@@ -37,10 +37,166 @@ const AdminModule = (function() {
     var autosaveCheckbox = null;
     var tabButtons = null;
     var tabPanels = null;
+
+    /* --------------------------------------------------------------------------
+       FIELD-LEVEL TRACKING REGISTRY
+       
+       PURPOSE:
+       Makes the save button accurate. Save button only turns green when there
+       are ACTUAL changes. If you toggle a switch on then off, nothing changed,
+       save button stays not-green.
+       
+       HOW IT WORKS:
+       Each field registers itself with an original value (from database).
+       When a field changes, it updates its current value.
+       Save button is green only if ANY field has current ≠ original.
+       
+       TWO TYPES OF FIELDS:
+       1. Simple: For individual inputs (text, checkbox, dropdown, etc.)
+          - Call registerField(id, originalValue) when field loads
+          - Call updateField(id, currentValue) when field changes
+          
+       2. Composite: For complex structures (like formbuilder with nested data)
+          - Call registerComposite(id, captureStateFn) when component loads
+          - The captureStateFn returns current state, compared as JSON
+       
+       FOR FUTURE DEVELOPERS:
+       When adding new inputs to the admin panel, you MUST:
+       1. Register the field when it loads with its database value
+       2. Call updateField() whenever the input changes
+       3. Use a unique field ID (e.g., 'settings.website_name', 'map.spin_speed')
+       
+       Example for a text input:
+         // When loading:
+         AdminModule.registerField('settings.website_name', valueFromDatabase);
+         
+         // When input changes:
+         input.addEventListener('input', function() {
+             AdminModule.updateField('settings.website_name', input.value);
+         });
+       
+       Example for a checkbox:
+         // When loading:
+         AdminModule.registerField('settings.maintenance_mode', checkboxValueFromDb);
+         
+         // When checkbox changes:
+         checkbox.addEventListener('change', function() {
+             AdminModule.updateField('settings.maintenance_mode', checkbox.checked);
+         });
+       -------------------------------------------------------------------------- */
     
-    // Change tracking
-    var isDirty = false;
-    var savedState = null;
+    var fieldRegistry = {};
+    
+    // Register a simple field (text input, checkbox, dropdown, etc.)
+    function registerField(fieldId, originalValue) {
+        fieldRegistry[fieldId] = {
+            type: 'simple',
+            original: originalValue,
+            current: originalValue
+        };
+    }
+    
+    // Update a simple field's current value
+    function updateField(fieldId, currentValue) {
+        if (!fieldRegistry[fieldId]) {
+            console.error('[Admin] Field "' + fieldId + '" was not registered before being updated. Call registerField() first.');
+            return;
+        }
+        fieldRegistry[fieldId].current = currentValue;
+        recheckDirtyState();
+    }
+    
+    // Remove a field from registry (for dynamic fields that get deleted)
+    function unregisterField(fieldId) {
+        delete fieldRegistry[fieldId];
+        recheckDirtyState();
+    }
+    
+    // Register a composite field (like formbuilder - captures entire state as JSON)
+    function registerComposite(fieldId, captureStateFn) {
+        var initialState = captureStateFn();
+        fieldRegistry[fieldId] = {
+            type: 'composite',
+            original: JSON.stringify(initialState),
+            captureState: captureStateFn
+        };
+    }
+    
+    // Update a composite field's baseline (called after successful save)
+    function updateCompositeBaseline(fieldId) {
+        var entry = fieldRegistry[fieldId];
+        if (entry && entry.type === 'composite') {
+            var currentState = entry.captureState();
+            entry.original = JSON.stringify(currentState);
+        }
+    }
+    
+    // Check if any field has changes
+    function hasFieldChanges() {
+        for (var fieldId in fieldRegistry) {
+            var entry = fieldRegistry[fieldId];
+            if (entry.type === 'simple') {
+                if (entry.current !== entry.original) {
+                    return true;
+                }
+            } else if (entry.type === 'composite') {
+                var currentState = entry.captureState();
+                if (JSON.stringify(currentState) !== entry.original) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    // Mark all fields as saved (update original to match current)
+    function markAllFieldsSaved() {
+        for (var fieldId in fieldRegistry) {
+            var entry = fieldRegistry[fieldId];
+            if (entry.type === 'simple') {
+                entry.original = entry.current;
+            } else if (entry.type === 'composite') {
+                var currentState = entry.captureState();
+                entry.original = JSON.stringify(currentState);
+            }
+        }
+    }
+    
+    // Get list of changed field IDs (for debugging)
+    function getChangedFields() {
+        var changed = [];
+        for (var fieldId in fieldRegistry) {
+            var entry = fieldRegistry[fieldId];
+            if (entry.type === 'simple') {
+                if (entry.current !== entry.original) {
+                    changed.push(fieldId);
+                }
+            } else if (entry.type === 'composite') {
+                var currentState = entry.captureState();
+                if (JSON.stringify(currentState) !== entry.original) {
+                    changed.push(fieldId);
+                }
+            }
+        }
+        return changed;
+    }
+    
+    // Recheck and update button states based on field registry
+    function recheckDirtyState() {
+        var hasChanges = hasFieldChanges();
+        if (hasChanges !== isDirty) {
+            isDirty = hasChanges;
+            updateButtonStates();
+            if (hasChanges) {
+                scheduleAutoSave();
+            }
+        }
+    }
+    
+    // Trigger a recheck (called by other modules after they make changes)
+    function notifyFieldChange() {
+        recheckDirtyState();
+    }
 
     /* --------------------------------------------------------------------------
        INITIALIZATION
@@ -230,21 +386,20 @@ const AdminModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
-       CHANGE TRACKING
+       CHANGE TRACKING (uses field registry above)
        -------------------------------------------------------------------------- */
     
+    // isDirty is now derived from field registry via recheckDirtyState()
+    var isDirty = false;
+    
+    // Called by other modules to trigger a recheck after changes
     function markDirty() {
-        if (isDirty) {
-            // Already dirty, but still schedule autosave for new changes
-            scheduleAutoSave();
-            return;
-        }
-        isDirty = true;
-        updateButtonStates();
-        scheduleAutoSave();
+        recheckDirtyState();
     }
     
+    // Called after successful save
     function markSaved() {
+        markAllFieldsSaved();
         isDirty = false;
         updateButtonStates();
         // Clear any pending autosave since there's nothing to save
@@ -288,12 +443,8 @@ const AdminModule = (function() {
     }
     
     function hasActualChanges() {
-        // Ask formbuilder if there are real changes vs saved snapshot
-        if (window.FormbuilderModule && typeof FormbuilderModule.hasChanges === 'function') {
-            return FormbuilderModule.hasChanges();
-        }
-        // Fallback to dirty flag if formbuilder method unavailable
-        return isDirty;
+        // Use field registry to check for actual changes
+        return hasFieldChanges();
     }
     
     function runSave(options) {
@@ -369,13 +520,20 @@ const AdminModule = (function() {
             autoSaveTimer = null;
         }
         
-        // Discard formbuilder changes
+        // Clear the field registry - modules will re-register when they reload
+        fieldRegistry = {};
+        
+        // Tell formbuilder to re-fetch from database (not restore from snapshot)
         if (window.FormbuilderModule && typeof FormbuilderModule.discard === 'function') {
             FormbuilderModule.discard();
         }
         
-        console.log('[Admin] Changes discarded');
-        markSaved();
+        // Emit event for other modules to discard their changes
+        App.emit('admin:discard');
+        
+        console.log('[Admin] Changes discarded - re-fetching from database');
+        isDirty = false;
+        updateButtonStates();
     }
     
     function scheduleAutoSave() {
@@ -406,11 +564,23 @@ const AdminModule = (function() {
         openPanel: openPanel,
         closePanel: closePanel,
         switchTab: switchTab,
+        
+        // Field-level tracking
+        registerField: registerField,
+        updateField: updateField,
+        unregisterField: unregisterField,
+        registerComposite: registerComposite,
+        updateCompositeBaseline: updateCompositeBaseline,
+        notifyFieldChange: notifyFieldChange,
+        getChangedFields: getChangedFields,
+        
+        // Change state
         markDirty: markDirty,
         markSaved: markSaved,
         runSave: runSave,
         discardChanges: discardChanges,
         isDirty: function() { return isDirty; },
+        hasChanges: hasActualChanges,
         isAutoSaveEnabled: isAutoSaveEnabled
     };
 

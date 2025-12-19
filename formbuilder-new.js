@@ -1,6 +1,37 @@
 /* ============================================================================
    FORMBUILDER MODULE - Admin Panel > Forms Tab
    Category/Subcategory/Field Editor
+   ============================================================================
+   
+   FIELD-LEVEL TRACKING:
+   This module registers itself with AdminModule's field registry as a
+   "composite" field. Instead of tracking individual inputs, it captures
+   the entire formbuilder state as JSON and compares it to the baseline.
+   
+   HOW IT WORKS:
+   1. When formbuilder loads, it calls:
+      AdminModule.registerComposite('formbuilder', captureFormbuilderState)
+      
+   2. captureFormbuilderState() reads the current DOM and returns an object
+      with all categories, subcategories, fields, icons, etc.
+      
+   3. When any input changes, notifyChange() tells AdminModule to recheck.
+      AdminModule calls captureFormbuilderState() and compares to baseline.
+      
+   4. If JSON differs from baseline → save button green
+      If JSON matches baseline → save button not green
+      
+   5. After save, AdminModule.updateCompositeBaseline('formbuilder') is called
+      to set the new baseline.
+      
+   6. Discard fetches fresh data from database (single source of truth).
+   
+   FOR FUTURE DEVELOPERS:
+   - Every input in formbuilder must call notifyChange() when it changes
+   - The captureFormbuilderState() function must capture ALL user-editable data
+   - If you add new fields, update captureFormbuilderState() to include them
+   - Do NOT store snapshots for comparison - use the field registry system
+   
    ============================================================================ */
 
 (function() {
@@ -8,10 +39,13 @@
 
     var container = null;
     var allIcons = [];
-    var currentSnapshot = null; // Store the loaded snapshot for reference
     var isLoaded = false;
     var checkoutOptions = []; // Module-local storage
     var siteCurrency = ''; // Module-local storage
+    
+    // Reference data (not for change tracking - just data needed to build the UI)
+    var loadedFieldsets = [];
+    var loadedCurrencies = [];
     
     var editPenSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5L13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175l-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>';
     var moreDotsSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>';
@@ -21,33 +55,16 @@
        CHANGE NOTIFICATION
        -------------------------------------------------------------------------- */
     
-    function hasActualChanges() {
-        if (!currentSnapshot) return false;
-        var current = captureFormbuilderState();
-        if (!current) return false;
-        // Compare JSON representations - this catches all structural changes
-        return JSON.stringify(current) !== JSON.stringify(currentSnapshot);
-    }
-    
     function notifyChange() {
         if (!isLoaded) return; // Don't notify during initial load
         
-        // Check if there are actual differences from saved state
-        var hasDiff = hasActualChanges();
-        
-        if (hasDiff) {
-            // Actual changes exist - mark dirty
-            if (window.AdminModule && typeof AdminModule.markDirty === 'function') {
-                AdminModule.markDirty();
-            }
-            if (window.App && typeof App.emit === 'function') {
-                App.emit('formbuilder:changed');
-            }
-        } else {
-            // No actual changes - mark as saved (clean)
-            if (window.AdminModule && typeof AdminModule.markSaved === 'function') {
-                AdminModule.markSaved();
-            }
+        // Tell admin to recheck the field registry
+        // Admin's composite registration will call captureFormbuilderState() to compare
+        if (window.AdminModule && typeof AdminModule.notifyFieldChange === 'function') {
+            AdminModule.notifyFieldChange();
+        }
+        if (window.App && typeof App.emit === 'function') {
+            App.emit('formbuilder:changed');
         }
     }
     
@@ -148,10 +165,10 @@
                         var fieldName = fieldNameSpan ? fieldNameSpan.textContent.trim() : '';
                         var isRequired = requiredCheckbox ? requiredCheckbox.checked : false;
                         
-                        // Find matching fieldset from snapshot
+                        // Find matching fieldset from loaded reference data
                         var fieldsetDef = null;
-                        if (currentSnapshot && currentSnapshot.fieldsets) {
-                            fieldsetDef = currentSnapshot.fieldsets.find(function(fs) {
+                        if (loadedFieldsets && loadedFieldsets.length > 0) {
+                            fieldsetDef = loadedFieldsets.find(function(fs) {
                                 return fs.id == fieldsetId || fs.key === fieldsetId;
                             });
                         }
@@ -207,9 +224,9 @@
             categories: categories,
             categoryIconPaths: categoryIconPaths,
             subcategoryIconPaths: subcategoryIconPaths,
-            fieldsets: currentSnapshot ? currentSnapshot.fieldsets : [],
+            fieldsets: loadedFieldsets,
             checkoutOptions: checkoutOptions,
-            currencies: currentSnapshot ? currentSnapshot.currencies : []
+            currencies: loadedCurrencies
         };
     }
     
@@ -248,8 +265,10 @@
                 updateSubcategoryIds(result.new_subcategory_ids);
             }
             
-            // Update snapshot to current state so future comparisons are against saved state
-            currentSnapshot = captureFormbuilderState();
+            // Update field registry baseline so future comparisons are against saved state
+            if (window.AdminModule && typeof AdminModule.updateCompositeBaseline === 'function') {
+                AdminModule.updateCompositeBaseline('formbuilder');
+            }
             
             return result;
         });
@@ -342,7 +361,7 @@
         };
         
         // Build the subcategory option
-        var option = buildSubcategoryOption(cat, newSubName, {}, currentSnapshot ? currentSnapshot.fieldsets : [], body);
+        var option = buildSubcategoryOption(cat, newSubName, {}, loadedFieldsets, body);
         
         // Insert before the Add Subcategory button
         var addSubBtn = body.querySelector('.formbuilder-add-button');
@@ -561,13 +580,14 @@
         if (!container) return;
         container.innerHTML = '';
         
-        // Store snapshot for reference
-        currentSnapshot = snapshot;
+        // Store reference data (not for change tracking - just data needed to build UI)
+        loadedFieldsets = snapshot.fieldsets || [];
+        loadedCurrencies = snapshot.currencies || [];
         
         var categories = snapshot.categories || [];
         var categoryIconPaths = snapshot.categoryIconPaths || {};
         var subcategoryIconPaths = snapshot.subcategoryIconPaths || {};
-        var fieldsets = snapshot.fieldsets || [];
+        var fieldsets = loadedFieldsets;
         
         categories.forEach(function(cat) {
             var accordion = buildCategoryAccordion(cat, categoryIconPaths, subcategoryIconPaths, fieldsets);
@@ -586,6 +606,12 @@
         
         // Mark as loaded after rendering
         isLoaded = true;
+        
+        // Register formbuilder as a composite field with admin's field registry
+        // This captures current state and sets it as the baseline for comparison
+        if (window.AdminModule && typeof AdminModule.registerComposite === 'function') {
+            AdminModule.registerComposite('formbuilder', captureFormbuilderState);
+        }
     }
     
     function buildCategoryAccordion(cat, categoryIconPaths, subcategoryIconPaths, fieldsets) {
@@ -1642,14 +1668,12 @@
     });
     
     /* --------------------------------------------------------------------------
-       DISCARD CHANGES - Restore from saved snapshot
+       DISCARD CHANGES - Fetch fresh from database
        -------------------------------------------------------------------------- */
     
     function discardChanges() {
-        if (currentSnapshot) {
-            isLoaded = false; // Prevent notifyChange during restore
-            renderForm(currentSnapshot);
-        }
+        isLoaded = false; // Prevent notifyChange during reload
+        loadFormData(); // Fetch fresh from database - single source of truth
     }
     
     /* --------------------------------------------------------------------------
@@ -1661,9 +1685,7 @@
         refresh: loadFormData,
         save: saveFormbuilder,
         discard: discardChanges,
-        capture: captureFormbuilderState,
-        getSnapshot: function() { return currentSnapshot; },
-        hasChanges: hasActualChanges
+        capture: captureFormbuilderState
     };
     
     // Register module with App

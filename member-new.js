@@ -292,8 +292,9 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var formpickerLoaded = false;
-    var memberSnapshot = null;
     var memberCategories = [];
+    var memberCategoryIconPaths = {};
+    var memberSubcategoryIconPaths = {};
     var selectedCategory = '';
     var selectedSubcategory = '';
     var formWrapper = null;
@@ -313,7 +314,7 @@ const MemberModule = (function() {
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
-        // Fetch form snapshot and checkout options from database
+        // Fetch form data and checkout options from database
         Promise.all([
             fetch('/gateway.php?action=get-form', {
                 method: 'GET',
@@ -328,8 +329,9 @@ const MemberModule = (function() {
             var settingsResponse = results[1];
             
             if (formResponse && formResponse.success && formResponse.snapshot) {
-                memberSnapshot = formResponse.snapshot;
                 memberCategories = formResponse.snapshot.categories || [];
+                memberCategoryIconPaths = formResponse.snapshot.categoryIconPaths || {};
+                memberSubcategoryIconPaths = formResponse.snapshot.subcategoryIconPaths || {};
             }
             
             // Get checkout options and currency from admin settings
@@ -366,8 +368,8 @@ const MemberModule = (function() {
         adminSubmitBtn = null;
         termsAgreed = false;
         
-        var categoryIconPaths = memberSnapshot.categoryIconPaths || {};
-        var subcategoryIconPaths = memberSnapshot.subcategoryIconPaths || {};
+        var categoryIconPaths = memberCategoryIconPaths;
+        var subcategoryIconPaths = memberSubcategoryIconPaths;
         
         // Container for dropdowns
         var dropdownsContainer = document.createElement('div');
@@ -572,7 +574,7 @@ const MemberModule = (function() {
             return;
         }
         
-        // Get fields for this category/subcategory from snapshot
+        // Get fields for this category/subcategory
         var fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
         
         if (formFields) formFields.innerHTML = '';
@@ -794,7 +796,7 @@ const MemberModule = (function() {
         // Get subcategory data for surcharge and type
         var surcharge = 0;
         var subcategoryType = 'General';
-        if (memberSnapshot && memberCategories) {
+        if (memberCategories && memberCategories.length > 0) {
             var category = memberCategories.find(function(c) {
                 return c.name === selectedCategory;
             });
@@ -1060,7 +1062,7 @@ const MemberModule = (function() {
     }
     
     function getFieldsForSelection(categoryName, subcategoryName) {
-        if (!memberSnapshot || !memberCategories) return [];
+        if (!memberCategories || memberCategories.length === 0) return [];
         
         var category = memberCategories.find(function(c) {
             return c.name === categoryName;
