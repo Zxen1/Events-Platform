@@ -944,8 +944,8 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     function handleLogin() {
-        var emailInput = document.getElementById('member-login-email');
-        var passwordInput = document.getElementById('member-login-password');
+        var emailInput = document.getElementById('memberLoginEmail');
+        var passwordInput = document.getElementById('memberLoginPassword');
         
         var username = emailInput ? emailInput.value.trim() : '';
         var password = passwordInput ? passwordInput.value : '';
