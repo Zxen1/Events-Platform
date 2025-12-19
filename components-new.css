@@ -1192,7 +1192,6 @@
 /* Appearance */
 .admin-currency-wrapper {
     width: 100%;
-    max-width: 300px;
     height: 36px;
     position: relative;
 }
@@ -1599,7 +1598,8 @@
 /* Appearance */
 .systemimagepicker-container {
     position: relative;
-    display: inline-block;
+    display: block;
+    width: 100%;
 }
 
 .systemimagepicker-button {

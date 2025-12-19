@@ -2069,21 +2069,21 @@ const CurrencyComponent = (function(){
         var containerEl = options.container || null;
         
         var menu = document.createElement('div');
-        menu.className = 'admin-menu admin-currency-menu';
-        menu.innerHTML = '<div class="admin-menu-button"><img class="admin-menu-button-image" src="assets/flags/us.svg" alt=""><span class="admin-menu-button-text">USD - US Dollar</span><span class="admin-menu-button-arrow">▼</span></div><div class="admin-menu-options"></div>';
+        menu.className = 'admin-currency-wrapper';
+        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="assets/flags/us.svg" alt=""><span class="admin-currency-button-text">USD - US Dollar</span><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
         
-        var btn = menu.querySelector('.admin-menu-button');
-        var opts = menu.querySelector('.admin-menu-options');
-        var btnImg = menu.querySelector('.admin-menu-button-image');
-        var btnText = menu.querySelector('.admin-menu-button-text');
+        var btn = menu.querySelector('.admin-currency-button');
+        var opts = menu.querySelector('.admin-currency-options');
+        var btnImg = menu.querySelector('.admin-currency-button-flag');
+        var btnText = menu.querySelector('.admin-currency-button-text');
         
         var currencies = currencyData;
         currencies.forEach(function(item) {
             var countryCode = item.value.substring(0, 2);
             var currencyCode = item.value.substring(3);
             var op = document.createElement('div');
-            op.className = 'admin-menu-option';
-            op.innerHTML = '<img class="admin-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="admin-menu-option-text">' + currencyCode + ' - ' + item.label + '</span>';
+            op.className = 'admin-currency-option';
+            op.innerHTML = '<img class="admin-currency-option-flag" src="assets/flags/' + countryCode + '.svg" alt=""><span class="admin-currency-option-text">' + currencyCode + ' - ' + item.label + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
                 btnImg.src = 'assets/flags/' + countryCode + '.svg';
@@ -2097,7 +2097,7 @@ const CurrencyComponent = (function(){
         btn.onclick = function(e) {
             e.stopPropagation();
             if (containerEl) {
-                containerEl.querySelectorAll('.admin-menu.open').forEach(function(el) {
+                containerEl.querySelectorAll('.admin-currency-wrapper.open').forEach(function(el) {
                     if (el !== menu) el.classList.remove('open');
                 });
             }

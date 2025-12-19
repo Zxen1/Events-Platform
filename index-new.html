@@ -219,7 +219,88 @@
         
         <!-- Settings Tab -->
         <section id="admin-tab-settings" class="admin-tab-panel admin-tab-panel--active" role="tabpanel" aria-labelledby="admin-tab-settings-btn">
-          <p class="admin-tab-intro">Settings content will go here.</p>
+          <div class="admin-settings-general-container">
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWebsiteName">Website Name</label>
+              <input type="text" class="admin-settings-field-input" id="adminWebsiteName" data-setting-key="website_name" autocomplete="off" placeholder="Enter website name" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWebsiteTagline">Website Tagline</label>
+              <input type="text" class="admin-settings-field-input" id="adminWebsiteTagline" data-setting-key="website_tagline" autocomplete="off" placeholder="Enter website tagline" />
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Big Logo</label>
+              <div id="adminBigLogoPicker" data-setting-key="big_logo"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Small Logo</label>
+              <div id="adminSmallLogoPicker" data-setting-key="small_logo"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Favicon</label>
+              <div id="adminFaviconPicker" data-setting-key="favicon"></div>
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label">Website Currency</label>
+              <div id="adminCurrencyPicker" data-setting-key="website_currency"></div>
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminContactEmail">Contact Email</label>
+              <input type="email" class="admin-settings-field-input" id="adminContactEmail" data-setting-key="contact_email" autocomplete="off" placeholder="contact@example.com" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminSupportEmail">Support Email</label>
+              <input type="email" class="admin-settings-field-input" id="adminSupportEmail" data-setting-key="support_email" autocomplete="off" placeholder="support@example.com" />
+            </div>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label">Maintenance Mode</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+            </div>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label">Welcome Message on Load</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+            </div>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label">Devtools Console Filter</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminEnableConsoleFilter" data-setting-key="console_filter" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="admin-settings-folders-container">
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminIconFolder">Icon Folder</label>
+              <input type="text" class="admin-settings-field-input" id="adminIconFolder" data-setting-key="icon_folder" autocomplete="off" placeholder="assets/icons-30" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminSystemImagesFolder">System Images Folder</label>
+              <input type="text" class="admin-settings-field-input" id="adminSystemImagesFolder" data-setting-key="system_images_folder" autocomplete="off" placeholder="assets/system-images" />
+            </div>
+          </div>
+          <div class="admin-settings-paypal-container">
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminPaypalClientId">PayPal Client ID</label>
+              <input type="text" class="admin-settings-field-input" id="adminPaypalClientId" data-setting-key="paypal_client_id" autocomplete="new-password" placeholder="Enter PayPal Client ID" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminPaypalClientSecret">PayPal Client Secret</label>
+              <input type="password" class="admin-settings-field-input" id="adminPaypalClientSecret" data-setting-key="paypal_client_secret" autocomplete="new-password" placeholder="Enter PayPal Client Secret" />
+            </div>
+          </div>
+          <div class="admin-settings-checkout-container">
+            <h3 class="admin-checkout-options-header-label">Checkout Options</h3>
+            <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
+              <!-- Checkout options will be populated by JavaScript -->
+            </div>
+            <button type="button" class="admin-checkout-options-add">Add Tier</button>
+          </div>
         </section>
         
         <!-- Forms Tab -->
