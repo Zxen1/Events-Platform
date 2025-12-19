@@ -576,9 +576,18 @@ const MemberModule = (function() {
         
         // Get fields for this category/subcategory
         var fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
-        
+
         if (formFields) formFields.innerHTML = '';
-        
+
+        // Set picklist data from global variables (loaded by index.js)
+        if (typeof FieldsetComponent !== 'undefined' && FieldsetComponent.setPicklist) {
+            FieldsetComponent.setPicklist({
+                'currency': window.currencyData || [],
+                'phone-prefix': window.phonePrefixData || [],
+                'amenity': window.amenityData || []
+            });
+        }
+
         if (fields.length === 0) {
             var placeholder = document.createElement('p');
             placeholder.className = 'member-create-intro';
@@ -589,7 +598,7 @@ const MemberModule = (function() {
             fields.forEach(function(fieldData, index) {
                 var field = ensureFieldDefaults(fieldData);
                 if (!field.name) field.name = 'Field ' + (index + 1);
-                
+
                 var fieldset = FieldsetComponent.buildFieldset(field, {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,

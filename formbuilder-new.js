@@ -1734,6 +1734,15 @@
         body.className = 'formbuilder-formpreview-modal-body';
         
         // Render fields using FieldsetComponent
+        // Set picklist data from global variables (loaded by index.js)
+        if (typeof FieldsetComponent !== 'undefined' && FieldsetComponent.setPicklist) {
+            FieldsetComponent.setPicklist({
+                'currency': window.currencyData || [],
+                'phone-prefix': window.phonePrefixData || [],
+                'amenity': window.amenityData || []
+            });
+        }
+        
         if (fields.length === 0) {
             var emptyMsg = document.createElement('p');
             emptyMsg.className = 'formbuilder-formpreview-empty';

@@ -2719,6 +2719,13 @@ let __notifyMapOnInteraction = null;
                       label: opt.label
                     }));
                   }
+                  // Store amenity data globally for fieldset component
+                  if(data.picklist['amenity']){
+                    window.amenityData = data.picklist['amenity'].map(opt => ({
+                      value: opt.value,
+                      label: opt.label
+                    }));
+                  }
                   
                   const websiteCurrencyArrow = document.createElement('span');
                   websiteCurrencyArrow.className = 'dropdown-arrow';

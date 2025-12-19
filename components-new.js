@@ -382,7 +382,7 @@ const FieldsetComponent = (function(){
         var placeholder = fieldData.fieldset_placeholder || '';
         var minLength = fieldData.min_length || 0;
         var maxLength = fieldData.max_length || 500;
-        var fieldOptions = fieldData.fieldset_options || [];
+        var fieldOptions = fieldData.fieldset_options || fieldData.options || [];
         var fields = fieldData.fieldset_fields || [];
         
         // Build based on fieldset type
