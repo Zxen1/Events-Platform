@@ -6,6 +6,7 @@
    
    STRUCTURE:
    - ICONS               - SVG icon library (JS only, no CSS needed)
+   - MENU MANAGER        - Global manager for closing menus
    - CLEAR BUTTON        - Reusable X/clear button
    - SWITCH              - Toggle switch (has size variants)
    - FIELDSETS           - Form field types
@@ -39,6 +40,48 @@ const Icons = {
     
     chevronDown: '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
 };
+
+
+/* ============================================================================
+   MENU MANAGER
+   Global manager to close all open menus when clicking outside or opening another
+   ============================================================================ */
+
+const MenuManager = (function(){
+    var openMenus = [];
+    
+    // Close all open menus
+    function closeAll(except) {
+        openMenus.forEach(function(menu) {
+            if (menu !== except && menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            }
+        });
+    }
+    
+    // Register a menu element
+    function register(menuElement) {
+        if (openMenus.indexOf(menuElement) === -1) {
+            openMenus.push(menuElement);
+        }
+    }
+    
+    // Close all menus when clicking outside
+    document.addEventListener('click', function(e) {
+        openMenus.forEach(function(menu) {
+            if (!menu.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+    });
+    
+    return {
+        closeAll: closeAll,
+        register: register
+    };
+})();
+
+window.MenuManager = MenuManager;
 
 
 /* ============================================================================
@@ -273,13 +316,13 @@ const FieldsetComponent = (function(){
             opts.appendChild(op);
         });
         
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
         btn.onclick = function(e) {
             e.stopPropagation();
-            if (container) {
-                container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                    if (el !== menu) el.classList.remove('open');
-                });
-            }
+            // Close all other menus first
+            MenuManager.closeAll(menu);
             menu.classList.toggle('open');
         };
         
@@ -313,13 +356,13 @@ const FieldsetComponent = (function(){
             opts.appendChild(op);
         });
         
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
         btn.onclick = function(e) {
             e.stopPropagation();
-            if (container) {
-                container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                    if (el !== menu) el.classList.remove('open');
-                });
-            }
+            // Close all other menus first
+            MenuManager.closeAll(menu);
             menu.classList.toggle('open');
         };
         
@@ -827,13 +870,13 @@ const FieldsetComponent = (function(){
                         opts.appendChild(op);
                     });
                     
+                    // Register with MenuManager
+                    MenuManager.register(menu);
+                    
                     btn.onclick = function(e) {
                         e.stopPropagation();
-                        if (container) {
-                            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                                if (el !== menu) el.classList.remove('open');
-                            });
-                        }
+                        // Close all other menus first
+                        MenuManager.closeAll(menu);
                         menu.classList.toggle('open');
                     };
                     
@@ -1024,13 +1067,13 @@ const FieldsetComponent = (function(){
                         opts.appendChild(op);
                     });
                     
+                    // Register with MenuManager
+                    MenuManager.register(menu);
+                    
                     btn.onclick = function(e) {
                         e.stopPropagation();
-                        if (container) {
-                            container.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                                if (el !== menu) el.classList.remove('open');
-                            });
-                        }
+                        // Close all other menus first
+                        MenuManager.closeAll(menu);
                         menu.classList.toggle('open');
                     };
                     
@@ -2116,23 +2159,15 @@ const CurrencyComponent = (function(){
             opts.appendChild(op);
         });
         
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
         btn.onclick = function(e) {
             e.stopPropagation();
-            // Close other open menus in container
-            if (containerEl) {
-                containerEl.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                    if (el !== menu) el.classList.remove('open');
-                });
-            }
+            // Close all other menus first
+            MenuManager.closeAll(menu);
             menu.classList.toggle('open');
         };
-        
-        // Close when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('open');
-            }
-        });
         
         return menu;
     }
@@ -2170,25 +2205,19 @@ const CurrencyComponent = (function(){
             opts.appendChild(op);
         });
         
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
         btn.onclick = function(e) {
             e.stopPropagation();
-            if (containerEl) {
-                containerEl.querySelectorAll('.admin-currency-wrapper.open').forEach(function(el) {
-                    if (el !== menu) el.classList.remove('open');
-                });
-            }
+            // Close all other menus first
+            MenuManager.closeAll(menu);
             menu.classList.toggle('open');
         };
-        
-        document.addEventListener('click', function(e) {
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('open');
-            }
-        });
-        
+
         return menu;
     }
-    
+
     return {
         getData: getData,
         setData: setData,
@@ -2287,23 +2316,15 @@ const PhonePrefixComponent = (function(){
                     opts.appendChild(op);
         });
         
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
         btn.onclick = function(e) {
             e.stopPropagation();
-            // Close other open menus in container
-            if (containerEl) {
-                containerEl.querySelectorAll('.fieldset-menu.open').forEach(function(el) {
-                    if (el !== menu) el.classList.remove('open');
-                });
-            }
+            // Close all other menus first
+            MenuManager.closeAll(menu);
             menu.classList.toggle('open');
         };
-        
-        // Close when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('open');
-            }
-        });
         
         return menu;
     }
@@ -2428,6 +2449,9 @@ const IconPickerComponent = (function(){
         optionsDiv.className = 'component-iconpicker-options';
         menu.appendChild(optionsDiv);
         
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
         // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
@@ -2435,6 +2459,8 @@ const IconPickerComponent = (function(){
             if (isOpen) {
                 menu.classList.remove('open');
             } else {
+                // Close all other menus first
+                MenuManager.closeAll(menu);
                 // Load and show icons
                 loadIconsFromFolder().then(function(iconList) {
                     optionsDiv.innerHTML = '';
@@ -2477,13 +2503,6 @@ const IconPickerComponent = (function(){
                 });
             }
         };
-        
-        // Close on outside click
-        document.addEventListener('click', function(e) {
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('open');
-            }
-        });
         
         return {
             element: menu,
@@ -3269,6 +3288,9 @@ const SystemImagePickerComponent = (function(){
         optionsDiv.className = 'component-systemimagepicker-options';
         menu.appendChild(optionsDiv);
         
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
         // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
@@ -3276,6 +3298,8 @@ const SystemImagePickerComponent = (function(){
             if (isOpen) {
                 menu.classList.remove('open');
             } else {
+                // Close all other menus first
+                MenuManager.closeAll(menu);
                 // Load and show images
                 loadImagesFromFolder().then(function(imageList) {
                     optionsDiv.innerHTML = '';
@@ -3318,13 +3342,6 @@ const SystemImagePickerComponent = (function(){
                 });
             }
         };
-        
-        // Close on outside click
-        document.addEventListener('click', function(e) {
-            if (!menu.contains(e.target)) {
-                menu.classList.remove('open');
-            }
-        });
         
         return {
             element: menu,

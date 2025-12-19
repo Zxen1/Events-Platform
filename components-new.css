@@ -1622,7 +1622,7 @@
    ICON PICKER
    
    Dropdown menu for selecting category icons.
-   Design matches menu-test.html exactly.
+   Matches admin currency menu style.
    ============================================================================ */
 
 /* Appearance */
@@ -1637,10 +1637,9 @@
     height: 36px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    box-sizing: border-box;
-    background: #333;
-    border: none;
+    padding: 0 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
     cursor: pointer;
     color: #fff;
@@ -1648,8 +1647,8 @@
 }
 
 .component-iconpicker-button-image {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -1658,7 +1657,8 @@
     flex: 1;
     text-align: left;
     padding-left: 10px;
-    font-size: 13px;
+    font-size: 14px;
+    color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1667,14 +1667,12 @@
 .component-iconpicker-button-arrow {
     width: 16px;
     height: 36px;
-    margin-left: 10px;
-    transition: transform 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    line-height: 1;
-    flex-shrink: 0;
+    color: #888;
+    transition: transform 0.2s;
 }
 
 .component-iconpicker-options {
@@ -1683,31 +1681,42 @@
     top: 36px;
     left: 0;
     width: 100%;
-    background: #333;
-    border-radius: 5px;
-    max-height: 200px;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 250px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
 }
 
+.component-iconpicker-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.component-iconpicker-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
 .component-iconpicker-option {
     width: 100%;
-    height: 36px;
+    height: 40px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    box-sizing: border-box;
+    padding: 0 12px;
     cursor: pointer;
     background: none;
     border: none;
     color: #fff;
-    font: inherit;
+    font-size: 14px;
 }
 
 .component-iconpicker-option-image {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -1716,14 +1725,11 @@
     flex: 1;
     text-align: left;
     padding-left: 10px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 14px;
 }
 
 .component-iconpicker-error {
-    padding: 20px 10px;
+    padding: 20px 12px;
     text-align: center;
     font-size: 12px;
     color: #888;
@@ -1731,6 +1737,16 @@
 }
 
 /* States */
+.component-iconpicker-button:hover {
+    border-color: #555;
+}
+
+.component-iconpicker.open .component-iconpicker-button {
+    border-color: #3b82f5;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
 .component-iconpicker.open .component-iconpicker-button-arrow {
     transform: rotate(180deg);
 }
@@ -1740,7 +1756,7 @@
 }
 
 .component-iconpicker-option:hover {
-    background: #444;
+    background: #3b82f5;
 }
 
 
@@ -1748,7 +1764,7 @@
    SYSTEM IMAGE PICKER
    
    Dropdown menu for selecting system images (logos, map pills, etc).
-   Design matches menu-test.html exactly.
+   Matches admin currency menu style.
    ============================================================================ */
 
 /* Appearance */
@@ -1763,10 +1779,9 @@
     height: 36px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    box-sizing: border-box;
-    background: #333;
-    border: none;
+    padding: 0 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
     cursor: pointer;
     color: #fff;
@@ -1774,8 +1789,8 @@
 }
 
 .component-systemimagepicker-button-image {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -1784,7 +1799,8 @@
     flex: 1;
     text-align: left;
     padding-left: 10px;
-    font-size: 13px;
+    font-size: 14px;
+    color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1793,14 +1809,12 @@
 .component-systemimagepicker-button-arrow {
     width: 16px;
     height: 36px;
-    margin-left: 10px;
-    transition: transform 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    line-height: 1;
-    flex-shrink: 0;
+    color: #888;
+    transition: transform 0.2s;
 }
 
 .component-systemimagepicker-options {
@@ -1809,31 +1823,42 @@
     top: 36px;
     left: 0;
     width: 100%;
-    background: #333;
-    border-radius: 5px;
-    max-height: 200px;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 250px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
 }
 
+.component-systemimagepicker-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.component-systemimagepicker-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
 .component-systemimagepicker-option {
     width: 100%;
-    height: 36px;
+    height: 40px;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    box-sizing: border-box;
+    padding: 0 12px;
     cursor: pointer;
     background: none;
     border: none;
     color: #fff;
-    font: inherit;
+    font-size: 14px;
 }
 
 .component-systemimagepicker-option-image {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
@@ -1842,14 +1867,11 @@
     flex: 1;
     text-align: left;
     padding-left: 10px;
-    font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 14px;
 }
 
 .component-systemimagepicker-error {
-    padding: 20px 10px;
+    padding: 20px 12px;
     text-align: center;
     font-size: 12px;
     color: #888;
@@ -1857,6 +1879,16 @@
 }
 
 /* States */
+.component-systemimagepicker-button:hover {
+    border-color: #555;
+}
+
+.component-systemimagepicker.open .component-systemimagepicker-button {
+    border-color: #3b82f5;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
 .component-systemimagepicker.open .component-systemimagepicker-button-arrow {
     transform: rotate(180deg);
 }
@@ -1866,7 +1898,7 @@
 }
 
 .component-systemimagepicker-option:hover {
-    background: #444;
+    background: #3b82f5;
 }
 
 
