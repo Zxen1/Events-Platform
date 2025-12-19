@@ -1742,21 +1742,21 @@ const AdminModule = (function() {
                     '</div>' +
                     '<div class="admin-checkout-option-field">' +
                         '<label class="admin-checkout-option-field-label">Flagfall Price</label>' +
-                        '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" step="0.01" min="0" />' +
+                        '<input type="text" inputmode="decimal" class="admin-checkout-option-field-input-number admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
                     '</div>' +
                     '<div class="admin-checkout-option-field">' +
                         '<label class="admin-checkout-option-field-label">Basic Day Rate</label>' +
-                        '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" step="0.01" min="0" placeholder="N/A" />' +
+                        '<input type="text" inputmode="decimal" class="admin-checkout-option-field-input-number admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" placeholder="N/A" />' +
                     '</div>' +
                     '<div class="admin-checkout-option-field">' +
                         '<label class="admin-checkout-option-field-label">Discount Day Rate</label>' +
-                        '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" step="0.01" min="0" placeholder="N/A" />' +
+                        '<input type="text" inputmode="decimal" class="admin-checkout-option-field-input-number admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" placeholder="N/A" />' +
                     '</div>' +
                     '<div class="admin-checkout-option-calculator">' +
                         '<div class="admin-checkout-option-field">' +
                             '<label class="admin-checkout-option-field-label">Price Calculator (Sandbox)</label>' +
                             '<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">' +
-                                '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-calc-days" value="" placeholder="Days" min="1" step="1" style="width: 100px;" />' +
+                                '<input type="text" inputmode="numeric" class="admin-checkout-option-field-input-number admin-checkout-option-calc-days" value="" placeholder="Days" style="width: 100px;" />' +
                                 '<span style="font-weight: 600;">=</span>' +
                                 '<span class="admin-checkout-option-calc-total" style="min-width: 120px;">' + siteCurrency + ' 0.00</span>' +
                             '</div>' +

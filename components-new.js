@@ -855,10 +855,10 @@ const FieldsetComponent = (function(){
                     priceSub.className = 'fieldset-sublabel';
                     priceSub.textContent = 'Price';
                     var priceInput = document.createElement('input');
-                    priceInput.type = 'number';
+                    priceInput.type = 'text';
+                    priceInput.inputMode = 'decimal';
                     priceInput.className = 'fieldset-input';
                     priceInput.placeholder = '0.00';
-                    priceInput.step = '0.01';
                     priceInput.addEventListener('blur', function() {
                         if (this.value !== '') {
                             this.value = parseFloat(this.value).toFixed(2);
@@ -1035,10 +1035,10 @@ const FieldsetComponent = (function(){
                     priceSub.className = 'fieldset-sublabel';
                     priceSub.textContent = 'Price';
                     var priceInput = document.createElement('input');
-                    priceInput.type = 'number';
+                    priceInput.type = 'text';
+                    priceInput.inputMode = 'decimal';
                     priceInput.className = 'fieldset-input';
                     priceInput.placeholder = '0.00';
-                    priceInput.step = '0.01';
                     priceInput.addEventListener('blur', function() {
                         if (this.value !== '') {
                             this.value = parseFloat(this.value).toFixed(2);

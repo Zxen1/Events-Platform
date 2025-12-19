@@ -1218,11 +1218,11 @@
    ============================================================================ */
 
 .admin-checkout-options-header-label {
-  margin: 0 0 12px 0;
-  padding: 10px 0;
-  font-size: 15px;
-  font-weight: 500;
-  color: #fff;
+  display: block;
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  font-weight: normal;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .admin-checkout-options-tiers {
@@ -1871,7 +1871,7 @@
   right: 0;
   bottom: 0;
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 5px;
+  border-radius: 12px;
   transition: background 0.2s;
 }
 
