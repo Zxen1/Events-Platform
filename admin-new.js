@@ -281,11 +281,14 @@ const AdminModule = (function() {
             console.warn('[Admin] Admin panel not found');
             return;
         }
-        
+
         bindEvents();
         initHeaderDrag();
         loadAutosaveSetting();
         
+        // Initialize Settings tab (default tab)
+        initSettingsTab();
+
         console.log('[Admin] Admin module initialized');
     }
     
@@ -464,7 +467,9 @@ const AdminModule = (function() {
         });
         
         // Initialize tab content on first view
-        if (tabName === 'messages') {
+        if (tabName === 'settings') {
+            initSettingsTab();
+        } else if (tabName === 'messages') {
             initMessagesTab();
         }
     }
@@ -561,6 +566,25 @@ const AdminModule = (function() {
         // Save formbuilder data
         if (window.FormbuilderModule && typeof FormbuilderModule.save === 'function') {
             savePromises.push(FormbuilderModule.save());
+        }
+        
+        // Save modified settings (uses save-admin-settings endpoint)
+        var modifiedSettings = getModifiedSettings();
+        if (Object.keys(modifiedSettings).length > 0) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(modifiedSettings)
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to save settings');
+                    }
+                    console.log('[Admin] Settings saved:', Object.keys(modifiedSettings).length);
+                })
+            );
         }
         
         // Save modified messages (uses save-admin-settings endpoint)
@@ -682,7 +706,8 @@ const AdminModule = (function() {
             autoSaveTimer = null;
         }
         
-        // Reset messages tab to original values before clearing registry
+        // Reset tabs to original values before clearing registry
+        resetSettingsToOriginal();
         resetMessagesToOriginal();
         
         // Reset field registry values (current = original) instead of clearing
@@ -1492,6 +1517,501 @@ const AdminModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
+       SETTINGS TAB
+       
+       Contains website settings loaded from admin_settings table.
+       Uses simple field tracking (registerField/updateField).
+       -------------------------------------------------------------------------- */
+    
+    var settingsContainer = null;
+    var settingsInitialized = false;
+    var settingsData = {}; // Cached settings from database
+    
+    function initSettingsTab() {
+        if (settingsInitialized) return;
+        
+        settingsContainer = document.getElementById('admin-tab-settings');
+        if (!settingsContainer) return;
+        
+        // Clear placeholder
+        settingsContainer.innerHTML = '';
+        
+        // Load settings from database then build UI
+        loadSettingsFromDatabase().then(function() {
+            renderSettingsUI();
+            settingsInitialized = true;
+        });
+    }
+    
+    function loadSettingsFromDatabase() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.settings) {
+                    settingsData = data.settings;
+                }
+            })
+            .catch(function(err) {
+                console.error('[Admin] Failed to load settings:', err);
+            });
+    }
+    
+    function renderSettingsUI() {
+        if (!settingsContainer) return;
+        
+        // General Settings Section
+        var generalSection = createSettingsSection('General');
+        
+        // Website Name
+        generalSection.appendChild(createTextField({
+            key: 'website_name',
+            label: 'Website Name',
+            placeholder: 'Enter website name'
+        }));
+        
+        // Website Tagline
+        generalSection.appendChild(createTextField({
+            key: 'website_tagline',
+            label: 'Website Tagline',
+            placeholder: 'Enter website tagline'
+        }));
+        
+        // Big Logo
+        generalSection.appendChild(createImagePickerField({
+            key: 'big_logo',
+            label: 'Big Logo'
+        }));
+        
+        // Small Logo
+        generalSection.appendChild(createImagePickerField({
+            key: 'small_logo',
+            label: 'Small Logo'
+        }));
+        
+        // Favicon
+        generalSection.appendChild(createImagePickerField({
+            key: 'favicon',
+            label: 'Favicon'
+        }));
+        
+        // Website Currency
+        generalSection.appendChild(createCurrencyField({
+            key: 'website_currency',
+            label: 'Website Currency'
+        }));
+        
+        // Contact Email
+        generalSection.appendChild(createTextField({
+            key: 'contact_email',
+            label: 'Contact Email',
+            placeholder: 'contact@example.com',
+            type: 'email'
+        }));
+        
+        // Support Email
+        generalSection.appendChild(createTextField({
+            key: 'support_email',
+            label: 'Support Email',
+            placeholder: 'support@example.com',
+            type: 'email'
+        }));
+        
+        settingsContainer.appendChild(generalSection);
+        
+        // Toggles Section
+        var togglesSection = createSettingsSection('Options');
+        
+        togglesSection.appendChild(createToggleField({
+            key: 'maintenance_mode',
+            label: 'Maintenance Mode'
+        }));
+        
+        togglesSection.appendChild(createToggleField({
+            key: 'welcome_enabled',
+            label: 'Welcome Message on Load'
+        }));
+        
+        togglesSection.appendChild(createToggleField({
+            key: 'console_filter',
+            label: 'Devtools Console Filter'
+        }));
+        
+        settingsContainer.appendChild(togglesSection);
+        
+        // Folders Section
+        var foldersSection = createSettingsSection('Folders');
+        
+        foldersSection.appendChild(createTextField({
+            key: 'icon_folder',
+            label: 'Icon Folder',
+            placeholder: 'assets/icons-30'
+        }));
+        
+        foldersSection.appendChild(createTextField({
+            key: 'system_images_folder',
+            label: 'System Images Folder',
+            placeholder: 'assets/system-images'
+        }));
+        
+        settingsContainer.appendChild(foldersSection);
+        
+        // PayPal Section
+        var paypalSection = createSettingsSection('PayPal');
+        
+        paypalSection.appendChild(createTextField({
+            key: 'paypal_client_id',
+            label: 'PayPal Client ID',
+            placeholder: 'Enter PayPal Client ID',
+            autocomplete: 'off'
+        }));
+        
+        paypalSection.appendChild(createTextField({
+            key: 'paypal_client_secret',
+            label: 'PayPal Client Secret',
+            placeholder: 'Enter PayPal Client Secret',
+            type: 'password',
+            autocomplete: 'off'
+        }));
+        
+        settingsContainer.appendChild(paypalSection);
+    }
+    
+    function createSettingsSection(title) {
+        var section = document.createElement('div');
+        section.className = 'admin-settings-section';
+        
+        var header = document.createElement('h3');
+        header.className = 'admin-settings-section-header';
+        header.textContent = title;
+        section.appendChild(header);
+        
+        return section;
+    }
+    
+    function createTextField(options) {
+        var field = document.createElement('div');
+        field.className = 'admin-settings-field';
+        
+        var label = document.createElement('label');
+        label.className = 'admin-settings-field-label';
+        label.textContent = options.label;
+        field.appendChild(label);
+        
+        var input = document.createElement('input');
+        input.type = options.type || 'text';
+        input.className = 'admin-settings-field-input';
+        input.placeholder = options.placeholder || '';
+        input.autocomplete = options.autocomplete || 'off';
+        input.dataset.settingKey = options.key;
+        
+        // Set initial value from loaded settings
+        var initialValue = settingsData[options.key] || '';
+        input.value = initialValue;
+        
+        // Register field for tracking
+        registerField('settings.' + options.key, initialValue);
+        
+        // Track changes
+        input.addEventListener('input', function() {
+            updateField('settings.' + options.key, input.value);
+        });
+        
+        field.appendChild(input);
+        return field;
+    }
+    
+    function createToggleField(options) {
+        var field = document.createElement('div');
+        field.className = 'admin-settings-field admin-settings-field--toggle';
+        
+        var label = document.createElement('span');
+        label.className = 'admin-settings-field-label';
+        label.textContent = options.label;
+        field.appendChild(label);
+        
+        var toggle = document.createElement('label');
+        toggle.className = 'admin-settings-toggle';
+        
+        var checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'admin-settings-toggle-input';
+        checkbox.dataset.settingKey = options.key;
+        
+        // Set initial value
+        var initialValue = settingsData[options.key] === true || settingsData[options.key] === 'true';
+        checkbox.checked = initialValue;
+        
+        // Register field for tracking
+        registerField('settings.' + options.key, initialValue);
+        
+        // Track changes
+        checkbox.addEventListener('change', function() {
+            updateField('settings.' + options.key, checkbox.checked);
+        });
+        
+        var slider = document.createElement('span');
+        slider.className = 'admin-settings-toggle-slider';
+        
+        toggle.appendChild(checkbox);
+        toggle.appendChild(slider);
+        field.appendChild(toggle);
+        
+        return field;
+    }
+    
+    function createImagePickerField(options) {
+        var field = document.createElement('div');
+        field.className = 'admin-settings-field admin-settings-field--imagepicker';
+        
+        var label = document.createElement('label');
+        label.className = 'admin-settings-field-label';
+        label.textContent = options.label;
+        field.appendChild(label);
+        
+        var initialValue = settingsData[options.key] || '';
+        
+        // Use SystemImagePickerComponent if available
+        if (window.SystemImagePickerComponent && typeof SystemImagePickerComponent.buildPicker === 'function') {
+            var picker = SystemImagePickerComponent.buildPicker({
+                label: options.label,
+                currentImage: initialValue,
+                onSelect: function(imagePath) {
+                    updateField('settings.' + options.key, imagePath);
+                }
+            });
+            picker.dataset.settingKey = options.key;
+            field.appendChild(picker);
+        } else {
+            // Fallback to text input if component not available
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'admin-settings-field-input';
+            input.placeholder = 'Image path';
+            input.value = initialValue;
+            input.dataset.settingKey = options.key;
+            input.addEventListener('input', function() {
+                updateField('settings.' + options.key, input.value);
+            });
+            field.appendChild(input);
+        }
+        
+        // Register field for tracking
+        registerField('settings.' + options.key, initialValue);
+        
+        return field;
+    }
+    
+    function createCurrencyField(options) {
+        var field = document.createElement('div');
+        field.className = 'admin-settings-field';
+        
+        var label = document.createElement('label');
+        label.className = 'admin-settings-field-label';
+        label.textContent = options.label;
+        field.appendChild(label);
+        
+        var initialValue = settingsData[options.key] || 'USD';
+        
+        // Currency dropdown
+        var menuWrap = document.createElement('div');
+        menuWrap.className = 'admin-settings-currency-menu';
+        
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'admin-settings-currency-button';
+        button.dataset.settingKey = options.key;
+        
+        var flag = document.createElement('img');
+        flag.className = 'admin-settings-currency-flag';
+        flag.src = getCurrencyFlag(initialValue);
+        flag.alt = '';
+        
+        var text = document.createElement('span');
+        text.className = 'admin-settings-currency-text';
+        text.textContent = initialValue;
+        
+        var arrow = document.createElement('span');
+        arrow.className = 'admin-settings-currency-arrow';
+        arrow.textContent = '▼';
+        
+        button.appendChild(flag);
+        button.appendChild(text);
+        button.appendChild(arrow);
+        menuWrap.appendChild(button);
+        
+        var dropdown = document.createElement('div');
+        dropdown.className = 'admin-settings-currency-dropdown';
+        dropdown.style.display = 'none';
+        menuWrap.appendChild(dropdown);
+        
+        // Toggle dropdown
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = dropdown.style.display !== 'none';
+            if (!isOpen) {
+                populateCurrencyDropdown(dropdown, function(code) {
+                    flag.src = getCurrencyFlag(code);
+                    text.textContent = code;
+                    dropdown.style.display = 'none';
+                    updateField('settings.' + options.key, code);
+                });
+            }
+            dropdown.style.display = isOpen ? 'none' : 'block';
+        });
+        
+        // Close on outside click
+        document.addEventListener('click', function() {
+            dropdown.style.display = 'none';
+        });
+        
+        field.appendChild(menuWrap);
+        
+        // Register field for tracking
+        registerField('settings.' + options.key, initialValue);
+        
+        return field;
+    }
+    
+    function getCurrencyFlag(code) {
+        var currencyFlags = {
+            'USD': 'us', 'EUR': 'eu', 'GBP': 'gb', 'AUD': 'au', 'CAD': 'ca',
+            'JPY': 'jp', 'CNY': 'cn', 'INR': 'in', 'NZD': 'nz', 'CHF': 'ch',
+            'HKD': 'hk', 'SGD': 'sg', 'SEK': 'se', 'NOK': 'no', 'DKK': 'dk',
+            'ZAR': 'za', 'MXN': 'mx', 'BRL': 'br', 'KRW': 'kr', 'RUB': 'ru'
+        };
+        var flagCode = currencyFlags[code] || 'xx';
+        return 'assets/flags/' + flagCode + '.svg';
+    }
+    
+    function populateCurrencyDropdown(dropdown, onSelect) {
+        var currencies = [
+            { code: 'USD', name: 'US Dollar' },
+            { code: 'EUR', name: 'Euro' },
+            { code: 'GBP', name: 'British Pound' },
+            { code: 'AUD', name: 'Australian Dollar' },
+            { code: 'CAD', name: 'Canadian Dollar' },
+            { code: 'JPY', name: 'Japanese Yen' },
+            { code: 'CNY', name: 'Chinese Yuan' },
+            { code: 'INR', name: 'Indian Rupee' },
+            { code: 'NZD', name: 'New Zealand Dollar' },
+            { code: 'CHF', name: 'Swiss Franc' },
+            { code: 'HKD', name: 'Hong Kong Dollar' },
+            { code: 'SGD', name: 'Singapore Dollar' },
+            { code: 'SEK', name: 'Swedish Krona' },
+            { code: 'NOK', name: 'Norwegian Krone' },
+            { code: 'DKK', name: 'Danish Krone' },
+            { code: 'ZAR', name: 'South African Rand' },
+            { code: 'MXN', name: 'Mexican Peso' },
+            { code: 'BRL', name: 'Brazilian Real' },
+            { code: 'KRW', name: 'South Korean Won' },
+            { code: 'RUB', name: 'Russian Ruble' }
+        ];
+        
+        dropdown.innerHTML = '';
+        currencies.forEach(function(curr) {
+            var option = document.createElement('button');
+            option.type = 'button';
+            option.className = 'admin-settings-currency-option';
+            
+            var optFlag = document.createElement('img');
+            optFlag.className = 'admin-settings-currency-option-flag';
+            optFlag.src = getCurrencyFlag(curr.code);
+            optFlag.alt = '';
+            
+            var optText = document.createElement('span');
+            optText.className = 'admin-settings-currency-option-text';
+            optText.textContent = curr.code + ' - ' + curr.name;
+            
+            option.appendChild(optFlag);
+            option.appendChild(optText);
+            
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                onSelect(curr.code);
+            });
+            
+            dropdown.appendChild(option);
+        });
+    }
+    
+    // Get modified settings for saving
+    function getModifiedSettings() {
+        var modified = {};
+        
+        for (var key in fieldRegistry) {
+            if (key.indexOf('settings.') === 0) {
+                var entry = fieldRegistry[key];
+                if (entry.type === 'simple') {
+                    var currentStr = String(entry.current);
+                    var originalStr = String(entry.original);
+                    if (currentStr !== originalStr) {
+                        var settingKey = key.replace('settings.', '');
+                        modified[settingKey] = entry.current;
+                    }
+                }
+            }
+        }
+        
+        return modified;
+    }
+    
+    // Reset settings to original values (called on discard)
+    function resetSettingsToOriginal() {
+        if (!settingsContainer) return;
+        
+        // Reset text inputs
+        settingsContainer.querySelectorAll('.admin-settings-field-input[data-setting-key]').forEach(function(input) {
+            var key = input.dataset.settingKey;
+            var entry = fieldRegistry['settings.' + key];
+            if (entry && entry.type === 'simple') {
+                input.value = entry.original || '';
+            }
+        });
+        
+        // Reset toggles
+        settingsContainer.querySelectorAll('.admin-settings-toggle-input[data-setting-key]').forEach(function(checkbox) {
+            var key = checkbox.dataset.settingKey;
+            var entry = fieldRegistry['settings.' + key];
+            if (entry && entry.type === 'simple') {
+                checkbox.checked = entry.original === true || entry.original === 'true';
+            }
+        });
+        
+        // Reset currency
+        settingsContainer.querySelectorAll('.admin-settings-currency-button[data-setting-key]').forEach(function(button) {
+            var key = button.dataset.settingKey;
+            var entry = fieldRegistry['settings.' + key];
+            if (entry && entry.type === 'simple') {
+                var code = entry.original || 'USD';
+                var flag = button.querySelector('.admin-settings-currency-flag');
+                var text = button.querySelector('.admin-settings-currency-text');
+                if (flag) flag.src = getCurrencyFlag(code);
+                if (text) text.textContent = code;
+            }
+        });
+        
+        // Reset image pickers
+        settingsContainer.querySelectorAll('.systemimagepicker-container[data-setting-key]').forEach(function(picker) {
+            var key = picker.dataset.settingKey;
+            var entry = fieldRegistry['settings.' + key];
+            if (entry && entry.type === 'simple') {
+                var preview = picker.querySelector('.systemimagepicker-button-preview');
+                var placeholder = picker.querySelector('.systemimagepicker-button-placeholder');
+                if (entry.original) {
+                    if (preview) {
+                        preview.src = entry.original;
+                        preview.style.display = '';
+                    }
+                    if (placeholder) placeholder.style.display = 'none';
+                } else {
+                    if (preview) preview.style.display = 'none';
+                    if (placeholder) placeholder.style.display = '';
+                }
+            }
+        });
+    }
+
+    /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
     
@@ -1521,6 +2041,9 @@ const AdminModule = (function() {
         isDirty: function() { return isDirty; },
         hasChanges: hasActualChanges,
         isAutoSaveEnabled: isAutoSaveEnabled,
+        
+        // Settings tab
+        getModifiedSettings: getModifiedSettings,
         
         // Messages tab
         getModifiedMessages: getModifiedMessages,

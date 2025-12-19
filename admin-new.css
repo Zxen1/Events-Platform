@@ -1757,6 +1757,215 @@
 }
 
 /* ============================================================================
+   SETTINGS TAB
+   ============================================================================ */
+
+.admin-settings-section {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.admin-settings-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.admin-settings-section-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 16px 0;
+  padding: 0;
+}
+
+.admin-settings-field {
+  margin-bottom: 16px;
+}
+
+.admin-settings-field:last-child {
+  margin-bottom: 0;
+}
+
+.admin-settings-field-label {
+  display: block;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 6px;
+}
+
+.admin-settings-field-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  caret-color: #fff;
+}
+
+.admin-settings-field-input:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.admin-settings-field-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.admin-settings-field-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Toggle Fields */
+.admin-settings-field--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-settings-field--toggle .admin-settings-field-label {
+  margin-bottom: 0;
+}
+
+.admin-settings-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.admin-settings-toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.admin-settings-toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.admin-settings-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.admin-settings-toggle-input:checked + .admin-settings-toggle-slider {
+  background: #3b82f5;
+}
+
+.admin-settings-toggle-input:checked + .admin-settings-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Currency Dropdown */
+.admin-settings-currency-menu {
+  position: relative;
+}
+
+.admin-settings-currency-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-settings-currency-button:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.admin-settings-currency-flag {
+  width: 20px;
+  height: 14px;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.admin-settings-currency-text {
+  flex: 1;
+}
+
+.admin-settings-currency-arrow {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.admin-settings-currency-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  z-index: var(--layer-menu, 85);
+  margin-top: 4px;
+}
+
+.admin-settings-currency-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.admin-settings-currency-option:hover {
+  background: rgba(59, 130, 245, 0.2);
+}
+
+.admin-settings-currency-option-flag {
+  width: 20px;
+  height: 14px;
+  object-fit: contain;
+  border-radius: 2px;
+}
+
+.admin-settings-currency-option-text {
+  flex: 1;
+}
+
+/* Image Picker Fields */
+.admin-settings-field--imagepicker {
+  /* Container styling if needed */
+}
+
+/* ============================================================================
    MESSAGES ACCORDION (Category containers in Messages tab)
    Uses same styling as formbuilder-accordion
    ============================================================================ */
