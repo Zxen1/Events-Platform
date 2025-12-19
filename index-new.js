@@ -344,3 +344,6 @@ const App = (function() {
   };
 
 })();
+
+// Expose App globally so modules can check window.App
+window.App = App;
