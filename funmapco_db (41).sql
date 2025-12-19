@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 18, 2025 at 10:54 PM
+-- Generation Time: Dec 20, 2025 at 05:14 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -236,7 +236,8 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (41, 'big_logo', 'assets/system-images/funmap welcome message 2025-12-10f.webp', 'string', 'Path to big logo', '2025-12-09 16:18:19', '2025-12-10 00:00:53'),
 (42, 'small_logo', 'assets/system-images/earth toy.png', 'string', 'Path to small logo', '2025-12-09 16:25:58', '2025-12-10 00:09:29'),
 (43, 'favicon', 'assets/system-images/favicon.ico', 'string', 'Path to favicon', '2025-12-10 00:10:23', '2025-12-10 00:52:30'),
-(6351, 'wait_for_map_tiles', 'false', 'boolean', NULL, '2025-12-10 05:16:15', '2025-12-12 16:43:54');
+(44, 'wait_for_map_tiles', 'false', 'boolean', NULL, '2025-12-10 05:16:15', '2025-12-19 18:14:14'),
+(45, 'admin_autosave', 'false', 'boolean', 'Remember autosave toggle state in admin panel', '2025-12-19 18:12:20', '2025-12-19 18:14:14');
 
 -- --------------------------------------------------------
 
@@ -283,13 +284,13 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `created_at`, `updated_at`) VALUES
-(1, 'What\'s On', 'whats-on', 1, 0, 'assets/category-icons/whats-on.svg', '#E74C3C', '2025-10-29 23:32:47', '2025-12-16 00:12:37'),
+(1, 'What\'s On', 'what-s-on', 1, 0, 'assets/category-icons/whats-on.svg', '#E74C3C', '2025-10-29 23:32:47', '2025-12-19 15:20:30'),
 (2, 'Opportunities', 'opportunities', 4, 0, 'assets/category-icons/opportunities.svg', '#F1C40F', '2025-10-29 23:32:47', '2025-12-16 00:12:37'),
 (3, 'Learning', 'learning', 3, 0, 'assets/category-icons/learning.svg', '#3498DB', '2025-10-29 23:32:47', '2025-12-16 00:12:37'),
 (4, 'Buy and Sell', 'buy-and-sell', 5, 0, 'assets/category-icons/buy-and-sell.svg', '#2ECC71', '2025-10-29 23:32:47', '2025-12-16 00:12:37'),
 (5, 'For Hire', 'for-hire', 2, 0, 'assets/category-icons/for-hire.svg', '#9B59B6', '2025-10-29 23:32:47', '2025-12-16 00:12:37'),
-(6, 'Eat & Drink', 'eat-and-drink', 6, 0, 'assets/category-icons/eat-and-drink.svg', '#E67E22', '2025-12-15 00:11:53', '2025-12-16 00:12:37'),
-(47, 'Test', 'test', 7, 0, 'assets/category-icons/opportunities.svg', NULL, '2025-11-17 04:45:27', '2025-12-16 00:12:37'),
+(6, 'Eat & Drink', 'eat-drink', 6, 0, 'assets/category-icons/eat-and-drink.svg', '#E67E22', '2025-12-15 00:11:53', '2025-12-19 12:14:52'),
+(47, 'Test', 'test', 7, 0, 'assets/category-icons/opportunities.svg', NULL, '2025-11-17 04:45:27', '2025-12-19 12:19:13'),
 (7, 'Stay', 'stay', 8, 0, 'assets/category-icons/stay.svg', '#1ABC9C', '2025-12-15 00:11:53', '2025-12-16 00:12:37'),
 (8, 'Get Around', 'get-around', 9, 0, 'assets/category-icons/get-around.svg', '#34495E', '2025-12-15 00:11:53', '2025-12-16 00:12:37');
 
@@ -1237,7 +1238,7 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `fieldset_ids`, `fieldset_name`, `required`, `location_repeat`, `must_repeat`, `autofill_repeat`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `subcategory_type_logic`, `created_at`, `updated_at`) VALUES
-(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15,3', 'Title, Description, Images, Event Details, Text Box (editable)', '1,1,1,1,1', NULL, NULL, NULL, NULL, '1', 0, 'assets/category-icons/whats-on-blue.svg', '#E74C3C', 'Events', 'Sessions Menu shows dates/times. Date-driven pricing based on final session date. Listing expires after final session ends (searchable via expired filter for 12 months). Venue menu + Sessions menu.', '2025-10-29 12:32:47', '2025-12-15 13:12:37'),
+(1, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,12,15,3', 'Title, Description, Images, Event Details, Text Box (editable)', '1,1,1,1,1', NULL, NULL, NULL, NULL, '1', 0, 'assets/category-icons/whats-on-blue.svg', '#E74C3C', 'Events', 'Sessions Menu shows dates/times. Date-driven pricing based on final session date. Listing expires after final session ends (searchable via expired filter for 12 months). Venue menu + Sessions menu.', '2025-10-29 12:32:47', '2025-12-19 18:06:06'),
 (2, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,12,15', 'Title, Description, Images, Event Details', '1,1,1,1', NULL, NULL, NULL, NULL, '3', 0, 'assets/category-icons/whats-on-yellow.svg', '#E74C3C', 'Events', NULL, '2025-10-29 12:32:47', '2025-12-15 13:12:37'),
 (3, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,12,15', 'Title, Description, Images, Event Details', '1,1,1,1', NULL, NULL, NULL, NULL, '2', 0, 'assets/category-icons/whats-on-green.svg', '#E74C3C', 'Events', NULL, '2025-10-29 12:32:47', '2025-12-15 13:12:37'),
 (4, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,12,15', 'Title, Description, Images, Event Details', '1,1,1,1', NULL, NULL, NULL, NULL, '4', 0, 'assets/category-icons/whats-on-purple.svg', '#E74C3C', 'Events', NULL, '2025-10-29 12:32:47', '2025-12-15 13:12:37'),
@@ -1307,15 +1308,16 @@ CREATE TABLE `subcategory_edits` (
 --
 
 INSERT INTO `subcategory_edits` (`id`, `subcategory_key`, `fieldset_key`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
-(1042, 'live-gigs', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1043, 'test-subcategory', 'text-box', 'Textify!', NULL, NULL, NULL, '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1044, 'test-subcategory', 'text-area', 'Write an Essay', NULL, NULL, NULL, '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1045, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', NULL, NULL, '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1046, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', NULL, NULL, '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1047, 'test-2-subcategory', 'text-area', 'hlhlhText Area Name 2', NULL, 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1048, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Field Placeholder 2', 'Field Placeholder 2', '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1049, 'test-2-subcategory', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-12-15 14:11:03', '2025-12-15 14:11:03'),
-(1050, 'test-2-subcategory', 'radio', 'Radicvcvvo Toggle (editable)', '[\"Four\",\"Five\",\"Six\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-12-15 14:11:03', '2025-12-15 14:11:03');
+(1150, 'live-gigss', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', NULL, '2025-12-19 18:05:32', '2025-12-19 18:05:32'),
+(1159, 'live-gigs', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1160, 'test-subcategory', 'text-box', 'Textify!', NULL, 'eg. Diamonds and Pearls', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1161, 'test-subcategory', 'text-area', 'Write an Essay', NULL, 'eg. Sing along!', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1162, 'test-subcategory', 'dropdown', 'Droppable', '[\"I Cant\",\"Do That\",\"Dave\"]', 'One,Two,Three', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1163, 'test-subcategory', 'radio', 'Radiothon', '[\"Wake Me Up\",\"Before You\",\"Go Go\"]', 'Four,Five,Six', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1164, 'test-2-subcategory', 'text-area', 'hlhlhText Area Name 2', NULL, 'eg. Sing along!', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1165, 'test-2-subcategory', 'dropdown', 'Dropdown Name 2', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1166, 'test-2-subcategory', 'text-box', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06'),
+(1167, 'test-2-subcategory', 'radio', 'Radicvcvvo Toggle (editable)', '[\"Four\",\"Five\",\"Six\"]', 'Four,Five,Six', NULL, '2025-12-19 18:06:06', '2025-12-19 18:06:06');
 
 -- --------------------------------------------------------
 
@@ -1575,7 +1577,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6505;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1701,7 +1703,7 @@ ALTER TABLE `subcategories`
 -- AUTO_INCREMENT for table `subcategory_edits`
 --
 ALTER TABLE `subcategory_edits`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1051;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1168;
 
 --
 -- AUTO_INCREMENT for table `transactions`

@@ -199,6 +199,59 @@ const AdminModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
+       AUTOSAVE SETTING (persisted to database)
+       -------------------------------------------------------------------------- */
+    
+    function loadAutosaveSetting() {
+        fetch('/gateway.php?action=get-admin-settings')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data && data.settings && data.settings.admin_autosave !== undefined) {
+                    // Boolean is already converted by PHP, but handle string just in case
+                    var isEnabled = data.settings.admin_autosave === true || data.settings.admin_autosave === 'true';
+                    if (autosaveCheckbox) {
+                        autosaveCheckbox.checked = isEnabled;
+                        updateAutosaveLabel();
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.error('[Admin] Failed to load autosave setting:', err);
+            });
+    }
+    
+    function saveAutosaveSetting(enabled) {
+        var payload = {
+            admin_autosave: enabled ? 'true' : 'false'
+        };
+        
+        fetch('/gateway.php?action=save-admin-settings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+            if (data.success) {
+                console.log('[Admin] Autosave setting saved:', enabled);
+            }
+        })
+        .catch(function(err) {
+            console.error('[Admin] Failed to save autosave setting:', err);
+        });
+    }
+    
+    function updateAutosaveLabel() {
+        if (!autosaveCheckbox) return;
+        var label = autosaveCheckbox.parentElement.querySelector('.admin-autosave-toggle-label');
+        if (label) {
+            label.classList.toggle('admin-autosave-toggle-label--checked', autosaveCheckbox.checked);
+        }
+    }
+
+    /* --------------------------------------------------------------------------
        INITIALIZATION
        -------------------------------------------------------------------------- */
     
@@ -211,6 +264,7 @@ const AdminModule = (function() {
         
         bindEvents();
         initHeaderDrag();
+        loadAutosaveSetting();
         
         console.log('[Admin] Admin module initialized');
     }
@@ -298,9 +352,14 @@ const AdminModule = (function() {
             });
         }
         
-        // Autosave checkbox - trigger save when enabled with pending changes
+        // Autosave checkbox - save setting immediately and trigger autosave if enabled with pending changes
         if (autosaveCheckbox) {
             autosaveCheckbox.addEventListener('change', function() {
+                // Save the setting to database immediately
+                saveAutosaveSetting(autosaveCheckbox.checked);
+                updateAutosaveLabel();
+                
+                // If enabled and there are pending changes, schedule autosave
                 if (autosaveCheckbox.checked && isDirty) {
                     scheduleAutoSave();
                 }
