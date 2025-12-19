@@ -193,11 +193,11 @@ const FieldsetComponent = (function(){
         return menu;
     }
     
-    // Build phone prefix menu (100px compact, same style as currency)
+    // Build phone prefix menu (120px compact, same style as currency)
     function buildPhonePrefixMenu(container) {
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="" alt=""><span class="fieldset-menu-button-text">+...</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><span class="fieldset-menu-button-text">+1</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
@@ -206,6 +206,7 @@ const FieldsetComponent = (function(){
         
         var prefixes = picklist['phone-prefix'] || [];
         if (prefixes.length > 0) {
+            // Use first prefix from picklist as default
             btnImg.src = 'assets/flags/' + prefixes[0].value.substring(0,2) + '.svg';
             btnText.textContent = prefixes[0].value.substring(3);
         }

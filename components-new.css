@@ -237,7 +237,7 @@
     border-radius: 0 0 4px 4px;
     max-height: 250px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }
@@ -344,7 +344,7 @@
 }
 
 .fieldset-row > .fieldset-currency-wrapper {
-    flex: 0 0 100px;
+    flex: 0 0 120px;
 }
 
 .fieldset-row > .fieldset-input-small {
@@ -531,7 +531,7 @@
     border-radius: 0 0 4px 4px;
     font-family: sans-serif;
     font-size: 13px;
-    z-index: 10000;
+    z-index: var(--layer-modal, 90);
 }
 
 .pac-item {
@@ -718,7 +718,7 @@
     width: 250px;
     max-width: calc(100vw - 40px);
     white-space: normal;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     line-height: 1.4;
 }
 
@@ -848,16 +848,16 @@
     z-index: 10;
 }
 
-/* Compact Currency (for Item/Ticket Pricing) */
+/* Compact Currency/Phone Prefix (for Item/Ticket Pricing and Phone fields) */
 .fieldset-currency-compact {
-    width: 100px;
+    width: 120px;
     height: 36px;
     position: relative;
     flex-shrink: 0;
 }
 
 .fieldset-currency-compact .fieldset-menu-button {
-    width: 100px;
+    width: 120px;
 }
 
 .fieldset-currency-compact .fieldset-menu-button-text {
@@ -871,10 +871,11 @@
     right: auto;
     border-top: 1px solid #3b82f5;
     border-radius: 4px;
+    z-index: var(--layer-menu, 85);
 }
 
 .fieldset-row > .fieldset-currency-compact {
-    flex: 0 0 100px;
+    flex: 0 0 120px;
 }
 
 
@@ -1139,7 +1140,7 @@
     border-radius: 4px;
     max-height: 250px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }
@@ -1247,7 +1248,7 @@
     border-radius: 0 0 8px 8px;
     max-height: 250px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }
@@ -1393,7 +1394,7 @@
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 8px;
     margin-top: 4px;
-    z-index: 100;
+    z-index: var(--layer-menu, 85);
 }
 
 .phoneprefix-options[hidden] {
@@ -1509,7 +1510,7 @@
     background: #222;
     border: 1px solid #3b82f5;
     border-radius: 8px;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     overflow: hidden;
 }
 
@@ -1631,7 +1632,7 @@
     background: #222;
     border: 1px solid #3b82f5;
     border-radius: 8px;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     overflow: hidden;
 }
 
@@ -1930,7 +1931,7 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.4);
     max-height: 300px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     font-family: Roboto, Arial, sans-serif;
 }
 
@@ -2061,7 +2062,7 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     max-height: 300px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     font-family: Roboto, Arial, sans-serif;
 }
 
@@ -2193,7 +2194,7 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     max-height: 300px;
     overflow-y: auto;
-    z-index: 1000;
+    z-index: var(--layer-menu, 85);
     font-family: Roboto, Arial, sans-serif;
 }
 
