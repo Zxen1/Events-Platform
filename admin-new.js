@@ -142,6 +142,15 @@ const AdminModule = (function() {
             });
         }
         
+        // Autosave checkbox - trigger save when enabled with pending changes
+        if (autosaveCheckbox) {
+            autosaveCheckbox.addEventListener('change', function() {
+                if (autosaveCheckbox.checked && isDirty) {
+                    scheduleAutoSave();
+                }
+            });
+        }
+
         // Tab switching
         if (tabButtons) {
             tabButtons.forEach(function(btn) {
