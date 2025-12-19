@@ -618,14 +618,25 @@
         header.appendChild(headerDrag);
         header.appendChild(headerEditArea);
         
-        // Category drag and drop
-        accordion.draggable = true;
+        // Category drag and drop - only via drag handle
+        accordion.draggable = false;
+        headerDrag.addEventListener('mousedown', function() {
+            accordion.draggable = true;
+        });
+        document.addEventListener('mouseup', function() {
+            accordion.draggable = false;
+        });
         accordion.addEventListener('dragstart', function(e) {
+            if (!accordion.draggable) {
+                e.preventDefault();
+                return;
+            }
             e.dataTransfer.effectAllowed = 'move';
             accordion.classList.add('dragging');
         });
         accordion.addEventListener('dragend', function() {
             accordion.classList.remove('dragging');
+            accordion.draggable = false;
             notifyChange(); // Notify on reorder
         });
         accordion.addEventListener('dragover', function(e) {
@@ -795,15 +806,27 @@
         optHeader.appendChild(optDrag);
         optHeader.appendChild(optEditArea);
         
-        // Subcategory drag and drop
-        option.draggable = true;
+        // Subcategory drag and drop - only via drag handle
+        option.draggable = false;
+        optDrag.addEventListener('mousedown', function(e) {
+            e.stopPropagation();
+            option.draggable = true;
+        });
+        document.addEventListener('mouseup', function() {
+            option.draggable = false;
+        });
         option.addEventListener('dragstart', function(e) {
+            if (!option.draggable) {
+                e.preventDefault();
+                return;
+            }
             e.stopPropagation();
             e.dataTransfer.effectAllowed = 'move';
             option.classList.add('dragging');
         });
         option.addEventListener('dragend', function() {
             option.classList.remove('dragging');
+            option.draggable = false;
             notifyChange(); // Notify on reorder
         });
         option.addEventListener('dragover', function(e) {
@@ -1421,14 +1444,27 @@
                 }
             });
             
-            fieldWrapper.draggable = true;
+            // Field drag and drop - only via drag handle
+            fieldWrapper.draggable = false;
+            fieldDrag.addEventListener('mousedown', function(ev) {
+                ev.stopPropagation();
+                fieldWrapper.draggable = true;
+            });
+            document.addEventListener('mouseup', function() {
+                fieldWrapper.draggable = false;
+            });
             fieldWrapper.addEventListener('dragstart', function(ev) {
+                if (!fieldWrapper.draggable) {
+                    ev.preventDefault();
+                    return;
+                }
                 ev.stopPropagation();
                 ev.dataTransfer.effectAllowed = 'move';
                 fieldWrapper.classList.add('dragging');
             });
             fieldWrapper.addEventListener('dragend', function() {
                 fieldWrapper.classList.remove('dragging');
+                fieldWrapper.draggable = false;
             });
             fieldWrapper.addEventListener('dragover', function(ev) {
                 ev.preventDefault();
