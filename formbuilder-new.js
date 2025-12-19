@@ -47,9 +47,15 @@
     var loadedFieldsets = [];
     var loadedCurrencies = [];
     
-    var editPenSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5L13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175l-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>';
-    var moreDotsSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>';
-    var dragHandleSvg = '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L4 6h8L8 2zM8 14l4-4H4l4 4z"/></svg>';
+    // Use central icon registry from AdminModule
+    function getIcon(name) {
+        if (window.AdminModule && AdminModule.icons && AdminModule.icons[name]) {
+            return AdminModule.icons[name];
+        }
+        // Fallback if AdminModule not loaded yet (shouldn't happen)
+        console.warn('[Formbuilder] AdminModule.icons not available for:', name);
+        return '';
+    }
     
     /* --------------------------------------------------------------------------
        CHANGE NOTIFICATION
@@ -652,12 +658,12 @@
         headerEditArea.className = 'formbuilder-accordion-header-editarea';
         var headerEdit = document.createElement('div');
         headerEdit.className = 'formbuilder-accordion-header-edit';
-        headerEdit.innerHTML = editPenSvg;
+        headerEdit.innerHTML = getIcon('editPen');
         headerEditArea.appendChild(headerEdit);
         
         var headerDrag = document.createElement('div');
         headerDrag.className = 'formbuilder-accordion-header-drag';
-        headerDrag.innerHTML = dragHandleSvg;
+        headerDrag.innerHTML = getIcon('dragHandle');
         
         header.appendChild(headerImg);
         header.appendChild(headerText);
@@ -728,7 +734,7 @@
         
         var moreBtn = document.createElement('div');
         moreBtn.className = 'formbuilder-accordion-editpanel-more';
-        moreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch' + (cat.hidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
+        moreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch' + (cat.hidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
         
         moreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -850,12 +856,12 @@
         optEditArea.className = 'formbuilder-accordion-option-editarea';
         var optEdit = document.createElement('div');
         optEdit.className = 'formbuilder-accordion-option-edit';
-        optEdit.innerHTML = editPenSvg;
+        optEdit.innerHTML = getIcon('editPen');
         optEditArea.appendChild(optEdit);
         
         var optDrag = document.createElement('div');
         optDrag.className = 'formbuilder-accordion-option-drag';
-        optDrag.innerHTML = dragHandleSvg;
+        optDrag.innerHTML = getIcon('dragHandle');
         
         optHeader.appendChild(optImg);
         optHeader.appendChild(optText);
@@ -929,7 +935,7 @@
         
         var subMoreBtn = document.createElement('div');
         subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
-        subMoreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
+        subMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
         
         subMoreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1253,11 +1259,11 @@
             
             var fieldDrag = document.createElement('div');
             fieldDrag.className = 'formbuilder-field-drag';
-            fieldDrag.innerHTML = dragHandleSvg;
+            fieldDrag.innerHTML = getIcon('dragHandle');
             
             var fieldEdit = document.createElement('div');
             fieldEdit.className = 'formbuilder-field-edit';
-            fieldEdit.innerHTML = editPenSvg;
+            fieldEdit.innerHTML = getIcon('editPen');
             
             fieldText.appendChild(fieldNameSpan);
             fieldText.appendChild(fieldRequired);
@@ -1296,7 +1302,7 @@
             
             var fieldMoreBtn = document.createElement('div');
             fieldMoreBtn.className = 'formbuilder-field-more';
-            fieldMoreBtn.innerHTML = moreDotsSvg + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
+            fieldMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
             
             fieldMoreBtn.addEventListener('click', function(ev) {
                 ev.stopPropagation();
@@ -1431,7 +1437,7 @@
                         
                         var addBtn = document.createElement('div');
                         addBtn.className = 'formbuilder-field-option-add';
-                        addBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+                        addBtn.innerHTML = getIcon('plus');
                         addBtn.onclick = function() {
                             var newRow = createOptionRow('');
                             row.parentNode.insertBefore(newRow, row.nextSibling);
@@ -1439,7 +1445,7 @@
                         
                         var removeBtn = document.createElement('div');
                         removeBtn.className = 'formbuilder-field-option-remove';
-                        removeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+                        removeBtn.innerHTML = getIcon('minus');
                         removeBtn.onclick = function() {
                             if (optionsContainer.querySelectorAll('.formbuilder-field-option-row').length > 1) {
                                 row.remove();

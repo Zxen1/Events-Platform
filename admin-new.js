@@ -39,6 +39,26 @@ const AdminModule = (function() {
     var tabPanels = null;
 
     /* --------------------------------------------------------------------------
+       SVG ICONS REGISTRY
+       
+       DEVELOPER NOTE:
+       Admin-specific icons are kept here as a central registry. This prevents
+       duplication across modules and ensures consistency.
+       
+       - Modules access icons via AdminModule.icons.editPen, AdminModule.icons.dragHandle, etc.
+       - Site-wide icons (save, close, etc.) are in assets/system-images/
+       - Add new admin UI icons here, not in individual module files
+       -------------------------------------------------------------------------- */
+    
+    var icons = {
+        editPen: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5L13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175l-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>',
+        dragHandle: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L4 6h8L8 2zM8 14l4-4H4l4 4z"/></svg>',
+        moreDots: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>',
+        plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+        minus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+    };
+
+    /* --------------------------------------------------------------------------
        FIELD-LEVEL TRACKING REGISTRY
        
        PURPOSE:
@@ -585,6 +605,46 @@ const AdminModule = (function() {
             );
         }
         
+        // Save modified category names (uses save-admin-settings endpoint)
+        var modifiedCategoryNames = getModifiedCategoryNames();
+        if (Object.keys(modifiedCategoryNames).length > 0) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(modifiedCategoryNames)
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to save category names');
+                    }
+                    console.log('[Admin] Category names saved');
+                    updateCompositeBaseline('messages');
+                })
+            );
+        }
+        
+        // Save category order if changed (uses save-admin-settings endpoint)
+        var newCategoryOrder = getCategoryOrderIfChanged();
+        if (newCategoryOrder) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ msg_category_order: JSON.stringify(newCategoryOrder) })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to save category order');
+                    }
+                    console.log('[Admin] Category order saved');
+                    updateCompositeBaseline('messages');
+                })
+            );
+        }
+        
         // Run all saves
         Promise.all(savePromises)
             .then(function() {
@@ -713,10 +773,22 @@ const AdminModule = (function() {
     
     // Capture current state of all messages from DOM (like Formbuilder's captureFormbuilderState)
     function captureMessagesState() {
-        var state = { messages: {}, tooltips: {} };
-        
+        var state = { messages: {}, tooltips: {}, categoryNames: {}, categoryOrder: [] };
+
         if (!messagesContainer) return state;
-        
+
+        // Capture category order and names (in DOM order, reflects drag changes)
+        messagesContainer.querySelectorAll('.admin-messages-accordion').forEach(function(accordion) {
+            var key = accordion.dataset.messageCategory;
+            if (key) {
+                state.categoryOrder.push(key);
+                var nameInput = accordion.querySelector('.admin-messages-accordion-editpanel-input[data-category-key]');
+                if (nameInput) {
+                    state.categoryNames[key] = nameInput.value;
+                }
+            }
+        });
+
         // Capture message textareas
         messagesContainer.querySelectorAll('.admin-message-text-input[data-message-id]').forEach(function(textarea) {
             var id = textarea.dataset.messageId;
@@ -724,7 +796,7 @@ const AdminModule = (function() {
                 state.messages[id] = textarea.value;
             }
         });
-        
+
         // Capture tooltip textareas
         messagesContainer.querySelectorAll('.admin-message-text-input[data-fieldset-id]').forEach(function(textarea) {
             var id = textarea.dataset.fieldsetId;
@@ -732,7 +804,7 @@ const AdminModule = (function() {
                 state.tooltips[id] = textarea.value;
             }
         });
-        
+
         return state;
     }
     
@@ -789,6 +861,7 @@ const AdminModule = (function() {
             });
     }
     
+    
     function renderMessagesAccordions(container) {
         container.innerHTML = '';
         
@@ -797,7 +870,7 @@ const AdminModule = (function() {
             accordion.className = 'admin-messages-accordion';
             accordion.dataset.messageCategory = cat.key;
             
-            // Header
+            // Header (same structure as formbuilder)
             var header = document.createElement('div');
             header.className = 'admin-messages-accordion-header';
             
@@ -808,7 +881,7 @@ const AdminModule = (function() {
                 headerImg.src = cat.icon;
                 headerImg.alt = '';
             } else {
-                headerImg.className += ' admin-messages-accordion-header-image--empty';
+                headerImg.src = 'assets/icons-30/default.png';
             }
             
             // Header text
@@ -822,138 +895,144 @@ const AdminModule = (function() {
             headerArrow.textContent = '▼';
             
             // Drag handle
-            var dragHandle = document.createElement('div');
-            dragHandle.className = 'admin-messages-accordion-header-drag';
-            dragHandle.innerHTML = '<svg class="admin-messages-accordion-header-drag-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 4h12v1H2V4zm0 3.5h12v1H2v-1zm0 3.5h12v1H2v-1z"/></svg>';
-            dragHandle.setAttribute('aria-label', 'Reorder ' + cat.name);
+            var headerDrag = document.createElement('div');
+            headerDrag.className = 'admin-messages-accordion-header-drag';
+            headerDrag.innerHTML = icons.dragHandle;
             
-            // Edit button
-            var editBtn = document.createElement('button');
-            editBtn.type = 'button';
-            editBtn.className = 'admin-messages-accordion-header-edit';
-            editBtn.innerHTML = '<svg class="admin-messages-accordion-header-edit-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M12.854 1.146a.5.5 0 0 1 .707 0l1.293 1.293a.5.5 0 0 1 0 .707l-8.939 8.939a.5.5 0 0 1-.233.131l-3.5.875a.5.5 0 0 1-.606-.606l.875-3.5a.5.5 0 0 1 .131-.233l8.939-8.939z"/></svg>';
-            editBtn.setAttribute('aria-label', 'Edit ' + cat.name);
+            // Edit area (wrapper around pencil icon, like formbuilder)
+            var headerEditArea = document.createElement('div');
+            headerEditArea.className = 'admin-messages-accordion-header-editarea';
+            var headerEdit = document.createElement('div');
+            headerEdit.className = 'admin-messages-accordion-header-edit';
+            headerEdit.innerHTML = icons.editPen;
+            headerEditArea.appendChild(headerEdit);
             
             header.appendChild(headerImg);
             header.appendChild(headerText);
             header.appendChild(headerArrow);
-            header.appendChild(dragHandle);
-            header.appendChild(editBtn);
+            header.appendChild(headerDrag);
+            header.appendChild(headerEditArea);
+            
+            // Edit panel (sibling to header, like formbuilder)
+            var editPanel = document.createElement('div');
+            editPanel.className = 'admin-messages-accordion-editpanel';
+            
+            // Name input row
+            var nameRow = document.createElement('div');
+            nameRow.className = 'admin-messages-accordion-editpanel-row';
+            
+            var nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'admin-messages-accordion-editpanel-input';
+            nameInput.value = cat.name;
+            nameInput.dataset.categoryKey = cat.key;
+            nameInput.oninput = function() {
+                headerText.textContent = nameInput.value || cat.name;
+                notifyMessagesChange();
+            };
+            
+            nameRow.appendChild(nameInput);
+            editPanel.appendChild(nameRow);
+            
+            // TODO: Icon picker will go here (like formbuilder)
             
             // Content area (for messages list)
             var content = document.createElement('div');
             content.className = 'admin-messages-accordion-content admin-messages-accordion-content--hidden';
             
-            // Edit panel (hidden by default)
-            var editPanel = createMessageEditPanel(cat, headerText, headerImg);
-            header.appendChild(editPanel);
-            
             accordion.appendChild(header);
+            accordion.appendChild(editPanel);
             accordion.appendChild(content);
             container.appendChild(accordion);
             
-            // Toggle accordion on header click (but not on buttons)
-            header.addEventListener('click', function(e) {
-                if (e.target.closest('button') || e.target.closest('.admin-messages-accordion-header-drag')) return;
-                toggleMessagesAccordion(accordion);
+            // Category drag and drop - only via drag handle (same as formbuilder)
+            accordion.draggable = false;
+            var dragStartIndex = -1;
+            headerDrag.addEventListener('mousedown', function() {
+                accordion.draggable = true;
+            });
+            document.addEventListener('mouseup', function() {
+                accordion.draggable = false;
+            });
+            accordion.addEventListener('dragstart', function(e) {
+                if (!accordion.draggable) {
+                    e.preventDefault();
+                    return;
+                }
+                // Remember starting position
+                var siblings = Array.from(container.querySelectorAll('.admin-messages-accordion'));
+                dragStartIndex = siblings.indexOf(accordion);
+                e.dataTransfer.effectAllowed = 'move';
+                accordion.classList.add('dragging');
+            });
+            accordion.addEventListener('dragend', function() {
+                accordion.classList.remove('dragging');
+                accordion.draggable = false;
+                // Only notify if position actually changed
+                var siblings = Array.from(container.querySelectorAll('.admin-messages-accordion'));
+                var currentIndex = siblings.indexOf(accordion);
+                if (currentIndex !== dragStartIndex) {
+                    notifyMessagesChange();
+                }
+                dragStartIndex = -1;
+            });
+            accordion.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                var dragging = container.querySelector('.admin-messages-accordion.dragging');
+                if (dragging && dragging !== accordion) {
+                    var rect = accordion.getBoundingClientRect();
+                    var midY = rect.top + rect.height / 2;
+                    if (e.clientY < midY) {
+                        accordion.parentNode.insertBefore(dragging, accordion);
+                    } else {
+                        accordion.parentNode.insertBefore(dragging, accordion.nextSibling);
+                    }
+                }
             });
             
-            // Edit button click
-            editBtn.addEventListener('click', function(e) {
+            // Edit area click - toggle editing mode (like formbuilder)
+            headerEditArea.addEventListener('click', function(e) {
                 e.stopPropagation();
-                toggleMessageEditPanel(editPanel, editBtn);
+                var isEditing = accordion.classList.contains('admin-messages-accordion--editing');
+                closeAllMessagesEditPanels();
+                if (!isEditing) {
+                    accordion.classList.add('admin-messages-accordion--editing');
+                }
+            });
+            
+            // Header click (except edit area/drag) - toggle open/close (like formbuilder)
+            header.addEventListener('click', function(e) {
+                if (e.target.closest('.admin-messages-accordion-header-editarea')) return;
+                if (e.target.closest('.admin-messages-accordion-header-drag')) return;
+                if (!accordion.classList.contains('admin-messages-accordion--editing')) {
+                    closeAllMessagesEditPanels();
+                }
+                accordion.classList.toggle('admin-messages-accordion--open');
+                content.classList.toggle('admin-messages-accordion-content--hidden');
             });
         });
+        
+        // Bind document click to close edit panels (like formbuilder)
+        bindMessagesDocumentListeners();
     }
     
-    function createMessageEditPanel(cat, headerTextEl, headerImgEl) {
-        var editPanel = document.createElement('div');
-        editPanel.className = 'admin-messages-accordion-editpanel admin-messages-accordion-editpanel--hidden';
-        
-        // Name input
-        var nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.className = 'admin-messages-accordion-editpanel-input';
-        nameInput.placeholder = 'Category Name';
-        nameInput.value = cat.name;
-        
-        // Save name on blur
-        nameInput.addEventListener('blur', function() {
-            var newName = nameInput.value.trim();
-            if (newName && newName !== cat.name) {
-                cat.name = newName;
-                headerTextEl.textContent = newName;
-                
-                // Save to database
-                var payload = {};
-                payload['msg_category_' + cat.key + '_name'] = newName;
-                fetch('/gateway.php?action=save-admin-settings', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(function(err) {
-                    console.error('[Admin] Failed to save category name:', err);
-                });
+    function closeAllMessagesEditPanels() {
+        if (!messagesContainer) return;
+        messagesContainer.querySelectorAll('.admin-messages-accordion--editing').forEach(function(el) {
+            el.classList.remove('admin-messages-accordion--editing');
+        });
+    }
+    
+    function bindMessagesDocumentListeners() {
+        // Close edit panels when clicking outside (like formbuilder)
+        document.addEventListener('click', function(e) {
+            if (!messagesContainer) return;
+            if (!e.target.closest('.admin-messages-accordion-editpanel') &&
+                !e.target.closest('.admin-messages-accordion-header-editarea') &&
+                !e.target.closest('.admin-messages-accordion-header')) {
+                closeAllMessagesEditPanels();
             }
         });
-        
-        // TODO: Icon picker integration will go here
-        // For now, just show the name input
-        
-        // Save button
-        var saveBtn = document.createElement('button');
-        saveBtn.type = 'button';
-        saveBtn.className = 'admin-messages-accordion-editpanel-save';
-        saveBtn.textContent = 'Done';
-        saveBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            editPanel.classList.add('admin-messages-accordion-editpanel--hidden');
-        });
-        
-        editPanel.appendChild(nameInput);
-        editPanel.appendChild(saveBtn);
-        
-        // Close on click outside
-        document.addEventListener('pointerdown', function(e) {
-            if (editPanel.classList.contains('admin-messages-accordion-editpanel--hidden')) return;
-            if (editPanel.contains(e.target)) return;
-            if (e.target.closest('.admin-messages-accordion-header-edit')) return;
-            editPanel.classList.add('admin-messages-accordion-editpanel--hidden');
-        }, true);
-        
-        return editPanel;
-    }
-    
-    function toggleMessagesAccordion(accordion) {
-        var isOpen = accordion.classList.contains('admin-messages-accordion--open');
-        var content = accordion.querySelector('.admin-messages-accordion-content');
-        
-        if (isOpen) {
-            accordion.classList.remove('admin-messages-accordion--open');
-            content.classList.add('admin-messages-accordion-content--hidden');
-        } else {
-            accordion.classList.add('admin-messages-accordion--open');
-            content.classList.remove('admin-messages-accordion-content--hidden');
-        }
-    }
-    
-    function toggleMessageEditPanel(editPanel, editBtn) {
-        var isHidden = editPanel.classList.contains('admin-messages-accordion-editpanel--hidden');
-        
-        // Close all other edit panels first
-        document.querySelectorAll('.admin-messages-accordion-editpanel').forEach(function(panel) {
-            if (panel !== editPanel) {
-                panel.classList.add('admin-messages-accordion-editpanel--hidden');
-            }
-        });
-        
-        if (isHidden) {
-            editPanel.classList.remove('admin-messages-accordion-editpanel--hidden');
-            editBtn.classList.add('admin-messages-accordion-header-edit--active');
-        } else {
-            editPanel.classList.add('admin-messages-accordion-editpanel--hidden');
-            editBtn.classList.remove('admin-messages-accordion-header-edit--active');
-        }
     }
     
     function loadMessagesFromDatabase() {
@@ -1289,6 +1368,47 @@ const AdminModule = (function() {
         return modified;
     }
     
+    // Collect modified category names for saving (compares DOM to composite baseline)
+    function getModifiedCategoryNames() {
+        var modified = {};
+        var entry = fieldRegistry['messages'];
+        if (!entry || entry.type !== 'composite') return modified;
+        
+        var originalState = JSON.parse(entry.original);
+        var currentState = captureMessagesState();
+        
+        // Compare each category name
+        for (var key in currentState.categoryNames) {
+            var currentValue = currentState.categoryNames[key];
+            var originalValue = originalState.categoryNames ? originalState.categoryNames[key] : undefined;
+            if (currentValue !== originalValue) {
+                modified['msg_category_' + key + '_name'] = currentValue;
+            }
+        }
+        
+        return modified;
+    }
+    
+    // Check if category order has changed
+    function getCategoryOrderIfChanged() {
+        var entry = fieldRegistry['messages'];
+        if (!entry || entry.type !== 'composite') return null;
+        
+        var originalState = JSON.parse(entry.original);
+        var currentState = captureMessagesState();
+        
+        var originalOrder = originalState.categoryOrder || [];
+        var currentOrder = currentState.categoryOrder || [];
+        
+        // Compare arrays
+        if (originalOrder.length !== currentOrder.length) return currentOrder;
+        for (var i = 0; i < originalOrder.length; i++) {
+            if (originalOrder[i] !== currentOrder[i]) return currentOrder;
+        }
+        
+        return null; // No change
+    }
+    
     // Reset messages tab to original values (called on discard)
     function resetMessagesToOriginal() {
         if (!messagesContainer) return;
@@ -1297,6 +1417,37 @@ const AdminModule = (function() {
         if (!entry || entry.type !== 'composite') return;
         
         var originalState = JSON.parse(entry.original);
+        
+        // Reset category order (reorder DOM elements)
+        if (originalState.categoryOrder && originalState.categoryOrder.length > 0) {
+            var accordionsContainer = messagesContainer.querySelector('.admin-messages-container');
+            if (accordionsContainer) {
+                originalState.categoryOrder.forEach(function(key) {
+                    var accordion = accordionsContainer.querySelector('.admin-messages-accordion[data-message-category="' + key + '"]');
+                    if (accordion) {
+                        accordionsContainer.appendChild(accordion);
+                    }
+                });
+            }
+        }
+        
+        // Reset category name inputs and header text
+        messagesContainer.querySelectorAll('.admin-messages-accordion-editpanel-input[data-category-key]').forEach(function(input) {
+            var key = input.dataset.categoryKey;
+            if (key && originalState.categoryNames && originalState.categoryNames[key] !== undefined) {
+                var originalValue = originalState.categoryNames[key];
+                input.value = originalValue;
+                
+                // Also update header text
+                var accordion = input.closest('.admin-messages-accordion');
+                if (accordion) {
+                    var headerText = accordion.querySelector('.admin-messages-accordion-header-text');
+                    if (headerText) {
+                        headerText.textContent = originalValue;
+                    }
+                }
+            }
+        });
         
         // Reset message textareas
         messagesContainer.querySelectorAll('.admin-message-text-input[data-message-id]').forEach(function(textarea) {
@@ -1335,6 +1486,9 @@ const AdminModule = (function() {
                 }
             }
         });
+        
+        // Close any open edit panels
+        closeAllMessagesEditPanels();
     }
 
     /* --------------------------------------------------------------------------
@@ -1346,6 +1500,9 @@ const AdminModule = (function() {
         openPanel: openPanel,
         closePanel: closePanel,
         switchTab: switchTab,
+
+        // SVG icons registry (shared with formbuilder and other modules)
+        icons: icons,
 
         // Field-level tracking
         registerField: registerField,
