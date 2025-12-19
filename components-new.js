@@ -5,16 +5,17 @@
    Shared components used across multiple sections.
    
    STRUCTURE:
-   0. ICONS               - SVG icon library
-   0b. CLEAR BUTTON       - Reusable X/clear button
-   1. FIELDSETS           - Form field types
-   2. CALENDAR            - Horizontal scrolling date picker
-   3. CURRENCY            - Currency selector (compact + full)
-   4. PHONE PREFIX        - Phone prefix selector
-   5. ICON PICKER         - Category icon picker
-   6. SYSTEM IMAGE PICKER - System image picker
-   7. MAP CONTROL ROW     - Geocoder + Geolocate + Compass
-   8. CHECKOUT OPTIONS    - Radio card selector for checkout tiers
+   - ICONS               - SVG icon library (JS only, no CSS needed)
+   - CLEAR BUTTON        - Reusable X/clear button
+   - FIELDSETS           - Form field types
+   - CALENDAR            - Horizontal scrolling date picker
+   - CURRENCY            - Currency selector (has variants)
+   - PHONE PREFIX        - Phone prefix selector
+   - ICON PICKER         - Category icon picker
+   - SYSTEM IMAGE PICKER - System image picker
+   - MAP CONTROL ROW     - Geocoder + Geolocate + Compass (has variants)
+   - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
+   - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    
    ============================================================================ */
 
@@ -22,7 +23,7 @@ console.log('[components.js] Components loaded');
 
 
 /* ============================================================================
-   SECTION 0: ICONS
+   ICONS
    SVG icon library for consistent icons across the site
    ============================================================================ */
 
@@ -40,7 +41,7 @@ const Icons = {
 
 
 /* ============================================================================
-   SECTION 0b: CLEAR BUTTON
+   CLEAR BUTTON
    Reusable X/clear button component
    ============================================================================ */
 
@@ -95,7 +96,7 @@ const ClearButtonComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 1: FIELDSETS
+   FIELDSETS
    Source: fieldset-test.html
    ============================================================================ */
 
@@ -1692,7 +1693,7 @@ const FieldsetComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 2: CALENDAR
+   CALENDAR
    Source: calendar-test.html
    ============================================================================ */
 
@@ -1956,7 +1957,7 @@ const CalendarComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 3: CURRENCY
+   CURRENCY
    Source: test-currency-menu.html
    ============================================================================ */
 
@@ -2126,7 +2127,7 @@ const CurrencyComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 4: PHONE PREFIX
+   PHONE PREFIX
    Source: test-prefix-menu.html
    ============================================================================ */
 
@@ -2244,7 +2245,7 @@ const PhonePrefixComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 5: ICON PICKER
+   ICON PICKER
    Uses icon folder path from admin settings (e.g. assets/category-icons)
    ============================================================================ */
 
@@ -2445,12 +2446,12 @@ const IconPickerComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 6: SYSTEM IMAGE PICKER
+   SYSTEM IMAGE PICKER
    Uses system_images folder path from admin settings
    ============================================================================ */
 
 /* ============================================================================
-   SECTION 7: MAP CONTROL ROW
+   MAP CONTROL ROW
    
    Plain HTML controls - fully styled via CSS:
    - Input field for geocoder (Google Places API provides data only)
@@ -2841,7 +2842,7 @@ const MapControlRowComponent = (function(){
 
 
 /* ============================================================================
-   SECTION 8: CHECKOUT OPTIONS
+   CHECKOUT OPTIONS
    
    Radio card selector for checkout tiers (events and general posts).
    Used in member panel create post form.
@@ -3287,4 +3288,198 @@ const SystemImagePickerComponent = (function(){
         buildPicker: buildPicker
     };
 })();
+
+
+/* ============================================================================
+   CONFIRM DIALOG
+   
+   Reusable confirmation dialog for destructive actions.
+   Returns a Promise that resolves to true (confirmed) or false (cancelled).
+   
+   Usage:
+     const confirmed = await ConfirmDialogComponent.show({
+       titleText: 'Delete Item',
+       messageText: 'Are you sure you want to delete this item?',
+       confirmLabel: 'Delete',
+       focusCancel: true
+     });
+     if (confirmed) {
+       // do the thing
+     }
+   ============================================================================ */
+
+const ConfirmDialogComponent = (function() {
+    var overlayEl = null;
+    
+    function ensureOverlay() {
+        if (overlayEl) return overlayEl;
+        
+        var overlay = document.createElement('div');
+        overlay.className = 'component-confirm-dialog-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('tabindex', '-1');
+        
+        var dialog = document.createElement('div');
+        dialog.className = 'component-confirm-dialog';
+        dialog.setAttribute('role', 'alertdialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', 'confirmDialogTitle');
+        dialog.setAttribute('aria-describedby', 'confirmDialogMessage');
+        
+        var title = document.createElement('h2');
+        title.id = 'confirmDialogTitle';
+        title.className = 'component-confirm-dialog-title';
+        
+        var message = document.createElement('p');
+        message.id = 'confirmDialogMessage';
+        message.className = 'component-confirm-dialog-message';
+        
+        var actions = document.createElement('div');
+        actions.className = 'component-confirm-dialog-actions';
+        
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'component-confirm-dialog-button component-confirm-dialog-button--cancel';
+        cancelBtn.dataset.role = 'cancel';
+        cancelBtn.textContent = 'Cancel';
+        
+        var confirmBtn = document.createElement('button');
+        confirmBtn.type = 'button';
+        confirmBtn.className = 'component-confirm-dialog-button component-confirm-dialog-button--confirm';
+        confirmBtn.dataset.role = 'confirm';
+        confirmBtn.textContent = 'Confirm';
+        
+        actions.appendChild(cancelBtn);
+        actions.appendChild(confirmBtn);
+        dialog.appendChild(title);
+        dialog.appendChild(message);
+        dialog.appendChild(actions);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        
+        overlayEl = overlay;
+        return overlay;
+    }
+    
+    function show(options) {
+        options = options || {};
+        var titleText = options.titleText || 'Confirm';
+        var messageText = options.messageText || 'Are you sure?';
+        var confirmLabel = options.confirmLabel || 'Confirm';
+        var cancelLabel = options.cancelLabel || 'Cancel';
+        var focusCancel = options.focusCancel !== false;
+        var confirmClass = options.confirmClass || '';
+        
+        var overlay = ensureOverlay();
+        var title = overlay.querySelector('#confirmDialogTitle');
+        var message = overlay.querySelector('#confirmDialogMessage');
+        var cancelBtn = overlay.querySelector('[data-role="cancel"]');
+        var confirmBtn = overlay.querySelector('[data-role="confirm"]');
+        var previousFocused = document.activeElement;
+        
+        // Clone buttons to remove old event listeners
+        var newCancelBtn = cancelBtn.cloneNode(true);
+        var newConfirmBtn = confirmBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+        cancelBtn = newCancelBtn;
+        confirmBtn = newConfirmBtn;
+        
+        // Set content
+        title.textContent = titleText;
+        message.textContent = messageText;
+        cancelBtn.textContent = cancelLabel;
+        confirmBtn.textContent = confirmLabel;
+        
+        // Set confirm button class
+        confirmBtn.className = 'component-confirm-dialog-button component-confirm-dialog-button--confirm';
+        if (confirmClass) {
+            confirmBtn.classList.add(confirmClass);
+        }
+        
+        // Show overlay
+        overlay.classList.add('component-confirm-dialog-overlay--visible');
+        overlay.setAttribute('aria-hidden', 'false');
+        
+        // Focus appropriate button
+        if (focusCancel) {
+            cancelBtn.focus();
+        } else {
+            confirmBtn.focus();
+        }
+        
+        return new Promise(function(resolve) {
+            function cleanup(result) {
+                overlay.classList.remove('component-confirm-dialog-overlay--visible');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', onKeyDown, true);
+                overlay.removeEventListener('click', onOverlayClick);
+                
+                if (previousFocused && typeof previousFocused.focus === 'function') {
+                    try {
+                        previousFocused.focus({ preventScroll: true });
+                    } catch (e) {
+                        // ignore focus errors
+                    }
+                }
+                
+                resolve(result);
+            }
+            
+            function onKeyDown(e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cleanup(false);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var focused = document.activeElement;
+                    if (focused === cancelBtn) {
+                        cleanup(false);
+                    } else {
+                        cleanup(true);
+                    }
+                } else if (e.key === 'Tab') {
+                    // Trap focus inside dialog
+                    var buttons = [cancelBtn, confirmBtn];
+                    var first = buttons[0];
+                    var last = buttons[buttons.length - 1];
+                    
+                    if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    } else if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+            
+            function onOverlayClick(e) {
+                if (e.target === overlay) {
+                    cleanup(false);
+                }
+            }
+            
+            cancelBtn.addEventListener('click', function() {
+                cleanup(false);
+            });
+            
+            confirmBtn.addEventListener('click', function() {
+                cleanup(true);
+            });
+            
+            document.addEventListener('keydown', onKeyDown, true);
+            overlay.addEventListener('click', onOverlayClick);
+        });
+    }
+    
+    return {
+        show: show
+    };
+})();
+
+// Expose globally
+window.ConfirmDialogComponent = ConfirmDialogComponent;
 

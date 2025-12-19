@@ -669,30 +669,24 @@ const AdminModule = (function() {
             );
         }
         
-        // Save checkout options if changed
-        var checkoutEntry = fieldRegistry['checkout_options'];
-        if (checkoutEntry && checkoutEntry.type === 'simple') {
-            var currentCheckout = String(checkoutEntry.current);
-            var originalCheckout = String(checkoutEntry.original);
-            if (currentCheckout !== originalCheckout) {
-                var checkoutData = getCheckoutOptionsForSave();
-                savePromises.push(
-                    fetch('/gateway.php?action=save-admin-settings', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ checkout_options: checkoutData })
-                    })
-                    .then(function(response) { return response.json(); })
-                    .then(function(data) {
-                        if (!data.success) {
-                            throw new Error(data.message || 'Failed to save checkout options');
-                        }
-                        console.log('[Admin] Checkout options saved');
-                        // Update baseline
-                        checkoutOptionsOriginal = JSON.parse(JSON.stringify(checkoutOptionsData));
-                    })
-                );
-            }
+        // Save checkout options (uses save-admin-settings endpoint)
+        var checkoutOptions = getCheckoutOptionsFromUI();
+        if (checkoutOptions.length > 0 || document.getElementById('adminCheckoutTiers')) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ checkout_options: checkoutOptions })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to save checkout options');
+                    }
+                    console.log('[Admin] Checkout options saved:', checkoutOptions.length);
+                    updateCompositeBaseline('checkout_options');
+                })
+            );
         }
         
         // Run all saves
@@ -735,6 +729,7 @@ const AdminModule = (function() {
         // Reset tabs to original values before clearing registry
         resetSettingsToOriginal();
         resetMessagesToOriginal();
+        resetCheckoutOptionsToOriginal();
         
         // Reset field registry values (current = original) instead of clearing
         // This preserves registrations so fields don't need to re-register
@@ -1572,15 +1567,22 @@ const AdminModule = (function() {
             .then(function(data) {
                 if (data.success && data.settings) {
                     settingsData = data.settings;
-                    
+
                     // Initialize SystemImagePickerComponent with folder from settings
                     if (window.SystemImagePickerComponent && settingsData.system_images_folder) {
                         SystemImagePickerComponent.setImageFolder(settingsData.system_images_folder);
                     }
-                    
+
                     // Initialize CurrencyComponent data if available
                     if (window.CurrencyComponent && data.picklist && data.picklist.currency) {
                         CurrencyComponent.setData(data.picklist.currency);
+                    }
+
+                    // Render checkout options and register for tracking
+                    if (data.checkout_options && Array.isArray(data.checkout_options)) {
+                        renderCheckoutOptions(data.checkout_options, settingsData.website_currency || 'USD');
+                        // Register as composite field for change tracking
+                        registerComposite('checkout_options', getCheckoutOptionsFromUI);
                     }
                 }
             })
@@ -1625,9 +1627,6 @@ const AdminModule = (function() {
         
         // Initialize currency picker (using CurrencyComponent from components file)
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');
-        
-        // Initialize checkout options editor
-        initCheckoutOptions();
     }
     
     function initImagePicker(containerId, settingKey) {
@@ -1672,266 +1671,325 @@ const AdminModule = (function() {
         
         registerField('settings.' + settingKey, initialValue);
     }
-    
+
     /* --------------------------------------------------------------------------
-       CHECKOUT OPTIONS EDITOR
+       CHECKOUT OPTIONS (copied from index.js)
        -------------------------------------------------------------------------- */
-    
-    var checkoutOptionsData = [];
-    var checkoutOptionsOriginal = [];
-    
-    function initCheckoutOptions() {
+
+    function closeAllCheckoutEditPanels(exceptPanel) {
+        document.querySelectorAll('.admin-checkout-options-edit-panel').forEach(function(panel) {
+            if (panel !== exceptPanel) {
+                panel.hidden = true;
+                var card = panel.closest('.admin-checkout-option-card');
+                if (card) card.classList.remove('admin-checkout-option-card--edit-open');
+                var btn = card && card.querySelector('.admin-checkout-options-edit-btn');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    function renderCheckoutOptions(checkoutOptions, siteCurrency) {
         var container = document.getElementById('adminCheckoutTiers');
-        var addBtn = settingsContainer.querySelector('.admin-checkout-options-add');
         if (!container) return;
-        
-        // Load checkout options from database
-        fetch('/gateway.php?action=get-admin-settings')
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.checkout_options && Array.isArray(data.checkout_options)) {
-                    checkoutOptionsData = data.checkout_options;
-                    checkoutOptionsOriginal = JSON.parse(JSON.stringify(checkoutOptionsData));
-                }
-                renderCheckoutOptions(container);
-                // Register field for change tracking
-                registerField('checkout_options', JSON.stringify(checkoutOptionsOriginal));
+
+        container.innerHTML = '';
+
+        if (!checkoutOptions || !checkoutOptions.length) {
+            container.innerHTML = '<div class="admin-checkout-option-empty">No checkout options configured.</div>';
+            return;
+        }
+
+        checkoutOptions.forEach(function(option) {
+            var tierCard = document.createElement('div');
+            tierCard.className = 'admin-checkout-option-card' + (option.is_active ? '' : ' admin-checkout-option-card--inactive');
+            tierCard.dataset.id = option.id;
+
+            var flagfallPrice = option.checkout_flagfall_price !== undefined ? option.checkout_flagfall_price : 0;
+            var priceDisplay = flagfallPrice === 0 ? 'Free' : (siteCurrency + ' ' + flagfallPrice.toFixed(2));
+            var basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate).toFixed(2) : '';
+            var discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate).toFixed(2) : '';
+            var isFeatured = option.checkout_featured === 1 || option.checkout_featured === true;
+            var featuredBadgeText = isFeatured ? 'featured' : 'standard';
+
+            tierCard.innerHTML = 
+                '<div class="admin-checkout-option-header">' +
+                    '<span class="admin-checkout-option-title-display">' + escapeHtml(option.checkout_title || 'Untitled') + '</span>' +
+                    '<span class="admin-checkout-option-tier-badge' + (isFeatured ? ' admin-checkout-option-tier-badge--featured' : '') + '">' + featuredBadgeText + '</span>' +
+                    '<button type="button" class="admin-checkout-options-edit-btn" aria-haspopup="true" aria-expanded="false" title="Edit">' + icons.editPen + '</button>' +
+                '</div>' +
+                '<div class="admin-checkout-options-edit-panel" hidden>' +
+                    '<div class="admin-checkout-option-field">' +
+                        '<label class="admin-checkout-option-field-label">Title</label>' +
+                        '<input type="text" class="admin-checkout-option-title" value="' + escapeHtml(option.checkout_title || '') + '" placeholder="Title" />' +
+                    '</div>' +
+                    '<label class="admin-checkout-option-active">' +
+                        '<input type="checkbox" class="admin-checkout-option-active-checkbox"' + (option.is_active ? ' checked' : '') + ' />' +
+                        '<span>Active</span>' +
+                    '</label>' +
+                    '<div class="admin-checkout-option-field">' +
+                        '<label class="admin-checkout-option-field-label">Description</label>' +
+                        '<textarea class="admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
+                    '</div>' +
+                    '<div class="admin-checkout-option-field admin-checkout-option-field--sidebar">' +
+                        '<label class="admin-checkout-option-field-sidebar-label">' +
+                            '<input type="checkbox" class="admin-checkout-option-featured"' + (isFeatured ? ' checked' : '') + ' />' +
+                            '<span>Featured</span>' +
+                        '</label>' +
+                        '<label class="admin-checkout-option-field-sidebar-label">' +
+                            '<input type="checkbox" class="admin-checkout-option-sidebar"' + (option.checkout_sidebar_ad ? ' checked' : '') + ' />' +
+                            '<span>Sidebar Ad</span>' +
+                        '</label>' +
+                    '</div>' +
+                    '<div class="admin-checkout-option-field">' +
+                        '<label class="admin-checkout-option-field-label">Flagfall Price</label>' +
+                        '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" step="0.01" min="0" />' +
+                    '</div>' +
+                    '<div class="admin-checkout-option-field">' +
+                        '<label class="admin-checkout-option-field-label">Basic Day Rate</label>' +
+                        '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" step="0.01" min="0" placeholder="N/A" />' +
+                    '</div>' +
+                    '<div class="admin-checkout-option-field">' +
+                        '<label class="admin-checkout-option-field-label">Discount Day Rate</label>' +
+                        '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" step="0.01" min="0" placeholder="N/A" />' +
+                    '</div>' +
+                    '<div class="admin-checkout-option-calculator">' +
+                        '<div class="admin-checkout-option-field">' +
+                            '<label class="admin-checkout-option-field-label">Price Calculator (Sandbox)</label>' +
+                            '<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">' +
+                                '<input type="number" class="admin-checkout-option-field-input-number admin-checkout-option-calc-days" value="" placeholder="Days" min="1" step="1" style="width: 100px;" />' +
+                                '<span style="font-weight: 600;">=</span>' +
+                                '<span class="admin-checkout-option-calc-total" style="min-width: 120px;">' + siteCurrency + ' 0.00</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<button type="button" class="admin-checkout-option-delete">Delete</button>' +
+                '</div>';
+
+            // Edit button handler
+            var editBtn = tierCard.querySelector('.admin-checkout-options-edit-btn');
+            var editPanel = tierCard.querySelector('.admin-checkout-options-edit-panel');
+            editBtn.addEventListener('click', function() {
+                var isOpen = !editPanel.hidden;
+                closeAllCheckoutEditPanels(editPanel);
+                editPanel.hidden = isOpen;
+                tierCard.classList.toggle('admin-checkout-option-card--edit-open', !isOpen);
+                editBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
             });
-        
-        // Add tier button
-        if (addBtn) {
+
+            // Title input updates display
+            var titleInput = tierCard.querySelector('.admin-checkout-option-title');
+            var titleDisplay = tierCard.querySelector('.admin-checkout-option-title-display');
+            if (titleInput && titleDisplay) {
+                titleInput.addEventListener('input', function() {
+                    titleDisplay.textContent = titleInput.value.trim() || 'Untitled';
+                    markDirty();
+                });
+            }
+
+            // Description textarea
+            var descriptionInput = tierCard.querySelector('.admin-checkout-option-description');
+            if (descriptionInput) {
+                descriptionInput.addEventListener('input', function() {
+                    markDirty();
+                });
+            }
+
+            // Active checkbox
+            var activeCheckbox = tierCard.querySelector('.admin-checkout-option-active-checkbox');
+            if (activeCheckbox) {
+                activeCheckbox.addEventListener('change', function() {
+                    markDirty();
+                });
+            }
+
+            // Featured checkbox updates badge
+            var featuredCheckbox = tierCard.querySelector('.admin-checkout-option-featured');
+            var tierBadge = tierCard.querySelector('.admin-checkout-option-tier-badge');
+            if (featuredCheckbox) {
+                featuredCheckbox.addEventListener('change', function() {
+                    var isFeatured = featuredCheckbox.checked;
+                    tierBadge.className = 'admin-checkout-option-tier-badge' + (isFeatured ? ' admin-checkout-option-tier-badge--featured' : '');
+                    tierBadge.textContent = isFeatured ? 'featured' : 'standard';
+                    markDirty();
+                });
+            }
+
+            // Sidebar checkbox
+            var sidebarCheckbox = tierCard.querySelector('.admin-checkout-option-sidebar');
+            if (sidebarCheckbox) {
+                sidebarCheckbox.addEventListener('change', function() {
+                    markDirty();
+                });
+            }
+
+            // Price calculator logic
+            var calcDaysInput = tierCard.querySelector('.admin-checkout-option-calc-days');
+            var calcTotalSpan = tierCard.querySelector('.admin-checkout-option-calc-total');
+            var priceInput = tierCard.querySelector('.admin-checkout-option-price');
+            var basicDayRateInput = tierCard.querySelector('.admin-checkout-option-basic-day-rate');
+            var discountDayRateInput = tierCard.querySelector('.admin-checkout-option-discount-day-rate');
+
+            function updateCalculator() {
+                if (!calcDaysInput || !calcTotalSpan) return;
+
+                var days = parseFloat(calcDaysInput.value) || 0;
+                if (days <= 0) {
+                    calcTotalSpan.textContent = siteCurrency + ' 0.00';
+                    return;
+                }
+
+                var flagfall = parseFloat(priceInput.value) || 0;
+                var dayRate = null;
+
+                if (days >= 365) {
+                    var discountRateValue = discountDayRateInput.value.trim();
+                    dayRate = discountRateValue !== '' ? parseFloat(discountRateValue) : null;
+                } else {
+                    var basicRateValue = basicDayRateInput.value.trim();
+                    dayRate = basicRateValue !== '' ? parseFloat(basicRateValue) : null;
+                }
+
+                if (dayRate === null || isNaN(dayRate)) {
+                    calcTotalSpan.textContent = siteCurrency + ' ' + flagfall.toFixed(2);
+                    return;
+                }
+
+                var total = flagfall + (dayRate * days);
+                calcTotalSpan.textContent = siteCurrency + ' ' + total.toFixed(2);
+            }
+
+            if (calcDaysInput) {
+                calcDaysInput.addEventListener('input', updateCalculator);
+                calcDaysInput.addEventListener('change', updateCalculator);
+            }
+            if (priceInput) {
+                priceInput.addEventListener('input', function() {
+                    updateCalculator();
+                    markDirty();
+                });
+                priceInput.addEventListener('change', updateCalculator);
+            }
+            if (basicDayRateInput) {
+                basicDayRateInput.addEventListener('input', function() {
+                    updateCalculator();
+                    markDirty();
+                });
+                basicDayRateInput.addEventListener('change', updateCalculator);
+            }
+            if (discountDayRateInput) {
+                discountDayRateInput.addEventListener('input', function() {
+                    updateCalculator();
+                    markDirty();
+                });
+                discountDayRateInput.addEventListener('change', updateCalculator);
+            }
+
+            // Delete button handler
+            tierCard.querySelector('.admin-checkout-option-delete').addEventListener('click', function() {
+                var optionTitle = titleInput ? titleInput.value.trim() : '';
+                if (!optionTitle) optionTitle = 'this checkout option';
+                
+                if (window.ConfirmDialogComponent) {
+                    ConfirmDialogComponent.show({
+                        titleText: 'Delete Checkout Option',
+                        messageText: 'Delete "' + optionTitle + '"?',
+                        confirmLabel: 'Delete',
+                        focusCancel: true
+                    }).then(function(confirmed) {
+                        if (confirmed) {
+                            tierCard.remove();
+                            markDirty();
+                        }
+                    });
+                } else {
+                    // Fallback if component not loaded
+                    tierCard.remove();
+                    markDirty();
+                }
+            });
+
+            container.appendChild(tierCard);
+        });
+
+        // Add tier button handler
+        var addBtn = document.querySelector('.admin-checkout-options-add');
+        if (addBtn && !addBtn.dataset.initialized) {
+            addBtn.dataset.initialized = 'true';
             addBtn.addEventListener('click', function() {
                 var newOption = {
                     id: 'new-' + Date.now(),
+                    checkout_key: '',
                     checkout_title: 'New Tier',
                     checkout_description: '',
                     checkout_flagfall_price: 0,
                     checkout_basic_day_rate: null,
                     checkout_discount_day_rate: null,
+                    checkout_currency: siteCurrency,
                     checkout_featured: 0,
                     checkout_sidebar_ad: false,
                     is_active: true
                 };
-                checkoutOptionsData.push(newOption);
-                renderCheckoutOptions(container);
-                notifyCheckoutChange();
+                renderCheckoutOptions([].concat(getCheckoutOptionsFromUI(), [newOption]), siteCurrency);
+                markDirty();
             });
         }
     }
-    
-    function renderCheckoutOptions(container) {
-        if (!container) return;
-        container.innerHTML = '';
-        
-        var currency = settingsData.website_currency || 'USD';
-        
-        if (!checkoutOptionsData || checkoutOptionsData.length === 0) {
-            container.innerHTML = '<div class="admin-checkout-option-empty">No checkout options configured.</div>';
-            return;
-        }
-        
-        checkoutOptionsData.forEach(function(option, index) {
-            var card = createCheckoutOptionCard(option, index, currency);
-            container.appendChild(card);
-        });
-    }
-    
-    function createCheckoutOptionCard(option, index, currency) {
-        var card = document.createElement('div');
-        card.className = 'admin-checkout-option-card' + (option.is_active ? '' : ' admin-checkout-option-card--inactive');
-        card.dataset.id = option.id;
-        card.dataset.index = index;
-        
-        var isFeatured = option.checkout_featured === 1 || option.checkout_featured === true;
-        var badgeClass = isFeatured ? 'admin-checkout-option-tier-badge--featured' : '';
-        var badgeText = isFeatured ? 'featured' : 'standard';
-        
-        // Header
-        var header = document.createElement('div');
-        header.className = 'admin-checkout-option-header';
-        
-        var titleDisplay = document.createElement('span');
-        titleDisplay.className = 'admin-checkout-option-title-display';
-        titleDisplay.textContent = option.checkout_title || 'Untitled';
-        
-        var badge = document.createElement('span');
-        badge.className = 'admin-checkout-option-tier-badge ' + badgeClass;
-        badge.textContent = badgeText;
-        
-        var editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.className = 'admin-checkout-options-edit-btn';
-        editBtn.innerHTML = icons.editPen;
-        
-        header.appendChild(titleDisplay);
-        header.appendChild(badge);
-        header.appendChild(editBtn);
-        card.appendChild(header);
-        
-        // Edit panel
-        var editPanel = document.createElement('div');
-        editPanel.className = 'admin-checkout-options-edit-panel admin-checkout-options-edit-panel--hidden';
-        
-        // Title field
-        var titleField = createCheckoutField('Title', 'text', option.checkout_title || '', function(val) {
-            option.checkout_title = val;
-            titleDisplay.textContent = val || 'Untitled';
-            notifyCheckoutChange();
-        });
-        editPanel.appendChild(titleField);
-        
-        // Active checkbox
-        var activeLabel = document.createElement('label');
-        activeLabel.className = 'admin-checkout-option-active';
-        var activeCheckbox = document.createElement('input');
-        activeCheckbox.type = 'checkbox';
-        activeCheckbox.className = 'admin-checkout-option-active-checkbox';
-        activeCheckbox.checked = option.is_active;
-        activeCheckbox.addEventListener('change', function() {
-            option.is_active = activeCheckbox.checked;
-            card.classList.toggle('admin-checkout-option-card--inactive', !activeCheckbox.checked);
-            notifyCheckoutChange();
-        });
-        var activeText = document.createElement('span');
-        activeText.textContent = 'Active';
-        activeLabel.appendChild(activeCheckbox);
-        activeLabel.appendChild(activeText);
-        editPanel.appendChild(activeLabel);
-        
-        // Description
-        var descField = createCheckoutTextarea('Description', option.checkout_description || '', function(val) {
-            option.checkout_description = val;
-            notifyCheckoutChange();
-        });
-        editPanel.appendChild(descField);
-        
-        // Featured checkbox
-        var featuredLabel = document.createElement('label');
-        featuredLabel.className = 'admin-checkout-option-field-sidebar-label';
-        var featuredCheckbox = document.createElement('input');
-        featuredCheckbox.type = 'checkbox';
-        featuredCheckbox.checked = isFeatured;
-        featuredCheckbox.addEventListener('change', function() {
-            option.checkout_featured = featuredCheckbox.checked ? 1 : 0;
-            badge.className = 'admin-checkout-option-tier-badge ' + (featuredCheckbox.checked ? 'admin-checkout-option-tier-badge--featured' : '');
-            badge.textContent = featuredCheckbox.checked ? 'featured' : 'standard';
-            notifyCheckoutChange();
-        });
-        var featuredText = document.createElement('span');
-        featuredText.textContent = 'Featured';
-        featuredLabel.appendChild(featuredCheckbox);
-        featuredLabel.appendChild(featuredText);
-        editPanel.appendChild(featuredLabel);
-        
-        // Price fields
-        editPanel.appendChild(createCheckoutField('Flagfall Price', 'number', option.checkout_flagfall_price || 0, function(val) {
-            option.checkout_flagfall_price = parseFloat(val) || 0;
-            notifyCheckoutChange();
-        }));
-        
-        editPanel.appendChild(createCheckoutField('Basic Day Rate', 'number', option.checkout_basic_day_rate || '', function(val) {
-            option.checkout_basic_day_rate = val === '' ? null : parseFloat(val);
-            notifyCheckoutChange();
-        }));
-        
-        editPanel.appendChild(createCheckoutField('Discount Day Rate', 'number', option.checkout_discount_day_rate || '', function(val) {
-            option.checkout_discount_day_rate = val === '' ? null : parseFloat(val);
-            notifyCheckoutChange();
-        }));
-        
-        // Delete button
-        var deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'admin-checkout-option-delete';
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', function() {
-            checkoutOptionsData.splice(index, 1);
-            renderCheckoutOptions(document.getElementById('adminCheckoutTiers'));
-            notifyCheckoutChange();
-        });
-        editPanel.appendChild(deleteBtn);
-        
-        card.appendChild(editPanel);
-        
-        // Edit button toggle
-        editBtn.addEventListener('click', function() {
-            var isHidden = editPanel.classList.contains('admin-checkout-options-edit-panel--hidden');
-            // Close all other panels
-            settingsContainer.querySelectorAll('.admin-checkout-options-edit-panel').forEach(function(p) {
-                p.classList.add('admin-checkout-options-edit-panel--hidden');
-            });
-            settingsContainer.querySelectorAll('.admin-checkout-options-edit-btn').forEach(function(b) {
-                b.classList.remove('admin-checkout-options-edit-btn--expanded');
-            });
-            if (isHidden) {
-                editPanel.classList.remove('admin-checkout-options-edit-panel--hidden');
-                editBtn.classList.add('admin-checkout-options-edit-btn--expanded');
-            }
-        });
-        
-        return card;
-    }
-    
-    function createCheckoutField(label, type, value, onChange) {
-        var field = document.createElement('div');
-        field.className = 'admin-checkout-option-field';
-        
-        var labelEl = document.createElement('label');
-        labelEl.className = 'admin-checkout-option-field-label';
-        labelEl.textContent = label;
-        field.appendChild(labelEl);
-        
-        var input = document.createElement('input');
-        input.type = type;
-        input.className = type === 'number' ? 'admin-checkout-option-field-input-number' : 'admin-checkout-option-title';
-        input.value = value;
-        if (type === 'number') {
-            input.step = '0.01';
-            input.min = '0';
-        }
-        input.addEventListener('input', function() {
-            onChange(input.value);
-        });
-        field.appendChild(input);
-        
-        return field;
-    }
-    
-    function createCheckoutTextarea(label, value, onChange) {
-        var field = document.createElement('div');
-        field.className = 'admin-checkout-option-field';
-        
-        var labelEl = document.createElement('label');
-        labelEl.className = 'admin-checkout-option-field-label';
-        labelEl.textContent = label;
-        field.appendChild(labelEl);
-        
-        var textarea = document.createElement('textarea');
-        textarea.className = 'admin-checkout-option-description';
-        textarea.value = value;
-        textarea.placeholder = 'Description';
-        textarea.addEventListener('input', function() {
-            onChange(textarea.value);
-        });
-        field.appendChild(textarea);
-        
-        return field;
-    }
-    
-    function notifyCheckoutChange() {
-        updateField('checkout_options', JSON.stringify(checkoutOptionsData));
-    }
-    
-    function getCheckoutOptionsForSave() {
-        return checkoutOptionsData;
-    }
-    
-    function resetCheckoutOptionsToOriginal() {
-        checkoutOptionsData = JSON.parse(JSON.stringify(checkoutOptionsOriginal));
+
+    function getCheckoutOptionsFromUI() {
         var container = document.getElementById('adminCheckoutTiers');
-        if (container) renderCheckoutOptions(container);
+        if (!container) return [];
+
+        var options = [];
+        container.querySelectorAll('.admin-checkout-option-card').forEach(function(card) {
+            var basicDayRateInput = card.querySelector('.admin-checkout-option-basic-day-rate');
+            var discountDayRateInput = card.querySelector('.admin-checkout-option-discount-day-rate');
+            var priceInput = card.querySelector('.admin-checkout-option-price');
+
+            var flagfallPrice = priceInput ? Math.round((parseFloat(priceInput.value) || 0) * 100) / 100 : 0;
+            var basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? Math.round(parseFloat(basicDayRateInput.value) * 100) / 100 : null;
+            var discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? Math.round(parseFloat(discountDayRateInput.value) * 100) / 100 : null;
+
+            var titleInput = card.querySelector('.admin-checkout-option-title');
+            var descriptionInput = card.querySelector('.admin-checkout-option-description');
+            var featuredCheckbox = card.querySelector('.admin-checkout-option-featured');
+            var sidebarCheckbox = card.querySelector('.admin-checkout-option-sidebar');
+            var activeCheckbox = card.querySelector('.admin-checkout-option-active-checkbox');
+
+            if (!titleInput) {
+                console.warn('Checkout option title input not found for card:', card);
+                return;
+            }
+
+            options.push({
+                id: card.dataset.id,
+                checkout_title: (titleInput.value || '').trim(),
+                checkout_description: descriptionInput ? (descriptionInput.value || '').trim() : '',
+                checkout_flagfall_price: flagfallPrice,
+                checkout_basic_day_rate: basicDayRate,
+                checkout_discount_day_rate: discountDayRate,
+                checkout_featured: featuredCheckbox && featuredCheckbox.checked ? 1 : 0,
+                checkout_sidebar_ad: sidebarCheckbox && sidebarCheckbox.checked ? 1 : 0,
+                is_active: activeCheckbox && activeCheckbox.checked ? 1 : 0
+            });
+        });
+        return options;
     }
-    
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function resetCheckoutOptionsToOriginal() {
+        // Re-render checkout options from the composite field's original baseline
+        var entry = fieldRegistry['checkout_options'];
+        if (entry && entry.type === 'composite' && entry.original) {
+            var originalOptions = JSON.parse(entry.original);
+            var currency = settingsData.website_currency || 'USD';
+            renderCheckoutOptions(originalOptions, currency);
+        }
+    }
+
     // Get modified settings for saving
     function getModifiedSettings() {
         var modified = {};
@@ -2005,9 +2063,6 @@ const AdminModule = (function() {
                 }
             }
         });
-        
-        // Reset checkout options
-        resetCheckoutOptionsToOriginal();
     }
 
     /* --------------------------------------------------------------------------

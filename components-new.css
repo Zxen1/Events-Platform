@@ -5,21 +5,22 @@
    Shared component styles used across multiple sections.
    
    STRUCTURE:
-   0. CLEAR BUTTON        - Reusable X/clear button
-   1. FIELDSETS           - Form field types
-   2. CALENDAR            - Horizontal scrolling date picker
-   3. CURRENCY            - Currency selector (has variants)
-   4. PHONE PREFIX        - Phone prefix selector
-   5. ICON PICKER         - Category icon picker
-   6. SYSTEM IMAGE PICKER - System image picker
-   7. MAP CONTROL         - Geocoder + Geolocate + Compass (has variants)
-   8. CHECKOUT OPTIONS    - Radio card selector for checkout tiers
+   - CLEAR BUTTON        - Reusable X/clear button
+   - FIELDSETS           - Form field types
+   - CALENDAR            - Horizontal scrolling date picker
+   - CURRENCY            - Currency selector (has variants)
+   - PHONE PREFIX        - Phone prefix selector
+   - ICON PICKER         - Category icon picker
+   - SYSTEM IMAGE PICKER - System image picker
+   - MAP CONTROL ROW     - Geocoder + Geolocate + Compass (has variants)
+   - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
+   - CONFIRM DIALOG      - Confirmation dialog for destructive actions
    
    ============================================================================ */
 
 
 /* ============================================================================
-   SECTION 0: CLEAR BUTTON
+   CLEAR BUTTON
    
    No variants - same everywhere.
    ============================================================================ */
@@ -51,7 +52,7 @@
 
 
 /* ============================================================================
-   SECTION 1: FIELDSETS
+   FIELDSETS
    
    No variants - same everywhere.
    ============================================================================ */
@@ -883,7 +884,7 @@
 
 
 /* ============================================================================
-   SECTION 2: CALENDAR
+   CALENDAR
    
    No variants - same everywhere.
    ============================================================================ */
@@ -1071,7 +1072,7 @@
 
 
 /* ============================================================================
-   SECTION 3: CURRENCY
+   CURRENCY
    
    This component has variants - no base styles.
    Each location where it appears has its own complete CSS block.
@@ -1192,6 +1193,7 @@
 /* Appearance */
 .admin-currency-wrapper {
     width: 100%;
+    max-width: 300px;
     height: 36px;
     position: relative;
 }
@@ -1328,7 +1330,7 @@
 
 
 /* ============================================================================
-   SECTION 4: PHONE PREFIX
+   PHONE PREFIX
    
    No variants - same everywhere.
    ============================================================================ */
@@ -1468,7 +1470,7 @@
 
 
 /* ============================================================================
-   SECTION 5: ICON PICKER
+   ICON PICKER
    
    No variants - same everywhere.
    ============================================================================ */
@@ -1590,7 +1592,7 @@
 
 
 /* ============================================================================
-   SECTION 6: SYSTEM IMAGE PICKER
+   SYSTEM IMAGE PICKER
    
    No variants - same everywhere.
    ============================================================================ */
@@ -1598,8 +1600,7 @@
 /* Appearance */
 .systemimagepicker-container {
     position: relative;
-    display: block;
-    width: 100%;
+    display: inline-block;
 }
 
 .systemimagepicker-button {
@@ -1713,173 +1714,7 @@
 
 
 /* ============================================================================
-   SECTION 8: CHECKOUT OPTIONS
-   
-   Radio card selector for checkout tiers.
-   Used in member panel create post form.
-   ============================================================================ */
-
-/* Appearance - Group */
-.member-checkout-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-.member-checkout-placeholder {
-    color: #888;
-    font-style: italic;
-    padding: 12px;
-}
-
-/* Appearance - Option Card */
-.member-checkout-option {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px;
-    border: 1px solid #444;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
-    box-sizing: border-box;
-    max-width: 100%;
-    overflow: hidden;
-}
-
-.member-checkout-option-radio {
-    position: static;
-    opacity: 1;
-    pointer-events: auto;
-    flex-shrink: 0;
-    width: auto;
-    height: auto;
-    margin: 3px 0 0 0;
-    padding: 0;
-    cursor: pointer;
-}
-
-.member-checkout-option-content {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    overflow: hidden;
-}
-
-.member-checkout-option-title {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.member-checkout-option-name {
-    color: #fff;
-}
-
-.member-checkout-option-description {
-    font-size: 13px;
-    color: #888;
-    line-height: 1.4;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
-
-/* Appearance - Price Section */
-.member-checkout-price-section {
-    margin-top: 8px;
-}
-
-.member-checkout-price-display {
-    color: #3b82f5;
-    font-weight: 500;
-    font-size: 14px;
-}
-
-/* Appearance - Duration Buttons (General posts) */
-.member-checkout-duration-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.member-checkout-duration-option {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-weight: 500;
-    border: 1px solid #444;
-    border-radius: 6px;
-    background: transparent;
-    color: #888;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.member-checkout-duration-radio {
-    flex-shrink: 0;
-    width: auto;
-    height: auto;
-    margin: 0;
-    cursor: pointer;
-}
-
-.member-checkout-duration-text {
-    color: inherit;
-}
-
-/* States - Option Card */
-.member-checkout-option:hover {
-    border-color: #3b82f5;
-    background: rgba(59, 130, 245, 0.05);
-}
-
-.member-checkout-option:has(input:checked) {
-    border-color: #3b82f5;
-    background: rgba(59, 130, 245, 0.1);
-}
-
-/* States - Disabled (no dates for events) */
-.member-checkout-option--disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-    border-style: dashed;
-}
-
-.member-checkout-option--disabled:hover {
-    border-color: #444;
-    background: transparent;
-}
-
-.member-checkout-option--disabled .member-checkout-price-display {
-    color: #888;
-    font-style: italic;
-}
-
-/* States - Duration Option */
-.member-checkout-duration-option:hover {
-    border-color: #3b82f5;
-    color: #fff;
-}
-
-.member-checkout-duration-option:has(input:checked) {
-    border-color: #3b82f5;
-    background: rgba(59, 130, 245, 0.15);
-    color: #3b82f5;
-}
-
-
-/* ============================================================================
-   SECTION 7: MAP CONTROL
+   MAP CONTROL ROW
    
    This component has variants - no base styles.
    Each location where it appears has its own complete CSS block.
@@ -2418,4 +2253,267 @@
 .map-mapcontrol-geolocate.active,
 .welcome-mapcontrol-geolocate.active {
     color: #3b82f6;
+}
+
+
+/* ============================================================================
+   CHECKOUT OPTIONS
+   
+   Radio card selector for checkout tiers.
+   Used in member panel create post form.
+   ============================================================================ */
+
+/* Appearance - Group */
+.member-checkout-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.member-checkout-placeholder {
+    color: #888;
+    font-style: italic;
+    padding: 12px;
+}
+
+/* Appearance - Option Card */
+.member-checkout-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.member-checkout-option-radio {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 3px 0 0 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.member-checkout-option-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.member-checkout-option-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.member-checkout-option-name {
+    color: #fff;
+}
+
+.member-checkout-option-description {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Appearance - Price Section */
+.member-checkout-price-section {
+    margin-top: 8px;
+}
+
+.member-checkout-price-display {
+    color: #3b82f5;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Appearance - Duration Buttons (General posts) */
+.member-checkout-duration-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.member-checkout-duration-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #444;
+    border-radius: 6px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.member-checkout-duration-radio {
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.member-checkout-duration-text {
+    color: inherit;
+}
+
+/* States - Option Card */
+.member-checkout-option:hover {
+    border-color: #3b82f5;
+    background: rgba(59, 130, 245, 0.05);
+}
+
+.member-checkout-option:has(input:checked) {
+    border-color: #3b82f5;
+    background: rgba(59, 130, 245, 0.1);
+}
+
+/* States - Disabled (no dates for events) */
+.member-checkout-option--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    border-style: dashed;
+}
+
+.member-checkout-option--disabled:hover {
+    border-color: #444;
+    background: transparent;
+}
+
+.member-checkout-option--disabled .member-checkout-price-display {
+    color: #888;
+    font-style: italic;
+}
+
+/* States - Duration Option */
+.member-checkout-duration-option:hover {
+    border-color: #3b82f5;
+    color: #fff;
+}
+
+.member-checkout-duration-option:has(input:checked) {
+    border-color: #3b82f5;
+    background: rgba(59, 130, 245, 0.15);
+    color: #3b82f5;
+}
+
+
+/* ============================================================================
+   CONFIRM DIALOG
+   
+   Reusable confirmation dialog for destructive actions.
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-confirm-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-confirm-dialog-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Appearance - Dialog */
+.component-confirm-dialog {
+    background: #222222;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    padding: 24px;
+    width: min(90vw, 360px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.component-confirm-dialog-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.component-confirm-dialog-message {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Appearance - Actions */
+.component-confirm-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.component-confirm-dialog-button {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-confirm-dialog-button--cancel {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.component-confirm-dialog-button--confirm {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* States */
+.component-confirm-dialog-button--cancel:focus-visible,
+.component-confirm-dialog-button--cancel:hover {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+.component-confirm-dialog-button--confirm:focus-visible,
+.component-confirm-dialog-button--confirm:hover {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
 }
