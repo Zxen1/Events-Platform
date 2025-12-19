@@ -345,9 +345,16 @@ const FieldsetComponent = (function(){
         });
     }
     
-    // Set picklist data
+    // Set picklist data and propagate to external components
     function setPicklist(data) {
         picklist = data || {};
+        // Also set data in Currency and PhonePrefix components
+        if (data && data.currency && typeof CurrencyComponent !== 'undefined') {
+            CurrencyComponent.setData(data.currency);
+        }
+        if (data && data['phone-prefix'] && typeof PhonePrefixComponent !== 'undefined') {
+            PhonePrefixComponent.setData(data['phone-prefix']);
+        }
     }
     
     /**
