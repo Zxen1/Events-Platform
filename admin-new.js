@@ -1663,6 +1663,10 @@ const AdminModule = (function() {
             container: settingsContainer,
             onSelect: function(currencyCode, currencyName, countryCode) {
                 updateField('settings.' + settingKey, currencyCode);
+                // Update local cache so new checkout options use correct currency
+                settingsData[settingKey] = currencyCode;
+                // Update checkout options currency display
+                updateCheckoutOptionsCurrency(currencyCode);
             }
         });
         
@@ -1670,6 +1674,21 @@ const AdminModule = (function() {
         container.appendChild(menu);
         
         registerField('settings.' + settingKey, initialValue);
+    }
+    
+    // Update all currency displays in checkout options
+    function updateCheckoutOptionsCurrency(currencyCode) {
+        // Update calculator totals
+        document.querySelectorAll('.admin-checkout-option-calc-total').forEach(function(span) {
+            var text = span.textContent;
+            // Replace old currency code with new one (format: "XXX 0.00")
+            var match = text.match(/^[A-Z]{3}\s+(.*)$/);
+            if (match) {
+                span.textContent = currencyCode + ' ' + match[1];
+            } else {
+                span.textContent = currencyCode + ' 0.00';
+            }
+        });
     }
 
     /* --------------------------------------------------------------------------
@@ -1868,6 +1887,14 @@ const AdminModule = (function() {
                     markDirty();
                 });
                 priceInput.addEventListener('change', updateCalculator);
+                priceInput.addEventListener('blur', function() {
+                    var val = parseFloat(this.value);
+                    if (!isNaN(val)) {
+                        this.value = val.toFixed(2);
+                    } else if (this.value.trim() === '') {
+                        this.value = '0.00';
+                    }
+                });
             }
             if (basicDayRateInput) {
                 basicDayRateInput.addEventListener('input', function() {
@@ -1875,6 +1902,13 @@ const AdminModule = (function() {
                     markDirty();
                 });
                 basicDayRateInput.addEventListener('change', updateCalculator);
+                basicDayRateInput.addEventListener('blur', function() {
+                    var val = parseFloat(this.value);
+                    if (!isNaN(val)) {
+                        this.value = val.toFixed(2);
+                    }
+                    // Leave empty if N/A
+                });
             }
             if (discountDayRateInput) {
                 discountDayRateInput.addEventListener('input', function() {
@@ -1882,6 +1916,13 @@ const AdminModule = (function() {
                     markDirty();
                 });
                 discountDayRateInput.addEventListener('change', updateCalculator);
+                discountDayRateInput.addEventListener('blur', function() {
+                    var val = parseFloat(this.value);
+                    if (!isNaN(val)) {
+                        this.value = val.toFixed(2);
+                    }
+                    // Leave empty if N/A
+                });
             }
 
             // Delete button handler
@@ -1916,6 +1957,8 @@ const AdminModule = (function() {
         if (addBtn && !addBtn.dataset.initialized) {
             addBtn.dataset.initialized = 'true';
             addBtn.addEventListener('click', function() {
+                // Get current currency from settings (may have changed since render)
+                var currentCurrency = settingsData.website_currency || 'USD';
                 var newOption = {
                     id: 'new-' + Date.now(),
                     checkout_key: '',
@@ -1924,12 +1967,12 @@ const AdminModule = (function() {
                     checkout_flagfall_price: 0,
                     checkout_basic_day_rate: null,
                     checkout_discount_day_rate: null,
-                    checkout_currency: siteCurrency,
+                    checkout_currency: currentCurrency,
                     checkout_featured: 0,
                     checkout_sidebar_ad: false,
                     is_active: true
                 };
-                renderCheckoutOptions([].concat(getCheckoutOptionsFromUI(), [newOption]), siteCurrency);
+                renderCheckoutOptions([].concat(getCheckoutOptionsFromUI(), [newOption]), currentCurrency);
                 markDirty();
             });
         }
