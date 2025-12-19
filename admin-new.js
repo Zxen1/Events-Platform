@@ -558,6 +558,8 @@ const AdminModule = (function() {
                         throw new Error(data.message || 'Failed to save messages');
                     }
                     console.log('[Admin] Messages saved:', modifiedMessages.length);
+                    // Update composite baseline (like Formbuilder does)
+                    updateCompositeBaseline('messages');
                 })
             );
         }
@@ -577,6 +579,8 @@ const AdminModule = (function() {
                         throw new Error(data.message || 'Failed to save fieldset tooltips');
                     }
                     console.log('[Admin] Fieldset tooltips saved:', modifiedTooltips.length);
+                    // Update composite baseline (like Formbuilder does)
+                    updateCompositeBaseline('messages');
                 })
             );
         }
@@ -587,17 +591,11 @@ const AdminModule = (function() {
                 console.log('[Admin] All saves completed successfully');
                 isSaving = false;
                 
-                // Re-check if new changes occurred during save
-                if (hasActualChanges()) {
-                    console.log('[Admin] New changes detected during save, staying dirty');
-                    // Don't markSaved - there are new changes
-                    // Reschedule autosave if enabled
-                    if (isAutoSaveEnabled()) {
-                        scheduleAutoSave();
-                    }
-                } else {
-                    markSaved();
-                }
+                // Update baselines to saved values
+                markSaved();
+                
+                // If user made changes during save, recheckDirtyState will detect them
+                // via the next input event - no need to check here
                 
                 if (options.closeAfter) {
                     closePanel();
@@ -670,10 +668,31 @@ const AdminModule = (function() {
 
     /* --------------------------------------------------------------------------
        MESSAGES TAB
+       
+       FIELD-LEVEL TRACKING:
+       Like Formbuilder, Messages registers as a "composite" field.
+       Instead of tracking individual textareas, it captures all message
+       values from the DOM and compares as JSON.
+       
+       HOW IT WORKS:
+       1. After messages load, we call:
+          registerComposite('messages', captureMessagesState)
+       
+       2. captureMessagesState() reads all textarea values from DOM
+       
+       3. When any textarea changes, notifyChange() tells AdminModule to recheck.
+          AdminModule calls captureMessagesState() and compares to baseline.
+       
+       4. If JSON differs from baseline → save button green
+          If JSON matches baseline → save button not green
+       
+       5. After save, updateCompositeBaseline('messages') is called
+          to set the new baseline.
        -------------------------------------------------------------------------- */
     
     var messagesContainer = null;
     var messagesInitialized = false;
+    var messagesLoaded = false; // Don't notify during initial load
     
     // Message categories (icons loaded from database)
     var MESSAGE_CATEGORIES = [
@@ -691,6 +710,37 @@ const AdminModule = (function() {
         'msg_admin': 'admin',
         'msg_email': 'email'
     };
+    
+    // Capture current state of all messages from DOM (like Formbuilder's captureFormbuilderState)
+    function captureMessagesState() {
+        var state = { messages: {}, tooltips: {} };
+        
+        if (!messagesContainer) return state;
+        
+        // Capture message textareas
+        messagesContainer.querySelectorAll('.admin-message-text-input[data-message-id]').forEach(function(textarea) {
+            var id = textarea.dataset.messageId;
+            if (id) {
+                state.messages[id] = textarea.value;
+            }
+        });
+        
+        // Capture tooltip textareas
+        messagesContainer.querySelectorAll('.admin-message-text-input[data-fieldset-id]').forEach(function(textarea) {
+            var id = textarea.dataset.fieldsetId;
+            if (id) {
+                state.tooltips[id] = textarea.value;
+            }
+        });
+        
+        return state;
+    }
+    
+    // Notify change (like Formbuilder's notifyChange)
+    function notifyMessagesChange() {
+        if (!messagesLoaded) return; // Don't notify during initial load
+        notifyFieldChange();
+    }
     
     function initMessagesTab() {
         if (messagesInitialized) return;
@@ -912,11 +962,34 @@ const AdminModule = (function() {
             .then(function(data) {
                 if (data.success && data.messages) {
                     populateMessagesIntoAccordions(data.messages);
+                    registerMessagesCompositeIfReady();
                 }
             })
             .catch(function(err) {
                 console.error('[Admin] Failed to load messages:', err);
             });
+    }
+    
+    // Track loading state for both messages and tooltips
+    var messagesDataLoaded = false;
+    var tooltipsDataLoaded = false;
+    
+    function registerMessagesCompositeIfReady() {
+        messagesDataLoaded = true;
+        if (messagesDataLoaded && tooltipsDataLoaded) {
+            // Register messages as composite field (like Formbuilder)
+            registerComposite('messages', captureMessagesState);
+            messagesLoaded = true;
+        }
+    }
+    
+    function registerTooltipsCompositeIfReady() {
+        tooltipsDataLoaded = true;
+        if (messagesDataLoaded && tooltipsDataLoaded) {
+            // Register messages as composite field (like Formbuilder)
+            registerComposite('messages', captureMessagesState);
+            messagesLoaded = true;
+        }
     }
     
     function populateMessagesIntoAccordions(messageContainers) {
@@ -957,12 +1030,7 @@ const AdminModule = (function() {
         item.dataset.messageId = message.id;
         item.dataset.messageKey = message.message_key;
         
-        // Field ID for registry
-        var fieldId = 'messages.msg_' + message.id;
         var originalValue = message.message_text || '';
-        
-        // Register with field-level tracking
-        registerField(fieldId, originalValue);
         
         // Label with hover popup
         var label = document.createElement('div');
@@ -1028,7 +1096,6 @@ const AdminModule = (function() {
         textInput.value = originalValue;
         textInput.rows = 3;
         textInput.dataset.messageId = message.id;
-        textInput.dataset.fieldId = fieldId;
         
         // Click to edit
         textDisplay.addEventListener('click', function() {
@@ -1037,19 +1104,10 @@ const AdminModule = (function() {
             textInput.focus();
         });
         
-        // Track changes using field registry
+        // Track changes - notify AdminModule to recheck (like Formbuilder)
         textInput.addEventListener('input', function() {
-            var currentValue = textInput.value;
-            updateField(fieldId, currentValue);
-            textDisplay.innerHTML = currentValue;
-            
-            // Visual indicator
-            var entry = fieldRegistry[fieldId];
-            if (entry && currentValue !== entry.original) {
-                item.classList.add('admin-message-item--modified');
-            } else {
-                item.classList.remove('admin-message-item--modified');
-            }
+            textDisplay.innerHTML = textInput.value;
+            notifyMessagesChange();
         });
         
         // Blur to close
@@ -1073,6 +1131,7 @@ const AdminModule = (function() {
             .then(function(data) {
                 if (data.success && data.snapshot && data.snapshot.fieldsets) {
                     populateFieldsetTooltips(data.snapshot.fieldsets);
+                    registerTooltipsCompositeIfReady();
                 }
             })
             .catch(function(err) {
@@ -1122,12 +1181,7 @@ const AdminModule = (function() {
         item.className = 'admin-message-item';
         item.dataset.fieldsetId = fieldset.id;
         
-        // Field ID for registry
-        var fieldId = 'messages.tooltip_' + fieldset.id;
         var originalValue = fieldset.fieldset_tooltip || '';
-        
-        // Register with field-level tracking
-        registerField(fieldId, originalValue);
         
         // Label
         var label = document.createElement('div');
@@ -1152,7 +1206,6 @@ const AdminModule = (function() {
         textInput.rows = 3;
         textInput.placeholder = 'Enter tooltip help text';
         textInput.dataset.fieldsetId = fieldset.id;
-        textInput.dataset.fieldId = fieldId;
         
         // Click to edit
         textDisplay.addEventListener('click', function() {
@@ -1161,22 +1214,15 @@ const AdminModule = (function() {
             textInput.focus();
         });
         
-        // Track changes using field registry
+        // Track changes - notify AdminModule to recheck (like Formbuilder)
         textInput.addEventListener('input', function() {
             var currentValue = textInput.value;
-            updateField(fieldId, currentValue);
             
             textDisplay.textContent = currentValue || '(empty)';
             textDisplay.style.color = currentValue ? '' : 'var(--text-muted, #888)';
             textDisplay.style.fontStyle = currentValue ? '' : 'italic';
             
-            // Visual indicator
-            var entry = fieldRegistry[fieldId];
-            if (entry && currentValue !== entry.original) {
-                item.classList.add('admin-message-item--modified');
-            } else {
-                item.classList.remove('admin-message-item--modified');
-            }
+            notifyMessagesChange();
         });
         
         // Blur to close
@@ -1195,40 +1241,48 @@ const AdminModule = (function() {
         return item;
     }
     
-    // Collect modified messages for saving (uses field registry)
+    // Collect modified messages for saving (compares DOM to composite baseline)
     function getModifiedMessages() {
         var modified = [];
+        var entry = fieldRegistry['messages'];
+        if (!entry || entry.type !== 'composite') return modified;
         
-        for (var fieldId in fieldRegistry) {
-            if (fieldId.indexOf('messages.msg_') === 0) {
-                var entry = fieldRegistry[fieldId];
-                if (entry.type === 'simple' && entry.current !== entry.original) {
-                    var messageId = parseInt(fieldId.replace('messages.msg_', ''), 10);
-                    modified.push({
-                        id: messageId,
-                        message_text: entry.current
-                    });
-                }
+        var originalState = JSON.parse(entry.original);
+        var currentState = captureMessagesState();
+        
+        // Compare each message
+        for (var id in currentState.messages) {
+            var currentValue = currentState.messages[id];
+            var originalValue = originalState.messages[id];
+            if (currentValue !== originalValue) {
+                modified.push({
+                    id: parseInt(id, 10),
+                    message_text: currentValue
+                });
             }
         }
         
         return modified;
     }
     
-    // Collect modified fieldset tooltips for saving (uses field registry)
+    // Collect modified fieldset tooltips for saving (compares DOM to composite baseline)
     function getModifiedFieldsetTooltips() {
         var modified = [];
+        var entry = fieldRegistry['messages'];
+        if (!entry || entry.type !== 'composite') return modified;
         
-        for (var fieldId in fieldRegistry) {
-            if (fieldId.indexOf('messages.tooltip_') === 0) {
-                var entry = fieldRegistry[fieldId];
-                if (entry.type === 'simple' && entry.current !== entry.original) {
-                    var fieldsetId = parseInt(fieldId.replace('messages.tooltip_', ''), 10);
-                    modified.push({
-                        id: fieldsetId,
-                        fieldset_tooltip: entry.current
-                    });
-                }
+        var originalState = JSON.parse(entry.original);
+        var currentState = captureMessagesState();
+        
+        // Compare each tooltip
+        for (var id in currentState.tooltips) {
+            var currentValue = currentState.tooltips[id];
+            var originalValue = originalState.tooltips[id];
+            if (currentValue !== originalValue) {
+                modified.push({
+                    id: parseInt(id, 10),
+                    fieldset_tooltip: currentValue
+                });
             }
         }
         
@@ -1239,25 +1293,43 @@ const AdminModule = (function() {
     function resetMessagesToOriginal() {
         if (!messagesContainer) return;
         
-        messagesContainer.querySelectorAll('.admin-message-text-input').forEach(function(textarea) {
-            var fieldId = textarea.dataset.fieldId;
-            if (fieldId && fieldRegistry[fieldId]) {
-                var originalValue = fieldRegistry[fieldId].original;
+        var entry = fieldRegistry['messages'];
+        if (!entry || entry.type !== 'composite') return;
+        
+        var originalState = JSON.parse(entry.original);
+        
+        // Reset message textareas
+        messagesContainer.querySelectorAll('.admin-message-text-input[data-message-id]').forEach(function(textarea) {
+            var id = textarea.dataset.messageId;
+            if (id && originalState.messages[id] !== undefined) {
+                var originalValue = originalState.messages[id];
                 textarea.value = originalValue;
                 
-                // Update display
                 var item = textarea.closest('.admin-message-item');
                 if (item) {
                     var display = item.querySelector('.admin-message-text-display');
                     if (display) {
-                        // For tooltips, show "(empty)" if empty
-                        if (fieldId.indexOf('messages.tooltip_') === 0) {
-                            display.textContent = originalValue || '(empty)';
-                            display.style.color = originalValue ? '' : 'var(--text-muted, #888)';
-                            display.style.fontStyle = originalValue ? '' : 'italic';
-                        } else {
-                            display.innerHTML = originalValue;
-                        }
+                        display.innerHTML = originalValue;
+                    }
+                    item.classList.remove('admin-message-item--modified');
+                }
+            }
+        });
+        
+        // Reset tooltip textareas
+        messagesContainer.querySelectorAll('.admin-message-text-input[data-fieldset-id]').forEach(function(textarea) {
+            var id = textarea.dataset.fieldsetId;
+            if (id && originalState.tooltips[id] !== undefined) {
+                var originalValue = originalState.tooltips[id];
+                textarea.value = originalValue;
+                
+                var item = textarea.closest('.admin-message-item');
+                if (item) {
+                    var display = item.querySelector('.admin-message-text-display');
+                    if (display) {
+                        display.textContent = originalValue || '(empty)';
+                        display.style.color = originalValue ? '' : 'var(--text-muted, #888)';
+                        display.style.fontStyle = originalValue ? '' : 'italic';
                     }
                     item.classList.remove('admin-message-item--modified');
                 }
