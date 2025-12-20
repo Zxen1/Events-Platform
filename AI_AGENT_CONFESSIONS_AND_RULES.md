@@ -2037,6 +2037,72 @@ How text displays in the four reusable dropdown menus:
 
 ---
 
+## TIMEZONE SYSTEM: UTC+14 (LINE ISLANDS, KIRIBATI)
+
+**Date:** December 21, 2025
+
+**CRITICAL:** The entire website uses UTC+14 (Line Islands, Kiribati) as the standard timezone for all date/time operations.
+
+### Why UTC+14?
+
+**Problem Solved:**
+- Most websites use UTC+0, which can cause posts to expire before events actually happen
+- Example: Member in Australia (UTC+10) creates post at 2:00 PM local time for "tonight's show"
+  - With UTC+0: Post expires 10 hours before the show (expires at end of UTC day, which is next morning in Australia)
+  - With UTC+14: Post stays visible through the show (expires at end of UTC+14 day, which is same evening in Australia)
+- UTC+14 gives everyone the maximum "benefit of the doubt" - events stay visible as long as possible
+- Prevents expired events from showing in search results (users can't attend events that already happened)
+
+**Why Not UTC+0 (Standard)?**
+- UTC+0 is the technical standard, but causes premature expiration for users in timezones ahead of UTC
+- Most websites don't auto-expire events at end of day, so they don't face this problem
+- Websites that do expire often accept showing expired events as acceptable
+- This website prioritizes user experience (no expired events) over technical convention
+
+**UTC+14 Benefits:**
+- No daylight saving time (stays UTC+14 year-round, consistent)
+- Latest timezone on Earth (last to experience each new day)
+- Fair to all users globally (maximum visibility time)
+- Consistent system-wide date/time (no confusion)
+- Natural month folder organization (based on UTC+14 date)
+
+### Implementation
+
+**Storage:**
+- All dates/times stored in database as UTC+14
+- All filenames use UTC+14 date/time
+- Month folders organized by UTC+14 date: `post-images/2025-12/`, `post-images/2026-01/`, etc.
+- Post expiration logic uses UTC+14 "end of day"
+
+**Display:**
+- Dates/times displayed to users converted to their local timezone
+- "Posted date/time" shown in user's local time for clarity
+- Event times shown in user's local time
+- System time (UTC+14) remains hidden from users
+
+**File Organization:**
+- Images organized by month folders at Bunny.net: `post-images/{year}-{month}/`
+- Month determined by UTC+14 date of upload
+- Bunny.net auto-creates folders when uploading to new path (no pre-creation needed)
+- Filenames include UTC+14 date/time for chronological sorting
+
+**Posted Date/Time Display:**
+- Shows when member created/listed the post
+- Displayed in user's local timezone (converted from UTC+14)
+- Format: "Posted: {date} {time}" in user's local time
+- Stored in database as UTC+14, converted for display
+
+**Why This Approach is Better:**
+- Solves real problem: Prevents expired events from showing in search results
+- Fair to all users: Maximum visibility time regardless of location
+- Consistent system: One timezone for all operations
+- User-friendly: Displays converted to local time for clarity
+- Standard practice: Month-based organization is common (just using UTC+14 instead of UTC+0)
+
+**Note:** While UTC+14 is uncommon (most sites use UTC+0), it's the correct solution for this specific use case where auto-expiring events at end of day is critical for user experience.
+
+---
+
 **END OF DOCUMENT**
 
 **READ THIS FIRST BEFORE MAKING ANY CHANGES**
