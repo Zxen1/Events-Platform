@@ -3721,6 +3721,18 @@ const SystemImagePickerComponent = (function(){
         folderPath = folderPath || imageFolder;
         if (!folderPath) return Promise.resolve([]);
         
+        // Check if this is a Bunny CDN folder (starts with https://cdn.funmap.com/)
+        var isBunnyFolder = folderPath.indexOf('https://cdn.funmap.com/') === 0;
+        
+        if (isBunnyFolder) {
+            // For Bunny CDN, we need to list files differently
+            // For now, return empty - will need Bunny API or manual list
+            // TODO: Implement Bunny Storage API list when needed
+            console.warn('Bunny CDN folder listing not yet implemented');
+            return Promise.resolve([]);
+        }
+        
+        // Original server folder listing
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {

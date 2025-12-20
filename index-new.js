@@ -106,6 +106,56 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
+     BUNNY.NET CDN FOLDER REGISTRY
+     Centralized folder paths for all Bunny.net CDN images
+     -------------------------------------------------------------------------- */
+  const BUNNY_CDN_BASE = 'https://cdn.funmap.com/';
+  
+  const bunnyFolders = {
+    amenities: 'amenities/',
+    avatars: 'avatars/',
+    categoryIcons: 'category-icons/',
+    dummyImages: 'dummy-images/',
+    flags: 'flags/',
+    postImages: 'post-images/',
+    siteAvatars: 'site-avatars/',
+    siteImages: 'site-images/',
+    systemImages: 'system-images/'
+  };
+
+  /**
+   * Get full Bunny CDN URL for an image
+   * @param {string} folder - Folder key from bunnyFolders
+   * @param {string} filename - Image filename
+   * @param {string} [class] - Optional Bunny class for resizing (imagebox, thumbnail, minithumb)
+   * @returns {string} Full CDN URL
+   */
+  function getBunnyUrl(folder, filename, resizeClass) {
+    if (!bunnyFolders[folder]) {
+      console.warn(`[App] Unknown Bunny folder: ${folder}`);
+      return '';
+    }
+    
+    let url = BUNNY_CDN_BASE + bunnyFolders[folder] + filename;
+    
+    if (resizeClass) {
+      url += '?class=' + resizeClass;
+    }
+    
+    return url;
+  }
+
+  /**
+   * Get Bunny folder path (for building URLs manually if needed)
+   * @param {string} folder - Folder key from bunnyFolders
+   * @returns {string} Folder path
+   */
+  function getBunnyFolder(folder) {
+    return bunnyFolders[folder] || '';
+  }
+
+
+  /* --------------------------------------------------------------------------
      SHARED STATE
      Things multiple modules need access to
      -------------------------------------------------------------------------- */
@@ -403,7 +453,12 @@ const App = (function() {
     getTopPanel,
     
     // Favicon
-    setFavicon
+    setFavicon,
+    
+    // Bunny CDN
+    getBunnyUrl,
+    getBunnyFolder,
+    BUNNY_CDN_BASE
   };
 
 })();

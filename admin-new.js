@@ -1587,9 +1587,15 @@ const AdminModule = (function() {
         // Reuse settingsData if Settings tab already loaded it
         if (settingsInitialized && Object.keys(settingsData).length > 0) {
             mapTabData = settingsData;
-            if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
-                SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+            // TEST: Use Bunny CDN for system images (database setting commented out)
+            if (window.SystemImagePickerComponent && window.App && window.App.BUNNY_CDN_BASE) {
+                var bunnySystemFolder = window.App.BUNNY_CDN_BASE + 'system-images/';
+                SystemImagePickerComponent.setImageFolder(bunnySystemFolder);
             }
+            // Database setting commented out for test:
+            // if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
+            //     SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+            // }
             return Promise.resolve();
         }
         
@@ -1599,10 +1605,16 @@ const AdminModule = (function() {
                 if (data.success && data.settings) {
                     mapTabData = data.settings;
                     
-                    // Initialize SystemImagePickerComponent with folder from settings
-                    if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
-                        SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+                    // TEST: Use Bunny CDN for system images (database setting commented out)
+                    if (window.SystemImagePickerComponent && window.App && window.App.BUNNY_CDN_BASE) {
+                        // Use Bunny CDN system-images folder ONLY
+                        var bunnySystemFolder = window.App.BUNNY_CDN_BASE + 'system-images/';
+                        SystemImagePickerComponent.setImageFolder(bunnySystemFolder);
                     }
+                    // Database setting commented out for test:
+                    // if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
+                    //     SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+                    // }
                 }
             })
             .catch(function(err) {
@@ -2173,10 +2185,15 @@ const AdminModule = (function() {
                 if (data.success && data.settings) {
                     settingsData = data.settings;
 
-                    // Initialize SystemImagePickerComponent with folder from settings
-                    if (window.SystemImagePickerComponent && settingsData.system_images_folder) {
-                        SystemImagePickerComponent.setImageFolder(settingsData.system_images_folder);
+                    // TEST: Use Bunny CDN for system images (database setting commented out)
+                    if (window.SystemImagePickerComponent && window.App && window.App.BUNNY_CDN_BASE) {
+                        var bunnySystemFolder = window.App.BUNNY_CDN_BASE + 'system-images/';
+                        SystemImagePickerComponent.setImageFolder(bunnySystemFolder);
                     }
+                    // Database setting commented out for test:
+                    // if (window.SystemImagePickerComponent && settingsData.system_images_folder) {
+                    //     SystemImagePickerComponent.setImageFolder(settingsData.system_images_folder);
+                    // }
 
                     // Initialize CurrencyComponent data if available
                     if (window.CurrencyComponent && data.picklist && data.picklist.currency) {
