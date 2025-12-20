@@ -2103,6 +2103,181 @@ How text displays in the four reusable dropdown menus:
 
 ---
 
+## IMAGE FILENAME PATTERN
+
+**Date:** December 21, 2025
+
+**CRITICAL:** All user-uploaded images are renamed to a standardized format. Original filenames are discarded.
+
+### Filename Format
+
+**Pattern:**
+`{postId}-{hash}.{extension}`
+
+**Example:**
+- `123-a7f3b2.jpg`
+- `123-b8g4c3.png`
+- `123-c9h5d4.webp`
+
+### Components
+
+**Post ID:**
+- Never changes (even with multiple venues/addresses)
+- Links image to post in database
+
+**Hash:**
+- Ensures uniqueness
+- Prevents collisions
+- Permanent (doesn't change when images are reordered)
+
+**Extension:**
+- Preserved from original upload
+- No conversion/handling (Bunny handles optimization)
+- Stored as-is: `.jpg`, `.png`, `.webp`, etc.
+
+### Storage Location
+
+**Bunny.net Path:**
+`post-images/{year}-{month}/{postId}-{hash}.{extension}`
+
+**Example:**
+`https://cdn.funmap.com/post-images/2025-12/123-a7f3b2.jpg`
+
+**Month Folder:**
+- Determined by UTC+14 upload date
+- Auto-created by Bunny when uploading to new path
+- No pre-creation needed
+
+### Database Storage
+
+**Media Table Stores:**
+- `post_id` = 123
+- `file_url` = Full URL: `https://cdn.funmap.com/post-images/2025-12/123-a7f3b2.jpg`
+- `file_name` = `123-a7f3b2.jpg` (or just store URL)
+- `sort_order` = 1, 2, 3 (for drag-and-drop, separate from filename)
+- `uploaded_at` = UTC+14 timestamp
+- `hash` = a7f3b2 (for reference)
+
+### Workflow
+
+1. **User uploads:** Original filename (e.g., `funmap welcome message 2025-12-10b.png`)
+2. **System renames:** `123-a7f3b2.png` (post ID + hash + original extension)
+3. **Upload to Bunny:** `post-images/2025-12/123-a7f3b2.png`
+4. **Store in database:** Full URL and metadata
+5. **Original filename:** Discarded (not needed, standard practice)
+
+### Why This Approach
+
+**Security:**
+- No user-controlled filenames (prevents injection attacks)
+- Sanitized, predictable format
+
+**Uniqueness:**
+- Hash prevents collisions
+- Post ID + hash = guaranteed unique
+
+**Permanence:**
+- Filename doesn't change when images are reordered/deleted
+- Sort order stored separately in database
+
+**Simplicity:**
+- Short, clean filenames
+- Easy to reference
+- No unnecessary data in filename (all in database)
+
+**Standard Practice:**
+- Matches how most websites handle user uploads
+- WordPress, Facebook, Instagram all rename images
+- Original filenames typically discarded
+
+### Image Handling
+
+**No conversion/optimization by website:**
+- Bunny.net handles all image optimization
+- We just rename and upload
+- Extension preserved from original upload
+- Bunny may optimize on-the-fly (doesn't change filename)
+
+---
+
+## POST URLS AND AVATAR SYSTEM
+
+**Date:** December 21, 2025
+
+### Post URLs
+
+**Format:**
+`funmap.com/post/{id}-{slug}`
+
+**Example:**
+- `funmap.com/post/123-summer-music-festival`
+- `funmap.com/post/456-summer-music-festival`
+
+**Benefits:**
+- Chronological (ID first maintains order)
+- Readable (slug shows what post is about)
+- Unique (ID prevents collisions even with identical titles)
+- Works even if slug missing: `funmap.com/post/123`
+
+**URL Structure:**
+- `post/` prefix distinguishes content types (posts vs avatars vs members)
+- Other prefixes: `member/`, `avatar/` (if needed)
+
+### Avatar System
+
+**User Avatars:**
+- **Format:** `{memberId}-avatar.{extension}`
+- **Example:** `45-avatar.jpg`
+- **Location:** `https://cdn.funmap.com/avatars/45-avatar.jpg`
+- **Behavior:** Overwrites on new upload (old avatar deleted automatically)
+- **No hash needed** - simple system for beginner-level classifieds site
+- **No management interface** - keep it simple
+
+**Site Avatars (Library):**
+- **Location:** `https://cdn.funmap.com/site-avatars/`
+- **Filenames:** Descriptive, fun names (e.g., `monkey-on-bicycle.png`, `moon-through-clouds.jpg`)
+- **Purpose:** Premade library avatars for users to pick from
+- **Usage:** 3 random options shown + upload option
+- **Most users:** Pick from library (quick/easy)
+- **Business users:** Upload their own (professional)
+
+**Avatar Selection:**
+- Users see 3 random library avatars (radio buttons)
+- Option to upload their own
+- Most users pick from library (don't care enough to upload)
+- Business users upload for professionalism
+
+### Site Posts (Seed Content)
+
+**Folder Structure:**
+- `site-images/` (your posts - no month subfolders)
+- `post-images/{year}-{month}/` (user posts - with month subfolders)
+
+**Identification:**
+- **No extra database column needed**
+- **If `member_id = 1` (admin):** Don't show member avatar after post description
+- Simple code exception: `if (member_id === 1) { /* don't show avatar */ }`
+
+**Filename Structure:**
+- Same as user posts: `{postId}-{hash}.{extension}`
+- Same database structure (full compatibility)
+- Bulk creation via CSV/Google Places API/Wikipedia tools
+
+**Purpose:**
+- Make site look busy with seed content
+- Overt system design (not hidden, acceptable)
+- Easy to manage/replace all at once (dedicated folder)
+
+### Paid Posts System
+
+**No Free Posts:**
+- Every post costs money (prevents spam)
+- Users must consider value before posting
+- Special permission required for free posts (rare exceptions)
+- Not an open forum - quality over quantity
+
+---
+
 **END OF DOCUMENT**
 
 **READ THIS FIRST BEFORE MAKING ANY CHANGES**
