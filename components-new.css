@@ -367,6 +367,23 @@
     white-space: nowrap;
 }
 
+.fieldset-menu-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+}
+
+.fieldset-menu-button-input::placeholder {
+    color: #666;
+}
+
 .fieldset-menu-button-arrow {
     width: 16px;
     height: 36px;
@@ -376,6 +393,7 @@
     font-size: 10px;
     color: #888;
     transition: transform 0.2s;
+    cursor: pointer;
 }
 
 .fieldset-menu-options {
@@ -1058,6 +1076,11 @@
 }
 
 .fieldset-currency-compact .fieldset-menu-button-text {
+    padding-left: 6px;
+    font-size: 12px;
+}
+
+.fieldset-currency-compact .fieldset-menu-button-input {
     padding-left: 6px;
     font-size: 12px;
 }

@@ -292,79 +292,201 @@ const FieldsetComponent = (function(){
     }
     
     // Build compact currency menu (100px, value only, default USD)
+    // Combobox style - type to filter
     function buildCurrencyMenuCompact(container) {
+        var selectedCode = 'USD';
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><span class="fieldset-menu-button-text">USD</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><input type="text" class="fieldset-menu-button-input" value="USD" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
         var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        var btnInput = menu.querySelector('.fieldset-menu-button-input');
         
+        var allOptions = [];
         var currencies = picklist['currency'] || [];
+
+        function setValue(code) {
+            var found = currencies.find(function(item) {
+                return item.value.substring(3) === code;
+            });
+            if (found) {
+                btnImg.src = 'assets/flags/' + found.value.substring(0,2) + '.svg';
+                btnInput.value = found.value.substring(3);
+                selectedCode = code;
+            }
+        }
+
+        function filterOptions(searchText) {
+            var search = searchText.toLowerCase();
+            allOptions.forEach(function(optData) {
+                optData.element.style.display = optData.searchText.indexOf(search) !== -1 ? '' : 'none';
+            });
+        }
+
         currencies.forEach(function(item) {
+            var countryCode = item.value.substring(0,2);
+            var currencyCode = item.value.substring(3);
+            var displayText = currencyCode + ' - ' + item.label;
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
-                btnText.textContent = item.value.substring(3); // Value only
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnInput.value = currencyCode;
+                selectedCode = currencyCode;
                 menu.classList.remove('open');
+                filterOptions('');
             };
             opts.appendChild(op);
+            allOptions.push({ element: op, searchText: displayText.toLowerCase() });
         });
         
-        // Register with MenuManager
         MenuManager.register(menu);
-        
-        btn.onclick = function(e) {
+
+        btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
-            // Close all other menus first
             MenuManager.closeAll(menu);
-            menu.classList.toggle('open');
-        };
+            menu.classList.add('open');
+            this.select();
+        });
+
+        btnInput.addEventListener('input', function() {
+            filterOptions(this.value);
+            if (!menu.classList.contains('open')) menu.classList.add('open');
+        });
+
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                menu.classList.remove('open');
+                setValue(selectedCode);
+                filterOptions('');
+            }
+        });
+
+        btnInput.addEventListener('blur', function() {
+            setTimeout(function() {
+                if (!menu.classList.contains('open')) {
+                    setValue(selectedCode);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            } else {
+                MenuManager.closeAll(menu);
+                menu.classList.add('open');
+                btnInput.focus();
+                btnInput.select();
+            }
+        });
         
         return menu;
     }
     
     // Build phone prefix menu (120px compact, same style as currency)
+    // Combobox style - type to filter
     function buildPhonePrefixMenu(container) {
+        var selectedPrefix = '+1';
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><span class="fieldset-menu-button-text">+1</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><input type="text" class="fieldset-menu-button-input" value="+1" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
         var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnText = menu.querySelector('.fieldset-menu-button-text');
+        var btnInput = menu.querySelector('.fieldset-menu-button-input');
         
-        // Default is hardcoded to US (+1) - set in innerHTML above
+        var allOptions = [];
         var prefixes = picklist['phone-prefix'] || [];
 
+        function setValue(prefix) {
+            var found = prefixes.find(function(item) {
+                return item.value.substring(3) === prefix;
+            });
+            if (found) {
+                btnImg.src = 'assets/flags/' + found.value.substring(0,2) + '.svg';
+                btnInput.value = found.value.substring(3);
+                selectedPrefix = prefix;
+            }
+        }
+
+        function filterOptions(searchText) {
+            var search = searchText.toLowerCase();
+            allOptions.forEach(function(optData) {
+                optData.element.style.display = optData.searchText.indexOf(search) !== -1 ? '' : 'none';
+            });
+        }
+
         prefixes.forEach(function(item) {
+            var countryCode = item.value.substring(0,2);
+            var prefix = item.value.substring(3);
+            var displayText = prefix + ' - ' + item.label;
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = 'assets/flags/' + item.value.substring(0,2) + '.svg';
-                btnText.textContent = item.value.substring(3);
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnInput.value = prefix;
+                selectedPrefix = prefix;
                 menu.classList.remove('open');
+                filterOptions('');
             };
             opts.appendChild(op);
+            allOptions.push({ element: op, searchText: displayText.toLowerCase() });
         });
         
-        // Register with MenuManager
         MenuManager.register(menu);
-        
-        btn.onclick = function(e) {
+
+        btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
-            // Close all other menus first
             MenuManager.closeAll(menu);
-            menu.classList.toggle('open');
-        };
+            menu.classList.add('open');
+            this.select();
+        });
+
+        btnInput.addEventListener('input', function() {
+            filterOptions(this.value);
+            if (!menu.classList.contains('open')) menu.classList.add('open');
+        });
+
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                menu.classList.remove('open');
+                setValue(selectedPrefix);
+                filterOptions('');
+            }
+        });
+
+        btnInput.addEventListener('blur', function() {
+            setTimeout(function() {
+                if (!menu.classList.contains('open')) {
+                    setValue(selectedPrefix);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            } else {
+                MenuManager.closeAll(menu);
+                menu.classList.add('open');
+                btnInput.focus();
+                btnInput.select();
+            }
+        });
         
         return menu;
     }
@@ -831,53 +953,103 @@ const FieldsetComponent = (function(){
             case 'item-pricing':
                 // Item Name (full width), then variants with currency + price
                 fieldset.appendChild(buildLabel(name, tooltip));
-                
+
                 // Track shared currency state for item pricing
                 var itemCurrencyState = { flag: 'us', code: 'USD' };
                 var itemCurrencyMenus = [];
-                
+
                 function syncAllItemCurrencies() {
                     itemCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
-                        var text = menu.querySelector('.fieldset-menu-button-text');
+                        var input = menu.querySelector('.fieldset-menu-button-input');
                         img.src = 'assets/flags/' + itemCurrencyState.flag + '.svg';
-                        text.textContent = itemCurrencyState.code;
+                        input.value = itemCurrencyState.code;
                     });
                 }
-                
+
                 function buildItemCurrencyMenu() {
                     var menu = document.createElement('div');
                     menu.className = 'fieldset-menu fieldset-currency-compact';
-                    menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + itemCurrencyState.flag + '.svg" alt=""><span class="fieldset-menu-button-text">' + itemCurrencyState.code + '</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
-                    
+                    menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + itemCurrencyState.flag + '.svg" alt=""><input type="text" class="fieldset-menu-button-input" value="' + itemCurrencyState.code + '" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+
                     var btn = menu.querySelector('.fieldset-menu-button');
                     var opts = menu.querySelector('.fieldset-menu-options');
-                    
+                    var btnImg = menu.querySelector('.fieldset-menu-button-image');
+                    var btnInput = menu.querySelector('.fieldset-menu-button-input');
+
+                    var allOptions = [];
                     var currencies = picklist['currency'] || [];
+
+                    function filterOptions(searchText) {
+                        var search = searchText.toLowerCase();
+                        allOptions.forEach(function(optData) {
+                            optData.element.style.display = optData.searchText.indexOf(search) !== -1 ? '' : 'none';
+                        });
+                    }
+
                     currencies.forEach(function(item) {
+                        var countryCode = item.value.substring(0,2);
+                        var currencyCode = item.value.substring(3);
+                        var displayText = currencyCode + ' - ' + item.label;
                         var op = document.createElement('div');
                         op.className = 'fieldset-menu-option';
-                        op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+                        op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
                         op.onclick = function(e) {
                             e.stopPropagation();
-                            itemCurrencyState.flag = item.value.substring(0,2);
-                            itemCurrencyState.code = item.value.substring(3);
+                            itemCurrencyState.flag = countryCode;
+                            itemCurrencyState.code = currencyCode;
                             syncAllItemCurrencies();
                             menu.classList.remove('open');
+                            filterOptions('');
                         };
                         opts.appendChild(op);
+                        allOptions.push({ element: op, searchText: displayText.toLowerCase() });
                     });
-                    
-                    // Register with MenuManager
+
                     MenuManager.register(menu);
-                    
-                    btn.onclick = function(e) {
+
+                    btnInput.addEventListener('focus', function(e) {
                         e.stopPropagation();
-                        // Close all other menus first
                         MenuManager.closeAll(menu);
-                        menu.classList.toggle('open');
-                    };
-                    
+                        menu.classList.add('open');
+                        this.select();
+                    });
+
+                    btnInput.addEventListener('input', function() {
+                        filterOptions(this.value);
+                        if (!menu.classList.contains('open')) menu.classList.add('open');
+                    });
+
+                    btnInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') {
+                            menu.classList.remove('open');
+                            btnInput.value = itemCurrencyState.code;
+                            filterOptions('');
+                        }
+                    });
+
+                    btnInput.addEventListener('blur', function() {
+                        setTimeout(function() {
+                            if (!menu.classList.contains('open')) {
+                                btnInput.value = itemCurrencyState.code;
+                                filterOptions('');
+                            }
+                        }, 150);
+                    });
+
+                    var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+                    arrow.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (menu.classList.contains('open')) {
+                            menu.classList.remove('open');
+                        } else {
+                            MenuManager.closeAll(menu);
+                            menu.classList.add('open');
+                            btnInput.focus();
+                            btnInput.select();
+                        }
+                    });
+
                     itemCurrencyMenus.push(menu);
                     return menu;
                 }
@@ -1032,49 +1204,99 @@ const FieldsetComponent = (function(){
                 // Track shared currency state
                 var ticketCurrencyState = { flag: 'us', code: 'USD' };
                 var ticketCurrencyMenus = [];
-                
+
                 function syncAllTicketCurrencies() {
                     ticketCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
-                        var text = menu.querySelector('.fieldset-menu-button-text');
+                        var input = menu.querySelector('.fieldset-menu-button-input');
                         img.src = 'assets/flags/' + ticketCurrencyState.flag + '.svg';
-                        text.textContent = ticketCurrencyState.code;
+                        input.value = ticketCurrencyState.code;
                     });
                 }
-                
+
                 function buildTicketCurrencyMenu() {
                     var menu = document.createElement('div');
                     menu.className = 'fieldset-menu fieldset-currency-compact';
-                    menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + ticketCurrencyState.flag + '.svg" alt=""><span class="fieldset-menu-button-text">' + ticketCurrencyState.code + '</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
-                    
+                    menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/' + ticketCurrencyState.flag + '.svg" alt=""><input type="text" class="fieldset-menu-button-input" value="' + ticketCurrencyState.code + '" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+
                     var btn = menu.querySelector('.fieldset-menu-button');
                     var opts = menu.querySelector('.fieldset-menu-options');
-                    
+                    var btnImg = menu.querySelector('.fieldset-menu-button-image');
+                    var btnInput = menu.querySelector('.fieldset-menu-button-input');
+
+                    var allOptions = [];
                     var currencies = picklist['currency'] || [];
+
+                    function filterOptions(searchText) {
+                        var search = searchText.toLowerCase();
+                        allOptions.forEach(function(optData) {
+                            optData.element.style.display = optData.searchText.indexOf(search) !== -1 ? '' : 'none';
+                        });
+                    }
+
                     currencies.forEach(function(item) {
+                        var countryCode = item.value.substring(0,2);
+                        var currencyCode = item.value.substring(3);
+                        var displayText = currencyCode + ' - ' + item.label;
                         var op = document.createElement('div');
                         op.className = 'fieldset-menu-option';
-                        op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + item.value.substring(0,2) + '.svg" alt=""><span class="fieldset-menu-option-text">' + item.value.substring(3) + ' - ' + item.label + '</span>';
+                        op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
                         op.onclick = function(e) {
                             e.stopPropagation();
-                            ticketCurrencyState.flag = item.value.substring(0,2);
-                            ticketCurrencyState.code = item.value.substring(3);
+                            ticketCurrencyState.flag = countryCode;
+                            ticketCurrencyState.code = currencyCode;
                             syncAllTicketCurrencies();
                             menu.classList.remove('open');
+                            filterOptions('');
                         };
                         opts.appendChild(op);
+                        allOptions.push({ element: op, searchText: displayText.toLowerCase() });
                     });
-                    
-                    // Register with MenuManager
+
                     MenuManager.register(menu);
-                    
-                    btn.onclick = function(e) {
+
+                    btnInput.addEventListener('focus', function(e) {
                         e.stopPropagation();
-                        // Close all other menus first
                         MenuManager.closeAll(menu);
-                        menu.classList.toggle('open');
-                    };
-                    
+                        menu.classList.add('open');
+                        this.select();
+                    });
+
+                    btnInput.addEventListener('input', function() {
+                        filterOptions(this.value);
+                        if (!menu.classList.contains('open')) menu.classList.add('open');
+                    });
+
+                    btnInput.addEventListener('keydown', function(e) {
+                        if (e.key === 'Escape') {
+                            menu.classList.remove('open');
+                            btnInput.value = ticketCurrencyState.code;
+                            filterOptions('');
+                        }
+                    });
+
+                    btnInput.addEventListener('blur', function() {
+                        setTimeout(function() {
+                            if (!menu.classList.contains('open')) {
+                                btnInput.value = ticketCurrencyState.code;
+                                filterOptions('');
+                            }
+                        }, 150);
+                    });
+
+                    var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+                    arrow.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (menu.classList.contains('open')) {
+                            menu.classList.remove('open');
+                        } else {
+                            MenuManager.closeAll(menu);
+                            menu.classList.add('open');
+                            btnInput.focus();
+                            btnInput.select();
+                        }
+                    });
+
                     ticketCurrencyMenus.push(menu);
                     return menu;
                 }
@@ -2119,55 +2341,135 @@ const CurrencyComponent = (function(){
     }
     
     // Build a compact currency menu (100px, code only)
-    // Returns the complete menu element
+    // Combobox style - type to filter options
+    // Returns object with element and setValue method
     function buildCompactMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
-        var containerEl = options.container || null; // For closing other menus
-        
+        var initialValue = options.initialValue || null;
+        var selectedCode = initialValue;
+
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><span class="fieldset-menu-button-text">Select currency</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
-        
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
-        var btnText = menu.querySelector('.fieldset-menu-button-text');
-        var btnImg = null;
-        
-        var currencies = currencyData;
-        currencies.forEach(function(item) {
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnInput = menu.querySelector('.fieldset-menu-button-input');
+
+        // Store all option elements for filtering
+        var allOptions = [];
+
+        // Find and set value
+        function setValue(code) {
+            var found = currencyData.find(function(item) {
+                return item.value.substring(3) === code;
+            });
+            if (found) {
+                var countryCode = found.value.substring(0, 2);
+                var currencyCode = found.value.substring(3);
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnInput.value = currencyCode;
+                selectedCode = code;
+            }
+        }
+
+        // Filter options based on search text
+        function filterOptions(searchText) {
+            var search = searchText.toLowerCase();
+            allOptions.forEach(function(optData) {
+                var matches = optData.searchText.indexOf(search) !== -1;
+                optData.element.style.display = matches ? '' : 'none';
+            });
+        }
+
+        // Build options
+        currencyData.forEach(function(item) {
             var countryCode = item.value.substring(0, 2);
             var currencyCode = item.value.substring(3);
+            var displayText = currencyCode + ' - ' + item.label;
+
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + currencyCode + ' - ' + item.label + '</span>';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                if (!btnImg) {
-                    btnImg = document.createElement('img');
-                    btnImg.className = 'fieldset-menu-button-image';
-                    btnImg.alt = '';
-                    btn.insertBefore(btnImg, btnText);
-                }
                 btnImg.src = 'assets/flags/' + countryCode + '.svg';
-                btnText.textContent = currencyCode;
+                btnInput.value = currencyCode;
+                selectedCode = currencyCode;
                 menu.classList.remove('open');
+                filterOptions('');
                 onSelect(currencyCode, item.label, countryCode);
             };
             opts.appendChild(op);
+
+            // Store for filtering
+            allOptions.push({
+                element: op,
+                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+            });
         });
-        
+
+        // Set initial value
+        if (initialValue) {
+            setValue(initialValue);
+        }
+
         // Register with MenuManager
         MenuManager.register(menu);
-        
-        btn.onclick = function(e) {
+
+        // Input events
+        btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
-            // Close all other menus first
             MenuManager.closeAll(menu);
-            menu.classList.toggle('open');
+            menu.classList.add('open');
+            this.select();
+        });
+
+        btnInput.addEventListener('input', function(e) {
+            filterOptions(this.value);
+            if (!menu.classList.contains('open')) {
+                menu.classList.add('open');
+            }
+        });
+
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                menu.classList.remove('open');
+                setValue(selectedCode);
+                filterOptions('');
+            }
+        });
+
+        // Blur - restore selected value when clicking away
+        btnInput.addEventListener('blur', function() {
+            setTimeout(function() {
+                if (!menu.classList.contains('open')) {
+                    setValue(selectedCode);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
+        // Arrow click opens/closes
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            } else {
+                MenuManager.closeAll(menu);
+                menu.classList.add('open');
+                btnInput.focus();
+                btnInput.select();
+            }
+        });
+
+        return {
+            element: menu,
+            setValue: setValue
         };
-        
-        return menu;
     }
     
     // Build a full currency menu (wide, shows code + label)
@@ -2365,56 +2667,135 @@ const PhonePrefixComponent = (function(){
     }
     
     // Build a compact phone prefix menu (100px, prefix only)
-    // Returns the complete menu element
+    // Combobox style - type to filter options
+    // Returns object with element and setValue method
     function buildCompactMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
-        var containerEl = options.container || null; // For closing other menus
-        
+        var initialValue = options.initialValue || null;
+        var selectedPrefix = initialValue;
+
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        menu.innerHTML = '<div class="fieldset-menu-button"><span class="fieldset-menu-button-text">Select prefix</span><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
-        
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="assets/flags/us.svg" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
-        var btnText = menu.querySelector('.fieldset-menu-button-text');
-        var btnImg = null;
-        
-        var prefixes = prefixData;
-        
-        prefixes.forEach(function(item) {
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnInput = menu.querySelector('.fieldset-menu-button-input');
+
+        // Store all option elements for filtering
+        var allOptions = [];
+
+        // Find and set value
+        function setValue(prefix) {
+            var found = prefixData.find(function(item) {
+                return item.value.substring(3) === prefix;
+            });
+            if (found) {
+                var countryCode = found.value.substring(0, 2);
+                var prefixCode = found.value.substring(3);
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnInput.value = prefixCode;
+                selectedPrefix = prefix;
+            }
+        }
+
+        // Filter options based on search text
+        function filterOptions(searchText) {
+            var search = searchText.toLowerCase();
+            allOptions.forEach(function(optData) {
+                var matches = optData.searchText.indexOf(search) !== -1;
+                optData.element.style.display = matches ? '' : 'none';
+            });
+        }
+
+        // Build options
+        prefixData.forEach(function(item) {
             var countryCode = item.value.substring(0, 2);
             var prefix = item.value.substring(3);
-                    var op = document.createElement('div');
+            var displayText = prefix + ' - ' + item.label;
+
+            var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + prefix + ' - ' + item.label + '</span>';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="assets/flags/' + countryCode + '.svg" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                if (!btnImg) {
-                    btnImg = document.createElement('img');
-                    btnImg.className = 'fieldset-menu-button-image';
-                    btnImg.alt = '';
-                    btn.insertBefore(btnImg, btnText);
-                }
                 btnImg.src = 'assets/flags/' + countryCode + '.svg';
-                btnText.textContent = prefix;
+                btnInput.value = prefix;
+                selectedPrefix = prefix;
                 menu.classList.remove('open');
+                filterOptions('');
                 onSelect(prefix, item.label, countryCode);
             };
-                    opts.appendChild(op);
+            opts.appendChild(op);
+
+            // Store for filtering
+            allOptions.push({
+                element: op,
+                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+            });
         });
-        
+
+        // Set initial value
+        if (initialValue) {
+            setValue(initialValue);
+        }
+
         // Register with MenuManager
         MenuManager.register(menu);
-        
-        btn.onclick = function(e) {
+
+        // Input events
+        btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
-            // Close all other menus first
             MenuManager.closeAll(menu);
-            menu.classList.toggle('open');
+            menu.classList.add('open');
+            this.select();
+        });
+
+        btnInput.addEventListener('input', function(e) {
+            filterOptions(this.value);
+            if (!menu.classList.contains('open')) {
+                menu.classList.add('open');
+            }
+        });
+
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                menu.classList.remove('open');
+                setValue(selectedPrefix);
+                filterOptions('');
+            }
+        });
+
+        // Blur - restore selected value when clicking away
+        btnInput.addEventListener('blur', function() {
+            setTimeout(function() {
+                if (!menu.classList.contains('open')) {
+                    setValue(selectedPrefix);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
+        // Arrow click opens/closes
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            } else {
+                MenuManager.closeAll(menu);
+                menu.classList.add('open');
+                btnInput.focus();
+                btnInput.select();
+            }
+        });
+
+        return {
+            element: menu,
+            setValue: setValue
         };
-        
-        return menu;
     }
     
     return {
