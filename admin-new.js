@@ -1571,15 +1571,19 @@ const AdminModule = (function() {
     var mapTabData = {}; // Cached map settings from database
     
     function initMapTab() {
+        console.log('[Admin] initMapTab called, initialized:', mapTabInitialized);
         if (mapTabInitialized) return;
         
         mapTabContainer = document.getElementById('admin-tab-map');
+        console.log('[Admin] mapTabContainer:', mapTabContainer);
         if (!mapTabContainer) return;
         
         // Load settings from database then initialize controls
         loadMapTabSettings().then(function() {
+            console.log('[Admin] Map settings loaded, mapTabData:', mapTabData);
             attachMapTabHandlers();
             mapTabInitialized = true;
+            console.log('[Admin] Map tab fully initialized');
         });
     }
     
@@ -1611,11 +1615,13 @@ const AdminModule = (function() {
     }
     
     function attachMapTabHandlers() {
+        console.log('[Admin] attachMapTabHandlers called');
         if (!mapTabContainer) return;
         
         // Starting Zoom slider
         var startingZoomSlider = document.getElementById('adminStartingZoom');
         var startingZoomDisplay = document.getElementById('adminStartingZoomDisplay');
+        console.log('[Admin] Starting Zoom elements:', startingZoomSlider, startingZoomDisplay);
         if (startingZoomSlider && startingZoomDisplay) {
             var initialZoom = mapTabData.starting_zoom !== undefined ? parseFloat(mapTabData.starting_zoom) : 10;
             startingZoomSlider.value = initialZoom;
@@ -1787,6 +1793,8 @@ const AdminModule = (function() {
         initMapImagePicker('adminBigMapCardPillPicker', 'big_map_card_pill');
         initMapImagePicker('adminHoverMapCardPillPicker', 'hover_map_card_pill');
         initMapImagePicker('adminMultiPostIconPicker', 'multi_post_icon');
+        
+        console.log('[Admin] attachMapTabHandlers completed');
     }
     
     // Helper to update switch slider visual state
@@ -1798,12 +1806,14 @@ const AdminModule = (function() {
     }
     
     function initStartingLocationGeocoder() {
+        console.log('[Admin] initStartingLocationGeocoder called');
         var startingAddressInput = document.getElementById('adminStartingAddress');
         var startingLatInput = document.getElementById('adminStartingLat');
         var startingLngInput = document.getElementById('adminStartingLng');
         var startingGeocoderContainer = document.getElementById('admin-geocoder-starting');
         var startingAddressDisplay = document.getElementById('admin-starting-address-display');
         
+        console.log('[Admin] Geocoder container:', startingGeocoderContainer);
         if (!startingGeocoderContainer) return;
         if (startingGeocoderContainer.dataset.geocoderAdded) return;
         startingGeocoderContainer.dataset.geocoderAdded = 'true';
@@ -1928,6 +1938,7 @@ const AdminModule = (function() {
     
     function initMapImagePicker(containerId, settingKey) {
         var container = document.getElementById(containerId);
+        console.log('[Admin] initMapImagePicker:', containerId, 'container:', container, 'SystemImagePickerComponent:', !!window.SystemImagePickerComponent);
         if (!container || !window.SystemImagePickerComponent) return;
         
         var initialValue = mapTabData[settingKey] || '';
