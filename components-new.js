@@ -694,32 +694,30 @@ const FieldsetComponent = (function(){
                 
             case 'images':
                 fieldset.appendChild(buildLabel(name, tooltip));
-                
+
                 var imagesContainer = document.createElement('div');
                 imagesContainer.className = 'fieldset-images-container';
-                imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; gap: 5px;';
-                
+
                 var imageFiles = [];
                 var maxImages = 10;
-                
+
                 function renderImages() {
                     imagesContainer.innerHTML = '';
-                    
+
                     // Show existing images
                     imageFiles.forEach(function(file, idx) {
                         var thumb = document.createElement('div');
                         thumb.className = 'fieldset-image-thumb';
-                        thumb.style.cssText = 'width: 76px; height: 76px; position: relative; border-radius: 4px; overflow: hidden; background: #222; border: 1px solid #333; flex-shrink: 0;';
-                        
+
                         var img = document.createElement('img');
+                        img.className = 'fieldset-image-thumb-img';
                         img.src = URL.createObjectURL(file);
-                        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
                         thumb.appendChild(img);
-                        
+
                         var removeBtn = document.createElement('button');
                         removeBtn.type = 'button';
+                        removeBtn.className = 'fieldset-image-thumb-remove';
                         removeBtn.textContent = '×';
-                        removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: rgba(0,0,0,0.7); border: none; border-radius: 50%; color: #fff; cursor: pointer; font-size: 12px; line-height: 1;';
                         (function(idx) {
                             removeBtn.addEventListener('click', function() {
                                 imageFiles.splice(idx, 1);
@@ -727,10 +725,10 @@ const FieldsetComponent = (function(){
                             });
                         })(idx);
                         thumb.appendChild(removeBtn);
-                        
+
                         imagesContainer.appendChild(thumb);
                     });
-                    
+
                     // Show upload button if under max
                     if (imageFiles.length < maxImages) {
                         var uploadBox = document.createElement('div');
