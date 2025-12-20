@@ -1051,6 +1051,7 @@ Mapbox layers in rendering order (bottom to top):
 **Map tab:**
 - Starting Location geocoder
 - Starting Zoom slider
+- Starting Pitch slider
 - Spin on Load toggle + Everyone/New Users radios
 - Spin on Logo toggle
 - Spin Max Zoom slider

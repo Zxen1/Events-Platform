@@ -55,7 +55,7 @@ const MapModule = (function() {
   // Spin defaults
   const DEFAULT_SPIN_SPEED = 0.015;
   const DEFAULT_SPIN_ZOOM_MAX = 5;
-  const DEFAULT_PITCH = 45;
+  const DEFAULT_PITCH = 0;
   
   // Text settings
   const MARKER_LABEL_TEXT_SIZE = 11;
@@ -178,7 +178,6 @@ const MapModule = (function() {
     updateZoomIndicator();
     
     // Start spin if enabled
-    console.log('[Map] onMapLoad - spinEnabled:', spinEnabled, 'spinLoadStart:', spinLoadStart);
     if (spinEnabled) {
       startSpin();
     }
@@ -212,11 +211,9 @@ const MapModule = (function() {
       // Use GET request (same as admin panel) - POST is blocked by server
       const response = await fetch('/gateway.php?action=get-admin-settings');
       const result = await response.json();
-      console.log('[Map] Settings loaded:', result);
       if (result && result.success && result.settings) {
         adminSettings = result.settings;
         applySettings(result.settings);
-        console.log('[Map] Settings applied - spinLoadStart:', spinLoadStart, 'spinEnabled:', spinEnabled, 'startCenter:', startCenter, 'startZoom:', startZoom);
       }
     } catch (err) {
       console.warn('[Map] Failed to load settings:', err);
@@ -240,6 +237,13 @@ const MapModule = (function() {
       const zoom = parseFloat(settings.starting_zoom);
       if (Number.isFinite(zoom)) {
         startZoom = zoom;
+      }
+    }
+    
+    if (settings.starting_pitch !== undefined) {
+      const pitch = parseFloat(settings.starting_pitch);
+      if (Number.isFinite(pitch)) {
+        startPitch = pitch;
       }
     }
     

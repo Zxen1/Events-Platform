@@ -1571,19 +1571,15 @@ const AdminModule = (function() {
     var mapTabData = {}; // Cached map settings from database
     
     function initMapTab() {
-        console.log('[Admin] initMapTab called, initialized:', mapTabInitialized);
         if (mapTabInitialized) return;
         
         mapTabContainer = document.getElementById('admin-tab-map');
-        console.log('[Admin] mapTabContainer:', mapTabContainer);
         if (!mapTabContainer) return;
         
         // Load settings from database then initialize controls
         loadMapTabSettings().then(function() {
-            console.log('[Admin] Map settings loaded, mapTabData:', mapTabData);
             attachMapTabHandlers();
             mapTabInitialized = true;
-            console.log('[Admin] Map tab fully initialized');
         });
     }
     
@@ -1615,13 +1611,11 @@ const AdminModule = (function() {
     }
     
     function attachMapTabHandlers() {
-        console.log('[Admin] attachMapTabHandlers called');
         if (!mapTabContainer) return;
         
         // Starting Zoom slider
         var startingZoomSlider = document.getElementById('adminStartingZoom');
         var startingZoomDisplay = document.getElementById('adminStartingZoomDisplay');
-        console.log('[Admin] Starting Zoom elements:', startingZoomSlider, startingZoomDisplay);
         if (startingZoomSlider && startingZoomDisplay) {
             var initialZoom = mapTabData.starting_zoom !== undefined ? parseFloat(mapTabData.starting_zoom) : 10;
             startingZoomSlider.value = initialZoom;
@@ -1632,6 +1626,22 @@ const AdminModule = (function() {
             startingZoomSlider.addEventListener('input', function() {
                 startingZoomDisplay.textContent = Math.round(parseFloat(startingZoomSlider.value)).toString();
                 updateField('map.starting_zoom', parseFloat(startingZoomSlider.value));
+            });
+        }
+        
+        // Starting Pitch slider
+        var startingPitchSlider = document.getElementById('adminStartingPitch');
+        var startingPitchDisplay = document.getElementById('adminStartingPitchDisplay');
+        if (startingPitchSlider && startingPitchDisplay) {
+            var initialPitch = mapTabData.starting_pitch !== undefined ? parseFloat(mapTabData.starting_pitch) : 0;
+            startingPitchSlider.value = initialPitch;
+            startingPitchDisplay.textContent = Math.round(initialPitch).toString() + '°';
+            
+            registerField('map.starting_pitch', initialPitch);
+            
+            startingPitchSlider.addEventListener('input', function() {
+                startingPitchDisplay.textContent = Math.round(parseFloat(startingPitchSlider.value)).toString() + '°';
+                updateField('map.starting_pitch', parseFloat(startingPitchSlider.value));
             });
         }
         
@@ -1793,8 +1803,6 @@ const AdminModule = (function() {
         initMapImagePicker('adminBigMapCardPillPicker', 'big_map_card_pill');
         initMapImagePicker('adminHoverMapCardPillPicker', 'hover_map_card_pill');
         initMapImagePicker('adminMultiPostIconPicker', 'multi_post_icon');
-        
-        console.log('[Admin] attachMapTabHandlers completed');
     }
     
     // Helper to update switch slider visual state
@@ -1806,14 +1814,11 @@ const AdminModule = (function() {
     }
     
     function initStartingLocationGeocoder() {
-        console.log('[Admin] initStartingLocationGeocoder called');
         var startingAddressInput = document.getElementById('adminStartingAddress');
         var startingLatInput = document.getElementById('adminStartingLat');
         var startingLngInput = document.getElementById('adminStartingLng');
         var startingGeocoderContainer = document.getElementById('admin-geocoder-starting');
         var startingAddressDisplay = document.getElementById('admin-starting-address-display');
-        
-        console.log('[Admin] Geocoder container:', startingGeocoderContainer);
         if (!startingGeocoderContainer) return;
         if (startingGeocoderContainer.dataset.geocoderAdded) return;
         startingGeocoderContainer.dataset.geocoderAdded = 'true';
@@ -1938,7 +1943,6 @@ const AdminModule = (function() {
     
     function initMapImagePicker(containerId, settingKey) {
         var container = document.getElementById(containerId);
-        console.log('[Admin] initMapImagePicker:', containerId, 'container:', container, 'SystemImagePickerComponent:', !!window.SystemImagePickerComponent);
         if (!container || !window.SystemImagePickerComponent) return;
         
         var initialValue = mapTabData[settingKey] || '';
@@ -1968,6 +1972,7 @@ const AdminModule = (function() {
         // Reset sliders
         var sliders = [
             { id: 'adminStartingZoom', displayId: 'adminStartingZoomDisplay', fieldId: 'map.starting_zoom', format: 'int' },
+            { id: 'adminStartingPitch', displayId: 'adminStartingPitchDisplay', fieldId: 'map.starting_pitch', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
             { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
             { id: 'adminMapShadowOpacity', displayId: 'adminMapShadowOpacityDisplay', fieldId: 'map.post_mode_bg_opacity', format: 'decimal2' }
@@ -1981,6 +1986,8 @@ const AdminModule = (function() {
                 slider.value = entry.original;
                 if (s.format === 'int') {
                     display.textContent = Math.round(entry.original).toString();
+                } else if (s.format === 'degree') {
+                    display.textContent = Math.round(entry.original).toString() + '°';
                 } else if (s.format === 'decimal1') {
                     display.textContent = parseFloat(entry.original).toFixed(1);
                 } else if (s.format === 'decimal2') {
