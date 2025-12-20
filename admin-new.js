@@ -1753,17 +1753,14 @@ const AdminModule = (function() {
             headerBadge.className = 'admin-checkout-accordion-header-badge' + (isFeatured ? ' admin-checkout-accordion-header-badge--featured' : '');
             headerBadge.textContent = featuredBadgeText;
 
-            // Edit area (pen icon only)
-            var headerEditArea = document.createElement('div');
-            headerEditArea.className = 'admin-checkout-accordion-header-editarea';
-            var headerEdit = document.createElement('div');
-            headerEdit.className = 'admin-checkout-accordion-header-edit';
-            headerEdit.innerHTML = icons.editPen;
-            headerEditArea.appendChild(headerEdit);
+            // Arrow (same as messages/formbuilder)
+            var headerArrow = document.createElement('span');
+            headerArrow.className = 'admin-checkout-accordion-header-arrow';
+            headerArrow.textContent = '▼';
 
             header.appendChild(headerText);
             header.appendChild(headerBadge);
-            header.appendChild(headerEditArea);
+            header.appendChild(headerArrow);
 
             // Edit panel (sibling to header)
             var editPanel = document.createElement('div');
@@ -1873,6 +1870,37 @@ const AdminModule = (function() {
             var priceInput = accordion.querySelector('.admin-checkout-option-price');
             var basicDayRateInput = accordion.querySelector('.admin-checkout-option-basic-day-rate');
             var discountDayRateInput = accordion.querySelector('.admin-checkout-option-discount-day-rate');
+
+            // Prevent letters and scroll wheel on number inputs
+            function setupNumericInput(input, allowDecimal) {
+                if (!input) return;
+                // Prevent scroll wheel changing value
+                input.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                }, { passive: false });
+                // Only allow numbers (and decimal if specified)
+                input.addEventListener('keydown', function(e) {
+                    // Allow: backspace, delete, tab, escape, enter, arrows
+                    if ([8, 46, 9, 27, 13, 37, 38, 39, 40].indexOf(e.keyCode) !== -1) return;
+                    // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                    if ((e.ctrlKey || e.metaKey) && [65, 67, 86, 88].indexOf(e.keyCode) !== -1) return;
+                    // Allow decimal point (only one)
+                    if (allowDecimal && (e.key === '.' || e.key === ',')) {
+                        if (this.value.indexOf('.') === -1 && this.value.indexOf(',') === -1) return;
+                        e.preventDefault();
+                        return;
+                    }
+                    // Block non-numeric
+                    if ((e.shiftKey || e.keyCode < 48 || e.keyCode > 57) && (e.keyCode < 96 || e.keyCode > 105)) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            setupNumericInput(priceInput, true);
+            setupNumericInput(basicDayRateInput, true);
+            setupNumericInput(discountDayRateInput, true);
+            setupNumericInput(calcDaysInput, false);
 
             function updateCalculator() {
                 if (!calcDaysInput || !calcTotalSpan) return;

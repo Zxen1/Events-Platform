@@ -1547,17 +1547,11 @@
 
 /* Checkout Accordion (same structure as Messages/Formbuilder) */
 .admin-checkout-accordion {
-  background: rgba(0, 0, 0, 0.15);
+  width: 100%;
+  margin-bottom: 3px;
+  background: #080808;
   border-radius: 5px;
-  margin-bottom: 8px;
-}
-
-.admin-checkout-accordion--inactive {
-  opacity: 0.5;
-}
-
-.admin-checkout-accordion.dragging {
-  opacity: 0.5;
+  overflow: visible;
 }
 
 .admin-checkout-accordion-header {
@@ -1567,27 +1561,24 @@
   padding: 0 10px;
   cursor: pointer;
   background: #0c4070;
-  border-radius: 5px 5px 0 0;
+  border-radius: 5px;
   border: 1px solid transparent;
 }
 
-.admin-checkout-accordion:not(.admin-checkout-accordion--open):not(.admin-checkout-accordion--editing) .admin-checkout-accordion-header {
-  border-radius: 5px;
+.admin-checkout-accordion--editing .admin-checkout-accordion-header {
+  border-radius: 5px 5px 0 0;
 }
 
 .admin-checkout-accordion-header:hover {
   border-color: #3b82f5;
 }
 
-.admin-checkout-accordion--editing .admin-checkout-accordion-header {
-  border-color: rgba(255, 255, 255, 0.2);
-  border-radius: 5px 5px 0 0;
-  border-bottom: none;
+.admin-checkout-accordion--inactive .admin-checkout-accordion-header {
+  background: #333;
 }
 
 .admin-checkout-accordion-header-text {
   flex: 1;
-  padding-left: 0;
   font-weight: bold;
   min-width: 0;
   overflow: hidden;
@@ -1603,14 +1594,14 @@
   letter-spacing: 0.5px;
   padding: 2px 8px;
   border-radius: 5px;
-  background: rgba(80, 80, 80, 0.3);
-  color: #888;
+  background: #444;
+  color: #aaa;
   margin-left: 10px;
 }
 
 .admin-checkout-accordion-header-badge--featured {
-  background: rgba(255, 180, 50, 0.15);
-  color: #e8b020;
+  background: #6b4a00;
+  color: #ffc107;
 }
 
 .admin-checkout-accordion-header-arrow {
@@ -1624,56 +1615,14 @@
   margin-left: 10px;
 }
 
-.admin-checkout-accordion--open > .admin-checkout-accordion-header .admin-checkout-accordion-header-arrow {
+.admin-checkout-accordion--editing .admin-checkout-accordion-header-arrow {
   transform: rotate(180deg);
-}
-
-.admin-checkout-accordion-header-drag {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: grab;
-  color: #888;
-}
-
-.admin-checkout-accordion-header-drag:hover {
-  color: #fff;
-}
-
-.admin-checkout-accordion-header-drag svg {
-  width: 16px;
-  height: 16px;
-}
-
-.admin-checkout-accordion-header-editarea {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.admin-checkout-accordion-header-edit {
-  width: 16px;
-  height: 16px;
-  color: #888;
-}
-
-.admin-checkout-accordion-header-editarea:hover .admin-checkout-accordion-header-edit,
-.admin-checkout-accordion--editing .admin-checkout-accordion-header-edit {
-  color: #3b82f5;
 }
 
 /* Edit Panel */
 .admin-checkout-accordion-editpanel {
   padding: 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: none;
+  background: #111;
   border-radius: 0 0 5px 5px;
   display: flex;
   flex-direction: column;
@@ -1690,6 +1639,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   gap: 16px;
+  padding: 5px 0;
 }
 
 .admin-checkout-accordion-editpanel-label {
@@ -1700,8 +1650,8 @@
 .admin-checkout-accordion-editpanel-input {
   height: 36px;
   padding: 0 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 5px;
   color: #fff;
   font-size: 14px;
@@ -1717,8 +1667,8 @@
 .admin-checkout-accordion-editpanel-textarea {
   min-height: 80px;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #1a1a1a;
+  border: 1px solid #333;
   border-radius: 5px;
   color: #fff;
   font-size: 14px;
@@ -1778,24 +1728,6 @@
 .admin-checkout-accordion-editpanel-delete:hover {
   background: rgba(200, 80, 80, 0.15);
   border-color: rgba(200, 80, 80, 0.5);
-}
-
-/* Content (summary when closed) */
-.admin-checkout-accordion-content {
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
-}
-
-.admin-checkout-accordion-content--hidden {
-  display: none;
-}
-
-.admin-checkout-accordion-content-price {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 /* ============================================================================
