@@ -1580,7 +1580,7 @@
 }
 
 .admin-checkout-accordion--editing .admin-checkout-accordion-header {
-  border-color: #3b82f5;
+  border-color: rgba(255, 255, 255, 0.2);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -1671,8 +1671,8 @@
 /* Edit Panel */
 .admin-checkout-accordion-editpanel {
   padding: 10px;
-  background: #0c4070;
-  border: 1px solid #3b82f5;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: none;
   border-radius: 0 0 5px 5px;
   display: flex;
@@ -1783,7 +1783,9 @@
 /* Content (summary when closed) */
 .admin-checkout-accordion-content {
   padding: 10px;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
   border-radius: 0 0 5px 5px;
 }
 

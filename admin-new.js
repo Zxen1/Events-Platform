@@ -1697,15 +1697,6 @@ const AdminModule = (function() {
             }
         });
 
-        // Update content prices
-        document.querySelectorAll('.admin-checkout-accordion-content-price').forEach(function(span) {
-            var text = span.textContent;
-            if (text === 'Free') return;
-            var match = text.match(/^[A-Z]{3}\s+(.*)$/);
-            if (match) {
-                span.textContent = currencyCode + ' ' + match[1];
-            }
-        });
     }
 
     /* --------------------------------------------------------------------------
@@ -1748,7 +1739,7 @@ const AdminModule = (function() {
             var isFeatured = option.checkout_featured === 1 || option.checkout_featured === true;
             var featuredBadgeText = isFeatured ? 'featured' : 'standard';
 
-            // Header (same structure as messages/formbuilder)
+            // Header
             var header = document.createElement('div');
             header.className = 'admin-checkout-accordion-header';
 
@@ -1762,17 +1753,7 @@ const AdminModule = (function() {
             headerBadge.className = 'admin-checkout-accordion-header-badge' + (isFeatured ? ' admin-checkout-accordion-header-badge--featured' : '');
             headerBadge.textContent = featuredBadgeText;
 
-            // Header arrow
-            var headerArrow = document.createElement('span');
-            headerArrow.className = 'admin-checkout-accordion-header-arrow';
-            headerArrow.textContent = '▼';
-
-            // Drag handle
-            var headerDrag = document.createElement('div');
-            headerDrag.className = 'admin-checkout-accordion-header-drag';
-            headerDrag.innerHTML = icons.dragHandle;
-
-            // Edit area
+            // Edit area (pen icon only)
             var headerEditArea = document.createElement('div');
             headerEditArea.className = 'admin-checkout-accordion-header-editarea';
             var headerEdit = document.createElement('div');
@@ -1782,8 +1763,6 @@ const AdminModule = (function() {
 
             header.appendChild(headerText);
             header.appendChild(headerBadge);
-            header.appendChild(headerArrow);
-            header.appendChild(headerDrag);
             header.appendChild(headerEditArea);
 
             // Edit panel (sibling to header)
@@ -1826,65 +1805,12 @@ const AdminModule = (function() {
                 '</div>' +
                 '<button type="button" class="admin-checkout-accordion-editpanel-delete">Delete</button>';
 
-            // Content area (summary when closed)
-            var content = document.createElement('div');
-            content.className = 'admin-checkout-accordion-content admin-checkout-accordion-content--hidden';
-            var priceDisplay = flagfallPrice === 0 ? 'Free' : (siteCurrency + ' ' + flagfallPrice.toFixed(2));
-            content.innerHTML = '<span class="admin-checkout-accordion-content-price">' + priceDisplay + '</span>';
-
             accordion.appendChild(header);
             accordion.appendChild(editPanel);
-            accordion.appendChild(content);
             container.appendChild(accordion);
 
-            // Drag and drop
-            accordion.draggable = false;
-            headerDrag.addEventListener('mousedown', function() {
-                accordion.draggable = true;
-            });
-            document.addEventListener('mouseup', function() {
-                accordion.draggable = false;
-            });
-            accordion.addEventListener('dragstart', function(e) {
-                if (!accordion.draggable) {
-                    e.preventDefault();
-                    return;
-                }
-                accordion.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-            });
-            accordion.addEventListener('dragend', function() {
-                accordion.classList.remove('dragging');
-                markDirty();
-            });
-            accordion.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                var dragging = container.querySelector('.dragging');
-                if (dragging && dragging !== accordion) {
-                    var rect = accordion.getBoundingClientRect();
-                    var midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) {
-                        container.insertBefore(dragging, accordion);
-                    } else {
-                        container.insertBefore(dragging, accordion.nextSibling);
-                    }
-                }
-            });
-
-            // Header click - toggle open/close
+            // Header click - toggle edit panel
             header.addEventListener('click', function(e) {
-                if (e.target.closest('.admin-checkout-accordion-header-editarea')) return;
-                if (e.target.closest('.admin-checkout-accordion-header-drag')) return;
-                if (!accordion.classList.contains('admin-checkout-accordion--editing')) {
-                    closeAllCheckoutEditPanels();
-                }
-                accordion.classList.toggle('admin-checkout-accordion--open');
-                content.classList.toggle('admin-checkout-accordion-content--hidden');
-            });
-
-            // Edit area click - toggle edit panel
-            headerEditArea.addEventListener('click', function(e) {
-                e.stopPropagation();
                 var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
                 closeAllCheckoutEditPanels(accordion);
                 if (!isEditing) {
@@ -1947,7 +1873,6 @@ const AdminModule = (function() {
             var priceInput = accordion.querySelector('.admin-checkout-option-price');
             var basicDayRateInput = accordion.querySelector('.admin-checkout-option-basic-day-rate');
             var discountDayRateInput = accordion.querySelector('.admin-checkout-option-discount-day-rate');
-            var contentPrice = content.querySelector('.admin-checkout-accordion-content-price');
 
             function updateCalculator() {
                 if (!calcDaysInput || !calcTotalSpan) return;
@@ -2027,17 +1952,6 @@ const AdminModule = (function() {
                     }
                     // Leave empty if N/A
                 });
-            }
-
-            // Update content price when flagfall changes
-            function updateContentPrice() {
-                if (!contentPrice || !priceInput) return;
-                var currency = container.dataset.currency || 'USD';
-                var flagfall = parseFloat(priceInput.value) || 0;
-                contentPrice.textContent = flagfall === 0 ? 'Free' : (currency + ' ' + flagfall.toFixed(2));
-            }
-            if (priceInput) {
-                priceInput.addEventListener('input', updateContentPrice);
             }
 
             // Delete button handler
