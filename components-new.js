@@ -2171,21 +2171,26 @@ const CurrencyComponent = (function(){
     }
     
     // Build a full currency menu (wide, shows code + label)
+    // Combobox style - type to filter options
     // Returns object with element and setValue method
     function buildFullMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var containerEl = options.container || null;
         var initialValue = options.initialValue || 'USD';
+        var selectedCode = initialValue;
 
         var menu = document.createElement('div');
         menu.className = 'admin-currency-wrapper';
-        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="assets/flags/us.svg" alt=""><span class="admin-currency-button-text">USD - US Dollar</span><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
+        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="assets/flags/us.svg" alt=""><input type="text" class="admin-currency-button-input" placeholder="Search currency..." autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
 
         var btn = menu.querySelector('.admin-currency-button');
         var opts = menu.querySelector('.admin-currency-options');
         var btnImg = menu.querySelector('.admin-currency-button-flag');
-        var btnText = menu.querySelector('.admin-currency-button-text');
+        var btnInput = menu.querySelector('.admin-currency-button-input');
+
+        // Store all option elements for filtering
+        var allOptions = [];
 
         // Find and set initial value
         function setValue(code) {
@@ -2196,25 +2201,46 @@ const CurrencyComponent = (function(){
                 var countryCode = found.value.substring(0, 2);
                 var currencyCode = found.value.substring(3);
                 btnImg.src = 'assets/flags/' + countryCode + '.svg';
-                btnText.textContent = currencyCode + ' - ' + found.label;
+                btnInput.value = currencyCode + ' - ' + found.label;
+                selectedCode = code;
             }
         }
 
+        // Filter options based on search text
+        function filterOptions(searchText) {
+            var search = searchText.toLowerCase();
+            allOptions.forEach(function(optData) {
+                var matches = optData.searchText.indexOf(search) !== -1;
+                optData.element.style.display = matches ? '' : 'none';
+            });
+        }
+
+        // Build options
         var currencies = currencyData;
         currencies.forEach(function(item) {
             var countryCode = item.value.substring(0, 2);
             var currencyCode = item.value.substring(3);
+            var displayText = currencyCode + ' - ' + item.label;
+            
             var op = document.createElement('div');
             op.className = 'admin-currency-option';
-            op.innerHTML = '<img class="admin-currency-option-flag" src="assets/flags/' + countryCode + '.svg" alt=""><span class="admin-currency-option-text">' + currencyCode + ' - ' + item.label + '</span>';
+            op.innerHTML = '<img class="admin-currency-option-flag" src="assets/flags/' + countryCode + '.svg" alt=""><span class="admin-currency-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
                 btnImg.src = 'assets/flags/' + countryCode + '.svg';
-                btnText.textContent = currencyCode + ' - ' + item.label;
+                btnInput.value = displayText;
+                selectedCode = currencyCode;
                 menu.classList.remove('open');
+                filterOptions(''); // Reset filter
                 onSelect(currencyCode, item.label, countryCode);
             };
             opts.appendChild(op);
+            
+            // Store for filtering
+            allOptions.push({
+                element: op,
+                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+            });
         });
 
         // Set initial value
@@ -2223,12 +2249,44 @@ const CurrencyComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
 
-        btn.onclick = function(e) {
+        // Input events
+        btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
-            // Close all other menus first
             MenuManager.closeAll(menu);
-            menu.classList.toggle('open');
-        };
+            menu.classList.add('open');
+            // Select all text for easy replacement
+            this.select();
+        });
+
+        btnInput.addEventListener('input', function(e) {
+            filterOptions(this.value);
+            if (!menu.classList.contains('open')) {
+                menu.classList.add('open');
+            }
+        });
+
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                menu.classList.remove('open');
+                // Restore selected value
+                setValue(selectedCode);
+                filterOptions('');
+            }
+        });
+
+        // Arrow click opens/closes
+        var arrow = menu.querySelector('.admin-currency-button-arrow');
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            } else {
+                MenuManager.closeAll(menu);
+                menu.classList.add('open');
+                btnInput.focus();
+                btnInput.select();
+            }
+        });
 
         // Return object with element and setValue method
         return {

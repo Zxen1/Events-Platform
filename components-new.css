@@ -1421,6 +1421,23 @@
     white-space: nowrap;
 }
 
+.admin-currency-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+}
+
+.admin-currency-button-input::placeholder {
+    color: #888;
+}
+
 .admin-currency-button-arrow {
     width: 16px;
     height: 36px;
@@ -1430,6 +1447,7 @@
     font-size: 10px;
     color: #888;
     transition: transform 0.2s;
+    cursor: pointer;
 }
 
 .admin-currency-options {
