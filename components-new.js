@@ -632,7 +632,23 @@ const FieldsetComponent = (function(){
         
         var key = fieldData.fieldset_key || fieldData.key || '';
         var name = fieldData.fieldset_name || fieldData.name || 'Unnamed';
-        var tooltip = fieldData.fieldset_tooltip || '';
+        
+        // Get tooltip: check customTooltip first (editable fieldsets), then tooltip, then fieldset_tooltip
+        // If still empty, try to match against fieldset definitions (like live site)
+        var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip || '';
+        if (!tooltip && key) {
+            // Try to match against fieldset definitions if available (like live site does)
+            var fieldsets = window.FORM_FIELDSETS || window.loadedFieldsets || [];
+            if (fieldsets && fieldsets.length > 0) {
+                var matchingFieldset = fieldsets.find(function(fs) {
+                    return fs.value === key || fs.key === key || fs.fieldset_key === key || fs.fieldsetKey === key;
+                });
+                if (matchingFieldset && matchingFieldset.fieldset_tooltip) {
+                    tooltip = matchingFieldset.fieldset_tooltip;
+                }
+            }
+        }
+        
         var placeholder = fieldData.fieldset_placeholder || '';
         var minLength = fieldData.min_length || 0;
         var maxLength = fieldData.max_length || 500;
