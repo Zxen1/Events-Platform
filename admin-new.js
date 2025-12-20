@@ -1659,8 +1659,9 @@ const AdminModule = (function() {
         
         var initialValue = settingsData[settingKey] || 'USD';
         
-        var menu = CurrencyComponent.buildFullMenu({
+        var picker = CurrencyComponent.buildFullMenu({
             container: settingsContainer,
+            initialValue: initialValue,
             onSelect: function(currencyCode, currencyName, countryCode) {
                 updateField('settings.' + settingKey, currencyCode);
                 // Update local cache so new checkout options use correct currency
@@ -1670,8 +1671,8 @@ const AdminModule = (function() {
             }
         });
         
-        menu.dataset.settingKey = settingKey;
-        container.appendChild(menu);
+        picker.element.dataset.settingKey = settingKey;
+        container.appendChild(picker.element);
         
         registerField('settings.' + settingKey, initialValue);
     }
@@ -2093,8 +2094,21 @@ const AdminModule = (function() {
             var entry = fieldRegistry['settings.' + key];
             if (entry && entry.type === 'simple') {
                 var code = entry.original || 'USD';
+                // Look up the currency label from data
+                var currencyData = window.CurrencyComponent ? CurrencyComponent.getData() : [];
+                var found = currencyData.find(function(item) {
+                    return item.value.substring(3) === code;
+                });
+                var btnImg = menu.querySelector('.admin-currency-button-flag');
                 var btnText = menu.querySelector('.admin-currency-button-text');
-                if (btnText) btnText.textContent = code + ' - US Dollar'; // Default label
+                if (found) {
+                    var countryCode = found.value.substring(0, 2);
+                    if (btnImg) btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                    if (btnText) btnText.textContent = code + ' - ' + found.label;
+                } else {
+                    if (btnImg) btnImg.src = 'assets/flags/us.svg';
+                    if (btnText) btnText.textContent = code + ' - US Dollar';
+                }
             }
         });
         

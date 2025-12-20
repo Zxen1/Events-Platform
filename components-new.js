@@ -2173,21 +2173,35 @@ const CurrencyComponent = (function(){
     }
     
     // Build a full currency menu (wide, shows code + label)
-    // Returns the complete menu element
+    // Returns object with element and setValue method
     function buildFullMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var containerEl = options.container || null;
-        
+        var initialValue = options.initialValue || 'USD';
+
         var menu = document.createElement('div');
         menu.className = 'admin-currency-wrapper';
         menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="assets/flags/us.svg" alt=""><span class="admin-currency-button-text">USD - US Dollar</span><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
-        
+
         var btn = menu.querySelector('.admin-currency-button');
         var opts = menu.querySelector('.admin-currency-options');
         var btnImg = menu.querySelector('.admin-currency-button-flag');
         var btnText = menu.querySelector('.admin-currency-button-text');
-        
+
+        // Find and set initial value
+        function setValue(code) {
+            var found = currencyData.find(function(item) {
+                return item.value.substring(3) === code;
+            });
+            if (found) {
+                var countryCode = found.value.substring(0, 2);
+                var currencyCode = found.value.substring(3);
+                btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                btnText.textContent = currencyCode + ' - ' + found.label;
+            }
+        }
+
         var currencies = currencyData;
         currencies.forEach(function(item) {
             var countryCode = item.value.substring(0, 2);
@@ -2204,10 +2218,13 @@ const CurrencyComponent = (function(){
             };
             opts.appendChild(op);
         });
-        
+
+        // Set initial value
+        setValue(initialValue);
+
         // Register with MenuManager
         MenuManager.register(menu);
-        
+
         btn.onclick = function(e) {
             e.stopPropagation();
             // Close all other menus first
@@ -2215,7 +2232,11 @@ const CurrencyComponent = (function(){
             menu.classList.toggle('open');
         };
 
-        return menu;
+        // Return object with element and setValue method
+        return {
+            element: menu,
+            setValue: setValue
+        };
     }
 
     return {
