@@ -1984,6 +1984,59 @@ How text displays in the four reusable dropdown menus:
 
 ---
 
+---
+
+## IMAGE HANDLING: BUNNY.NET CDN
+
+**Date:** December 20, 2025
+
+**CDN Base URL:** `https://cdn.funmap.com/`
+
+**Storage Folders:**
+- `amenities/`
+- `avatars/`
+- `category-icons/`
+- `dummy-images/`
+- `flags/`
+- `post-images/`
+- `system-images/`
+
+**Post Image Sizes:**
+- **Full size:** 1600px max (desktop), 800px max (mobile)
+- **Image box:** 530px (1:1 aspect ratio) - Class: `imagebox`
+- **Thumbnail:** 100px (1:1 aspect ratio) - Class: `thumbnail`
+- **Mini Thumb:** 50px (1:1 aspect ratio) - Class: `minithumb`
+
+**CRITICAL: Minimum Image Size Requirement:**
+- **ALL uploaded images must be at least 530x530 pixels**
+- Bunny classes will crop to the smaller dimension if image is smaller than target size (e.g., 40px image becomes 40x40 instead of 530x530)
+- Enforce 530x530 minimum on upload to ensure proper cropping to all sizes
+
+**Image URL Format:**
+- Full size: `https://cdn.funmap.com/{folder}/{filename}`
+- Image box: `https://cdn.funmap.com/{folder}/{filename}?class=imagebox`
+- Thumbnail: `https://cdn.funmap.com/{folder}/{filename}?class=thumbnail`
+- Mini thumb: `https://cdn.funmap.com/{folder}/{filename}?class=minithumb`
+
+**Bunny Class Behavior:**
+- Images larger than target: Crops to target size correctly (530x530, 100x100, 50x50)
+- Images smaller than target: Crops to smaller dimension (broken behavior - must prevent)
+
+**Integration:**
+- **Storage API Endpoint:** `storage.bunnycdn.com`
+- **Documentation:** https://docs.bunny.net/reference/storage-api
+- **Authentication:** Uses storage zone password as API key (AccessKey header)
+- **FTP Username:** `funmap`
+- **FTP Hostname:** `storage.bunnycdn.com`
+- **FTP Port:** 21 (Passive mode)
+
+**Notes:**
+- All user-facing images (map markers, icons, badges, calendars, post images) should use Bunny CDN for global distribution
+- System images that are small and rarely change may stay on server, but map markers and frequently-used icons should use CDN
+- No dummy/generated posts - all images must come from database via Bunny CDN
+
+---
+
 **END OF DOCUMENT**
 
 **READ THIS FIRST BEFORE MAKING ANY CHANGES**
