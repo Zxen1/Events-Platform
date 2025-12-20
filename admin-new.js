@@ -2859,6 +2859,52 @@ const AdminModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
+       STATUS MESSAGES
+       -------------------------------------------------------------------------- */
+    
+    var statusMessage = null;
+    var statusTimer = null;
+    
+    function ensureStatusElement() {
+        if (!statusMessage) {
+            statusMessage = document.getElementById('adminStatusMessage');
+        }
+        return statusMessage;
+    }
+    
+    function showStatus(message, options) {
+        options = options || {};
+        if (!ensureStatusElement()) return;
+        
+        statusMessage.textContent = message || '';
+        statusMessage.setAttribute('aria-hidden', 'false');
+        statusMessage.classList.remove('admin-status-message--error', 'admin-status-message--show');
+        
+        if (options.error) {
+            statusMessage.classList.add('admin-status-message--error');
+        }
+        
+        if (window.__adminStatusMessageTimer) {
+            clearTimeout(window.__adminStatusMessageTimer);
+            window.__adminStatusMessageTimer = null;
+        }
+        
+        if (statusTimer) {
+            clearTimeout(statusTimer);
+        }
+        
+        statusMessage.classList.add('admin-status-message--show');
+        statusTimer = setTimeout(function() {
+            statusMessage.classList.remove('admin-status-message--show');
+            statusMessage.setAttribute('aria-hidden', 'true');
+        }, 2000);
+    }
+    
+    function showError(message) {
+        showStatus(message, { error: true });
+    }
+
+    /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
     
@@ -2894,7 +2940,11 @@ const AdminModule = (function() {
         
         // Messages tab
         getModifiedMessages: getModifiedMessages,
-        getModifiedFieldsetTooltips: getModifiedFieldsetTooltips
+        getModifiedFieldsetTooltips: getModifiedFieldsetTooltips,
+        
+        // Status messages
+        showStatus: showStatus,
+        showError: showError
     };
 
 })();

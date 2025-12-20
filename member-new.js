@@ -1341,10 +1341,37 @@ const MemberModule = (function() {
        STATUS MESSAGES
        -------------------------------------------------------------------------- */
     
+    var statusMessage = null;
+    var statusTimer = null;
+    
+    function ensureStatusElement() {
+        if (!statusMessage) {
+            statusMessage = document.getElementById('memberStatusMessage');
+        }
+        return statusMessage;
+    }
+    
     function showStatus(message, options) {
         options = options || {};
-        // TODO: Implement status message display
-        console.log('[Member]', options.error ? 'Error:' : 'Status:', message);
+        if (!ensureStatusElement()) return;
+        
+        statusMessage.textContent = message || '';
+        statusMessage.setAttribute('aria-hidden', 'false');
+        statusMessage.classList.remove('member-status-message--error', 'member-status-message--show');
+        
+        if (options.error) {
+            statusMessage.classList.add('member-status-message--error');
+        }
+        
+        if (statusTimer) {
+            clearTimeout(statusTimer);
+        }
+        
+        statusMessage.classList.add('member-status-message--show');
+        statusTimer = setTimeout(function() {
+            statusMessage.classList.remove('member-status-message--show');
+            statusMessage.setAttribute('aria-hidden', 'true');
+        }, 2000);
     }
 
     /* --------------------------------------------------------------------------
@@ -1357,7 +1384,8 @@ const MemberModule = (function() {
         closePanel: closePanel,
         getCurrentUser: function() { return currentUser; },
         isLoggedIn: function() { return !!currentUser; },
-        isAdmin: function() { return currentUser && currentUser.isAdmin === true; }
+        isAdmin: function() { return currentUser && currentUser.isAdmin === true; },
+        showStatus: showStatus
     };
 
 })();

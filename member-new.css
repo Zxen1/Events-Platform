@@ -3,6 +3,37 @@
    ============================================================================ */
 
 /* ============================================================================
+   STATUS MESSAGE
+   ============================================================================ */
+
+.member-status-message {
+  position: fixed;
+  top: calc(var(--safe-top, 0px) + 20px);
+  left: 50%;
+  transform: translate(-50%, -10px);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: var(--layer-dialog);
+  font-size: 14px;
+}
+
+.member-status-message--error {
+  background: #c62828;
+  color: #fff;
+}
+
+.member-status-message--show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ============================================================================
    PANEL BASE
    ============================================================================ */
 
