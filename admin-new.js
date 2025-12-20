@@ -1578,26 +1578,6 @@ const AdminModule = (function() {
                         CurrencyComponent.setData(data.picklist.currency);
                     }
 
-                    // Apply logo to header
-                    if (settingsData.small_logo) {
-                        applyHeaderLogo(settingsData.small_logo);
-                    }
-
-                    // Apply favicon
-                    if (settingsData.favicon) {
-                        applyFavicon(settingsData.favicon);
-                    }
-
-                    // Apply welcome modal logo
-                    if (settingsData.big_logo) {
-                        applyWelcomeLogo(settingsData.big_logo);
-                    }
-
-                    // Show welcome modal if enabled
-                    if (settingsData.welcome_enabled && window.WelcomeModalComponent) {
-                        WelcomeModalComponent.open();
-                    }
-
                     // Render checkout options and register for tracking
                     if (data.checkout_options && Array.isArray(data.checkout_options)) {
                         renderCheckoutOptions(data.checkout_options, settingsData.website_currency || 'USD');
@@ -1649,33 +1629,6 @@ const AdminModule = (function() {
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');
     }
     
-    // Apply header logo from settings
-    function applyHeaderLogo(imagePath) {
-        var headerLogo = document.querySelector('.header-logo-button-image');
-        if (headerLogo && imagePath) {
-            headerLogo.onload = function() { headerLogo.classList.add('loaded'); };
-            headerLogo.src = imagePath;
-            if (headerLogo.complete) headerLogo.classList.add('loaded');
-        }
-    }
-
-    // Apply favicon from settings
-    function applyFavicon(imagePath) {
-        if (!imagePath) return;
-        var faviconLinks = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
-        faviconLinks.forEach(function(link) {
-            link.href = imagePath;
-        });
-    }
-
-    // Apply welcome modal logo from settings
-    function applyWelcomeLogo(imagePath) {
-        if (!imagePath) return;
-        if (window.WelcomeModalComponent && typeof WelcomeModalComponent.setLogo === 'function') {
-            WelcomeModalComponent.setLogo(imagePath);
-        }
-    }
-
     function initImagePicker(containerId, settingKey) {
         var container = document.getElementById(containerId);
         if (!container || !window.SystemImagePickerComponent) return;
@@ -1689,11 +1642,19 @@ const AdminModule = (function() {
                 
                 // Update UI immediately based on which setting changed
                 if (settingKey === 'small_logo') {
-                    applyHeaderLogo(imagePath);
+                    // Header module handles small logo
+                    var headerModule = App.getModule('header');
+                    if (headerModule && headerModule.setLogo) {
+                        headerModule.setLogo(imagePath);
+                    }
                 } else if (settingKey === 'favicon') {
-                    applyFavicon(imagePath);
+                    // App handles favicon
+                    App.setFavicon(imagePath);
                 } else if (settingKey === 'big_logo') {
-                    applyWelcomeLogo(imagePath);
+                    // WelcomeModalComponent handles big logo
+                    if (window.WelcomeModalComponent && WelcomeModalComponent.setLogo) {
+                        WelcomeModalComponent.setLogo(imagePath);
+                    }
                 }
             }
         });

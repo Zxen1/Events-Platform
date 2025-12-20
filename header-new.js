@@ -28,6 +28,7 @@ const HeaderModule = (function() {
     var memberBtn = null;
     var adminBtn = null;
     var fullscreenBtn = null;
+    var logoBtn = null;
 
 
     /* --------------------------------------------------------------------------
@@ -35,14 +36,63 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function init() {
+        initLogoButton();
         initFilterButton();
         initModeSwitch();
         initMemberButton();
         initAdminButton();
         initFullscreenButton();
+        
+        // Load logo from settings on startup
+        loadLogoFromSettings();
     }
     
     
+    /* --------------------------------------------------------------------------
+       LOGO BUTTON
+       -------------------------------------------------------------------------- */
+    
+    function initLogoButton() {
+        logoBtn = document.querySelector('.header-logo-button');
+        if (!logoBtn) return;
+        
+        logoBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Toggle welcome modal
+            if (window.WelcomeModalComponent) {
+                WelcomeModalComponent.toggle();
+            }
+            // Trigger spin if map module supports it
+            var mapModule = App.getModule('map');
+            if (mapModule && mapModule.triggerLogoSpin) {
+                mapModule.triggerLogoSpin();
+            }
+        });
+    }
+    
+    function loadLogoFromSettings() {
+        fetch('/gateway.php?action=get-admin-settings')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.settings && data.settings.small_logo) {
+                    setLogo(data.settings.small_logo);
+                }
+            })
+            .catch(function(err) {
+                console.error('[Header] Failed to load logo:', err);
+            });
+    }
+    
+    function setLogo(imagePath) {
+        var logoImg = document.querySelector('.header-logo-button-image');
+        if (logoImg && imagePath) {
+            logoImg.onload = function() { logoImg.classList.add('loaded'); };
+            logoImg.src = imagePath;
+            if (logoImg.complete) logoImg.classList.add('loaded');
+        }
+    }
+
+
     /* --------------------------------------------------------------------------
        MODE SWITCH (Recents / Posts / Map)
        -------------------------------------------------------------------------- */
@@ -320,7 +370,8 @@ const HeaderModule = (function() {
     
     return {
         init: init,
-        updateFilterCounter: updateFilterCounter
+        updateFilterCounter: updateFilterCounter,
+        setLogo: setLogo
     };
 
 })();

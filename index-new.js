@@ -221,11 +221,62 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
+     FAVICON
+     -------------------------------------------------------------------------- */
+  function setFavicon(imagePath) {
+    if (!imagePath) return;
+    var faviconLinks = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
+    faviconLinks.forEach(function(link) {
+      link.href = imagePath;
+    });
+  }
+
+
+  /* --------------------------------------------------------------------------
+     STARTUP SETTINGS
+     Load settings needed at startup: favicon, big_logo, welcome_enabled
+     -------------------------------------------------------------------------- */
+  function loadStartupSettings() {
+    fetch('/gateway.php?action=get-admin-settings')
+      .then(function(response) { return response.json(); })
+      .then(function(data) {
+        if (!data.success || !data.settings) return;
+        
+        var settings = data.settings;
+        
+        // Apply favicon
+        if (settings.favicon) {
+          setFavicon(settings.favicon);
+        }
+        
+        // Apply big logo to welcome modal
+        if (settings.big_logo && window.WelcomeModalComponent) {
+          WelcomeModalComponent.setLogo(settings.big_logo);
+        }
+        
+        // Show welcome modal if enabled
+        if (settings.welcome_enabled && window.WelcomeModalComponent) {
+          WelcomeModalComponent.open();
+        }
+        
+        // Store settings in state
+        state.settings = settings;
+      })
+      .catch(function(err) {
+        console.error('[App] Failed to load startup settings:', err);
+      });
+  }
+
+
+  /* --------------------------------------------------------------------------
      INITIALIZATION
      Called on DOMContentLoaded
      -------------------------------------------------------------------------- */
   function init() {
     console.log('[App] Initializing...');
+
+    // Load startup settings (favicon, welcome modal)
+    loadStartupSettings();
 
     // Initialize modules in order (they register themselves on load)
     // Each module's init is called if it exists
@@ -340,7 +391,10 @@ const App = (function() {
     // Panel stack
     bringToTop,
     removeFromStack,
-    getTopPanel
+    getTopPanel,
+    
+    // Favicon
+    setFavicon
   };
 
 })();

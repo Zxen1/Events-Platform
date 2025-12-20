@@ -947,22 +947,6 @@ const MapModule = (function() {
     
     // Initialize map
     initMap();
-    
-    // Header logo click toggles welcome modal and triggers spin
-    var logoButton = document.querySelector('.header-logo-button');
-    if (logoButton) {
-      logoButton.addEventListener('click', function(e) {
-        e.stopPropagation();
-        // Toggle welcome modal
-        if (window.WelcomeModalComponent) {
-          WelcomeModalComponent.toggle();
-        }
-        // Trigger spin if enabled
-        if (spinLogoClick) {
-          triggerLogoSpin();
-        }
-      });
-    }
   }
 
 
