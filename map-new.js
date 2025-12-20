@@ -209,7 +209,9 @@ const MapModule = (function() {
    */
   async function loadSettings() {
     try {
-      const result = await App.api('get-admin-settings');
+      // Use GET request (same as admin panel) - POST is blocked by server
+      const response = await fetch('/gateway.php?action=get-admin-settings');
+      const result = await response.json();
       console.log('[Map] Settings loaded:', result);
       if (result && result.success && result.settings) {
         adminSettings = result.settings;
