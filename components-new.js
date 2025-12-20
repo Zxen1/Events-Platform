@@ -3725,11 +3725,41 @@ const SystemImagePickerComponent = (function(){
         var isBunnyFolder = folderPath.indexOf('https://cdn.funmap.com/') === 0;
         
         if (isBunnyFolder) {
-            // For Bunny CDN, we need to list files differently
-            // For now, return empty - will need Bunny API or manual list
-            // TODO: Implement Bunny Storage API list when needed
-            console.warn('Bunny CDN folder listing not yet implemented');
-            return Promise.resolve([]);
+            // TEST: Hard-coded list of known system images to test Bunny CDN loading
+            // TODO: Replace with Bunny Storage API list when implementing full solution
+            var testImageList = [
+                'funmap welcome message 2025-12-10f.webp',
+                'earth toy.png',
+                'favicon.ico',
+                '150x40-pill-70.webp',
+                '225x60-pill-2f3b73.webp',
+                'multi-post-icon-50.webp',
+                'red-balloon-40.png',
+                'user-messages.svg',
+                'member-messages.svg',
+                'admin-messages.svg',
+                'email-messages.svg',
+                'fieldset-tooltips.svg',
+                'icon-filter.svg',
+                'icon-recents.svg',
+                'icon-posts.svg',
+                'icon-map.svg',
+                'icon-save.svg',
+                'icon-discard.svg',
+                'icon-close.svg',
+                'icon-member.svg',
+                'icon-admin.svg',
+                'icon-fullscreen.svg',
+                'icon-fullscreen-exit.svg'
+            ];
+            
+            var imageList = testImageList.map(function(filename) {
+                return folderPath + filename;
+            });
+            images = imageList;
+            dataLoaded = true;
+            console.log('[SystemImagePicker] TEST: Using hard-coded image list for Bunny CDN test');
+            return Promise.resolve(imageList);
         }
         
         // Original server folder listing
