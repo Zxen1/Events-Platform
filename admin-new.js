@@ -1749,18 +1749,6 @@ const AdminModule = (function() {
             headerText.className = 'admin-checkout-accordion-header-text';
             headerText.textContent = option.checkout_title || 'Untitled';
 
-            // More button (3-dot menu) - same as formbuilder
-            var moreBtn = document.createElement('div');
-            moreBtn.className = 'admin-checkout-accordion-header-more';
-            moreBtn.innerHTML = icons.moreDots + 
-                '<div class="admin-checkout-accordion-header-more-menu">' +
-                    '<div class="admin-checkout-accordion-header-more-item">' +
-                        '<span class="admin-checkout-accordion-header-more-item-text">Hide Tier</span>' +
-                        '<div class="admin-checkout-accordion-header-more-switch' + (isHidden ? ' on' : '') + '"></div>' +
-                    '</div>' +
-                    '<div class="admin-checkout-accordion-header-more-item admin-checkout-accordion-header-more-delete">Delete Tier</div>' +
-                '</div>';
-
             // Header badge
             var headerBadge = document.createElement('span');
             headerBadge.className = 'admin-checkout-accordion-header-badge' + (isFeatured ? ' admin-checkout-accordion-header-badge--featured' : '');
@@ -1772,7 +1760,6 @@ const AdminModule = (function() {
             headerArrow.textContent = '▼';
 
             header.appendChild(headerText);
-            header.appendChild(moreBtn);
             header.appendChild(headerBadge);
             header.appendChild(headerArrow);
 
@@ -1780,11 +1767,36 @@ const AdminModule = (function() {
             var editPanel = document.createElement('div');
             editPanel.className = 'admin-checkout-accordion-editpanel';
             editPanel.style.display = 'none';
-            editPanel.innerHTML =
-                '<div class="admin-checkout-accordion-editpanel-row">' +
-                    '<label class="admin-checkout-accordion-editpanel-label">Title</label>' +
-                    '<input type="text" class="admin-checkout-accordion-editpanel-input admin-checkout-option-title" value="' + escapeHtml(option.checkout_title || '') + '" placeholder="Title" />' +
-                '</div>' +
+
+            // Title row with input and more button (same as formbuilder)
+            var titleRow = document.createElement('div');
+            titleRow.className = 'admin-checkout-accordion-editpanel-row admin-checkout-accordion-editpanel-row--title';
+
+            var titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.className = 'admin-checkout-accordion-editpanel-input admin-checkout-option-title';
+            titleInput.value = option.checkout_title || '';
+            titleInput.placeholder = 'Title';
+
+            // More button (3-dot menu) - inside edit panel like formbuilder
+            var moreBtn = document.createElement('div');
+            moreBtn.className = 'admin-checkout-accordion-editpanel-more';
+            moreBtn.innerHTML = icons.moreDots + 
+                '<div class="admin-checkout-accordion-editpanel-more-menu">' +
+                    '<div class="admin-checkout-accordion-editpanel-more-item">' +
+                        '<span class="admin-checkout-accordion-editpanel-more-item-text">Hide Tier</span>' +
+                        '<div class="admin-checkout-accordion-editpanel-more-switch' + (isHidden ? ' on' : '') + '"></div>' +
+                    '</div>' +
+                    '<div class="admin-checkout-accordion-editpanel-more-item admin-checkout-accordion-editpanel-more-delete">Delete Tier</div>' +
+                '</div>';
+
+            titleRow.appendChild(titleInput);
+            titleRow.appendChild(moreBtn);
+            editPanel.appendChild(titleRow);
+
+            // Rest of the edit panel
+            var restOfPanel = document.createElement('div');
+            restOfPanel.innerHTML =
                 '<div class="admin-checkout-accordion-editpanel-row">' +
                     '<label class="admin-checkout-accordion-editpanel-label">Description</label>' +
                     '<textarea class="admin-checkout-accordion-editpanel-textarea admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
@@ -1813,6 +1825,11 @@ const AdminModule = (function() {
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
                     '</div>' +
                 '</div>';
+            
+            // Append all children from restOfPanel
+            while (restOfPanel.firstChild) {
+                editPanel.appendChild(restOfPanel.firstChild);
+            }
 
             // Set hidden class if hidden
             if (isHidden) {
@@ -1828,7 +1845,7 @@ const AdminModule = (function() {
                 e.stopPropagation();
                 var wasOpen = moreBtn.classList.contains('open');
                 // Close all other menus
-                container.querySelectorAll('.admin-checkout-accordion-header-more.open').forEach(function(el) {
+                container.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
                     if (el !== moreBtn) el.classList.remove('open');
                 });
                 if (!wasOpen) {
@@ -1839,7 +1856,7 @@ const AdminModule = (function() {
             });
 
             // Hide switch click
-            var hideSwitch = moreBtn.querySelector('.admin-checkout-accordion-header-more-switch');
+            var hideSwitch = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-switch');
             hideSwitch.addEventListener('click', function(e) {
                 e.stopPropagation();
                 hideSwitch.classList.toggle('on');
@@ -1848,12 +1865,11 @@ const AdminModule = (function() {
             });
 
             // Delete option click
-            var deleteOption = moreBtn.querySelector('.admin-checkout-accordion-header-more-delete');
+            var deleteOption = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-delete');
             deleteOption.addEventListener('click', function(e) {
                 e.stopPropagation();
                 moreBtn.classList.remove('open');
-                var optionTitle = accordion.querySelector('.admin-checkout-option-title');
-                var titleText = optionTitle ? optionTitle.value.trim() : '';
+                var titleText = titleInput.value.trim();
                 if (!titleText) titleText = 'this checkout option';
                 
                 if (window.ConfirmDialogComponent) {
@@ -1874,9 +1890,14 @@ const AdminModule = (function() {
                 }
             });
 
-            // Header click - toggle edit panel (except when clicking more button)
+            // Title input updates header text
+            titleInput.addEventListener('input', function() {
+                headerText.textContent = titleInput.value.trim() || 'Untitled';
+                markDirty();
+            });
+
+            // Header click - toggle edit panel
             header.addEventListener('click', function(e) {
-                if (e.target.closest('.admin-checkout-accordion-header-more')) return;
                 var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
                 closeAllCheckoutEditPanels(accordion);
                 if (!isEditing) {
@@ -1887,15 +1908,6 @@ const AdminModule = (function() {
                     editPanel.style.display = 'none';
                 }
             });
-
-            // Title input updates header text
-            var titleInput = accordion.querySelector('.admin-checkout-option-title');
-            if (titleInput) {
-                titleInput.addEventListener('input', function() {
-                    headerText.textContent = titleInput.value.trim() || 'Untitled';
-                    markDirty();
-                });
-            }
 
             // Description textarea
             var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
@@ -2046,8 +2058,8 @@ const AdminModule = (function() {
 
         // Close more menus when clicking outside
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.admin-checkout-accordion-header-more')) {
-                document.querySelectorAll('.admin-checkout-accordion-header-more.open').forEach(function(el) {
+            if (!e.target.closest('.admin-checkout-accordion-editpanel-more')) {
+                document.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
                     el.classList.remove('open');
                 });
             }
@@ -2097,7 +2109,7 @@ const AdminModule = (function() {
             var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
             var featuredCheckbox = accordion.querySelector('.admin-checkout-option-featured');
             var sidebarCheckbox = accordion.querySelector('.admin-checkout-option-sidebar');
-            var hiddenSwitch = accordion.querySelector('.admin-checkout-accordion-header-more-switch');
+            var hiddenSwitch = accordion.querySelector('.admin-checkout-accordion-editpanel-more-switch');
 
             if (!titleInput) {
                 console.warn('Checkout option title input not found for accordion:', accordion);
