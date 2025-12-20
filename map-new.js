@@ -139,7 +139,10 @@ const MapModule = (function() {
       zoom: startZoom,
       pitch: startPitch,
       bearing: startBearing,
-      attributionControl: true
+      attributionControl: true,
+      fadeDuration: 0,           // Disable fade animations for better performance
+      antialias: false,          // Disable antialiasing for better performance
+      refreshExpiredTiles: false // Don't refresh expired tiles during animation
     });
 
     // Handle map load
@@ -274,7 +277,6 @@ const MapModule = (function() {
     if (settings.wait_for_map_tiles !== undefined) {
       const val = settings.wait_for_map_tiles;
       waitForMapTiles = val === '1' || val === 'true' || val === true;
-      console.log('[Map] wait_for_map_tiles from DB:', val, '→ waitForMapTiles:', waitForMapTiles);
     }
     
     // Update spin enabled state
