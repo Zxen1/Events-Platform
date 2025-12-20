@@ -1288,10 +1288,6 @@ const MemberModule = (function() {
             var active = authForm.dataset.active === 'register' ? 'register' : 'login';
             setAuthPanel(active);
             
-            // Clear inputs
-            clearInputs(loginInputs);
-            clearInputs(registerInputs);
-            
             // Update header (no avatar)
             updateHeaderAvatar(null);
         }
