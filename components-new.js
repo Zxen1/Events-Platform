@@ -220,10 +220,11 @@ const SwitchComponent = (function(){
 
 const FieldsetComponent = (function(){
     var picklist = {};
+    var fieldsets = [];
     var dataLoaded = false;
     var loadPromise = null;
     
-    // Load picklist data from database
+    // Load picklist data and fieldset definitions from database
     function loadFromDatabase() {
         if (loadPromise) return loadPromise;
         loadPromise = fetch('/gateway.php?action=get-admin-settings')
@@ -231,9 +232,19 @@ const FieldsetComponent = (function(){
             .then(function(res) {
                 if (res.picklist) {
                     picklist = res.picklist;
-                    dataLoaded = true;
                 }
-                return picklist;
+                // Also fetch fieldset definitions for tooltip matching
+                return fetch('/gateway.php?action=get-form');
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.success && res.snapshot && res.snapshot.fieldsets) {
+                    fieldsets = res.snapshot.fieldsets;
+                    // Also make available globally for other components
+                    window.FORM_FIELDSETS = fieldsets;
+                }
+                dataLoaded = true;
+                return { picklist: picklist, fieldsets: fieldsets };
             });
         return loadPromise;
     }
@@ -638,9 +649,10 @@ const FieldsetComponent = (function(){
         var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip || '';
         if (!tooltip && key) {
             // Try to match against fieldset definitions if available (like live site does)
-            var fieldsets = window.FORM_FIELDSETS || window.loadedFieldsets || [];
-            if (fieldsets && fieldsets.length > 0) {
-                var matchingFieldset = fieldsets.find(function(fs) {
+            // Check local fieldsets first, then global window variables
+            var availableFieldsets = fieldsets.length > 0 ? fieldsets : (window.FORM_FIELDSETS || window.loadedFieldsets || []);
+            if (availableFieldsets && availableFieldsets.length > 0) {
+                var matchingFieldset = availableFieldsets.find(function(fs) {
                     return fs.value === key || fs.key === key || fs.fieldset_key === key || fs.fieldsetKey === key;
                 });
                 if (matchingFieldset && matchingFieldset.fieldset_tooltip) {
@@ -2038,6 +2050,7 @@ const FieldsetComponent = (function(){
         autoUrlProtocol: autoUrlProtocol,
         setPicklist: setPicklist,
         getPicklist: function() { return picklist; },
+        getFieldsets: function() { return fieldsets; },
         isLoaded: function() { return dataLoaded; },
         loadFromDatabase: loadFromDatabase,
         buildCurrencyMenuCompact: buildCurrencyMenuCompact,
