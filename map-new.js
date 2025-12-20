@@ -139,10 +139,7 @@ const MapModule = (function() {
       zoom: startZoom,
       pitch: startPitch,
       bearing: startBearing,
-      attributionControl: true,
-      fadeDuration: 0,           // Disable fade animations for better performance
-      antialias: false,          // Disable antialiasing for better performance
-      refreshExpiredTiles: false // Don't refresh expired tiles during animation
+      attributionControl: true
     });
 
     // Handle map load
@@ -478,7 +475,23 @@ const MapModule = (function() {
   }
 
   /**
-   * Start the globe spin animation
+   * Spin globe one step (called on moveend to chain animations)
+   */
+  function spinGlobeStep() {
+    if (!spinning || !map) return;
+    
+    const center = map.getCenter();
+    const newLng = center.lng + spinSpeed * 10; // Larger step since easeTo handles interpolation
+    
+    map.easeTo({
+      center: [newLng, center.lat],
+      duration: 200, // Smooth 200ms animation per step
+      easing: (t) => t // Linear easing for constant speed
+    });
+  }
+
+  /**
+   * Start the globe spin animation (uses Mapbox's easeTo for smooth GPU-accelerated rotation)
    */
   function startSpin(fromCurrent = false) {
     if (!spinEnabled || spinning || !map) return;
@@ -487,32 +500,20 @@ const MapModule = (function() {
     spinning = true;
     App.emit('map:spinStarted');
 
-    function step() {
-      if (!spinning || !map) return;
-
-      // Only wait for tiles if setting enabled (skip isMoving check - it causes micro-stutters)
-      if (waitForMapTiles && map.areTilesLoaded && !map.areTilesLoaded()) {
-        requestAnimationFrame(step);
-        return;
-      }
-
-      // Rotate globe
-      const center = map.getCenter();
-      map.setCenter([center.lng + spinSpeed, center.lat]);
-      requestAnimationFrame(step);
-    }
+    // Chain animations - when one ends, start next
+    map.on('moveend', spinGlobeStep);
 
     if (fromCurrent) {
-      requestAnimationFrame(step);
+      spinGlobeStep();
     } else {
-      // Ease to starting position first
+      // Ease to starting position first, then start spinning
       map.easeTo({
         center: startCenter,
         zoom: startZoom,
         pitch: startPitch,
+        duration: 1000,
         essential: true
       });
-      map.once('moveend', () => requestAnimationFrame(step));
     }
   }
 
@@ -523,6 +524,8 @@ const MapModule = (function() {
     if (!spinning) return;
     spinning = false;
     spinEnabled = false;
+    // Remove the moveend listener to stop the chain
+    map.off('moveend', spinGlobeStep);
     App.emit('map:spinStopped');
   }
 

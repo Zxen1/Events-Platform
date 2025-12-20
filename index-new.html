@@ -68,14 +68,14 @@
     </nav>
     
     <!-- Access buttons (Member / Admin / Fullscreen) -->
-    <button class="header-access-button" type="button" data-panel="member" aria-label="Member" aria-expanded="false" aria-controls="member-panel">
+    <button class="header-access-button" type="button" data-panel="member" title="Members" aria-label="Member" aria-expanded="false" aria-controls="member-panel">
       <span class="header-access-button-icon header-access-button-icon--member"></span>
       <img class="header-access-button-avatar header-access-button-avatar--hidden" src="" alt="">
     </button>
-    <button class="header-access-button header-access-button--hidden" type="button" data-panel="admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel" aria-hidden="true">
+    <button class="header-access-button header-access-button--hidden" type="button" data-panel="admin" title="Admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel" aria-hidden="true">
       <span class="header-access-button-icon header-access-button-icon--admin"></span>
     </button>
-    <button class="header-access-button fullscreen-btn" type="button" data-action="fullscreen" aria-label="Toggle fullscreen">
+    <button class="header-access-button fullscreen-btn" type="button" data-action="fullscreen" title="Fullscreen" aria-label="Toggle fullscreen">
       <span class="header-access-button-icon header-access-button-icon--fullscreen"></span>
     </button>
     
@@ -202,13 +202,13 @@
               <input type="checkbox" id="admin-autosave-checkbox" class="admin-autosave-toggle-input">
               <span class="admin-autosave-toggle-label">Auto</span>
             </label>
-            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--save admin-panel-actions-icon-btn--disabled" aria-label="Save Changes" disabled>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--save admin-panel-actions-icon-btn--disabled" title="Save Changes" aria-label="Save Changes" disabled>
               <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--save admin-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>
             </button>
-            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--discard admin-panel-actions-icon-btn--disabled" aria-label="Discard Changes" disabled>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--discard admin-panel-actions-icon-btn--disabled" title="Discard Changes" aria-label="Discard Changes" disabled>
               <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--discard admin-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>
             </button>
-            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--close" aria-label="Close Panel">
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--close" title="Close Panel" aria-label="Close Panel">
               <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--close" aria-hidden="true"></span>
             </button>
           </div>
@@ -608,6 +608,12 @@
       <!-- Slides inserted dynamically by marquee.js -->
     </div>
   </aside>
+
+  <!-- ========================================================================
+       STATUS MESSAGES (Toast notifications)
+       ======================================================================== -->
+  <div id="adminStatusMessage" class="admin-status-message" role="status" aria-live="polite" aria-hidden="true"></div>
+  <div id="memberStatusMessage" class="member-status-message" role="status" aria-live="polite" aria-hidden="true"></div>
 
   <!-- ========================================================================
        MODALS (not counted as sections)
