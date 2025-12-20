@@ -568,11 +568,14 @@
                 checkoutOptions = res.checkout_options;
                 siteCurrency = res.settings && res.settings.website_currency;
                 // Then fetch icons
-                return fetch('/gateway.php?action=list-icons&folder=assets/category-icons/');
+                // Use Bunny CDN category-icons folder
+                var categoryIconsFolder = window.App.getBunnyFolder('categoryIcons');
+                return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent('https://cdn.funmap.com/' + categoryIconsFolder));
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                allIcons = (res.icons || []).map(function(name) { return 'assets/category-icons/' + name; });
+                var categoryIconsBase = window.App.BUNNY_CDN_BASE + window.App.getBunnyFolder('categoryIcons');
+                allIcons = (res.icons || []).map(function(name) { return categoryIconsBase + name; });
                 return fetch('/gateway.php?action=get-form');
             })
             .then(function(r) { return r.json(); })

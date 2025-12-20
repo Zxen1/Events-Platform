@@ -163,18 +163,18 @@
 }
 
 .admin-panel-actions-icon-btn-icon--save {
-  -webkit-mask-image: url('assets/system-images/icon-save.svg');
-  mask-image: url('assets/system-images/icon-save.svg');
+  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-save.svg');
+  mask-image: url('https://cdn.funmap.com/system-images/icon-save.svg');
 }
 
 .admin-panel-actions-icon-btn-icon--discard {
-  -webkit-mask-image: url('assets/system-images/icon-discard.svg');
-  mask-image: url('assets/system-images/icon-discard.svg');
+  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-discard.svg');
+  mask-image: url('https://cdn.funmap.com/system-images/icon-discard.svg');
 }
 
 .admin-panel-actions-icon-btn-icon--close {
-  -webkit-mask-image: url('assets/system-images/icon-close.svg');
-  mask-image: url('assets/system-images/icon-close.svg');
+  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-close.svg');
+  mask-image: url('https://cdn.funmap.com/system-images/icon-close.svg');
 }
 
 .admin-panel-actions-icon-btn-icon--disabled {

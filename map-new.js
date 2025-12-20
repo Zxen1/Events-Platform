@@ -721,8 +721,8 @@ const MapModule = (function() {
     const iconSize = isActive ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
     const pillClass = `map-card-${state}`;
     
-    // Get icon URL (would come from subcategory or default)
-    const iconUrl = post.iconUrl || 'assets/system-images/multi-post-icon-30.webp';
+    // Get icon URL from post or database setting (no hardcoded fallback)
+    const iconUrl = post.iconUrl || adminSettings.multi_post_icon;
     
     // Truncate title for label
     const title = post.title || '';

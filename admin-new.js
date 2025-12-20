@@ -46,7 +46,7 @@ const AdminModule = (function() {
        duplication across modules and ensures consistency.
        
        - Modules access icons via AdminModule.icons.editPen, AdminModule.icons.dragHandle, etc.
-       - Site-wide icons (save, close, etc.) are in assets/system-images/
+       - Site-wide icons (save, close, etc.) are in https://cdn.funmap.com/system-images/
        - Add new admin UI icons here, not in individual module files
        -------------------------------------------------------------------------- */
     
@@ -948,9 +948,8 @@ const AdminModule = (function() {
             if (cat.icon) {
                 headerImg.src = cat.icon;
                 headerImg.alt = '';
-            } else {
-                headerImg.src = 'assets/icons-30/default.png';
             }
+            // No fallback - icon must come from database
             
             // Header text
             var headerText = document.createElement('span');
@@ -2845,10 +2844,10 @@ const AdminModule = (function() {
                 var btnText = menu.querySelector('.admin-currency-button-text');
                 if (found) {
                     var countryCode = found.value.substring(0, 2);
-                    if (btnImg) btnImg.src = 'assets/flags/' + countryCode + '.svg';
+                    if (btnImg) btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
                     if (btnText) btnText.textContent = code + ' - ' + found.label;
                 } else {
-                    if (btnImg) btnImg.src = 'assets/flags/us.svg';
+                    if (btnImg) btnImg.src = window.App.getBunnyUrl('flags', 'us.svg');
                     if (btnText) btnText.textContent = code + ' - US Dollar';
                 }
             }

@@ -74,13 +74,42 @@ const HeaderModule = (function() {
         fetch('/gateway.php?action=get-admin-settings')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (data.success && data.settings && data.settings.small_logo) {
-                    setLogo(data.settings.small_logo);
+                if (data.success && data.settings) {
+                    // Load logo
+                    if (data.settings.small_logo) {
+                        setLogo(data.settings.small_logo);
+                    }
+                    // Load header icons from database
+                    loadHeaderIcons(data.settings);
                 }
             })
             .catch(function(err) {
-                console.error('[Header] Failed to load logo:', err);
+                console.error('[Header] Failed to load settings:', err);
             });
+    }
+    
+    function loadHeaderIcons(settings) {
+        // Filter icon
+        var filterIcon = document.querySelector('.header-filter-button-icon');
+        if (filterIcon && settings.icon_filter) {
+            filterIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_filter);
+        }
+        
+        // Mode switch icons
+        var recentsIcon = document.querySelector('.header-modeswitch-button[data-mode="recents"] .header-modeswitch-button-icon');
+        if (recentsIcon && settings.icon_recents) {
+            recentsIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_recents);
+        }
+        
+        var postsIcon = document.querySelector('.header-modeswitch-button[data-mode="posts"] .header-modeswitch-button-icon');
+        if (postsIcon && settings.icon_posts) {
+            postsIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_posts);
+        }
+        
+        var mapIcon = document.querySelector('.header-modeswitch-button[data-mode="map"] .header-modeswitch-button-icon');
+        if (mapIcon && settings.icon_map) {
+            mapIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_map);
+        }
     }
     
     function setLogo(imagePath) {
