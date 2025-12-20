@@ -205,12 +205,29 @@ body {
    ============================================================================ */
 
 .welcome-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
   background: rgba(0,0,0,0.65);
   backdrop-filter: blur(4px);
+  display: none;
+  z-index: var(--layer-modal, 100);
+  pointer-events: none;
+}
+
+.welcome-modal.show {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: calc(var(--header-h, 50px) + var(--safe-top, 0px) + 10px);
+  pointer-events: auto;
 }
 
 .welcome-modal-content {
-  position: absolute;
+  position: relative;
   width: min(600px, 90vw);
   max-width: 90vw;
   background: none;

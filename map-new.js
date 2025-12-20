@@ -326,6 +326,11 @@ const MapModule = (function() {
     const lng = result.center[0];
     const lat = result.center[1];
 
+    // Close welcome modal on search
+    if (window.WelcomeModalComponent) {
+      WelcomeModalComponent.close();
+    }
+
     // Stop spin on interaction
     stopSpin();
 
@@ -429,12 +434,19 @@ const MapModule = (function() {
     ['dragstart', 'zoomstart', 'rotatestart'].forEach(event => {
       map.on(event, () => {
         if (spinning) stopSpin();
+        // Close welcome modal on map interaction
+        if (window.WelcomeModalComponent && WelcomeModalComponent.isVisible()) {
+          WelcomeModalComponent.close();
+        }
       });
     });
 
-    // Click to stop spin
+    // Click to stop spin and close welcome modal
     map.on('click', () => {
       if (spinning) stopSpin();
+      if (window.WelcomeModalComponent && WelcomeModalComponent.isVisible()) {
+        WelcomeModalComponent.close();
+      }
     });
   }
 
@@ -935,6 +947,22 @@ const MapModule = (function() {
     
     // Initialize map
     initMap();
+    
+    // Header logo click toggles welcome modal and triggers spin
+    var logoButton = document.querySelector('.header-logo-button');
+    if (logoButton) {
+      logoButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Toggle welcome modal
+        if (window.WelcomeModalComponent) {
+          WelcomeModalComponent.toggle();
+        }
+        // Trigger spin if enabled
+        if (spinLogoClick) {
+          triggerLogoSpin();
+        }
+      });
+    }
   }
 
 

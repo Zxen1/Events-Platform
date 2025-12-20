@@ -4033,6 +4033,158 @@ const ConfirmDialogComponent = (function() {
     };
 })();
 
+
+/* ============================================================================
+   WELCOME MODAL
+   Full-screen modal with logo and map controls (geocoder, geolocate, compass)
+   Uses big_logo from admin settings
+   ============================================================================ */
+
+const WelcomeModalComponent = (function() {
+    
+    var modal = null;
+    var logoElement = null;
+    var controlsElement = null;
+    var isOpen = false;
+    
+    /**
+     * Initialize the welcome modal
+     * Finds or creates the modal element and sets up event handlers
+     */
+    function init() {
+        modal = document.getElementById('welcome-modal');
+        if (!modal) {
+            // Create modal if it doesn't exist
+            modal = document.createElement('div');
+            modal.id = 'welcome-modal';
+            modal.className = 'welcome-modal';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.setAttribute('aria-hidden', 'true');
+            
+            modal.innerHTML = '<div class="welcome-modal-content">' +
+                '<div class="welcome-modal-body" id="welcomeBody">' +
+                '<img class="welcome-modal-logo" src="" alt="FunMap logo" loading="eager">' +
+                '<div class="welcome-modal-controls map-controls-welcome">' +
+                '<div id="geocoder-welcome" class="geocoder"></div>' +
+                '<div id="geolocate-welcome" class="geolocate-btn"></div>' +
+                '<div id="compass-welcome" class="compass-btn"></div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+            
+            document.body.appendChild(modal);
+        }
+        
+        logoElement = modal.querySelector('.welcome-modal-logo');
+        controlsElement = modal.querySelector('.welcome-modal-controls');
+        
+        // Close when clicking outside content
+        modal.addEventListener('click', function(e) {
+            var content = modal.querySelector('.welcome-modal-content');
+            if (controlsElement && controlsElement.contains(e.target)) return;
+            if (content && !content.contains(e.target)) {
+                close();
+            }
+        });
+        
+        // Close on content click (but not controls)
+        var content = modal.querySelector('.welcome-modal-content');
+        if (content) {
+            content.addEventListener('click', function(e) {
+                if (controlsElement && controlsElement.contains(e.target)) return;
+                close();
+            });
+        }
+    }
+    
+    /**
+     * Open the welcome modal
+     */
+    function open() {
+        if (!modal) init();
+        modal.classList.add('show');
+        modal.removeAttribute('aria-hidden');
+        isOpen = true;
+        
+        // Hide map controls while welcome is open
+        var mapControls = document.querySelector('.map-controls');
+        if (mapControls) mapControls.style.display = 'none';
+    }
+    
+    /**
+     * Close the welcome modal
+     */
+    function close() {
+        if (!modal) return;
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        isOpen = false;
+        
+        // Show map controls again
+        var mapControls = document.querySelector('.map-controls');
+        if (mapControls) mapControls.style.display = '';
+    }
+    
+    /**
+     * Toggle the welcome modal
+     */
+    function toggle() {
+        if (isOpen) {
+            close();
+        } else {
+            open();
+        }
+    }
+    
+    /**
+     * Set the logo image
+     * @param {string} imagePath - Path to logo image
+     */
+    function setLogo(imagePath) {
+        if (!modal) init();
+        if (logoElement && imagePath) {
+            logoElement.onload = function() {
+                logoElement.classList.add('welcome-modal-logo--loaded');
+                if (controlsElement) controlsElement.classList.add('welcome-modal-controls--visible');
+            };
+            logoElement.src = imagePath;
+            if (logoElement.complete) {
+                logoElement.classList.add('welcome-modal-logo--loaded');
+                if (controlsElement) controlsElement.classList.add('welcome-modal-controls--visible');
+            }
+        }
+    }
+    
+    /**
+     * Check if modal is currently open
+     * @returns {boolean}
+     */
+    function isVisible() {
+        return isOpen;
+    }
+    
+    /**
+     * Get the modal element
+     * @returns {HTMLElement}
+     */
+    function getElement() {
+        if (!modal) init();
+        return modal;
+    }
+    
+    return {
+        init: init,
+        open: open,
+        close: close,
+        toggle: toggle,
+        setLogo: setLogo,
+        isVisible: isVisible,
+        getElement: getElement
+    };
+})();
+
+
 // Expose globally
 window.ClearButtonComponent = ClearButtonComponent;
 window.SwitchComponent = SwitchComponent;
@@ -4045,4 +4197,5 @@ window.SystemImagePickerComponent = SystemImagePickerComponent;
 window.MapControlRowComponent = MapControlRowComponent;
 window.CheckoutOptionsComponent = CheckoutOptionsComponent;
 window.ConfirmDialogComponent = ConfirmDialogComponent;
+window.WelcomeModalComponent = WelcomeModalComponent;
 
