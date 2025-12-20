@@ -270,9 +270,11 @@ const MapModule = (function() {
       }
     }
     
-    // Wait for tiles
+    // Wait for tiles (database stores as string 'true'/'false')
     if (settings.wait_for_map_tiles !== undefined) {
-      waitForMapTiles = settings.wait_for_map_tiles === '1' || settings.wait_for_map_tiles === true;
+      const val = settings.wait_for_map_tiles;
+      waitForMapTiles = val === '1' || val === 'true' || val === true;
+      console.log('[Map] wait_for_map_tiles from DB:', val, '→ waitForMapTiles:', waitForMapTiles);
     }
     
     // Update spin enabled state
@@ -486,9 +488,8 @@ const MapModule = (function() {
     function step() {
       if (!spinning || !map) return;
 
-      // Wait if map is busy
-      const isBusy = (map.isMoving && map.isMoving()) || (map.areTilesLoaded && !map.areTilesLoaded());
-      if (isBusy) {
+      // Only wait for tiles if setting enabled (skip isMoving check - it causes micro-stutters)
+      if (waitForMapTiles && map.areTilesLoaded && !map.areTilesLoaded()) {
         requestAnimationFrame(step);
         return;
       }
