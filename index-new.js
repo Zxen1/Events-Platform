@@ -244,6 +244,15 @@ const App = (function() {
         
         var settings = data.settings;
         
+        // Update document title with website name and tagline
+        if (settings.website_name) {
+          var pageTitle = settings.website_name;
+          if (settings.website_tagline) {
+            pageTitle += ' - ' + settings.website_tagline;
+          }
+          document.title = pageTitle;
+        }
+        
         // Apply favicon
         if (settings.favicon) {
           setFavicon(settings.favicon);

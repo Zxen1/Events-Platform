@@ -2465,10 +2465,10 @@ let __notifyMapOnInteraction = null;
               // No localStorage caching needed
               
               // Update document title with site name and tagline
-              if(data.settings.site_name){
-                let pageTitle = data.settings.site_name;
-                if(data.settings.site_tagline){
-                  pageTitle += ' - ' + data.settings.site_tagline;
+              if(data.settings.website_name){
+                let pageTitle = data.settings.website_name;
+                if(data.settings.website_tagline){
+                  pageTitle += ' - ' + data.settings.website_tagline;
                 }
                 document.title = pageTitle;
               }
@@ -2692,13 +2692,13 @@ let __notifyMapOnInteraction = null;
               
               // Initialize general website settings
               const websiteNameInput = document.getElementById('adminWebsiteName');
-              if(websiteNameInput && data.settings.site_name){
-                websiteNameInput.value = data.settings.site_name;
+              if(websiteNameInput && data.settings.website_name){
+                websiteNameInput.value = data.settings.website_name;
               }
               
               const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
-              if(websiteTaglineInput && data.settings.site_tagline){
-                websiteTaglineInput.value = data.settings.site_tagline;
+              if(websiteTaglineInput && data.settings.website_tagline){
+                websiteTaglineInput.value = data.settings.website_tagline;
               }
               
               const websiteCurrencyBtn = document.getElementById('adminWebsiteCurrency');
@@ -2753,14 +2753,14 @@ let __notifyMapOnInteraction = null;
                   });
                   
                   // Set selected value
-                  if(data.settings.site_currency){
-                    const siteOpt = findCurrencyOption(data.settings.site_currency);
+                  if(data.settings.website_currency){
+                    const siteOpt = findCurrencyOption(data.settings.website_currency);
                     if(siteOpt){
                       websiteCurrencyBtn.innerHTML = getCurrencyDisplayText(siteOpt);
                     } else {
-                      websiteCurrencyBtn.textContent = data.settings.site_currency;
+                      websiteCurrencyBtn.textContent = data.settings.website_currency;
                     }
-                    websiteCurrencyBtn.dataset.value = data.settings.site_currency;
+                    websiteCurrencyBtn.dataset.value = data.settings.website_currency;
                   }
                   websiteCurrencyBtn.appendChild(websiteCurrencyArrow);
                   
@@ -2802,7 +2802,7 @@ let __notifyMapOnInteraction = null;
               
               // Render checkout options
               if(data.checkout_options && Array.isArray(data.checkout_options)){
-                renderCheckoutOptions(data.checkout_options, data.settings.site_currency || 'USD');
+                renderCheckoutOptions(data.checkout_options, data.settings.website_currency || 'USD');
                 // Refresh saved state after checkout options are rendered to capture the initial state
                 setTimeout(() => {
                   if(window.adminPanelModule && typeof window.adminPanelModule.markSaved === 'function'){
@@ -25951,17 +25951,17 @@ form.addEventListener('input', formChangedWrapper, true);
     
     const websiteNameInput = document.getElementById('adminWebsiteName');
     if(websiteNameInput){
-      websiteSettings.site_name = websiteNameInput.value.trim();
+      websiteSettings.website_name = websiteNameInput.value.trim();
     }
     
     const websiteTaglineInput = document.getElementById('adminWebsiteTagline');
     if(websiteTaglineInput){
-      websiteSettings.site_tagline = websiteTaglineInput.value.trim();
+      websiteSettings.website_tagline = websiteTaglineInput.value.trim();
     }
     
     const websiteCurrencyInput = document.getElementById('adminWebsiteCurrency');
     if(websiteCurrencyInput){
-      websiteSettings.site_currency = (websiteCurrencyInput.dataset.value || websiteCurrencyInput.value || '').trim();
+      websiteSettings.website_currency = (websiteCurrencyInput.dataset.value || websiteCurrencyInput.value || '').trim();
     }
     
     const contactEmailInput = document.getElementById('adminContactEmail');

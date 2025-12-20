@@ -566,7 +566,7 @@
                     throw new Error('Failed to load admin settings');
                 }
                 checkoutOptions = res.checkout_options;
-                siteCurrency = res.settings && res.settings.site_currency;
+                siteCurrency = res.settings && res.settings.website_currency;
                 // Then fetch icons
                 return fetch('/gateway.php?action=list-icons&folder=assets/category-icons/');
             })

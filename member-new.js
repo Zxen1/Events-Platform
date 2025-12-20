@@ -340,8 +340,8 @@ const MemberModule = (function() {
                     return opt.is_active !== false && opt.is_active !== 0;
                 });
             }
-            if (settingsResponse && settingsResponse.settings && settingsResponse.settings.site_currency) {
-                siteCurrency = settingsResponse.settings.site_currency;
+            if (settingsResponse && settingsResponse.settings && settingsResponse.settings.website_currency) {
+                siteCurrency = settingsResponse.settings.website_currency;
             }
 
             if (memberCategories.length > 0) {
