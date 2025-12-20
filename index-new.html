@@ -303,7 +303,142 @@
         
         <!-- Map Tab -->
         <section id="admin-tab-map" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-map-btn">
-          <p class="admin-tab-intro">Map content will go here.</p>
+          
+          <!-- Starting Location -->
+          <div class="admin-map-defaults-container">
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminStartingAddress">Starting Location</label>
+              <p class="admin-settings-field-description">Default map center for new visitors</p>
+              <div class="admin-map-controls-starting">
+                <div id="admin-geocoder-starting" class="admin-map-controls-starting-geocoder"></div>
+                <div id="admin-starting-address-display" class="admin-map-controls-starting-address-display" hidden></div>
+              </div>
+              <input type="hidden" id="adminStartingAddress" />
+              <input type="hidden" id="adminStartingLat" />
+              <input type="hidden" id="adminStartingLng" />
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminStartingZoom">Starting Zoom</label>
+              <div class="admin-spin-control-row">
+                <span id="adminStartingZoomDisplay" class="admin-slider-value">10</span>
+                <input type="range" id="adminStartingZoom" min="1" max="18" step="1" value="10" class="admin-spin-slider" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Spin Settings -->
+          <div class="admin-map-spin-container">
+            <div class="admin-panel-field">
+              <div class="admin-option-label">
+                <span>Spin on Load</span>
+                <label class="admin-switch">
+                  <input type="checkbox" id="adminSpinLoadStart" class="admin-switch-input" />
+                  <span class="admin-switch-slider"></span>
+                </label>
+                <div id="adminSpinType" class="admin-spin-type-toggles">
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminSpinType" value="everyone" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Everyone</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminSpinType" value="new_users" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">New Users</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <div class="admin-option-label">
+                <span>Spin on Logo</span>
+                <label class="admin-switch">
+                  <input type="checkbox" id="adminSpinLogoClick" class="admin-switch-input" checked />
+                  <span class="admin-switch-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminSpinZoomMax">Spin Max Zoom</label>
+              <div class="admin-spin-control-row">
+                <span id="adminSpinZoomMaxDisplay" class="admin-slider-value">4</span>
+                <input type="range" id="adminSpinZoomMax" min="1" max="10" step="1" value="4" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminSpinSpeed">Spin Speed</label>
+              <div class="admin-spin-control-row">
+                <span id="adminSpinSpeedDisplay" class="admin-slider-value">0.3</span>
+                <input type="range" id="adminSpinSpeed" min="0.1" max="2.0" step="0.1" value="0.3" class="admin-spin-slider" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Map Shadow -->
+          <div class="admin-map-shadow-container" id="admin-map-shadow-container">
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminMapShadowOpacity">Map Shadow</label>
+              <div class="admin-spin-control-row">
+                <span id="adminMapShadowOpacityDisplay" class="admin-slider-value">0.00</span>
+                <input type="range" id="adminMapShadowOpacity" min="0" max="1" step="0.01" class="admin-spin-slider" />
+              </div>
+              <div class="admin-panel-field admin-panel-field--spaced-small">
+                <div class="admin-spin-type-toggles admin-spin-type-toggles--no-margin">
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapShadowMode" value="post_mode_only" id="adminMapShadowModePostOnly" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Post Mode Only</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapShadowMode" value="always" id="adminMapShadowModeAlways" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Always</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <div class="admin-option-label">
+                <span>Wait for Map Tiles</span>
+                <label class="admin-switch">
+                  <input type="checkbox" id="adminWaitForMapTiles" class="admin-switch-input" checked />
+                  <span class="admin-switch-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--separator">
+              <div class="admin-option-label">
+                <span>Map Card Display</span>
+                <div class="admin-spin-type-toggles">
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapCardDisplay" value="hover_only" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Hover Only</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapCardDisplay" value="always" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Always</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Map Card Image Pickers -->
+          <div class="admin-settings-container">
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Small Map Card Pill</label>
+              <div id="adminSmallMapCardPillPicker" data-setting-key="small_map_card_pill"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Big Map Card Pill</label>
+              <div id="adminBigMapCardPillPicker" data-setting-key="big_map_card_pill"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Hover Map Card Pill</label>
+              <div id="adminHoverMapCardPillPicker" data-setting-key="hover_map_card_pill"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Multi Post Icon</label>
+              <div id="adminMultiPostIconPicker" data-setting-key="multi_post_icon"></div>
+            </div>
+          </div>
+          
         </section>
         
         <!-- Messages Tab -->

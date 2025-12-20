@@ -471,6 +471,10 @@ const AdminModule = (function() {
             initSettingsTab();
         } else if (tabName === 'messages') {
             initMessagesTab();
+        } else if (tabName === 'map') {
+            initMapTab();
+        } else if (tabName === 'checkout') {
+            initCheckoutTab();
         }
     }
 
@@ -730,6 +734,7 @@ const AdminModule = (function() {
         resetSettingsToOriginal();
         resetMessagesToOriginal();
         resetCheckoutOptionsToOriginal();
+        resetMapTabToOriginal();
         
         // Reset field registry values (current = original) instead of clearing
         // This preserves registrations so fields don't need to re-register
@@ -885,6 +890,23 @@ const AdminModule = (function() {
     }
     
     function loadMessageCategoryIcons() {
+        // Reuse settingsData if Settings tab already loaded it
+        var useExisting = settingsInitialized && Object.keys(settingsData).length > 0;
+        
+        if (useExisting) {
+            MESSAGE_CATEGORIES.forEach(function(cat) {
+                var settingKey = 'msg_category_' + cat.key + '_icon';
+                if (settingsData[settingKey]) {
+                    cat.icon = settingsData[settingKey];
+                }
+                var nameKey = 'msg_category_' + cat.key + '_name';
+                if (settingsData[nameKey]) {
+                    cat.name = settingsData[nameKey];
+                }
+            });
+            return Promise.resolve();
+        }
+        
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(response) { return response.json(); })
             .then(function(data) {
@@ -1538,6 +1560,571 @@ const AdminModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
+       MAP TAB
+       
+       Contains map-related settings: starting location, spin settings,
+       map shadow, map card display, and system image pickers.
+       -------------------------------------------------------------------------- */
+    
+    var mapTabContainer = null;
+    var mapTabInitialized = false;
+    var mapTabData = {}; // Cached map settings from database
+    
+    function initMapTab() {
+        if (mapTabInitialized) return;
+        
+        mapTabContainer = document.getElementById('admin-tab-map');
+        if (!mapTabContainer) return;
+        
+        // Load settings from database then initialize controls
+        loadMapTabSettings().then(function() {
+            attachMapTabHandlers();
+            mapTabInitialized = true;
+        });
+    }
+    
+    function loadMapTabSettings() {
+        // Reuse settingsData if Settings tab already loaded it
+        if (settingsInitialized && Object.keys(settingsData).length > 0) {
+            mapTabData = settingsData;
+            if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
+                SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+            }
+            return Promise.resolve();
+        }
+        
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.settings) {
+                    mapTabData = data.settings;
+                    
+                    // Initialize SystemImagePickerComponent with folder from settings
+                    if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
+                        SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.error('[Admin] Failed to load map tab settings:', err);
+            });
+    }
+    
+    function attachMapTabHandlers() {
+        if (!mapTabContainer) return;
+        
+        // Starting Zoom slider
+        var startingZoomSlider = document.getElementById('adminStartingZoom');
+        var startingZoomDisplay = document.getElementById('adminStartingZoomDisplay');
+        if (startingZoomSlider && startingZoomDisplay) {
+            var initialZoom = mapTabData.starting_zoom !== undefined ? parseFloat(mapTabData.starting_zoom) : 10;
+            startingZoomSlider.value = initialZoom;
+            startingZoomDisplay.textContent = Math.round(initialZoom).toString();
+            
+            registerField('map.starting_zoom', initialZoom);
+            
+            startingZoomSlider.addEventListener('input', function() {
+                startingZoomDisplay.textContent = Math.round(parseFloat(startingZoomSlider.value)).toString();
+                updateField('map.starting_zoom', parseFloat(startingZoomSlider.value));
+            });
+        }
+        
+        // Spin on Load checkbox
+        var spinLoadStartCheckbox = document.getElementById('adminSpinLoadStart');
+        if (spinLoadStartCheckbox) {
+            var initialSpinLoad = mapTabData.spin_on_load === true || mapTabData.spin_on_load === '1';
+            spinLoadStartCheckbox.checked = initialSpinLoad;
+            updateSwitchSlider(spinLoadStartCheckbox);
+            
+            registerField('map.spin_on_load', initialSpinLoad);
+            
+            spinLoadStartCheckbox.addEventListener('change', function() {
+                updateSwitchSlider(spinLoadStartCheckbox);
+                updateField('map.spin_on_load', spinLoadStartCheckbox.checked);
+            });
+        }
+        
+        // Spin Type radios
+        var spinTypeRadios = mapTabContainer.querySelectorAll('input[name="adminSpinType"]');
+        if (spinTypeRadios.length) {
+            var initialSpinType = mapTabData.spin_load_type || 'everyone';
+            spinTypeRadios.forEach(function(radio) {
+                radio.checked = (radio.value === initialSpinType);
+            });
+            
+            registerField('map.spin_load_type', initialSpinType);
+            
+            spinTypeRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (radio.checked) {
+                        updateField('map.spin_load_type', radio.value);
+                    }
+                });
+            });
+        }
+        
+        // Spin on Logo checkbox
+        var spinLogoClickCheckbox = document.getElementById('adminSpinLogoClick');
+        if (spinLogoClickCheckbox) {
+            var initialSpinLogo = mapTabData.spin_on_logo !== false && mapTabData.spin_on_logo !== '0';
+            spinLogoClickCheckbox.checked = initialSpinLogo;
+            updateSwitchSlider(spinLogoClickCheckbox);
+            
+            registerField('map.spin_on_logo', initialSpinLogo);
+            
+            spinLogoClickCheckbox.addEventListener('change', function() {
+                updateSwitchSlider(spinLogoClickCheckbox);
+                updateField('map.spin_on_logo', spinLogoClickCheckbox.checked);
+            });
+        }
+        
+        // Spin Max Zoom slider
+        var spinZoomMaxSlider = document.getElementById('adminSpinZoomMax');
+        var spinZoomMaxDisplay = document.getElementById('adminSpinZoomMaxDisplay');
+        if (spinZoomMaxSlider && spinZoomMaxDisplay) {
+            var initialSpinZoomMax = mapTabData.spin_zoom_max !== undefined ? parseFloat(mapTabData.spin_zoom_max) : 4;
+            spinZoomMaxSlider.value = initialSpinZoomMax;
+            spinZoomMaxDisplay.textContent = Math.round(initialSpinZoomMax).toString();
+            
+            registerField('map.spin_zoom_max', initialSpinZoomMax);
+            
+            spinZoomMaxSlider.addEventListener('input', function() {
+                spinZoomMaxDisplay.textContent = Math.round(parseFloat(spinZoomMaxSlider.value)).toString();
+                updateField('map.spin_zoom_max', parseFloat(spinZoomMaxSlider.value));
+            });
+        }
+        
+        // Spin Speed slider
+        var spinSpeedSlider = document.getElementById('adminSpinSpeed');
+        var spinSpeedDisplay = document.getElementById('adminSpinSpeedDisplay');
+        if (spinSpeedSlider && spinSpeedDisplay) {
+            var initialSpinSpeed = mapTabData.spin_speed !== undefined ? parseFloat(mapTabData.spin_speed) : 0.3;
+            spinSpeedSlider.value = initialSpinSpeed;
+            spinSpeedDisplay.textContent = initialSpinSpeed.toFixed(1);
+            
+            registerField('map.spin_speed', initialSpinSpeed);
+            
+            spinSpeedSlider.addEventListener('input', function() {
+                spinSpeedDisplay.textContent = parseFloat(spinSpeedSlider.value).toFixed(1);
+                updateField('map.spin_speed', parseFloat(spinSpeedSlider.value));
+            });
+        }
+        
+        // Map Shadow Opacity slider
+        var shadowOpacitySlider = document.getElementById('adminMapShadowOpacity');
+        var shadowOpacityDisplay = document.getElementById('adminMapShadowOpacityDisplay');
+        if (shadowOpacitySlider && shadowOpacityDisplay) {
+            var initialShadowOpacity = mapTabData.post_mode_bg_opacity !== undefined ? parseFloat(mapTabData.post_mode_bg_opacity) : 0;
+            shadowOpacitySlider.value = initialShadowOpacity;
+            shadowOpacityDisplay.textContent = initialShadowOpacity.toFixed(2);
+            
+            registerField('map.post_mode_bg_opacity', initialShadowOpacity);
+            
+            shadowOpacitySlider.addEventListener('input', function() {
+                shadowOpacityDisplay.textContent = parseFloat(shadowOpacitySlider.value).toFixed(2);
+                updateField('map.post_mode_bg_opacity', parseFloat(shadowOpacitySlider.value));
+            });
+        }
+        
+        // Map Shadow Mode radios
+        var shadowModeRadios = mapTabContainer.querySelectorAll('input[name="adminMapShadowMode"]');
+        if (shadowModeRadios.length) {
+            var initialShadowMode = mapTabData.map_shadow_mode || 'post_mode_only';
+            shadowModeRadios.forEach(function(radio) {
+                radio.checked = (radio.value === initialShadowMode);
+            });
+            
+            registerField('map.map_shadow_mode', initialShadowMode);
+            
+            shadowModeRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (radio.checked) {
+                        updateField('map.map_shadow_mode', radio.value);
+                    }
+                });
+            });
+        }
+        
+        // Wait for Map Tiles checkbox
+        var waitForMapTilesCheckbox = document.getElementById('adminWaitForMapTiles');
+        if (waitForMapTilesCheckbox) {
+            var initialWaitTiles = mapTabData.wait_for_map_tiles !== false && mapTabData.wait_for_map_tiles !== '0';
+            waitForMapTilesCheckbox.checked = initialWaitTiles;
+            updateSwitchSlider(waitForMapTilesCheckbox);
+            
+            registerField('map.wait_for_map_tiles', initialWaitTiles);
+            
+            waitForMapTilesCheckbox.addEventListener('change', function() {
+                updateSwitchSlider(waitForMapTilesCheckbox);
+                updateField('map.wait_for_map_tiles', waitForMapTilesCheckbox.checked);
+            });
+        }
+        
+        // Map Card Display radios
+        var mapCardDisplayRadios = mapTabContainer.querySelectorAll('input[name="adminMapCardDisplay"]');
+        if (mapCardDisplayRadios.length) {
+            var initialMapCardDisplay = mapTabData.map_card_display || 'hover_only';
+            mapCardDisplayRadios.forEach(function(radio) {
+                radio.checked = (radio.value === initialMapCardDisplay);
+            });
+            
+            registerField('map.map_card_display', initialMapCardDisplay);
+            
+            mapCardDisplayRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (radio.checked) {
+                        updateField('map.map_card_display', radio.value);
+                    }
+                });
+            });
+        }
+        
+        // Initialize Starting Location Geocoder
+        initStartingLocationGeocoder();
+        
+        // Initialize Map tab image pickers
+        initMapImagePicker('adminSmallMapCardPillPicker', 'small_map_card_pill');
+        initMapImagePicker('adminBigMapCardPillPicker', 'big_map_card_pill');
+        initMapImagePicker('adminHoverMapCardPillPicker', 'hover_map_card_pill');
+        initMapImagePicker('adminMultiPostIconPicker', 'multi_post_icon');
+    }
+    
+    // Helper to update switch slider visual state
+    function updateSwitchSlider(checkbox) {
+        var slider = checkbox.parentElement.querySelector('.admin-switch-slider');
+        if (slider) {
+            slider.classList.toggle('admin-switch-slider--checked', checkbox.checked);
+        }
+    }
+    
+    function initStartingLocationGeocoder() {
+        var startingAddressInput = document.getElementById('adminStartingAddress');
+        var startingLatInput = document.getElementById('adminStartingLat');
+        var startingLngInput = document.getElementById('adminStartingLng');
+        var startingGeocoderContainer = document.getElementById('admin-geocoder-starting');
+        var startingAddressDisplay = document.getElementById('admin-starting-address-display');
+        
+        if (!startingGeocoderContainer) return;
+        if (startingGeocoderContainer.dataset.geocoderAdded) return;
+        startingGeocoderContainer.dataset.geocoderAdded = 'true';
+        
+        var startingAddress = mapTabData.starting_address || '';
+        var startingLat = mapTabData.starting_lat || null;
+        var startingLng = mapTabData.starting_lng || null;
+        
+        // Register field for change tracking
+        registerField('map.starting_address', startingAddress);
+        registerField('map.starting_lat', startingLat);
+        registerField('map.starting_lng', startingLng);
+        
+        var showGeocoderInput = function() {
+            startingGeocoderContainer.classList.remove('admin-map-controls-starting-geocoder--hidden');
+            if (startingAddressDisplay) startingAddressDisplay.hidden = true;
+            setTimeout(function() {
+                var input = startingGeocoderContainer.querySelector('.google-places-geocoder input') ||
+                            startingGeocoderContainer.querySelector('input');
+                if (input) input.focus();
+            }, 50);
+        };
+        
+        var showAddressDisplay = function() {
+            var addr = startingAddress || '';
+            if (addr.trim() && startingAddressDisplay) {
+                startingAddressDisplay.textContent = addr;
+                startingGeocoderContainer.classList.add('admin-map-controls-starting-geocoder--hidden');
+                startingAddressDisplay.hidden = false;
+            } else {
+                startingGeocoderContainer.classList.remove('admin-map-controls-starting-geocoder--hidden');
+                if (startingAddressDisplay) startingAddressDisplay.hidden = true;
+            }
+        };
+        
+        // Click on display to edit
+        if (startingAddressDisplay) {
+            startingAddressDisplay.addEventListener('click', showGeocoderInput);
+        }
+        
+        var saveStartingLocation = function(address, lat, lng) {
+            startingAddress = address || '';
+            startingLat = lat || null;
+            startingLng = lng || null;
+            
+            if (startingAddressInput) startingAddressInput.value = address || '';
+            if (startingLatInput) startingLatInput.value = lat || '';
+            if (startingLngInput) startingLngInput.value = lng || '';
+            
+            updateField('map.starting_address', startingAddress);
+            updateField('map.starting_lat', startingLat);
+            updateField('map.starting_lng', startingLng);
+            
+            showAddressDisplay();
+        };
+        
+        // Check if Google Places is ready
+        var googleReady = typeof google !== 'undefined' && google.maps && google.maps.places;
+        
+        if (googleReady) {
+            // Create Google Places geocoder wrapper
+            var wrapper = document.createElement('div');
+            wrapper.className = 'google-places-geocoder';
+            
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = 'Search for a location...';
+            input.setAttribute('autocomplete', 'off');
+            input.value = startingAddress;
+            
+            wrapper.appendChild(input);
+            startingGeocoderContainer.appendChild(wrapper);
+            
+            // Initialize Google Places Autocomplete
+            var autocomplete = new google.maps.places.Autocomplete(input, {
+                fields: ['formatted_address', 'geometry', 'name', 'place_id']
+            });
+            
+            // Handle result selection
+            autocomplete.addListener('place_changed', function() {
+                var place = autocomplete.getPlace();
+                if (place && place.geometry && place.geometry.location) {
+                    var placeName = place.formatted_address || place.name || '';
+                    var lat = place.geometry.location.lat();
+                    var lng = place.geometry.location.lng();
+                    saveStartingLocation(placeName, lat, lng);
+                }
+            });
+            
+            // Save on blur if user types custom text
+            input.addEventListener('blur', function() {
+                var value = input.value.trim();
+                if (value !== startingAddress) {
+                    // Custom text entered - no coordinates
+                    saveStartingLocation(value, null, null);
+                } else if (startingAddress) {
+                    showAddressDisplay();
+                }
+            });
+            
+            // Show display if we have an address
+            showAddressDisplay();
+        } else {
+            // Fallback: create simple input if Google Places not ready
+            var fallback = document.createElement('input');
+            fallback.type = 'text';
+            fallback.className = 'admin-map-controls-starting-fallback-input';
+            fallback.placeholder = 'Search for a location...';
+            fallback.value = startingAddress;
+            
+            fallback.addEventListener('blur', function() {
+                saveStartingLocation(fallback.value.trim(), null, null);
+            });
+            fallback.addEventListener('change', function() {
+                saveStartingLocation(fallback.value.trim(), null, null);
+            });
+            
+            startingGeocoderContainer.appendChild(fallback);
+            showAddressDisplay();
+        }
+    }
+    
+    function initMapImagePicker(containerId, settingKey) {
+        var container = document.getElementById(containerId);
+        if (!container || !window.SystemImagePickerComponent) return;
+        
+        var initialValue = mapTabData[settingKey] || '';
+        
+        var picker = SystemImagePickerComponent.buildPicker({
+            container: mapTabContainer,
+            onSelect: function(imagePath) {
+                updateField('map.' + settingKey, imagePath);
+            }
+        });
+        
+        picker.element.dataset.settingKey = settingKey;
+        container.appendChild(picker.element);
+        
+        // Set initial image if exists
+        if (initialValue) {
+            picker.setImage(initialValue);
+        }
+        
+        registerField('map.' + settingKey, initialValue);
+    }
+    
+    // Reset map tab to original values (called on discard)
+    function resetMapTabToOriginal() {
+        if (!mapTabContainer) return;
+        
+        // Reset sliders
+        var sliders = [
+            { id: 'adminStartingZoom', displayId: 'adminStartingZoomDisplay', fieldId: 'map.starting_zoom', format: 'int' },
+            { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
+            { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
+            { id: 'adminMapShadowOpacity', displayId: 'adminMapShadowOpacityDisplay', fieldId: 'map.post_mode_bg_opacity', format: 'decimal2' }
+        ];
+        
+        sliders.forEach(function(s) {
+            var slider = document.getElementById(s.id);
+            var display = document.getElementById(s.displayId);
+            var entry = fieldRegistry[s.fieldId];
+            if (slider && display && entry && entry.type === 'simple') {
+                slider.value = entry.original;
+                if (s.format === 'int') {
+                    display.textContent = Math.round(entry.original).toString();
+                } else if (s.format === 'decimal1') {
+                    display.textContent = parseFloat(entry.original).toFixed(1);
+                } else if (s.format === 'decimal2') {
+                    display.textContent = parseFloat(entry.original).toFixed(2);
+                }
+            }
+        });
+        
+        // Reset checkboxes
+        var checkboxes = [
+            { id: 'adminSpinLoadStart', fieldId: 'map.spin_on_load' },
+            { id: 'adminSpinLogoClick', fieldId: 'map.spin_on_logo' },
+            { id: 'adminWaitForMapTiles', fieldId: 'map.wait_for_map_tiles' }
+        ];
+        
+        checkboxes.forEach(function(c) {
+            var checkbox = document.getElementById(c.id);
+            var entry = fieldRegistry[c.fieldId];
+            if (checkbox && entry && entry.type === 'simple') {
+                checkbox.checked = entry.original === true || entry.original === '1';
+                updateSwitchSlider(checkbox);
+            }
+        });
+        
+        // Reset radio groups
+        var radioGroups = [
+            { name: 'adminSpinType', fieldId: 'map.spin_load_type' },
+            { name: 'adminMapShadowMode', fieldId: 'map.map_shadow_mode' },
+            { name: 'adminMapCardDisplay', fieldId: 'map.map_card_display' }
+        ];
+        
+        radioGroups.forEach(function(rg) {
+            var radios = mapTabContainer.querySelectorAll('input[name="' + rg.name + '"]');
+            var entry = fieldRegistry[rg.fieldId];
+            if (radios.length && entry && entry.type === 'simple') {
+                radios.forEach(function(radio) {
+                    radio.checked = (radio.value === entry.original);
+                });
+            }
+        });
+        
+        // Reset starting address
+        var addressEntry = fieldRegistry['map.starting_address'];
+        if (addressEntry && addressEntry.type === 'simple') {
+            var originalAddress = addressEntry.original || '';
+            
+            // Update hidden inputs
+            var startingAddressInput = document.getElementById('adminStartingAddress');
+            var startingLatInput = document.getElementById('adminStartingLat');
+            var startingLngInput = document.getElementById('adminStartingLng');
+            var latEntry = fieldRegistry['map.starting_lat'];
+            var lngEntry = fieldRegistry['map.starting_lng'];
+            
+            if (startingAddressInput) startingAddressInput.value = originalAddress;
+            if (startingLatInput && latEntry) startingLatInput.value = latEntry.original || '';
+            if (startingLngInput && lngEntry) startingLngInput.value = lngEntry.original || '';
+            
+            // Update display
+            var addressDisplay = document.getElementById('admin-starting-address-display');
+            var geocoderContainer = document.getElementById('admin-geocoder-starting');
+            
+            if (originalAddress.trim() && addressDisplay) {
+                addressDisplay.textContent = originalAddress;
+                if (geocoderContainer) geocoderContainer.classList.add('admin-map-controls-starting-geocoder--hidden');
+                addressDisplay.hidden = false;
+            } else {
+                if (geocoderContainer) geocoderContainer.classList.remove('admin-map-controls-starting-geocoder--hidden');
+                if (addressDisplay) addressDisplay.hidden = true;
+            }
+            
+            // Update geocoder input value
+            if (geocoderContainer) {
+                var geocoderInput = geocoderContainer.querySelector('input');
+                if (geocoderInput) geocoderInput.value = originalAddress;
+            }
+        }
+        
+        // Reset image pickers (need to update the preview images)
+        var imagePickers = [
+            { containerId: 'adminSmallMapCardPillPicker', fieldId: 'map.small_map_card_pill' },
+            { containerId: 'adminBigMapCardPillPicker', fieldId: 'map.big_map_card_pill' },
+            { containerId: 'adminHoverMapCardPillPicker', fieldId: 'map.hover_map_card_pill' },
+            { containerId: 'adminMultiPostIconPicker', fieldId: 'map.multi_post_icon' }
+        ];
+        
+        imagePickers.forEach(function(ip) {
+            var entry = fieldRegistry[ip.fieldId];
+            if (entry && entry.type === 'simple') {
+                var container = document.getElementById(ip.containerId);
+                if (container) {
+                    var buttonImg = container.querySelector('.systemimagepicker-button-preview');
+                    var placeholder = container.querySelector('.systemimagepicker-button-placeholder');
+                    if (entry.original) {
+                        if (buttonImg) {
+                            buttonImg.src = entry.original;
+                            buttonImg.style.display = '';
+                        }
+                        if (placeholder) placeholder.style.display = 'none';
+                    } else {
+                        if (buttonImg) buttonImg.style.display = 'none';
+                        if (placeholder) placeholder.style.display = '';
+                    }
+                }
+            }
+        });
+    }
+
+    /* --------------------------------------------------------------------------
+       CHECKOUT TAB
+       
+       Checkout options are now in their own tab.
+       Uses the existing checkout options rendering from Settings tab.
+       -------------------------------------------------------------------------- */
+    
+    var checkoutTabContainer = null;
+    var checkoutTabInitialized = false;
+    
+    function initCheckoutTab() {
+        // Checkout tab is already initialized via Settings tab load
+        // since they share the same settingsData and checkout options rendering
+        if (checkoutTabInitialized) return;
+        
+        checkoutTabContainer = document.getElementById('admin-tab-checkout');
+        if (!checkoutTabContainer) return;
+        
+        // Load settings if not already loaded
+        if (!settingsInitialized) {
+            loadSettingsFromDatabase().then(function() {
+                attachCheckoutTabHandlers();
+                checkoutTabInitialized = true;
+            });
+        } else {
+            attachCheckoutTabHandlers();
+            checkoutTabInitialized = true;
+        }
+    }
+    
+    function attachCheckoutTabHandlers() {
+        if (!checkoutTabContainer) return;
+        
+        // Attach to PayPal inputs
+        checkoutTabContainer.querySelectorAll('.admin-settings-field-input[data-setting-key]').forEach(function(input) {
+            var key = input.dataset.settingKey;
+            var initialValue = settingsData[key] || '';
+            input.value = initialValue;
+            
+            registerField('checkout.' + key, initialValue);
+            
+            input.addEventListener('input', function() {
+                updateField('checkout.' + key, input.value);
+            });
+        });
+    }
+
+    /* --------------------------------------------------------------------------
        SETTINGS TAB
        
        Contains website settings loaded from admin_settings table.
@@ -2163,18 +2750,20 @@ const AdminModule = (function() {
         }
     }
 
-    // Get modified settings for saving
+    // Get modified settings for saving (includes settings.* and map.* prefixes)
     function getModifiedSettings() {
         var modified = {};
         
         for (var key in fieldRegistry) {
-            if (key.indexOf('settings.') === 0) {
+            // Include both settings.* and map.* prefixed fields
+            if (key.indexOf('settings.') === 0 || key.indexOf('map.') === 0 || key.indexOf('checkout.') === 0) {
                 var entry = fieldRegistry[key];
                 if (entry.type === 'simple') {
                     var currentStr = String(entry.current);
                     var originalStr = String(entry.original);
                     if (currentStr !== originalStr) {
-                        var settingKey = key.replace('settings.', '');
+                        // Remove prefix to get database key
+                        var settingKey = key.replace(/^(settings\.|map\.|checkout\.)/, '');
                         modified[settingKey] = entry.current;
                     }
                 }

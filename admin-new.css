@@ -978,6 +978,45 @@
   visibility: hidden !important;
 }
 
+/* Google Places geocoder wrapper */
+.admin-map-controls-starting .google-places-geocoder {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 5px;
+}
+
+.admin-map-controls-starting .google-places-geocoder input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: #fff;
+  font: inherit;
+  caret-color: #fff;
+}
+
+.admin-map-controls-starting .google-places-geocoder input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Fallback input (when Google Places not available) */
+.admin-map-controls-starting-fallback-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: inherit;
+  caret-color: #fff;
+}
+
+.admin-map-controls-starting-fallback-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
 /* ============================================================================
    MAP THEME CONTAINER
    ============================================================================ */
@@ -2091,6 +2130,26 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.8);
   margin-bottom: 6px;
+}
+
+.admin-settings-field-description {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 12px 0;
+}
+
+.admin-panel-field--spaced {
+  margin-top: 16px;
+}
+
+.admin-panel-field--spaced-small {
+  margin-top: 12px;
+}
+
+.admin-panel-field--separator {
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .admin-settings-field-input {
