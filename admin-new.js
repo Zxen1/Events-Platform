@@ -1730,7 +1730,7 @@ const AdminModule = (function() {
 
         checkoutOptions.forEach(function(option, index) {
             var accordion = document.createElement('div');
-            accordion.className = 'admin-checkout-accordion' + (option.is_active ? '' : ' admin-checkout-accordion--inactive');
+            accordion.className = 'admin-checkout-accordion';
             accordion.dataset.id = option.id;
 
             var flagfallPrice = option.checkout_flagfall_price !== undefined ? option.checkout_flagfall_price : 0;
@@ -1738,6 +1738,7 @@ const AdminModule = (function() {
             var discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate).toFixed(2) : '';
             var isFeatured = option.checkout_featured === 1 || option.checkout_featured === true;
             var featuredBadgeText = isFeatured ? 'featured' : 'standard';
+            var isHidden = option.hidden === 1 || option.hidden === true;
 
             // Header
             var header = document.createElement('div');
@@ -1747,6 +1748,18 @@ const AdminModule = (function() {
             var headerText = document.createElement('span');
             headerText.className = 'admin-checkout-accordion-header-text';
             headerText.textContent = option.checkout_title || 'Untitled';
+
+            // More button (3-dot menu) - same as formbuilder
+            var moreBtn = document.createElement('div');
+            moreBtn.className = 'admin-checkout-accordion-header-more';
+            moreBtn.innerHTML = icons.moreDots + 
+                '<div class="admin-checkout-accordion-header-more-menu">' +
+                    '<div class="admin-checkout-accordion-header-more-item">' +
+                        '<span class="admin-checkout-accordion-header-more-item-text">Hide Tier</span>' +
+                        '<div class="admin-checkout-accordion-header-more-switch' + (isHidden ? ' on' : '') + '"></div>' +
+                    '</div>' +
+                    '<div class="admin-checkout-accordion-header-more-item admin-checkout-accordion-header-more-delete">Delete Tier</div>' +
+                '</div>';
 
             // Header badge
             var headerBadge = document.createElement('span');
@@ -1759,6 +1772,7 @@ const AdminModule = (function() {
             headerArrow.textContent = '▼';
 
             header.appendChild(headerText);
+            header.appendChild(moreBtn);
             header.appendChild(headerBadge);
             header.appendChild(headerArrow);
 
@@ -1776,7 +1790,6 @@ const AdminModule = (function() {
                     '<textarea class="admin-checkout-accordion-editpanel-textarea admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
                 '</div>' +
                 '<div class="admin-checkout-accordion-editpanel-row admin-checkout-accordion-editpanel-row--checkboxes">' +
-                    '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-active-checkbox"' + (option.is_active ? ' checked' : '') + ' /><span>Active</span></label>' +
                     '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-featured"' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
                     '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-sidebar"' + (option.checkout_sidebar_ad ? ' checked' : '') + ' /><span>Sidebar Ad</span></label>' +
                 '</div>' +
@@ -1799,15 +1812,71 @@ const AdminModule = (function() {
                         '<span class="admin-checkout-accordion-editpanel-calc-equals">=</span>' +
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
                     '</div>' +
-                '</div>' +
-                '<button type="button" class="admin-checkout-accordion-editpanel-delete">Delete</button>';
+                '</div>';
+
+            // Set hidden class if hidden
+            if (isHidden) {
+                accordion.classList.add('admin-checkout-accordion--hidden');
+            }
 
             accordion.appendChild(header);
             accordion.appendChild(editPanel);
             container.appendChild(accordion);
 
-            // Header click - toggle edit panel
+            // More button click - toggle menu
+            moreBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var wasOpen = moreBtn.classList.contains('open');
+                // Close all other menus
+                container.querySelectorAll('.admin-checkout-accordion-header-more.open').forEach(function(el) {
+                    if (el !== moreBtn) el.classList.remove('open');
+                });
+                if (!wasOpen) {
+                    moreBtn.classList.add('open');
+                } else {
+                    moreBtn.classList.remove('open');
+                }
+            });
+
+            // Hide switch click
+            var hideSwitch = moreBtn.querySelector('.admin-checkout-accordion-header-more-switch');
+            hideSwitch.addEventListener('click', function(e) {
+                e.stopPropagation();
+                hideSwitch.classList.toggle('on');
+                accordion.classList.toggle('admin-checkout-accordion--hidden');
+                markDirty();
+            });
+
+            // Delete option click
+            var deleteOption = moreBtn.querySelector('.admin-checkout-accordion-header-more-delete');
+            deleteOption.addEventListener('click', function(e) {
+                e.stopPropagation();
+                moreBtn.classList.remove('open');
+                var optionTitle = accordion.querySelector('.admin-checkout-option-title');
+                var titleText = optionTitle ? optionTitle.value.trim() : '';
+                if (!titleText) titleText = 'this checkout option';
+                
+                if (window.ConfirmDialogComponent) {
+                    ConfirmDialogComponent.show({
+                        titleText: 'Delete Checkout Option',
+                        messageText: 'Delete "' + titleText + '"?',
+                        confirmLabel: 'Delete',
+                        focusCancel: true
+                    }).then(function(confirmed) {
+                        if (confirmed) {
+                            accordion.remove();
+                            markDirty();
+                        }
+                    });
+                } else {
+                    accordion.remove();
+                    markDirty();
+                }
+            });
+
+            // Header click - toggle edit panel (except when clicking more button)
             header.addEventListener('click', function(e) {
+                if (e.target.closest('.admin-checkout-accordion-header-more')) return;
                 var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
                 closeAllCheckoutEditPanels(accordion);
                 if (!isEditing) {
@@ -1832,15 +1901,6 @@ const AdminModule = (function() {
             var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
             if (descriptionInput) {
                 descriptionInput.addEventListener('input', function() {
-                    markDirty();
-                });
-            }
-
-            // Active checkbox
-            var activeCheckbox = accordion.querySelector('.admin-checkout-option-active-checkbox');
-            if (activeCheckbox) {
-                activeCheckbox.addEventListener('change', function() {
-                    accordion.classList.toggle('admin-checkout-accordion--inactive', !activeCheckbox.checked);
                     markDirty();
                 });
             }
@@ -1982,29 +2042,13 @@ const AdminModule = (function() {
                 });
             }
 
-            // Delete button handler
-            var deleteBtn = accordion.querySelector('.admin-checkout-accordion-editpanel-delete');
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', function() {
-                    var optionTitle = titleInput ? titleInput.value.trim() : '';
-                    if (!optionTitle) optionTitle = 'this checkout option';
-                    
-                    if (window.ConfirmDialogComponent) {
-                        ConfirmDialogComponent.show({
-                            titleText: 'Delete Checkout Option',
-                            messageText: 'Delete "' + optionTitle + '"?',
-                            confirmLabel: 'Delete',
-                            focusCancel: true
-                        }).then(function(confirmed) {
-                            if (confirmed) {
-                                accordion.remove();
-                                markDirty();
-                            }
-                        });
-                    } else {
-                        accordion.remove();
-                        markDirty();
-                    }
+        });
+
+        // Close more menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.admin-checkout-accordion-header-more')) {
+                document.querySelectorAll('.admin-checkout-accordion-header-more.open').forEach(function(el) {
+                    el.classList.remove('open');
                 });
             }
         });
@@ -2027,7 +2071,7 @@ const AdminModule = (function() {
                     checkout_currency: currentCurrency,
                     checkout_featured: 0,
                     checkout_sidebar_ad: false,
-                    is_active: true
+                    hidden: 0
                 };
                 renderCheckoutOptions([].concat(getCheckoutOptionsFromUI(), [newOption]), currentCurrency);
                 markDirty();
@@ -2053,7 +2097,7 @@ const AdminModule = (function() {
             var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
             var featuredCheckbox = accordion.querySelector('.admin-checkout-option-featured');
             var sidebarCheckbox = accordion.querySelector('.admin-checkout-option-sidebar');
-            var activeCheckbox = accordion.querySelector('.admin-checkout-option-active-checkbox');
+            var hiddenSwitch = accordion.querySelector('.admin-checkout-accordion-header-more-switch');
 
             if (!titleInput) {
                 console.warn('Checkout option title input not found for accordion:', accordion);
@@ -2069,7 +2113,7 @@ const AdminModule = (function() {
                 checkout_discount_day_rate: discountDayRate,
                 checkout_featured: featuredCheckbox && featuredCheckbox.checked ? 1 : 0,
                 checkout_sidebar_ad: sidebarCheckbox && sidebarCheckbox.checked ? 1 : 0,
-                is_active: activeCheckbox && activeCheckbox.checked ? 1 : 0
+                hidden: hiddenSwitch && hiddenSwitch.classList.contains('on') ? 1 : 0
             });
         });
         return options;

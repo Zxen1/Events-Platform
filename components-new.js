@@ -694,26 +694,26 @@ const FieldsetComponent = (function(){
                 
             case 'images':
                 fieldset.appendChild(buildLabel(name, tooltip));
-
+                
                 var imagesContainer = document.createElement('div');
                 imagesContainer.className = 'fieldset-images-container';
-
+                
                 var imageFiles = [];
                 var maxImages = 10;
-
+                
                 function renderImages() {
                     imagesContainer.innerHTML = '';
-
+                    
                     // Show existing images
                     imageFiles.forEach(function(file, idx) {
                         var thumb = document.createElement('div');
                         thumb.className = 'fieldset-image-thumb';
-
+                        
                         var img = document.createElement('img');
                         img.className = 'fieldset-image-thumb-img';
                         img.src = URL.createObjectURL(file);
                         thumb.appendChild(img);
-
+                        
                         var removeBtn = document.createElement('button');
                         removeBtn.type = 'button';
                         removeBtn.className = 'fieldset-image-thumb-remove';
@@ -725,10 +725,10 @@ const FieldsetComponent = (function(){
                             });
                         })(idx);
                         thumb.appendChild(removeBtn);
-
+                        
                         imagesContainer.appendChild(thumb);
                     });
-
+                    
                     // Show upload button if under max
                     if (imageFiles.length < maxImages) {
                         var uploadBox = document.createElement('div');
@@ -2179,11 +2179,11 @@ const CurrencyComponent = (function(){
         var containerEl = options.container || null;
         var initialValue = options.initialValue || 'USD';
         var selectedCode = initialValue;
-
+        
         var menu = document.createElement('div');
         menu.className = 'admin-currency-wrapper';
         menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="assets/flags/us.svg" alt=""><input type="text" class="admin-currency-button-input" placeholder="Search currency..." autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
-
+        
         var btn = menu.querySelector('.admin-currency-button');
         var opts = menu.querySelector('.admin-currency-options');
         var btnImg = menu.querySelector('.admin-currency-button-flag');
@@ -2264,7 +2264,7 @@ const CurrencyComponent = (function(){
                 menu.classList.add('open');
             }
         });
-
+        
         btnInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 menu.classList.remove('open');
@@ -2273,7 +2273,7 @@ const CurrencyComponent = (function(){
                 filterOptions('');
             }
         });
-
+        
         // Blur - restore selected value when clicking away
         btnInput.addEventListener('blur', function() {
             // Small delay to allow option click to fire first
@@ -2305,7 +2305,7 @@ const CurrencyComponent = (function(){
             setValue: setValue
         };
     }
-
+    
     return {
         getData: getData,
         setData: setData,

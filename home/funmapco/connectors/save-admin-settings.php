@@ -292,15 +292,15 @@ try {
                     `checkout_discount_day_rate` = :discount_day_rate,
                     `checkout_featured` = :featured,
                     `checkout_sidebar_ad` = :sidebar,
-                    `is_active` = :active' . $adminOnlyUpdate . ',
+                    `hidden` = :hidden' . $adminOnlyUpdate . ',
                     `updated_at` = CURRENT_TIMESTAMP
                 WHERE `id` = :id
             ');
             
             $insertStmt = $pdo->prepare('
                 INSERT INTO `checkout_options` 
-                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`' . $adminOnlyInsert . ')
-                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :featured, :sidebar, :sort_order, :active' . $adminOnlyValues . ')
+                (`checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`' . $adminOnlyInsert . ')
+                VALUES (:key, :title, :description, :flagfall_price, :basic_day_rate, :discount_day_rate, :currency, :featured, :sidebar, :sort_order, :hidden' . $adminOnlyValues . ')
             ');
             
             $sortOrder = 0;
@@ -336,7 +336,7 @@ try {
                 $discountDayRate = isset($option['checkout_discount_day_rate']) && $option['checkout_discount_day_rate'] !== null && $option['checkout_discount_day_rate'] !== '' ? round((float)$option['checkout_discount_day_rate'], 2) : null;
                 $featured = isset($option['checkout_featured']) ? ((int)$option['checkout_featured'] ? 1 : 0) : 0;
                 $sidebar = !empty($option['checkout_sidebar_ad']) ? 1 : 0;
-                $active = !empty($option['is_active']) ? 1 : 0;
+                $hidden = !empty($option['hidden']) ? 1 : 0;
                 $adminOnly = !empty($option['admin_only']) ? 1 : 0;
                 
                 // Check if this is an existing ID or new
@@ -353,7 +353,7 @@ try {
                         ':discount_day_rate' => $discountDayRate,
                         ':featured' => $featured,
                         ':sidebar' => $sidebar,
-                        ':active' => $active,
+                        ':hidden' => $hidden,
                     ];
                     if ($hasAdminOnly) {
                         $updateParams[':admin_only'] = $adminOnly;
@@ -377,7 +377,7 @@ try {
                         ':featured' => $featured,
                         ':sidebar' => $sidebar,
                         ':sort_order' => $sortOrder,
-                        ':active' => $active,
+                        ':hidden' => $hidden,
                     ];
                     if ($hasAdminOnly) {
                         $insertParams[':admin_only'] = $adminOnly;

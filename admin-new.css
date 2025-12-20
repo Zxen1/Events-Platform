@@ -1573,9 +1573,6 @@
   border-color: #3b82f5;
 }
 
-.admin-checkout-accordion--inactive .admin-checkout-accordion-header {
-  background: #333;
-}
 
 .admin-checkout-accordion-header-text {
   flex: 1;
@@ -1617,6 +1614,104 @@
 
 .admin-checkout-accordion--editing .admin-checkout-accordion-header-arrow {
   transform: rotate(180deg);
+}
+
+/* More button (3-dot menu) */
+.admin-checkout-accordion-header-more {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #888;
+}
+
+.admin-checkout-accordion-header-more:hover {
+  color: #fff;
+}
+
+.admin-checkout-accordion-header-more svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-checkout-accordion-header-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  background: #111;
+  border: 1px solid #3b82f5;
+  border-radius: 5px;
+  padding: 5px 0;
+  display: none;
+  z-index: var(--layer-menu, 85);
+}
+
+.admin-checkout-accordion-header-more.open .admin-checkout-accordion-header-more-menu {
+  display: block;
+}
+
+.admin-checkout-accordion-header-more-item {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.admin-checkout-accordion-header-more-item:hover {
+  background: #222;
+}
+
+.admin-checkout-accordion-header-more-item-text {
+  flex: 1;
+}
+
+.admin-checkout-accordion-header-more-switch {
+  width: 36px;
+  height: 20px;
+  background: #444;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+}
+
+.admin-checkout-accordion-header-more-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s;
+}
+
+.admin-checkout-accordion-header-more-switch.on {
+  background: #3b82f5;
+}
+
+.admin-checkout-accordion-header-more-switch.on::after {
+  left: 18px;
+}
+
+.admin-checkout-accordion-header-more-delete {
+  color: #f87171;
+}
+
+.admin-checkout-accordion-header-more-delete:hover {
+  background: #7f1d1d;
+}
+
+/* Hidden state */
+.admin-checkout-accordion--hidden .admin-checkout-accordion-header {
+  background: #333;
 }
 
 /* Edit Panel */
@@ -1711,23 +1806,6 @@
 
 .admin-checkout-accordion-editpanel-calc-equals {
   font-weight: 600;
-}
-
-.admin-checkout-accordion-editpanel-delete {
-  align-self: flex-start;
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid rgba(200, 80, 80, 0.3);
-  border-radius: 5px;
-  color: rgba(200, 80, 80, 0.8);
-  font-size: 13px;
-  cursor: pointer;
-  margin-top: 10px;
-}
-
-.admin-checkout-accordion-editpanel-delete:hover {
-  background: rgba(200, 80, 80, 0.15);
-  border-color: rgba(200, 80, 80, 0.5);
 }
 
 /* ============================================================================

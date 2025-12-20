@@ -172,7 +172,7 @@ try {
             }
             
             $adminOnlySelect = $hasAdminOnly ? ', `admin_only`' : '';
-            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `is_active`' . $adminOnlySelect . ' FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
+            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`' . $adminOnlySelect . ' FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
             $checkoutRows = $stmt->fetchAll();
             
             $checkoutOptions = [];
@@ -189,7 +189,7 @@ try {
                     'checkout_featured' => isset($row['checkout_featured']) ? (int)$row['checkout_featured'] : 0,
                     'checkout_sidebar_ad' => (bool)$row['checkout_sidebar_ad'],
                     'sort_order' => (int)$row['sort_order'],
-                    'is_active' => (bool)$row['is_active'],
+                    'hidden' => (bool)$row['hidden'],
                     'admin_only' => isset($row['admin_only']) ? (bool)$row['admin_only'] : false,
                 ];
             }
