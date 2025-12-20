@@ -1545,6 +1545,257 @@
   border-color: rgba(200, 80, 80, 0.5);
 }
 
+/* Checkout Accordion (same structure as Messages/Formbuilder) */
+.admin-checkout-accordion {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 5px;
+  margin-bottom: 8px;
+}
+
+.admin-checkout-accordion--inactive {
+  opacity: 0.5;
+}
+
+.admin-checkout-accordion.dragging {
+  opacity: 0.5;
+}
+
+.admin-checkout-accordion-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  background: #0c4070;
+  border-radius: 5px 5px 0 0;
+  border: 1px solid transparent;
+}
+
+.admin-checkout-accordion:not(.admin-checkout-accordion--open):not(.admin-checkout-accordion--editing) .admin-checkout-accordion-header {
+  border-radius: 5px;
+}
+
+.admin-checkout-accordion-header:hover {
+  border-color: #3b82f5;
+}
+
+.admin-checkout-accordion--editing .admin-checkout-accordion-header {
+  border-color: #3b82f5;
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.admin-checkout-accordion-header-text {
+  flex: 1;
+  padding-left: 0;
+  font-weight: bold;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-checkout-accordion-header-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 5px;
+  background: rgba(80, 80, 80, 0.3);
+  color: #888;
+  margin-left: 10px;
+}
+
+.admin-checkout-accordion-header-badge--featured {
+  background: rgba(255, 180, 50, 0.15);
+  color: #e8b020;
+}
+
+.admin-checkout-accordion-header-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.2s;
+  margin-left: 10px;
+}
+
+.admin-checkout-accordion--open > .admin-checkout-accordion-header .admin-checkout-accordion-header-arrow {
+  transform: rotate(180deg);
+}
+
+.admin-checkout-accordion-header-drag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #888;
+}
+
+.admin-checkout-accordion-header-drag:hover {
+  color: #fff;
+}
+
+.admin-checkout-accordion-header-drag svg {
+  width: 16px;
+  height: 16px;
+}
+
+.admin-checkout-accordion-header-editarea {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.admin-checkout-accordion-header-edit {
+  width: 16px;
+  height: 16px;
+  color: #888;
+}
+
+.admin-checkout-accordion-header-editarea:hover .admin-checkout-accordion-header-edit,
+.admin-checkout-accordion--editing .admin-checkout-accordion-header-edit {
+  color: #3b82f5;
+}
+
+/* Edit Panel */
+.admin-checkout-accordion-editpanel {
+  padding: 10px;
+  background: #0c4070;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-checkout-accordion-editpanel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-checkout-accordion-editpanel-row--checkboxes {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.admin-checkout-accordion-editpanel-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-checkout-accordion-editpanel-input {
+  height: 36px;
+  padding: 0 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  caret-color: #fff;
+}
+
+.admin-checkout-accordion-editpanel-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.admin-checkout-accordion-editpanel-textarea {
+  min-height: 80px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  caret-color: #fff;
+}
+
+.admin-checkout-accordion-editpanel-textarea:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.admin-checkout-accordion-editpanel-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.admin-checkout-accordion-editpanel-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f5;
+  cursor: pointer;
+}
+
+.admin-checkout-accordion-editpanel-calc {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-checkout-accordion-editpanel-calc .admin-checkout-accordion-editpanel-input {
+  width: 100px;
+}
+
+.admin-checkout-accordion-editpanel-calc-equals {
+  font-weight: 600;
+}
+
+.admin-checkout-accordion-editpanel-delete {
+  align-self: flex-start;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid rgba(200, 80, 80, 0.3);
+  border-radius: 5px;
+  color: rgba(200, 80, 80, 0.8);
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.admin-checkout-accordion-editpanel-delete:hover {
+  background: rgba(200, 80, 80, 0.15);
+  border-color: rgba(200, 80, 80, 0.5);
+}
+
+/* Content (summary when closed) */
+.admin-checkout-accordion-content {
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 5px 5px;
+}
+
+.admin-checkout-accordion-content--hidden {
+  display: none;
+}
+
+.admin-checkout-accordion-content-price {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
 /* ============================================================================
    FORMS TAB (Formbuilder)
    ============================================================================

@@ -1696,20 +1696,30 @@ const AdminModule = (function() {
                 span.textContent = currencyCode + ' 0.00';
             }
         });
+
+        // Update content prices
+        document.querySelectorAll('.admin-checkout-accordion-content-price').forEach(function(span) {
+            var text = span.textContent;
+            if (text === 'Free') return;
+            var match = text.match(/^[A-Z]{3}\s+(.*)$/);
+            if (match) {
+                span.textContent = currencyCode + ' ' + match[1];
+            }
+        });
     }
 
     /* --------------------------------------------------------------------------
-       CHECKOUT OPTIONS (copied from index.js)
+       CHECKOUT OPTIONS (accordion style like Messages/Formbuilder)
        -------------------------------------------------------------------------- */
 
-    function closeAllCheckoutEditPanels(exceptPanel) {
-        document.querySelectorAll('.admin-checkout-options-edit-panel').forEach(function(panel) {
-            if (panel !== exceptPanel) {
-                panel.hidden = true;
-                var card = panel.closest('.admin-checkout-option-card');
-                if (card) card.classList.remove('admin-checkout-option-card--edit-open');
-                var btn = card && card.querySelector('.admin-checkout-options-edit-btn');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
+    function closeAllCheckoutEditPanels(exceptAccordion) {
+        var container = document.getElementById('adminCheckoutTiers');
+        if (!container) return;
+        container.querySelectorAll('.admin-checkout-accordion--editing').forEach(function(el) {
+            if (el !== exceptAccordion) {
+                el.classList.remove('admin-checkout-accordion--editing');
+                var editPanel = el.querySelector('.admin-checkout-accordion-editpanel');
+                if (editPanel) editPanel.style.display = 'none';
             }
         });
     }
@@ -1727,95 +1737,176 @@ const AdminModule = (function() {
             return;
         }
 
-        checkoutOptions.forEach(function(option) {
-            var tierCard = document.createElement('div');
-            tierCard.className = 'admin-checkout-option-card' + (option.is_active ? '' : ' admin-checkout-option-card--inactive');
-            tierCard.dataset.id = option.id;
+        checkoutOptions.forEach(function(option, index) {
+            var accordion = document.createElement('div');
+            accordion.className = 'admin-checkout-accordion' + (option.is_active ? '' : ' admin-checkout-accordion--inactive');
+            accordion.dataset.id = option.id;
 
             var flagfallPrice = option.checkout_flagfall_price !== undefined ? option.checkout_flagfall_price : 0;
-            var priceDisplay = flagfallPrice === 0 ? 'Free' : (siteCurrency + ' ' + flagfallPrice.toFixed(2));
             var basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null ? parseFloat(option.checkout_basic_day_rate).toFixed(2) : '';
             var discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null ? parseFloat(option.checkout_discount_day_rate).toFixed(2) : '';
             var isFeatured = option.checkout_featured === 1 || option.checkout_featured === true;
             var featuredBadgeText = isFeatured ? 'featured' : 'standard';
 
-            tierCard.innerHTML = 
-                '<div class="admin-checkout-option-header">' +
-                    '<span class="admin-checkout-option-title-display">' + escapeHtml(option.checkout_title || 'Untitled') + '</span>' +
-                    '<span class="admin-checkout-option-tier-badge' + (isFeatured ? ' admin-checkout-option-tier-badge--featured' : '') + '">' + featuredBadgeText + '</span>' +
-                    '<button type="button" class="admin-checkout-options-edit-btn" aria-haspopup="true" aria-expanded="false" title="Edit">' + icons.editPen + '</button>' +
-                '</div>' +
-                '<div class="admin-checkout-options-edit-panel" hidden>' +
-                    '<div class="admin-checkout-option-field">' +
-                        '<label class="admin-checkout-option-field-label">Title</label>' +
-                        '<input type="text" class="admin-checkout-option-title" value="' + escapeHtml(option.checkout_title || '') + '" placeholder="Title" />' +
-                    '</div>' +
-                    '<label class="admin-checkout-option-active">' +
-                        '<input type="checkbox" class="admin-checkout-option-active-checkbox"' + (option.is_active ? ' checked' : '') + ' />' +
-                        '<span>Active</span>' +
-                    '</label>' +
-                    '<div class="admin-checkout-option-field">' +
-                        '<label class="admin-checkout-option-field-label">Description</label>' +
-                        '<textarea class="admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
-                    '</div>' +
-                    '<div class="admin-checkout-option-field admin-checkout-option-field--sidebar">' +
-                        '<label class="admin-checkout-option-field-sidebar-label">' +
-                            '<input type="checkbox" class="admin-checkout-option-featured"' + (isFeatured ? ' checked' : '') + ' />' +
-                            '<span>Featured</span>' +
-                        '</label>' +
-                        '<label class="admin-checkout-option-field-sidebar-label">' +
-                            '<input type="checkbox" class="admin-checkout-option-sidebar"' + (option.checkout_sidebar_ad ? ' checked' : '') + ' />' +
-                            '<span>Sidebar Ad</span>' +
-                        '</label>' +
-                    '</div>' +
-                    '<div class="admin-checkout-option-field">' +
-                        '<label class="admin-checkout-option-field-label">Flagfall Price</label>' +
-                        '<input type="text" inputmode="decimal" class="admin-checkout-option-field-input-number admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
-                    '</div>' +
-                    '<div class="admin-checkout-option-field">' +
-                        '<label class="admin-checkout-option-field-label">Basic Day Rate</label>' +
-                        '<input type="text" inputmode="decimal" class="admin-checkout-option-field-input-number admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" placeholder="N/A" />' +
-                    '</div>' +
-                    '<div class="admin-checkout-option-field">' +
-                        '<label class="admin-checkout-option-field-label">Discount Day Rate</label>' +
-                        '<input type="text" inputmode="decimal" class="admin-checkout-option-field-input-number admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" placeholder="N/A" />' +
-                    '</div>' +
-                    '<div class="admin-checkout-option-calculator">' +
-                        '<div class="admin-checkout-option-field">' +
-                            '<label class="admin-checkout-option-field-label">Price Calculator (Sandbox)</label>' +
-                            '<div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">' +
-                                '<input type="text" inputmode="numeric" class="admin-checkout-option-field-input-number admin-checkout-option-calc-days" value="" placeholder="Days" style="width: 100px;" />' +
-                                '<span style="font-weight: 600;">=</span>' +
-                                '<span class="admin-checkout-option-calc-total" style="min-width: 120px;">' + siteCurrency + ' 0.00</span>' +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
-                    '<button type="button" class="admin-checkout-option-delete">Delete</button>' +
-                '</div>';
+            // Header (same structure as messages/formbuilder)
+            var header = document.createElement('div');
+            header.className = 'admin-checkout-accordion-header';
 
-            // Edit button handler
-            var editBtn = tierCard.querySelector('.admin-checkout-options-edit-btn');
-            var editPanel = tierCard.querySelector('.admin-checkout-options-edit-panel');
-            editBtn.addEventListener('click', function() {
-                var isOpen = !editPanel.hidden;
-                closeAllCheckoutEditPanels(editPanel);
-                editPanel.hidden = isOpen;
-                tierCard.classList.toggle('admin-checkout-option-card--edit-open', !isOpen);
-                editBtn.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+            // Header text (title)
+            var headerText = document.createElement('span');
+            headerText.className = 'admin-checkout-accordion-header-text';
+            headerText.textContent = option.checkout_title || 'Untitled';
+
+            // Header badge
+            var headerBadge = document.createElement('span');
+            headerBadge.className = 'admin-checkout-accordion-header-badge' + (isFeatured ? ' admin-checkout-accordion-header-badge--featured' : '');
+            headerBadge.textContent = featuredBadgeText;
+
+            // Header arrow
+            var headerArrow = document.createElement('span');
+            headerArrow.className = 'admin-checkout-accordion-header-arrow';
+            headerArrow.textContent = '▼';
+
+            // Drag handle
+            var headerDrag = document.createElement('div');
+            headerDrag.className = 'admin-checkout-accordion-header-drag';
+            headerDrag.innerHTML = icons.dragHandle;
+
+            // Edit area
+            var headerEditArea = document.createElement('div');
+            headerEditArea.className = 'admin-checkout-accordion-header-editarea';
+            var headerEdit = document.createElement('div');
+            headerEdit.className = 'admin-checkout-accordion-header-edit';
+            headerEdit.innerHTML = icons.editPen;
+            headerEditArea.appendChild(headerEdit);
+
+            header.appendChild(headerText);
+            header.appendChild(headerBadge);
+            header.appendChild(headerArrow);
+            header.appendChild(headerDrag);
+            header.appendChild(headerEditArea);
+
+            // Edit panel (sibling to header)
+            var editPanel = document.createElement('div');
+            editPanel.className = 'admin-checkout-accordion-editpanel';
+            editPanel.style.display = 'none';
+            editPanel.innerHTML =
+                '<div class="admin-checkout-accordion-editpanel-row">' +
+                    '<label class="admin-checkout-accordion-editpanel-label">Title</label>' +
+                    '<input type="text" class="admin-checkout-accordion-editpanel-input admin-checkout-option-title" value="' + escapeHtml(option.checkout_title || '') + '" placeholder="Title" />' +
+                '</div>' +
+                '<div class="admin-checkout-accordion-editpanel-row">' +
+                    '<label class="admin-checkout-accordion-editpanel-label">Description</label>' +
+                    '<textarea class="admin-checkout-accordion-editpanel-textarea admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
+                '</div>' +
+                '<div class="admin-checkout-accordion-editpanel-row admin-checkout-accordion-editpanel-row--checkboxes">' +
+                    '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-active-checkbox"' + (option.is_active ? ' checked' : '') + ' /><span>Active</span></label>' +
+                    '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-featured"' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
+                    '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-sidebar"' + (option.checkout_sidebar_ad ? ' checked' : '') + ' /><span>Sidebar Ad</span></label>' +
+                '</div>' +
+                '<div class="admin-checkout-accordion-editpanel-row">' +
+                    '<label class="admin-checkout-accordion-editpanel-label">Flagfall Price</label>' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
+                '</div>' +
+                '<div class="admin-checkout-accordion-editpanel-row">' +
+                    '<label class="admin-checkout-accordion-editpanel-label">Basic Day Rate</label>' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" placeholder="N/A" />' +
+                '</div>' +
+                '<div class="admin-checkout-accordion-editpanel-row">' +
+                    '<label class="admin-checkout-accordion-editpanel-label">Discount Day Rate</label>' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" placeholder="N/A" />' +
+                '</div>' +
+                '<div class="admin-checkout-accordion-editpanel-row">' +
+                    '<label class="admin-checkout-accordion-editpanel-label">Price Calculator (Sandbox)</label>' +
+                    '<div class="admin-checkout-accordion-editpanel-calc">' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-option-calc-days" value="" placeholder="Days" />' +
+                        '<span class="admin-checkout-accordion-editpanel-calc-equals">=</span>' +
+                        '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
+                    '</div>' +
+                '</div>' +
+                '<button type="button" class="admin-checkout-accordion-editpanel-delete">Delete</button>';
+
+            // Content area (summary when closed)
+            var content = document.createElement('div');
+            content.className = 'admin-checkout-accordion-content admin-checkout-accordion-content--hidden';
+            var priceDisplay = flagfallPrice === 0 ? 'Free' : (siteCurrency + ' ' + flagfallPrice.toFixed(2));
+            content.innerHTML = '<span class="admin-checkout-accordion-content-price">' + priceDisplay + '</span>';
+
+            accordion.appendChild(header);
+            accordion.appendChild(editPanel);
+            accordion.appendChild(content);
+            container.appendChild(accordion);
+
+            // Drag and drop
+            accordion.draggable = false;
+            headerDrag.addEventListener('mousedown', function() {
+                accordion.draggable = true;
+            });
+            document.addEventListener('mouseup', function() {
+                accordion.draggable = false;
+            });
+            accordion.addEventListener('dragstart', function(e) {
+                if (!accordion.draggable) {
+                    e.preventDefault();
+                    return;
+                }
+                accordion.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            accordion.addEventListener('dragend', function() {
+                accordion.classList.remove('dragging');
+                markDirty();
+            });
+            accordion.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                var dragging = container.querySelector('.dragging');
+                if (dragging && dragging !== accordion) {
+                    var rect = accordion.getBoundingClientRect();
+                    var midY = rect.top + rect.height / 2;
+                    if (e.clientY < midY) {
+                        container.insertBefore(dragging, accordion);
+                    } else {
+                        container.insertBefore(dragging, accordion.nextSibling);
+                    }
+                }
             });
 
-            // Title input updates display
-            var titleInput = tierCard.querySelector('.admin-checkout-option-title');
-            var titleDisplay = tierCard.querySelector('.admin-checkout-option-title-display');
-            if (titleInput && titleDisplay) {
+            // Header click - toggle open/close
+            header.addEventListener('click', function(e) {
+                if (e.target.closest('.admin-checkout-accordion-header-editarea')) return;
+                if (e.target.closest('.admin-checkout-accordion-header-drag')) return;
+                if (!accordion.classList.contains('admin-checkout-accordion--editing')) {
+                    closeAllCheckoutEditPanels();
+                }
+                accordion.classList.toggle('admin-checkout-accordion--open');
+                content.classList.toggle('admin-checkout-accordion-content--hidden');
+            });
+
+            // Edit area click - toggle edit panel
+            headerEditArea.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
+                closeAllCheckoutEditPanels(accordion);
+                if (!isEditing) {
+                    accordion.classList.add('admin-checkout-accordion--editing');
+                    editPanel.style.display = 'block';
+                } else {
+                    accordion.classList.remove('admin-checkout-accordion--editing');
+                    editPanel.style.display = 'none';
+                }
+            });
+
+            // Title input updates header text
+            var titleInput = accordion.querySelector('.admin-checkout-option-title');
+            if (titleInput) {
                 titleInput.addEventListener('input', function() {
-                    titleDisplay.textContent = titleInput.value.trim() || 'Untitled';
+                    headerText.textContent = titleInput.value.trim() || 'Untitled';
                     markDirty();
                 });
             }
 
             // Description textarea
-            var descriptionInput = tierCard.querySelector('.admin-checkout-option-description');
+            var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
             if (descriptionInput) {
                 descriptionInput.addEventListener('input', function() {
                     markDirty();
@@ -1823,27 +1914,27 @@ const AdminModule = (function() {
             }
 
             // Active checkbox
-            var activeCheckbox = tierCard.querySelector('.admin-checkout-option-active-checkbox');
+            var activeCheckbox = accordion.querySelector('.admin-checkout-option-active-checkbox');
             if (activeCheckbox) {
                 activeCheckbox.addEventListener('change', function() {
+                    accordion.classList.toggle('admin-checkout-accordion--inactive', !activeCheckbox.checked);
                     markDirty();
                 });
             }
 
             // Featured checkbox updates badge
-            var featuredCheckbox = tierCard.querySelector('.admin-checkout-option-featured');
-            var tierBadge = tierCard.querySelector('.admin-checkout-option-tier-badge');
+            var featuredCheckbox = accordion.querySelector('.admin-checkout-option-featured');
             if (featuredCheckbox) {
                 featuredCheckbox.addEventListener('change', function() {
                     var isFeatured = featuredCheckbox.checked;
-                    tierBadge.className = 'admin-checkout-option-tier-badge' + (isFeatured ? ' admin-checkout-option-tier-badge--featured' : '');
-                    tierBadge.textContent = isFeatured ? 'featured' : 'standard';
+                    headerBadge.className = 'admin-checkout-accordion-header-badge' + (isFeatured ? ' admin-checkout-accordion-header-badge--featured' : '');
+                    headerBadge.textContent = isFeatured ? 'featured' : 'standard';
                     markDirty();
                 });
             }
 
             // Sidebar checkbox
-            var sidebarCheckbox = tierCard.querySelector('.admin-checkout-option-sidebar');
+            var sidebarCheckbox = accordion.querySelector('.admin-checkout-option-sidebar');
             if (sidebarCheckbox) {
                 sidebarCheckbox.addEventListener('change', function() {
                     markDirty();
@@ -1851,11 +1942,12 @@ const AdminModule = (function() {
             }
 
             // Price calculator logic
-            var calcDaysInput = tierCard.querySelector('.admin-checkout-option-calc-days');
-            var calcTotalSpan = tierCard.querySelector('.admin-checkout-option-calc-total');
-            var priceInput = tierCard.querySelector('.admin-checkout-option-price');
-            var basicDayRateInput = tierCard.querySelector('.admin-checkout-option-basic-day-rate');
-            var discountDayRateInput = tierCard.querySelector('.admin-checkout-option-discount-day-rate');
+            var calcDaysInput = accordion.querySelector('.admin-checkout-option-calc-days');
+            var calcTotalSpan = accordion.querySelector('.admin-checkout-option-calc-total');
+            var priceInput = accordion.querySelector('.admin-checkout-option-price');
+            var basicDayRateInput = accordion.querySelector('.admin-checkout-option-basic-day-rate');
+            var discountDayRateInput = accordion.querySelector('.admin-checkout-option-discount-day-rate');
+            var contentPrice = content.querySelector('.admin-checkout-accordion-content-price');
 
             function updateCalculator() {
                 if (!calcDaysInput || !calcTotalSpan) return;
@@ -1937,31 +2029,42 @@ const AdminModule = (function() {
                 });
             }
 
-            // Delete button handler
-            tierCard.querySelector('.admin-checkout-option-delete').addEventListener('click', function() {
-                var optionTitle = titleInput ? titleInput.value.trim() : '';
-                if (!optionTitle) optionTitle = 'this checkout option';
-                
-                if (window.ConfirmDialogComponent) {
-                    ConfirmDialogComponent.show({
-                        titleText: 'Delete Checkout Option',
-                        messageText: 'Delete "' + optionTitle + '"?',
-                        confirmLabel: 'Delete',
-                        focusCancel: true
-                    }).then(function(confirmed) {
-                        if (confirmed) {
-                            tierCard.remove();
-                            markDirty();
-                        }
-                    });
-                } else {
-                    // Fallback if component not loaded
-                    tierCard.remove();
-                    markDirty();
-                }
-            });
+            // Update content price when flagfall changes
+            function updateContentPrice() {
+                if (!contentPrice || !priceInput) return;
+                var currency = container.dataset.currency || 'USD';
+                var flagfall = parseFloat(priceInput.value) || 0;
+                contentPrice.textContent = flagfall === 0 ? 'Free' : (currency + ' ' + flagfall.toFixed(2));
+            }
+            if (priceInput) {
+                priceInput.addEventListener('input', updateContentPrice);
+            }
 
-            container.appendChild(tierCard);
+            // Delete button handler
+            var deleteBtn = accordion.querySelector('.admin-checkout-accordion-editpanel-delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    var optionTitle = titleInput ? titleInput.value.trim() : '';
+                    if (!optionTitle) optionTitle = 'this checkout option';
+                    
+                    if (window.ConfirmDialogComponent) {
+                        ConfirmDialogComponent.show({
+                            titleText: 'Delete Checkout Option',
+                            messageText: 'Delete "' + optionTitle + '"?',
+                            confirmLabel: 'Delete',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                accordion.remove();
+                                markDirty();
+                            }
+                        });
+                    } else {
+                        accordion.remove();
+                        markDirty();
+                    }
+                });
+            }
         });
 
         // Add tier button handler
@@ -1995,28 +2098,28 @@ const AdminModule = (function() {
         if (!container) return [];
 
         var options = [];
-        container.querySelectorAll('.admin-checkout-option-card').forEach(function(card) {
-            var basicDayRateInput = card.querySelector('.admin-checkout-option-basic-day-rate');
-            var discountDayRateInput = card.querySelector('.admin-checkout-option-discount-day-rate');
-            var priceInput = card.querySelector('.admin-checkout-option-price');
+        container.querySelectorAll('.admin-checkout-accordion').forEach(function(accordion) {
+            var basicDayRateInput = accordion.querySelector('.admin-checkout-option-basic-day-rate');
+            var discountDayRateInput = accordion.querySelector('.admin-checkout-option-discount-day-rate');
+            var priceInput = accordion.querySelector('.admin-checkout-option-price');
 
             var flagfallPrice = priceInput ? Math.round((parseFloat(priceInput.value) || 0) * 100) / 100 : 0;
             var basicDayRate = basicDayRateInput && basicDayRateInput.value.trim() !== '' ? Math.round(parseFloat(basicDayRateInput.value) * 100) / 100 : null;
             var discountDayRate = discountDayRateInput && discountDayRateInput.value.trim() !== '' ? Math.round(parseFloat(discountDayRateInput.value) * 100) / 100 : null;
 
-            var titleInput = card.querySelector('.admin-checkout-option-title');
-            var descriptionInput = card.querySelector('.admin-checkout-option-description');
-            var featuredCheckbox = card.querySelector('.admin-checkout-option-featured');
-            var sidebarCheckbox = card.querySelector('.admin-checkout-option-sidebar');
-            var activeCheckbox = card.querySelector('.admin-checkout-option-active-checkbox');
+            var titleInput = accordion.querySelector('.admin-checkout-option-title');
+            var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
+            var featuredCheckbox = accordion.querySelector('.admin-checkout-option-featured');
+            var sidebarCheckbox = accordion.querySelector('.admin-checkout-option-sidebar');
+            var activeCheckbox = accordion.querySelector('.admin-checkout-option-active-checkbox');
 
             if (!titleInput) {
-                console.warn('Checkout option title input not found for card:', card);
+                console.warn('Checkout option title input not found for accordion:', accordion);
                 return;
             }
 
             options.push({
-                id: card.dataset.id,
+                id: accordion.dataset.id,
                 checkout_title: (titleInput.value || '').trim(),
                 checkout_description: descriptionInput ? (descriptionInput.value || '').trim() : '',
                 checkout_flagfall_price: flagfallPrice,

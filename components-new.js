@@ -2274,6 +2274,17 @@ const CurrencyComponent = (function(){
             }
         });
 
+        // Blur - restore selected value when clicking away
+        btnInput.addEventListener('blur', function() {
+            // Small delay to allow option click to fire first
+            setTimeout(function() {
+                if (!menu.classList.contains('open')) {
+                    setValue(selectedCode);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
         // Arrow click opens/closes
         var arrow = menu.querySelector('.admin-currency-button-arrow');
         arrow.addEventListener('click', function(e) {
