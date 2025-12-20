@@ -2,7 +2,9 @@
 // gateway.php — public bridge to backend scripts outside web root
 // DO NOT place secrets here.
 
-$action = isset($_GET['action']) ? preg_replace('/[^a-z0-9_\-]/i', '', $_GET['action']) : '';
+// Check both GET and POST for action parameter
+$rawAction = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
+$action = preg_replace('/[^a-z0-9_\-]/i', '', $rawAction);
 
 $baseDir = __DIR__;
 

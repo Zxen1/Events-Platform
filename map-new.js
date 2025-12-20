@@ -178,6 +178,7 @@ const MapModule = (function() {
     updateZoomIndicator();
     
     // Start spin if enabled
+    console.log('[Map] onMapLoad - spinEnabled:', spinEnabled, 'spinLoadStart:', spinLoadStart);
     if (spinEnabled) {
       startSpin();
     }
@@ -209,9 +210,11 @@ const MapModule = (function() {
   async function loadSettings() {
     try {
       const result = await App.api('get-admin-settings');
+      console.log('[Map] Settings loaded:', result);
       if (result && result.success && result.settings) {
         adminSettings = result.settings;
         applySettings(result.settings);
+        console.log('[Map] Settings applied - spinLoadStart:', spinLoadStart, 'spinEnabled:', spinEnabled, 'startCenter:', startCenter, 'startZoom:', startZoom);
       }
     } catch (err) {
       console.warn('[Map] Failed to load settings:', err);
