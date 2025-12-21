@@ -307,13 +307,8 @@ const FieldsetComponent = (function(){
             console.error('[FieldsetComponent] CurrencyComponent not available');
             return document.createElement('div');
         }
-        // Use defaultCurrency if provided, otherwise use first available currency, otherwise null
-        var initialValue = null;
-        if (defaultCurrency) {
-            initialValue = defaultCurrency;
-        } else if (CurrencyComponent.isLoaded() && CurrencyComponent.getData().length > 0) {
-            initialValue = CurrencyComponent.getData()[0].value;
-        }
+        // Use defaultCurrency if provided, otherwise null (user must select)
+        var initialValue = defaultCurrency || null;
         var result = CurrencyComponent.buildCompactMenu({
             initialValue: initialValue,
             container: container
@@ -327,11 +322,8 @@ const FieldsetComponent = (function(){
             console.error('[FieldsetComponent] PhonePrefixComponent not available');
             return document.createElement('div');
         }
-        // Use first available prefix if data is loaded, otherwise null
+        // No default - user must select
         var initialValue = null;
-        if (PhonePrefixComponent.isLoaded() && PhonePrefixComponent.getData().length > 0) {
-            initialValue = PhonePrefixComponent.getData()[0].value;
-        }
         var result = PhonePrefixComponent.buildCompactMenu({
             initialValue: initialValue,
             container: container
@@ -821,11 +813,8 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip));
 
                 // Track shared currency state for item pricing
-                // Use defaultCurrency if provided, otherwise first available, otherwise null
-                var initialCurrencyCode = defaultCurrency;
-                if (!initialCurrencyCode && CurrencyComponent.isLoaded() && CurrencyComponent.getData().length > 0) {
-                    initialCurrencyCode = CurrencyComponent.getData()[0].value;
-                }
+                // Use defaultCurrency if provided, otherwise null (user must select)
+                var initialCurrencyCode = defaultCurrency || null;
                 var initialCurrency = null;
                 if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
                     var found = CurrencyComponent.getData().find(function(item) {
@@ -1015,11 +1004,8 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(seatingAreasContainer);
                 
                 // Track shared currency state
-                // Use defaultCurrency if provided, otherwise first available, otherwise null
-                var initialCurrencyCode = defaultCurrency;
-                if (!initialCurrencyCode && CurrencyComponent.isLoaded() && CurrencyComponent.getData().length > 0) {
-                    initialCurrencyCode = CurrencyComponent.getData()[0].value;
-                }
+                // Use defaultCurrency if provided, otherwise null (user must select)
+                var initialCurrencyCode = defaultCurrency || null;
                 var initialCurrency = null;
                 if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
                     var found = CurrencyComponent.getData().find(function(item) {
@@ -2109,15 +2095,8 @@ const CurrencyComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        // Use first available flag if no initialValue and data is loaded, otherwise empty
+        // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        if (!initialValue && currencyData.length > 0) {
-            var firstItem = currencyData[0];
-            var countryCode = firstItem.filename ? firstItem.filename.replace('.svg', '') : null;
-            if (countryCode) {
-                initialFlagUrl = window.App.getImageUrl('currencies', countryCode + '.svg');
-            }
-        }
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Select currency" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
@@ -2253,15 +2232,8 @@ const CurrencyComponent = (function(){
         
         var menu = document.createElement('div');
         menu.className = 'admin-currency-wrapper';
-        // Use first available flag if no initialValue and data is loaded, otherwise empty
+        // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        if (!initialValue && currencyData.length > 0) {
-            var firstItem = currencyData[0];
-            var countryCode = firstItem.filename ? firstItem.filename.replace('.svg', '') : null;
-            if (countryCode) {
-                initialFlagUrl = window.App.getImageUrl('currencies', countryCode + '.svg');
-            }
-        }
         menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="' + initialFlagUrl + '" alt=""><input type="text" class="admin-currency-button-input" placeholder="Select currency" autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
         
         var btn = menu.querySelector('.admin-currency-button');
@@ -2322,8 +2294,10 @@ const CurrencyComponent = (function(){
             });
         });
 
-        // Set initial value
-        setValue(initialValue);
+        // Set initial value (only if provided)
+        if (initialValue) {
+            setValue(initialValue);
+        }
 
         // Register with MenuManager
         MenuManager.register(menu);
@@ -2451,15 +2425,8 @@ const PhonePrefixComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        // Use first available flag if no initialValue and data is loaded, otherwise empty
+        // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        if (!initialValue && prefixData.length > 0) {
-            var firstItem = prefixData[0];
-            var countryCode = firstItem.filename ? firstItem.filename.replace('.svg', '') : null;
-            if (countryCode) {
-                initialFlagUrl = window.App.getImageUrl('phonePrefixes', countryCode + '.svg');
-            }
-        }
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Select prefix" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
