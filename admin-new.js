@@ -2412,7 +2412,11 @@ const AdminModule = (function() {
         var container = document.getElementById(containerId);
         if (!container || !window.CurrencyComponent) return;
         
-        var initialValue = settingsData[settingKey] || 'USD';
+        // Use settingsData value if available, otherwise first available currency, otherwise null
+        var initialValue = settingsData[settingKey] || null;
+        if (!initialValue && CurrencyComponent.isLoaded() && CurrencyComponent.getData().length > 0) {
+            initialValue = CurrencyComponent.getData()[0].value;
+        }
         
         var picker = CurrencyComponent.buildFullMenu({
             container: settingsContainer,

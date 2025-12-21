@@ -300,7 +300,7 @@ const MemberModule = (function() {
     var formWrapper = null;
     var formFields = null;
     var checkoutOptions = [];
-    var siteCurrency = 'USD';
+    var siteCurrency = null;
     var checkoutInstance = null;
     
     function loadFormpicker() {
@@ -594,7 +594,8 @@ const MemberModule = (function() {
                 var fieldset = FieldsetComponent.buildFieldset(field, {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
-                    container: formFields
+                    container: formFields,
+                    defaultCurrency: siteCurrency
                 });
                 
                 formFields.appendChild(fieldset);

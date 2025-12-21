@@ -302,13 +302,20 @@ const FieldsetComponent = (function(){
     }
     
     // Build compact currency menu - uses CurrencyComponent
-    function buildCurrencyMenuCompact(container) {
+    function buildCurrencyMenuCompact(container, defaultCurrency) {
         if (typeof CurrencyComponent === 'undefined') {
             console.error('[FieldsetComponent] CurrencyComponent not available');
             return document.createElement('div');
         }
+        // Use defaultCurrency if provided, otherwise use first available currency, otherwise null
+        var initialValue = null;
+        if (defaultCurrency) {
+            initialValue = defaultCurrency;
+        } else if (CurrencyComponent.isLoaded() && CurrencyComponent.getData().length > 0) {
+            initialValue = CurrencyComponent.getData()[0].value;
+        }
         var result = CurrencyComponent.buildCompactMenu({
-            initialValue: 'USD',
+            initialValue: initialValue,
             container: container
         });
         return result.element;
@@ -320,8 +327,13 @@ const FieldsetComponent = (function(){
             console.error('[FieldsetComponent] PhonePrefixComponent not available');
             return document.createElement('div');
         }
+        // Use first available prefix if data is loaded, otherwise null
+        var initialValue = null;
+        if (PhonePrefixComponent.isLoaded() && PhonePrefixComponent.getData().length > 0) {
+            initialValue = PhonePrefixComponent.getData()[0].value;
+        }
         var result = PhonePrefixComponent.buildCompactMenu({
-            initialValue: '+1',
+            initialValue: initialValue,
             container: container
         });
         return result.element;
@@ -462,6 +474,7 @@ const FieldsetComponent = (function(){
         var idPrefix = options.idPrefix || 'fieldset';
         var index = options.fieldIndex || 0;
         var container = options.container || null;
+        var defaultCurrency = options.defaultCurrency || null;
         
         var fieldset = document.createElement('div');
         fieldset.className = 'fieldset';
@@ -808,15 +821,32 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip));
 
                 // Track shared currency state for item pricing
-                var itemCurrencyState = { flag: 'us', code: 'USD' };
+                // Use defaultCurrency if provided, otherwise first available, otherwise null
+                var initialCurrencyCode = defaultCurrency;
+                if (!initialCurrencyCode && CurrencyComponent.isLoaded() && CurrencyComponent.getData().length > 0) {
+                    initialCurrencyCode = CurrencyComponent.getData()[0].value;
+                }
+                var initialCurrency = null;
+                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var found = CurrencyComponent.getData().find(function(item) {
+                        return item.value === initialCurrencyCode;
+                    });
+                    if (found) {
+                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
+                    }
+                }
+                var itemCurrencyState = initialCurrency || { flag: null, code: null };
                 var itemCurrencyMenus = [];
 
                 function syncAllItemCurrencies() {
                     itemCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
                         var input = menu.querySelector('.fieldset-menu-button-input');
-                        img.src = window.App.getImageUrl('currencies', itemCurrencyState.flag + '.svg');
-                        input.value = itemCurrencyState.code;
+                        if (itemCurrencyState.flag) {
+                            img.src = window.App.getImageUrl('currencies', itemCurrencyState.flag + '.svg');
+                        }
+                        input.value = itemCurrencyState.code || '';
                     });
                 }
 
@@ -985,15 +1015,32 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(seatingAreasContainer);
                 
                 // Track shared currency state
-                var ticketCurrencyState = { flag: 'us', code: 'USD' };
+                // Use defaultCurrency if provided, otherwise first available, otherwise null
+                var initialCurrencyCode = defaultCurrency;
+                if (!initialCurrencyCode && CurrencyComponent.isLoaded() && CurrencyComponent.getData().length > 0) {
+                    initialCurrencyCode = CurrencyComponent.getData()[0].value;
+                }
+                var initialCurrency = null;
+                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var found = CurrencyComponent.getData().find(function(item) {
+                        return item.value === initialCurrencyCode;
+                    });
+                    if (found) {
+                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
+                    }
+                }
+                var ticketCurrencyState = initialCurrency || { flag: null, code: null };
                 var ticketCurrencyMenus = [];
 
                 function syncAllTicketCurrencies() {
                     ticketCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
                         var input = menu.querySelector('.fieldset-menu-button-input');
-                        img.src = window.App.getImageUrl('currencies', ticketCurrencyState.flag + '.svg');
-                        input.value = ticketCurrencyState.code;
+                        if (ticketCurrencyState.flag) {
+                            img.src = window.App.getImageUrl('currencies', ticketCurrencyState.flag + '.svg');
+                        }
+                        input.value = ticketCurrencyState.code || '';
                     });
                 }
 
@@ -2062,8 +2109,16 @@ const CurrencyComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getImageUrl('currencies', 'us.svg');
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        // Use first available flag if no initialValue and data is loaded, otherwise empty
+        var initialFlagUrl = '';
+        if (!initialValue && currencyData.length > 0) {
+            var firstItem = currencyData[0];
+            var countryCode = firstItem.filename ? firstItem.filename.replace('.svg', '') : null;
+            if (countryCode) {
+                initialFlagUrl = window.App.getImageUrl('currencies', countryCode + '.svg');
+            }
+        }
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Select currency" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
@@ -2193,13 +2248,21 @@ const CurrencyComponent = (function(){
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var containerEl = options.container || null;
-        var initialValue = options.initialValue || 'USD';
+        var initialValue = options.initialValue || null;
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
         menu.className = 'admin-currency-wrapper';
-        var usFlagUrl = window.App.getImageUrl('currencies', 'us.svg');
-        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="' + usFlagUrl + '" alt=""><input type="text" class="admin-currency-button-input" placeholder="Search currency..." autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
+        // Use first available flag if no initialValue and data is loaded, otherwise empty
+        var initialFlagUrl = '';
+        if (!initialValue && currencyData.length > 0) {
+            var firstItem = currencyData[0];
+            var countryCode = firstItem.filename ? firstItem.filename.replace('.svg', '') : null;
+            if (countryCode) {
+                initialFlagUrl = window.App.getImageUrl('currencies', countryCode + '.svg');
+            }
+        }
+        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="' + initialFlagUrl + '" alt=""><input type="text" class="admin-currency-button-input" placeholder="Select currency" autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
         
         var btn = menu.querySelector('.admin-currency-button');
         var opts = menu.querySelector('.admin-currency-options');
@@ -2388,8 +2451,16 @@ const PhonePrefixComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getImageUrl('phonePrefixes', 'us.svg');
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        // Use first available flag if no initialValue and data is loaded, otherwise empty
+        var initialFlagUrl = '';
+        if (!initialValue && prefixData.length > 0) {
+            var firstItem = prefixData[0];
+            var countryCode = firstItem.filename ? firstItem.filename.replace('.svg', '') : null;
+            if (countryCode) {
+                initialFlagUrl = window.App.getImageUrl('phonePrefixes', countryCode + '.svg');
+            }
+        }
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Select prefix" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
