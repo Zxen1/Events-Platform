@@ -488,6 +488,16 @@ const AdminModule = (function() {
                                     .then(function(syncRes) {
                                         if (syncRes.success) {
                                             localStorage.setItem(folderSyncKey, 'true');
+                                            if (syncRes.inserted_count > 0 || syncRes.deleted_count > 0) {
+                                                console.log('[Admin] Synced ' + item.option_group + ':', syncRes.inserted_count + ' added, ' + syncRes.deleted_count + ' removed');
+                                            }
+                                        } else {
+                                            console.error('[Admin] Sync failed for ' + item.option_group + ':', syncRes.errors || syncRes.message || 'Unknown error');
+                                            if (syncRes.errors && syncRes.errors.length > 0) {
+                                                syncRes.errors.forEach(function(err) {
+                                                    console.error('[Admin] ' + item.option_group + ' error:', err);
+                                                });
+                                            }
                                         }
                                     })
                                     .catch(function(err) {
