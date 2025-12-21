@@ -163,6 +163,10 @@ try {
         $insertStmt = $pdo->prepare("INSERT INTO `picklist` (`option_group`, `option_value`, `option_filename`, `option_label`, `sort_order`, `is_active`) VALUES (:option_group, :option_value, :option_filename, NULL, 0, 1)");
         $deleteStmt = $pdo->prepare("DELETE FROM `picklist` WHERE `option_group` = :option_group AND `option_filename` = :option_filename");
 
+        $errors = [];
+        $insertedCount = 0;
+        $deletedCount = 0;
+
         // Add new files from API (not in database)
         foreach ($apiFilenames as $apiFilename) {
             if (!isset($dbFilenames[$apiFilename])) {
@@ -173,8 +177,11 @@ try {
                         ':option_filename' => $apiFilename
                     ]);
                     $changes[] = ['action' => 'added', 'filename' => $apiFilename];
+                    $insertedCount++;
                 } catch (PDOException $e) {
-                    error_log("Failed to add filename '{$apiFilename}' to picklist: " . $e->getMessage());
+                    $errorMsg = "Failed to add filename '{$apiFilename}' to picklist: " . $e->getMessage();
+                    error_log($errorMsg);
+                    $errors[] = $errorMsg;
                 }
             }
         }
@@ -188,16 +195,23 @@ try {
                         ':option_filename' => $dbFilename
                     ]);
                     $changes[] = ['action' => 'removed', 'filename' => $dbFilename];
+                    $deletedCount++;
                 } catch (PDOException $e) {
-                    error_log("Failed to remove filename '{$dbFilename}' from picklist: " . $e->getMessage());
+                    $errorMsg = "Failed to remove filename '{$dbFilename}' from picklist: " . $e->getMessage();
+                    error_log($errorMsg);
+                    $errors[] = $errorMsg;
                 }
             }
         }
 
         echo json_encode([
-            'success' => true,
+            'success' => empty($errors),
             'changes' => $changes,
             'changes_count' => count($changes),
+            'inserted_count' => $insertedCount,
+            'deleted_count' => $deletedCount,
+            'errors' => $errors,
+            'error_count' => count($errors)
         ]);
         return;
     }
