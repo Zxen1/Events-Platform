@@ -37,11 +37,11 @@ try {
         $input = file_get_contents('php://input');
         $data = json_decode($input, true);
         
-        if (!isset($data['filenames']) || !is_array($data['filenames']) || !isset($data['table'])) {
+        if (!isset($data['filenames']) || !is_array($data['filenames']) || !isset($data['option_group'])) {
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => 'filenames array and table name are required',
+                'message' => 'filenames array and option_group are required',
             ]);
             return;
         }
