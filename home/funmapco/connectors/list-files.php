@@ -1,4 +1,22 @@
 <?php
+/**
+ * LIST FILES CONNECTOR
+ * 
+ * IMAGE SYNC SYSTEM:
+ * This connector handles both listing files (GET) and syncing baskets (POST).
+ * 
+ * GET: Lists filenames from local folders or Bunny CDN Storage API
+ * POST: Syncs system_images or category_icons basket tables with API results
+ * 
+ * SYNC PROCESS (POST):
+ * 1. Receives filenames array and table name (system_images or category_icons)
+ * 2. Compares API filenames with database basket
+ * 3. Adds new files that exist in API but not in basket
+ * 4. Removes files from basket that no longer exist in API
+ * 5. Handles renamed files (old removed, new added)
+ * 
+ * Returns changes array so frontend can update menu if needed.
+ */
 declare(strict_types=1);
 
 header('Content-Type: application/json');

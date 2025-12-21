@@ -2853,8 +2853,20 @@ const PhonePrefixComponent = (function(){
 
 
 /* ============================================================================
-   ICON PICKER
-   Uses icon folder path from admin settings
+   ICON PICKER COMPONENT
+   
+   IMAGE SYNC SYSTEM:
+   This component uses a "basket" system for instant menu loading:
+   
+   1. Menu opens instantly from database basket (category_icons table)
+   2. API call fetches current file list from Bunny CDN in background
+   3. After menu loads, sync runs automatically to update basket:
+      - Adds new files from API
+      - Removes deleted files from basket
+      - Handles renamed files (old removed, new added)
+   4. If sync detects changes, menu updates with new files
+   
+   NO API CALLS AT STARTUP - all API calls happen only when menu opens.
    ============================================================================ */
 
 const IconPickerComponent = (function(){
@@ -2862,6 +2874,8 @@ const IconPickerComponent = (function(){
     var iconFolder = null;
     var icons = [];
     var dataLoaded = false;
+    var apiCache = {}; // Cache for API results by folder path
+    var categoryIconsBasket = null; // Basket of available filenames from category_icons table
     
     function getIconFolder() {
         return iconFolder;
@@ -2879,7 +2893,7 @@ const IconPickerComponent = (function(){
         return dataLoaded;
     }
     
-    // Load icon folder path from admin settings
+    // Load icon folder path and basket from admin settings
     function loadFolderFromSettings() {
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
@@ -2887,38 +2901,144 @@ const IconPickerComponent = (function(){
                 if (res.settings && res.settings.folder_category_icons) {
                     iconFolder = res.settings.folder_category_icons;
                 }
+                if (res.category_icons_basket && Array.isArray(res.category_icons_basket)) {
+                    categoryIconsBasket = res.category_icons_basket;
+                }
                 return iconFolder;
             });
     }
     
-    // Load icons list from folder
-    function loadIconsFromFolder(folderPath) {
+    // Get database icons instantly (from category_icons basket table)
+    function getDatabaseIcons(folderPath) {
+        if (!categoryIconsBasket || !folderPath || !Array.isArray(categoryIconsBasket)) return [];
+        var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        var dbIcons = [];
+        categoryIconsBasket.forEach(function(filename) {
+            dbIcons.push(folder + filename);
+        });
+        return dbIcons;
+    }
+    
+    // Load icons list - returns database icons instantly, loads API in background
+    function loadIconsFromFolder(folderPath, callback) {
         folderPath = folderPath || iconFolder;
-        if (!folderPath) return Promise.resolve([]);
+        if (!folderPath) {
+            if (callback) callback([]);
+            return Promise.resolve([]);
+        }
         
-        // COMMENTED OUT - file list request (10-second delay)
-        // Images will load from database paths instead
-        /*
-        // Use existing connector (works for both local folders and Bunny CDN)
-        return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folderPath))
+        var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        
+        // Return cached API results if available for this folder
+        if (apiCache[folderPath]) {
+            icons = apiCache[folderPath];
+            dataLoaded = true;
+            if (callback) callback(apiCache[folderPath]);
+            return Promise.resolve(apiCache[folderPath]);
+        }
+        
+        // Get database icons instantly
+        var dbIcons = getDatabaseIcons(folderPath);
+        icons = dbIcons;
+        
+        // Return database icons immediately
+        if (callback) callback(dbIcons);
+        var dbPromise = Promise.resolve(dbIcons);
+        
+        // Load API in background
+        fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.success && Array.isArray(res.icons)) {
-                    var iconList = res.icons.map(function(icon) {
-                        return folderPath + '/' + icon;
+                    var apiIconList = res.icons.map(function(icon) {
+                        return folder + icon;
                     });
-                    icons = iconList;
+                    
+                    // Merge with database icons (avoid duplicates)
+                    var allIcons = dbIcons.slice();
+                    var dbFilenames = dbIcons.map(function(path) {
+                        return getFilename(path);
+                    });
+                    
+                    apiIconList.forEach(function(apiPath) {
+                        var apiFilename = getFilename(apiPath);
+                        if (dbFilenames.indexOf(apiFilename) === -1) {
+                            allIcons.push(apiPath);
+                        }
+                    });
+                    
+                    // Update cache and icons
+                    apiCache[folderPath] = allIcons;
+                    icons = allIcons;
                     dataLoaded = true;
-                    return iconList;
+                    
+                    // Callback with updated list if provided (menu is already loaded)
+                    if (callback) callback(allIcons);
+                    
+                    // Sync database after menu has loaded (background task, only once per session)
+                    var syncKey = 'category_icons_synced_' + folderPath;
+                    var alreadySynced = localStorage.getItem(syncKey) === 'true';
+                    
+                    if (!alreadySynced) {
+                        var apiFilenames = res.icons;
+                        fetch('/gateway.php?action=list-files', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                filenames: apiFilenames,
+                                table: 'category_icons'
+                            })
+                        })
+                        .then(function(r) { return r.json(); })
+                        .then(function(syncRes) {
+                            if (syncRes.success) {
+                                // Mark as synced for this session
+                                localStorage.setItem(syncKey, 'true');
+                                
+                                if (syncRes.changes_count > 0) {
+                                    // Database was updated - reload category_icons data and update menu
+                                    loadFolderFromSettings().then(function() {
+                                        // Re-render menu with updated database icons
+                                        if (callback) {
+                                            var updatedDbIcons = getDatabaseIcons(folderPath);
+                                            var updatedAllIcons = updatedDbIcons.slice();
+                                            var updatedDbFilenames = updatedDbIcons.map(function(path) {
+                                                return getFilename(path);
+                                            });
+                                            
+                                            apiIconList.forEach(function(apiPath) {
+                                                var apiFilename = getFilename(apiPath);
+                                                if (updatedDbFilenames.indexOf(apiFilename) === -1) {
+                                                    updatedAllIcons.push(apiPath);
+                                                }
+                                            });
+                                            
+                                            apiCache[folderPath] = updatedAllIcons;
+                                            icons = updatedAllIcons;
+                                            callback(updatedAllIcons);
+                                        }
+                                    });
+                                }
+                            }
+                        })
+                        .catch(function(err) {
+                            console.warn('Failed to sync category icons:', err);
+                        });
+                    }
+                } else {
+                    // API failed, but we already returned database icons
+                    if (callback) callback(dbIcons);
                 }
-                return [];
             })
             .catch(function(err) {
-                console.warn('Failed to load icons from folder:', err);
-                return [];
+                console.warn('Failed to load icons from API:', err);
+                // API failed, but we already returned database icons
+                if (callback) callback(dbIcons);
             });
-        */
-        return Promise.resolve([]);
+        
+        return dbPromise;
     }
     
     // Extract filename from path
@@ -2970,6 +3090,46 @@ const IconPickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         
+        // Render icon options
+        function renderIconOptions(iconList, isInitial) {
+            optionsDiv.innerHTML = '';
+            if (iconList.length === 0) {
+                var msg = document.createElement('div');
+                msg.className = 'component-iconpicker-error';
+                msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
+                optionsDiv.appendChild(msg);
+            } else {
+                iconList.forEach(function(iconPath) {
+                    var option = document.createElement('button');
+                    option.type = 'button';
+                    option.className = 'component-iconpicker-option';
+                    
+                    var optImg = document.createElement('img');
+                    optImg.className = 'component-iconpicker-option-image';
+                    optImg.src = iconPath;
+                    optImg.alt = '';
+                    
+                    var optText = document.createElement('span');
+                    optText.className = 'component-iconpicker-option-text';
+                    optText.textContent = getFilename(iconPath);
+                    
+                    option.appendChild(optImg);
+                    option.appendChild(optText);
+                    
+                    option.onclick = function(ev) {
+                        ev.stopPropagation();
+                        currentIcon = iconPath;
+                        buttonImage.src = iconPath;
+                        buttonImage.style.display = '';
+                        buttonText.textContent = getFilename(iconPath);
+                        menu.classList.remove('open');
+                        onSelect(iconPath);
+                    };
+                    optionsDiv.appendChild(option);
+                });
+            }
+        }
+        
         // Load icons and set button if current icon exists (matches SystemImagePickerComponent pattern)
         var loadPromise = iconFolder ? Promise.resolve() : loadFolderFromSettings();
         loadPromise.then(function() {
@@ -2990,53 +3150,22 @@ const IconPickerComponent = (function(){
                 MenuManager.closeAll(menu);
                 // Open menu immediately
                 menu.classList.add('open');
-                // Show loading state
-                optionsDiv.innerHTML = '<div class="component-iconpicker-loading">Loading...</div>';
-                // Load and show icons in background
-                loadIconsFromFolder().then(function(iconList) {
-                    optionsDiv.innerHTML = '';
-                    if (iconList.length === 0) {
-                        var msg = document.createElement('div');
-                        msg.className = 'component-iconpicker-error';
-                        msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
-                        optionsDiv.appendChild(msg);
-                    } else {
-                        iconList.forEach(function(iconPath) {
-                            var option = document.createElement('button');
-                            option.type = 'button';
-                            option.className = 'component-iconpicker-option';
-                            
-                            var optImg = document.createElement('img');
-                            optImg.className = 'component-iconpicker-option-image';
-                            optImg.src = iconPath;
-                            optImg.alt = '';
-                            
-                            var optText = document.createElement('span');
-                            optText.className = 'component-iconpicker-option-text';
-                            optText.textContent = getFilename(iconPath);
-                            
-                            option.appendChild(optImg);
-                            option.appendChild(optText);
-                            
-                            option.onclick = function(ev) {
-                                ev.stopPropagation();
-                                currentIcon = iconPath;
-                                buttonImage.src = iconPath;
-                                buttonImage.style.display = '';
-                                buttonText.textContent = getFilename(iconPath);
-                                menu.classList.remove('open');
-                                onSelect(iconPath);
-                            };
-                            optionsDiv.appendChild(option);
-                        });
-                    }
-                }).catch(function(err) {
-                    console.error('Failed to load icons:', err);
-                    optionsDiv.innerHTML = '';
-                    var msg = document.createElement('div');
-                    msg.className = 'component-iconpicker-error';
-                    msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
-                    optionsDiv.appendChild(msg);
+                
+                // Show database icons instantly (menu is now open and interactive)
+                if (!categoryIconsBasket) {
+                    loadFolderFromSettings().then(function() {
+                        // Update with database icons now that they're loaded
+                        var updatedDbIcons = getDatabaseIcons(iconFolder);
+                        renderIconOptions(updatedDbIcons, true);
+                    });
+                } else {
+                    var dbIcons = getDatabaseIcons(iconFolder);
+                    renderIconOptions(dbIcons, true);
+                }
+                
+                // Load API in background and append new icons (always runs)
+                loadIconsFromFolder(null, function(updatedIconList) {
+                    renderIconOptions(updatedIconList, false);
                 });
             }
         };
@@ -3721,6 +3850,23 @@ const CheckoutOptionsComponent = (function(){
 })();
 
 
+/* ============================================================================
+   SYSTEM IMAGE PICKER COMPONENT
+   
+   IMAGE SYNC SYSTEM:
+   This component uses a "basket" system for instant menu loading:
+   
+   1. Menu opens instantly from database basket (system_images table)
+   2. API call fetches current file list from Bunny CDN in background
+   3. After menu loads, sync runs automatically to update basket:
+      - Adds new files from API
+      - Removes deleted files from basket
+      - Handles renamed files (old removed, new added)
+   4. If sync detects changes, menu updates with new files
+   
+   NO API CALLS AT STARTUP - all API calls happen only when menu opens.
+   ============================================================================ */
+
 const SystemImagePickerComponent = (function(){
     
     var imageFolder = null;
@@ -3831,48 +3977,58 @@ const SystemImagePickerComponent = (function(){
                     // Callback with updated list if provided (menu is already loaded)
                     if (callback) callback(allImages);
                     
-                    // Sync database after menu has loaded (background task)
-                    var apiFilenames = res.icons;
-                    fetch('/gateway.php?action=list-files', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            filenames: apiFilenames,
-                            table: 'system_images'
+                    // Sync database after menu has loaded (background task, only once per session)
+                    var syncKey = 'system_images_synced_' + folderPath;
+                    var alreadySynced = localStorage.getItem(syncKey) === 'true';
+                    
+                    if (!alreadySynced) {
+                        var apiFilenames = res.icons;
+                        fetch('/gateway.php?action=list-files', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                filenames: apiFilenames,
+                                table: 'system_images'
+                            })
                         })
-                    })
-                    .then(function(r) { return r.json(); })
-                    .then(function(syncRes) {
-                        if (syncRes.success && syncRes.changes_count > 0) {
-                            // Database was updated - reload system_images data and update menu
-                            loadFolderFromSettings().then(function() {
-                                // Re-render menu with updated database images
-                                if (callback) {
-                                    var updatedDbImages = getDatabaseImages(folderPath);
-                                    var updatedAllImages = updatedDbImages.slice();
-                                    var updatedDbFilenames = updatedDbImages.map(function(path) {
-                                        return getFilename(path);
-                                    });
-                                    
-                                    apiImageList.forEach(function(apiPath) {
-                                        var apiFilename = getFilename(apiPath);
-                                        if (updatedDbFilenames.indexOf(apiFilename) === -1) {
-                                            updatedAllImages.push(apiPath);
+                        .then(function(r) { return r.json(); })
+                        .then(function(syncRes) {
+                            if (syncRes.success) {
+                                // Mark as synced for this session
+                                localStorage.setItem(syncKey, 'true');
+                                
+                                if (syncRes.changes_count > 0) {
+                                    // Database was updated - reload system_images data and update menu
+                                    loadFolderFromSettings().then(function() {
+                                        // Re-render menu with updated database images
+                                        if (callback) {
+                                            var updatedDbImages = getDatabaseImages(folderPath);
+                                            var updatedAllImages = updatedDbImages.slice();
+                                            var updatedDbFilenames = updatedDbImages.map(function(path) {
+                                                return getFilename(path);
+                                            });
+                                            
+                                            apiImageList.forEach(function(apiPath) {
+                                                var apiFilename = getFilename(apiPath);
+                                                if (updatedDbFilenames.indexOf(apiFilename) === -1) {
+                                                    updatedAllImages.push(apiPath);
+                                                }
+                                            });
+                                            
+                                            apiCache[folderPath] = updatedAllImages;
+                                            images = updatedAllImages;
+                                            callback(updatedAllImages);
                                         }
                                     });
-                                    
-                                    apiCache[folderPath] = updatedAllImages;
-                                    images = updatedAllImages;
-                                    callback(updatedAllImages);
                                 }
-                            });
-                        }
-                    })
-                    .catch(function(err) {
-                        console.warn('Failed to sync system images:', err);
-                    });
+                            }
+                        })
+                        .catch(function(err) {
+                            console.warn('Failed to sync system images:', err);
+                        });
+                    }
                 }
             })
             .catch(function(err) {

@@ -2241,6 +2241,25 @@ const AdminModule = (function() {
         
         // Initialize currency picker (using CurrencyComponent from components file)
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');
+        
+        // Add explanation to API container
+        addImageSyncExplanation();
+    }
+    
+    function addImageSyncExplanation() {
+        var apiContainer = settingsContainer.querySelector('.admin-settings-api-container');
+        if (!apiContainer) return;
+        
+        // Check if explanation already exists
+        if (apiContainer.querySelector('.admin-settings-explanation')) return;
+        
+        var explanation = document.createElement('div');
+        explanation.className = 'admin-settings-explanation';
+        explanation.style.cssText = 'padding: 15px; margin-top: 20px; background-color: rgba(255, 255, 255, 0.1); border-radius: 4px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.9);';
+        explanation.innerHTML = '<strong>How Image Sync Works:</strong><br>' +
+            'System Images and Category Icons use a "basket" system for instant menu loading. When you open an image picker menu, it displays instantly from the database basket. The system then syncs with Bunny CDN in the background to add new files, remove deleted files, and handle renamed files. This sync happens automatically after the menu loads - no API calls occur at website startup, ensuring fast page loads.';
+        
+        apiContainer.appendChild(explanation);
     }
     
     function initImagePicker(containerId, settingKey) {
