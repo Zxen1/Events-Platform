@@ -2983,7 +2983,11 @@ const IconPickerComponent = (function(){
             } else {
                 // Close all other menus first
                 MenuManager.closeAll(menu);
-                // Load and show icons
+                // Open menu immediately
+                menu.classList.add('open');
+                // Show loading state
+                optionsDiv.innerHTML = '<div class="component-iconpicker-loading">Loading...</div>';
+                // Load and show icons in background
                 loadIconsFromFolder().then(function(iconList) {
                     optionsDiv.innerHTML = '';
                     if (iconList.length === 0) {
@@ -3021,16 +3025,13 @@ const IconPickerComponent = (function(){
                             optionsDiv.appendChild(option);
                         });
                     }
-                    menu.classList.add('open');
                 }).catch(function(err) {
-                    // Ensure menu opens even if load fails
                     console.error('Failed to load icons:', err);
                     optionsDiv.innerHTML = '';
                     var msg = document.createElement('div');
                     msg.className = 'component-iconpicker-error';
                     msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
                     optionsDiv.appendChild(msg);
-                    menu.classList.add('open');
                 });
             }
         };
@@ -3866,7 +3867,11 @@ const SystemImagePickerComponent = (function(){
             } else {
                 // Close all other menus first
                 MenuManager.closeAll(menu);
-                // Show images (already loaded)
+                // Open menu immediately
+                menu.classList.add('open');
+                // Show loading state
+                optionsDiv.innerHTML = '<div class="component-systemimagepicker-loading">Loading...</div>';
+                // Load and show images in background
                 loadImagesFromFolder().then(function(imageList) {
                     optionsDiv.innerHTML = '';
                     if (imageList.length === 0) {
@@ -3904,7 +3909,6 @@ const SystemImagePickerComponent = (function(){
                             optionsDiv.appendChild(option);
                         });
                     }
-                    menu.classList.add('open');
                 });
             }
         };

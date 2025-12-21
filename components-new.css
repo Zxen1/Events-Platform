@@ -1839,6 +1839,12 @@
     display: block;
 }
 
+.component-iconpicker-loading {
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
+}
+
 .component-iconpicker-option:hover {
     background: #3b82f5;
 }
@@ -1979,6 +1985,12 @@
 
 .component-systemimagepicker.open .component-systemimagepicker-options {
     display: block;
+}
+
+.component-systemimagepicker-loading {
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
 }
 
 .component-systemimagepicker-option:hover {
