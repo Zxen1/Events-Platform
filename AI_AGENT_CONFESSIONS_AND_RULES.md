@@ -1,4 +1,9 @@
 # AI AGENT CONFESSIONS AND PROJECT RULES
+
+## ⚠️ CRITICAL RULE - READ FIRST ⚠️
+
+**Fallbacks, hardcode, and snapshots cause immense harm to the development of this software. Do not ever use them.**
+
 ## Critical Information for All Future AI Agents
 
 ---

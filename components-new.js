@@ -2035,7 +2035,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             default:
-                // Generic text input fallback
+                // Unknown field type - use generic text input
                 fieldset.appendChild(buildLabel(name, tooltip));
                 var input = document.createElement('input');
                 input.type = 'text';
@@ -3802,11 +3802,12 @@ const SystemImagePickerComponent = (function(){
     }
     
     // Build system image picker dropdown menu (matches menu-test.html design)
-    // options: { onSelect, currentImage }
+    // options: { onSelect, databaseValue } - databaseValue is checked against loaded images
     function buildPicker(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
-        var currentImage = options.currentImage || null;
+        var databaseValue = options.databaseValue || null;
+        var currentImage = null; // Only set if databaseValue exists in loaded images
         
         var menu = document.createElement('div');
         menu.className = 'component-systemimagepicker';
@@ -3818,13 +3819,13 @@ const SystemImagePickerComponent = (function(){
         
         var buttonImage = document.createElement('img');
         buttonImage.className = 'component-systemimagepicker-button-image';
-        buttonImage.src = currentImage || '';
+        buttonImage.src = '';
         buttonImage.alt = '';
-        if (!currentImage) buttonImage.style.display = 'none';
+        buttonImage.style.display = 'none';
         
         var buttonText = document.createElement('span');
         buttonText.className = 'component-systemimagepicker-button-text';
-        buttonText.textContent = currentImage ? getFilename(currentImage) : 'Select...';
+        buttonText.textContent = 'Select...';
         
         var buttonArrow = document.createElement('span');
         buttonArrow.className = 'component-systemimagepicker-button-arrow';
@@ -3843,6 +3844,20 @@ const SystemImagePickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         
+        // Load images and set button if database value exists in list
+        // Ensure folder is loaded from settings if not already set
+        var loadPromise = imageFolder ? Promise.resolve() : loadFolderFromSettings();
+        loadPromise.then(function() {
+            return loadImagesFromFolder();
+        }).then(function(imageList) {
+            if (databaseValue && imageList.indexOf(databaseValue) !== -1) {
+                currentImage = databaseValue;
+                buttonImage.src = databaseValue;
+                buttonImage.style.display = '';
+                buttonText.textContent = getFilename(databaseValue);
+            }
+        });
+        
         // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
@@ -3852,7 +3867,7 @@ const SystemImagePickerComponent = (function(){
             } else {
                 // Close all other menus first
                 MenuManager.closeAll(menu);
-                // Load and show images
+                // Show images (already loaded)
                 loadImagesFromFolder().then(function(imageList) {
                     optionsDiv.innerHTML = '';
                     if (imageList.length === 0) {
@@ -3897,17 +3912,6 @@ const SystemImagePickerComponent = (function(){
         
         return {
             element: menu,
-            setImage: function(imagePath) {
-                currentImage = imagePath;
-                if (imagePath) {
-                    buttonImage.src = imagePath;
-                    buttonImage.style.display = '';
-                    buttonText.textContent = getFilename(imagePath);
-                } else {
-                    buttonImage.style.display = 'none';
-                    buttonText.textContent = 'Select...';
-                }
-            },
             getImage: function() {
                 return currentImage;
             }

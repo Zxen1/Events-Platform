@@ -52,9 +52,7 @@
         if (window.AdminModule && AdminModule.icons && AdminModule.icons[name]) {
             return AdminModule.icons[name];
         }
-        // Fallback if AdminModule not loaded yet (shouldn't happen)
-        console.warn('[Formbuilder] AdminModule.icons not available for:', name);
-        return '';
+        throw new Error('[Formbuilder] AdminModule.icons not available for: ' + name);
     }
     
     /* --------------------------------------------------------------------------
@@ -462,8 +460,13 @@
     function buildIconPicker(currentSrc, onSelect) {
         var menu = document.createElement('div');
         menu.className = 'formbuilder-menu';
-        var currentFilename = currentSrc ? currentSrc.split('/').pop() : 'Select...';
-        menu.innerHTML = '<div class="formbuilder-menu-button"><img class="formbuilder-menu-button-image" src="' + currentSrc + '" alt=""><span class="formbuilder-menu-button-text">' + currentFilename + '</span><span class="formbuilder-menu-button-arrow">▼</span></div><div class="formbuilder-menu-options"></div>';
+        
+        // Only show button image if currentSrc exists in allIcons array
+        var showButtonImage = currentSrc && allIcons.indexOf(currentSrc) !== -1;
+        var currentFilename = showButtonImage ? currentSrc.split('/').pop() : 'Select...';
+        var buttonImageSrc = showButtonImage ? currentSrc : '';
+        
+        menu.innerHTML = '<div class="formbuilder-menu-button"><img class="formbuilder-menu-button-image" src="' + buttonImageSrc + '" alt=""' + (showButtonImage ? '' : ' style="display:none"') + '><span class="formbuilder-menu-button-text">' + currentFilename + '</span><span class="formbuilder-menu-button-arrow">▼</span></div><div class="formbuilder-menu-options"></div>';
         var btn = menu.querySelector('.formbuilder-menu-button');
         var opts = menu.querySelector('.formbuilder-menu-options');
         var btnImg = menu.querySelector('.formbuilder-menu-button-image');
@@ -477,6 +480,7 @@
             op.onclick = function(e) {
                 e.stopPropagation();
                 btnImg.src = iconPath;
+                btnImg.style.display = '';
                 btnText.textContent = filename;
                 menu.classList.remove('open');
                 onSelect(iconPath);
@@ -488,7 +492,9 @@
             e.stopPropagation();
             var wasOpen = menu.classList.contains('open');
             closeAllMenus();
-            if (!wasOpen) menu.classList.add('open');
+            if (!wasOpen && allIcons.length > 0) {
+                menu.classList.add('open');
+            }
         };
         
         return menu;
@@ -567,15 +573,24 @@
                 }
                 checkoutOptions = res.checkout_options;
                 siteCurrency = res.settings && res.settings.website_currency;
-                // Then fetch icons
-                // Use Bunny CDN category-icons folder
-                var categoryIconsFolder = window.App.getBunnyFolder('categoryIcons');
-                return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent('https://cdn.funmap.com/' + categoryIconsFolder));
+                // Get icon folder from database setting
+                var iconFolder = res.settings && res.settings.icon_folder;
+                if (!iconFolder) {
+                    throw new Error('icon_folder not found in admin settings');
+                }
+                checkoutOptions = checkoutOptions || {};
+                checkoutOptions.icon_folder = iconFolder;
+                return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(iconFolder));
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                var categoryIconsBase = window.App.BUNNY_CDN_BASE + window.App.getBunnyFolder('categoryIcons');
-                allIcons = (res.icons || []).map(function(name) { return categoryIconsBase + name; });
+                // Ensure folder path ends with /
+                var iconFolder = checkoutOptions && checkoutOptions.icon_folder;
+                if (!iconFolder) {
+                    throw new Error('icon_folder not found in checkout options');
+                }
+                var folderPath = iconFolder.endsWith('/') ? iconFolder : iconFolder + '/';
+                allIcons = (res.icons || []).map(function(name) { return folderPath + name; });
                 return fetch('/gateway.php?action=get-form');
             })
             .then(function(r) { return r.json(); })

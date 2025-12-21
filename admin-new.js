@@ -1587,14 +1587,10 @@ const AdminModule = (function() {
         if (settingsInitialized && Object.keys(settingsData).length > 0) {
             mapTabData = settingsData;
             // TEST: Use Bunny CDN for system images (database setting commented out)
-            if (window.SystemImagePickerComponent && window.App && window.App.BUNNY_CDN_BASE) {
-                var bunnySystemFolder = window.App.BUNNY_CDN_BASE + 'system-images/';
-                SystemImagePickerComponent.setImageFolder(bunnySystemFolder);
+            // Use database setting for system images folder
+            if (window.SystemImagePickerComponent && mapTabData && mapTabData.system_images_folder) {
+                SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
             }
-            // Database setting commented out for test:
-            // if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
-            //     SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
-            // }
             return Promise.resolve();
         }
         
@@ -1604,16 +1600,10 @@ const AdminModule = (function() {
                 if (data.success && data.settings) {
                     mapTabData = data.settings;
                     
-                    // TEST: Use Bunny CDN for system images (database setting commented out)
-                    if (window.SystemImagePickerComponent && window.App && window.App.BUNNY_CDN_BASE) {
-                        // Use Bunny CDN system-images folder ONLY
-                        var bunnySystemFolder = window.App.BUNNY_CDN_BASE + 'system-images/';
-                        SystemImagePickerComponent.setImageFolder(bunnySystemFolder);
+                    // Use database setting for system images folder
+                    if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
+                        SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
                     }
-                    // Database setting commented out for test:
-                    // if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
-                    //     SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
-                    // }
                 }
             })
             .catch(function(err) {
@@ -1933,22 +1923,8 @@ const AdminModule = (function() {
             // Show display if we have an address
             showAddressDisplay();
         } else {
-            // Fallback: create simple input if Google Places not ready
-            var fallback = document.createElement('input');
-            fallback.type = 'text';
-            fallback.className = 'admin-map-controls-starting-fallback-input';
-            fallback.placeholder = 'Search for a location...';
-            fallback.value = startingAddress;
-            
-            fallback.addEventListener('blur', function() {
-                saveStartingLocation(fallback.value.trim(), null, null);
-            });
-            fallback.addEventListener('change', function() {
-                saveStartingLocation(fallback.value.trim(), null, null);
-            });
-            
-            startingGeocoderContainer.appendChild(fallback);
-            showAddressDisplay();
+            // Google Places not ready - throw error instead of fallback
+            throw new Error('Google Places Autocomplete not available');
         }
     }
     
@@ -1960,6 +1936,7 @@ const AdminModule = (function() {
         
         var picker = SystemImagePickerComponent.buildPicker({
             container: mapTabContainer,
+            databaseValue: initialValue,
             onSelect: function(imagePath) {
                 updateField('map.' + settingKey, imagePath);
             }
@@ -1967,11 +1944,6 @@ const AdminModule = (function() {
         
         picker.element.dataset.settingKey = settingKey;
         container.appendChild(picker.element);
-        
-        // Set initial image if exists
-        if (initialValue) {
-            picker.setImage(initialValue);
-        }
         
         registerField('map.' + settingKey, initialValue);
     }
@@ -2184,15 +2156,10 @@ const AdminModule = (function() {
                 if (data.success && data.settings) {
                     settingsData = data.settings;
 
-                    // TEST: Use Bunny CDN for system images (database setting commented out)
-                    if (window.SystemImagePickerComponent && window.App && window.App.BUNNY_CDN_BASE) {
-                        var bunnySystemFolder = window.App.BUNNY_CDN_BASE + 'system-images/';
-                        SystemImagePickerComponent.setImageFolder(bunnySystemFolder);
+                    // Use database setting for system images folder
+                    if (window.SystemImagePickerComponent && settingsData.system_images_folder) {
+                        SystemImagePickerComponent.setImageFolder(settingsData.system_images_folder);
                     }
-                    // Database setting commented out for test:
-                    // if (window.SystemImagePickerComponent && settingsData.system_images_folder) {
-                    //     SystemImagePickerComponent.setImageFolder(settingsData.system_images_folder);
-                    // }
 
                     // Initialize CurrencyComponent data if available
                     if (window.CurrencyComponent && data.picklist && data.picklist.currency) {
@@ -2258,6 +2225,7 @@ const AdminModule = (function() {
 
         var picker = SystemImagePickerComponent.buildPicker({
             container: settingsContainer,
+            databaseValue: initialValue,
             onSelect: function(imagePath) {
                 updateField('settings.' + settingKey, imagePath);
                 
@@ -2282,11 +2250,6 @@ const AdminModule = (function() {
 
         picker.element.dataset.settingKey = settingKey;
         container.appendChild(picker.element);
-
-        // Set initial image if exists
-        if (initialValue) {
-            picker.setImage(initialValue);
-        }
 
         registerField('settings.' + settingKey, initialValue);
     }
