@@ -93,10 +93,20 @@ const HeaderModule = (function() {
     }
     
     function loadHeaderIcons(systemImages) {
-        // Filter icon
+        // Filter icon - use mask-image like admin buttons
         var filterIcon = document.querySelector('.header-filter-button-icon');
         if (filterIcon && systemImages.icon_filter) {
-            filterIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_filter);
+            var iconUrl = window.App.getImageUrl('systemImages', systemImages.icon_filter);
+            filterIcon.style.webkitMaskImage = 'url(' + iconUrl + ')';
+            filterIcon.style.maskImage = 'url(' + iconUrl + ')';
+            filterIcon.style.webkitMaskSize = 'contain';
+            filterIcon.style.maskSize = 'contain';
+            filterIcon.style.webkitMaskRepeat = 'no-repeat';
+            filterIcon.style.maskRepeat = 'no-repeat';
+            filterIcon.style.webkitMaskPosition = 'center';
+            filterIcon.style.maskPosition = 'center';
+            filterIcon.style.backgroundColor = '#ffffff';
+            filterIcon.src = '';
         }
         
         // Mode switch icons
