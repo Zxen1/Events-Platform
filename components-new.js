@@ -2896,6 +2896,9 @@ const IconPickerComponent = (function(){
         folderPath = folderPath || iconFolder;
         if (!folderPath) return Promise.resolve([]);
         
+        // COMMENTED OUT - file list request (10-second delay)
+        // Images will load from database paths instead
+        /*
         // Use existing connector (works for both local folders and Bunny CDN)
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
@@ -2914,6 +2917,8 @@ const IconPickerComponent = (function(){
                 console.warn('Failed to load icons from folder:', err);
                 return [];
             });
+        */
+        return Promise.resolve([]);
     }
     
     // Extract filename from path
@@ -3755,6 +3760,9 @@ const SystemImagePickerComponent = (function(){
         folderPath = folderPath || imageFolder;
         if (!folderPath) return Promise.resolve([]);
         
+        // COMMENTED OUT - file list request (10-second delay)
+        // Images will load from database paths instead
+        /*
         // Use existing connector (works for both local folders and Bunny CDN)
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
@@ -3773,6 +3781,8 @@ const SystemImagePickerComponent = (function(){
                 console.warn('Failed to load system images from folder:', err);
                 return [];
             });
+        */
+        return Promise.resolve([]);
     }
     
     // Extract filename from path
