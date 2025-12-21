@@ -698,17 +698,35 @@ const FilterModule = (function() {
     
     function initCategoryFilter() {
         var container = panelEl.querySelector('.filter-categoryfilter-container');
-        if (!container) return;
+        if (!container) {
+            console.warn('[Filter] Category filter container not found');
+            return;
+        }
+        
+        console.log('[Filter] Loading category filters...');
         
         // Fetch categories from database
         fetch('/gateway.php?action=get-form')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (!res.success || !res.snapshot) return;
+                if (!res.success) {
+                    console.warn('[Filter] get-form request failed:', res);
+                    return;
+                }
+                if (!res.formData) {
+                    console.warn('[Filter] No formData in get-form response');
+                    return;
+                }
                 
-                var categories = res.snapshot.categories || [];
-                var categoryIconPaths = res.snapshot.categoryIconPaths || {};
-                var subcategoryIconPaths = res.snapshot.subcategoryIconPaths || {};
+                var categories = res.formData.categories || [];
+                var categoryIconPaths = res.formData.categoryIconPaths || {};
+                var subcategoryIconPaths = res.formData.subcategoryIconPaths || {};
+                
+                console.log('[Filter] Loaded categories:', categories.length, 'categories');
+                if (categories.length === 0) {
+                    console.warn('[Filter] No categories found in formData');
+                    return;
+                }
                 
                 categories.forEach(function(cat) {
                     var accordion = document.createElement('div');
@@ -802,9 +820,11 @@ const FilterModule = (function() {
                     
                     container.appendChild(accordion);
                 });
+                
+                console.log('[Filter] Category filters rendered successfully');
             })
             .catch(function(err) {
-                console.warn('[Filter] Failed to load categories:', err);
+                console.error('[Filter] Failed to load categories:', err);
             });
     }
     
