@@ -6,22 +6,27 @@
  * This connector handles both listing files (GET) and syncing baskets (POST).
  * 
  * GET: Lists filenames from local folders or Bunny CDN Storage API
- * POST: Syncs picklist table basket entries with API results
+ * POST: Syncs separate table basket entries with API results
  * 
  * SYNC PROCESS (POST):
  * This syncs ALL picklist types (system-image, category-icon, currency, phone-prefix, amenity)
- * from their corresponding Bunny CDN folders to the unified picklist table.
+ * from their corresponding Bunny CDN folders to their respective separate tables.
  * 
  * Steps:
  * 1. Receives filenames array and option_group (system-image, category-icon, currency, phone-prefix, amenity)
- * 2. Detects and removes duplicate option_filename entries (keeps lowest ID)
- * 3. Normalizes API filenames (trims, filters empty, removes duplicates from API list)
- * 4. Adds new files that exist in API but not in database basket
- * 5. Removes files from basket that no longer exist in API
- * 6. Handles renamed files (old removed, new added)
+ * 2. Maps option_group to table name (system-image -> system_images, etc.)
+ * 3. Detects and removes duplicate option_filename entries (keeps lowest ID)
+ * 4. Normalizes API filenames (trims, filters empty, removes duplicates from API list)
+ * 5. Adds new files that exist in API but not in database basket
+ * 6. Removes files from basket that no longer exist in API
+ * 7. Handles renamed files (old removed, new added)
  * 
- * Note: Currency and phone-prefix each have their own folders (currencies and phone-prefixes)
- * which sync to their respective option_groups in the picklist table.
+ * Note: Each folder type has its own table:
+ * - system-image -> system_images
+ * - category-icon -> category_icons
+ * - currency -> currencies
+ * - phone-prefix -> phone_prefixes
+ * - amenity -> amenities
  * 
  * Returns changes array so frontend can update menu if needed.
  */
@@ -56,6 +61,16 @@ try {
             ]);
             return;
         }
+
+        // Map option_group to table name
+        $tableMap = [
+            'system-image' => 'system_images',
+            'category-icon' => 'category_icons',
+            'currency' => 'currencies',
+            'phone-prefix' => 'phone_prefixes',
+            'amenity' => 'amenities'
+        ];
+        $tableName = $tableMap[$optionGroup];
 
         // Database connection code
         $configCandidates = [
@@ -124,9 +139,9 @@ try {
         }
         $apiFilenames = array_unique($normalizedApiFilenames); // Remove duplicates from API list
 
-        // Get current database filenames with their IDs from picklist table
-        $stmt = $pdo->prepare("SELECT `id`, `option_filename` FROM `picklist` WHERE `option_group` = :option_group ORDER BY `id` ASC");
-        $stmt->execute([':option_group' => $optionGroup]);
+        // Get current database filenames with their IDs from the appropriate table
+        $stmt = $pdo->prepare("SELECT `id`, `option_filename` FROM `{$tableName}` ORDER BY `id` ASC");
+        $stmt->execute();
         $dbRows = $stmt->fetchAll();
         
         // Track filenames and their first occurrence (lowest ID)
@@ -149,19 +164,19 @@ try {
         // Remove duplicates (keep first occurrence, delete rest)
         if (!empty($duplicateIds)) {
             $placeholders = implode(',', array_fill(0, count($duplicateIds), '?'));
-            $deleteDuplicatesStmt = $pdo->prepare("DELETE FROM `picklist` WHERE `id` IN ({$placeholders})");
+            $deleteDuplicatesStmt = $pdo->prepare("DELETE FROM `{$tableName}` WHERE `id` IN ({$placeholders})");
             try {
                 $deleteDuplicatesStmt->execute($duplicateIds);
                 foreach ($duplicateIds as $dupId) {
                     $changes[] = ['action' => 'duplicate_removed', 'id' => $dupId];
                 }
             } catch (PDOException $e) {
-                error_log("Failed to remove duplicates from picklist: " . $e->getMessage());
+                error_log("Failed to remove duplicates from {$tableName}: " . $e->getMessage());
             }
         }
 
-        $insertStmt = $pdo->prepare("INSERT INTO `picklist` (`option_group`, `option_value`, `option_filename`, `option_label`, `sort_order`, `is_active`) VALUES (:option_group, :option_value, :option_filename, '', 0, 1)");
-        $deleteStmt = $pdo->prepare("DELETE FROM `picklist` WHERE `option_group` = :option_group AND `option_filename` = :option_filename");
+        $insertStmt = $pdo->prepare("INSERT INTO `{$tableName}` (`option_value`, `option_filename`, `option_label`, `sort_order`, `is_active`) VALUES (:option_value, :option_filename, '', 0, 1)");
+        $deleteStmt = $pdo->prepare("DELETE FROM `{$tableName}` WHERE `option_filename` = :option_filename");
 
         $errors = [];
         $insertedCount = 0;
@@ -172,14 +187,13 @@ try {
             if (!isset($dbFilenames[$apiFilename])) {
                 try {
                     $insertStmt->execute([
-                        ':option_group' => $optionGroup,
                         ':option_value' => $apiFilename,
                         ':option_filename' => $apiFilename
                     ]);
                     $changes[] = ['action' => 'added', 'filename' => $apiFilename];
                     $insertedCount++;
                 } catch (PDOException $e) {
-                    $errorMsg = "Failed to add filename '{$apiFilename}' to picklist: " . $e->getMessage();
+                    $errorMsg = "Failed to add filename '{$apiFilename}' to {$tableName}: " . $e->getMessage();
                     error_log($errorMsg);
                     $errors[] = $errorMsg;
                 }
@@ -191,13 +205,12 @@ try {
             if (!in_array($dbFilename, $apiFilenames)) {
                 try {
                     $deleteStmt->execute([
-                        ':option_group' => $optionGroup,
                         ':option_filename' => $dbFilename
                     ]);
                     $changes[] = ['action' => 'removed', 'filename' => $dbFilename];
                     $deletedCount++;
                 } catch (PDOException $e) {
-                    $errorMsg = "Failed to remove filename '{$dbFilename}' from picklist: " . $e->getMessage();
+                    $errorMsg = "Failed to remove filename '{$dbFilename}' from {$tableName}: " . $e->getMessage();
                     error_log($errorMsg);
                     $errors[] = $errorMsg;
                 }

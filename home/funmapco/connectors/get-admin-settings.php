@@ -160,25 +160,25 @@ try {
     }
     $response['system_images'] = $systemImages;
     
-    // Fetch system-images from picklist table (basket of available filenames)
+    // Fetch system-images from system_images table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SELECT `option_filename` FROM `picklist` WHERE `option_group` = 'system-image' AND `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
-            $systemImageRows = $stmt->fetchAll();
-            
+        $stmt = $pdo->query("SELECT `option_filename` FROM `system_images` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $systemImageRows = $stmt->fetchAll();
+        
         $systemImagesBasket = [];
-            foreach ($systemImageRows as $row) {
+        foreach ($systemImageRows as $row) {
             if (!empty($row['option_filename'])) {
                 $systemImagesBasket[] = $row['option_filename'];
             }
         }
         $response['system_images_basket'] = $systemImagesBasket;
     } catch (Throwable $systemImagesError) {
-        // If picklist query fails, don't break the whole response
+        // If query fails, don't break the whole response
     }
     
-    // Fetch category-icons from picklist table (basket of available filenames)
+    // Fetch category-icons from category_icons table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SELECT `option_filename` FROM `picklist` WHERE `option_group` = 'category-icon' AND `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $stmt = $pdo->query("SELECT `option_filename` FROM `category_icons` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
         $categoryIconRows = $stmt->fetchAll();
         
         $categoryIconsBasket = [];
@@ -189,32 +189,71 @@ try {
         }
         $response['category_icons_basket'] = $categoryIconsBasket;
     } catch (Throwable $categoryIconsError) {
-        // If picklist query fails, don't break the whole response
+        // If query fails, don't break the whole response
     }
 
     // Fetch picklist data for dropdown settings (currencies, phone prefixes, amenities, etc.)
+    // Query each separate table and combine into the same response format
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'picklist'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `option_filename`, `sort_order` FROM `picklist` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
-            $optionRows = $stmt->fetchAll();
-            
-            $picklist = [];
-            foreach ($optionRows as $row) {
-                $group = $row['option_group'];
-                if (!isset($picklist[$group])) {
-                    $picklist[$group] = [];
+        $picklist = [];
+        
+        // Fetch currencies
+        try {
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $currencyRows = $stmt->fetchAll();
+            $picklist['currency'] = [];
+            foreach ($currencyRows as $row) {
+                // Only include entries with filename (they need flags)
+                if (empty($row['option_filename'])) {
+                    continue;
                 }
-                // Only include entries with filename for phone-prefix and currency groups (they need flags)
-                if (($group === 'phone-prefix' || $group === 'currency') && empty($row['option_filename'])) {
-                    continue; // Skip entries without filenames for these groups
-                }
-                $picklist[$group][] = [
+                $picklist['currency'][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
                     'filename' => $row['option_filename'] ? $row['option_filename'] : null,
                 ];
             }
+        } catch (Throwable $e) {
+            // Table might not exist yet, continue
+        }
+        
+        // Fetch phone-prefixes
+        try {
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `phone_prefixes` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $phoneRows = $stmt->fetchAll();
+            $picklist['phone-prefix'] = [];
+            foreach ($phoneRows as $row) {
+                // Only include entries with filename (they need flags)
+                if (empty($row['option_filename'])) {
+                    continue;
+                }
+                $picklist['phone-prefix'][] = [
+                    'value' => $row['option_value'],
+                    'label' => $row['option_label'],
+                    'filename' => $row['option_filename'] ? $row['option_filename'] : null,
+                ];
+            }
+        } catch (Throwable $e) {
+            // Table might not exist yet, continue
+        }
+        
+        // Fetch amenities
+        try {
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `amenities` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $amenityRows = $stmt->fetchAll();
+            $picklist['amenity'] = [];
+            foreach ($amenityRows as $row) {
+                $picklist['amenity'][] = [
+                    'value' => $row['option_value'],
+                    'label' => $row['option_label'],
+                    'filename' => $row['option_filename'] ? $row['option_filename'] : null,
+                ];
+            }
+        } catch (Throwable $e) {
+            // Table might not exist yet, continue
+        }
+        
+        if (!empty($picklist)) {
             $response['picklist'] = $picklist;
         }
     } catch (Throwable $optionsError) {
