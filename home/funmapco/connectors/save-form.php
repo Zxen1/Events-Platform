@@ -1331,15 +1331,52 @@ function iconFileExists(string $relativePath): bool
     return is_file($fullPath);
 }
 
+/**
+ * Extract just the filename from a full URL or path
+ * Examples:
+ *   "https://cdn.funmap.com/category-icons/whats-on.svg" -> "whats-on.svg"
+ *   "category-icons/whats-on.svg" -> "whats-on.svg"
+ *   "whats-on.svg" -> "whats-on.svg"
+ */
+function extractFilenameFromPath(string $path): string
+{
+    $path = trim($path);
+    if ($path === '') {
+        return '';
+    }
+    
+    // Remove query string and fragment
+    $path = preg_replace('/[?#].*$/', '', $path);
+    
+    // Extract filename (everything after the last slash)
+    $filename = basename($path);
+    
+    // If it's empty or just a slash, return empty
+    if ($filename === '' || $filename === '/' || $filename === '.') {
+        return '';
+    }
+    
+    return $filename;
+}
+
 function deriveIconVariants(string $path): array
 {
-    $clean = sanitizeIconPath($path);
+    // Extract just the filename from the path (database should only store filenames)
+    $filename = extractFilenameFromPath($path);
+    if ($filename === '') {
+        return ['icon' => '', 'marker' => ''];
+    }
+    
+    // Sanitize the filename
+    $clean = sanitizeIconPath($filename);
     if ($clean === '') {
         return ['icon' => '', 'marker' => ''];
     }
+    
     $base = upgradeIconBasePath($clean);
     $normalized = normalizeMarkerIconPath($base);
     // Use same path for both icon and marker - resize in CSS where needed
+    // Return just the filename (not full URL) for database storage
     return ['icon' => $normalized, 'marker' => $normalized];
 }
 

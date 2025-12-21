@@ -853,9 +853,28 @@ function resolveIconPathWithFolder(string $iconPath, string $adminFolder): strin
         return '';
     }
     
-    // If already a full URL, use as-is
+    // Fix malformed URLs FIRST (e.g., "https:/cdn.funmap.com" -> "https://cdn.funmap.com")
+    // Check for "https:/" or "http:/" (one slash) at the start
+    if (strpos($iconPath, 'https:/') === 0 && strpos($iconPath, 'https://') !== 0) {
+        // Has one slash, fix to two slashes
+        $iconPath = 'https://' . substr($iconPath, 7);
+        return $iconPath;
+    }
+    if (strpos($iconPath, 'http:/') === 0 && strpos($iconPath, 'http://') !== 0) {
+        // Has one slash, fix to two slashes
+        $iconPath = 'http://' . substr($iconPath, 6);
+        return $iconPath;
+    }
+    
+    // If already a full URL (with proper protocol), use as-is
     if (strpos($iconPath, 'http://') === 0 || strpos($iconPath, 'https://') === 0) {
         return $iconPath;
+    }
+    
+    // If icon path looks like a domain (starts with hostname), add https://
+    // This handles cases where the database has "cdn.funmap.com/category-icons/whats-on.svg"
+    if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}/', $iconPath)) {
+        return 'https://' . $iconPath;
     }
     
     // If admin folder not set, return original path
@@ -865,19 +884,29 @@ function resolveIconPathWithFolder(string $iconPath, string $adminFolder): strin
     
     // If it's just a filename, prepend admin folder
     if (strpos($iconPath, '/') === false && strpos($iconPath, '\\') === false) {
-        $adminFolder = rtrim($adminFolder, '/');
+        $adminFolder = trim($adminFolder);
         
         // If admin folder is a full URL, use it directly
         if (strpos($adminFolder, 'http://') === 0 || strpos($adminFolder, 'https://') === 0) {
+            $adminFolder = rtrim($adminFolder, '/');
+            return $adminFolder . '/' . $iconPath;
+        }
+        
+        // Fix malformed URLs in admin folder
+        if (preg_match('/^https?:\/(?!\/)/', $adminFolder)) {
+            $adminFolder = preg_replace('/^https?:\//', 'https://', $adminFolder);
+            $adminFolder = rtrim($adminFolder, '/');
             return $adminFolder . '/' . $iconPath;
         }
         
         // If admin folder looks like a domain (starts with a hostname), add https://
         if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}/', $adminFolder)) {
+            $adminFolder = rtrim($adminFolder, '/');
             return 'https://' . $adminFolder . '/' . $iconPath;
         }
         
         // Otherwise treat as relative path
+        $adminFolder = rtrim($adminFolder, '/');
         return $adminFolder . '/' . $iconPath;
     }
     
