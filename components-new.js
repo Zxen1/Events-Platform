@@ -2896,11 +2896,7 @@ const IconPickerComponent = (function(){
         folderPath = folderPath || iconFolder;
         if (!folderPath) return Promise.resolve([]);
         
-        // Check if this is a full URL (starts with http:// or https://)
-        var isFullUrl = folderPath.indexOf('http://') === 0 || folderPath.indexOf('https://') === 0;
-        
-        // Both local and online folders use the same endpoint
-        // The server will handle remote URLs appropriately
+        // Use existing connector (works for both local folders and Bunny CDN)
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
@@ -2969,6 +2965,15 @@ const IconPickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         
+        // Load icons and set button if current icon exists (matches SystemImagePickerComponent pattern)
+        var loadPromise = iconFolder ? Promise.resolve() : loadFolderFromSettings();
+        loadPromise.then(function() {
+            return loadIconsFromFolder();
+        }).catch(function(err) {
+            console.warn('Failed to preload icons:', err);
+            return [];
+        });
+        
         // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
@@ -3016,6 +3021,15 @@ const IconPickerComponent = (function(){
                             optionsDiv.appendChild(option);
                         });
                     }
+                    menu.classList.add('open');
+                }).catch(function(err) {
+                    // Ensure menu opens even if load fails
+                    console.error('Failed to load icons:', err);
+                    optionsDiv.innerHTML = '';
+                    var msg = document.createElement('div');
+                    msg.className = 'component-iconpicker-error';
+                    msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
+                    optionsDiv.appendChild(msg);
                     menu.classList.add('open');
                 });
             }
@@ -3740,11 +3754,7 @@ const SystemImagePickerComponent = (function(){
         folderPath = folderPath || imageFolder;
         if (!folderPath) return Promise.resolve([]);
         
-        // Check if this is a full URL (starts with http:// or https://)
-        var isFullUrl = folderPath.indexOf('http://') === 0 || folderPath.indexOf('https://') === 0;
-        
-        // Both local and online folders use the same endpoint
-        // The server will handle remote URLs appropriately
+        // Use existing connector (works for both local folders and Bunny CDN)
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
