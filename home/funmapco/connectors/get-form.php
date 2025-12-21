@@ -866,6 +866,18 @@ function resolveIconPathWithFolder(string $iconPath, string $adminFolder): strin
     // If it's just a filename, prepend admin folder
     if (strpos($iconPath, '/') === false && strpos($iconPath, '\\') === false) {
         $adminFolder = rtrim($adminFolder, '/');
+        
+        // If admin folder is a full URL, use it directly
+        if (strpos($adminFolder, 'http://') === 0 || strpos($adminFolder, 'https://') === 0) {
+            return $adminFolder . '/' . $iconPath;
+        }
+        
+        // If admin folder looks like a domain (starts with a hostname), add https://
+        if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-\.]*\.[a-zA-Z]{2,}/', $adminFolder)) {
+            return 'https://' . $adminFolder . '/' . $iconPath;
+        }
+        
+        // Otherwise treat as relative path
         return $adminFolder . '/' . $iconPath;
     }
     
