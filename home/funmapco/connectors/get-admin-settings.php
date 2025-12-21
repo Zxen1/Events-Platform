@@ -205,10 +205,14 @@ try {
                 if (!isset($picklist[$group])) {
                     $picklist[$group] = [];
                 }
+                // Only include entries with filename for phone-prefix and currency groups (they need flags)
+                if (($group === 'phone-prefix' || $group === 'currency') && empty($row['option_filename'])) {
+                    continue; // Skip entries without filenames for these groups
+                }
                 $picklist[$group][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
-                    'filename' => $row['option_filename'],
+                    'filename' => $row['option_filename'] ? $row['option_filename'] : null,
                 ];
             }
             $response['picklist'] = $picklist;

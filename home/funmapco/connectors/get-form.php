@@ -842,36 +842,46 @@ function fetchCheckoutOptions(PDO $pdo): array
 }
 
 /**
- * Resolve icon path using admin folder setting
- * @param string $iconPath - Path from database (may be filename, relative path, or full URL)
+ * Resolve icon filename using admin folder setting
+ * @param string $iconFilename - Filename from database (should be just filename, but handles legacy full URLs)
  * @param string $adminFolder - Folder path from admin settings
- * @return string - Resolved full path
+ * @return string - Resolved full URL
  */
-function resolveIconPathWithFolder(string $iconPath, string $adminFolder): string {
-    $iconPath = trim($iconPath);
-    if ($iconPath === '') {
+function resolveIconFilenameWithFolder(string $iconFilename, string $adminFolder): string {
+    $iconFilename = trim($iconFilename);
+    if ($iconFilename === '') {
         return '';
     }
     
-    // If already a full URL (with proper protocol), use as-is
-    if (strpos($iconPath, 'http://') === 0 || strpos($iconPath, 'https://') === 0) {
-        return $iconPath;
+    // If already a full URL (with proper or malformed protocol), extract filename first
+    if (strpos($iconFilename, 'http://') === 0 || strpos($iconFilename, 'https://') === 0 || strpos($iconFilename, 'http:/') === 0 || strpos($iconFilename, 'https:/') === 0) {
+        // Legacy data - extract just the filename
+        // Fix malformed URLs first (https:/ -> https://)
+        if (strpos($iconFilename, 'https:/') === 0 && strpos($iconFilename, 'https://') !== 0) {
+            $iconFilename = 'https://' . substr($iconFilename, 7);
+        } elseif (strpos($iconFilename, 'http:/') === 0 && strpos($iconFilename, 'http://') !== 0) {
+            $iconFilename = 'http://' . substr($iconFilename, 6);
+        }
+        $iconFilename = basename(parse_url($iconFilename, PHP_URL_PATH));
+        if ($iconFilename === '') {
+            return '';
+        }
     }
     
-    // If admin folder not set, return original path
+    // If admin folder not set, return empty (can't resolve without folder)
     if ($adminFolder === '') {
-        return $iconPath;
+        return '';
     }
     
-    // If it's just a filename (no slashes), prepend admin folder
-    if (strpos($iconPath, '/') === false && strpos($iconPath, '\\') === false) {
-        $adminFolder = trim($adminFolder);
-        $adminFolder = rtrim($adminFolder, '/');
-        return $adminFolder . '/' . $iconPath;
+    // Extract filename if it contains slashes (legacy data)
+    if (strpos($iconFilename, '/') !== false || strpos($iconFilename, '\\') !== false) {
+        $iconFilename = basename($iconFilename);
     }
     
-    // Otherwise return as-is (might be a relative path the admin wants to keep)
-    return $iconPath;
+    // Combine admin folder with filename
+    $adminFolder = trim($adminFolder);
+    $adminFolder = rtrim($adminFolder, '/');
+    return $adminFolder . '/' . $iconFilename;
 }
 
 function buildFormData(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $fieldsets = [], string $iconFolder = ''): array
@@ -907,23 +917,23 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
         ];
 
         $iconHtml = '';
-        $iconPath = '';
+        $iconUrl = '';
         if (isset($category['icon_path']) && is_string($category['icon_path'])) {
-            $rawIconPath = trim($category['icon_path']);
-            if ($rawIconPath !== '') {
-                // Resolve icon path using admin folder setting
-                $iconPath = resolveIconPathWithFolder($rawIconPath, $iconFolder);
-                if ($iconPath !== '') {
-                    $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
-                    $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
+            $iconFilename = trim($category['icon_path']);
+            if ($iconFilename !== '') {
+                // Resolve icon filename using admin folder setting
+                $iconUrl = resolveIconFilenameWithFolder($iconFilename, $iconFolder);
+                if ($iconUrl !== '') {
+                    $safeIconUrl = htmlspecialchars($iconUrl, ENT_QUOTES, 'UTF-8');
+                    $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconUrl);
                 }
             }
         }
         if ($iconHtml !== '') {
             $categoryIcons[$categoryName] = $iconHtml;
         }
-        if ($iconPath !== '') {
-            $categoryIconPaths[$categoryName] = $iconPath;
+        if ($iconUrl !== '') {
+            $categoryIconPaths[$categoryName] = $iconUrl;
         }
 
         // Use resolved icon path for marker
@@ -1249,23 +1259,23 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
         $subcategoryFieldsetNames[$sub['name']] = $fieldsetNames;
 
         $iconHtml = '';
-        $iconPath = '';
+        $iconUrl = '';
         if (isset($sub['icon_path']) && is_string($sub['icon_path'])) {
-            $rawIconPath = trim($sub['icon_path']);
-            if ($rawIconPath !== '') {
-                // Resolve icon path using admin folder setting
-                $iconPath = resolveIconPathWithFolder($rawIconPath, $iconFolder);
-                if ($iconPath !== '') {
-                    $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
-                    $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
+            $iconFilename = trim($sub['icon_path']);
+            if ($iconFilename !== '') {
+                // Resolve icon filename using admin folder setting
+                $iconUrl = resolveIconFilenameWithFolder($iconFilename, $iconFolder);
+                if ($iconUrl !== '') {
+                    $safeIconUrl = htmlspecialchars($iconUrl, ENT_QUOTES, 'UTF-8');
+                    $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconUrl);
                 }
             }
         }
         if ($iconHtml !== '') {
             $subcategoryIcons[$sub['name']] = $iconHtml;
         }
-        if ($iconPath !== '') {
-            $subcategoryIconPaths[$sub['name']] = $iconPath;
+        if ($iconUrl !== '') {
+            $subcategoryIconPaths[$sub['name']] = $iconUrl;
         }
 
         // Use resolved icon path for marker
