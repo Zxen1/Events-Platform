@@ -106,7 +106,6 @@ const HeaderModule = (function() {
             filterIcon.style.webkitMaskPosition = 'center';
             filterIcon.style.maskPosition = 'center';
             filterIcon.style.backgroundColor = '#ffffff';
-            filterIcon.src = '';
         }
         
         // Mode switch icons
