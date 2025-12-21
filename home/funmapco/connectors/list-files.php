@@ -38,12 +38,13 @@ try {
             return;
         }
 
-        $tableName = $data['table']; // 'system_images' or 'category_icons'
-        if ($tableName !== 'system_images' && $tableName !== 'category_icons') {
+        $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'flag'
+        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'flag'];
+        if (!in_array($optionGroup, $validGroups)) {
             http_response_code(400);
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid table name. Must be system_images or category_icons',
+                'message' => 'Invalid option_group. Must be one of: ' . implode(', ', $validGroups),
             ]);
             return;
         }
@@ -103,16 +104,6 @@ try {
             return;
         }
 
-        $stmt = $pdo->query("SHOW TABLES LIKE '{$tableName}'");
-        if ($stmt->rowCount() === 0) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => "{$tableName} table does not exist",
-            ]);
-            return;
-        }
-
         $apiFilenames = $data['filenames'];
         $changes = [];
 
@@ -125,8 +116,9 @@ try {
         }
         $apiFilenames = array_unique($normalizedApiFilenames); // Remove duplicates from API list
 
-        // Get current database filenames with their IDs
-        $stmt = $pdo->query("SELECT `id`, `filename` FROM `{$tableName}` ORDER BY `id` ASC");
+        // Get current database filenames with their IDs from picklist table
+        $stmt = $pdo->prepare("SELECT `id`, `option_filename` FROM `picklist` WHERE `option_group` = :option_group ORDER BY `id` ASC");
+        $stmt->execute([':option_group' => $optionGroup]);
         $dbRows = $stmt->fetchAll();
         
         // Track filenames and their first occurrence (lowest ID)
@@ -134,7 +126,9 @@ try {
         $duplicateIds = [];
         
         foreach ($dbRows as $row) {
-            $filename = $row['filename'];
+            $filename = $row['option_filename'];
+            if (empty($filename)) continue;
+            
             if (!isset($dbFilenames[$filename])) {
                 // First occurrence - keep this one
                 $dbFilenames[$filename] = $row['id'];
@@ -147,30 +141,32 @@ try {
         // Remove duplicates (keep first occurrence, delete rest)
         if (!empty($duplicateIds)) {
             $placeholders = implode(',', array_fill(0, count($duplicateIds), '?'));
-            $deleteDuplicatesStmt = $pdo->prepare("DELETE FROM `{$tableName}` WHERE `id` IN ({$placeholders})");
+            $deleteDuplicatesStmt = $pdo->prepare("DELETE FROM `picklist` WHERE `id` IN ({$placeholders})");
             try {
                 $deleteDuplicatesStmt->execute($duplicateIds);
                 foreach ($duplicateIds as $dupId) {
                     $changes[] = ['action' => 'duplicate_removed', 'id' => $dupId];
                 }
             } catch (PDOException $e) {
-                error_log("Failed to remove duplicates from {$tableName}: " . $e->getMessage());
+                error_log("Failed to remove duplicates from picklist: " . $e->getMessage());
             }
         }
 
-        $insertStmt = $pdo->prepare("INSERT INTO `{$tableName}` (`filename`) VALUES (:filename)");
-        $deleteStmt = $pdo->prepare("DELETE FROM `{$tableName}` WHERE `filename` = :filename");
+        $insertStmt = $pdo->prepare("INSERT INTO `picklist` (`option_group`, `option_value`, `option_filename`, `option_label`, `sort_order`, `is_active`) VALUES (:option_group, :option_value, :option_filename, NULL, 0, 1)");
+        $deleteStmt = $pdo->prepare("DELETE FROM `picklist` WHERE `option_group` = :option_group AND `option_filename` = :option_filename");
 
         // Add new files from API (not in database)
         foreach ($apiFilenames as $apiFilename) {
             if (!isset($dbFilenames[$apiFilename])) {
                 try {
-                    $insertStmt->execute([':filename' => $apiFilename]);
+                    $insertStmt->execute([
+                        ':option_group' => $optionGroup,
+                        ':option_value' => $apiFilename,
+                        ':option_filename' => $apiFilename
+                    ]);
                     $changes[] = ['action' => 'added', 'filename' => $apiFilename];
                 } catch (PDOException $e) {
-                    // If duplicate constraint exists, this will fail silently (which is fine)
-                    // If no constraint, we'll catch it in the next sync
-                    error_log("Failed to add filename '{$apiFilename}' to {$tableName}: " . $e->getMessage());
+                    error_log("Failed to add filename '{$apiFilename}' to picklist: " . $e->getMessage());
                 }
             }
         }
@@ -179,10 +175,13 @@ try {
         foreach ($dbFilenames as $dbFilename => $dbId) {
             if (!in_array($dbFilename, $apiFilenames)) {
                 try {
-                    $deleteStmt->execute([':filename' => $dbFilename]);
+                    $deleteStmt->execute([
+                        ':option_group' => $optionGroup,
+                        ':option_filename' => $dbFilename
+                    ]);
                     $changes[] = ['action' => 'removed', 'filename' => $dbFilename];
                 } catch (PDOException $e) {
-                    error_log("Failed to remove filename '{$dbFilename}' from {$tableName}: " . $e->getMessage());
+                    error_log("Failed to remove filename '{$dbFilename}' from picklist: " . $e->getMessage());
                 }
             }
         }

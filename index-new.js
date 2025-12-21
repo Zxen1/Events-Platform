@@ -5,6 +5,98 @@
    Minimal foundation for module communication and initialization.
    Utilities added here only when needed by 2+ modules.
    
+   ============================================================================
+   IMAGE SYNC SYSTEM - HOW IT WORKS
+   ============================================================================
+   
+   The image sync system ensures System Images and Category Icons menus load
+   instantly while keeping database "baskets" synced with Bunny CDN (or any online
+   storage). The system uses a "basket" approach: database tables store all
+   available filenames for instant menu loading, then sync in the background.
+   
+   FILES INVOLVED:
+   
+   1. components-new.js
+      - IconPickerComponent: Category icon picker menu
+      - SystemImagePickerComponent: System image picker menu
+      - Both components:
+        * Load folder paths and basket data from get-admin-settings.php
+        * Display database basket images instantly when menu opens
+        * Fetch from API in background (list-files.php GET)
+        * Trigger sync after menu loads (list-files.php POST)
+        * Use localStorage to ensure sync runs only once per session
+   
+   2. home/funmapco/connectors/list-files.php
+      - GET request: Lists filenames from local folders or Bunny CDN Storage API
+      - POST request: Syncs database basket tables with API results
+      - Sync process:
+        * Detects and removes duplicate filenames (keeps lowest ID)
+        * Adds new files from API that don't exist in database
+        * Removes files from database that no longer exist in API
+        * Handles renamed files (old removed, new added)
+        * Returns changes array for frontend menu updates
+   
+   3. home/funmapco/connectors/get-admin-settings.php
+      - Fetches admin_settings table (folder paths, system image assignments)
+      - Fetches system_images table (basket of available system image filenames)
+      - Fetches category_icons table (basket of available category icon filenames)
+      - Returns all data needed for instant menu loading
+   
+   4. home/funmapco/connectors/save-admin-settings.php
+      - Saves system image assignments directly to admin_settings table
+      - System image assignments stored as: small_logo, big_logo, favicon, etc.
+   
+   5. Database Tables:
+      - admin_settings: Stores folder paths (folder_system_images, folder_category_icons)
+                        and system image assignments (small_logo, big_logo, etc.)
+      - system_images: Basket table - stores all available system image filenames
+      - category_icons: Basket table - stores all available category icon filenames
+      - categories.icon_path: Source of truth for category icon assignments
+      - subcategories.icon_path: Source of truth for subcategory icon assignments
+   
+   HOW IT LINKS TOGETHER:
+   
+   1. Page Load:
+      - get-admin-settings.php loads folder paths and basket data
+      - Components cache basket data for instant menu loading
+      - NO API calls at startup (fast page load)
+   
+   2. Menu Opens (System Images or Category Icons):
+      - Menu opens instantly, displaying images from database basket
+      - Menu is fully interactive immediately
+      - API fetch happens in background (list-files.php GET)
+      - New images from API are appended to menu
+   
+   3. After Menu Loads:
+      - Sync runs automatically (list-files.php POST)
+      - localStorage key checked: 'system_images_synced_[folderPath]' or
+                                  'category_icons_synced_[folderPath]'
+      - If already synced this session, skip (prevents multiple syncs)
+      - If not synced, sync runs and localStorage marked as synced
+      - If sync detects changes, menu updates with new/removed files
+   
+   4. Sync Process (list-files.php POST):
+      - Compares API filenames with database basket
+      - Removes duplicates (keeps lowest ID)
+      - Adds new files from API
+      - Removes files deleted from API
+      - Returns changes array
+   
+   LOCALSTORAGE USAGE:
+   - Keys: 'system_images_synced_[folderPath]' and 'category_icons_synced_[folderPath]'
+   - Value: 'true' (string) when sync has completed for this session
+   - Purpose: Ensures sync runs only once per session per folder path
+   - Cleared: When browser localStorage is cleared (allows re-sync)
+   
+   KEY PRINCIPLES:
+   - Menus load instantly from database baskets (no API delay)
+   - Sync happens after menu loads (non-blocking background task)
+   - Sync runs only once per session (localStorage prevents duplicates)
+   - Database baskets are source of truth for available filenames
+   - Actual assignments stored in admin_settings (system images) or
+     categories/subcategories.icon_path (category icons)
+   - Sync handles duplicates, new files, deleted files, and renamed files
+   
    ============================================================================ */
 
 const App = (function() {

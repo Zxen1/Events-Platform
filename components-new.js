@@ -2343,12 +2343,9 @@ const CurrencyComponent = (function(){
     var dataLoaded = false;
     
     function parseCurrencyValue(optionValue) {
-        if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, currencyCode: optionValue || '' };
-        var parts = optionValue.trim().split(' ');
-        if (parts.length >= 2) {
-            return { countryCode: parts[0].toLowerCase(), currencyCode: parts.slice(1).join(' ') };
-        }
-        return { countryCode: null, currencyCode: optionValue };
+        // No longer needs parsing - option_value is just the currency code
+        // Country code comes from option_filename
+        return { countryCode: null, currencyCode: optionValue || '' };
     }
     
     function getData() {
@@ -2402,13 +2399,12 @@ const CurrencyComponent = (function(){
         // Find and set value
         function setValue(code) {
             var found = currencyData.find(function(item) {
-                return item.value.substring(3) === code;
+                return item.value === code;
             });
             if (found) {
-                var countryCode = found.value.substring(0, 2);
-                var currencyCode = found.value.substring(3);
-                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
-                btnInput.value = currencyCode;
+                var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                btnImg.src = countryCode ? window.App.getImageUrl('flags', countryCode + '.svg') : '';
+                btnInput.value = found.value;
                 selectedCode = code;
             }
         }
@@ -2424,22 +2420,21 @@ const CurrencyComponent = (function(){
 
         // Build options
         currencyData.forEach(function(item) {
-            var countryCode = item.value.substring(0, 2);
-            var currencyCode = item.value.substring(3);
-            var displayText = currencyCode + ' - ' + item.label;
+            var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
+            var displayText = item.value + ' - ' + item.label;
 
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
+            var flagUrl = countryCode ? window.App.getImageUrl('flags', countryCode + '.svg') : '';
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
-                btnInput.value = currencyCode;
-                selectedCode = currencyCode;
+                btnImg.src = flagUrl;
+                btnInput.value = item.value;
+                selectedCode = item.value;
                 menu.classList.remove('open');
                 filterOptions('');
-                onSelect(currencyCode, item.label, countryCode);
+                onSelect(item.value, item.label, countryCode);
             };
             opts.appendChild(op);
 
@@ -2537,13 +2532,12 @@ const CurrencyComponent = (function(){
         // Find and set initial value
         function setValue(code) {
             var found = currencyData.find(function(item) {
-                return item.value.substring(3) === code;
+                return item.value === code;
             });
             if (found) {
-                var countryCode = found.value.substring(0, 2);
-                var currencyCode = found.value.substring(3);
-                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
-                btnInput.value = currencyCode + ' - ' + found.label;
+                var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                btnImg.src = countryCode ? window.App.getImageUrl('flags', countryCode + '.svg') : '';
+                btnInput.value = found.value + ' - ' + found.label;
                 selectedCode = code;
             }
         }
@@ -2560,22 +2554,21 @@ const CurrencyComponent = (function(){
         // Build options
         var currencies = currencyData;
         currencies.forEach(function(item) {
-            var countryCode = item.value.substring(0, 2);
-            var currencyCode = item.value.substring(3);
-            var displayText = currencyCode + ' - ' + item.label;
+            var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
+            var displayText = item.value + ' - ' + item.label;
             
             var op = document.createElement('div');
             op.className = 'admin-currency-option';
-            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
+            var flagUrl = countryCode ? window.App.getImageUrl('flags', countryCode + '.svg') : '';
             op.innerHTML = '<img class="admin-currency-option-flag" src="' + flagUrl + '" alt=""><span class="admin-currency-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
+                btnImg.src = flagUrl;
                 btnInput.value = displayText;
-                selectedCode = currencyCode;
+                selectedCode = item.value;
                 menu.classList.remove('open');
                 filterOptions(''); // Reset filter
-                onSelect(currencyCode, item.label, countryCode);
+                onSelect(item.value, item.label, countryCode);
             };
             opts.appendChild(op);
             
@@ -2673,12 +2666,9 @@ const PhonePrefixComponent = (function(){
     var dataLoaded = false;
     
     function parsePrefixValue(optionValue) {
-        if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, prefix: optionValue || '' };
-        var parts = optionValue.trim().split(' ');
-        if (parts.length >= 2) {
-            return { countryCode: parts[0].toLowerCase(), prefix: parts.slice(1).join(' ') };
-        }
-        return { countryCode: null, prefix: optionValue };
+        // No longer needs parsing - option_value is just the prefix
+        // Country code comes from option_filename
+        return { countryCode: null, prefix: optionValue || '' };
     }
     
     function getData() {
@@ -2732,13 +2722,12 @@ const PhonePrefixComponent = (function(){
         // Find and set value
         function setValue(prefix) {
             var found = prefixData.find(function(item) {
-                return item.value.substring(3) === prefix;
+                return item.value === prefix;
             });
             if (found) {
-                var countryCode = found.value.substring(0, 2);
-                var prefixCode = found.value.substring(3);
-                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
-                btnInput.value = prefixCode;
+                var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                btnImg.src = countryCode ? window.App.getImageUrl('flags', countryCode + '.svg') : '';
+                btnInput.value = found.value;
                 selectedPrefix = prefix;
             }
         }
@@ -2754,22 +2743,21 @@ const PhonePrefixComponent = (function(){
 
         // Build options
         prefixData.forEach(function(item) {
-            var countryCode = item.value.substring(0, 2);
-            var prefix = item.value.substring(3);
-            var displayText = prefix + ' - ' + item.label;
+            var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
+            var displayText = item.value + ' - ' + item.label;
 
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
+            var flagUrl = countryCode ? window.App.getImageUrl('flags', countryCode + '.svg') : '';
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
-                btnInput.value = prefix;
-                selectedPrefix = prefix;
+                btnImg.src = flagUrl;
+                btnInput.value = item.value;
+                selectedPrefix = item.value;
                 menu.classList.remove('open');
                 filterOptions('');
-                onSelect(prefix, item.label, countryCode);
+                onSelect(item.value, item.label, countryCode);
             };
             opts.appendChild(op);
 
@@ -2988,7 +2976,7 @@ const IconPickerComponent = (function(){
                             },
                             body: JSON.stringify({
                                 filenames: apiFilenames,
-                                table: 'category_icons'
+                                option_group: 'category-icon'
                             })
                         })
                         .then(function(r) { return r.json(); })
@@ -3090,6 +3078,8 @@ const IconPickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         
+        // NO PRELOADING - menu only loads when opened (admin only, doesn't affect page load speed)
+        
         // Render icon options
         function renderIconOptions(iconList, isInitial) {
             optionsDiv.innerHTML = '';
@@ -3130,14 +3120,7 @@ const IconPickerComponent = (function(){
             }
         }
         
-        // Load icons and set button if current icon exists (matches SystemImagePickerComponent pattern)
-        var loadPromise = iconFolder ? Promise.resolve() : loadFolderFromSettings();
-        loadPromise.then(function() {
-            return loadIconsFromFolder();
-        }).catch(function(err) {
-            console.warn('Failed to preload icons:', err);
-            return [];
-        });
+        // NO PRELOADING - menu only loads when opened (admin only, doesn't affect page load speed)
         
         // Toggle menu
         button.onclick = function(e) {
@@ -3990,7 +3973,7 @@ const SystemImagePickerComponent = (function(){
                             },
                             body: JSON.stringify({
                                 filenames: apiFilenames,
-                                table: 'system_images'
+                                option_group: 'system-image'
                             })
                         })
                         .then(function(r) { return r.json(); })
@@ -4088,32 +4071,16 @@ const SystemImagePickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         
-        // Load images and set button if database value exists
+        // Set button if database value exists (NO API CALL - just construct URL from folder + filename)
         // Ensure folder and system_images are loaded from settings if not already set
         var loadPromise = (imageFolder && systemImagesData) ? Promise.resolve() : loadFolderFromSettings();
         loadPromise.then(function() {
-            // Get database images for button display
-            var dbImages = getDatabaseImages(imageFolder);
-            if (dbImages.length > 0) {
-                return Promise.resolve(dbImages);
-            }
-            // If no database images, try API (but this should be instant from cache if available)
-            return loadImagesFromFolder();
-        }).then(function(imageList) {
             if (databaseValue) {
                 var databaseFilename = getFilename(databaseValue);
                 var fullImageUrl = null;
                 
-                if (imageList.length > 0) {
-                    // Local folder - find matching full path in imageList
-                    var matchingImage = imageList.find(function(imgPath) {
-                        return getFilename(imgPath) === databaseFilename;
-                    });
-                    if (matchingImage) {
-                        fullImageUrl = matchingImage;
-                    }
-                } else if (imageFolder) {
-                    // Online folder or empty list - construct URL from folder + filename
+                if (imageFolder) {
+                    // Construct URL from folder + filename (no API call needed for button display)
                     var folder = imageFolder.endsWith('/') ? imageFolder : imageFolder + '/';
                     fullImageUrl = folder + databaseFilename;
                 }

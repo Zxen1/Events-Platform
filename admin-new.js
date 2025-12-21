@@ -424,6 +424,88 @@ const AdminModule = (function() {
         
         // Update header button
         App.emit('admin:opened');
+        
+        // Sync all picklists from Bunny CDN (1.5 second delay, background, once per session)
+        setTimeout(function() {
+            syncAllPicklists();
+        }, 1500);
+    }
+    
+    // Sync all picklist types from Bunny CDN (background, once per session)
+    function syncAllPicklists() {
+        var syncKey = 'picklists_synced';
+        var alreadySynced = localStorage.getItem(syncKey) === 'true';
+        
+        if (alreadySynced) {
+            return; // Already synced this session
+        }
+        
+        // Get folder paths from admin settings
+        fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (!res.settings) return;
+                
+                var foldersToSync = [
+                    { folder: res.settings.folder_category_icons, option_group: 'category-icon' },
+                    { folder: res.settings.folder_system_images, option_group: 'system-image' },
+                    { folder: res.settings.folder_flags, option_group: 'flag' },
+                    { folder: res.settings.folder_amenities, option_group: 'amenity' }
+                ];
+                
+                // Sync each folder (non-blocking, parallel)
+                var syncPromises = [];
+                foldersToSync.forEach(function(item) {
+                    if (!item.folder) return;
+                    
+                    // Check if this specific folder has been synced
+                    var folderSyncKey = 'picklist_synced_' + item.option_group + '_' + item.folder;
+                    var folderSynced = localStorage.getItem(folderSyncKey) === 'true';
+                    
+                    if (!folderSynced) {
+                        // Fetch file list from Bunny CDN
+                        var syncPromise = fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(item.folder))
+                            .then(function(r) { return r.json(); })
+                            .then(function(fileRes) {
+                                if (fileRes.success && Array.isArray(fileRes.icons) && fileRes.icons.length > 0) {
+                                    // Sync to picklist table
+                                    return fetch('/gateway.php?action=list-files', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({
+                                            filenames: fileRes.icons,
+                                            option_group: item.option_group
+                                        })
+                                    })
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(syncRes) {
+                                        if (syncRes.success) {
+                                            localStorage.setItem(folderSyncKey, 'true');
+                                        }
+                                    })
+                                    .catch(function(err) {
+                                        console.warn('[Admin] Failed to sync ' + item.option_group + ':', err);
+                                    });
+                                }
+                            })
+                            .catch(function(err) {
+                                console.warn('[Admin] Failed to fetch ' + item.option_group + ' files:', err);
+                            });
+                        
+                        syncPromises.push(syncPromise);
+                    }
+                });
+                
+                // Mark as synced when all complete
+                Promise.all(syncPromises).then(function() {
+                    localStorage.setItem(syncKey, 'true');
+                });
+            })
+            .catch(function(err) {
+                console.warn('[Admin] Failed to load admin settings for sync:', err);
+            });
     }
 
     function closePanel() {

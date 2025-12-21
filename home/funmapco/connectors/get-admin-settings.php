@@ -160,45 +160,43 @@ try {
     }
     $response['system_images'] = $systemImages;
     
-    // Also fetch system_images table data (basket of available filenames)
+    // Fetch system-images from picklist table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'system_images'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `filename` FROM `system_images` ORDER BY `filename` ASC');
-            $systemImageRows = $stmt->fetchAll();
-            
-            $systemImagesBasket = [];
-            foreach ($systemImageRows as $row) {
-                $systemImagesBasket[] = $row['filename'];
+        $stmt = $pdo->query("SELECT `option_filename` FROM `picklist` WHERE `option_group` = 'system-image' AND `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $systemImageRows = $stmt->fetchAll();
+        
+        $systemImagesBasket = [];
+        foreach ($systemImageRows as $row) {
+            if (!empty($row['option_filename'])) {
+                $systemImagesBasket[] = $row['option_filename'];
             }
-            $response['system_images_basket'] = $systemImagesBasket;
         }
+        $response['system_images_basket'] = $systemImagesBasket;
     } catch (Throwable $systemImagesError) {
-        // If system_images table fails, don't break the whole response
+        // If picklist query fails, don't break the whole response
     }
     
-    // Also fetch category_icons table data (basket of available filenames)
+    // Fetch category-icons from picklist table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'category_icons'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `filename` FROM `category_icons` ORDER BY `filename` ASC');
-            $categoryIconRows = $stmt->fetchAll();
-            
-            $categoryIconsBasket = [];
-            foreach ($categoryIconRows as $row) {
-                $categoryIconsBasket[] = $row['filename'];
+        $stmt = $pdo->query("SELECT `option_filename` FROM `picklist` WHERE `option_group` = 'category-icon' AND `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $categoryIconRows = $stmt->fetchAll();
+        
+        $categoryIconsBasket = [];
+        foreach ($categoryIconRows as $row) {
+            if (!empty($row['option_filename'])) {
+                $categoryIconsBasket[] = $row['option_filename'];
             }
-            $response['category_icons_basket'] = $categoryIconsBasket;
         }
+        $response['category_icons_basket'] = $categoryIconsBasket;
     } catch (Throwable $categoryIconsError) {
-        // If category_icons table fails, don't break the whole response
+        // If picklist query fails, don't break the whole response
     }
 
     // Fetch picklist data for dropdown settings (currencies, phone prefixes, amenities, etc.)
     try {
         $stmt = $pdo->query("SHOW TABLES LIKE 'picklist'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `sort_order` FROM `picklist` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_group`, `option_value`, `option_label`, `option_filename`, `sort_order` FROM `picklist` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $optionRows = $stmt->fetchAll();
             
             $picklist = [];
@@ -210,6 +208,7 @@ try {
                 $picklist[$group][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
+                    'filename' => $row['option_filename'],
                 ];
             }
             $response['picklist'] = $picklist;
