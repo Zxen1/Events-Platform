@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
 
+// Enable error reporting for debugging (remove in production if needed)
+error_reporting(E_ALL);
+ini_set('display_errors', '0'); // Don't display errors, but log them
+
 header('Content-Type: application/json');
 
 try {
@@ -116,7 +120,7 @@ try {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Bunny Storage API key not configured. Please set storage_api_key in Admin Settings.',
+                'message' => 'Bunny Storage Zone Password (Read-Only) not configured. Please set storage_api_key in Admin Settings.',
             ]);
             return;
         }

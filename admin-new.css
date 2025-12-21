@@ -2103,6 +2103,7 @@
 /* Settings Containers */
 .admin-settings-general-container,
 .admin-settings-folders-container,
+.admin-settings-api-container,
 .admin-checkout-paypal-container,
 .admin-checkout-options-container {
   background: rgba(0, 0, 0, 0.2);
