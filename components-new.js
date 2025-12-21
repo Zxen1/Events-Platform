@@ -2380,7 +2380,7 @@ const PhonePrefixComponent = (function(){
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var initialValue = options.initialValue || null;
-        var selectedPrefix = initialValue;
+        var selectedCode = initialValue;
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
@@ -2396,16 +2396,15 @@ const PhonePrefixComponent = (function(){
         var allOptions = [];
 
         // Find and set value
-        function setValue(prefix) {
+        function setValue(code) {
             var found = prefixData.find(function(item) {
-                return item.value === prefix;
+                return item.value === code;
             });
             if (found) {
-                // Extract country code from filename (remove .svg extension if present)
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
                 btnImg.src = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
                 btnInput.value = found.value;
-                selectedPrefix = prefix;
+                selectedCode = code;
             }
         }
 
@@ -2420,7 +2419,6 @@ const PhonePrefixComponent = (function(){
 
         // Build options
         prefixData.forEach(function(item) {
-            // Extract country code from filename (remove .svg extension if present)
             var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
             var displayText = item.value + ' - ' + item.label;
 
@@ -2432,7 +2430,7 @@ const PhonePrefixComponent = (function(){
                 e.stopPropagation();
                 btnImg.src = flagUrl;
                 btnInput.value = item.value;
-                selectedPrefix = item.value;
+                selectedCode = item.value;
                 menu.classList.remove('open');
                 filterOptions('');
                 onSelect(item.value, item.label, countryCode);
@@ -2472,7 +2470,7 @@ const PhonePrefixComponent = (function(){
         btnInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 menu.classList.remove('open');
-                setValue(selectedPrefix);
+                setValue(selectedCode);
                 filterOptions('');
             }
         });
@@ -2481,7 +2479,7 @@ const PhonePrefixComponent = (function(){
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
                 if (!menu.classList.contains('open')) {
-                    setValue(selectedPrefix);
+                    setValue(selectedCode);
                     filterOptions('');
                 }
             }, 150);
