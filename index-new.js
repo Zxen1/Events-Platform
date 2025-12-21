@@ -106,37 +106,59 @@ const App = (function() {
 
 
   /* --------------------------------------------------------------------------
-     BUNNY.NET CDN FOLDER REGISTRY
-     Centralized folder paths for all Bunny.net CDN images
+     IMAGE FOLDER PATHS
+     Folder paths are controlled by admin settings in database
+     Admin can use any CDN or local paths - no hardcoding
      -------------------------------------------------------------------------- */
-  const BUNNY_CDN_BASE = 'https://cdn.funmap.com/';
   
-  const bunnyFolders = {
-    amenities: 'amenities/',
-    avatars: 'avatars/',
-    categoryIcons: 'category-icons/',
-    dummyImages: 'dummy-images/',
-    flags: 'flags/',
-    postImages: 'post-images/',
-    siteAvatars: 'site-avatars/',
-    siteImages: 'site-images/',
-    systemImages: 'system-images/'
+  // Folder key to database setting key mapping
+  const folderSettingKeys = {
+    amenities: 'folder_amenities',
+    avatars: 'folder_avatars',
+    categoryIcons: 'folder_category_icons',
+    dummyImages: 'folder_dummy_images',
+    flags: 'folder_flags',
+    postImages: 'folder_post_images',
+    siteAvatars: 'folder_site_avatars',
+    siteImages: 'folder_site_images',
+    systemImages: 'folder_system_images'
   };
 
   /**
-   * Get full Bunny CDN URL for an image
-   * @param {string} folder - Folder key from bunnyFolders
+   * Get full URL for an image using folder path from admin settings
+   * @param {string} folder - Folder key (amenities, avatars, etc.)
    * @param {string} filename - Image filename
-   * @param {string} [class] - Optional Bunny class for resizing (imagebox, thumbnail, minithumb)
-   * @returns {string} Full CDN URL
+   * @param {string} [resizeClass] - Optional resize class (imagebox, thumbnail, minithumb)
+   * @returns {string} Full URL
    */
-  function getBunnyUrl(folder, filename, resizeClass) {
-    if (!bunnyFolders[folder]) {
-      console.warn(`[App] Unknown Bunny folder: ${folder}`);
+  function getImageUrl(folder, filename, resizeClass) {
+    var settingKey = folderSettingKeys[folder];
+    if (!settingKey) {
+      console.warn(`[App] Unknown folder: ${folder}`);
       return '';
     }
     
-    let url = BUNNY_CDN_BASE + bunnyFolders[folder] + filename;
+    var folderPath = state.settings[settingKey];
+    if (!folderPath) {
+      console.warn(`[App] Folder path not set in admin settings: ${settingKey}`);
+      return '';
+    }
+    
+    // Use folder path directly from admin settings (can be full URL or relative path)
+    var url;
+    if (folderPath.startsWith('http://') || folderPath.startsWith('https://')) {
+      // Full URL provided - use directly
+      if (!folderPath.endsWith('/')) {
+        folderPath += '/';
+      }
+      url = folderPath + filename;
+    } else {
+      // Relative path - use as-is (admin controls the path structure)
+      if (!folderPath.endsWith('/')) {
+        folderPath += '/';
+      }
+      url = folderPath + filename;
+    }
     
     if (resizeClass) {
       url += '?class=' + resizeClass;
@@ -146,12 +168,20 @@ const App = (function() {
   }
 
   /**
-   * Get Bunny folder path (for building URLs manually if needed)
-   * @param {string} folder - Folder key from bunnyFolders
+   * Get image folder path (for building URLs manually if needed)
+   * @param {string} folder - Folder key (amenities, avatars, etc.)
    * @returns {string} Folder path
    */
-  function getBunnyFolder(folder) {
-    return bunnyFolders[folder] || '';
+  function getImageFolder(folder) {
+    var settingKey = folderSettingKeys[folder];
+    if (!settingKey) return '';
+    
+    var folderPath = state.settings[settingKey] || '';
+    // Return as-is (could be full URL or folder path)
+    if (folderPath && !folderPath.endsWith('/')) {
+      folderPath += '/';
+    }
+    return folderPath;
   }
 
 
@@ -303,14 +333,18 @@ const App = (function() {
           document.title = pageTitle;
         }
         
-        // Apply favicon
-        if (settings.favicon) {
-          setFavicon(settings.favicon);
+        // Apply favicon from system_images
+        if (data.system_images && data.system_images.favicon) {
+          var faviconFilename = data.system_images.favicon;
+          var faviconUrl = App.getImageUrl('systemImages', faviconFilename);
+          setFavicon(faviconUrl);
         }
         
-        // Apply big logo to welcome modal
-        if (settings.big_logo && window.WelcomeModalComponent) {
-          WelcomeModalComponent.setLogo(settings.big_logo);
+        // Apply big logo to welcome modal from system_images
+        if (data.system_images && data.system_images.big_logo && window.WelcomeModalComponent) {
+          var bigLogoFilename = data.system_images.big_logo;
+          var bigLogoUrl = App.getImageUrl('systemImages', bigLogoFilename);
+          WelcomeModalComponent.setLogo(bigLogoUrl);
         }
         
         // Show welcome modal if enabled
@@ -455,10 +489,9 @@ const App = (function() {
     // Favicon
     setFavicon,
     
-    // Bunny CDN
-    getBunnyUrl,
-    getBunnyFolder,
-    BUNNY_CDN_BASE
+    // Image URL helpers
+    getImageUrl,
+    getImageFolder
   };
 
 })();

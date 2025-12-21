@@ -98,9 +98,18 @@ try {
     $stmt = $pdo->query('SELECT `setting_key`, `setting_value`, `setting_type` FROM `admin_settings`');
     $rows = $stmt->fetchAll();
 
+    // Sensitive fields that should NEVER be sent to frontend
+    $sensitiveKeys = ['storage_api_key'];
+
     $settings = [];
     foreach ($rows as $row) {
         $key = $row['setting_key'];
+        
+        // Skip sensitive keys - never expose API keys to frontend
+        if (in_array($key, $sensitiveKeys)) {
+            continue;
+        }
+        
         $value = $row['setting_value'];
         $type = $row['setting_type'] ?? 'string';
 
@@ -133,6 +142,23 @@ try {
         'success' => true,
         'settings' => $settings,
     ];
+
+    // Fetch system_images data
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'system_images'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query('SELECT `image_key`, `filename` FROM `system_images`');
+            $systemImageRows = $stmt->fetchAll();
+            
+            $systemImages = [];
+            foreach ($systemImageRows as $row) {
+                $systemImages[$row['image_key']] = $row['filename'];
+            }
+            $response['system_images'] = $systemImages;
+        }
+    } catch (Throwable $systemImagesError) {
+        // If system_images fails, don't break the whole response
+    }
 
     // Fetch picklist data for dropdown settings (currencies, phone prefixes, amenities, etc.)
     try {

@@ -139,17 +139,17 @@ try {
         // Continue without checkout options
     }
 
-    // Load icon_folder from admin_settings
-    $iconFolder = 'assets/icons-30'; // Default fallback
+    // Load folder_category_icons from admin_settings (no hardcoded fallback)
+    $iconFolder = '';
     try {
-        $settingStmt = $pdo->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'icon_folder' LIMIT 1");
+        $settingStmt = $pdo->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'folder_category_icons' LIMIT 1");
         if ($settingRow = $settingStmt->fetch(PDO::FETCH_ASSOC)) {
             if (isset($settingRow['setting_value']) && is_string($settingRow['setting_value']) && trim($settingRow['setting_value']) !== '') {
                 $iconFolder = trim($settingRow['setting_value']);
             }
         }
     } catch (PDOException $e) {
-        // Use default if query fails
+        // No fallback - admin must configure folder path
     }
 
     // Fetch banned words
@@ -205,16 +205,16 @@ try {
     }
     unset($fieldset); // Break reference
 
-    $snapshot = buildSnapshot($pdo, $categories, $subcategories, $currencyOptions, $allFields, $fieldsets, $iconFolder);
-    $snapshot['fieldsets'] = $fieldsets;
-    $snapshot['checkout_options'] = $checkoutOptions;
-    $snapshot['banned_words'] = $bannedWords;
-    $snapshot['field_limits'] = $fieldLimitsLookup;
+    $formData = buildFormData($pdo, $categories, $subcategories, $currencyOptions, $allFields, $fieldsets, $iconFolder);
+    $formData['fieldsets'] = $fieldsets;
+    $formData['checkout_options'] = $checkoutOptions;
+    $formData['banned_words'] = $bannedWords;
+    $formData['field_limits'] = $fieldLimitsLookup;
 
     // Flush output immediately
     echo json_encode([
         'success' => true,
-        'snapshot' => $snapshot,
+        'formData' => $formData,
     ]);
     // Note: fastcgi_finish_request() removed - was causing partial image loading issues
     // The output buffering cleanup (ob_end_clean) is sufficient for performance
@@ -841,7 +841,39 @@ function fetchCheckoutOptions(PDO $pdo): array
     return $checkoutOptions;
 }
 
-function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $fieldsets = [], string $iconFolder = 'assets/icons-30'): array
+/**
+ * Resolve icon path using admin folder setting
+ * @param string $iconPath - Path from database (may be filename, relative path, or full URL)
+ * @param string $adminFolder - Folder path from admin settings
+ * @return string - Resolved full path
+ */
+function resolveIconPathWithFolder(string $iconPath, string $adminFolder): string {
+    $iconPath = trim($iconPath);
+    if ($iconPath === '') {
+        return '';
+    }
+    
+    // If already a full URL, use as-is
+    if (strpos($iconPath, 'http://') === 0 || strpos($iconPath, 'https://') === 0) {
+        return $iconPath;
+    }
+    
+    // If admin folder not set, return original path
+    if ($adminFolder === '') {
+        return $iconPath;
+    }
+    
+    // If it's just a filename, prepend admin folder
+    if (strpos($iconPath, '/') === false && strpos($iconPath, '\\') === false) {
+        $adminFolder = rtrim($adminFolder, '/');
+        return $adminFolder . '/' . $iconPath;
+    }
+    
+    // Otherwise return as-is (might be a relative path the admin wants to keep)
+    return $iconPath;
+}
+
+function buildFormData(PDO $pdo, array $categories, array $subcategories, array $currencyOptions = [], array $allFields = [], array $fieldsets = [], string $iconFolder = ''): array
 {
     // Index fields by ID and by key for quick lookup
     $fieldsById = [];
@@ -876,10 +908,14 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         $iconHtml = '';
         $iconPath = '';
         if (isset($category['icon_path']) && is_string($category['icon_path'])) {
-            $iconPath = trim($category['icon_path']);
-            if ($iconPath !== '') {
-                $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
-                $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
+            $rawIconPath = trim($category['icon_path']);
+            if ($rawIconPath !== '') {
+                // Resolve icon path using admin folder setting
+                $iconPath = resolveIconPathWithFolder($rawIconPath, $iconFolder);
+                if ($iconPath !== '') {
+                    $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
+                    $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
+                }
             }
         }
         if ($iconHtml !== '') {
@@ -889,13 +925,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             $categoryIconPaths[$categoryName] = $iconPath;
         }
 
-        $markerPath = '';
-        if (isset($category['icon_path']) && is_string($category['icon_path'])) {
-            $candidate = trim($category['icon_path']);
-            if ($candidate !== '') {
-                $markerPath = $candidate;
-            }
-        }
+        // Use resolved icon path for marker
+        $markerPath = $iconPath;
         if ($markerPath !== '') {
             $categoryMarkers[$categoryName] = $markerPath;
         }
@@ -1219,10 +1250,14 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
         $iconHtml = '';
         $iconPath = '';
         if (isset($sub['icon_path']) && is_string($sub['icon_path'])) {
-            $iconPath = trim($sub['icon_path']);
-            if ($iconPath !== '') {
-                $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
-                $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
+            $rawIconPath = trim($sub['icon_path']);
+            if ($rawIconPath !== '') {
+                // Resolve icon path using admin folder setting
+                $iconPath = resolveIconPathWithFolder($rawIconPath, $iconFolder);
+                if ($iconPath !== '') {
+                    $safeIconPath = htmlspecialchars($iconPath, ENT_QUOTES, 'UTF-8');
+                    $iconHtml = sprintf('<img src="%s" width="20" height="20" alt="">', $safeIconPath);
+                }
             }
         }
         if ($iconHtml !== '') {
@@ -1232,13 +1267,8 @@ function buildSnapshot(PDO $pdo, array $categories, array $subcategories, array 
             $subcategoryIconPaths[$sub['name']] = $iconPath;
         }
 
-        $markerPath = '';
-        if (isset($sub['icon_path']) && is_string($sub['icon_path'])) {
-            $candidate = trim($sub['icon_path']);
-            if ($candidate !== '') {
-                $markerPath = $candidate;
-            }
-        }
+        // Use resolved icon path for marker
+        $markerPath = $iconPath;
         if ($markerPath !== '') {
             $subcategoryMarkers[$sub['name']] = $markerPath;
         }
@@ -1373,7 +1403,7 @@ function sanitizeSubcategoryMarkers(array $markers): array
     return $clean;
 }
 
-function sanitizeSnapshotIconPath(string $value): string
+function sanitizeFormIconPath(string $value): string
 {
     $path = trim($value);
     if ($path === '') {
@@ -1388,14 +1418,11 @@ function sanitizeSnapshotIconPath(string $value): string
         return '';
     }
 
-    if (stripos($normalized, 'assets/icons-') !== 0) {
-        return '';
-    }
-
-    return snapshotSanitizeString($normalized, 255);
+    // No hardcoded path restrictions - admin controls all paths
+    return sanitizeFormString($normalized, 255);
 }
 
-function normalizeSnapshotMarkerIconPath(string $sanitizedPath): string
+function normalizeFormMarkerIconPath(string $sanitizedPath): string
 {
     if ($sanitizedPath === '') {
         return '';
@@ -1403,19 +1430,14 @@ function normalizeSnapshotMarkerIconPath(string $sanitizedPath): string
 
     $markerPath = $sanitizedPath;
 
-    // Normalize any icons-\d+ folder to standard icons folder
-    $directoryNormalized = preg_replace('#^assets/icons-\d+/#i', 'assets/icons-30/', $markerPath, 1);
-    if (is_string($directoryNormalized) && $directoryNormalized !== '') {
-        $markerPath = $directoryNormalized;
-    }
-
-    // Normalize size suffix to -30
+    // No hardcoded path normalization - admin controls all paths
+    // Normalize size suffix to -30 (if needed for legacy compatibility)
     $sizeAdjusted = preg_replace('/-(\d{2,3})(\.[a-z0-9]+)$/i', '-30$2', $markerPath, 1);
     if (is_string($sizeAdjusted) && $sizeAdjusted !== '') {
         $markerPath = $sizeAdjusted;
     }
 
-    return snapshotSanitizeString($markerPath, 255);
+    return sanitizeFormString($markerPath, 255);
 }
 
 function parseFieldsetIdsCsv(string $value): array
@@ -1498,7 +1520,7 @@ function slugify_key(string $value): string
     return $normalized;
 }
 
-function snapshotSanitizeString(string $value, int $maxLength = 255): string
+function sanitizeFormString(string $value, int $maxLength = 255): string
 {
     $trimmed = trim($value);
     if ($trimmed === '') {

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 21, 2025 at 09:55 PM
+-- Generation Time: Dec 21, 2025 at 11:07 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -204,8 +204,6 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (9, 'welcome_message', '\"<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class=\\\"icon-search\\\" width=\\\"30\\\" height=\\\"30\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" role=\\\"img\\\" aria-label=\\\"Filters\\\"><circle cx=\\\"11\\\" cy=\\\"11\\\" r=\\\"8\\\"></circle><line x1=\\\"21\\\" y1=\\\"21\\\" x2=\\\"16.65\\\" y2=\\\"16.65\\\"></line></svg> button to refine your search.</p>\"', 'json', 'Main content of the welcome modal (supports HTML and SVG)', '2025-11-13 16:17:10', '2025-12-08 14:16:17'),
 (10, 'map_shadow', '0', 'integer', 'Map Shadow', '2025-11-13 16:17:10', '2025-12-14 18:00:40'),
 (11, 'console_filter', 'true', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-12-02 03:25:58'),
-(12, 'icon_folder', 'https://cdn.funmap.com/category-icons', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-12-21 09:04:17'),
-(13, 'system_images_folder', 'https://cdn.funmap.com/system-images', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-12-21 09:04:17'),
 (14, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-10 05:02:00'),
 (15, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-12-12 09:01:59'),
 (16, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-11-24 15:20:41'),
@@ -219,29 +217,25 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (24, 'member_tab_order', '[\"create\",\"myposts\",\"profile\"]', 'json', 'Order of member panel tabs', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
 (25, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-12-09 13:20:32'),
 (26, 'map_shadow_mode', 'always', 'string', 'Map Shadow Mode: post_mode_only or always', '2025-11-24 14:41:59', '2025-12-12 07:55:23'),
-(27, 'small_map_card_pill', 'assets/system-images/150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-11-25 16:59:26', '2025-11-29 08:35:15'),
-(28, 'big_map_card_pill', 'assets/system-images/225x60-pill-2f3b73.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-11-25 16:59:26', '2025-11-29 09:22:12'),
-(29, 'multi_post_icon', 'assets/system-images/multi-post-icon-50.webp', 'string', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-11-25 16:59:26', '2025-12-12 03:49:49'),
-(30, 'hover_map_card_pill', 'assets/system-images/150x40-pill-2f3b73.webp', 'string', 'Path to hover map card pill image (150×40px)', '2025-11-27 16:24:58', '2025-11-29 08:35:38'),
-(31, 'msg_category_user_icon', 'assets/system-images/user-messages.svg', 'string', 'Path to user messages category icon', '2025-11-27 21:40:22', '2025-12-11 02:53:09'),
-(32, 'msg_category_member_icon', 'assets/system-images/member-messages.svg', 'string', 'Path to member messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
-(33, 'msg_category_admin_icon', 'assets/system-images/admin-messages.svg', 'string', 'Path to admin messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
-(34, 'msg_category_email_icon', 'assets/system-images/email-messages.svg', 'string', 'Path to email messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
-(35, 'marker_cluster_icon', 'assets/system-images/red-balloon-40.png', 'string', 'Path to marker cluster/balloon icon', '2025-11-27 21:40:22', '2025-11-29 06:55:06'),
-(36, 'msg_category_fieldset-tooltips_icon', '/assets/system-images/fieldset-tooltips.svg', 'string', 'Path to fieldset tooltips messages category icon', '2025-12-06 17:40:32', '2025-12-09 18:23:54'),
 (37, 'starting_address', '11050 W. G. Rogell Dr. Building 602, Detroit, MI 48242, USA', 'string', 'Default map starting location for new visitors (address or coordinates)', '2025-12-08 07:21:39', '2025-12-20 05:47:00'),
 (38, 'starting_zoom', '2', 'integer', 'Default map zoom level for new visitors (1-18)', '2025-12-08 07:49:50', '2025-12-20 06:27:03'),
 (39, 'starting_lat', '42.2132203', 'decimal', 'Starting location latitude coordinate', '2025-12-08 11:43:09', '2025-12-20 05:47:00'),
 (40, 'starting_lng', '-83.3524824', 'decimal', 'Starting location longitude coordinate', '2025-12-08 11:43:09', '2025-12-20 05:47:00'),
-(41, 'big_logo', 'assets/system-images/funmap welcome message 2025-12-10f.webp', 'string', 'Path to big logo', '2025-12-09 16:18:19', '2025-12-10 00:00:53'),
-(42, 'small_logo', 'assets/system-images/earth toy.png', 'string', 'Path to small logo', '2025-12-09 16:25:58', '2025-12-10 00:09:29'),
-(43, 'favicon', 'assets/system-images/favicon.ico', 'string', 'Path to favicon', '2025-12-10 00:10:23', '2025-12-10 00:52:30'),
 (44, 'wait_for_map_tiles', 'false', 'boolean', NULL, '2025-12-10 05:16:15', '2025-12-20 06:20:56'),
 (45, 'admin_autosave', 'false', 'string', 'Remember autosave toggle state in admin panel', '2025-12-19 18:12:20', '2025-12-19 22:24:49'),
 (47, 'msg_category_user_name', 'User Messagess', 'string', NULL, '2025-12-19 19:34:16', '2025-12-19 19:34:16'),
 (48, 'msg_category_order', '[\"member\",\"user\",\"admin\",\"email\",\"fieldset-tooltips\"]', 'string', NULL, '2025-12-19 20:18:16', '2025-12-19 20:18:16'),
 (50, 'paypal_client_secret', '', 'string', NULL, '2025-12-19 20:52:17', '2025-12-20 05:49:08'),
 (51, 'starting_pitch', '0', 'integer', NULL, '2025-12-20 06:10:19', '2025-12-20 06:24:36'),
+(52, 'folder_category_icons', 'https://cdn.funmap.com/category-icons', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-12-21 11:59:21'),
+(53, 'folder_system_images', 'https://cdn.funmap.com/system-images', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-12-21 11:59:21'),
+(54, 'folder_amenities', 'https://cdn.funmap.com/amenities', 'string', 'Folder path for amenity icons', '2025-12-21 11:53:19', '2025-12-21 12:05:25'),
+(55, 'folder_avatars', 'https://cdn.funmap.com/avatars', 'string', 'Folder path for user avatars', '2025-12-21 11:53:19', '2025-12-21 12:05:25'),
+(56, 'folder_dummy_images', 'https://cdn.funmap.com/dummy-images', 'string', 'Folder path for dummy/test images', '2025-12-21 11:53:19', '2025-12-21 12:05:25'),
+(57, 'folder_flags', 'https://cdn.funmap.com/flags', 'string', 'Folder path for country flag icons', '2025-12-21 11:53:19', '2025-12-21 12:05:25'),
+(58, 'folder_post_images', 'https://cdn.funmap.com/post-images', 'string', 'Folder path for post images', '2025-12-21 11:53:19', '2025-12-21 12:05:25'),
+(59, 'folder_site_avatars', 'https://cdn.funmap.com/site-avatars', 'string', 'Folder path for site/library avatars', '2025-12-21 11:53:19', '2025-12-21 12:05:25'),
+(60, 'folder_site_images', 'https://cdn.funmap.com/site-images', 'string', 'Folder path for site-generated images', '2025-12-21 11:53:19', '2025-12-21 12:05:25'),
 (90, 'post_mode_bg_opacity', '0.68', 'decimal', NULL, '2025-12-20 07:58:46', '2025-12-20 07:58:46');
 
 -- --------------------------------------------------------
@@ -1329,6 +1323,44 @@ INSERT INTO `subcategory_edits` (`id`, `subcategory_key`, `fieldset_key`, `field
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `system_images`
+--
+
+CREATE TABLE `system_images` (
+  `id` int(11) NOT NULL,
+  `image_key` varchar(100) NOT NULL,
+  `filename` varchar(255) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `system_images`
+--
+
+INSERT INTO `system_images` (`id`, `image_key`, `filename`, `description`, `created_at`, `updated_at`) VALUES
+(1, 'small_map_card_pill', '150x40-pill-70.webp', 'Path to small map card base pill image (150×40px)', '2025-11-25 16:59:26', '2025-11-29 08:35:15'),
+(2, 'big_map_card_pill', '225x60-pill-2f3b73.webp', 'Path to big map card pill image (225×60px)', '2025-11-25 16:59:26', '2025-11-29 09:22:12'),
+(3, 'multi_post_icon', 'multi-post-icon-50.webp', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-11-25 16:59:26', '2025-12-12 03:49:49'),
+(4, 'hover_map_card_pill', '150x40-pill-2f3b73.webp', 'Path to hover map card pill image (150×40px)', '2025-11-27 16:24:58', '2025-11-29 08:35:38'),
+(5, 'msg_category_user_icon', 'user-messages.svg', 'Path to user messages category icon', '2025-11-27 21:40:22', '2025-12-11 02:53:09'),
+(6, 'msg_category_member_icon', 'member-messages.svg', 'Path to member messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
+(7, 'msg_category_admin_icon', 'admin-messages.svg', 'Path to admin messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
+(8, 'msg_category_email_icon', 'email-messages.svg', 'Path to email messages category icon', '2025-11-27 21:40:22', '2025-11-27 21:40:22'),
+(9, 'marker_cluster_icon', 'red-balloon-40.png', 'Path to marker cluster/balloon icon', '2025-11-27 21:40:22', '2025-11-29 06:55:06'),
+(10, 'msg_category_fieldset-tooltips_icon', 'fieldset-tooltips.svg', 'Path to fieldset tooltips messages category icon', '2025-12-06 17:40:32', '2025-12-09 18:23:54'),
+(11, 'big_logo', 'funmap welcome message 2025-12-10f.webp', 'Path to big logo', '2025-12-09 16:18:19', '2025-12-10 00:00:53'),
+(12, 'small_logo', 'earth toy.png', 'Path to small logo', '2025-12-09 16:25:58', '2025-12-10 00:09:29'),
+(13, 'favicon', 'favicon.ico', 'Path to favicon', '2025-12-10 00:10:23', '2025-12-10 00:52:30'),
+(16, 'icon_filter', 'magnifying-glass.svg', 'Filter button icon filename', '2025-12-21 11:53:19', '2025-12-21 11:53:19'),
+(17, 'icon_recents', 'recents-icon.svg', 'Recents mode button icon filename (clock icon)', '2025-12-21 11:53:19', '2025-12-21 11:53:19'),
+(18, 'icon_posts', 'posts-icon.svg', 'Posts mode button icon filename (list icon)', '2025-12-21 11:53:19', '2025-12-21 11:53:19'),
+(19, 'icon_map', 'map-icon.svg', 'Map mode button icon filename (location pin icon)', '2025-12-21 11:53:19', '2025-12-21 11:53:19');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `transactions`
 --
 
@@ -1551,6 +1583,13 @@ ALTER TABLE `subcategory_edits`
   ADD KEY `idx_fieldset_key` (`fieldset_key`);
 
 --
+-- Indexes for table `system_images`
+--
+ALTER TABLE `system_images`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `image_key` (`image_key`);
+
+--
 -- Indexes for table `transactions`
 --
 ALTER TABLE `transactions`
@@ -1584,7 +1623,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -1711,6 +1750,12 @@ ALTER TABLE `subcategories`
 --
 ALTER TABLE `subcategory_edits`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1711;
+
+--
+-- AUTO_INCREMENT for table `system_images`
+--
+ALTER TABLE `system_images`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `transactions`

@@ -213,6 +213,10 @@ const MapModule = (function() {
       const result = await response.json();
       if (result && result.success && result.settings) {
         adminSettings = result.settings;
+        // Store system_images separately
+        if (result.system_images) {
+          adminSettings.system_images = result.system_images;
+        }
         applySettings(result.settings);
       }
     } catch (err) {
@@ -722,7 +726,12 @@ const MapModule = (function() {
     const pillClass = `map-card-${state}`;
     
     // Get icon URL from post or database setting (no hardcoded fallback)
-    const iconUrl = post.iconUrl || adminSettings.multi_post_icon;
+    // Get multi_post_icon from system_images and convert to full URL
+    let iconUrl = post.iconUrl;
+    if (!iconUrl && adminSettings.system_images && adminSettings.system_images.multi_post_icon) {
+      const filename = adminSettings.system_images.multi_post_icon;
+      iconUrl = window.App.getImageUrl('systemImages', filename);
+    }
     
     // Truncate title for label
     const title = post.title || '';

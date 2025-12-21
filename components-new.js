@@ -238,10 +238,8 @@ const FieldsetComponent = (function(){
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.success && res.snapshot && res.snapshot.fieldsets) {
-                    fieldsets = res.snapshot.fieldsets;
-                    // Also make available globally for other components
-                    window.FORM_FIELDSETS = fieldsets;
+                if (res.success && res.formData && res.formData.fieldsets) {
+                    fieldsets = res.formData.fieldsets;
                 }
                 dataLoaded = true;
                 return { picklist: picklist, fieldsets: fieldsets };
@@ -308,7 +306,7 @@ const FieldsetComponent = (function(){
         var selectedCode = 'USD';
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getBunnyUrl('flags', 'us.svg');
+        var usFlagUrl = window.App.getImageUrl('flags', 'us.svg');
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" value="USD" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
@@ -325,7 +323,7 @@ const FieldsetComponent = (function(){
             });
             if (found) {
                 var flagCode = found.value.substring(0,2);
-                btnImg.src = window.App.getBunnyUrl('flags', flagCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', flagCode + '.svg');
                 btnInput.value = found.value.substring(3);
                 selectedCode = code;
             }
@@ -344,11 +342,11 @@ const FieldsetComponent = (function(){
             var displayText = currencyCode + ' - ' + item.label;
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            var flagUrl = window.App.getBunnyUrl('flags', countryCode + '.svg');
+            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = currencyCode;
                 selectedCode = currencyCode;
                 menu.classList.remove('open');
@@ -411,7 +409,7 @@ const FieldsetComponent = (function(){
         var selectedPrefix = '+1';
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getBunnyUrl('flags', 'us.svg');
+        var usFlagUrl = window.App.getImageUrl('flags', 'us.svg');
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" value="+1" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
         
         var btn = menu.querySelector('.fieldset-menu-button');
@@ -428,7 +426,7 @@ const FieldsetComponent = (function(){
             });
             if (found) {
                 var flagCode = found.value.substring(0,2);
-                btnImg.src = window.App.getBunnyUrl('flags', flagCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', flagCode + '.svg');
                 btnInput.value = found.value.substring(3);
                 selectedPrefix = prefix;
             }
@@ -447,11 +445,11 @@ const FieldsetComponent = (function(){
             var displayText = prefix + ' - ' + item.label;
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            var flagUrl = window.App.getBunnyUrl('flags', countryCode + '.svg');
+            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = prefix;
                 selectedPrefix = prefix;
                 menu.classList.remove('open');
@@ -654,9 +652,8 @@ const FieldsetComponent = (function(){
         // If still empty, try to match against fieldset definitions (like live site)
         var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip || '';
         if (!tooltip && key) {
-            // Try to match against fieldset definitions if available (like live site does)
-            // Check local fieldsets first, then global window variables
-            var availableFieldsets = fieldsets.length > 0 ? fieldsets : (window.FORM_FIELDSETS || window.loadedFieldsets || []);
+            // No fallbacks - fieldsets must be provided
+            var availableFieldsets = fieldsets || [];
             if (availableFieldsets && availableFieldsets.length > 0) {
                 var matchingFieldset = availableFieldsets.find(function(fs) {
                     return fs.value === key || fs.key === key || fs.fieldset_key === key || fs.fieldsetKey === key;
@@ -940,7 +937,7 @@ const FieldsetComponent = (function(){
                     // Icon
                     var iconEl = document.createElement('div');
                     iconEl.className = 'fieldset-amenity-icon';
-                    var amenityUrl = window.App.getBunnyUrl('amenities', iconKey + '.svg');
+                    var amenityUrl = window.App.getImageUrl('amenities', iconKey + '.svg');
                     iconEl.innerHTML = '<img src="' + amenityUrl + '" alt="' + amenityName + '">';
                     row.appendChild(iconEl);
                     
@@ -997,7 +994,7 @@ const FieldsetComponent = (function(){
                     itemCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
                         var input = menu.querySelector('.fieldset-menu-button-input');
-                        img.src = window.App.getBunnyUrl('flags', itemCurrencyState.flag + '.svg');
+                        img.src = window.App.getImageUrl('flags', itemCurrencyState.flag + '.svg');
                         input.value = itemCurrencyState.code;
                     });
                 }
@@ -1005,7 +1002,7 @@ const FieldsetComponent = (function(){
                 function buildItemCurrencyMenu() {
                     var menu = document.createElement('div');
                     menu.className = 'fieldset-menu fieldset-currency-compact';
-                    var flagUrl = window.App.getBunnyUrl('flags', itemCurrencyState.flag + '.svg');
+                    var flagUrl = window.App.getImageUrl('flags', itemCurrencyState.flag + '.svg');
                     menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + flagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" value="' + itemCurrencyState.code + '" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
                     var btn = menu.querySelector('.fieldset-menu-button');
@@ -1029,7 +1026,7 @@ const FieldsetComponent = (function(){
                         var displayText = currencyCode + ' - ' + item.label;
                         var op = document.createElement('div');
                         op.className = 'fieldset-menu-option';
-                        var flagUrl = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                        var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
                         op.onclick = function(e) {
                             e.stopPropagation();
@@ -1246,7 +1243,7 @@ const FieldsetComponent = (function(){
                     ticketCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
                         var input = menu.querySelector('.fieldset-menu-button-input');
-                        img.src = window.App.getBunnyUrl('flags', ticketCurrencyState.flag + '.svg');
+                        img.src = window.App.getImageUrl('flags', ticketCurrencyState.flag + '.svg');
                         input.value = ticketCurrencyState.code;
                     });
                 }
@@ -1254,7 +1251,7 @@ const FieldsetComponent = (function(){
                 function buildTicketCurrencyMenu() {
                     var menu = document.createElement('div');
                     menu.className = 'fieldset-menu fieldset-currency-compact';
-                    var flagUrl = window.App.getBunnyUrl('flags', ticketCurrencyState.flag + '.svg');
+                    var flagUrl = window.App.getImageUrl('flags', ticketCurrencyState.flag + '.svg');
                     menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + flagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" value="' + ticketCurrencyState.code + '" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
                     var btn = menu.querySelector('.fieldset-menu-button');
@@ -1278,7 +1275,7 @@ const FieldsetComponent = (function(){
                         var displayText = currencyCode + ' - ' + item.label;
                         var op = document.createElement('div');
                         op.className = 'fieldset-menu-option';
-                        var flagUrl = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                        var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
                         op.onclick = function(e) {
                             e.stopPropagation();
@@ -2391,7 +2388,7 @@ const CurrencyComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getBunnyUrl('flags', 'us.svg');
+        var usFlagUrl = window.App.getImageUrl('flags', 'us.svg');
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
@@ -2410,7 +2407,7 @@ const CurrencyComponent = (function(){
             if (found) {
                 var countryCode = found.value.substring(0, 2);
                 var currencyCode = found.value.substring(3);
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = currencyCode;
                 selectedCode = code;
             }
@@ -2433,11 +2430,11 @@ const CurrencyComponent = (function(){
 
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            var flagUrl = window.App.getBunnyUrl('flags', countryCode + '.svg');
+            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = currencyCode;
                 selectedCode = currencyCode;
                 menu.classList.remove('open');
@@ -2526,7 +2523,7 @@ const CurrencyComponent = (function(){
         
         var menu = document.createElement('div');
         menu.className = 'admin-currency-wrapper';
-        var usFlagUrl = window.App.getBunnyUrl('flags', 'us.svg');
+        var usFlagUrl = window.App.getImageUrl('flags', 'us.svg');
         menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="' + usFlagUrl + '" alt=""><input type="text" class="admin-currency-button-input" placeholder="Search currency..." autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
         
         var btn = menu.querySelector('.admin-currency-button');
@@ -2545,7 +2542,7 @@ const CurrencyComponent = (function(){
             if (found) {
                 var countryCode = found.value.substring(0, 2);
                 var currencyCode = found.value.substring(3);
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = currencyCode + ' - ' + found.label;
                 selectedCode = code;
             }
@@ -2569,11 +2566,11 @@ const CurrencyComponent = (function(){
             
             var op = document.createElement('div');
             op.className = 'admin-currency-option';
-            var flagUrl = window.App.getBunnyUrl('flags', countryCode + '.svg');
+            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
             op.innerHTML = '<img class="admin-currency-option-flag" src="' + flagUrl + '" alt=""><span class="admin-currency-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = displayText;
                 selectedCode = currencyCode;
                 menu.classList.remove('open');
@@ -2721,7 +2718,7 @@ const PhonePrefixComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getBunnyUrl('flags', 'us.svg');
+        var usFlagUrl = window.App.getImageUrl('flags', 'us.svg');
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
@@ -2740,7 +2737,7 @@ const PhonePrefixComponent = (function(){
             if (found) {
                 var countryCode = found.value.substring(0, 2);
                 var prefixCode = found.value.substring(3);
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = prefixCode;
                 selectedPrefix = prefix;
             }
@@ -2763,11 +2760,11 @@ const PhonePrefixComponent = (function(){
 
             var op = document.createElement('div');
             op.className = 'fieldset-menu-option';
-            var flagUrl = window.App.getBunnyUrl('flags', countryCode + '.svg');
+            var flagUrl = window.App.getImageUrl('flags', countryCode + '.svg');
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                 btnInput.value = prefix;
                 selectedPrefix = prefix;
                 menu.classList.remove('open');
@@ -2857,7 +2854,7 @@ const PhonePrefixComponent = (function(){
 
 /* ============================================================================
    ICON PICKER
-   Uses icon folder path from admin settings (e.g. https://cdn.funmap.com/category-icons/)
+   Uses icon folder path from admin settings
    ============================================================================ */
 
 const IconPickerComponent = (function(){
@@ -2887,8 +2884,8 @@ const IconPickerComponent = (function(){
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.settings && res.settings.icon_folder) {
-                    iconFolder = res.settings.icon_folder;
+                if (res.settings && res.settings.folder_category_icons) {
+                    iconFolder = res.settings.folder_category_icons;
                 }
                 return iconFolder;
             });
@@ -2899,6 +2896,11 @@ const IconPickerComponent = (function(){
         folderPath = folderPath || iconFolder;
         if (!folderPath) return Promise.resolve([]);
         
+        // Check if this is a full URL (starts with http:// or https://)
+        var isFullUrl = folderPath.indexOf('http://') === 0 || folderPath.indexOf('https://') === 0;
+        
+        // Both local and online folders use the same endpoint
+        // The server will handle remote URLs appropriately
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
@@ -3726,8 +3728,8 @@ const SystemImagePickerComponent = (function(){
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.settings && res.settings.system_images_folder) {
-                    imageFolder = res.settings.system_images_folder;
+                if (res.settings && res.settings.folder_system_images) {
+                    imageFolder = res.settings.folder_system_images;
                 }
                 return imageFolder;
             });
@@ -3738,43 +3740,11 @@ const SystemImagePickerComponent = (function(){
         folderPath = folderPath || imageFolder;
         if (!folderPath) return Promise.resolve([]);
         
-        // Check if this is a Bunny CDN folder (starts with https://cdn.funmap.com/)
-        var isBunnyFolder = folderPath.indexOf('https://cdn.funmap.com/') === 0;
+        // Check if this is a full URL (starts with http:// or https://)
+        var isFullUrl = folderPath.indexOf('http://') === 0 || folderPath.indexOf('https://') === 0;
         
-        if (isBunnyFolder) {
-            // Fetch system image list from database settings
-            // System images should be stored in admin_settings table
-            return fetch('/gateway.php?action=get-admin-settings')
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (res.success && res.settings && res.settings.system_images_list) {
-                        // system_images_list should be a JSON array of filenames
-                        var imageList = typeof res.settings.system_images_list === 'string' 
-                            ? JSON.parse(res.settings.system_images_list)
-                            : res.settings.system_images_list;
-                        
-                        if (Array.isArray(imageList)) {
-                            var fullImageList = imageList.map(function(filename) {
-                                return folderPath + filename;
-                            });
-                            images = fullImageList;
-                            dataLoaded = true;
-                            return fullImageList;
-                        }
-                    }
-                    images = [];
-                    dataLoaded = true;
-                    return [];
-                })
-                .catch(function(err) {
-                    console.warn('[SystemImagePicker] Failed to load system images list:', err);
-                    images = [];
-                    dataLoaded = true;
-                    return [];
-                });
-        }
-        
-        // Original server folder listing
+        // Both local and online folders use the same endpoint
+        // The server will handle remote URLs appropriately
         return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
@@ -3844,17 +3814,36 @@ const SystemImagePickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         
-        // Load images and set button if database value exists in list
+        // Load images and set button if database value exists
         // Ensure folder is loaded from settings if not already set
         var loadPromise = imageFolder ? Promise.resolve() : loadFolderFromSettings();
         loadPromise.then(function() {
             return loadImagesFromFolder();
         }).then(function(imageList) {
-            if (databaseValue && imageList.indexOf(databaseValue) !== -1) {
-                currentImage = databaseValue;
-                buttonImage.src = databaseValue;
-                buttonImage.style.display = '';
-                buttonText.textContent = getFilename(databaseValue);
+            if (databaseValue) {
+                var databaseFilename = getFilename(databaseValue);
+                var fullImageUrl = null;
+                
+                if (imageList.length > 0) {
+                    // Local folder - find matching full path in imageList
+                    var matchingImage = imageList.find(function(imgPath) {
+                        return getFilename(imgPath) === databaseFilename;
+                    });
+                    if (matchingImage) {
+                        fullImageUrl = matchingImage;
+                    }
+                } else if (imageFolder) {
+                    // Online folder or empty list - construct URL from folder + filename
+                    var folder = imageFolder.endsWith('/') ? imageFolder : imageFolder + '/';
+                    fullImageUrl = folder + databaseFilename;
+                }
+                
+                if (fullImageUrl) {
+                    currentImage = fullImageUrl;
+                    buttonImage.src = fullImageUrl;
+                    buttonImage.style.display = '';
+                    buttonText.textContent = databaseFilename;
+                }
             }
         });
         

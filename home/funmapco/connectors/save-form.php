@@ -1199,9 +1199,7 @@ function sanitizeIconPath($value): string
     if ($normalized === '' || strpos($normalized, '..') !== false) {
         return '';
     }
-    if (stripos($normalized, 'assets/icons-') !== 0) {
-        return '';
-    }
+    // No hardcoded path restrictions - admin controls all paths
     return sanitizeString($normalized, 255);
 }
 
@@ -1211,17 +1209,8 @@ function upgradeIconBasePath(string $sanitizedPath): string
         return '';
     }
 
-    // Convert old icons-20 paths to icons folder structure, preserving the filename
-    $upgraded = $sanitizedPath;
-
-    if (stripos($upgraded, 'assets/icons-20/') === 0) {
-        // Extract filename and convert -20 suffix to -30
-        $filename = basename($upgraded);
-        $filename = preg_replace('/-20(\.[a-z0-9]+)$/i', '-30$1', $filename);
-        $upgraded = 'assets/icons-30/' . $filename;
-    }
-
-    return sanitizeString($upgraded, 255);
+    // No hardcoded path upgrades - admin controls all paths
+    return sanitizeString($sanitizedPath, 255);
 }
 
 function normalizeMarkerIconPath(string $sanitizedPath): string
@@ -1232,13 +1221,8 @@ function normalizeMarkerIconPath(string $sanitizedPath): string
 
     $markerPath = $sanitizedPath;
 
-    // Normalize any icons-\d+ folder to standard icons folder
-    $directoryNormalized = preg_replace('#^assets/icons-\d+/#i', 'assets/icons-30/', $markerPath, 1);
-    if (is_string($directoryNormalized) && $directoryNormalized !== '') {
-        $markerPath = $directoryNormalized;
-    }
-
-    // Normalize size suffix to -30
+    // No hardcoded path normalization - admin controls all paths
+    // Normalize size suffix to -30 (if needed for legacy compatibility)
     $sizeAdjusted = preg_replace('/-(\d{2,3})(\.[a-z0-9]+)$/i', '-30$2', $markerPath, 1);
     if (is_string($sizeAdjusted) && $sizeAdjusted !== '') {
         $markerPath = $sizeAdjusted;

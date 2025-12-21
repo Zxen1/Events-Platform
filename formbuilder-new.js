@@ -30,7 +30,7 @@
    - Every input in formbuilder must call notifyChange() when it changes
    - The captureFormbuilderState() function must capture ALL user-editable data
    - If you add new fields, update captureFormbuilderState() to include them
-   - Do NOT store snapshots for comparison - use the field registry system
+   - Do NOT store cached data for comparison - use the field registry system
    
    ============================================================================ */
 
@@ -461,8 +461,8 @@
         var menu = document.createElement('div');
         menu.className = 'formbuilder-menu';
         
-        // Only show button image if currentSrc exists in allIcons array
-        var showButtonImage = currentSrc && allIcons.indexOf(currentSrc) !== -1;
+        // Show button image if currentSrc exists (even if not in allIcons - for online folders)
+        var showButtonImage = currentSrc && currentSrc.trim() !== '';
         var currentFilename = showButtonImage ? currentSrc.split('/').pop() : 'Select...';
         var buttonImageSrc = showButtonImage ? currentSrc : '';
         
@@ -574,9 +574,9 @@
                 checkoutOptions = res.checkout_options;
                 siteCurrency = res.settings && res.settings.website_currency;
                 // Get icon folder from database setting
-                var iconFolder = res.settings && res.settings.icon_folder;
+                var iconFolder = res.settings && res.settings.folder_category_icons;
                 if (!iconFolder) {
-                    throw new Error('icon_folder not found in admin settings');
+                    throw new Error('folder_category_icons not found in admin settings');
                 }
                 checkoutOptions = checkoutOptions || {};
                 checkoutOptions.icon_folder = iconFolder;
@@ -587,7 +587,7 @@
                 // Ensure folder path ends with /
                 var iconFolder = checkoutOptions && checkoutOptions.icon_folder;
                 if (!iconFolder) {
-                    throw new Error('icon_folder not found in checkout options');
+                    throw new Error('folder_category_icons not found in checkout options');
                 }
                 var folderPath = iconFolder.endsWith('/') ? iconFolder : iconFolder + '/';
                 allIcons = (res.icons || []).map(function(name) { return folderPath + name; });
@@ -595,22 +595,22 @@
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (!res.success || !res.snapshot) return;
-                renderForm(res.snapshot);
+                if (!res.success || !res.formData) return;
+                renderForm(res.formData);
             });
     }
     
-    function renderForm(snapshot) {
+    function renderForm(formData) {
         if (!container) return;
         container.innerHTML = '';
         
         // Store reference data (not for change tracking - just data needed to build UI)
-        loadedFieldsets = snapshot.fieldsets || [];
-        loadedCurrencies = snapshot.currencies || [];
+        loadedFieldsets = formData.fieldsets || [];
+        loadedCurrencies = formData.currencies || [];
         
-        var categories = snapshot.categories || [];
-        var categoryIconPaths = snapshot.categoryIconPaths || {};
-        var subcategoryIconPaths = snapshot.subcategoryIconPaths || {};
+        var categories = formData.categories || [];
+        var categoryIconPaths = formData.categoryIconPaths || {};
+        var subcategoryIconPaths = formData.subcategoryIconPaths || {};
         var fieldsets = loadedFieldsets;
         
         categories.forEach(function(cat) {

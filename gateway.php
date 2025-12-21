@@ -28,38 +28,6 @@ if ($connectorDir === null) {
   exit;
 }
 
-// Handle list-icons inline (no separate file needed)
-if ($action === 'list-icons') {
-  header('Content-Type: application/json');
-  
-  $folder = isset($_GET['folder']) ? $_GET['folder'] : '';
-  
-  // Security: prevent directory traversal and limit to assets folder
-  if (strpos($folder, '..') !== false || strpos($folder, '\\') !== false || stripos($folder, 'assets/') !== 0) {
-    echo json_encode(['success' => false, 'icons' => []]);
-    exit;
-  }
-  
-  // Ensure folder is relative to base directory
-  $fullPath = $baseDir . '/' . ltrim($folder, '/');
-  
-  $icons = [];
-  $allowedExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico'];
-  
-  if (is_dir($fullPath)) {
-    $files = scandir($fullPath);
-    foreach ($files as $file) {
-      if ($file === '.' || $file === '..') continue;
-      $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-      if (in_array($ext, $allowedExtensions)) {
-        $icons[] = $file;
-      }
-    }
-  }
-  
-  echo json_encode(['success' => true, 'icons' => $icons]);
-  exit;
-}
 
 $map = [
   'verify-login' => $connectorDir . '/verify-login.php',

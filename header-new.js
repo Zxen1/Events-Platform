@@ -74,13 +74,17 @@ const HeaderModule = (function() {
         fetch('/gateway.php?action=get-admin-settings')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (data.success && data.settings) {
-                    // Load logo
-                    if (data.settings.small_logo) {
-                        setLogo(data.settings.small_logo);
+                if (data.success) {
+                    // Load logo from system_images
+                    if (data.system_images && data.system_images.small_logo) {
+                        var logoFilename = data.system_images.small_logo;
+                        var logoUrl = window.App.getImageUrl('systemImages', logoFilename);
+                        setLogo(logoUrl);
                     }
-                    // Load header icons from database
-                    loadHeaderIcons(data.settings);
+                    // Load header icons from system_images
+                    if (data.system_images) {
+                        loadHeaderIcons(data.system_images);
+                    }
                 }
             })
             .catch(function(err) {
@@ -88,27 +92,27 @@ const HeaderModule = (function() {
             });
     }
     
-    function loadHeaderIcons(settings) {
+    function loadHeaderIcons(systemImages) {
         // Filter icon
         var filterIcon = document.querySelector('.header-filter-button-icon');
-        if (filterIcon && settings.icon_filter) {
-            filterIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_filter);
+        if (filterIcon && systemImages.icon_filter) {
+            filterIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_filter);
         }
         
         // Mode switch icons
         var recentsIcon = document.querySelector('.header-modeswitch-button[data-mode="recents"] .header-modeswitch-button-icon');
-        if (recentsIcon && settings.icon_recents) {
-            recentsIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_recents);
+        if (recentsIcon && systemImages.icon_recents) {
+            recentsIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_recents);
         }
         
         var postsIcon = document.querySelector('.header-modeswitch-button[data-mode="posts"] .header-modeswitch-button-icon');
-        if (postsIcon && settings.icon_posts) {
-            postsIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_posts);
+        if (postsIcon && systemImages.icon_posts) {
+            postsIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_posts);
         }
         
         var mapIcon = document.querySelector('.header-modeswitch-button[data-mode="map"] .header-modeswitch-button-icon');
-        if (mapIcon && settings.icon_map) {
-            mapIcon.src = window.App.getBunnyUrl('systemImages', settings.icon_map);
+        if (mapIcon && systemImages.icon_map) {
+            mapIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_map);
         }
     }
     

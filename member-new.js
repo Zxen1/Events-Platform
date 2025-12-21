@@ -328,10 +328,10 @@ const MemberModule = (function() {
             var formResponse = results[0];
             var settingsResponse = results[1];
             
-            if (formResponse && formResponse.success && formResponse.snapshot) {
-                memberCategories = formResponse.snapshot.categories || [];
-                memberCategoryIconPaths = formResponse.snapshot.categoryIconPaths || {};
-                memberSubcategoryIconPaths = formResponse.snapshot.subcategoryIconPaths || {};
+            if (formResponse && formResponse.success && formResponse.formData) {
+                memberCategories = formResponse.formData.categories || [];
+                memberCategoryIconPaths = formResponse.formData.categoryIconPaths || {};
+                memberSubcategoryIconPaths = formResponse.formData.subcategoryIconPaths || {};
             }
             
             // Get checkout options, currency, and picklist from admin settings

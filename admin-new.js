@@ -745,7 +745,7 @@ const AdminModule = (function() {
             }
         }
         
-        // Tell formbuilder to re-fetch from database (not restore from snapshot)
+        // Tell formbuilder to re-fetch from database (not restore from cache)
         if (window.FormbuilderModule && typeof FormbuilderModule.discard === 'function') {
             FormbuilderModule.discard();
         }
@@ -895,9 +895,11 @@ const AdminModule = (function() {
         
         if (useExisting) {
             MESSAGE_CATEGORIES.forEach(function(cat) {
-                var settingKey = 'msg_category_' + cat.key + '_icon';
-                if (settingsData[settingKey]) {
-                    cat.icon = settingsData[settingKey];
+                var imageKey = 'msg_category_' + cat.key + '_icon';
+                // Get filename from system_images, convert to full URL
+                if (settingsData.system_images && settingsData.system_images[imageKey]) {
+                    var filename = settingsData.system_images[imageKey];
+                    cat.icon = window.App.getImageUrl('systemImages', filename);
                 }
                 var nameKey = 'msg_category_' + cat.key + '_name';
                 if (settingsData[nameKey]) {
@@ -910,15 +912,17 @@ const AdminModule = (function() {
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (data.success && data.settings) {
+                if (data.success) {
                     MESSAGE_CATEGORIES.forEach(function(cat) {
-                        var settingKey = 'msg_category_' + cat.key + '_icon';
-                        if (data.settings[settingKey]) {
-                            cat.icon = data.settings[settingKey];
+                        var imageKey = 'msg_category_' + cat.key + '_icon';
+                        // Get filename from system_images, convert to full URL
+                        if (data.system_images && data.system_images[imageKey]) {
+                            var filename = data.system_images[imageKey];
+                            cat.icon = window.App.getImageUrl('systemImages', filename);
                         }
                         // Also check for custom name
                         var nameKey = 'msg_category_' + cat.key + '_name';
-                        if (data.settings[nameKey]) {
+                        if (data.settings && data.settings[nameKey]) {
                             cat.name = data.settings[nameKey];
                         }
                     });
@@ -1271,12 +1275,12 @@ const AdminModule = (function() {
     }
     
     function loadFieldsetTooltips() {
-        // Fetch fieldsets from get-form endpoint (returns snapshot with fieldsets)
+        // Fetch fieldsets from get-form endpoint (returns form data with fieldsets)
         fetch('/gateway.php?action=get-form')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (data.success && data.snapshot && data.snapshot.fieldsets) {
-                    populateFieldsetTooltips(data.snapshot.fieldsets);
+                if (data.success && data.formData && data.formData.fieldsets) {
+                    populateFieldsetTooltips(data.formData.fieldsets);
                     registerTooltipsCompositeIfReady();
                 }
             })
@@ -1586,10 +1590,13 @@ const AdminModule = (function() {
         // Reuse settingsData if Settings tab already loaded it
         if (settingsInitialized && Object.keys(settingsData).length > 0) {
             mapTabData = settingsData;
-            // TEST: Use Bunny CDN for system images (database setting commented out)
+            // Store system_images data separately
+            if (settingsData.system_images) {
+                mapTabData.system_images = settingsData.system_images;
+            }
             // Use database setting for system images folder
-            if (window.SystemImagePickerComponent && mapTabData && mapTabData.system_images_folder) {
-                SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+            if (window.SystemImagePickerComponent && mapTabData && mapTabData.folder_system_images) {
+                SystemImagePickerComponent.setImageFolder(mapTabData.folder_system_images);
             }
             return Promise.resolve();
         }
@@ -1599,10 +1606,13 @@ const AdminModule = (function() {
             .then(function(data) {
                 if (data.success && data.settings) {
                     mapTabData = data.settings;
-                    
+                    // Store system_images data separately
+                    if (data.system_images) {
+                        mapTabData.system_images = data.system_images;
+                    }
                     // Use database setting for system images folder
-                    if (window.SystemImagePickerComponent && mapTabData.system_images_folder) {
-                        SystemImagePickerComponent.setImageFolder(mapTabData.system_images_folder);
+                    if (window.SystemImagePickerComponent && mapTabData.folder_system_images) {
+                        SystemImagePickerComponent.setImageFolder(mapTabData.folder_system_images);
                     }
                 }
             })
@@ -1932,20 +1942,31 @@ const AdminModule = (function() {
         var container = document.getElementById(containerId);
         if (!container || !window.SystemImagePickerComponent) return;
         
-        var initialValue = mapTabData[settingKey] || '';
+        // Get initial value from system_images (filename only, not full path)
+        var initialValue = '';
+        if (mapTabData.system_images && mapTabData.system_images[settingKey]) {
+            initialValue = mapTabData.system_images[settingKey];
+        }
         
         var picker = SystemImagePickerComponent.buildPicker({
             container: mapTabContainer,
             databaseValue: initialValue,
             onSelect: function(imagePath) {
-                updateField('map.' + settingKey, imagePath);
+                // Extract filename from full path
+                var filename = imagePath;
+                if (imagePath.indexOf('/') !== -1) {
+                    filename = imagePath.split('/').pop();
+                }
+                // Update system_images field (not map)
+                updateField('system_images.' + settingKey, filename);
             }
         });
         
         picker.element.dataset.settingKey = settingKey;
+        picker.element.dataset.isSystemImage = 'true';
         container.appendChild(picker.element);
         
-        registerField('map.' + settingKey, initialValue);
+        registerField('system_images.' + settingKey, initialValue);
     }
     
     // Reset map tab to original values (called on discard)
@@ -2155,10 +2176,15 @@ const AdminModule = (function() {
             .then(function(data) {
                 if (data.success && data.settings) {
                     settingsData = data.settings;
+                    
+                    // Store system_images data separately
+                    if (data.system_images) {
+                        settingsData.system_images = data.system_images;
+                    }
 
                     // Use database setting for system images folder
-                    if (window.SystemImagePickerComponent && settingsData.system_images_folder) {
-                        SystemImagePickerComponent.setImageFolder(settingsData.system_images_folder);
+                    if (window.SystemImagePickerComponent && settingsData.folder_system_images) {
+                        SystemImagePickerComponent.setImageFolder(settingsData.folder_system_images);
                     }
 
                     // Initialize CurrencyComponent data if available
@@ -2221,13 +2247,24 @@ const AdminModule = (function() {
         var container = document.getElementById(containerId);
         if (!container || !window.SystemImagePickerComponent) return;
 
-        var initialValue = settingsData[settingKey] || '';
+        // Get initial value from system_images (filename only, not full path)
+        var initialValue = '';
+        if (settingsData.system_images && settingsData.system_images[settingKey]) {
+            initialValue = settingsData.system_images[settingKey];
+        }
 
         var picker = SystemImagePickerComponent.buildPicker({
             container: settingsContainer,
             databaseValue: initialValue,
             onSelect: function(imagePath) {
-                updateField('settings.' + settingKey, imagePath);
+                // Extract filename from full path
+                var filename = imagePath;
+                if (imagePath.indexOf('/') !== -1) {
+                    filename = imagePath.split('/').pop();
+                }
+                
+                // Update system_images field (not settings)
+                updateField('system_images.' + settingKey, filename);
                 
                 // Update UI immediately based on which setting changed
                 if (settingKey === 'small_logo') {
@@ -2249,9 +2286,10 @@ const AdminModule = (function() {
         });
 
         picker.element.dataset.settingKey = settingKey;
+        picker.element.dataset.isSystemImage = 'true';
         container.appendChild(picker.element);
 
-        registerField('settings.' + settingKey, initialValue);
+        registerField('system_images.' + settingKey, initialValue);
     }
     
     function initCurrencyPicker(containerId, settingKey) {
@@ -2750,9 +2788,10 @@ const AdminModule = (function() {
     // Get modified settings for saving (includes settings.* and map.* prefixes)
     function getModifiedSettings() {
         var modified = {};
+        var systemImages = {};
         
         for (var key in fieldRegistry) {
-            // Include both settings.* and map.* prefixed fields
+            // Include settings.*, map.*, and checkout.* prefixed fields
             if (key.indexOf('settings.') === 0 || key.indexOf('map.') === 0 || key.indexOf('checkout.') === 0) {
                 var entry = fieldRegistry[key];
                 if (entry.type === 'simple') {
@@ -2765,6 +2804,24 @@ const AdminModule = (function() {
                     }
                 }
             }
+            // Collect system_images.* fields separately
+            else if (key.indexOf('system_images.') === 0) {
+                var entry = fieldRegistry[key];
+                if (entry.type === 'simple') {
+                    var currentStr = String(entry.current);
+                    var originalStr = String(entry.original);
+                    if (currentStr !== originalStr) {
+                        // Remove prefix to get image key
+                        var imageKey = key.replace(/^system_images\./, '');
+                        systemImages[imageKey] = entry.current;
+                    }
+                }
+            }
+        }
+        
+        // Add system_images to modified if any changes
+        if (Object.keys(systemImages).length > 0) {
+            modified['system_images'] = systemImages;
         }
         
         return modified;
@@ -2807,10 +2864,10 @@ const AdminModule = (function() {
                 var btnText = menu.querySelector('.admin-currency-button-text');
                 if (found) {
                     var countryCode = found.value.substring(0, 2);
-                    if (btnImg) btnImg.src = window.App.getBunnyUrl('flags', countryCode + '.svg');
+                    if (btnImg) btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
                     if (btnText) btnText.textContent = code + ' - ' + found.label;
                 } else {
-                    if (btnImg) btnImg.src = window.App.getBunnyUrl('flags', 'us.svg');
+                    if (btnImg) btnImg.src = window.App.getImageUrl('flags', 'us.svg');
                     if (btnText) btnText.textContent = code + ' - US Dollar';
                 }
             }

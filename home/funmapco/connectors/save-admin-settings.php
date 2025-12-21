@@ -103,10 +103,11 @@ try {
         return;
     }
 
-    // Separate messages, fieldset_tooltips, and checkout_options from settings
+    // Separate messages, fieldset_tooltips, checkout_options, and system_images from settings
     $messages = null;
     $fieldsetTooltips = null;
     $checkoutOptions = null;
+    $systemImages = null;
     $settings = $data;
     if (isset($data['messages']) && is_array($data['messages'])) {
         $messages = $data['messages'];
@@ -119,6 +120,26 @@ try {
     if (isset($data['checkout_options']) && is_array($data['checkout_options'])) {
         $checkoutOptions = $data['checkout_options'];
         unset($settings['checkout_options']);
+    }
+    if (isset($data['system_images']) && is_array($data['system_images'])) {
+        $systemImages = $data['system_images'];
+        unset($settings['system_images']);
+    }
+    
+    // Also check for keys prefixed with 'system_images.' (from frontend field registration)
+    $systemImageKeys = [];
+    foreach ($settings as $key => $value) {
+        if (strpos($key, 'system_images.') === 0) {
+            $imageKey = substr($key, 13); // Remove 'system_images.' prefix
+            $systemImageKeys[$imageKey] = $value;
+            unset($settings[$key]);
+        }
+    }
+    if (!empty($systemImageKeys)) {
+        if ($systemImages === null) {
+            $systemImages = [];
+        }
+        $systemImages = array_merge($systemImages, $systemImageKeys);
     }
 
     // Save settings
@@ -398,6 +419,37 @@ try {
         }
     }
 
+    // Save system_images if provided
+    $systemImagesUpdated = 0;
+    if ($systemImages !== null && is_array($systemImages) && !empty($systemImages)) {
+        // Check if system_images table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'system_images'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                INSERT INTO `system_images` (`image_key`, `filename`)
+                VALUES (:image_key, :filename)
+                ON DUPLICATE KEY UPDATE
+                    `filename` = VALUES(`filename`),
+                    `updated_at` = CURRENT_TIMESTAMP
+            ');
+
+            foreach ($systemImages as $imageKey => $filename) {
+                try {
+                    $result = $stmt->execute([
+                        ':image_key' => $imageKey,
+                        ':filename' => (string)$filename,
+                    ]);
+                    if ($result) {
+                        $systemImagesUpdated++;
+                    }
+                } catch (PDOException $e) {
+                    // Log error for specific image but continue with others
+                    error_log("Failed to save system image '{$imageKey}' with filename '{$filename}': " . $e->getMessage());
+                }
+            }
+        }
+    }
+
     $response = [
         'success' => true,
         'message' => 'Settings saved successfully',
@@ -417,6 +469,10 @@ try {
             'inserted' => $checkoutInserted,
             'deleted' => $checkoutDeleted,
         ];
+    }
+    
+    if ($systemImagesUpdated > 0) {
+        $response['system_images_updated'] = $systemImagesUpdated;
     }
 
     echo json_encode($response);
