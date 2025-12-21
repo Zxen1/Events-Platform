@@ -3726,6 +3726,8 @@ const SystemImagePickerComponent = (function(){
     var imageFolder = null;
     var images = [];
     var dataLoaded = false;
+    var apiCache = {}; // Cache for API results by folder path
+    var systemImagesData = null; // Database system_images
     
     function getImageFolder() {
         return imageFolder;
@@ -3743,7 +3745,7 @@ const SystemImagePickerComponent = (function(){
         return dataLoaded;
     }
     
-    // Load system images folder path from admin settings
+    // Load system images folder path and database images from admin settings
     function loadFolderFromSettings() {
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
@@ -3751,38 +3753,89 @@ const SystemImagePickerComponent = (function(){
                 if (res.settings && res.settings.folder_system_images) {
                     imageFolder = res.settings.folder_system_images;
                 }
+                if (res.system_images) {
+                    systemImagesData = res.system_images;
+                }
                 return imageFolder;
             });
     }
     
-    // Load images list from folder
-    function loadImagesFromFolder(folderPath) {
+    // Get database images instantly (from system_images table)
+    function getDatabaseImages(folderPath) {
+        if (!systemImagesData || !folderPath) return [];
+        var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        var dbImages = [];
+        for (var key in systemImagesData) {
+            if (systemImagesData.hasOwnProperty(key)) {
+                var filename = systemImagesData[key];
+                dbImages.push(folder + filename);
+            }
+        }
+        return dbImages;
+    }
+    
+    // Load images list - returns database images instantly, loads API in background
+    function loadImagesFromFolder(folderPath, callback) {
         folderPath = folderPath || imageFolder;
-        if (!folderPath) return Promise.resolve([]);
+        if (!folderPath) {
+            if (callback) callback([]);
+            return Promise.resolve([]);
+        }
         
-        // COMMENTED OUT - file list request (10-second delay)
-        // Images will load from database paths instead
-        /*
-        // Use existing connector (works for both local folders and Bunny CDN)
-        return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
+        var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
+        
+        // Return cached API results if available for this folder
+        if (apiCache[folderPath]) {
+            images = apiCache[folderPath];
+            dataLoaded = true;
+            if (callback) callback(apiCache[folderPath]);
+            return Promise.resolve(apiCache[folderPath]);
+        }
+        
+        // Get database images instantly
+        var dbImages = getDatabaseImages(folderPath);
+        images = dbImages;
+        
+        // Return database images immediately
+        if (callback) callback(dbImages);
+        var dbPromise = Promise.resolve(dbImages);
+        
+        // Load API in background
+        fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.success && Array.isArray(res.icons)) {
-                    var imageList = res.icons.map(function(img) {
-                        return folderPath + '/' + img;
+                    var apiImageList = res.icons.map(function(img) {
+                        return folder + img;
                     });
-                    images = imageList;
+                    
+                    // Merge with database images (avoid duplicates)
+                    var allImages = dbImages.slice();
+                    var dbFilenames = dbImages.map(function(path) {
+                        return getFilename(path);
+                    });
+                    
+                    apiImageList.forEach(function(apiPath) {
+                        var apiFilename = getFilename(apiPath);
+                        if (dbFilenames.indexOf(apiFilename) === -1) {
+                            allImages.push(apiPath);
+                        }
+                    });
+                    
+                    // Update cache and images
+                    apiCache[folderPath] = allImages;
+                    images = allImages;
                     dataLoaded = true;
-                    return imageList;
+                    
+                    // Callback with updated list if provided
+                    if (callback) callback(allImages);
                 }
-                return [];
             })
             .catch(function(err) {
-                console.warn('Failed to load system images from folder:', err);
-                return [];
+                console.warn('Failed to load system images from API:', err);
             });
-        */
-        return Promise.resolve([]);
+        
+        return dbPromise;
     }
     
     // Extract filename from path
@@ -3836,9 +3889,15 @@ const SystemImagePickerComponent = (function(){
         MenuManager.register(menu);
         
         // Load images and set button if database value exists
-        // Ensure folder is loaded from settings if not already set
-        var loadPromise = imageFolder ? Promise.resolve() : loadFolderFromSettings();
+        // Ensure folder and system_images are loaded from settings if not already set
+        var loadPromise = (imageFolder && systemImagesData) ? Promise.resolve() : loadFolderFromSettings();
         loadPromise.then(function() {
+            // Get database images for button display
+            var dbImages = getDatabaseImages(imageFolder);
+            if (dbImages.length > 0) {
+                return Promise.resolve(dbImages);
+            }
+            // If no database images, try API (but this should be instant from cache if available)
             return loadImagesFromFolder();
         }).then(function(imageList) {
             if (databaseValue) {
@@ -3868,6 +3927,56 @@ const SystemImagePickerComponent = (function(){
             }
         });
         
+        // Function to render image options (appends new ones, doesn't clear existing)
+        function renderImageOptions(imageList, clearFirst) {
+            if (clearFirst) {
+                optionsDiv.innerHTML = '';
+            }
+            
+            if (imageList.length === 0) {
+                if (clearFirst) {
+                    var msg = document.createElement('div');
+                    msg.className = 'component-systemimagepicker-error';
+                    msg.innerHTML = 'No images found.<br>Please set system images folder in Admin Settings.';
+                    optionsDiv.appendChild(msg);
+                }
+            } else {
+                imageList.forEach(function(imagePath) {
+                    // Skip if already rendered
+                    var existing = optionsDiv.querySelector('[data-image-path="' + imagePath + '"]');
+                    if (existing) return;
+                    
+                    var option = document.createElement('button');
+                    option.type = 'button';
+                    option.className = 'component-systemimagepicker-option';
+                    option.setAttribute('data-image-path', imagePath);
+                    
+                    var optImg = document.createElement('img');
+                    optImg.className = 'component-systemimagepicker-option-image';
+                    optImg.src = imagePath;
+                    optImg.alt = '';
+                    
+                    var optText = document.createElement('span');
+                    optText.className = 'component-systemimagepicker-option-text';
+                    optText.textContent = getFilename(imagePath);
+                    
+                    option.appendChild(optImg);
+                    option.appendChild(optText);
+                    
+                    option.onclick = function(ev) {
+                        ev.stopPropagation();
+                        currentImage = imagePath;
+                        buttonImage.src = imagePath;
+                        buttonImage.style.display = '';
+                        buttonText.textContent = getFilename(imagePath);
+                        menu.classList.remove('open');
+                        onSelect(imagePath);
+                    };
+                    optionsDiv.appendChild(option);
+                });
+            }
+        }
+        
         // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
@@ -3879,46 +3988,23 @@ const SystemImagePickerComponent = (function(){
                 MenuManager.closeAll(menu);
                 // Open menu immediately
                 menu.classList.add('open');
-                // Show loading state
-                optionsDiv.innerHTML = '<div class="component-systemimagepicker-loading">Loading...</div>';
-                // Load and show images in background
-                loadImagesFromFolder().then(function(imageList) {
-                    optionsDiv.innerHTML = '';
-                    if (imageList.length === 0) {
-                        var msg = document.createElement('div');
-                        msg.className = 'component-systemimagepicker-error';
-                        msg.innerHTML = 'No images found.<br>Please set system images folder in Admin Settings.';
-                        optionsDiv.appendChild(msg);
-                    } else {
-                        imageList.forEach(function(imagePath) {
-                            var option = document.createElement('button');
-                            option.type = 'button';
-                            option.className = 'component-systemimagepicker-option';
-                            
-                            var optImg = document.createElement('img');
-                            optImg.className = 'component-systemimagepicker-option-image';
-                            optImg.src = imagePath;
-                            optImg.alt = '';
-                            
-                            var optText = document.createElement('span');
-                            optText.className = 'component-systemimagepicker-option-text';
-                            optText.textContent = getFilename(imagePath);
-                            
-                            option.appendChild(optImg);
-                            option.appendChild(optText);
-                            
-                            option.onclick = function(ev) {
-                                ev.stopPropagation();
-                                currentImage = imagePath;
-                                buttonImage.src = imagePath;
-                                buttonImage.style.display = '';
-                                buttonText.textContent = getFilename(imagePath);
-                                menu.classList.remove('open');
-                                onSelect(imagePath);
-                            };
-                            optionsDiv.appendChild(option);
-                        });
-                    }
+                
+                // Show database images instantly (if systemImagesData is loaded)
+                var dbImages = systemImagesData ? getDatabaseImages(imageFolder) : [];
+                renderImageOptions(dbImages, true);
+                
+                // Ensure system_images data is loaded if not already
+                if (!systemImagesData) {
+                    loadFolderFromSettings().then(function() {
+                        // Update with database images now that they're loaded
+                        var updatedDbImages = getDatabaseImages(imageFolder);
+                        renderImageOptions(updatedDbImages, true);
+                    });
+                }
+                
+                // Load API in background and append new images (always runs)
+                loadImagesFromFolder(null, function(updatedImageList) {
+                    renderImageOptions(updatedImageList, false);
                 });
             }
         };
