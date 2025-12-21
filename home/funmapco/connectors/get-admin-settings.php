@@ -143,21 +143,55 @@ try {
         'settings' => $settings,
     ];
 
-    // Fetch system_images data
+    // Build system_images from admin_settings (system image keys)
+    // System image keys: small_map_card_pill, big_map_card_pill, multi_post_icon, etc.
+    $systemImageKeys = [
+        'small_map_card_pill', 'big_map_card_pill', 'multi_post_icon', 'hover_map_card_pill',
+        'msg_category_user_icon', 'msg_category_member_icon', 'msg_category_admin_icon', 'msg_category_email_icon',
+        'marker_cluster_icon', 'msg_category_fieldset-tooltips_icon', 'big_logo', 'small_logo',
+        'favicon', 'icon_filter', 'icon_recents', 'icon_posts', 'icon_map'
+    ];
+    
+    $systemImages = [];
+    foreach ($systemImageKeys as $key) {
+        if (isset($settings[$key])) {
+            $systemImages[$key] = $settings[$key];
+        }
+    }
+    $response['system_images'] = $systemImages;
+    
+    // Also fetch system_images table data (basket of available filenames)
     try {
         $stmt = $pdo->query("SHOW TABLES LIKE 'system_images'");
         if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query('SELECT `image_key`, `filename` FROM `system_images`');
+            $stmt = $pdo->query('SELECT `filename` FROM `system_images` ORDER BY `filename` ASC');
             $systemImageRows = $stmt->fetchAll();
             
-            $systemImages = [];
+            $systemImagesBasket = [];
             foreach ($systemImageRows as $row) {
-                $systemImages[$row['image_key']] = $row['filename'];
+                $systemImagesBasket[] = $row['filename'];
             }
-            $response['system_images'] = $systemImages;
+            $response['system_images_basket'] = $systemImagesBasket;
         }
     } catch (Throwable $systemImagesError) {
-        // If system_images fails, don't break the whole response
+        // If system_images table fails, don't break the whole response
+    }
+    
+    // Also fetch category_icons table data (basket of available filenames)
+    try {
+        $stmt = $pdo->query("SHOW TABLES LIKE 'category_icons'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->query('SELECT `filename` FROM `category_icons` ORDER BY `filename` ASC');
+            $categoryIconRows = $stmt->fetchAll();
+            
+            $categoryIconsBasket = [];
+            foreach ($categoryIconRows as $row) {
+                $categoryIconsBasket[] = $row['filename'];
+            }
+            $response['category_icons_basket'] = $categoryIconsBasket;
+        }
+    } catch (Throwable $categoryIconsError) {
+        // If category_icons table fails, don't break the whole response
     }
 
     // Fetch picklist data for dropdown settings (currencies, phone prefixes, amenities, etc.)

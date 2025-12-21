@@ -419,33 +419,30 @@ try {
         }
     }
 
-    // Save system_images if provided
+    // Save system_images if provided (save to admin_settings, not system_images table)
     $systemImagesUpdated = 0;
     if ($systemImages !== null && is_array($systemImages) && !empty($systemImages)) {
-        // Check if system_images table exists
-        $stmt = $pdo->query("SHOW TABLES LIKE 'system_images'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->prepare('
-                INSERT INTO `system_images` (`image_key`, `filename`)
-                VALUES (:image_key, :filename)
-                ON DUPLICATE KEY UPDATE
-                    `filename` = VALUES(`filename`),
-                    `updated_at` = CURRENT_TIMESTAMP
-            ');
+        $stmt = $pdo->prepare('
+            INSERT INTO `admin_settings` (`setting_key`, `setting_value`, `setting_type`)
+            VALUES (:setting_key, :setting_value, :setting_type)
+            ON DUPLICATE KEY UPDATE
+                `setting_value` = VALUES(`setting_value`),
+                `updated_at` = CURRENT_TIMESTAMP
+        ');
 
-            foreach ($systemImages as $imageKey => $filename) {
-                try {
-                    $result = $stmt->execute([
-                        ':image_key' => $imageKey,
-                        ':filename' => (string)$filename,
-                    ]);
-                    if ($result) {
-                        $systemImagesUpdated++;
-                    }
-                } catch (PDOException $e) {
-                    // Log error for specific image but continue with others
-                    error_log("Failed to save system image '{$imageKey}' with filename '{$filename}': " . $e->getMessage());
+        foreach ($systemImages as $imageKey => $filename) {
+            try {
+                $result = $stmt->execute([
+                    ':setting_key' => $imageKey,
+                    ':setting_value' => (string)$filename,
+                    ':setting_type' => 'string',
+                ]);
+                if ($result) {
+                    $systemImagesUpdated++;
                 }
+            } catch (PDOException $e) {
+                // Log error for specific image but continue with others
+                error_log("Failed to save system image '{$imageKey}' with filename '{$filename}': " . $e->getMessage());
             }
         }
     }

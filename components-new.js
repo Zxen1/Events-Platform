@@ -2900,7 +2900,7 @@ const IconPickerComponent = (function(){
         // Images will load from database paths instead
         /*
         // Use existing connector (works for both local folders and Bunny CDN)
-        return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
+        return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.success && Array.isArray(res.icons)) {
@@ -3727,7 +3727,8 @@ const SystemImagePickerComponent = (function(){
     var images = [];
     var dataLoaded = false;
     var apiCache = {}; // Cache for API results by folder path
-    var systemImagesData = null; // Database system_images
+    var systemImagesData = null; // Selected system images from admin_settings
+    var systemImagesBasket = null; // Basket of available filenames from system_images table
     
     function getImageFolder() {
         return imageFolder;
@@ -3745,7 +3746,7 @@ const SystemImagePickerComponent = (function(){
         return dataLoaded;
     }
     
-    // Load system images folder path and database images from admin settings
+    // Load system images folder path and basket from admin settings
     function loadFolderFromSettings() {
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
@@ -3756,21 +3757,21 @@ const SystemImagePickerComponent = (function(){
                 if (res.system_images) {
                     systemImagesData = res.system_images;
                 }
+                if (res.system_images_basket && Array.isArray(res.system_images_basket)) {
+                    systemImagesBasket = res.system_images_basket;
+                }
                 return imageFolder;
             });
     }
     
-    // Get database images instantly (from system_images table)
+    // Get database images instantly (from system_images basket table)
     function getDatabaseImages(folderPath) {
-        if (!systemImagesData || !folderPath) return [];
+        if (!systemImagesBasket || !folderPath || !Array.isArray(systemImagesBasket)) return [];
         var folder = folderPath.endsWith('/') ? folderPath : folderPath + '/';
         var dbImages = [];
-        for (var key in systemImagesData) {
-            if (systemImagesData.hasOwnProperty(key)) {
-                var filename = systemImagesData[key];
-                dbImages.push(folder + filename);
-            }
-        }
+        systemImagesBasket.forEach(function(filename) {
+            dbImages.push(folder + filename);
+        });
         return dbImages;
     }
     
@@ -3801,7 +3802,7 @@ const SystemImagePickerComponent = (function(){
         var dbPromise = Promise.resolve(dbImages);
         
         // Load API in background
-        fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(folderPath))
+        fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folderPath))
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.success && Array.isArray(res.icons)) {
@@ -3827,8 +3828,51 @@ const SystemImagePickerComponent = (function(){
                     images = allImages;
                     dataLoaded = true;
                     
-                    // Callback with updated list if provided
+                    // Callback with updated list if provided (menu is already loaded)
                     if (callback) callback(allImages);
+                    
+                    // Sync database after menu has loaded (background task)
+                    var apiFilenames = res.icons;
+                    fetch('/gateway.php?action=list-files', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            filenames: apiFilenames,
+                            table: 'system_images'
+                        })
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(function(syncRes) {
+                        if (syncRes.success && syncRes.changes_count > 0) {
+                            // Database was updated - reload system_images data and update menu
+                            loadFolderFromSettings().then(function() {
+                                // Re-render menu with updated database images
+                                if (callback) {
+                                    var updatedDbImages = getDatabaseImages(folderPath);
+                                    var updatedAllImages = updatedDbImages.slice();
+                                    var updatedDbFilenames = updatedDbImages.map(function(path) {
+                                        return getFilename(path);
+                                    });
+                                    
+                                    apiImageList.forEach(function(apiPath) {
+                                        var apiFilename = getFilename(apiPath);
+                                        if (updatedDbFilenames.indexOf(apiFilename) === -1) {
+                                            updatedAllImages.push(apiPath);
+                                        }
+                                    });
+                                    
+                                    apiCache[folderPath] = updatedAllImages;
+                                    images = updatedAllImages;
+                                    callback(updatedAllImages);
+                                }
+                            });
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('Failed to sync system images:', err);
+                    });
                 }
             })
             .catch(function(err) {

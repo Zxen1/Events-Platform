@@ -580,7 +580,7 @@
                 }
                 checkoutOptions = checkoutOptions || {};
                 checkoutOptions.icon_folder = iconFolder;
-                return fetch('/gateway.php?action=list-icons&folder=' + encodeURIComponent(iconFolder));
+                return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(iconFolder));
             })
             .then(function(r) { return r.json(); })
             .then(function(res) {
