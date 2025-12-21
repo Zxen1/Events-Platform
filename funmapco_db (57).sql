@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 22, 2025 at 08:14 AM
+-- Generation Time: Dec 22, 2025 at 08:38 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -261,6 +261,57 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `amenities`
+--
+
+CREATE TABLE `amenities` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `amenities`
+--
+
+INSERT INTO `amenities` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, 'parking.svg', 'Parking', 'Vehicle parking available at or near this location', 1, 1),
+(2, 'wheelchair.svg', 'Wheelchair Access', 'This location is wheelchair accessible', 2, 1),
+(3, 'accessible-parking.svg', 'Accessible Parking', 'Designated accessible parking spaces available', 3, 1),
+(4, 'food.svg', 'Food & Beverages', 'Food and beverages available for purchase', 10, 1),
+(5, 'byo.svg', 'BYO Allowed', 'BYO food or beverages permitted', 11, 1),
+(6, 'licensed.svg', 'Licensed Venue', 'Licensed to serve alcohol', 12, 1),
+(7, 'alacarte.svg', 'À La Carte', 'À la carte menu available', 13, 1),
+(8, 'takeaway.svg', 'Takeaway', 'Takeaway orders available', 14, 1),
+(9, 'delivery.svg', 'Delivery', 'Delivery service available', 15, 1),
+(10, 'reservations.svg', 'Reservations', 'Reservations accepted or required', 16, 1),
+(11, 'kids.svg', 'Kid Friendly', 'Suitable for children', 20, 1),
+(12, 'childminding.svg', 'Child Minding', 'Child minding services available', 21, 1),
+(13, 'babychange.svg', 'Baby Change', 'Baby change facilities available', 22, 1),
+(14, 'petfriendly.svg', 'Pet Friendly', 'Pets welcome', 23, 1),
+(15, 'serviceanimals.svg', 'Service Animals', 'Service animals welcome', 24, 1),
+(16, 'wifi.svg', 'WiFi', 'Free WiFi available', 30, 1),
+(17, 'aircon.svg', 'Air Conditioning', 'Air conditioned venue', 31, 1),
+(18, 'outdoor.svg', 'Outdoor Seating', 'Outdoor seating area available', 32, 1),
+(19, 'smoking.svg', 'Smoking Area', 'Designated smoking area', 33, 1),
+(20, 'restrooms.svg', 'Restrooms', 'Public restrooms available', 34, 1),
+(21, 'atm.svg', 'ATM', 'ATM on premises', 35, 1),
+(22, 'coatcheck.svg', 'Coat Check', 'Coat check service available', 36, 1),
+(23, 'livemusic.svg', 'Live Music', 'Live music performances', 40, 1),
+(24, 'dancefloor.svg', 'Dance Floor', 'Dance floor available', 41, 1),
+(25, 'vip.svg', 'VIP Area', 'VIP or private area available', 42, 1),
+(26, 'pool.svg', 'Swimming Pool', 'Swimming pool on site', 50, 1),
+(27, 'gym.svg', 'Gym', 'Fitness center or gym available', 51, 1),
+(28, 'breakfast.svg', 'Breakfast Included', 'Breakfast included with stay', 52, 1),
+(29, 'kitchen.svg', 'Kitchen Facilities', 'Kitchen or kitchenette available', 53, 1),
+(30, 'laundry.svg', 'Laundry', 'Laundry facilities available', 54, 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `banned_words`
 --
 
@@ -312,6 +363,116 @@ INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `
 (47, 'Test', 'test', 7, 0, 'opportunities.svg', NULL, '2025-11-17 04:45:27', '2025-12-22 06:25:10'),
 (7, 'Stay', 'stay', 8, 0, 'stay.svg', '#1ABC9C', '2025-12-15 00:11:53', '2025-12-22 06:25:10'),
 (8, 'Get Around', 'get-around', 9, 0, 'get-around.svg', '#34495E', '2025-12-15 00:11:53', '2025-12-22 06:25:10');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `category_icons`
+--
+
+CREATE TABLE `category_icons` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `category_icons`
+--
+
+INSERT INTO `category_icons` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, 'buy-and-sell-blue.svg', 'buy-and-sell-blue.svg', '', 0, 1),
+(2, 'buy-and-sell-cyan.svg', 'buy-and-sell-cyan.svg', '', 0, 1),
+(3, 'buy-and-sell-gray.svg', 'buy-and-sell-gray.svg', '', 0, 1),
+(4, 'buy-and-sell-green.svg', 'buy-and-sell-green.svg', '', 0, 1),
+(5, 'buy-and-sell-orange.svg', 'buy-and-sell-orange.svg', '', 0, 1),
+(6, 'buy-and-sell-pink.svg', 'buy-and-sell-pink.svg', '', 0, 1),
+(7, 'buy-and-sell-purple.svg', 'buy-and-sell-purple.svg', '', 0, 1),
+(8, 'buy-and-sell-red.svg', 'buy-and-sell-red.svg', '', 0, 1),
+(9, 'buy-and-sell-teal.svg', 'buy-and-sell-teal.svg', '', 0, 1),
+(10, 'buy-and-sell-yellow.svg', 'buy-and-sell-yellow.svg', '', 0, 1),
+(11, 'buy-and-sell.svg', 'buy-and-sell.svg', '', 0, 1),
+(12, 'eat-and-drink-blue.svg', 'eat-and-drink-blue.svg', '', 0, 1),
+(13, 'eat-and-drink-cyan.svg', 'eat-and-drink-cyan.svg', '', 0, 1),
+(14, 'eat-and-drink-gray.svg', 'eat-and-drink-gray.svg', '', 0, 1),
+(15, 'eat-and-drink-green.svg', 'eat-and-drink-green.svg', '', 0, 1),
+(16, 'eat-and-drink-orange.svg', 'eat-and-drink-orange.svg', '', 0, 1),
+(17, 'eat-and-drink-pink.svg', 'eat-and-drink-pink.svg', '', 0, 1),
+(18, 'eat-and-drink-purple.svg', 'eat-and-drink-purple.svg', '', 0, 1),
+(19, 'eat-and-drink-red.svg', 'eat-and-drink-red.svg', '', 0, 1),
+(20, 'eat-and-drink-teal.svg', 'eat-and-drink-teal.svg', '', 0, 1),
+(21, 'eat-and-drink-yellow.svg', 'eat-and-drink-yellow.svg', '', 0, 1),
+(22, 'eat-and-drink.svg', 'eat-and-drink.svg', '', 0, 1),
+(23, 'for-hire-blue.svg', 'for-hire-blue.svg', '', 0, 1),
+(24, 'for-hire-cyan.svg', 'for-hire-cyan.svg', '', 0, 1),
+(25, 'for-hire-gray.svg', 'for-hire-gray.svg', '', 0, 1),
+(26, 'for-hire-green.svg', 'for-hire-green.svg', '', 0, 1),
+(27, 'for-hire-orange.svg', 'for-hire-orange.svg', '', 0, 1),
+(28, 'for-hire-pink.svg', 'for-hire-pink.svg', '', 0, 1),
+(29, 'for-hire-purple.svg', 'for-hire-purple.svg', '', 0, 1),
+(30, 'for-hire-red.svg', 'for-hire-red.svg', '', 0, 1),
+(31, 'for-hire-teal.svg', 'for-hire-teal.svg', '', 0, 1),
+(32, 'for-hire-yellow.svg', 'for-hire-yellow.svg', '', 0, 1),
+(33, 'for-hire.svg', 'for-hire.svg', '', 0, 1),
+(34, 'get-around-blue.svg', 'get-around-blue.svg', '', 0, 1),
+(35, 'get-around-cyan.svg', 'get-around-cyan.svg', '', 0, 1),
+(36, 'get-around-gray.svg', 'get-around-gray.svg', '', 0, 1),
+(37, 'get-around-green.svg', 'get-around-green.svg', '', 0, 1),
+(38, 'get-around-orange.svg', 'get-around-orange.svg', '', 0, 1),
+(39, 'get-around-pink.svg', 'get-around-pink.svg', '', 0, 1),
+(40, 'get-around-purple.svg', 'get-around-purple.svg', '', 0, 1),
+(41, 'get-around-red.svg', 'get-around-red.svg', '', 0, 1),
+(42, 'get-around-teal.svg', 'get-around-teal.svg', '', 0, 1),
+(43, 'get-around-yellow.svg', 'get-around-yellow.svg', '', 0, 1),
+(44, 'get-around.svg', 'get-around.svg', '', 0, 1),
+(45, 'learning-blue.svg', 'learning-blue.svg', '', 0, 1),
+(46, 'learning-cyan.svg', 'learning-cyan.svg', '', 0, 1),
+(47, 'learning-gray.svg', 'learning-gray.svg', '', 0, 1),
+(48, 'learning-green.svg', 'learning-green.svg', '', 0, 1),
+(49, 'learning-orange.svg', 'learning-orange.svg', '', 0, 1),
+(50, 'learning-pink.svg', 'learning-pink.svg', '', 0, 1),
+(51, 'learning-purple.svg', 'learning-purple.svg', '', 0, 1),
+(52, 'learning-red.svg', 'learning-red.svg', '', 0, 1),
+(53, 'learning-teal.svg', 'learning-teal.svg', '', 0, 1),
+(54, 'learning-yellow.svg', 'learning-yellow.svg', '', 0, 1),
+(55, 'learning.svg', 'learning.svg', '', 0, 1),
+(56, 'opportunities-blue.svg', 'opportunities-blue.svg', '', 0, 1),
+(57, 'opportunities-cyan.svg', 'opportunities-cyan.svg', '', 0, 1),
+(58, 'opportunities-gray.svg', 'opportunities-gray.svg', '', 0, 1),
+(59, 'opportunities-green.svg', 'opportunities-green.svg', '', 0, 1),
+(60, 'opportunities-orange.svg', 'opportunities-orange.svg', '', 0, 1),
+(61, 'opportunities-pink.svg', 'opportunities-pink.svg', '', 0, 1),
+(62, 'opportunities-purple.svg', 'opportunities-purple.svg', '', 0, 1),
+(63, 'opportunities-red.svg', 'opportunities-red.svg', '', 0, 1),
+(64, 'opportunities-teal.svg', 'opportunities-teal.svg', '', 0, 1),
+(65, 'opportunities-yellow.svg', 'opportunities-yellow.svg', '', 0, 1),
+(66, 'opportunities.svg', 'opportunities.svg', '', 0, 1),
+(67, 'stay-blue.svg', 'stay-blue.svg', '', 0, 1),
+(68, 'stay-cyan.svg', 'stay-cyan.svg', '', 0, 1),
+(69, 'stay-gray.svg', 'stay-gray.svg', '', 0, 1),
+(70, 'stay-green.svg', 'stay-green.svg', '', 0, 1),
+(71, 'stay-orange.svg', 'stay-orange.svg', '', 0, 1),
+(72, 'stay-pink.svg', 'stay-pink.svg', '', 0, 1),
+(73, 'stay-purple.svg', 'stay-purple.svg', '', 0, 1),
+(74, 'stay-red.svg', 'stay-red.svg', '', 0, 1),
+(75, 'stay-teal.svg', 'stay-teal.svg', '', 0, 1),
+(76, 'stay-yellow.svg', 'stay-yellow.svg', '', 0, 1),
+(77, 'stay.svg', 'stay.svg', '', 0, 1),
+(78, 'whats-on-blue.svg', 'whats-on-blue.svg', '', 0, 1),
+(79, 'whats-on-cyan.svg', 'whats-on-cyan.svg', '', 0, 1),
+(80, 'whats-on-gray.svg', 'whats-on-gray.svg', '', 0, 1),
+(81, 'whats-on-green.svg', 'whats-on-green.svg', '', 0, 1),
+(82, 'whats-on-orange.svg', 'whats-on-orange.svg', '', 0, 1),
+(83, 'whats-on-pink.svg', 'whats-on-pink.svg', '', 0, 1),
+(84, 'whats-on-purple.svg', 'whats-on-purple.svg', '', 0, 1),
+(85, 'whats-on-red.svg', 'whats-on-red.svg', '', 0, 1),
+(86, 'whats-on-teal.svg', 'whats-on-teal.svg', '', 0, 1),
+(87, 'whats-on-yellow.svg', 'whats-on-yellow.svg', '', 0, 1),
+(88, 'whats-on.svg', 'whats-on.svg', '', 0, 1),
+(89, 'Krissy Nicholsons 40th birthday montage.00_03_31_01.Still059.jpg', 'Krissy Nicholsons 40th birthday montage.00_03_31_0', '', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -387,6 +548,178 @@ CREATE TABLE `coupons` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `currencies`
+--
+
+CREATE TABLE `currencies` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `currencies`
+--
+
+INSERT INTO `currencies` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, 'af.svg', 'AFN', 'Afghan Afghani', 1, 1),
+(2, 'al.svg', 'ALL', 'Albanian Lek', 2, 1),
+(3, 'dz.svg', 'DZD', 'Algerian Dinar', 3, 1),
+(4, 'ao.svg', 'AOA', 'Angolan Kwanza', 4, 1),
+(5, 'ar.svg', 'ARS', 'Argentine Peso', 5, 1),
+(6, 'am.svg', 'AMD', 'Armenian Dram', 6, 1),
+(7, 'aw.svg', 'AWG', 'Aruban Florin', 7, 1),
+(8, 'au.svg', 'AUD', 'Australian Dollar', 8, 1),
+(9, 'az.svg', 'AZN', 'Azerbaijani Manat', 9, 1),
+(10, 'bs.svg', 'BSD', 'Bahamian Dollar', 10, 1),
+(11, 'bh.svg', 'BHD', 'Bahraini Dinar', 11, 1),
+(12, 'bd.svg', 'BDT', 'Bangladeshi Taka', 12, 1),
+(13, 'bb.svg', 'BBD', 'Barbadian Dollar', 13, 1),
+(14, 'by.svg', 'BYN', 'Belarusian Ruble', 14, 1),
+(15, 'bz.svg', 'BZD', 'Belize Dollar', 15, 1),
+(16, 'bm.svg', 'BMD', 'Bermudian Dollar', 16, 1),
+(17, 'bt.svg', 'BTN', 'Bhutanese Ngultrum', 17, 1),
+(18, 'bo.svg', 'BOB', 'Bolivian Boliviano', 18, 1),
+(19, 'ba.svg', 'BAM', 'Bosnian Mark', 19, 1),
+(20, 'bw.svg', 'BWP', 'Botswana Pula', 20, 1),
+(21, 'br.svg', 'BRL', 'Brazilian Real', 21, 1),
+(22, 'bn.svg', 'BND', 'Brunei Dollar', 22, 1),
+(23, 'bg.svg', 'BGN', 'Bulgarian Lev', 23, 1),
+(24, 'bi.svg', 'BIF', 'Burundian Franc', 24, 1),
+(25, 'kh.svg', 'KHR', 'Cambodian Riel', 25, 1),
+(26, 'ca.svg', 'CAD', 'Canadian Dollar', 26, 1),
+(27, 'cv.svg', 'CVE', 'Cape Verdean Escudo', 27, 1),
+(28, 'ky.svg', 'KYD', 'Cayman Islands Dollar', 28, 1),
+(29, 'cm.svg', 'XAF', 'Central African CFA', 29, 1),
+(30, 'nc.svg', 'XPF', 'CFP Franc', 30, 1),
+(31, 'cl.svg', 'CLP', 'Chilean Peso', 31, 1),
+(32, 'cn.svg', 'CNY', 'Chinese Yuan', 32, 1),
+(33, 'co.svg', 'COP', 'Colombian Peso', 33, 1),
+(34, 'km.svg', 'KMF', 'Comorian Franc', 34, 1),
+(35, 'cd.svg', 'CDF', 'Congolese Franc', 35, 1),
+(36, 'cr.svg', 'CRC', 'Costa Rican Colon', 36, 1),
+(37, 'hr.svg', 'HRK', 'Croatian Kuna', 37, 1),
+(38, 'cu.svg', 'CUP', 'Cuban Peso', 38, 1),
+(39, 'cz.svg', 'CZK', 'Czech Koruna', 39, 1),
+(40, 'dk.svg', 'DKK', 'Danish Krone', 40, 1),
+(41, 'dj.svg', 'DJF', 'Djiboutian Franc', 41, 1),
+(42, 'do.svg', 'DOP', 'Dominican Peso', 42, 1),
+(43, 'eg.svg', 'EGP', 'Egyptian Pound', 43, 1),
+(44, 'er.svg', 'ERN', 'Eritrean Nakfa', 44, 1),
+(45, 'et.svg', 'ETB', 'Ethiopian Birr', 45, 1),
+(46, 'eu.svg', 'EUR', 'Euro', 46, 1),
+(47, 'fk.svg', 'FKP', 'Falkland Islands Pound', 47, 1),
+(48, 'fj.svg', 'FJD', 'Fijian Dollar', 48, 1),
+(49, 'gm.svg', 'GMD', 'Gambian Dalasi', 49, 1),
+(50, 'ge.svg', 'GEL', 'Georgian Lari', 50, 1),
+(51, 'gh.svg', 'GHS', 'Ghanaian Cedi', 51, 1),
+(52, 'gi.svg', 'GIP', 'Gibraltar Pound', 52, 1),
+(53, 'gt.svg', 'GTQ', 'Guatemalan Quetzal', 53, 1),
+(54, 'gn.svg', 'GNF', 'Guinean Franc', 54, 1),
+(55, 'gy.svg', 'GYD', 'Guyanese Dollar', 55, 1),
+(56, 'ht.svg', 'HTG', 'Haitian Gourde', 56, 1),
+(57, 'hn.svg', 'HNL', 'Honduran Lempira', 57, 1),
+(58, 'hk.svg', 'HKD', 'Hong Kong Dollar', 58, 1),
+(59, 'hu.svg', 'HUF', 'Hungarian Forint', 59, 1),
+(60, 'is.svg', 'ISK', 'Icelandic Krona', 60, 1),
+(61, 'in.svg', 'INR', 'Indian Rupee', 61, 1),
+(62, 'id.svg', 'IDR', 'Indonesian Rupiah', 62, 1),
+(63, 'ir.svg', 'IRR', 'Iranian Rial', 63, 1),
+(64, 'iq.svg', 'IQD', 'Iraqi Dinar', 64, 1),
+(65, 'il.svg', 'ILS', 'Israeli Shekel', 65, 1),
+(66, 'jm.svg', 'JMD', 'Jamaican Dollar', 66, 1),
+(67, 'jp.svg', 'JPY', 'Japanese Yen', 67, 1),
+(68, 'jo.svg', 'JOD', 'Jordanian Dinar', 68, 1),
+(69, 'kz.svg', 'KZT', 'Kazakhstani Tenge', 69, 1),
+(70, 'ke.svg', 'KES', 'Kenyan Shilling', 70, 1),
+(71, 'kw.svg', 'KWD', 'Kuwaiti Dinar', 71, 1),
+(72, 'kg.svg', 'KGS', 'Kyrgyzstani Som', 72, 1),
+(73, 'la.svg', 'LAK', 'Lao Kip', 73, 1),
+(74, 'lb.svg', 'LBP', 'Lebanese Pound', 74, 1),
+(75, 'ls.svg', 'LSL', 'Lesotho Loti', 75, 1),
+(76, 'lr.svg', 'LRD', 'Liberian Dollar', 76, 1),
+(77, 'ly.svg', 'LYD', 'Libyan Dinar', 77, 1),
+(78, 'mo.svg', 'MOP', 'Macanese Pataca', 78, 1),
+(79, 'mk.svg', 'MKD', 'Macedonian Denar', 79, 1),
+(80, 'mg.svg', 'MGA', 'Malagasy Ariary', 80, 1),
+(81, 'mw.svg', 'MWK', 'Malawian Kwacha', 81, 1),
+(82, 'my.svg', 'MYR', 'Malaysian Ringgit', 82, 1),
+(83, 'mv.svg', 'MVR', 'Maldivian Rufiyaa', 83, 1),
+(84, 'mr.svg', 'MRU', 'Mauritanian Ouguiya', 84, 1),
+(85, 'mu.svg', 'MUR', 'Mauritian Rupee', 85, 1),
+(86, 'mx.svg', 'MXN', 'Mexican Peso', 86, 1),
+(87, 'md.svg', 'MDL', 'Moldovan Leu', 87, 1),
+(88, 'mn.svg', 'MNT', 'Mongolian Tugrik', 88, 1),
+(89, 'ma.svg', 'MAD', 'Moroccan Dirham', 89, 1),
+(90, 'mz.svg', 'MZN', 'Mozambican Metical', 90, 1),
+(91, 'mm.svg', 'MMK', 'Myanmar Kyat', 91, 1),
+(92, 'na.svg', 'NAD', 'Namibian Dollar', 92, 1),
+(93, 'np.svg', 'NPR', 'Nepalese Rupee', 93, 1),
+(94, 'nz.svg', 'NZD', 'New Zealand Dollar', 94, 1),
+(95, 'ni.svg', 'NIO', 'Nicaraguan Cordoba', 95, 1),
+(96, 'ng.svg', 'NGN', 'Nigerian Naira', 96, 1),
+(97, 'kp.svg', 'KPW', 'North Korean Won', 97, 1),
+(98, 'no.svg', 'NOK', 'Norwegian Krone', 98, 1),
+(99, 'om.svg', 'OMR', 'Omani Rial', 99, 1),
+(100, 'pk.svg', 'PKR', 'Pakistani Rupee', 100, 1),
+(101, 'pa.svg', 'PAB', 'Panamanian Balboa', 101, 1),
+(102, 'pg.svg', 'PGK', 'Papua New Guinean Kina', 102, 1),
+(103, 'py.svg', 'PYG', 'Paraguayan Guarani', 103, 1),
+(104, 'pe.svg', 'PEN', 'Peruvian Sol', 104, 1),
+(105, 'ph.svg', 'PHP', 'Philippine Peso', 105, 1),
+(106, 'pl.svg', 'PLN', 'Polish Zloty', 106, 1),
+(107, 'gb.svg', 'GBP', 'Pound Sterling', 107, 1),
+(108, 'qa.svg', 'QAR', 'Qatari Riyal', 108, 1),
+(109, 'ro.svg', 'RON', 'Romanian Leu', 109, 1),
+(110, 'ru.svg', 'RUB', 'Russian Ruble', 110, 1),
+(111, 'rw.svg', 'RWF', 'Rwandan Franc', 111, 1),
+(112, 'ws.svg', 'WST', 'Samoan Tala', 112, 1),
+(113, 'sa.svg', 'SAR', 'Saudi Riyal', 113, 1),
+(114, 'rs.svg', 'RSD', 'Serbian Dinar', 114, 1),
+(115, 'sc.svg', 'SCR', 'Seychellois Rupee', 115, 1),
+(116, 'sl.svg', 'SLL', 'Sierra Leonean Leone', 116, 1),
+(117, 'sg.svg', 'SGD', 'Singapore Dollar', 117, 1),
+(118, 'sb.svg', 'SBD', 'Solomon Islands Dollar', 118, 1),
+(119, 'so.svg', 'SOS', 'Somali Shilling', 119, 1),
+(120, 'za.svg', 'ZAR', 'South African Rand', 120, 1),
+(121, 'kr.svg', 'KRW', 'South Korean Won', 121, 1),
+(122, 'ss.svg', 'SSP', 'South Sudanese Pound', 122, 1),
+(123, 'lk.svg', 'LKR', 'Sri Lankan Rupee', 123, 1),
+(124, 'sd.svg', 'SDG', 'Sudanese Pound', 124, 1),
+(125, 'sr.svg', 'SRD', 'Surinamese Dollar', 125, 1),
+(126, 'sz.svg', 'SZL', 'Swazi Lilangeni', 126, 1),
+(127, 'se.svg', 'SEK', 'Swedish Krona', 127, 1),
+(128, 'ch.svg', 'CHF', 'Swiss Franc', 128, 1),
+(129, 'sy.svg', 'SYP', 'Syrian Pound', 129, 1),
+(130, 'tw.svg', 'TWD', 'Taiwan Dollar', 130, 1),
+(131, 'tj.svg', 'TJS', 'Tajikistani Somoni', 131, 1),
+(132, 'tz.svg', 'TZS', 'Tanzanian Shilling', 132, 1),
+(133, 'th.svg', 'THB', 'Thai Baht', 133, 1),
+(134, 'to.svg', 'TOP', 'Tongan Paanga', 134, 1),
+(135, 'tt.svg', 'TTD', 'Trinidad Dollar', 135, 1),
+(136, 'tn.svg', 'TND', 'Tunisian Dinar', 136, 1),
+(137, 'tr.svg', 'TRY', 'Turkish Lira', 137, 1),
+(138, 'tm.svg', 'TMT', 'Turkmenistani Manat', 138, 1),
+(139, 'ae.svg', 'AED', 'UAE Dirham', 139, 1),
+(140, 'ug.svg', 'UGX', 'Ugandan Shilling', 140, 1),
+(141, 'ua.svg', 'UAH', 'Ukrainian Hryvnia', 141, 1),
+(142, 'uy.svg', 'UYU', 'Uruguayan Peso', 142, 1),
+(143, 'us.svg', 'USD', 'US Dollar', 143, 1),
+(144, 'uz.svg', 'UZS', 'Uzbekistani Som', 144, 1),
+(145, 'vu.svg', 'VUV', 'Vanuatu Vatu', 145, 1),
+(146, 've.svg', 'VES', 'Venezuelan Bolivar', 146, 1),
+(147, 'vn.svg', 'VND', 'Vietnamese Dong', 147, 1),
+(148, 'sn.svg', 'XOF', 'West African CFA', 148, 1),
+(149, 'ye.svg', 'YER', 'Yemeni Rial', 149, 1),
+(150, 'zm.svg', 'ZMW', 'Zambian Kwacha', 150, 1),
+(151, 'zw.svg', 'ZWL', 'Zimbabwean Dollar', 151, 1);
 
 -- --------------------------------------------------------
 
@@ -729,6 +1062,298 @@ CREATE TABLE `moderation_log` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `phone_prefixes`
+--
+
+CREATE TABLE `phone_prefixes` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `phone_prefixes`
+--
+
+INSERT INTO `phone_prefixes` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, 'af.svg', '+93', 'Afghanistan', 1, 1),
+(2, 'al.svg', '+355', 'Albania', 2, 1),
+(3, 'dz.svg', '+213', 'Algeria', 3, 1),
+(4, 'ad.svg', '+376', 'Andorra', 4, 1),
+(5, 'ao.svg', '+244', 'Angola', 5, 1),
+(6, 'ag.svg', '+1', 'Antigua and Barbuda', 6, 1),
+(7, 'ar.svg', '+54', 'Argentina', 7, 1),
+(8, 'am.svg', '+374', 'Armenia', 8, 1),
+(9, 'au.svg', '+61', 'Australia', 9, 1),
+(10, 'at.svg', '+43', 'Austria', 10, 1),
+(11, 'az.svg', '+994', 'Azerbaijan', 11, 1),
+(12, 'bs.svg', '+1', 'Bahamas', 12, 1),
+(13, 'bh.svg', '+973', 'Bahrain', 13, 1),
+(14, 'bd.svg', '+880', 'Bangladesh', 14, 1),
+(15, 'bb.svg', '+1', 'Barbados', 15, 1),
+(16, 'by.svg', '+375', 'Belarus', 16, 1),
+(17, 'be.svg', '+32', 'Belgium', 17, 1),
+(18, 'bz.svg', '+501', 'Belize', 18, 1),
+(19, 'bj.svg', '+229', 'Benin', 19, 1),
+(20, 'bt.svg', '+975', 'Bhutan', 20, 1),
+(21, 'bo.svg', '+591', 'Bolivia', 21, 1),
+(22, 'ba.svg', '+387', 'Bosnia and Herzegovina', 22, 1),
+(23, 'bw.svg', '+267', 'Botswana', 23, 1),
+(24, 'br.svg', '+55', 'Brazil', 24, 1),
+(25, 'bn.svg', '+673', 'Brunei', 25, 1),
+(26, 'bg.svg', '+359', 'Bulgaria', 26, 1),
+(27, 'bf.svg', '+226', 'Burkina Faso', 27, 1),
+(28, 'bi.svg', '+257', 'Burundi', 28, 1),
+(29, 'kh.svg', '+855', 'Cambodia', 29, 1),
+(30, 'cm.svg', '+237', 'Cameroon', 30, 1),
+(31, 'ca.svg', '+1', 'Canada', 31, 1),
+(32, 'cv.svg', '+238', 'Cape Verde', 32, 1),
+(33, 'cf.svg', '+236', 'Central African Republic', 33, 1),
+(34, 'td.svg', '+235', 'Chad', 34, 1),
+(35, 'cl.svg', '+56', 'Chile', 35, 1),
+(36, 'cn.svg', '+86', 'China', 36, 1),
+(37, 'co.svg', '+57', 'Colombia', 37, 1),
+(38, 'km.svg', '+269', 'Comoros', 38, 1),
+(39, 'cg.svg', '+242', 'Congo', 39, 1),
+(40, 'cd.svg', '+243', 'Congo (DRC)', 40, 1),
+(41, 'cr.svg', '+506', 'Costa Rica', 41, 1),
+(42, 'hr.svg', '+385', 'Croatia', 42, 1),
+(43, 'cu.svg', '+53', 'Cuba', 43, 1),
+(44, 'cy.svg', '+357', 'Cyprus', 44, 1),
+(45, 'cz.svg', '+420', 'Czech Republic', 45, 1),
+(46, 'dk.svg', '+45', 'Denmark', 46, 1),
+(47, 'dj.svg', '+253', 'Djibouti', 47, 1),
+(48, 'dm.svg', '+1', 'Dominica', 48, 1),
+(49, 'do.svg', '+1', 'Dominican Republic', 49, 1),
+(50, 'ec.svg', '+593', 'Ecuador', 50, 1),
+(51, 'eg.svg', '+20', 'Egypt', 51, 1),
+(52, 'sv.svg', '+503', 'El Salvador', 52, 1),
+(53, 'gq.svg', '+240', 'Equatorial Guinea', 53, 1),
+(54, 'er.svg', '+291', 'Eritrea', 54, 1),
+(55, 'ee.svg', '+372', 'Estonia', 55, 1),
+(56, 'sz.svg', '+268', 'Eswatini', 56, 1),
+(57, 'et.svg', '+251', 'Ethiopia', 57, 1),
+(58, 'fj.svg', '+679', 'Fiji', 58, 1),
+(59, 'fi.svg', '+358', 'Finland', 59, 1),
+(60, 'fr.svg', '+33', 'France', 60, 1),
+(61, 'ga.svg', '+241', 'Gabon', 61, 1),
+(62, 'gm.svg', '+220', 'Gambia', 62, 1),
+(63, 'ge.svg', '+995', 'Georgia', 63, 1),
+(64, 'de.svg', '+49', 'Germany', 64, 1),
+(65, 'gh.svg', '+233', 'Ghana', 65, 1),
+(66, 'gr.svg', '+30', 'Greece', 66, 1),
+(67, 'gd.svg', '+1', 'Grenada', 67, 1),
+(68, 'gt.svg', '+502', 'Guatemala', 68, 1),
+(69, 'gn.svg', '+224', 'Guinea', 69, 1),
+(70, 'gw.svg', '+245', 'Guinea-Bissau', 70, 1),
+(71, 'gy.svg', '+592', 'Guyana', 71, 1),
+(72, 'ht.svg', '+509', 'Haiti', 72, 1),
+(73, 'hn.svg', '+504', 'Honduras', 73, 1),
+(74, 'hk.svg', '+852', 'Hong Kong', 74, 1),
+(75, 'hu.svg', '+36', 'Hungary', 75, 1),
+(76, 'is.svg', '+354', 'Iceland', 76, 1),
+(77, 'in.svg', '+91', 'India', 77, 1),
+(78, 'id.svg', '+62', 'Indonesia', 78, 1),
+(79, 'ir.svg', '+98', 'Iran', 79, 1),
+(80, 'iq.svg', '+964', 'Iraq', 80, 1),
+(81, 'ie.svg', '+353', 'Ireland', 81, 1),
+(82, 'il.svg', '+972', 'Israel', 82, 1),
+(83, 'it.svg', '+39', 'Italy', 83, 1),
+(84, 'ci.svg', '+225', 'Ivory Coast', 84, 1),
+(85, 'jm.svg', '+1', 'Jamaica', 85, 1),
+(86, 'jp.svg', '+81', 'Japan', 86, 1),
+(87, 'jo.svg', '+962', 'Jordan', 87, 1),
+(88, 'kz.svg', '+7', 'Kazakhstan', 88, 1),
+(89, 'ke.svg', '+254', 'Kenya', 89, 1),
+(90, 'ki.svg', '+686', 'Kiribati', 90, 1),
+(91, 'xk.svg', '+383', 'Kosovo', 91, 1),
+(92, 'kw.svg', '+965', 'Kuwait', 92, 1),
+(93, 'kg.svg', '+996', 'Kyrgyzstan', 93, 1),
+(94, 'la.svg', '+856', 'Laos', 94, 1),
+(95, 'lv.svg', '+371', 'Latvia', 95, 1),
+(96, 'lb.svg', '+961', 'Lebanon', 96, 1),
+(97, 'ls.svg', '+266', 'Lesotho', 97, 1),
+(98, 'lr.svg', '+231', 'Liberia', 98, 1),
+(99, 'ly.svg', '+218', 'Libya', 99, 1),
+(100, 'li.svg', '+423', 'Liechtenstein', 100, 1),
+(101, 'lt.svg', '+370', 'Lithuania', 101, 1),
+(102, 'lu.svg', '+352', 'Luxembourg', 102, 1),
+(103, 'mo.svg', '+853', 'Macau', 103, 1),
+(104, 'mg.svg', '+261', 'Madagascar', 104, 1),
+(105, 'mw.svg', '+265', 'Malawi', 105, 1),
+(106, 'my.svg', '+60', 'Malaysia', 106, 1),
+(107, 'mv.svg', '+960', 'Maldives', 107, 1),
+(108, 'ml.svg', '+223', 'Mali', 108, 1),
+(109, 'mt.svg', '+356', 'Malta', 109, 1),
+(110, 'mh.svg', '+692', 'Marshall Islands', 110, 1),
+(111, 'mr.svg', '+222', 'Mauritania', 111, 1),
+(112, 'mu.svg', '+230', 'Mauritius', 112, 1),
+(113, 'mx.svg', '+52', 'Mexico', 113, 1),
+(114, 'fm.svg', '+691', 'Micronesia', 114, 1),
+(115, 'md.svg', '+373', 'Moldova', 115, 1),
+(116, 'mc.svg', '+377', 'Monaco', 116, 1),
+(117, 'mn.svg', '+976', 'Mongolia', 117, 1),
+(118, 'me.svg', '+382', 'Montenegro', 118, 1),
+(119, 'ma.svg', '+212', 'Morocco', 119, 1),
+(120, 'mz.svg', '+258', 'Mozambique', 120, 1),
+(121, 'mm.svg', '+95', 'Myanmar', 121, 1),
+(122, 'na.svg', '+264', 'Namibia', 122, 1),
+(123, 'nr.svg', '+674', 'Nauru', 123, 1),
+(124, 'np.svg', '+977', 'Nepal', 124, 1),
+(125, 'nl.svg', '+31', 'Netherlands', 125, 1),
+(126, 'nz.svg', '+64', 'New Zealand', 126, 1),
+(127, 'ni.svg', '+505', 'Nicaragua', 127, 1),
+(128, 'ne.svg', '+227', 'Niger', 128, 1),
+(129, 'ng.svg', '+234', 'Nigeria', 129, 1),
+(130, 'kp.svg', '+850', 'North Korea', 130, 1),
+(131, 'mk.svg', '+389', 'North Macedonia', 131, 1),
+(132, 'no.svg', '+47', 'Norway', 132, 1),
+(133, 'om.svg', '+968', 'Oman', 133, 1),
+(134, 'pk.svg', '+92', 'Pakistan', 134, 1),
+(135, 'pw.svg', '+680', 'Palau', 135, 1),
+(136, 'ps.svg', '+970', 'Palestine', 136, 1),
+(137, 'pa.svg', '+507', 'Panama', 137, 1),
+(138, 'pg.svg', '+675', 'Papua New Guinea', 138, 1),
+(139, 'py.svg', '+595', 'Paraguay', 139, 1),
+(140, 'pe.svg', '+51', 'Peru', 140, 1),
+(141, 'ph.svg', '+63', 'Philippines', 141, 1),
+(142, 'pl.svg', '+48', 'Poland', 142, 1),
+(143, 'pt.svg', '+351', 'Portugal', 143, 1),
+(144, 'qa.svg', '+974', 'Qatar', 144, 1),
+(145, 'ro.svg', '+40', 'Romania', 145, 1),
+(146, 'ru.svg', '+7', 'Russia', 146, 1),
+(147, 'rw.svg', '+250', 'Rwanda', 147, 1),
+(148, 'kn.svg', '+1', 'Saint Kitts and Nevis', 148, 1),
+(149, 'lc.svg', '+1', 'Saint Lucia', 149, 1),
+(150, 'vc.svg', '+1', 'Saint Vincent', 150, 1),
+(151, 'ws.svg', '+685', 'Samoa', 151, 1),
+(152, 'sm.svg', '+378', 'San Marino', 152, 1),
+(153, 'st.svg', '+239', 'Sao Tome and Principe', 153, 1),
+(154, 'sa.svg', '+966', 'Saudi Arabia', 154, 1),
+(155, 'sn.svg', '+221', 'Senegal', 155, 1),
+(156, 'rs.svg', '+381', 'Serbia', 156, 1),
+(157, 'sc.svg', '+248', 'Seychelles', 157, 1),
+(158, 'sl.svg', '+232', 'Sierra Leone', 158, 1),
+(159, 'sg.svg', '+65', 'Singapore', 159, 1),
+(160, 'sk.svg', '+421', 'Slovakia', 160, 1),
+(161, 'si.svg', '+386', 'Slovenia', 161, 1),
+(162, 'sb.svg', '+677', 'Solomon Islands', 162, 1),
+(163, 'so.svg', '+252', 'Somalia', 163, 1),
+(164, 'za.svg', '+27', 'South Africa', 164, 1),
+(165, 'kr.svg', '+82', 'South Korea', 165, 1),
+(166, 'ss.svg', '+211', 'South Sudan', 166, 1),
+(167, 'es.svg', '+34', 'Spain', 167, 1),
+(168, 'lk.svg', '+94', 'Sri Lanka', 168, 1),
+(169, 'sd.svg', '+249', 'Sudan', 169, 1),
+(170, 'sr.svg', '+597', 'Suriname', 170, 1),
+(171, 'se.svg', '+46', 'Sweden', 171, 1),
+(172, 'ch.svg', '+41', 'Switzerland', 172, 1),
+(173, 'sy.svg', '+963', 'Syria', 173, 1),
+(174, 'tw.svg', '+886', 'Taiwan', 174, 1),
+(175, 'tj.svg', '+992', 'Tajikistan', 175, 1),
+(176, 'tz.svg', '+255', 'Tanzania', 176, 1),
+(177, 'th.svg', '+66', 'Thailand', 177, 1),
+(178, 'tl.svg', '+670', 'Timor-Leste', 178, 1),
+(179, 'tg.svg', '+228', 'Togo', 179, 1),
+(180, 'to.svg', '+676', 'Tonga', 180, 1),
+(181, 'tt.svg', '+1', 'Trinidad and Tobago', 181, 1),
+(182, 'tn.svg', '+216', 'Tunisia', 182, 1),
+(183, 'tr.svg', '+90', 'Turkey', 183, 1),
+(184, 'tm.svg', '+993', 'Turkmenistan', 184, 1),
+(185, 'tv.svg', '+688', 'Tuvalu', 185, 1),
+(186, 'ae.svg', '+971', 'UAE', 186, 1),
+(187, 'ug.svg', '+256', 'Uganda', 187, 1),
+(188, 'ua.svg', '+380', 'Ukraine', 188, 1),
+(189, 'gb.svg', '+44', 'United Kingdom', 189, 1),
+(190, 'us.svg', '+1', 'United States', 190, 1),
+(191, 'uy.svg', '+598', 'Uruguay', 191, 1),
+(192, 'uz.svg', '+998', 'Uzbekistan', 192, 1),
+(193, 'vu.svg', '+678', 'Vanuatu', 193, 1),
+(194, 'va.svg', '+39', 'Vatican City', 194, 1),
+(195, 've.svg', '+58', 'Venezuela', 195, 1),
+(196, 'vn.svg', '+84', 'Vietnam', 196, 1),
+(197, 'ye.svg', '+967', 'Yemen', 197, 1),
+(198, 'zm.svg', '+260', 'Zambia', 198, 1),
+(199, 'zw.svg', '+263', 'Zimbabwe', 199, 1),
+(200, 'ai.svg', 'ai.svg', '', 0, 1),
+(201, 'aq.svg', 'aq.svg', '', 0, 1),
+(202, 'arab.svg', 'arab.svg', '', 0, 1),
+(203, 'as.svg', 'as.svg', '', 0, 1),
+(204, 'asean.svg', 'asean.svg', '', 0, 1),
+(205, 'aw.svg', 'aw.svg', '', 0, 1),
+(206, 'ax.svg', 'ax.svg', '', 0, 1),
+(207, 'bl.svg', 'bl.svg', '', 0, 1),
+(208, 'bm.svg', 'bm.svg', '', 0, 1),
+(209, 'bq.svg', 'bq.svg', '', 0, 1),
+(210, 'bv.svg', 'bv.svg', '', 0, 1),
+(211, 'cc.svg', 'cc.svg', '', 0, 1),
+(212, 'cefta.svg', 'cefta.svg', '', 0, 1),
+(213, 'ck.svg', 'ck.svg', '', 0, 1),
+(214, 'cp.svg', 'cp.svg', '', 0, 1),
+(215, 'cw.svg', 'cw.svg', '', 0, 1),
+(216, 'cx.svg', 'cx.svg', '', 0, 1),
+(217, 'dg.svg', 'dg.svg', '', 0, 1),
+(218, 'eac.svg', 'eac.svg', '', 0, 1),
+(219, 'eh.svg', 'eh.svg', '', 0, 1),
+(220, 'es-ct.svg', 'es-ct.svg', '', 0, 1),
+(221, 'es-ga.svg', 'es-ga.svg', '', 0, 1),
+(222, 'es-pv.svg', 'es-pv.svg', '', 0, 1),
+(223, 'eu.svg', 'eu.svg', '', 0, 1),
+(224, 'fk.svg', 'fk.svg', '', 0, 1),
+(225, 'fo.svg', 'fo.svg', '', 0, 1),
+(226, 'gb-eng.svg', 'gb-eng.svg', '', 0, 1),
+(227, 'gb-nir.svg', 'gb-nir.svg', '', 0, 1),
+(228, 'gb-sct.svg', 'gb-sct.svg', '', 0, 1),
+(229, 'gb-wls.svg', 'gb-wls.svg', '', 0, 1),
+(230, 'gf.svg', 'gf.svg', '', 0, 1),
+(231, 'gg.svg', 'gg.svg', '', 0, 1),
+(232, 'gi.svg', 'gi.svg', '', 0, 1),
+(233, 'gl.svg', 'gl.svg', '', 0, 1),
+(234, 'gp.svg', 'gp.svg', '', 0, 1),
+(235, 'gs.svg', 'gs.svg', '', 0, 1),
+(236, 'gu.svg', 'gu.svg', '', 0, 1),
+(237, 'hm.svg', 'hm.svg', '', 0, 1),
+(238, 'ic.svg', 'ic.svg', '', 0, 1),
+(239, 'im.svg', 'im.svg', '', 0, 1),
+(240, 'io.svg', 'io.svg', '', 0, 1),
+(241, 'je.svg', 'je.svg', '', 0, 1),
+(242, 'ky.svg', 'ky.svg', '', 0, 1),
+(243, 'mf.svg', 'mf.svg', '', 0, 1),
+(244, 'mp.svg', 'mp.svg', '', 0, 1),
+(245, 'mq.svg', 'mq.svg', '', 0, 1),
+(246, 'ms.svg', 'ms.svg', '', 0, 1),
+(247, 'nc.svg', 'nc.svg', '', 0, 1),
+(248, 'nf.svg', 'nf.svg', '', 0, 1),
+(249, 'nu.svg', 'nu.svg', '', 0, 1),
+(250, 'pc.svg', 'pc.svg', '', 0, 1),
+(251, 'pf.svg', 'pf.svg', '', 0, 1),
+(252, 'pm.svg', 'pm.svg', '', 0, 1),
+(253, 'pn.svg', 'pn.svg', '', 0, 1),
+(254, 'pr.svg', 'pr.svg', '', 0, 1),
+(255, 're.svg', 're.svg', '', 0, 1),
+(256, 'sh-ac.svg', 'sh-ac.svg', '', 0, 1),
+(257, 'sh-hl.svg', 'sh-hl.svg', '', 0, 1),
+(258, 'sh-ta.svg', 'sh-ta.svg', '', 0, 1),
+(259, 'sh.svg', 'sh.svg', '', 0, 1),
+(260, 'sj.svg', 'sj.svg', '', 0, 1),
+(261, 'sx.svg', 'sx.svg', '', 0, 1),
+(262, 'tc.svg', 'tc.svg', '', 0, 1),
+(263, 'tf.svg', 'tf.svg', '', 0, 1),
+(264, 'tk.svg', 'tk.svg', '', 0, 1),
+(265, 'um.svg', 'um.svg', '', 0, 1),
+(266, 'un.svg', 'un.svg', '', 0, 1),
+(267, 'vg.svg', 'vg.svg', '', 0, 1),
+(268, 'vi.svg', 'vi.svg', '', 0, 1),
+(269, 'wf.svg', 'wf.svg', '', 0, 1),
+(270, 'xx.svg', 'xx.svg', '', 0, 1),
+(271, 'yt.svg', 'yt.svg', '', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1665,6 +2290,67 @@ INSERT INTO `subcategory_edits` (`id`, `subcategory_key`, `fieldset_key`, `field
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `system_images`
+--
+
+CREATE TABLE `system_images` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `system_images`
+--
+
+INSERT INTO `system_images` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, '150x40-pill-2f3b73.webp', '150x40-pill-2f3b73.webp', '', 0, 1),
+(2, '150x40-pill-70.webp', '150x40-pill-70.webp', '', 0, 1),
+(3, '225x60-pill-2f3b73.webp', '225x60-pill-2f3b73.webp', '', 0, 1),
+(4, 'admin-messages.svg', 'admin-messages.svg', '', 0, 1),
+(5, 'android-chrome-192x192.png', 'android-chrome-192x192.png', '', 0, 1),
+(6, 'android-chrome-512x512.png', 'android-chrome-512x512.png', '', 0, 1),
+(7, 'apple-touch-icon.png', 'apple-touch-icon.png', '', 0, 1),
+(8, 'earth toy.png', 'earth toy.png', '', 0, 1),
+(9, 'email-messages.svg', 'email-messages.svg', '', 0, 1),
+(10, 'favicon-16x16.png', 'favicon-16x16.png', '', 0, 1),
+(11, 'favicon-32x32.png', 'favicon-32x32.png', '', 0, 1),
+(12, 'favicon.ico', 'favicon.ico', '', 0, 1),
+(13, 'fieldset-tooltips.svg', 'fieldset-tooltips.svg', '', 0, 1),
+(14, 'funmap logo square 2025-12-09.webp', 'funmap logo square 2025-12-09.webp', '', 0, 1),
+(15, 'funmap logo square 2025-12-09b.webp', 'funmap logo square 2025-12-09b.webp', '', 0, 1),
+(16, 'funmap welcome message 2025-12-10.webp', 'funmap welcome message 2025-12-10.webp', '', 0, 1),
+(17, 'funmap welcome message 2025-12-10b.webp', 'funmap welcome message 2025-12-10b.webp', '', 0, 1),
+(18, 'funmap welcome message 2025-12-10c.webp', 'funmap welcome message 2025-12-10c.webp', '', 0, 1),
+(19, 'funmap welcome message 2025-12-10d.webp', 'funmap welcome message 2025-12-10d.webp', '', 0, 1),
+(20, 'funmap welcome message 2025-12-10e.webp', 'funmap welcome message 2025-12-10e.webp', '', 0, 1),
+(21, 'funmap welcome message 2025-12-10f.webp', 'funmap welcome message 2025-12-10f.webp', '', 0, 1),
+(22, 'funmap-logo-big-1338x210.webp', 'funmap-logo-big-1338x210.webp', '', 0, 1),
+(23, 'funmap-logo-small-40x40.png', 'funmap-logo-small-40x40.png', '', 0, 1),
+(24, 'icon-admin.svg', 'icon-admin.svg', '', 0, 1),
+(25, 'icon-close.svg', 'icon-close.svg', '', 0, 1),
+(26, 'icon-discard.svg', 'icon-discard.svg', '', 0, 1),
+(27, 'icon-filter.svg', 'icon-filter.svg', '', 0, 1),
+(28, 'icon-fullscreen-exit.svg', 'icon-fullscreen-exit.svg', '', 0, 1),
+(29, 'icon-fullscreen.svg', 'icon-fullscreen.svg', '', 0, 1),
+(30, 'icon-map.svg', 'icon-map.svg', '', 0, 1),
+(31, 'icon-member.svg', 'icon-member.svg', '', 0, 1),
+(32, 'icon-posts.svg', 'icon-posts.svg', '', 0, 1),
+(33, 'icon-recents.svg', 'icon-recents.svg', '', 0, 1),
+(34, 'icon-save.svg', 'icon-save.svg', '', 0, 1),
+(35, 'magnifying-glass.svg', 'magnifying-glass.svg', '', 0, 1),
+(36, 'member-messages.svg', 'member-messages.svg', '', 0, 1),
+(37, 'multi-post-icon-50.webp', 'multi-post-icon-50.webp', '', 0, 1),
+(38, 'red-balloon-40.png', 'red-balloon-40.png', '', 0, 1),
+(39, 'user-messages.svg', 'user-messages.svg', '', 0, 1),
+(40, 'Krissy Nicholsons 40th birthday montage.00_03_31_09.Still056.jpg', 'Krissy Nicholsons 40th birthday montage.00_03_31_0', '', 0, 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `transactions`
 --
 
@@ -1722,6 +2408,14 @@ ALTER TABLE `admin_settings`
   ADD KEY `idx_setting_key` (`setting_key`);
 
 --
+-- Indexes for table `amenities`
+--
+ALTER TABLE `amenities`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
 -- Indexes for table `banned_words`
 --
 ALTER TABLE `banned_words`
@@ -1732,6 +2426,14 @@ ALTER TABLE `banned_words`
 --
 ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `category_icons`
+--
+ALTER TABLE `category_icons`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
 
 --
 -- Indexes for table `checkout_options`
@@ -1755,6 +2457,14 @@ ALTER TABLE `commissions`
 ALTER TABLE `coupons`
   ADD PRIMARY KEY (`id`),
   ADD KEY `created_by_admin_id` (`created_by_admin_id`);
+
+--
+-- Indexes for table `currencies`
+--
+ALTER TABLE `currencies`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
 
 --
 -- Indexes for table `fields`
@@ -1829,6 +2539,14 @@ ALTER TABLE `moderation_log`
   ADD KEY `moderator_id` (`moderator_id`);
 
 --
+-- Indexes for table `phone_prefixes`
+--
+ALTER TABLE `phone_prefixes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
 -- Indexes for table `picklist`
 --
 ALTER TABLE `picklist`
@@ -1887,6 +2605,14 @@ ALTER TABLE `subcategory_edits`
   ADD KEY `idx_fieldset_key` (`fieldset_key`);
 
 --
+-- Indexes for table `system_images`
+--
+ALTER TABLE `system_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
 -- Indexes for table `transactions`
 --
 ALTER TABLE `transactions`
@@ -1923,6 +2649,12 @@ ALTER TABLE `admin_settings`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
 
 --
+-- AUTO_INCREMENT for table `amenities`
+--
+ALTER TABLE `amenities`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+
+--
 -- AUTO_INCREMENT for table `banned_words`
 --
 ALTER TABLE `banned_words`
@@ -1933,6 +2665,12 @@ ALTER TABLE `banned_words`
 --
 ALTER TABLE `categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+
+--
+-- AUTO_INCREMENT for table `category_icons`
+--
+ALTER TABLE `category_icons`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
 
 --
 -- AUTO_INCREMENT for table `checkout_options`
@@ -1951,6 +2689,12 @@ ALTER TABLE `commissions`
 --
 ALTER TABLE `coupons`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `currencies`
+--
+ALTER TABLE `currencies`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=256;
 
 --
 -- AUTO_INCREMENT for table `fields`
@@ -2007,6 +2751,12 @@ ALTER TABLE `moderation_log`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `phone_prefixes`
+--
+ALTER TABLE `phone_prefixes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=512;
+
+--
 -- AUTO_INCREMENT for table `picklist`
 --
 ALTER TABLE `picklist`
@@ -2047,6 +2797,12 @@ ALTER TABLE `subcategories`
 --
 ALTER TABLE `subcategory_edits`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1727;
+
+--
+-- AUTO_INCREMENT for table `system_images`
+--
+ALTER TABLE `system_images`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `transactions`
