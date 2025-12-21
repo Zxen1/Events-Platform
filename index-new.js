@@ -22,9 +22,8 @@
       - Both components:
         * Load folder paths and basket data from get-admin-settings.php
         * Display database basket images instantly when menu opens
-        * Fetch from API in background (list-files.php GET)
-        * Trigger sync after menu loads (list-files.php POST)
-        * Use localStorage to ensure sync runs only once per session
+        * Fetch from API in background (list-files.php GET) to append new images
+        * No database syncing - sync handled by admin panel
    
    2. home/funmapco/connectors/list-files.php
       - GET request: Lists filenames from local folders or Bunny CDN Storage API
@@ -69,16 +68,9 @@
       - Menu is fully interactive immediately
       - API fetch happens in background (list-files.php GET)
       - New images from API are appended to menu
+      - No database sync happens here - sync is handled separately
    
-   3. After Menu Loads (for menu-triggered syncs):
-      - Sync runs automatically (list-files.php POST)
-      - localStorage key checked: 'system_images_synced_[folderPath]' or
-                                  'category_icons_synced_[folderPath]'
-      - If already synced this session, skip (prevents multiple syncs)
-      - If not synced, sync runs and localStorage marked as synced
-      - If sync detects changes, menu updates with new/removed files
-   
-   3b. When Admin Panel Opens (for all picklist syncs):
+   3. When Admin Panel Opens (for all picklist syncs):
       - Sync runs automatically after 1.5 second delay (list-files.php POST)
       - localStorage key checked: 'picklist_synced_[option_group]_[folderPath]' for each folder
       - Also checks 'picklists_synced' for overall status
@@ -107,7 +99,7 @@
    
    KEY PRINCIPLES:
    - Menus load instantly from database baskets (no API delay)
-   - Sync happens after menu loads (non-blocking background task)
+   - Sync happens when admin panel opens (non-blocking background task, 1.5 second delay)
    - Sync runs only once per session (localStorage prevents duplicates)
    - Database baskets are source of truth for available filenames
    - Actual assignments stored in admin_settings (system images) or

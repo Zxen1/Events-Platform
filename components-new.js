@@ -2725,7 +2725,8 @@ const PhonePrefixComponent = (function(){
                 return item.value === prefix;
             });
             if (found) {
-                var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                // Extract country code from filename (remove .svg extension if present)
+                var countryCode = found.filename ? found.filename.replace(/\.svg$/i, '').toLowerCase() : null;
                 btnImg.src = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
                 btnInput.value = found.value;
                 selectedPrefix = prefix;
@@ -2743,7 +2744,8 @@ const PhonePrefixComponent = (function(){
 
         // Build options
         prefixData.forEach(function(item) {
-            var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
+            // Extract country code from filename (remove .svg extension if present)
+            var countryCode = item.filename ? item.filename.replace(/\.svg$/i, '').toLowerCase() : null;
             var displayText = item.value + ' - ' + item.label;
 
             var op = document.createElement('div');
@@ -2849,14 +2851,10 @@ const PhonePrefixComponent = (function(){
    
    1. Menu opens instantly with images from database basket (picklist table, option_group='category-icon')
    2. API call fetches current file list from Bunny CDN folder_category_icons in background
-   3. After menu loads, sync runs automatically to update basket:
-      - Adds new files from API
-      - Removes deleted files from basket
-      - Handles renamed files (old removed, new added)
-   4. If sync detects changes, menu updates with new files
+   3. New images from API are appended to menu (if not already in database basket)
    
    NO API CALLS AT STARTUP - all API calls happen only when menu opens.
-   The picklist table is also synced when admin panel opens (ALL picklist types synced together).
+   Database sync is handled by syncAllPicklists() when admin panel opens (ALL picklist types synced together).
    ============================================================================ */
 
 const IconPickerComponent = (function(){
@@ -2965,58 +2963,8 @@ const IconPickerComponent = (function(){
                     // Callback with updated list if provided (menu is already loaded)
                     if (callback) callback(allIcons);
                     
-                    // Sync database after menu has loaded (background task, only once per session)
-                    var syncKey = 'category_icons_synced_' + folderPath;
-                    var alreadySynced = localStorage.getItem(syncKey) === 'true';
-                    
-                    if (!alreadySynced) {
-                        var apiFilenames = res.icons;
-                        fetch('/gateway.php?action=list-files', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                filenames: apiFilenames,
-                                option_group: 'category-icon'
-                            })
-                        })
-                        .then(function(r) { return r.json(); })
-                        .then(function(syncRes) {
-                            if (syncRes.success) {
-                                // Mark as synced for this session
-                                localStorage.setItem(syncKey, 'true');
-                                
-                                if (syncRes.changes_count > 0) {
-                                    // Database was updated - reload category_icons data and update menu
-                                    loadFolderFromSettings().then(function() {
-                                        // Re-render menu with updated database icons
-                                        if (callback) {
-                                            var updatedDbIcons = getDatabaseIcons(folderPath);
-                                            var updatedAllIcons = updatedDbIcons.slice();
-                                            var updatedDbFilenames = updatedDbIcons.map(function(path) {
-                                                return getFilename(path);
-                                            });
-                                            
-                                            apiIconList.forEach(function(apiPath) {
-                                                var apiFilename = getFilename(apiPath);
-                                                if (updatedDbFilenames.indexOf(apiFilename) === -1) {
-                                                    updatedAllIcons.push(apiPath);
-                                                }
-                                            });
-                                            
-                                            apiCache[folderPath] = updatedAllIcons;
-                                            icons = updatedAllIcons;
-                                            callback(updatedAllIcons);
-                                        }
-                                    });
-                                }
-                            }
-                        })
-                        .catch(function(err) {
-                            console.warn('Failed to sync category icons:', err);
-                        });
-                    }
+                    // Note: Sync is handled by syncAllPicklists() when admin panel opens
+                    // No need to sync here - database basket is already synced
                 } else {
                     // API failed, but we already returned database icons
                     if (callback) callback(dbIcons);
@@ -3844,14 +3792,10 @@ const CheckoutOptionsComponent = (function(){
    
    1. Menu opens instantly with images from database basket (picklist table, option_group='system-image')
    2. API call fetches current file list from Bunny CDN folder_system_images in background
-   3. After menu loads, sync runs automatically to update basket:
-      - Adds new files from API
-      - Removes deleted files from basket
-      - Handles renamed files (old removed, new added)
-   4. If sync detects changes, menu updates with new files
+   3. New images from API are appended to menu (if not already in database basket)
    
    NO API CALLS AT STARTUP - all API calls happen only when menu opens.
-   The picklist table is also synced when admin panel opens (ALL picklist types synced together).
+   Database sync is handled by syncAllPicklists() when admin panel opens (ALL picklist types synced together).
    ============================================================================ */
 
 const SystemImagePickerComponent = (function(){
@@ -3964,58 +3908,8 @@ const SystemImagePickerComponent = (function(){
                     // Callback with updated list if provided (menu is already loaded)
                     if (callback) callback(allImages);
                     
-                    // Sync database after menu has loaded (background task, only once per session)
-                    var syncKey = 'system_images_synced_' + folderPath;
-                    var alreadySynced = localStorage.getItem(syncKey) === 'true';
-                    
-                    if (!alreadySynced) {
-                        var apiFilenames = res.icons;
-                        fetch('/gateway.php?action=list-files', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                filenames: apiFilenames,
-                                option_group: 'system-image'
-                            })
-                        })
-                        .then(function(r) { return r.json(); })
-                        .then(function(syncRes) {
-                            if (syncRes.success) {
-                                // Mark as synced for this session
-                                localStorage.setItem(syncKey, 'true');
-                                
-                                if (syncRes.changes_count > 0) {
-                                    // Database was updated - reload system_images data and update menu
-                                    loadFolderFromSettings().then(function() {
-                                        // Re-render menu with updated database images
-                                        if (callback) {
-                                            var updatedDbImages = getDatabaseImages(folderPath);
-                                            var updatedAllImages = updatedDbImages.slice();
-                                            var updatedDbFilenames = updatedDbImages.map(function(path) {
-                                                return getFilename(path);
-                                            });
-                                            
-                                            apiImageList.forEach(function(apiPath) {
-                                                var apiFilename = getFilename(apiPath);
-                                                if (updatedDbFilenames.indexOf(apiFilename) === -1) {
-                                                    updatedAllImages.push(apiPath);
-                                                }
-                                            });
-                                            
-                                            apiCache[folderPath] = updatedAllImages;
-                                            images = updatedAllImages;
-                                            callback(updatedAllImages);
-                                        }
-                                    });
-                                }
-                            }
-                        })
-                        .catch(function(err) {
-                            console.warn('Failed to sync system images:', err);
-                        });
-                    }
+                    // Note: Sync is handled by syncAllPicklists() when admin panel opens
+                    // No need to sync here - database basket is already synced
                 }
             })
             .catch(function(err) {
