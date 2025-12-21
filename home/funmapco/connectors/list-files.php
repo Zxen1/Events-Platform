@@ -160,7 +160,7 @@ try {
             }
         }
 
-        $insertStmt = $pdo->prepare("INSERT INTO `picklist` (`option_group`, `option_value`, `option_filename`, `option_label`, `sort_order`, `is_active`) VALUES (:option_group, :option_value, :option_filename, NULL, 0, 1)");
+        $insertStmt = $pdo->prepare("INSERT INTO `picklist` (`option_group`, `option_value`, `option_filename`, `option_label`, `sort_order`, `is_active`) VALUES (:option_group, :option_value, :option_filename, '', 0, 1)");
         $deleteStmt = $pdo->prepare("DELETE FROM `picklist` WHERE `option_group` = :option_group AND `option_filename` = :option_filename");
 
         $errors = [];
