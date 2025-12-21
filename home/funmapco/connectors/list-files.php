@@ -116,38 +116,67 @@ try {
         $apiFilenames = $data['filenames'];
         $changes = [];
 
-        // Get current database filenames
-        $stmt = $pdo->query("SELECT `filename` FROM `{$tableName}`");
+        // Normalize API filenames (trim and filter empty)
+        $normalizedApiFilenames = [];
+        foreach ($apiFilenames as $apiFilename) {
+            if (is_string($apiFilename) && trim($apiFilename) !== '') {
+                $normalizedApiFilenames[] = trim($apiFilename);
+            }
+        }
+        $apiFilenames = array_unique($normalizedApiFilenames); // Remove duplicates from API list
+
+        // Get current database filenames with their IDs
+        $stmt = $pdo->query("SELECT `id`, `filename` FROM `{$tableName}` ORDER BY `id` ASC");
         $dbRows = $stmt->fetchAll();
         
+        // Track filenames and their first occurrence (lowest ID)
         $dbFilenames = [];
+        $duplicateIds = [];
+        
         foreach ($dbRows as $row) {
-            $dbFilenames[$row['filename']] = true;
+            $filename = $row['filename'];
+            if (!isset($dbFilenames[$filename])) {
+                // First occurrence - keep this one
+                $dbFilenames[$filename] = $row['id'];
+            } else {
+                // Duplicate - mark for deletion
+                $duplicateIds[] = $row['id'];
+            }
+        }
+
+        // Remove duplicates (keep first occurrence, delete rest)
+        if (!empty($duplicateIds)) {
+            $placeholders = implode(',', array_fill(0, count($duplicateIds), '?'));
+            $deleteDuplicatesStmt = $pdo->prepare("DELETE FROM `{$tableName}` WHERE `id` IN ({$placeholders})");
+            try {
+                $deleteDuplicatesStmt->execute($duplicateIds);
+                foreach ($duplicateIds as $dupId) {
+                    $changes[] = ['action' => 'duplicate_removed', 'id' => $dupId];
+                }
+            } catch (PDOException $e) {
+                error_log("Failed to remove duplicates from {$tableName}: " . $e->getMessage());
+            }
         }
 
         $insertStmt = $pdo->prepare("INSERT INTO `{$tableName}` (`filename`) VALUES (:filename)");
         $deleteStmt = $pdo->prepare("DELETE FROM `{$tableName}` WHERE `filename` = :filename");
 
-        // Add new files from API
+        // Add new files from API (not in database)
         foreach ($apiFilenames as $apiFilename) {
-            if (!is_string($apiFilename) || trim($apiFilename) === '') {
-                continue;
-            }
-            
-            $apiFilename = trim($apiFilename);
-            
             if (!isset($dbFilenames[$apiFilename])) {
                 try {
                     $insertStmt->execute([':filename' => $apiFilename]);
                     $changes[] = ['action' => 'added', 'filename' => $apiFilename];
                 } catch (PDOException $e) {
+                    // If duplicate constraint exists, this will fail silently (which is fine)
+                    // If no constraint, we'll catch it in the next sync
                     error_log("Failed to add filename '{$apiFilename}' to {$tableName}: " . $e->getMessage());
                 }
             }
         }
 
         // Remove files that no longer exist in API
-        foreach ($dbFilenames as $dbFilename => $exists) {
+        foreach ($dbFilenames as $dbFilename => $dbId) {
             if (!in_array($dbFilename, $apiFilenames)) {
                 try {
                     $deleteStmt->execute([':filename' => $dbFilename]);
