@@ -21,6 +21,31 @@
 
 ---
 
+## DATABASE ACCESS AND SQL
+
+**CRITICAL:** AI agents CANNOT access the database directly. AI agents have NO way to run SQL queries or modify the database.
+
+**How Database Changes Work:**
+1. AI agent provides SQL statements (SELECT, UPDATE, INSERT, etc.)
+2. User copies the SQL and runs it themselves in their database tool (phpMyAdmin, MySQL client, etc.)
+3. User modifies the database based on the SQL provided
+4. AI agent NEVER runs database commands - only provides SQL code
+
+**When User Asks for SQL:**
+- Provide clear, complete, ready-to-execute SQL statements
+- Include comments explaining what the SQL does
+- Make sure SQL is correct and safe before providing it
+- User will run it themselves - do NOT assume it will be executed automatically
+- Do NOT claim "I modified the database" - you only provided SQL code
+
+**NEVER:**
+- Claim to have modified the database
+- Assume SQL was executed
+- Provide incomplete or untested SQL
+- Use terminal commands to access database (agents cannot use terminal anyway)
+
+---
+
 ## CONFESSIONS: CRITICAL MISTAKES MADE
 
 ### 1. TERMINOLOGY CONFUSION

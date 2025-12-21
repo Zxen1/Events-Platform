@@ -94,20 +94,38 @@ try {
         }
 
         // Get storage API key and storage zone name from admin_settings
-        $stmt = $pdo->query("SELECT `setting_key`, `setting_value` FROM `admin_settings` WHERE `setting_key` IN ('storage_api_key', 'storage_zone_name')");
-        $settings = [];
-        while ($row = $stmt->fetch()) {
-            $settings[$row['setting_key']] = $row['setting_value'];
+        try {
+            $stmt = $pdo->query("SELECT `setting_key`, `setting_value` FROM `admin_settings` WHERE `setting_key` IN ('storage_api_key', 'storage_zone_name')");
+            $settings = [];
+            while ($row = $stmt->fetch()) {
+                $settings[$row['setting_key']] = $row['setting_value'];
+            }
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Database error: ' . $e->getMessage(),
+            ]);
+            return;
         }
 
         $apiKey = $settings['storage_api_key'] ?? '';
         $storageZoneName = $settings['storage_zone_name'] ?? '';
 
-        if (empty($apiKey) || empty($storageZoneName)) {
+        if (empty($apiKey)) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Bunny Storage API key or storage zone name not configured.',
+                'message' => 'Bunny Storage API key not configured. Please set storage_api_key in Admin Settings.',
+            ]);
+            return;
+        }
+
+        if (empty($storageZoneName)) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Bunny Storage zone name not configured. Please set storage_zone_name in Admin Settings.',
             ]);
             return;
         }
@@ -143,34 +161,56 @@ try {
 
         if ($httpCode !== 200) {
             http_response_code(500);
+            $errorBody = $response ? substr($response, 0, 200) : 'No response body';
             echo json_encode([
                 'success' => false,
-                'message' => 'Bunny Storage API returned error code: ' . $httpCode,
+                'message' => 'Bunny Storage API returned error code: ' . $httpCode . '. Response: ' . $errorBody,
             ]);
             return;
         }
 
         // Parse JSON response from Bunny API
         $files = json_decode($response, true);
-        if (!is_array($files)) {
+        if ($files === null && json_last_error() !== JSON_ERROR_NONE) {
             http_response_code(500);
             echo json_encode([
                 'success' => false,
-                'message' => 'Invalid response from Bunny Storage API',
+                'message' => 'Invalid JSON response from Bunny Storage API: ' . json_last_error_msg() . '. Response: ' . substr($response, 0, 200),
             ]);
             return;
+        }
+        
+        if (!is_array($files)) {
+            // Empty response or non-array - return empty list instead of error
+            $files = [];
         }
 
         // Extract just the filenames from the response
         // Bunny API returns array of objects with properties like: ObjectName, IsDirectory, etc.
+        // OR it might return an array of strings (filenames) directly
         foreach ($files as $file) {
+            // Handle case where API returns array of strings (filenames)
+            if (is_string($file)) {
+                $filename = basename($file);
+                if (!empty($filename) && $filename !== '.' && $filename !== '..') {
+                    $icons[] = $filename;
+                }
+                continue;
+            }
+            
+            // Handle case where API returns array of objects
+            if (!is_array($file)) {
+                continue;
+            }
+            
             // Skip directories
             if (isset($file['IsDirectory']) && $file['IsDirectory'] === true) {
                 continue;
             }
             
             // Get the object name (full path from storage root)
-            $objectName = $file['ObjectName'] ?? '';
+            // Try different possible property names
+            $objectName = $file['ObjectName'] ?? $file['Name'] ?? $file['FileName'] ?? $file['filename'] ?? '';
             if (empty($objectName) || !is_string($objectName)) {
                 continue;
             }

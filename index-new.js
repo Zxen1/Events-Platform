@@ -333,6 +333,9 @@ const App = (function() {
           document.title = pageTitle;
         }
         
+        // Store settings in state FIRST so getImageUrl can access them
+        state.settings = settings;
+        
         // Apply favicon from system_images
         if (data.system_images && data.system_images.favicon) {
           var faviconFilename = data.system_images.favicon;
@@ -351,9 +354,6 @@ const App = (function() {
         if (settings.welcome_enabled && window.WelcomeModalComponent) {
           WelcomeModalComponent.open();
         }
-        
-        // Store settings in state
-        state.settings = settings;
       })
       .catch(function(err) {
         console.error('[App] Failed to load startup settings:', err);
