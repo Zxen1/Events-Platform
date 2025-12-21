@@ -38,7 +38,6 @@
     'use strict';
 
     var container = null;
-    var allIcons = [];
     var isLoaded = false;
     var checkoutOptions = []; // Module-local storage
     var siteCurrency = ''; // Module-local storage
@@ -458,46 +457,12 @@
     }
     
     function buildIconPicker(currentSrc, onSelect) {
-        var menu = document.createElement('div');
-        menu.className = 'formbuilder-menu';
-        
-        // Show button image if currentSrc exists (even if not in allIcons - for online folders)
-        var showButtonImage = currentSrc && currentSrc.trim() !== '';
-        var currentFilename = showButtonImage ? currentSrc.split('/').pop() : 'Select...';
-        var buttonImageSrc = showButtonImage ? currentSrc : '';
-        
-        menu.innerHTML = '<div class="formbuilder-menu-button"><img class="formbuilder-menu-button-image" src="' + buttonImageSrc + '" alt=""' + (showButtonImage ? '' : ' style="display:none"') + '><span class="formbuilder-menu-button-text">' + currentFilename + '</span><span class="formbuilder-menu-button-arrow">▼</span></div><div class="formbuilder-menu-options"></div>';
-        var btn = menu.querySelector('.formbuilder-menu-button');
-        var opts = menu.querySelector('.formbuilder-menu-options');
-        var btnImg = menu.querySelector('.formbuilder-menu-button-image');
-        var btnText = menu.querySelector('.formbuilder-menu-button-text');
-        
-        allIcons.forEach(function(iconPath) {
-            var filename = iconPath.split('/').pop();
-            var op = document.createElement('div');
-            op.className = 'formbuilder-menu-option';
-            op.innerHTML = '<img class="formbuilder-menu-option-image" src="' + iconPath + '" alt=""><span class="formbuilder-menu-option-text">' + filename + '</span>';
-            op.onclick = function(e) {
-                e.stopPropagation();
-                btnImg.src = iconPath;
-                btnImg.style.display = '';
-                btnText.textContent = filename;
-                menu.classList.remove('open');
-                onSelect(iconPath);
-            };
-            opts.appendChild(op);
+        // Use standard IconPickerComponent (has sync functionality built in)
+        var picker = IconPickerComponent.buildPicker({
+            currentIcon: currentSrc || null,
+            onSelect: onSelect
         });
-        
-        btn.onclick = function(e) {
-            e.stopPropagation();
-            var wasOpen = menu.classList.contains('open');
-            closeAllMenus();
-            if (!wasOpen && allIcons.length > 0) {
-                menu.classList.add('open');
-            }
-        };
-        
-        return menu;
+        return picker.element;
     }
     
     function bindDocumentListeners() {
@@ -580,17 +545,8 @@
                 }
                 checkoutOptions = checkoutOptions || {};
                 checkoutOptions.icon_folder = iconFolder;
-                return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(iconFolder));
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                // Ensure folder path ends with /
-                var iconFolder = checkoutOptions && checkoutOptions.icon_folder;
-                if (!iconFolder) {
-                    throw new Error('folder_category_icons not found in checkout options');
-                }
-                var folderPath = iconFolder.endsWith('/') ? iconFolder : iconFolder + '/';
-                allIcons = (res.icons || []).map(function(name) { return folderPath + name; });
+                // IconPickerComponent handles icon loading and syncing internally
+                // No need to fetch icon list here - IconPickerComponent does it when menu opens
                 return fetch('/gateway.php?action=get-form');
             })
             .then(function(r) { return r.json(); })

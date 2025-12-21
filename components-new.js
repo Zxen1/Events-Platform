@@ -4189,17 +4189,16 @@ const SystemImagePickerComponent = (function(){
                 // Open menu immediately
                 menu.classList.add('open');
                 
-                // Show database images instantly (if systemImagesData is loaded)
-                var dbImages = systemImagesData ? getDatabaseImages(imageFolder) : [];
-                renderImageOptions(dbImages, true);
-                
-                // Ensure system_images data is loaded if not already
-                if (!systemImagesData) {
+                // Show database images instantly (menu is now open and interactive)
+                if (!systemImagesBasket) {
                     loadFolderFromSettings().then(function() {
                         // Update with database images now that they're loaded
                         var updatedDbImages = getDatabaseImages(imageFolder);
                         renderImageOptions(updatedDbImages, true);
                     });
+                } else {
+                    var dbImages = getDatabaseImages(imageFolder);
+                    renderImageOptions(dbImages, true);
                 }
                 
                 // Load API in background and append new images (always runs)
