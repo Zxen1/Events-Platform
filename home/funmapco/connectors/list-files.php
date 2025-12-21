@@ -6,14 +6,22 @@
  * This connector handles both listing files (GET) and syncing baskets (POST).
  * 
  * GET: Lists filenames from local folders or Bunny CDN Storage API
- * POST: Syncs system_images or category_icons basket tables with API results
+ * POST: Syncs picklist table basket entries with API results
  * 
  * SYNC PROCESS (POST):
- * 1. Receives filenames array and table name (system_images or category_icons)
- * 2. Compares API filenames with database basket
- * 3. Adds new files that exist in API but not in basket
- * 4. Removes files from basket that no longer exist in API
- * 5. Handles renamed files (old removed, new added)
+ * This syncs ALL picklist types (system-image, category-icon, currency, phone-prefix, amenity)
+ * from their corresponding Bunny CDN folders to the unified picklist table.
+ * 
+ * Steps:
+ * 1. Receives filenames array and option_group (system-image, category-icon, currency, phone-prefix, amenity)
+ * 2. Detects and removes duplicate option_filename entries (keeps lowest ID)
+ * 3. Normalizes API filenames (trims, filters empty, removes duplicates from API list)
+ * 4. Adds new files that exist in API but not in database basket
+ * 5. Removes files from basket that no longer exist in API
+ * 6. Handles renamed files (old removed, new added)
+ * 
+ * Note: Currency and phone-prefix each have their own folders (currencies and phone-prefixes)
+ * which sync to their respective option_groups in the picklist table.
  * 
  * Returns changes array so frontend can update menu if needed.
  */
@@ -38,8 +46,8 @@ try {
             return;
         }
 
-        $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'flag'
-        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'flag'];
+        $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity'
+        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity'];
         if (!in_array($optionGroup, $validGroups)) {
             http_response_code(400);
             echo json_encode([

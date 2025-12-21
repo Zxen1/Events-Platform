@@ -446,14 +446,19 @@ const AdminModule = (function() {
             .then(function(res) {
                 if (!res.settings) return;
                 
+                // Sync ALL picklist types from their Bunny CDN folders
+                // Each folder syncs to its corresponding option_group in the unified picklist table
+                // This ensures all available filenames are in the database "basket" for instant menu loading
                 var foldersToSync = [
-                    { folder: res.settings.folder_category_icons, option_group: 'category-icon' },
                     { folder: res.settings.folder_system_images, option_group: 'system-image' },
-                    { folder: res.settings.folder_flags, option_group: 'flag' },
-                    { folder: res.settings.folder_amenities, option_group: 'amenity' }
+                    { folder: res.settings.folder_category_icons, option_group: 'category-icon' },
+                    { folder: res.settings.folder_amenities, option_group: 'amenity' },
+                    { folder: res.settings.folder_currencies, option_group: 'currency' },
+                    { folder: res.settings.folder_phone_prefixes, option_group: 'phone-prefix' }
                 ];
                 
-                // Sync each folder (non-blocking, parallel)
+                // Sync each folder in parallel (non-blocking, background)
+                // Each sync runs only once per session (checked via localStorage)
                 var syncPromises = [];
                 foldersToSync.forEach(function(item) {
                     if (!item.folder) return;
@@ -2965,10 +2970,10 @@ const AdminModule = (function() {
                 var btnText = menu.querySelector('.admin-currency-button-text');
                 if (found) {
                     var countryCode = found.value.substring(0, 2);
-                    if (btnImg) btnImg.src = window.App.getImageUrl('flags', countryCode + '.svg');
+                    if (btnImg) btnImg.src = window.App.getImageUrl('currencies', countryCode + '.svg');
                     if (btnText) btnText.textContent = code + ' - ' + found.label;
                 } else {
-                    if (btnImg) btnImg.src = window.App.getImageUrl('flags', 'us.svg');
+                    if (btnImg) btnImg.src = window.App.getImageUrl('currencies', 'us.svg');
                     if (btnText) btnText.textContent = code + ' - US Dollar';
                 }
             }

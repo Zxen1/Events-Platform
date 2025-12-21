@@ -38,8 +38,7 @@
    
    3. home/funmapco/connectors/get-admin-settings.php
       - Fetches admin_settings table (folder paths, system image assignments)
-      - Fetches system_images table (basket of available system image filenames)
-      - Fetches category_icons table (basket of available category icon filenames)
+      - Fetches picklist table (basket of available filenames for all option_groups)
       - Returns all data needed for instant menu loading
    
    4. home/funmapco/connectors/save-admin-settings.php
@@ -47,10 +46,14 @@
       - System image assignments stored as: small_logo, big_logo, favicon, etc.
    
    5. Database Tables:
-      - admin_settings: Stores folder paths (folder_system_images, folder_category_icons)
+      - admin_settings: Stores folder paths (folder_system_images, folder_category_icons, etc.)
                         and system image assignments (small_logo, big_logo, etc.)
-      - system_images: Basket table - stores all available system image filenames
-      - category_icons: Basket table - stores all available category icon filenames
+      - picklist: Unified basket table - stores all available filenames for all picklist types
+                  - option_group: 'system-image' (IDs 1-99), 'category-icon' (IDs 100-299),
+                    'currency' (IDs 300-499), 'phone-prefix' (IDs 500-699), 'amenity' (IDs 700-799)
+                  - option_filename: The image filename
+                  - option_value: The value (currency code, prefix, etc.)
+                  - option_label: Display label
       - categories.icon_path: Source of truth for category icon assignments
       - subcategories.icon_path: Source of truth for subcategory icon assignments
    
@@ -67,13 +70,26 @@
       - API fetch happens in background (list-files.php GET)
       - New images from API are appended to menu
    
-   3. After Menu Loads:
+   3. After Menu Loads (for menu-triggered syncs):
       - Sync runs automatically (list-files.php POST)
       - localStorage key checked: 'system_images_synced_[folderPath]' or
                                   'category_icons_synced_[folderPath]'
       - If already synced this session, skip (prevents multiple syncs)
       - If not synced, sync runs and localStorage marked as synced
       - If sync detects changes, menu updates with new/removed files
+   
+   3b. When Admin Panel Opens (for all picklist syncs):
+      - Sync runs automatically after 1.5 second delay (list-files.php POST)
+      - localStorage key checked: 'picklist_synced_[option_group]_[folderPath]' for each folder
+      - Also checks 'picklists_synced' for overall status
+      - Syncs ALL picklist types in parallel:
+        * system-image (from folder_system_images)
+        * category-icon (from folder_category_icons)
+        * amenity (from folder_amenities)
+        * currency (from folder_currencies)
+        * phone-prefix (from folder_phone_prefixes)
+      - Background, non-blocking - doesn't slow down panel opening
+      - Each folder syncs once per session (localStorage prevents duplicates)
    
    4. Sync Process (list-files.php POST):
       - Compares API filenames with database basket
@@ -83,7 +99,8 @@
       - Returns changes array
    
    LOCALSTORAGE USAGE:
-   - Keys: 'system_images_synced_[folderPath]' and 'category_icons_synced_[folderPath]'
+   - Keys: 'picklist_synced_[option_group]_[folderPath]' for individual folders
+          'picklists_synced' for overall sync status
    - Value: 'true' (string) when sync has completed for this session
    - Purpose: Ensures sync runs only once per session per folder path
    - Cleared: When browser localStorage is cleared (allows re-sync)
@@ -209,7 +226,8 @@ const App = (function() {
     avatars: 'folder_avatars',
     categoryIcons: 'folder_category_icons',
     dummyImages: 'folder_dummy_images',
-    flags: 'folder_flags',
+    currencies: 'folder_currencies',
+    phonePrefixes: 'folder_phone_prefixes',
     postImages: 'folder_post_images',
     siteAvatars: 'folder_site_avatars',
     siteImages: 'folder_site_images',
