@@ -203,8 +203,8 @@ try {
             $currencyRows = $stmt->fetchAll();
             $picklist['currency'] = [];
             foreach ($currencyRows as $row) {
-                // Only include entries with filename (they need flags)
-                if (empty($row['option_filename'])) {
+                // Currency needs filename, value, and label (they need flags and proper data)
+                if (empty($row['option_filename']) || empty($row['option_value']) || empty($row['option_label'])) {
                     continue;
                 }
                 $picklist['currency'][] = [
@@ -223,8 +223,8 @@ try {
             $phoneRows = $stmt->fetchAll();
             $picklist['phone-prefix'] = [];
             foreach ($phoneRows as $row) {
-                // Only include entries with filename (they need flags)
-                if (empty($row['option_filename'])) {
+                // Phone-prefix needs filename, value, and label (they need flags and proper data)
+                if (empty($row['option_filename']) || empty($row['option_value']) || empty($row['option_label'])) {
                     continue;
                 }
                 $picklist['phone-prefix'][] = [
@@ -243,6 +243,10 @@ try {
             $amenityRows = $stmt->fetchAll();
             $picklist['amenity'] = [];
             foreach ($amenityRows as $row) {
+                // Amenities need value and label (filename is optional)
+                if (empty($row['option_value']) || empty($row['option_label'])) {
+                    continue;
+                }
                 $picklist['amenity'][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],

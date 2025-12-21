@@ -71,6 +71,26 @@ try {
             'amenity' => 'amenities'
         ];
         $tableName = $tableMap[$optionGroup];
+        
+        // Verify table exists
+        try {
+            $checkStmt = $pdo->query("SHOW TABLES LIKE '{$tableName}'");
+            if ($checkStmt->rowCount() === 0) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => "Table '{$tableName}' does not exist. Please run the migration SQL first.",
+                ]);
+                return;
+            }
+        } catch (PDOException $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => "Error checking table '{$tableName}': " . $e->getMessage(),
+            ]);
+            return;
+        }
 
         // Database connection code
         $configCandidates = [

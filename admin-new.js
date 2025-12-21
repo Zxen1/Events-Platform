@@ -2354,7 +2354,7 @@ const AdminModule = (function() {
         explanation.className = 'admin-settings-explanation';
         explanation.style.cssText = 'padding: 15px; margin-top: 20px; background-color: rgba(255, 255, 255, 0.1); border-radius: 4px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.9);';
         explanation.innerHTML = '<strong>How Image Sync Works:</strong><br>' +
-            'All image picker menus (System Images, Category Icons, Currencies, Phone Prefixes, Amenities) use the picklist table for instant menu loading. When you open an image picker menu, it displays instantly from the picklist table. The system syncs with Bunny CDN when the admin panel opens (1.5 second delay, background, once per session) to add new files, remove deleted files, and handle renamed files. No API calls occur at website startup, ensuring fast page loads.';
+            'All image picker menus (System Images, Category Icons, Currencies, Phone Prefixes, Amenities) use separate database tables (system_images, category_icons, currencies, phone_prefixes, amenities) for instant menu loading. When you open an image picker menu, it displays instantly from the database tables. The system syncs with Bunny CDN when the admin panel opens (1.5 second delay, background, once per session) to add new files, remove deleted files, and handle renamed files. No API calls occur at website startup, ensuring fast page loads.';
         
         apiContainer.appendChild(explanation);
     }

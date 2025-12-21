@@ -2421,8 +2421,12 @@ const PhonePrefixComponent = (function(){
             });
         }
 
-        // Build options
+        // Build options - filter out entries without proper data
         prefixData.forEach(function(item) {
+            // Skip entries without filename, value, or label
+            if (!item.filename || !item.value || !item.label) {
+                return;
+            }
             var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
             var displayText = item.value + ' - ' + item.label;
 
