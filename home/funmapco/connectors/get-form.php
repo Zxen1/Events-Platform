@@ -880,7 +880,7 @@ function resolveIconFilenameWithFolder(string $iconFilename, string $adminFolder
     
     // Combine admin folder with filename
     $adminFolder = trim($adminFolder);
-    $adminFolder = rtrim($adminFolder, '/');
+        $adminFolder = rtrim($adminFolder, '/');
     return $adminFolder . '/' . $iconFilename;
 }
 

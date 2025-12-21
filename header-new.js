@@ -71,6 +71,13 @@ const HeaderModule = (function() {
     }
     
     function loadLogoFromSettings() {
+        // Ensure App.getImageUrl is available before making request
+        if (typeof window.App === 'undefined' || typeof window.App.getImageUrl !== 'function') {
+            // Retry after a short delay if App not ready
+            setTimeout(loadLogoFromSettings, 50);
+            return;
+        }
+        
         fetch('/gateway.php?action=get-admin-settings')
             .then(function(response) { return response.json(); })
             .then(function(data) {
@@ -78,8 +85,10 @@ const HeaderModule = (function() {
                     // Load logo from system_images
                     if (data.system_images && data.system_images.small_logo) {
                         var logoFilename = data.system_images.small_logo;
-                        var logoUrl = window.App.getImageUrl('systemImages', logoFilename);
-                        setLogo(logoUrl);
+                        if (typeof window.App !== 'undefined' && typeof window.App.getImageUrl === 'function') {
+                            var logoUrl = window.App.getImageUrl('systemImages', logoFilename);
+                            setLogo(logoUrl);
+                        }
                     }
                     // Load header icons from system_images
                     if (data.system_images) {
@@ -93,6 +102,11 @@ const HeaderModule = (function() {
     }
     
     function loadHeaderIcons(systemImages) {
+        // Ensure App.getImageUrl is available
+        if (typeof window.App === 'undefined' || typeof window.App.getImageUrl !== 'function') {
+            return;
+        }
+        
         // Filter icon - use mask-image like admin buttons
         var filterIcon = document.querySelector('.header-filter-button-icon');
         if (filterIcon && systemImages.icon_filter) {

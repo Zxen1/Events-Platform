@@ -163,10 +163,10 @@ try {
     // Fetch system-images from picklist table (basket of available filenames)
     try {
         $stmt = $pdo->query("SELECT `option_filename` FROM `picklist` WHERE `option_group` = 'system-image' AND `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
-        $systemImageRows = $stmt->fetchAll();
-        
+            $systemImageRows = $stmt->fetchAll();
+            
         $systemImagesBasket = [];
-        foreach ($systemImageRows as $row) {
+            foreach ($systemImageRows as $row) {
             if (!empty($row['option_filename'])) {
                 $systemImagesBasket[] = $row['option_filename'];
             }

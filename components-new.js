@@ -231,7 +231,8 @@ const FieldsetComponent = (function(){
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.picklist) {
-                    picklist = res.picklist;
+                    // Set picklist data and propagate to CurrencyComponent and PhonePrefixComponent
+                    setPicklist(res.picklist);
                 }
                 // Also fetch fieldset definitions for tooltip matching
                 return fetch('/gateway.php?action=get-form');
@@ -2115,16 +2116,19 @@ const CurrencyComponent = (function(){
             opts.appendChild(op);
 
             // Store for filtering
-            allOptions.push({
-                element: op,
-                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
-            });
+                    allOptions.push({
+                        element: op,
+                        searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+                    });
         });
 
         // Set initial value
         if (initialValue) {
             setValue(initialValue);
         }
+
+        // Data must be loaded BEFORE building menu (via FieldsetComponent.setPicklist)
+        // If data isn't loaded, menu will be empty - this is expected behavior
 
         // Register with MenuManager
         MenuManager.register(menu);
@@ -2448,6 +2452,9 @@ const PhonePrefixComponent = (function(){
         if (initialValue) {
             setValue(initialValue);
         }
+
+        // Data must be loaded BEFORE building menu (via FieldsetComponent.setPicklist)
+        // If data isn't loaded, menu will be empty - this is expected behavior
 
         // Register with MenuManager
         MenuManager.register(menu);

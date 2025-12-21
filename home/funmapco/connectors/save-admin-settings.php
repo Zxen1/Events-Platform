@@ -422,27 +422,27 @@ try {
     // Save system_images if provided (save to admin_settings, not system_images table)
     $systemImagesUpdated = 0;
     if ($systemImages !== null && is_array($systemImages) && !empty($systemImages)) {
-        $stmt = $pdo->prepare('
+            $stmt = $pdo->prepare('
             INSERT INTO `admin_settings` (`setting_key`, `setting_value`, `setting_type`)
             VALUES (:setting_key, :setting_value, :setting_type)
-            ON DUPLICATE KEY UPDATE
+                ON DUPLICATE KEY UPDATE
                 `setting_value` = VALUES(`setting_value`),
-                `updated_at` = CURRENT_TIMESTAMP
-        ');
+                    `updated_at` = CURRENT_TIMESTAMP
+            ');
 
-        foreach ($systemImages as $imageKey => $filename) {
-            try {
-                $result = $stmt->execute([
+            foreach ($systemImages as $imageKey => $filename) {
+                try {
+                    $result = $stmt->execute([
                     ':setting_key' => $imageKey,
                     ':setting_value' => (string)$filename,
                     ':setting_type' => 'string',
-                ]);
-                if ($result) {
-                    $systemImagesUpdated++;
-                }
-            } catch (PDOException $e) {
-                // Log error for specific image but continue with others
-                error_log("Failed to save system image '{$imageKey}' with filename '{$filename}': " . $e->getMessage());
+                    ]);
+                    if ($result) {
+                        $systemImagesUpdated++;
+                    }
+                } catch (PDOException $e) {
+                    // Log error for specific image but continue with others
+                    error_log("Failed to save system image '{$imageKey}' with filename '{$filename}': " . $e->getMessage());
             }
         }
     }
