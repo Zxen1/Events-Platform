@@ -629,7 +629,7 @@ const FieldsetComponent = (function(){
     
     /**
      * Build a complete fieldset element based on field type
-     * @param {Object} fieldData - Field configuration from the form snapshot
+     * @param {Object} fieldData - Field configuration from the form data
      * @param {Object} options - Additional options
      * @param {string} options.idPrefix - Prefix for element IDs (default 'fieldset')
      * @param {number} options.fieldIndex - Index for unique radio group names
