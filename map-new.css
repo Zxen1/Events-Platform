@@ -76,6 +76,19 @@
   font-weight: 400;
 }
 
+/* Mapbox geocoder icon - make white */
+.mapboxgl-ctrl-geocoder--icon,
+.mapboxgl-ctrl-geocoder--icon-search {
+  fill: #ffffff;
+  color: #ffffff;
+}
+
+.mapboxgl-ctrl-geocoder--icon svg,
+.mapboxgl-ctrl-geocoder--icon-search svg {
+  fill: #ffffff;
+  stroke: #ffffff;
+}
+
 /* Mapbox button styling is in components-new.css (single source of truth) */
 
 /* ============================================================================
