@@ -784,10 +784,10 @@ const MemberModule = (function() {
                                 }
                                 
                                 // Re-render additional locations (after checkout section)
-                                var checkoutSection = formFields.querySelector('.member-checkout-options-section');
-                                if (checkoutSection) {
+                                console.log('[Member] Minus clicked, quantity now:', locationQuantity);
+                                setTimeout(function() {
                                     renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
-                                }
+                                }, 100);
                             }
                         });
                         
@@ -803,10 +803,10 @@ const MemberModule = (function() {
                             }
                             
                             // Re-render additional locations (after checkout section)
-                            var checkoutSection = formFields.querySelector('.member-checkout-options-section');
-                            if (checkoutSection) {
+                            console.log('[Member] Plus clicked, quantity now:', locationQuantity);
+                            setTimeout(function() {
                                 renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
-                            }
+                            }, 100);
                         });
                     } else {
                         console.warn('[Member] Could not find label element in location fieldset. Fieldset children:', fieldset.children);
@@ -823,7 +823,9 @@ const MemberModule = (function() {
         
         // Render additional locations if quantity > 1 (after checkout section is rendered)
         if (locationQuantity > 1 && locationFieldset) {
-            renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
+            setTimeout(function() {
+                renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
+            }, 100);
         }
         
         // Render terms agreement and submit buttons after checkout options
@@ -848,7 +850,7 @@ const MemberModule = (function() {
         }
         
         // Find insertion point - before checkout options section
-        var checkoutSection = formFields.querySelector('.member-checkout-options-section');
+        var checkoutSection = formFields.querySelector('.member-checkout-wrapper');
         if (!checkoutSection) {
             console.warn('[Member] Checkout section not found, cannot render additional locations');
             return;
@@ -998,7 +1000,10 @@ const MemberModule = (function() {
             if (category && category.subFees && category.subFees[selectedSubcategory]) {
                 var subData = category.subFees[selectedSubcategory];
                 if (subData.checkout_surcharge !== null && subData.checkout_surcharge !== undefined) {
-                    surcharge = parseFloat(subData.checkout_surcharge) || 0;
+                    var parsedSurcharge = parseFloat(subData.checkout_surcharge);
+                    if (!isNaN(parsedSurcharge)) {
+                        surcharge = parsedSurcharge;
+                    }
                 }
                 if (subData.subcategory_type) {
                     subcategoryType = subData.subcategory_type;
@@ -1035,12 +1040,6 @@ const MemberModule = (function() {
                     // Selection handler - can be used for validation
                 }
             });
-        } else {
-            // Fallback if component not loaded
-            var placeholder = document.createElement('div');
-            placeholder.className = 'member-checkout-placeholder';
-            placeholder.textContent = 'Checkout options not available.';
-            wrapper.appendChild(placeholder);
         }
         
         formFields.appendChild(wrapper);
