@@ -240,28 +240,35 @@ const MemberModule = (function() {
                 if (file) {
                     var avatarHiddenInput = document.getElementById('member-register-avatar');
                     var avatarRadios = panel ? panel.querySelectorAll('input[name="avatarChoice"]') : [];
+                    var avatarOptionsContainer = document.getElementById('member-avatar-options');
+                    var avatarPreviewContainer = document.getElementById('member-avatar-upload-preview');
+                    var avatarPreviewImg = document.getElementById('member-avatar-preview-img');
                     
                     // Uncheck all radio buttons
                     avatarRadios.forEach(function(radio) {
                         radio.checked = false;
                     });
                     
+                    // Hide avatar options, show preview
+                    if (avatarOptionsContainer) {
+                        avatarOptionsContainer.style.display = 'none';
+                    }
+                    if (avatarPreviewContainer && avatarPreviewImg) {
+                        avatarPreviewContainer.style.display = 'block';
+                        
+                        // Read file and display preview
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            avatarPreviewImg.src = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                    
                     // Store file reference (don't upload yet - will upload with correct name after member creation)
                     if (avatarHiddenInput) {
                         // Clear any previous URL - file will be uploaded during registration
                         avatarHiddenInput.value = '';
                         avatarHiddenInput.dataset.hasFile = 'true';
-                    }
-                    
-                    // Show visual feedback that file was selected
-                    if (avatarUploadBtn) {
-                        var originalText = avatarUploadBtn.textContent;
-                        avatarUploadBtn.textContent = 'File Selected: ' + file.name;
-                        setTimeout(function() {
-                            if (avatarUploadBtn) {
-                                avatarUploadBtn.textContent = originalText;
-                            }
-                        }, 2000);
                     }
                 }
             });
@@ -1458,9 +1465,20 @@ const MemberModule = (function() {
                                 if (img && img.src && avatarHiddenInput) {
                                     avatarHiddenInput.value = img.src;
                                 }
-                                // Clear file input
+                                // Clear file input and hide preview
                                 if (avatarFileInput) {
                                     avatarFileInput.value = '';
+                                }
+                                var avatarPreviewContainer = document.getElementById('member-avatar-upload-preview');
+                                var avatarOptionsContainer = document.getElementById('member-avatar-options');
+                                if (avatarPreviewContainer) {
+                                    avatarPreviewContainer.style.display = 'none';
+                                }
+                                if (avatarOptionsContainer) {
+                                    avatarOptionsContainer.style.display = 'flex';
+                                }
+                                if (avatarHiddenInput) {
+                                    avatarHiddenInput.removeAttribute('data-has-file');
                                 }
                             }
                         });
