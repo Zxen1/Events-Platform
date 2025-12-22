@@ -1021,8 +1021,8 @@
         locationTypeLabel.className = 'formbuilder-type-row-label';
         locationTypeLabel.textContent = 'Location Type';
         
-        // Only use existing value from database, no default fallback
-        var currentLocationType = subFeeData.location_type || null;
+        // Only use existing value from database, NO FALLBACKS
+        var currentLocationType = subFeeData.location_type;
         
         var venueLabel = document.createElement('label');
         venueLabel.className = 'formbuilder-type-option';
@@ -1030,7 +1030,8 @@
         venueInput.type = 'radio';
         venueInput.name = 'locationType-' + cat.name + '-' + subName;
         venueInput.value = 'Venue';
-        venueInput.checked = currentLocationType === 'Venue';
+        // Only check if explicitly 'Venue', not null/undefined/empty
+        venueInput.checked = (currentLocationType === 'Venue');
         var venueText = document.createElement('span');
         venueText.textContent = 'Venue';
         venueLabel.appendChild(venueInput);
@@ -1042,7 +1043,8 @@
         cityInput.type = 'radio';
         cityInput.name = 'locationType-' + cat.name + '-' + subName;
         cityInput.value = 'City';
-        cityInput.checked = currentLocationType === 'City';
+        // Only check if explicitly 'City', not null/undefined/empty
+        cityInput.checked = (currentLocationType === 'City');
         if (currentType === 'Events') {
             cityInput.disabled = true;
         }
@@ -1057,7 +1059,8 @@
         addressInput.type = 'radio';
         addressInput.name = 'locationType-' + cat.name + '-' + subName;
         addressInput.value = 'Address';
-        addressInput.checked = currentLocationType === 'Address';
+        // Only check if explicitly 'Address', not null/undefined/empty
+        addressInput.checked = (currentLocationType === 'Address');
         if (currentType === 'Events') {
             addressInput.disabled = true;
         }
@@ -1741,8 +1744,8 @@
             return { wrapper: fieldWrapper, fsId: fsId };
         }
         
-        // Populate fieldset options
-        var selectedLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
+        // Populate fieldset options - NO FALLBACKS
+        var selectedLocationType = subFeeData.location_type;
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
             var opt = document.createElement('div');
