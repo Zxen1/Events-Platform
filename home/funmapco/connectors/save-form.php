@@ -580,7 +580,6 @@ try {
             $checkoutSurcharge = isset($subFees['checkout_surcharge']) && $subFees['checkout_surcharge'] !== null && $subFees['checkout_surcharge'] !== '' ? round((float)$subFees['checkout_surcharge'], 2) : null;
             $subcategoryType = isset($subFees['subcategory_type']) ? $subFees['subcategory_type'] : 'Standard';
             $locationType = isset($subFees['location_type']) && $subFees['location_type'] !== null && $subFees['location_type'] !== '' ? $subFees['location_type'] : null;
-            error_log("DEBUG: location_type for subcategory '$subName': " . var_export($locationType, true) . " (from subFees: " . var_export($subFees['location_type'] ?? 'NOT SET', true) . ")");
 
             $fieldsPayload = [];
             $hasFieldsForThisSub = false;

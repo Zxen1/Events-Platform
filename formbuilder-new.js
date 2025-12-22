@@ -149,22 +149,9 @@
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
-                // Get location type from checked radio button (same pattern as subcategory_type)
-                var venueRadio = option.querySelector('input[type="radio"][value="Venue"]');
-                var cityRadio = option.querySelector('input[type="radio"][value="City"]');
-                var addressRadio = option.querySelector('input[type="radio"][value="Address"]');
-                var locationType = null;
-                if (venueRadio && venueRadio.checked) {
-                    locationType = 'Venue';
-                } else if (cityRadio && cityRadio.checked) {
-                    locationType = 'City';
-                } else if (addressRadio && addressRadio.checked) {
-                    locationType = 'Address';
-                }
                 category.subFees[subName] = {
                     checkout_surcharge: surchargeValue,
-                    subcategory_type: subcategoryType,
-                    location_type: locationType
+                    subcategory_type: subcategoryType
                 };
                 
                 // Fields
@@ -1025,9 +1012,7 @@
         locationTypeLabel.className = 'formbuilder-type-row-label';
         locationTypeLabel.textContent = 'Location Type';
         
-        // No default selection - admin must choose
-        // EXCEPTION: Events mode forces Venue (enforced by change handler, not fallback)
-        var currentLocationType = subFeeData.location_type;
+        var currentLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
         
         var venueLabel = document.createElement('label');
         venueLabel.className = 'formbuilder-type-option';
@@ -1036,6 +1021,10 @@
         venueInput.name = 'locationType-' + cat.name + '-' + subName;
         venueInput.value = 'Venue';
         venueInput.checked = currentLocationType === 'Venue';
+        if (currentType === 'Events') {
+            venueInput.checked = true;
+            // Venue stays enabled in Events mode
+        }
         var venueText = document.createElement('span');
         venueText.textContent = 'Venue';
         venueLabel.appendChild(venueInput);
@@ -1165,16 +1154,14 @@
         // Update when Events/General type changes
         eventsInput.addEventListener('change', function() {
             if (eventsInput.checked) {
-                // Events mode MUST have Venue selected
                 venueInput.checked = true;
+                // Venue stays enabled, only City and Address are disabled
                 cityInput.disabled = true;
                 addressInput.disabled = true;
-                // Set location_type to Venue (required for Events mode)
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'Venue';
                 updateLocationTypeFieldsets('Venue');
-                notifyChange();
             }
         });
         
@@ -1740,8 +1727,7 @@
         }
         
         // Populate fieldset options
-        // No default - only filter if location_type is actually set
-        var selectedLocationType = subFeeData.location_type;
+        var selectedLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
             var opt = document.createElement('div');
@@ -1782,7 +1768,6 @@
         });
         
         // Apply initial location type filtering now that fieldsetOpts exists
-        // Only filter if location_type is actually set (not null)
         if (initialLocationType) {
             updateLocationTypeFieldsets(initialLocationType);
         }
