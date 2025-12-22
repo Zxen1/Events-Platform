@@ -149,9 +149,18 @@
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
+                
+                // Location type - read from radio buttons (name pattern: locationType-{catName}-{subName})
+                var locationTypeRadio = option.querySelector('input[type="radio"][name^="locationType-"]:checked');
+                var locationType = null;
+                if (locationTypeRadio && locationTypeRadio.value) {
+                    locationType = locationTypeRadio.value;
+                }
+                
                 category.subFees[subName] = {
                     checkout_surcharge: surchargeValue,
-                    subcategory_type: subcategoryType
+                    subcategory_type: subcategoryType,
+                    location_type: locationType
                 };
                 
                 // Fields
