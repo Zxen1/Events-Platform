@@ -359,7 +359,8 @@ const AdminModule = (function() {
         
         // Save button
         if (saveBtn) {
-            saveBtn.addEventListener('click', function() {
+            saveBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent click-away handlers from closing menus
                 if (!saveBtn.disabled) {
                     runSave();
                 }
@@ -368,7 +369,8 @@ const AdminModule = (function() {
         
         // Discard button
         if (discardBtn) {
-            discardBtn.addEventListener('click', function() {
+            discardBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent click-away handlers from closing menus
                 if (!discardBtn.disabled) {
                     discardChanges();
                 }

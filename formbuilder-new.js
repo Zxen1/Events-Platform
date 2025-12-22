@@ -475,9 +475,18 @@
     }
     
     function bindDocumentListeners() {
+        // Helper function to check if click is on save/discard button
+        function isSaveOrDiscardButton(target) {
+            return target.closest('.admin-panel-actions-icon-btn--save') ||
+                   target.closest('.admin-panel-actions-icon-btn--discard') ||
+                   target.closest('.admin-panel-actions');
+        }
+        
         // Close category/subcategory edit panels when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons
+            if (isSaveOrDiscardButton(e.target)) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel') && 
                 !e.target.closest('.formbuilder-accordion-option-editpanel') &&
                 !e.target.closest('.formbuilder-accordion-header-editarea') &&
@@ -491,6 +500,8 @@
         // Close 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons
+            if (isSaveOrDiscardButton(e.target)) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
                 container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -501,6 +512,8 @@
         // Close fieldset menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons
+            if (isSaveOrDiscardButton(e.target)) return;
             if (!e.target.closest('.formbuilder-fieldset-menu')) {
                 container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -511,6 +524,8 @@
         // Close icon picker menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons
+            if (isSaveOrDiscardButton(e.target)) return;
             if (!e.target.closest('.formbuilder-menu')) {
                 container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -521,6 +536,8 @@
         // Close field 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons
+            if (isSaveOrDiscardButton(e.target)) return;
             if (!e.target.closest('.formbuilder-field-more')) {
                 container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -531,6 +548,8 @@
         // Close field edit panels when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons
+            if (isSaveOrDiscardButton(e.target)) return;
             if (!e.target.closest('.formbuilder-field-wrapper')) {
                 closeAllFieldEditPanels();
             }
@@ -1121,6 +1140,169 @@
             });
         }
         
+        // Update sessions fieldset gray-out state based on subcategory type
+        function updateSessionsFieldset(subcategoryType) {
+            if (!fieldsetOpts) return;
+            var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            
+            allOptions.forEach(function(opt) {
+                var fsId = opt.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (!fieldset) return;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                var isSessions = fieldsetKeyLower === 'sessions';
+                
+                if (isSessions) {
+                    if (subcategoryType === 'Events') {
+                        opt.classList.remove('disabled-location-type');
+                    } else {
+                        opt.classList.add('disabled-location-type');
+                    }
+                }
+            });
+        }
+        
+        function manageLocationTypeFieldsets(selectedType) {
+            if (!selectedType) {
+                // No location type selected - hide Add Field button
+                if (fieldsetMenu) {
+                    fieldsetMenu.style.display = 'none';
+                }
+                // Update gray-out state for all location fieldsets
+                updateLocationTypeFieldsets(null);
+                return;
+            }
+            
+            // Show Add Field button
+            if (fieldsetMenu) {
+                fieldsetMenu.style.display = '';
+            }
+            
+            // Update gray-out state based on selected type
+            updateLocationTypeFieldsets(selectedType);
+            
+            var selectedTypeLower = String(selectedType).toLowerCase();
+            var targetFieldsetKey = null;
+            
+            // Determine which fieldset key to use
+            if (selectedTypeLower === 'venue') {
+                targetFieldsetKey = 'venue';
+            } else if (selectedTypeLower === 'city') {
+                targetFieldsetKey = 'city';
+            } else if (selectedTypeLower === 'address') {
+                targetFieldsetKey = 'address';
+            }
+            
+            if (!targetFieldsetKey) return;
+            
+            // Check if the target fieldset already exists
+            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+            var targetFieldsetExists = false;
+            allFieldWrappers.forEach(function(wrapper) {
+                var fsId = wrapper.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (fieldset) {
+                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                    // For address, also check for 'location' key
+                    if (targetFieldsetKey === 'address') {
+                        if (fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location') {
+                            targetFieldsetExists = true;
+                        }
+                    } else {
+                        if (fieldsetKeyLower === targetFieldsetKey) {
+                            targetFieldsetExists = true;
+                        }
+                    }
+                }
+            });
+            
+            // If target fieldset doesn't exist, add it automatically
+            if (!targetFieldsetExists) {
+                // Try to find fieldset by target key, or 'location' if target is 'address'
+                var targetFieldset = null;
+                if (targetFieldsetKey === 'address') {
+                    // Try 'address' first, then 'location'
+                    targetFieldset = fieldsets.find(function(fs) {
+                        var fsKey = fs.key || fs.fieldset_key || fs.id;
+                        return String(fsKey).toLowerCase() === 'address';
+                    });
+                    if (!targetFieldset) {
+                        targetFieldset = fieldsets.find(function(fs) {
+                            var fsKey = fs.key || fs.fieldset_key || fs.id;
+                            return String(fsKey).toLowerCase() === 'location';
+                        });
+                    }
+                } else {
+                    targetFieldset = fieldsets.find(function(fs) {
+                        var fsKey = fs.key || fs.fieldset_key || fs.id;
+                        return String(fsKey).toLowerCase() === targetFieldsetKey;
+                    });
+                }
+                
+                if (targetFieldset) {
+                    var result = createFieldElement(targetFieldset, true, targetFieldset);
+                    fieldsContainer.appendChild(result.wrapper);
+                    addedFieldsets[result.fsId] = true;
+                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
+                    if (menuOpt) {
+                        menuOpt.classList.add('disabled');
+                    }
+                    notifyChange();
+                }
+            }
+        }
+        
+        // Manage sessions fieldset based on subcategory type (Events vs General)
+        function manageSessionsFieldset(isEvents) {
+            // Update gray-out state in menu
+            updateSessionsFieldset(isEvents ? 'Events' : 'General');
+            
+            // If Events is selected, check if sessions fieldset exists and add it automatically if not
+            if (isEvents) {
+                var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+                var sessionsFieldsetExists = false;
+                allFieldWrappers.forEach(function(wrapper) {
+                    var fsId = wrapper.getAttribute('data-fieldset-id');
+                    var fieldset = fieldsets.find(function(fs) {
+                        return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                    });
+                    if (fieldset) {
+                        var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                        var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                        if (fieldsetKeyLower === 'sessions') {
+                            sessionsFieldsetExists = true;
+                        }
+                    }
+                });
+                
+                // If sessions fieldset doesn't exist, add it automatically
+                if (!sessionsFieldsetExists) {
+                    var sessionsFieldset = fieldsets.find(function(fs) {
+                        var fsKey = fs.key || fs.fieldset_key || fs.id;
+                        return String(fsKey).toLowerCase() === 'sessions';
+                    });
+                    
+                    if (sessionsFieldset) {
+                        var result = createFieldElement(sessionsFieldset, true, sessionsFieldset);
+                        fieldsContainer.appendChild(result.wrapper);
+                        addedFieldsets[result.fsId] = true;
+                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
+                        if (menuOpt) {
+                            menuOpt.classList.add('disabled');
+                        }
+                        notifyChange();
+                    }
+                }
+            }
+        }
+        
         venueInput.addEventListener('change', function(e) {
             e.stopPropagation();
             if (venueInput.checked) {
@@ -1128,6 +1310,7 @@
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'Venue';
                 updateLocationTypeFieldsets('Venue');
+                manageLocationTypeFieldsets('Venue');
                 notifyChange();
             }
         });
@@ -1139,6 +1322,7 @@
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'City';
                 updateLocationTypeFieldsets('City');
+                manageLocationTypeFieldsets('City');
                 notifyChange();
             }
         });
@@ -1150,6 +1334,7 @@
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'Address';
                 updateLocationTypeFieldsets('Address');
+                manageLocationTypeFieldsets('Address');
                 notifyChange();
             }
         });
@@ -1183,8 +1368,11 @@
                 addressInput.checked = false;
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].subcategory_type = 'Events';
                 cat.subFees[subName].location_type = null;
                 updateLocationTypeFieldsets(null);
+                manageLocationTypeFieldsets(null);
+                manageSessionsFieldset(true); // Add sessions fieldset for Events
                 notifyChange();
             }
         });
@@ -1201,8 +1389,11 @@
                 addressInput.checked = false;
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].subcategory_type = 'General';
                 cat.subFees[subName].location_type = null;
                 updateLocationTypeFieldsets(null);
+                manageLocationTypeFieldsets(null);
+                manageSessionsFieldset(false); // Gray out sessions fieldset for General
                 notifyChange();
             }
         });
@@ -1758,52 +1949,53 @@
         }
         
         // Populate fieldset options - NO FALLBACKS
+        // All fieldsets appear in menu, but location fieldsets and sessions are grayed out when not selectable
         var selectedLocationType = subFeeData.location_type;
+        var currentSubcategoryType = subFeeData.subcategory_type;
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
-            var opt = document.createElement('div');
-            opt.className = 'formbuilder-fieldset-menu-option';
-            opt.textContent = fs.name || fs.key || 'Unnamed';
-            opt.setAttribute('data-fieldset-id', fsId);
-            
             var fieldsetKey = fs.key || fs.fieldset_key || fs.id;
             // Normalize to lowercase for comparison
             var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
             var isVenue = fieldsetKeyLower === 'venue';
             var isCity = fieldsetKeyLower === 'city';
             var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
+            var isSessions = fieldsetKeyLower === 'sessions';
             
-            // Normalize selectedLocationType for comparison
-            var selectedTypeLower = selectedLocationType ? String(selectedLocationType).toLowerCase() : '';
+            var opt = document.createElement('div');
+            opt.className = 'formbuilder-fieldset-menu-option';
+            opt.textContent = fs.name || fs.key || 'Unnamed';
+            opt.setAttribute('data-fieldset-id', fsId);
             
-            // Grey out fieldsets that don't match selected location type
-            // Use separate class 'disabled-location-type' to avoid breaking "already added" disabled state
-            if (selectedTypeLower === 'venue') {
-                if (isCity || isAddress) {
+            // Apply initial gray-out state for location fieldsets
+            if (isVenue || isCity || isAddress) {
+                var selectedTypeLower = selectedLocationType ? String(selectedLocationType).toLowerCase() : '';
+                if (!selectedTypeLower || selectedTypeLower === 'null' || selectedTypeLower === '') {
+                    // No location type selected - all location fieldsets are grayed out
                     opt.classList.add('disabled-location-type');
-                } else if (isVenue) {
-                    opt.classList.remove('disabled-location-type');
+                } else if (selectedTypeLower === 'venue') {
+                    if (isCity || isAddress) {
+                        opt.classList.add('disabled-location-type');
+                    }
+                } else if (selectedTypeLower === 'city') {
+                    if (isVenue || isAddress) {
+                        opt.classList.add('disabled-location-type');
+                    }
+                } else if (selectedTypeLower === 'address') {
+                    if (isVenue || isCity) {
+                        opt.classList.add('disabled-location-type');
+                    }
                 }
-            } else if (selectedTypeLower === 'city') {
-                if (isVenue || isAddress) {
-                    opt.classList.add('disabled-location-type');
-                } else if (isCity) {
-                    opt.classList.remove('disabled-location-type');
-                }
-            } else if (selectedTypeLower === 'address') {
-                if (isVenue || isCity) {
-                    opt.classList.add('disabled-location-type');
-                } else if (isAddress) {
-                    opt.classList.remove('disabled-location-type');
-                }
-            } else {
-                // No location type selected - enable all location fieldsets
-                opt.classList.remove('disabled-location-type');
+            }
+            
+            // Apply initial gray-out state for sessions (only available for Events)
+            if (isSessions && currentSubcategoryType !== 'Events') {
+                opt.classList.add('disabled-location-type');
             }
             
             opt.onclick = function(e) {
                 e.stopPropagation();
-                // Check for both "already added" disabled AND location type disabled
+                // Check for both "already added" disabled AND location type/sessions disabled
                 if (opt.classList.contains('disabled') || opt.classList.contains('disabled-location-type')) return;
                 
                 var result = createFieldElement(fs, true, fs);
@@ -1816,10 +2008,20 @@
             fieldsetOpts.appendChild(opt);
         });
         
-        // Apply initial location type filtering now that fieldsetOpts exists
+        // Apply initial location type filtering and management now that fieldsetOpts exists
         if (initialLocationType) {
             updateLocationTypeFieldsets(initialLocationType);
+            manageLocationTypeFieldsets(initialLocationType);
+        } else {
+            // No location type selected - hide Add Field button and gray out all location fieldsets
+            if (fieldsetMenu) {
+                fieldsetMenu.style.display = 'none';
+            }
+            updateLocationTypeFieldsets(null);
         }
+        
+        // Apply initial sessions fieldset gray-out state
+        updateSessionsFieldset(currentSubcategoryType);
         
         // Load existing fields from database
         var subFieldsMap = cat.subFields || {};
@@ -1837,15 +2039,24 @@
             if (menuOpt) menuOpt.classList.add('disabled');
         });
         
+        // After loading existing fields, ensure location type fieldset management is correct
+        if (initialLocationType) {
+            manageLocationTypeFieldsets(initialLocationType);
+        }
+        
+        // Also manage sessions fieldset based on current subcategory type
+        var currentSubcategoryType = subFeeData.subcategory_type;
+        if (currentSubcategoryType === 'Events') {
+            manageSessionsFieldset(true);
+        } else {
+            manageSessionsFieldset(false);
+        }
+        
         fieldsetBtn.onclick = function(e) {
             e.stopPropagation();
             var wasOpen = fieldsetMenu.classList.contains('open');
             closeAllMenus();
             if (!wasOpen) {
-                // Menu is opening - check current location type selection and apply filtering
-                var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
-                var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
-                updateLocationTypeFieldsets(currentLocationType);
                 fieldsetMenu.classList.add('open');
             }
         };

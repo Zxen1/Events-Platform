@@ -68,6 +68,12 @@ const MenuManager = (function(){
     
     // Close all menus when clicking outside
     document.addEventListener('click', function(e) {
+        // Don't close if clicking on save/discard buttons
+        if (e.target.closest('.admin-panel-actions-icon-btn--save') ||
+            e.target.closest('.admin-panel-actions-icon-btn--discard') ||
+            e.target.closest('.admin-panel-actions')) {
+            return;
+        }
         openMenus.forEach(function(menu) {
             if (!menu.contains(e.target)) {
                 menu.classList.remove('open');
