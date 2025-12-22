@@ -673,7 +673,7 @@ const MemberModule = (function() {
                     }
                 }
                 
-                console.log('[Member] Checking field', index, 'fieldsetKey:', fieldsetKey, 'fieldData:', fieldData);
+                // Checking field
                 
                 // Check if this is a location fieldset (venue, city, address, location)
                 // 'location' is legacy support for 'address'
@@ -681,7 +681,7 @@ const MemberModule = (function() {
                     if (!locationFieldset) {
                         locationFieldset = fieldData;
                         locationFieldsetType = fieldsetKey === 'location' ? 'address' : fieldsetKey;
-                        console.log('[Member] Found location fieldset:', fieldsetKey, 'stored as:', locationFieldset);
+                        // Found location fieldset
                     }
                 }
                 
@@ -723,7 +723,7 @@ const MemberModule = (function() {
                 }
                 
                 if (isLocationFieldset) {
-                    console.log('[Member] Rendering location fieldset with quantity selector:', fieldsetKey);
+                    // Rendering location fieldset with quantity selector
                 }
 
                 var fieldset = FieldsetComponent.buildFieldset(field, {
@@ -735,11 +735,11 @@ const MemberModule = (function() {
                 
                 // Add location quantity selector to location fieldset
                 if (isLocationFieldset) {
-                    console.log('[Member] Adding quantity selector to location fieldset. Fieldset:', fieldset, 'Field data:', field);
+                    // Adding quantity selector to location fieldset
                     // Find the label element - it should be the first child with class fieldset-label
                     var labelEl = fieldset.querySelector('.fieldset-label');
                     if (labelEl) {
-                        console.log('[Member] Found label element, adding quantity controls. Label:', labelEl);
+                        // Found label element, adding quantity controls
                         // Create quantity selector row
                         var quantityRow = document.createElement('div');
                         quantityRow.className = 'member-location-quantity-row';
@@ -804,7 +804,7 @@ const MemberModule = (function() {
                                 }
                                 
                                 // Re-render additional locations (after checkout section)
-                                console.log('[Member] Minus clicked, quantity now:', locationQuantity);
+                                // Minus clicked
                                 setTimeout(function() {
                                     renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
                                 }, 100);
@@ -823,7 +823,7 @@ const MemberModule = (function() {
                             }
                             
                             // Re-render additional locations (after checkout section)
-                            console.log('[Member] Plus clicked, quantity now:', locationQuantity);
+                            // Plus clicked
                             setTimeout(function() {
                                 renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
                             }, 100);
@@ -855,7 +855,7 @@ const MemberModule = (function() {
     }
     
     function renderAdditionalLocations(quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
-        console.log('[Member] renderAdditionalLocations called:', { quantity: quantity, locationType: locationType, mustRepeatCount: mustRepeatFieldsets.length, locationFieldsetData: locationFieldsetData });
+        // renderAdditionalLocations called
         
         // Remove existing additional locations
         var existingLocations = formFields.querySelectorAll('.member-additional-location');
@@ -865,7 +865,7 @@ const MemberModule = (function() {
         
         // Don't render if quantity is 1 or less
         if (quantity <= 1) {
-            console.log('[Member] Quantity is 1 or less, not rendering additional locations');
+            // Quantity is 1 or less, not rendering additional locations
             return;
         }
         
@@ -895,7 +895,7 @@ const MemberModule = (function() {
             locationSection.appendChild(locationHeader);
             
             // First, render the location fieldset again (venue/city/address)
-            console.log('[Member] Rendering location', i, 'for type:', locationType);
+            // Rendering location
             
             // Create a copy of the field data with updated name
             var locationFieldData = {};
@@ -906,7 +906,7 @@ const MemberModule = (function() {
             }
             locationFieldData.name = locationName;
             
-            console.log('[Member] Building fieldset for location', i, 'with data:', locationFieldData);
+            // Building fieldset for location
             
             var locationFieldsetClone = FieldsetComponent.buildFieldset(locationFieldData, {
                 idPrefix: 'memberCreate',
@@ -916,7 +916,7 @@ const MemberModule = (function() {
                 defaultCurrency: null
             });
             
-            console.log('[Member] Built fieldset for location', i, ':', locationFieldsetClone);
+            // Built fieldset for location
             locationSection.appendChild(locationFieldsetClone);
             
             // Then, render must-repeat fieldsets
@@ -942,13 +942,11 @@ const MemberModule = (function() {
             });
             
             // Insert before checkout options
-            console.log('[Member] Inserting location section', i, 'before checkout section');
+            // Inserting location section before checkout section
             formFields.insertBefore(locationSection, checkoutSection);
         }
         
-        console.log('[Member] Finished rendering additional locations. Total rendered:', quantity - 1);
-        
-        console.log('[Member] Finished rendering additional locations. Total rendered:', quantity - 1);
+        // Finished rendering additional locations
     }
     
     function copyFieldsetValues(targetFieldset, fieldData, sourceLocation, targetLocation) {

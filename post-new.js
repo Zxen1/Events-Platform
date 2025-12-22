@@ -33,5 +33,5 @@
    ============================================================================ */
 
 // Placeholder - to be built
-console.log('[post.js] Post section loaded');
+// Post section loaded
 

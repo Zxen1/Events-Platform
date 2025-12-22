@@ -255,7 +255,7 @@ const AdminModule = (function() {
         .then(function(response) { return response.json(); })
         .then(function(data) {
             if (data.success) {
-                console.log('[Admin] Autosave setting saved:', enabled);
+                // Autosave setting saved
             }
         })
         .catch(function(err) {
@@ -289,7 +289,7 @@ const AdminModule = (function() {
         // Initialize Settings tab (default tab)
         initSettingsTab();
 
-        console.log('[Admin] Admin module initialized');
+        // Admin module initialized
     }
     
     function cacheElements() {
@@ -490,7 +490,7 @@ const AdminModule = (function() {
                                         if (syncRes.success) {
                                             localStorage.setItem(folderSyncKey, 'true');
                                             if (syncRes.inserted_count > 0 || syncRes.deleted_count > 0) {
-                                                console.log('[Admin] Synced ' + item.option_group + ':', syncRes.inserted_count + ' added, ' + syncRes.deleted_count + ' removed');
+                                                // Synced option group
                                             }
                                         } else {
                                             console.error('[Admin] Sync failed for ' + item.option_group + ':', syncRes.errors || syncRes.message || 'Unknown error');
@@ -643,7 +643,7 @@ const AdminModule = (function() {
         
         // Prevent concurrent saves
         if (isSaving) {
-            console.log('[Admin] Save already in progress, skipping');
+            // Save already in progress, skipping
             return;
         }
         
@@ -655,7 +655,7 @@ const AdminModule = (function() {
         
         // Final check: are there actual changes to save?
         if (!hasActualChanges()) {
-            console.log('[Admin] No actual changes to save');
+            // No actual changes to save
             markSaved();
             return;
         }
@@ -684,7 +684,7 @@ const AdminModule = (function() {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save settings');
                     }
-                    console.log('[Admin] Settings saved:', Object.keys(modifiedSettings).length);
+                    // Settings saved
                 })
             );
         }
@@ -703,7 +703,7 @@ const AdminModule = (function() {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save messages');
                     }
-                    console.log('[Admin] Messages saved:', modifiedMessages.length);
+                    // Messages saved
                     // Update composite baseline (like Formbuilder does)
                     updateCompositeBaseline('messages');
                 })
@@ -724,7 +724,7 @@ const AdminModule = (function() {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save fieldset tooltips');
                     }
-                    console.log('[Admin] Fieldset tooltips saved:', modifiedTooltips.length);
+                    // Fieldset tooltips saved
                     // Update composite baseline (like Formbuilder does)
                     updateCompositeBaseline('messages');
                 })
@@ -745,7 +745,7 @@ const AdminModule = (function() {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save category names');
                     }
-                    console.log('[Admin] Category names saved');
+                    // Category names saved
                     updateCompositeBaseline('messages');
                 })
             );
@@ -765,7 +765,7 @@ const AdminModule = (function() {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save category order');
                     }
-                    console.log('[Admin] Category order saved');
+                    // Category order saved
                     updateCompositeBaseline('messages');
                 })
             );
@@ -785,7 +785,7 @@ const AdminModule = (function() {
                     if (!data.success) {
                         throw new Error(data.message || 'Failed to save checkout options');
                     }
-                    console.log('[Admin] Checkout options saved:', checkoutOptions.length);
+                    // Checkout options saved
                     updateCompositeBaseline('checkout_options');
                 })
             );
@@ -794,7 +794,7 @@ const AdminModule = (function() {
         // Run all saves
         Promise.all(savePromises)
             .then(function() {
-                console.log('[Admin] All saves completed successfully');
+                // All saves completed successfully
                 isSaving = false;
                 
                 // Update baselines to saved values
@@ -837,7 +837,7 @@ const AdminModule = (function() {
     function discardChanges() {
         // Prevent discard during save
         if (isSaving) {
-            console.log('[Admin] Cannot discard during save');
+            // Cannot discard during save
             return;
         }
         
@@ -870,7 +870,7 @@ const AdminModule = (function() {
         // Emit event for other modules to discard their changes
         App.emit('admin:discard');
         
-        console.log('[Admin] Changes discarded');
+        // Changes discarded
         isDirty = false;
         updateButtonStates();
         

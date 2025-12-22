@@ -253,7 +253,7 @@
             return Promise.reject(new Error('Failed to capture formbuilder state'));
         }
         
-        console.log('[Formbuilder] Saving...', payload);
+        // Saving...
         
         return fetch('/gateway.php?action=save-form', {
             method: 'POST',
@@ -267,7 +267,7 @@
             if (!result.success) {
                 throw new Error(result.message || 'Save failed');
             }
-            console.log('[Formbuilder] Saved successfully', result);
+            // Saved successfully
             
             // Update IDs for newly created items
             if (result.new_category_ids && result.new_category_ids.length > 0) {
