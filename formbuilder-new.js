@@ -520,10 +520,7 @@
             if (!container) return;
             // Don't close if clicking on save/discard buttons or calculator
             if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
-            // Check if click is inside any fieldset menu (button or options)
-            var clickedInsideMenu = e.target.closest('.formbuilder-fieldset-menu');
-            if (!clickedInsideMenu) {
-                // Click was outside - close all open fieldset menus
+            if (!e.target.closest('.formbuilder-fieldset-menu')) {
                 container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                     el.classList.remove('open');
                 });
@@ -2075,10 +2072,6 @@
             closeAllMenus();
             if (!wasOpen) {
                 fieldsetMenu.classList.add('open');
-                // Register with MenuManager for click-away handling
-                if (typeof MenuManager !== 'undefined' && MenuManager.register) {
-                    MenuManager.register(fieldsetMenu);
-                }
             }
         };
         
