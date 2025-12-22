@@ -149,14 +149,17 @@
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
-                // Get location type from data attribute or checked radio button
-                var locationType = option.dataset.locationType || null;
-                if (!locationType) {
-                    // Fallback: find checked radio button
-                    var checkedRadio = option.querySelector('input[type="radio"][name^="locationType-"]:checked');
-                    if (checkedRadio) {
-                        locationType = checkedRadio.value;
-                    }
+                // Get location type from checked radio button (same pattern as subcategory_type)
+                var venueRadio = option.querySelector('input[type="radio"][value="Venue"]');
+                var cityRadio = option.querySelector('input[type="radio"][value="City"]');
+                var addressRadio = option.querySelector('input[type="radio"][value="Address"]');
+                var locationType = null;
+                if (venueRadio && venueRadio.checked) {
+                    locationType = 'Venue';
+                } else if (cityRadio && cityRadio.checked) {
+                    locationType = 'City';
+                } else if (addressRadio && addressRadio.checked) {
+                    locationType = 'Address';
                 }
                 category.subFees[subName] = {
                     checkout_surcharge: surchargeValue,
@@ -1033,9 +1036,6 @@
         venueInput.name = 'locationType-' + cat.name + '-' + subName;
         venueInput.value = 'Venue';
         venueInput.checked = currentLocationType === 'Venue';
-        if (currentLocationType === 'Venue') {
-            option.dataset.locationType = 'Venue';
-        }
         var venueText = document.createElement('span');
         venueText.textContent = 'Venue';
         venueLabel.appendChild(venueInput);
@@ -1048,9 +1048,6 @@
         cityInput.name = 'locationType-' + cat.name + '-' + subName;
         cityInput.value = 'City';
         cityInput.checked = currentLocationType === 'City';
-        if (currentLocationType === 'City') {
-            option.dataset.locationType = 'City';
-        }
         if (currentType === 'Events') {
             cityInput.disabled = true;
         }
@@ -1066,9 +1063,6 @@
         addressInput.name = 'locationType-' + cat.name + '-' + subName;
         addressInput.value = 'Address';
         addressInput.checked = currentLocationType === 'Address';
-        if (currentLocationType === 'Address') {
-            option.dataset.locationType = 'Address';
-        }
         if (currentType === 'Events') {
             addressInput.disabled = true;
         }
@@ -1125,7 +1119,6 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'Venue';
-                option.dataset.locationType = 'Venue';
                 updateLocationTypeFieldsets('Venue');
                 notifyChange();
             }
@@ -1137,7 +1130,6 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'City';
-                option.dataset.locationType = 'City';
                 updateLocationTypeFieldsets('City');
                 notifyChange();
             }
@@ -1149,7 +1141,6 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'Address';
-                option.dataset.locationType = 'Address';
                 updateLocationTypeFieldsets('Address');
                 notifyChange();
             }
@@ -1182,7 +1173,6 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].location_type = 'Venue';
-                option.dataset.locationType = 'Venue';
                 updateLocationTypeFieldsets('Venue');
                 notifyChange();
             }
