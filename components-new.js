@@ -2097,7 +2097,7 @@ const CurrencyComponent = (function(){
         menu.className = 'fieldset-menu fieldset-currency-compact';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Select currency" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
@@ -2114,7 +2114,13 @@ const CurrencyComponent = (function(){
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
-                btnImg.src = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
+                if (countryCode) {
+                    btnImg.src = window.App.getImageUrl('currencies', countryCode + '.svg');
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = found.value;
                 selectedCode = code;
             }
@@ -2140,7 +2146,13 @@ const CurrencyComponent = (function(){
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = flagUrl;
+                if (countryCode) {
+                    btnImg.src = flagUrl;
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = item.value;
                 selectedCode = item.value;
                 menu.classList.remove('open');
@@ -2427,7 +2439,7 @@ const PhonePrefixComponent = (function(){
         menu.className = 'fieldset-menu fieldset-currency-compact';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Select prefix" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
@@ -2444,7 +2456,13 @@ const PhonePrefixComponent = (function(){
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
-                btnImg.src = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
+                if (countryCode) {
+                    btnImg.src = window.App.getImageUrl('phonePrefixes', countryCode + '.svg');
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = found.value;
                 selectedCode = code;
             }
@@ -2474,7 +2492,13 @@ const PhonePrefixComponent = (function(){
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = flagUrl;
+                if (countryCode) {
+                    btnImg.src = flagUrl;
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = item.value;
                 selectedCode = item.value;
                 menu.classList.remove('open');
