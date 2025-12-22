@@ -254,7 +254,7 @@ const FieldsetComponent = (function(){
         return loadPromise;
     }
     
-    // Google Places Autocomplete helper
+    // Google Places Autocomplete helper - Uses new API (AutocompleteSuggestion)
     // type: 'address' | 'establishment' | '(cities)'
     function initGooglePlaces(inputElement, type, latInput, lngInput, statusElement) {
         if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
@@ -266,45 +266,176 @@ const FieldsetComponent = (function(){
             return null;
         }
         
-        var options = {
-            fields: ['formatted_address', 'geometry', 'name', 'place_id']
-        };
-        
-        // Set type restriction
-        if (type === 'address') {
-            options.types = ['address'];
-        } else if (type === 'establishment') {
-            options.types = ['establishment'];
-        } else if (type === '(cities)') {
-            options.types = ['(cities)'];
+        // Check if new API is available
+        if (!google.maps.places.AutocompleteSuggestion) {
+            console.warn('Google Places AutocompleteSuggestion API not available');
+            if (statusElement) {
+                statusElement.textContent = 'Location search unavailable';
+                statusElement.className = 'fieldset-location-status error';
+            }
+            return null;
         }
         
-        var autocomplete = new google.maps.places.Autocomplete(inputElement, options);
+        // Create dropdown for suggestions
+        var dropdown = document.createElement('div');
+        dropdown.className = 'fieldset-location-dropdown';
+        dropdown.style.display = 'none';
+        dropdown.style.position = 'absolute';
+        dropdown.style.zIndex = '1000';
+        dropdown.style.backgroundColor = '#fff';
+        dropdown.style.border = '1px solid #ccc';
+        dropdown.style.borderRadius = '4px';
+        dropdown.style.maxHeight = '200px';
+        dropdown.style.overflowY = 'auto';
+        dropdown.style.width = '100%';
+        dropdown.style.marginTop = '2px';
+        dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
         
-        autocomplete.addListener('place_changed', function() {
-            var place = autocomplete.getPlace();
-            
-            if (!place.geometry || !place.geometry.location) {
-                if (statusElement) {
-                    statusElement.textContent = 'No location data for this place';
-                    statusElement.className = 'fieldset-location-status error';
-                }
+        // Insert dropdown after input element
+        var parent = inputElement.parentNode;
+        if (parent) {
+            parent.style.position = 'relative';
+            parent.appendChild(dropdown);
+        }
+        
+        // Determine included types for new API
+        var includedTypes = [];
+        if (type === 'address') {
+            includedTypes = ['geocode'];
+        } else if (type === 'establishment') {
+            includedTypes = ['establishment'];
+        } else if (type === '(cities)') {
+            includedTypes = ['(cities)'];
+        } else {
+            includedTypes = ['geocode', 'establishment'];
+        }
+        
+        // Fetch suggestions using new API
+        var debounceTimer = null;
+        async function fetchSuggestions(query) {
+            if (!query || query.length < 2) {
+                dropdown.style.display = 'none';
                 return;
             }
             
-            var lat = place.geometry.location.lat();
-            var lng = place.geometry.location.lng();
+            try {
+                var requestOptions = {
+                    input: query
+                };
+                
+                // Add type restrictions if specified
+                if (includedTypes.length > 0) {
+                    requestOptions.includedTypes = includedTypes;
+                }
+                
+                var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(requestOptions);
+                
+                dropdown.innerHTML = '';
+                
+                if (!response || !response.suggestions || response.suggestions.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                response.suggestions.forEach(function(suggestion) {
+                    var prediction = suggestion.placePrediction;
+                    if (!prediction) return;
+                    
+                    var item = document.createElement('div');
+                    item.className = 'fieldset-location-dropdown-item';
+                    item.style.padding = '8px 12px';
+                    item.style.cursor = 'pointer';
+                    item.style.borderBottom = '1px solid #eee';
+                    
+                    var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
+                    var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
+                    
+                    item.innerHTML = 
+                        '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
+                        (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
+                    
+                    // Hover effect
+                    item.addEventListener('mouseenter', function() {
+                        item.style.backgroundColor = '#f5f5f5';
+                    });
+                    item.addEventListener('mouseleave', function() {
+                        item.style.backgroundColor = 'transparent';
+                    });
+                    
+                    item.addEventListener('click', async function() {
+                        try {
+                            var place = prediction.toPlace();
+                            await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress'] });
+                            
+                            if (place.location) {
+                                var lat = place.location.lat();
+                                var lng = place.location.lng();
+                                
+                                inputElement.value = place.displayName || place.formattedAddress || mainText;
+                                dropdown.style.display = 'none';
+                                
+                                if (latInput) latInput.value = lat;
+                                if (lngInput) lngInput.value = lng;
+                                
+                                if (statusElement) {
+                                    statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                                    statusElement.className = 'fieldset-location-status success';
+                                }
+                            } else {
+                                if (statusElement) {
+                                    statusElement.textContent = 'No location data for this place';
+                                    statusElement.className = 'fieldset-location-status error';
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Place details error:', err);
+                            if (statusElement) {
+                                statusElement.textContent = 'Error loading place details';
+                                statusElement.className = 'fieldset-location-status error';
+                            }
+                        }
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.style.display = 'block';
+            } catch (err) {
+                console.error('Autocomplete error:', err);
+                dropdown.style.display = 'none';
+            }
+        }
+        
+        // Input event handler with debounce
+        inputElement.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            var query = inputElement.value.trim();
             
-            if (latInput) latInput.value = lat;
-            if (lngInput) lngInput.value = lng;
+            if (query.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
             
-            if (statusElement) {
-                statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
-                statusElement.className = 'fieldset-location-status success';
+            debounceTimer = setTimeout(function() {
+                fetchSuggestions(query);
+            }, 300);
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!inputElement.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
             }
         });
         
-        return autocomplete;
+        // Return object with cleanup method
+        return {
+            destroy: function() {
+                if (dropdown && dropdown.parentNode) {
+                    dropdown.parentNode.removeChild(dropdown);
+                }
+            }
+        };
     }
     
     // Build compact currency menu - uses CurrencyComponent
