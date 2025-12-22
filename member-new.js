@@ -40,6 +40,15 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var CURRENT_KEY = 'member-auth-current';
+    
+    /* --------------------------------------------------------------------------
+       SVG ICONS
+       -------------------------------------------------------------------------- */
+    
+    var icons = {
+        plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+        minus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+    };
 
     /* --------------------------------------------------------------------------
        STATE
@@ -579,6 +588,13 @@ const MemberModule = (function() {
 
         if (formFields) formFields.innerHTML = '';
 
+        // Track location quantity and repeat fieldsets
+        var locationQuantity = 1;
+        var locationFieldset = null;
+        var locationFieldsetType = null;
+        var mustRepeatFieldsets = [];
+        var autofillRepeatFieldsets = [];
+
         // FieldsetComponent auto-loads its own picklist data
         if (fields.length === 0) {
             var placeholder = document.createElement('p');
@@ -586,10 +602,72 @@ const MemberModule = (function() {
             placeholder.textContent = 'No fields configured for this subcategory yet.';
             if (formFields) formFields.appendChild(placeholder);
         } else {
-            // Render each field using FieldsetComponent
+            // First pass: identify location fieldset and collect repeat fieldsets
+            // Also get subcategory data to check for must-repeat and autofill-repeat CSV strings
+            var subcategoryData = null;
+            if (selectedCategory && selectedSubcategory) {
+                var category = memberCategories.find(function(c) {
+                    return c.name === selectedCategory;
+                });
+                if (category && category.subFields && category.subFields[selectedSubcategory]) {
+                    // Get subcategory metadata from category data
+                    var subcats = category.subcategories || [];
+                    subcategoryData = subcats.find(function(sub) {
+                        return sub.name === selectedSubcategory || sub.subcategory_key === selectedSubcategory;
+                    });
+                }
+            }
+            
+            // Parse must_repeat and autofill_repeat CSV strings if available
+            var mustRepeatIndices = [];
+            var autofillRepeatIndices = [];
+            if (subcategoryData) {
+                if (subcategoryData.must_repeat && typeof subcategoryData.must_repeat === 'string') {
+                    mustRepeatIndices = subcategoryData.must_repeat.split(',').map(function(s) {
+                        return parseInt(s.trim(), 10);
+                    }).filter(function(n) {
+                        return !isNaN(n);
+                    });
+                }
+                if (subcategoryData.autofill_repeat && typeof subcategoryData.autofill_repeat === 'string') {
+                    autofillRepeatIndices = subcategoryData.autofill_repeat.split(',').map(function(s) {
+                        return parseInt(s.trim(), 10);
+                    }).filter(function(n) {
+                        return !isNaN(n);
+                    });
+                }
+            }
+            
+            fields.forEach(function(fieldData, index) {
+                var field = ensureFieldDefaults(fieldData);
+                var fieldsetKey = (field.key || field.fieldset_key || '').toLowerCase();
+                
+                // Check if this is a location fieldset (venue, city, address)
+                if ((fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') && !locationFieldset) {
+                    locationFieldset = field;
+                    locationFieldsetType = fieldsetKey;
+                }
+                
+                // Check for must-repeat and autofill-repeat flags
+                // Check field data properties first, then CSV indices
+                var isMustRepeat = field.must_repeat || field.mustRepeat || mustRepeatIndices.indexOf(index) !== -1;
+                var isAutofillRepeat = field.autofill_repeat || field.autofillRepeat || autofillRepeatIndices.indexOf(index) !== -1;
+                
+                if (isMustRepeat) {
+                    mustRepeatFieldsets.push(field);
+                }
+                if (isAutofillRepeat) {
+                    autofillRepeatFieldsets.push(field);
+                }
+            });
+            
+            // Second pass: render fields with location quantity selector
             fields.forEach(function(fieldData, index) {
                 var field = ensureFieldDefaults(fieldData);
                 if (!field.name) field.name = 'Field ' + (index + 1);
+                
+                var fieldsetKey = (field.key || field.fieldset_key || '').toLowerCase();
+                var isLocationFieldset = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') && field === locationFieldset;
 
                 var fieldset = FieldsetComponent.buildFieldset(field, {
                     idPrefix: 'memberCreate',
@@ -598,17 +676,226 @@ const MemberModule = (function() {
                     defaultCurrency: null
                 });
                 
+                // Add location quantity selector to location fieldset
+                if (isLocationFieldset) {
+                    // Find the label element (first child is usually the label)
+                    var labelEl = fieldset.querySelector('.fieldset-label');
+                    if (labelEl) {
+                        // Create quantity selector row
+                        var quantityRow = document.createElement('div');
+                        quantityRow.className = 'member-location-quantity-row';
+                        
+                        var quantityLabel = document.createElement('span');
+                        quantityLabel.className = 'member-location-quantity-label';
+                        quantityLabel.textContent = 'Number of locations:';
+                        
+                        var quantityControls = document.createElement('div');
+                        quantityControls.className = 'member-location-quantity-controls';
+                        
+                        var minusBtn = document.createElement('button');
+                        minusBtn.type = 'button';
+                        minusBtn.className = 'member-location-quantity-btn member-location-quantity-btn--minus';
+                        minusBtn.innerHTML = icons.minus;
+                        minusBtn.setAttribute('aria-label', 'Decrease location quantity');
+                        
+                        var quantityDisplay = document.createElement('span');
+                        quantityDisplay.className = 'member-location-quantity-display';
+                        quantityDisplay.textContent = locationQuantity;
+                        
+                        var plusBtn = document.createElement('button');
+                        plusBtn.type = 'button';
+                        plusBtn.className = 'member-location-quantity-btn member-location-quantity-btn--plus';
+                        plusBtn.innerHTML = icons.plus;
+                        plusBtn.setAttribute('aria-label', 'Increase location quantity');
+                        
+                        quantityControls.appendChild(minusBtn);
+                        quantityControls.appendChild(quantityDisplay);
+                        quantityControls.appendChild(plusBtn);
+                        
+                        quantityRow.appendChild(quantityLabel);
+                        quantityRow.appendChild(quantityControls);
+                        
+                        // Insert after label
+                        labelEl.parentNode.insertBefore(quantityRow, labelEl.nextSibling);
+                        
+                        // Update label text if quantity > 1
+                        if (locationQuantity > 1) {
+                            var labelText = labelEl.textContent.trim();
+                            // Remove existing number suffix if present
+                            labelText = labelText.replace(/^\d+/, '').trim();
+                            labelEl.textContent = labelText.charAt(0).toUpperCase() + labelText.slice(1) + '1';
+                        }
+                        
+                        // Quantity button handlers
+                        minusBtn.addEventListener('click', function() {
+                            if (locationQuantity > 1) {
+                                locationQuantity--;
+                                quantityDisplay.textContent = locationQuantity;
+                                
+                                // Update label
+                                if (locationQuantity === 1) {
+                                    var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
+                                    labelEl.textContent = baseName;
+                                } else {
+                                    var currentLabel = labelEl.textContent.trim();
+                                    var baseName = currentLabel.replace(/^\d+/, '').trim();
+                                    labelEl.textContent = baseName.charAt(0).toUpperCase() + baseName.slice(1) + '1';
+                                }
+                                
+                            // Re-render additional locations (after checkout section)
+                            var checkoutSection = formFields.querySelector('.member-checkout-options-section');
+                            if (checkoutSection) {
+                                renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
+                            }
+                            }
+                        });
+                        
+                        plusBtn.addEventListener('click', function() {
+                            locationQuantity++;
+                            quantityDisplay.textContent = locationQuantity;
+                            
+                            // Update label
+                            var currentLabel = labelEl.textContent.trim();
+                            var baseName = currentLabel.replace(/^\d+/, '').trim();
+                            labelEl.textContent = baseName.charAt(0).toUpperCase() + baseName.slice(1) + '1';
+                            
+                            // Re-render additional locations (after checkout section)
+                            var checkoutSection = formFields.querySelector('.member-checkout-options-section');
+                            if (checkoutSection) {
+                                renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
+                            }
+                        });
+                    }
+                }
+                
                 formFields.appendChild(fieldset);
             });
+            
         }
         
         // Render checkout options at the bottom of the form
         renderCheckoutOptionsSection();
         
+        // Render additional locations if quantity > 1 (after checkout section is rendered)
+        if (locationQuantity > 1 && locationFieldset) {
+            renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
+        }
+        
         // Render terms agreement and submit buttons after checkout options
         renderTermsAndSubmitSection();
         
         if (formWrapper) formWrapper.hidden = false;
+    }
+    
+    function renderAdditionalLocations(quantity, locationType, mustRepeatFieldsets, autofillRepeatFieldsets) {
+        // Remove existing additional locations
+        var existingLocations = formFields.querySelectorAll('.member-additional-location');
+        existingLocations.forEach(function(el) {
+            el.remove();
+        });
+        
+        // Render locations 2, 3, 4, etc.
+        for (var i = 2; i <= quantity; i++) {
+            var locationSection = document.createElement('div');
+            locationSection.className = 'member-additional-location';
+            locationSection.dataset.locationNumber = i;
+            
+            // Location header
+            var locationHeader = document.createElement('h3');
+            locationHeader.className = 'member-additional-location-header';
+            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + i;
+            locationHeader.textContent = locationName;
+            locationSection.appendChild(locationHeader);
+            
+            // Render must-repeat fieldsets
+            mustRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
+                var field = ensureFieldDefaults(fieldData);
+                if (!field.name) field.name = 'Field ' + (fieldIndex + 1);
+                
+                var fieldset = FieldsetComponent.buildFieldset(field, {
+                    idPrefix: 'memberCreate',
+                    fieldIndex: fieldIndex,
+                    locationNumber: i,
+                    container: locationSection,
+                    defaultCurrency: null
+                });
+                
+                locationSection.appendChild(fieldset);
+                
+                // If autofill-repeat, copy values from first location
+                var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
+                if (isAutofill && i === 2) {
+                    // For location 2, copy from location 1
+                    setTimeout(function() {
+                        copyFieldsetValues(fieldset, fieldData, 1, i);
+                    }, 100);
+                }
+            });
+            
+            // Insert before checkout options
+            var checkoutSection = formFields.querySelector('.member-checkout-options-section');
+            if (checkoutSection) {
+                formFields.insertBefore(locationSection, checkoutSection);
+            } else {
+                formFields.appendChild(locationSection);
+            }
+        }
+    }
+    
+    function copyFieldsetValues(targetFieldset, fieldData, sourceLocation, targetLocation) {
+        // Find source fieldset (location 1 is the main fieldset, not in additional-location)
+        // We need to find the fieldset with the same fieldset key in the main form
+        var fieldsetKey = (fieldData.key || fieldData.fieldset_key || '').toLowerCase();
+        var sourceFieldset = null;
+        
+        // Find the first occurrence of this fieldset type in the main form
+        var allFieldsets = formFields.querySelectorAll('.fieldset');
+        for (var i = 0; i < allFieldsets.length; i++) {
+            var fs = allFieldsets[i];
+            // Check if this fieldset matches by looking at its structure or data attributes
+            // For now, match by fieldset type (venue, city, address have specific structures)
+            if (fieldsetKey === 'venue' && fs.querySelector('.fieldset-sublabel') && fs.querySelector('.fieldset-sublabel').textContent === 'Venue Name') {
+                sourceFieldset = fs;
+                break;
+            } else if (fieldsetKey === 'city' && fs.querySelector('.fieldset-input[placeholder*="city"]')) {
+                sourceFieldset = fs;
+                break;
+            } else if ((fieldsetKey === 'address' || fieldsetKey === 'location') && fs.querySelector('.fieldset-input[placeholder*="address"]')) {
+                sourceFieldset = fs;
+                break;
+            }
+        }
+        
+        if (!sourceFieldset) {
+            // Fallback: use first fieldset of same type by matching input structure
+            var targetInputs = targetFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
+            if (targetInputs.length > 0) {
+                // Find fieldset with similar structure
+                for (var j = 0; j < allFieldsets.length; j++) {
+                    var fs2 = allFieldsets[j];
+                    var fs2Inputs = fs2.querySelectorAll('input:not([type="hidden"]), textarea, select');
+                    if (fs2Inputs.length === targetInputs.length && !fs2.closest('.member-additional-location')) {
+                        sourceFieldset = fs2;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (sourceFieldset) {
+            var sourceInputs = sourceFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
+            var targetInputs = targetFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
+            
+            // Match inputs by position and copy values
+            sourceInputs.forEach(function(sourceInput, index) {
+                if (targetInputs[index]) {
+                    targetInputs[index].value = sourceInput.value;
+                    // Trigger change event
+                    var event = new Event('input', { bubbles: true });
+                    targetInputs[index].dispatchEvent(event);
+                }
+            });
+        }
     }
     
     function renderCheckoutOptionsSection() {
