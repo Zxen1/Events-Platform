@@ -386,6 +386,7 @@ try {
                 $fees = [
                     'checkout_surcharge' => isset($feeData['checkout_surcharge']) && $feeData['checkout_surcharge'] !== null && $feeData['checkout_surcharge'] !== '' ? round((float)$feeData['checkout_surcharge'], 2) : null,
                     'subcategory_type' => isset($feeData['subcategory_type']) ? (string)$feeData['subcategory_type'] : 'Standard',
+                    'location_type' => isset($feeData['location_type']) && $feeData['location_type'] !== null && $feeData['location_type'] !== '' ? (string)$feeData['location_type'] : null,
                 ];
                 
                 $nameKey = sanitizeString($stringKey);
