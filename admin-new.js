@@ -349,8 +349,7 @@ const AdminModule = (function() {
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
                 if (isDirty) {
-                    // TODO: Show unsaved changes dialog
-                    closePanel();
+                    showUnsavedChangesDialog();
                 } else {
                     closePanel();
                 }
@@ -801,6 +800,21 @@ const AdminModule = (function() {
                 // Update baselines to saved values
                 markSaved();
                 
+                // Show success message
+                if (window.getMessage) {
+                    window.getMessage('msg_admin_saved', {}, true).then(function(msg) {
+                        if (msg) {
+                            showStatus(msg);
+                        } else {
+                            showStatus('Saved');
+                        }
+                    }).catch(function() {
+                        showStatus('Saved');
+                    });
+                } else {
+                    showStatus('Saved');
+                }
+                
                 // If user made changes during save, recheckDirtyState will detect them
                 // via the next input event - no need to check here
                 
@@ -811,6 +825,30 @@ const AdminModule = (function() {
             .catch(function(err) {
                 console.error('[Admin] Save failed:', err);
                 isSaving = false;
+                
+                // Show error message
+                var errorMsg = 'Unable to reach the server. Please try again.';
+                if (err.message && err.message.includes('response')) {
+                    errorMsg = 'Unexpected response while saving changes.';
+                }
+                
+                if (window.getMessage) {
+                    var messageKey = err.message && err.message.includes('response') 
+                        ? 'msg_admin_save_error_response' 
+                        : 'msg_admin_save_error_network';
+                    window.getMessage(messageKey, {}, true).then(function(msg) {
+                        if (msg) {
+                            showError(msg);
+                        } else {
+                            showError(errorMsg);
+                        }
+                    }).catch(function() {
+                        showError(errorMsg);
+                    });
+                } else {
+                    showError(errorMsg);
+                }
+                
                 // Keep dirty state on error - don't lose user's changes
                 // Buttons stay lit so user knows save failed and can retry
             });
@@ -855,6 +893,21 @@ const AdminModule = (function() {
         console.log('[Admin] Changes discarded');
         isDirty = false;
         updateButtonStates();
+        
+        // Show discard message
+        if (window.getMessage) {
+            window.getMessage('msg_admin_discarded', {}, true).then(function(msg) {
+                if (msg) {
+                    showStatus(msg);
+                } else {
+                    showStatus('Changes Discarded');
+                }
+            }).catch(function() {
+                showStatus('Changes Discarded');
+            });
+        } else {
+            showStatus('Changes Discarded');
+        }
     }
     
     function scheduleAutoSave() {
@@ -3057,6 +3110,212 @@ const AdminModule = (function() {
     
     function showError(message) {
         showStatus(message, { error: true });
+    }
+    
+    /* --------------------------------------------------------------------------
+       UNSAVED CHANGES DIALOG
+       Shows dialog when trying to close panel with unsaved changes
+       -------------------------------------------------------------------------- */
+    
+    function showUnsavedChangesDialog() {
+        var promptEl = document.getElementById('adminUnsavedPrompt');
+        if (!promptEl) {
+            console.warn('[Admin] adminUnsavedPrompt element not found');
+            return;
+        }
+        
+        // Get messages from database
+        Promise.all([
+            window.getMessage ? window.getMessage('msg_admin_unsaved_title', {}, true) : Promise.resolve('Unsaved Changes'),
+            window.getMessage ? window.getMessage('msg_admin_unsaved_message', {}, true) : Promise.resolve('You have unsaved changes. Save before closing the admin panel?'),
+            window.getMessage ? window.getMessage('msg_button_cancel', {}, true) : Promise.resolve('Cancel'),
+            window.getMessage ? window.getMessage('msg_button_save', {}, true) : Promise.resolve('Save'),
+            window.getMessage ? window.getMessage('msg_button_discard', {}, true) : Promise.resolve('Discard Changes')
+        ]).then(function(messages) {
+            var title = messages[0] || 'Unsaved Changes';
+            var messageText = messages[1] || 'You have unsaved changes. Save before closing the admin panel?';
+            var cancelLabel = messages[2] || 'Cancel';
+            var saveLabel = messages[3] || 'Save';
+            var discardLabel = messages[4] || 'Discard Changes';
+            
+            // Clear any existing content
+            promptEl.innerHTML = '';
+            
+            // Create dialog
+            var dialog = document.createElement('div');
+            dialog.className = 'admin-unsaved-dialog';
+            dialog.setAttribute('role', 'dialog');
+            dialog.setAttribute('aria-modal', 'true');
+            
+            var titleEl = document.createElement('h3');
+            titleEl.id = 'adminUnsavedTitle';
+            titleEl.textContent = title;
+            
+            var messageEl = document.createElement('p');
+            messageEl.textContent = messageText;
+            
+            var actions = document.createElement('div');
+            actions.className = 'admin-unsaved-actions';
+            
+            var cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.className = 'admin-unsaved-actions-cancel admin-unsaved-actions-primary';
+            cancelBtn.textContent = cancelLabel;
+            
+            var saveBtn = document.createElement('button');
+            saveBtn.type = 'button';
+            saveBtn.className = 'admin-unsaved-actions-save';
+            saveBtn.textContent = saveLabel;
+            
+            var discardBtn = document.createElement('button');
+            discardBtn.type = 'button';
+            discardBtn.className = 'admin-unsaved-actions-discard';
+            discardBtn.textContent = discardLabel;
+            discardBtn.disabled = true; // Discard should be disabled initially
+            
+            // Event handlers
+            cancelBtn.addEventListener('click', function() {
+                hideUnsavedChangesDialog();
+            });
+            
+            saveBtn.addEventListener('click', function() {
+                hideUnsavedChangesDialog();
+                runSave({ closeAfter: true });
+            });
+            
+            discardBtn.addEventListener('click', function() {
+                hideUnsavedChangesDialog();
+                discardChanges();
+                closePanel();
+            });
+            
+            actions.appendChild(cancelBtn);
+            actions.appendChild(saveBtn);
+            actions.appendChild(discardBtn);
+            
+            dialog.appendChild(titleEl);
+            dialog.appendChild(messageEl);
+            dialog.appendChild(actions);
+            promptEl.appendChild(dialog);
+            
+            // Show dialog
+            promptEl.classList.add('admin-unsaved-prompt--show');
+            promptEl.setAttribute('aria-hidden', 'false');
+            
+            // Focus cancel button
+            cancelBtn.focus();
+            
+            // Close on backdrop click
+            var backdropHandler = function(e) {
+                if (e.target === promptEl) {
+                    hideUnsavedChangesDialog();
+                    promptEl.removeEventListener('click', backdropHandler);
+                }
+            };
+            promptEl.addEventListener('click', backdropHandler);
+            
+            // Close on Escape key
+            var escapeHandler = function(e) {
+                if (e.key === 'Escape') {
+                    hideUnsavedChangesDialog();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }).catch(function(err) {
+            console.error('[Admin] Error loading unsaved changes dialog messages:', err);
+            // Fallback to default messages
+            showUnsavedChangesDialogFallback();
+        });
+    }
+    
+    function showUnsavedChangesDialogFallback() {
+        var promptEl = document.getElementById('adminUnsavedPrompt');
+        if (!promptEl) return;
+        
+        promptEl.innerHTML = '';
+        
+        var dialog = document.createElement('div');
+        dialog.className = 'admin-unsaved-dialog';
+        dialog.setAttribute('role', 'dialog');
+        dialog.setAttribute('aria-modal', 'true');
+        
+        var titleEl = document.createElement('h3');
+        titleEl.textContent = 'Unsaved Changes';
+        
+        var messageEl = document.createElement('p');
+        messageEl.textContent = 'You have unsaved changes. Save before closing the admin panel?';
+        
+        var actions = document.createElement('div');
+        actions.className = 'admin-unsaved-actions';
+        
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'admin-unsaved-actions-cancel admin-unsaved-actions-primary';
+        cancelBtn.textContent = 'Cancel';
+        
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'admin-unsaved-actions-save';
+        saveBtn.textContent = 'Save';
+        
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.className = 'admin-unsaved-actions-discard';
+        discardBtn.textContent = 'Discard Changes';
+        discardBtn.disabled = true;
+        
+        cancelBtn.addEventListener('click', function() {
+            hideUnsavedChangesDialog();
+        });
+        
+        saveBtn.addEventListener('click', function() {
+            hideUnsavedChangesDialog();
+            runSave({ closeAfter: true });
+        });
+        
+        discardBtn.addEventListener('click', function() {
+            hideUnsavedChangesDialog();
+            discardChanges();
+            closePanel();
+        });
+        
+        actions.appendChild(cancelBtn);
+        actions.appendChild(saveBtn);
+        actions.appendChild(discardBtn);
+        
+        dialog.appendChild(titleEl);
+        dialog.appendChild(messageEl);
+        dialog.appendChild(actions);
+        promptEl.appendChild(dialog);
+        
+        promptEl.classList.add('admin-unsaved-prompt--show');
+        promptEl.setAttribute('aria-hidden', 'false');
+        cancelBtn.focus();
+        
+        var backdropHandler = function(e) {
+            if (e.target === promptEl) {
+                hideUnsavedChangesDialog();
+                promptEl.removeEventListener('click', backdropHandler);
+            }
+        };
+        promptEl.addEventListener('click', backdropHandler);
+        
+        var escapeHandler = function(e) {
+            if (e.key === 'Escape') {
+                hideUnsavedChangesDialog();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+    
+    function hideUnsavedChangesDialog() {
+        var promptEl = document.getElementById('adminUnsavedPrompt');
+        if (promptEl) {
+            promptEl.classList.remove('admin-unsaved-prompt--show');
+            promptEl.setAttribute('aria-hidden', 'true');
+        }
     }
 
     /* --------------------------------------------------------------------------

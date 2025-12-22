@@ -2472,6 +2472,23 @@
   gap: 10px;
 }
 
+.admin-unsaved-actions button {
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-unsaved-actions button:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+
 .admin-unsaved-actions-primary {
   background: var(--button-selected-bg, var(--btn-selected));
   border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
@@ -2484,7 +2501,7 @@
   color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
 }
 
-.admin-unsaved-actions-discard--disabled {
+.admin-unsaved-actions-discard:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
