@@ -149,18 +149,13 @@
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
-                // Get location type from data attribute (set by change handlers) or fallback to DOM
+                // Get location type from data attribute or checked radio button
                 var locationType = option.dataset.locationType || null;
                 if (!locationType) {
-                    var venueRadio = option.querySelector('input[type="radio"][value="Venue"]');
-                    var cityRadio = option.querySelector('input[type="radio"][value="City"]');
-                    var addressRadio = option.querySelector('input[type="radio"][value="Address"]');
-                    if (venueRadio && venueRadio.checked) {
-                        locationType = 'Venue';
-                    } else if (cityRadio && cityRadio.checked) {
-                        locationType = 'City';
-                    } else if (addressRadio && addressRadio.checked) {
-                        locationType = 'Address';
+                    // Fallback: find checked radio button
+                    var checkedRadio = option.querySelector('input[type="radio"][name^="locationType-"]:checked');
+                    if (checkedRadio) {
+                        locationType = checkedRadio.value;
                     }
                 }
                 category.subFees[subName] = {
