@@ -640,12 +640,29 @@ const MemberModule = (function() {
             
             fields.forEach(function(fieldData, index) {
                 var field = ensureFieldDefaults(fieldData);
-                var fieldsetKey = (field.key || field.fieldset_key || '').toLowerCase();
                 
-                // Check if this is a location fieldset (venue, city, address)
-                if ((fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') && !locationFieldset) {
-                    locationFieldset = field;
-                    locationFieldsetType = fieldsetKey;
+                // Get fieldset key - check fieldData first (source of truth)
+                var fieldsetKey = '';
+                if (fieldData && typeof fieldData === 'object') {
+                    if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+                        fieldsetKey = fieldData.fieldset_key.toLowerCase();
+                    } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                        fieldsetKey = fieldData.fieldsetKey.toLowerCase();
+                    } else if (fieldData.key && typeof fieldData.key === 'string') {
+                        fieldsetKey = fieldData.key.toLowerCase();
+                    }
+                }
+                
+                console.log('[Member] Checking field', index, 'fieldsetKey:', fieldsetKey, 'fieldData:', fieldData);
+                
+                // Check if this is a location fieldset (venue, city, address, location)
+                // 'location' is legacy support for 'address'
+                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                    if (!locationFieldset) {
+                        locationFieldset = fieldData;
+                        locationFieldsetType = fieldsetKey === 'location' ? 'address' : fieldsetKey;
+                        console.log('[Member] Found location fieldset:', fieldsetKey, 'stored as:', locationFieldset);
+                    }
                 }
                 
                 // Check for must-repeat and autofill-repeat flags
@@ -664,10 +681,30 @@ const MemberModule = (function() {
             // Second pass: render fields with location quantity selector
             fields.forEach(function(fieldData, index) {
                 var field = ensureFieldDefaults(fieldData);
-                if (!field.name) field.name = 'Field ' + (index + 1);
                 
-                var fieldsetKey = (field.key || field.fieldset_key || '').toLowerCase();
-                var isLocationFieldset = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') && field === locationFieldset;
+                // Get fieldset key - check fieldData first (source of truth)
+                var fieldsetKey = '';
+                if (fieldData && typeof fieldData === 'object') {
+                    if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+                        fieldsetKey = fieldData.fieldset_key.toLowerCase();
+                    } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                        fieldsetKey = fieldData.fieldsetKey.toLowerCase();
+                    } else if (fieldData.key && typeof fieldData.key === 'string') {
+                        fieldsetKey = fieldData.key.toLowerCase();
+                    }
+                }
+                
+                // Compare using original fieldData, not normalized field
+                var isLocationFieldset = false;
+                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                    if (fieldData === locationFieldset) {
+                        isLocationFieldset = true;
+                    }
+                }
+                
+                if (isLocationFieldset) {
+                    console.log('[Member] Rendering location fieldset with quantity selector:', fieldsetKey);
+                }
 
                 var fieldset = FieldsetComponent.buildFieldset(field, {
                     idPrefix: 'memberCreate',
@@ -678,9 +715,11 @@ const MemberModule = (function() {
                 
                 // Add location quantity selector to location fieldset
                 if (isLocationFieldset) {
-                    // Find the label element (first child is usually the label)
+                    console.log('[Member] Adding quantity selector to location fieldset. Fieldset:', fieldset, 'Field data:', field);
+                    // Find the label element - it should be the first child with class fieldset-label
                     var labelEl = fieldset.querySelector('.fieldset-label');
                     if (labelEl) {
+                        console.log('[Member] Found label element, adding quantity controls. Label:', labelEl);
                         // Create quantity selector row
                         var quantityRow = document.createElement('div');
                         quantityRow.className = 'member-location-quantity-row';
@@ -765,6 +804,8 @@ const MemberModule = (function() {
                                 renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
                             }
                         });
+                    } else {
+                        console.warn('[Member] Could not find label element in location fieldset. Fieldset children:', fieldset.children);
                     }
                 }
                 
@@ -1176,19 +1217,55 @@ const MemberModule = (function() {
     // Ensure field has safe defaults
     function ensureFieldDefaults(field) {
         if (!field || typeof field !== 'object') {
-            return { name: '', placeholder: '', options: [], fieldsetKey: '' };
+            return { name: '', placeholder: '', options: [], fieldsetKey: '', key: '', type: '', min_length: 0, max_length: 500 };
         }
-        return {
-            name: field.name || '',
-            placeholder: field.placeholder || '',
-            tooltip: field.tooltip || field.fieldset_tooltip || '',
-            options: Array.isArray(field.options) ? field.options : [],
-            fieldsetKey: field.fieldsetKey || field.key || field.type || '',
-            key: field.key || '',
-            type: field.type || '',
-            min_length: field.min_length || 0,
-            max_length: field.max_length || 500
+        var result = {
+            name: '',
+            placeholder: '',
+            tooltip: '',
+            options: [],
+            fieldsetKey: '',
+            key: '',
+            type: '',
+            min_length: 0,
+            max_length: 500
         };
+        
+        if (field.name && typeof field.name === 'string') {
+            result.name = field.name;
+        }
+        if (field.placeholder && typeof field.placeholder === 'string') {
+            result.placeholder = field.placeholder;
+        }
+        if (field.tooltip && typeof field.tooltip === 'string') {
+            result.tooltip = field.tooltip;
+        } else if (field.fieldset_tooltip && typeof field.fieldset_tooltip === 'string') {
+            result.tooltip = field.fieldset_tooltip;
+        }
+        if (Array.isArray(field.options)) {
+            result.options = field.options;
+        }
+        if (field.fieldsetKey && typeof field.fieldsetKey === 'string') {
+            result.fieldsetKey = field.fieldsetKey;
+        } else if (field.key && typeof field.key === 'string') {
+            result.fieldsetKey = field.key;
+        } else if (field.type && typeof field.type === 'string') {
+            result.fieldsetKey = field.type;
+        }
+        if (field.key && typeof field.key === 'string') {
+            result.key = field.key;
+        }
+        if (field.type && typeof field.type === 'string') {
+            result.type = field.type;
+        }
+        if (typeof field.min_length === 'number') {
+            result.min_length = field.min_length;
+        }
+        if (typeof field.max_length === 'number') {
+            result.max_length = field.max_length;
+        }
+        
+        return result;
     }
     
     function getFieldsForSelection(categoryName, subcategoryName) {
