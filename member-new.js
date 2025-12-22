@@ -1422,11 +1422,19 @@ const MemberModule = (function() {
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success && data.settings) {
-                    var avatarUrl1 = data.settings.avatar_provider_url_1 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1';
-                    var avatarUrl2 = data.settings.avatar_provider_url_2 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2';
-                    var avatarUrl3 = data.settings.avatar_provider_url_3 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3';
-                    var avatarUrl4 = data.settings.avatar_provider_url_4 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar4';
-                    var avatarUrl5 = data.settings.avatar_provider_url_5 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar5';
+                    // Generate random seeds for each avatar
+                    var randomSeeds = [];
+                    for (var i = 0; i < 5; i++) {
+                        randomSeeds.push(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+                    }
+                    
+                    // Use admin settings if provided, otherwise generate random DiceBear URLs
+                    var baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=';
+                    var avatarUrl1 = data.settings.avatar_provider_url_1 || (baseUrl + randomSeeds[0]);
+                    var avatarUrl2 = data.settings.avatar_provider_url_2 || (baseUrl + randomSeeds[1]);
+                    var avatarUrl3 = data.settings.avatar_provider_url_3 || (baseUrl + randomSeeds[2]);
+                    var avatarUrl4 = data.settings.avatar_provider_url_4 || (baseUrl + randomSeeds[3]);
+                    var avatarUrl5 = data.settings.avatar_provider_url_5 || (baseUrl + randomSeeds[4]);
                     
                     // Clear container
                     avatarOptionsContainer.innerHTML = '';
@@ -1495,10 +1503,20 @@ const MemberModule = (function() {
             })
             .catch(function(error) {
                 console.error('[Member] Failed to load avatar options:', error);
-                // Fallback to default DiceBear URLs if settings fail to load
+                // Fallback to random DiceBear URLs if settings fail to load
                 var avatarOptionsContainer = document.getElementById('member-avatar-options');
                 if (avatarOptionsContainer) {
-                    avatarOptionsContainer.innerHTML = '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar1" checked><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1" alt="Avatar 1" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar2"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2" alt="Avatar 2" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar3"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3" alt="Avatar 3" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar4"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar4" alt="Avatar 4" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar5"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar5" alt="Avatar 5" class="member-avatar-preview"></label>';
+                    var baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=';
+                    var randomSeeds = [];
+                    for (var i = 0; i < 5; i++) {
+                        randomSeeds.push(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+                    }
+                    avatarOptionsContainer.innerHTML = 
+                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar1" checked><img src="' + baseUrl + randomSeeds[0] + '" alt="Avatar 1" class="member-avatar-preview"></label>' +
+                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar2"><img src="' + baseUrl + randomSeeds[1] + '" alt="Avatar 2" class="member-avatar-preview"></label>' +
+                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar3"><img src="' + baseUrl + randomSeeds[2] + '" alt="Avatar 3" class="member-avatar-preview"></label>' +
+                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar4"><img src="' + baseUrl + randomSeeds[3] + '" alt="Avatar 4" class="member-avatar-preview"></label>' +
+                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar5"><img src="' + baseUrl + randomSeeds[4] + '" alt="Avatar 5" class="member-avatar-preview"></label>';
                 }
             });
     }
