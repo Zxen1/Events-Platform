@@ -1021,7 +1021,8 @@
         locationTypeLabel.className = 'formbuilder-type-row-label';
         locationTypeLabel.textContent = 'Location Type';
         
-        var currentLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
+        // Only use existing value from database, no default fallback
+        var currentLocationType = subFeeData.location_type || null;
         
         var venueLabel = document.createElement('label');
         venueLabel.className = 'formbuilder-type-option';
@@ -1030,10 +1031,6 @@
         venueInput.name = 'locationType-' + cat.name + '-' + subName;
         venueInput.value = 'Venue';
         venueInput.checked = currentLocationType === 'Venue';
-        if (currentType === 'Events') {
-            venueInput.checked = true;
-            // Venue stays enabled in Events mode
-        }
         var venueText = document.createElement('span');
         venueText.textContent = 'Venue';
         venueLabel.appendChild(venueInput);
@@ -1089,7 +1086,10 @@
                 // Normalize selectedType for comparison
                 var selectedTypeLower = String(selectedType).toLowerCase();
                 
-                if (selectedTypeLower === 'venue') {
+                if (!selectedType || selectedTypeLower === 'null' || selectedTypeLower === '') {
+                    // No selection - enable all options
+                    opt.classList.remove('disabled');
+                } else if (selectedTypeLower === 'venue') {
                     if (isCity || isAddress) {
                         opt.classList.add('disabled');
                     } else if (isVenue) {
@@ -1163,14 +1163,19 @@
         // Update when Events/General type changes
         eventsInput.addEventListener('change', function() {
             if (eventsInput.checked) {
-                venueInput.checked = true;
                 // Venue stays enabled, only City and Address are disabled
                 cityInput.disabled = true;
                 addressInput.disabled = true;
+                // Don't auto-select - user must click Venue to trigger save button
+                // Clear any existing selection so user must choose
+                venueInput.checked = false;
+                cityInput.checked = false;
+                addressInput.checked = false;
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                cat.subFees[subName].location_type = 'Venue';
-                updateLocationTypeFieldsets('Venue');
+                cat.subFees[subName].location_type = null;
+                updateLocationTypeFieldsets(null);
+                notifyChange();
             }
         });
         
@@ -1179,15 +1184,16 @@
                 venueInput.disabled = false;
                 cityInput.disabled = false;
                 addressInput.disabled = false;
-                // Ensure at least one is selected
-                if (!venueInput.checked && !cityInput.checked && !addressInput.checked) {
-                    venueInput.checked = true;
-                    if (!cat.subFees) cat.subFees = {};
-                    if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                    cat.subFees[subName].location_type = 'Venue';
-                }
-                var selectedType = venueInput.checked ? 'Venue' : (cityInput.checked ? 'City' : 'Address');
-                updateLocationTypeFieldsets(selectedType);
+                // Don't auto-select - user must choose one to trigger save button
+                // Clear any existing selection so user must choose
+                venueInput.checked = false;
+                cityInput.checked = false;
+                addressInput.checked = false;
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = null;
+                updateLocationTypeFieldsets(null);
+                notifyChange();
             }
         });
         
