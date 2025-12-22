@@ -1199,26 +1199,47 @@
             
             if (!targetFieldsetKey) return;
             
-            // Check if the target fieldset already exists
+            // Find all location type fieldsets in the fields container
             var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
             var targetFieldsetExists = false;
+            
+            // Remove any location fieldsets that don't match the selected type
             allFieldWrappers.forEach(function(wrapper) {
                 var fsId = wrapper.getAttribute('data-fieldset-id');
                 var fieldset = fieldsets.find(function(fs) {
                     return (fs.id || fs.key || fs.fieldset_key) == fsId;
                 });
-                if (fieldset) {
-                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
-                    // For address, also check for 'location' key
+                if (!fieldset) return;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                
+                // Check if this is a location fieldset
+                var isLocationFieldset = fieldsetKeyLower === 'venue' || 
+                                        fieldsetKeyLower === 'city' || 
+                                        fieldsetKeyLower === 'address' || 
+                                        fieldsetKeyLower === 'location';
+                
+                if (isLocationFieldset) {
+                    // Check if it matches the selected type
+                    var matches = false;
                     if (targetFieldsetKey === 'address') {
-                        if (fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location') {
-                            targetFieldsetExists = true;
+                        matches = (fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location');
+                    } else {
+                        matches = (fieldsetKeyLower === targetFieldsetKey);
+                    }
+                    
+                    // Remove if it doesn't match the selected type
+                    if (!matches) {
+                        wrapper.remove();
+                        addedFieldsets[fsId] = false;
+                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                        if (menuOpt) {
+                            menuOpt.classList.remove('disabled');
                         }
                     } else {
-                        if (fieldsetKeyLower === targetFieldsetKey) {
-                            targetFieldsetExists = true;
-                        }
+                        // This is the matching fieldset
+                        targetFieldsetExists = true;
                     }
                 }
             });
