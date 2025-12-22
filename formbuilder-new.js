@@ -1285,41 +1285,65 @@
             // Update gray-out state in menu
             updateSessionsFieldset(isEvents ? 'Events' : 'General');
             
-            // If Events is selected, check if sessions fieldset exists and add it automatically if not
-            if (isEvents) {
-                var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
-                var sessionsFieldsetExists = false;
+            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+            
+            // If General is selected, remove sessions fieldset if it exists
+            if (!isEvents) {
                 allFieldWrappers.forEach(function(wrapper) {
                     var fsId = wrapper.getAttribute('data-fieldset-id');
                     var fieldset = fieldsets.find(function(fs) {
                         return (fs.id || fs.key || fs.fieldset_key) == fsId;
                     });
-                    if (fieldset) {
-                        var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                        var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
-                        if (fieldsetKeyLower === 'sessions') {
-                            sessionsFieldsetExists = true;
+                    if (!fieldset) return;
+                    
+                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                    
+                    if (fieldsetKeyLower === 'sessions') {
+                        wrapper.remove();
+                        addedFieldsets[fsId] = false;
+                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                        if (menuOpt) {
+                            menuOpt.classList.remove('disabled');
                         }
                     }
                 });
-                
-                // If sessions fieldset doesn't exist, add it automatically
-                if (!sessionsFieldsetExists) {
-                    var sessionsFieldset = fieldsets.find(function(fs) {
-                        var fsKey = fs.key || fs.fieldset_key || fs.id;
-                        return String(fsKey).toLowerCase() === 'sessions';
-                    });
-                    
-                    if (sessionsFieldset) {
-                        var result = createFieldElement(sessionsFieldset, true, sessionsFieldset);
-                        fieldsContainer.appendChild(result.wrapper);
-                        addedFieldsets[result.fsId] = true;
-                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
-                        if (menuOpt) {
-                            menuOpt.classList.add('disabled');
-                        }
-                        notifyChange();
+                notifyChange();
+                return;
+            }
+            
+            // If Events is selected, check if sessions fieldset exists and add it automatically if not
+            var sessionsFieldsetExists = false;
+            allFieldWrappers.forEach(function(wrapper) {
+                var fsId = wrapper.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (fieldset) {
+                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                    if (fieldsetKeyLower === 'sessions') {
+                        sessionsFieldsetExists = true;
                     }
+                }
+            });
+            
+            // If sessions fieldset doesn't exist, add it automatically
+            if (!sessionsFieldsetExists) {
+                var sessionsFieldset = fieldsets.find(function(fs) {
+                    var fsKey = fs.key || fs.fieldset_key || fs.id;
+                    return String(fsKey).toLowerCase() === 'sessions';
+                });
+                
+                if (sessionsFieldset) {
+                    var result = createFieldElement(sessionsFieldset, true, sessionsFieldset);
+                    fieldsContainer.appendChild(result.wrapper);
+                    addedFieldsets[result.fsId] = true;
+                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
+                    if (menuOpt) {
+                        menuOpt.classList.add('disabled');
+                    }
+                    notifyChange();
                 }
             }
         }
