@@ -202,6 +202,19 @@ const MemberModule = (function() {
             });
         }
         
+        // Form submit handler (prevents default and routes to correct handler)
+        if (authForm) {
+            authForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                var submitter = e.submitter || document.activeElement;
+                if (submitter && submitter.dataset.action === 'login') {
+                    handleLogin();
+                } else if (submitter && submitter.dataset.action === 'register') {
+                    handleRegister();
+                }
+            });
+        }
+        
         // Login button click
         var loginBtn = panel.querySelector('.member-auth-submit[data-action="login"]');
         if (loginBtn) {
