@@ -1761,15 +1761,30 @@
             var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
             
             // Normalize selectedLocationType for comparison
-            var selectedTypeLower = String(selectedLocationType).toLowerCase();
+            var selectedTypeLower = selectedLocationType ? String(selectedLocationType).toLowerCase() : '';
             
             // Grey out fieldsets that don't match selected location type
-            if (selectedTypeLower === 'venue' && (isCity || isAddress)) {
-                opt.classList.add('disabled');
-            } else if (selectedTypeLower === 'city' && (isVenue || isAddress)) {
-                opt.classList.add('disabled');
-            } else if (selectedTypeLower === 'address' && (isVenue || isCity)) {
-                opt.classList.add('disabled');
+            if (selectedTypeLower === 'venue') {
+                if (isCity || isAddress) {
+                    opt.classList.add('disabled');
+                } else if (isVenue) {
+                    opt.classList.remove('disabled');
+                }
+            } else if (selectedTypeLower === 'city') {
+                if (isVenue || isAddress) {
+                    opt.classList.add('disabled');
+                } else if (isCity) {
+                    opt.classList.remove('disabled');
+                }
+            } else if (selectedTypeLower === 'address') {
+                if (isVenue || isCity) {
+                    opt.classList.add('disabled');
+                } else if (isAddress) {
+                    opt.classList.remove('disabled');
+                }
+            } else {
+                // No location type selected - enable all
+                opt.classList.remove('disabled');
             }
             
             opt.onclick = function(e) {
@@ -1810,7 +1825,13 @@
             e.stopPropagation();
             var wasOpen = fieldsetMenu.classList.contains('open');
             closeAllMenus();
-            if (!wasOpen) fieldsetMenu.classList.add('open');
+            if (!wasOpen) {
+                // Menu is opening - check current location type selection and apply filtering
+                var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
+                var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
+                updateLocationTypeFieldsets(currentLocationType);
+                fieldsetMenu.classList.add('open');
+            }
         };
         
         optBody.appendChild(fieldsetMenu);
