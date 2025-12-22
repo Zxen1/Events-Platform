@@ -249,10 +249,7 @@ const MemberModule = (function() {
                         radio.checked = false;
                     });
                     
-                    // Hide avatar options, show preview
-                    if (avatarOptionsContainer) {
-                        avatarOptionsContainer.style.display = 'none';
-                    }
+                    // Show preview (keep avatar options visible so user can still choose)
                     if (avatarPreviewContainer && avatarPreviewImg) {
                         avatarPreviewContainer.style.display = 'block';
                         
@@ -1424,7 +1421,7 @@ const MemberModule = (function() {
                 if (data.success && data.settings) {
                     // Generate random seeds for each avatar
                     var randomSeeds = [];
-                    for (var i = 0; i < 5; i++) {
+                    for (var i = 0; i < 3; i++) {
                         randomSeeds.push(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
                     }
                     
@@ -1433,14 +1430,12 @@ const MemberModule = (function() {
                     var avatarUrl1 = data.settings.avatar_provider_url_1 || (baseUrl + randomSeeds[0]);
                     var avatarUrl2 = data.settings.avatar_provider_url_2 || (baseUrl + randomSeeds[1]);
                     var avatarUrl3 = data.settings.avatar_provider_url_3 || (baseUrl + randomSeeds[2]);
-                    var avatarUrl4 = data.settings.avatar_provider_url_4 || (baseUrl + randomSeeds[3]);
-                    var avatarUrl5 = data.settings.avatar_provider_url_5 || (baseUrl + randomSeeds[4]);
                     
-                    // Clear container
-                    avatarOptionsContainer.innerHTML = '';
+                    // Use DocumentFragment to batch DOM changes and avoid triggering Mapbox mutation observers
+                    var fragment = document.createDocumentFragment();
                     
-                    // Create five avatar options
-                    [avatarUrl1, avatarUrl2, avatarUrl3, avatarUrl4, avatarUrl5].forEach(function(url, index) {
+                    // Create three avatar options
+                    [avatarUrl1, avatarUrl2, avatarUrl3].forEach(function(url, index) {
                         var label = document.createElement('label');
                         label.className = 'member-avatar-option';
                         
@@ -1457,8 +1452,12 @@ const MemberModule = (function() {
                         
                         label.appendChild(radio);
                         label.appendChild(img);
-                        avatarOptionsContainer.appendChild(label);
+                        fragment.appendChild(label);
                     });
+                    
+                    // Clear container and append all at once (single DOM mutation)
+                    avatarOptionsContainer.innerHTML = '';
+                    avatarOptionsContainer.appendChild(fragment);
                     
                     // Re-bind events for the new avatar options
                     var avatarRadios = panel ? panel.querySelectorAll('input[name="avatarChoice"]') : [];
@@ -1473,17 +1472,13 @@ const MemberModule = (function() {
                                 if (img && img.src && avatarHiddenInput) {
                                     avatarHiddenInput.value = img.src;
                                 }
-                                // Clear file input and hide preview
+                                // Clear file input and hide preview when preset avatar is selected
                                 if (avatarFileInput) {
                                     avatarFileInput.value = '';
                                 }
                                 var avatarPreviewContainer = document.getElementById('member-avatar-upload-preview');
-                                var avatarOptionsContainer = document.getElementById('member-avatar-options');
                                 if (avatarPreviewContainer) {
                                     avatarPreviewContainer.style.display = 'none';
-                                }
-                                if (avatarOptionsContainer) {
-                                    avatarOptionsContainer.style.display = 'flex';
                                 }
                                 if (avatarHiddenInput) {
                                     avatarHiddenInput.removeAttribute('data-has-file');
@@ -1508,15 +1503,35 @@ const MemberModule = (function() {
                 if (avatarOptionsContainer) {
                     var baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=';
                     var randomSeeds = [];
-                    for (var i = 0; i < 5; i++) {
+                    for (var i = 0; i < 3; i++) {
                         randomSeeds.push(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
                     }
-                    avatarOptionsContainer.innerHTML = 
-                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar1" checked><img src="' + baseUrl + randomSeeds[0] + '" alt="Avatar 1" class="member-avatar-preview"></label>' +
-                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar2"><img src="' + baseUrl + randomSeeds[1] + '" alt="Avatar 2" class="member-avatar-preview"></label>' +
-                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar3"><img src="' + baseUrl + randomSeeds[2] + '" alt="Avatar 3" class="member-avatar-preview"></label>' +
-                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar4"><img src="' + baseUrl + randomSeeds[3] + '" alt="Avatar 4" class="member-avatar-preview"></label>' +
-                        '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar5"><img src="' + baseUrl + randomSeeds[4] + '" alt="Avatar 5" class="member-avatar-preview"></label>';
+                    
+                    // Use DocumentFragment to batch DOM changes
+                    var fragment = document.createDocumentFragment();
+                    for (var j = 0; j < 3; j++) {
+                        var label = document.createElement('label');
+                        label.className = 'member-avatar-option';
+                        
+                        var radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = 'avatarChoice';
+                        radio.value = 'avatar' + (j + 1);
+                        if (j === 0) radio.checked = true;
+                        
+                        var img = document.createElement('img');
+                        img.src = baseUrl + randomSeeds[j];
+                        img.alt = 'Avatar ' + (j + 1);
+                        img.className = 'member-avatar-preview';
+                        
+                        label.appendChild(radio);
+                        label.appendChild(img);
+                        fragment.appendChild(label);
+                    }
+                    
+                    // Single DOM mutation
+                    avatarOptionsContainer.innerHTML = '';
+                    avatarOptionsContainer.appendChild(fragment);
                 }
             });
     }

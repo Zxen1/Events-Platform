@@ -139,7 +139,7 @@ const MapModule = (function() {
       zoom: startZoom,
       pitch: startPitch,
       bearing: startBearing,
-      attributionControl: true
+      attributionControl: false
     });
 
     // Handle map load

@@ -610,13 +610,17 @@
                 <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
                 <label class="member-auth-panel-label">Avatar</label>
                 <div class="member-avatar-selector">
+                  <div class="member-avatar-upload-btn-container">
+                    <button type="button" class="member-avatar-upload-btn" id="member-avatar-upload-btn" aria-label="Upload your own avatar">
+                      <div class="member-avatar-upload-icon">📷</div>
+                    </button>
+                    <div class="member-avatar-upload-preview" id="member-avatar-upload-preview" style="display: none;">
+                      <img id="member-avatar-preview-img" src="" alt="Uploaded avatar preview" class="member-avatar-preview">
+                    </div>
+                  </div>
                   <div class="member-avatar-options" id="member-avatar-options">
                     <!-- Avatar options will be populated dynamically from admin settings -->
                   </div>
-                  <div class="member-avatar-upload-preview" id="member-avatar-upload-preview" style="display: none;">
-                    <img id="member-avatar-preview-img" src="" alt="Uploaded avatar preview" class="member-avatar-preview">
-                  </div>
-                  <button type="button" class="member-button-auth member-avatar-upload-btn" id="member-avatar-upload-btn">Upload Your Own</button>
                   <input type="file" id="member-avatar-file" accept="image/*" style="display: none;">
                   <input type="hidden" id="member-register-avatar" name="registerAvatar">
                 </div>
