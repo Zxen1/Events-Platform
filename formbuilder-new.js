@@ -1811,6 +1811,7 @@
                 addedFieldsets[result.fsId] = true;
                 opt.classList.add('disabled');
                 fieldsetMenu.classList.remove('open');
+                notifyChange();
             };
             fieldsetOpts.appendChild(opt);
         });
