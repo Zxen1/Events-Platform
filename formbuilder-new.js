@@ -1509,25 +1509,60 @@
             surchargeInput.value = parseFloat(subFeeData.checkout_surcharge).toFixed(2);
         }
         
+        // Only allow numbers and minus sign
+        surchargeInput.addEventListener('keypress', function(e) {
+            var char = String.fromCharCode(e.which);
+            // Allow: numbers, minus sign (only at start), decimal point
+            if (!/[0-9]/.test(char) && char !== '-' && char !== '.') {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow minus at the start
+            if (char === '-' && (this.selectionStart !== 0 || this.value.indexOf('-') !== -1)) {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow one decimal point
+            if (char === '.' && this.value.indexOf('.') !== -1) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
         surchargeInput.addEventListener('input', function() {
-            var value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
-            if (value !== null && value < -100) {
-                value = -100;
-                surchargeInput.value = value.toFixed(2);
+            // Filter out any non-numeric characters except minus and decimal
+            var value = this.value;
+            // Remove any characters that aren't numbers, minus, or decimal
+            value = value.replace(/[^0-9.\-]/g, '');
+            // Ensure minus is only at the start
+            if (value.indexOf('-') > 0) {
+                value = value.replace(/-/g, '');
+            }
+            // Ensure only one decimal point
+            var parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            this.value = value;
+            
+            var numValue = value ? parseFloat(value) : null;
+            if (numValue !== null && numValue < -100) {
+                numValue = -100;
+                this.value = numValue.toFixed(2);
             }
             if (!cat.subFees) cat.subFees = {};
             if (!cat.subFees[subName]) cat.subFees[subName] = {};
-            cat.subFees[subName].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
+            cat.subFees[subName].checkout_surcharge = numValue !== null ? Math.round(numValue * 100) / 100 : null;
             notifyChange();
         });
         
         surchargeInput.addEventListener('blur', function() {
-            var value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+            var value = this.value ? parseFloat(this.value) : null;
             if (value !== null && value < -100) {
                 value = -100;
             }
             if (value !== null) {
-                surchargeInput.value = value.toFixed(2);
+                this.value = value.toFixed(2);
             }
         });
         
@@ -2201,21 +2236,56 @@
             renderCheckoutCards();
         };
         
+        // Only allow numbers and minus sign
+        popupSurchargeInput.addEventListener('keypress', function(e) {
+            var char = String.fromCharCode(e.which);
+            // Allow: numbers, minus sign (only at start), decimal point
+            if (!/[0-9]/.test(char) && char !== '-' && char !== '.') {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow minus at the start
+            if (char === '-' && (this.selectionStart !== 0 || this.value.indexOf('-') !== -1)) {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow one decimal point
+            if (char === '.' && this.value.indexOf('.') !== -1) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
         popupSurchargeInput.addEventListener('input', function() {
-            var value = popupSurchargeInput.value ? parseFloat(popupSurchargeInput.value) : null;
-            if (value !== null && value < -100) {
-                value = -100;
-                popupSurchargeInput.value = value.toFixed(2);
+            // Filter out any non-numeric characters except minus and decimal
+            var value = this.value;
+            // Remove any characters that aren't numbers, minus, or decimal
+            value = value.replace(/[^0-9.\-]/g, '');
+            // Ensure minus is only at the start
+            if (value.indexOf('-') > 0) {
+                value = value.replace(/-/g, '');
+            }
+            // Ensure only one decimal point
+            var parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            this.value = value;
+            
+            var numValue = value ? parseFloat(value) : null;
+            if (numValue !== null && numValue < -100) {
+                numValue = -100;
+                this.value = numValue.toFixed(2);
             }
             if (!cat.subFees) cat.subFees = {};
             if (!cat.subFees[subName]) cat.subFees[subName] = {};
-            cat.subFees[subName].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
-            currentSurcharge = value !== null ? value : 0;
+            cat.subFees[subName].checkout_surcharge = numValue !== null ? Math.round(numValue * 100) / 100 : null;
+            currentSurcharge = numValue !== null ? numValue : 0;
             
             // Update the surcharge input in the edit panel if it exists
             var editPanelInput = document.querySelector('.formbuilder-accordion-option--editing .formbuilder-fee-input');
             if (editPanelInput) {
-                editPanelInput.value = value !== null ? value.toFixed(2) : '';
+                editPanelInput.value = numValue !== null ? numValue.toFixed(2) : '';
             }
             
             // Recalculate and update prices
@@ -2224,12 +2294,12 @@
         });
         
         popupSurchargeInput.addEventListener('blur', function() {
-            var value = popupSurchargeInput.value ? parseFloat(popupSurchargeInput.value) : null;
+            var value = this.value ? parseFloat(this.value) : null;
             if (value !== null && value < -100) {
                 value = -100;
             }
             if (value !== null) {
-                popupSurchargeInput.value = value.toFixed(2);
+                this.value = value.toFixed(2);
             }
         });
         
