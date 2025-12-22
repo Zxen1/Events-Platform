@@ -82,15 +82,6 @@ const HeaderModule = (function() {
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
-                    // CRITICAL: Store settings in App state BEFORE calling getImageUrl
-                    // This ensures getImageUrl has the folder paths it needs
-                    if (data.settings && window.App && typeof window.App.setState === 'function') {
-                        // Merge settings into App state (don't overwrite, in case other modules set things)
-                        var currentSettings = window.App.getState('settings') || {};
-                        var mergedSettings = Object.assign({}, currentSettings, data.settings);
-                        window.App.setState('settings', mergedSettings);
-                    }
-                    
                     // Load logo from system_images
                     if (data.system_images && data.system_images.small_logo) {
                         var logoFilename = data.system_images.small_logo;

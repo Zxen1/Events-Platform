@@ -349,7 +349,8 @@ const AdminModule = (function() {
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
                 if (isDirty) {
-                    showUnsavedChangesDialog();
+                    // TODO: Show unsaved changes dialog
+                    closePanel();
                 } else {
                     closePanel();
                 }
@@ -358,8 +359,7 @@ const AdminModule = (function() {
         
         // Save button
         if (saveBtn) {
-            saveBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent click-away handlers from closing menus
+            saveBtn.addEventListener('click', function() {
                 if (!saveBtn.disabled) {
                     runSave();
                 }
@@ -368,8 +368,7 @@ const AdminModule = (function() {
         
         // Discard button
         if (discardBtn) {
-            discardBtn.addEventListener('click', function(e) {
-                e.stopPropagation(); // Prevent click-away handlers from closing menus
+            discardBtn.addEventListener('click', function() {
                 if (!discardBtn.disabled) {
                     discardChanges();
                 }
@@ -800,13 +799,6 @@ const AdminModule = (function() {
                 // Update baselines to saved values
                 markSaved();
                 
-                // Show success message
-                getMessage('msg_admin_saved', {}, true).then(function(message) {
-                    if (message) {
-                        ToastComponent.showSuccess(message);
-                    }
-                });
-                
                 // If user made changes during save, recheckDirtyState will detect them
                 // via the next input event - no need to check here
                 
@@ -817,18 +809,6 @@ const AdminModule = (function() {
             .catch(function(err) {
                 console.error('[Admin] Save failed:', err);
                 isSaving = false;
-                
-                // Show error message
-                var errorKey = 'msg_admin_save_error_response';
-                if (err && (err.message && err.message.includes('fetch')) || err.name === 'TypeError') {
-                    errorKey = 'msg_admin_save_error_network';
-                }
-                getMessage(errorKey, {}, true).then(function(message) {
-                    if (message) {
-                        ToastComponent.showError(message);
-                    }
-                });
-                
                 // Keep dirty state on error - don't lose user's changes
                 // Buttons stay lit so user knows save failed and can retry
             });
@@ -873,13 +853,6 @@ const AdminModule = (function() {
         console.log('[Admin] Changes discarded');
         isDirty = false;
         updateButtonStates();
-        
-        // Show discard message
-        getMessage('msg_admin_discarded', {}, true).then(function(message) {
-            if (message) {
-                ToastComponent.show(message);
-            }
-        });
     }
     
     function scheduleAutoSave() {
@@ -2381,7 +2354,7 @@ const AdminModule = (function() {
         explanation.className = 'admin-settings-explanation';
         explanation.style.cssText = 'padding: 15px; margin-top: 20px; background-color: rgba(255, 255, 255, 0.1); border-radius: 4px; font-size: 13px; line-height: 1.6; color: rgba(255, 255, 255, 0.9);';
         explanation.innerHTML = '<strong>How Image Sync Works:</strong><br>' +
-            'All image picker menus (System Images, Category Icons, Currencies, Phone Prefixes, Amenities) use separate database tables (system_images, category_icons, currencies, phone_prefixes, amenities) for instant menu loading. When you open an image picker menu, it displays instantly from the database tables. The system syncs with Bunny CDN when the admin panel opens (1.5 second delay, background, once per session) to add new files, remove deleted files, and handle renamed files. No API calls occur at website startup, ensuring fast page loads.';
+            'All image picker menus (System Images, Category Icons, Currencies, Phone Prefixes, Amenities) use the picklist table for instant menu loading. When you open an image picker menu, it displays instantly from the picklist table. The system syncs with Bunny CDN when the admin panel opens (1.5 second delay, background, once per session) to add new files, remove deleted files, and handle renamed files. No API calls occur at website startup, ensuring fast page loads.';
         
         apiContainer.appendChild(explanation);
     }
@@ -2439,8 +2412,7 @@ const AdminModule = (function() {
         var container = document.getElementById(containerId);
         if (!container || !window.CurrencyComponent) return;
         
-        // Use settingsData value if available, otherwise null (user must select)
-        var initialValue = settingsData[settingKey] || null;
+        var initialValue = settingsData[settingKey] || 'USD';
         
         var picker = CurrencyComponent.buildFullMenu({
             container: settingsContainer,
@@ -3035,37 +3007,6 @@ const AdminModule = (function() {
                     if (placeholder) placeholder.style.display = '';
                 }
             }
-        });
-    }
-
-    /* --------------------------------------------------------------------------
-       UNSAVED CHANGES DIALOG
-       -------------------------------------------------------------------------- */
-    
-    function showUnsavedChangesDialog() {
-        Promise.all([
-            getMessage('msg_admin_unsaved_title', {}, true),
-            getMessage('msg_admin_unsaved_message', {}, true)
-        ]).then(function(messages) {
-            var title = messages[0] || 'Unsaved Changes';
-            var message = messages[1] || 'You have unsaved changes. What would you like to do?';
-            
-            ThreeButtonDialogComponent.show({
-                titleText: title,
-                messageText: message,
-                cancelLabel: 'Cancel',
-                saveLabel: 'Save',
-                discardLabel: 'Discard',
-                focusCancel: true
-            }).then(function(result) {
-                if (result === 'save') {
-                    runSave({ closeAfter: true });
-                } else if (result === 'discard') {
-                    discardChanges();
-                    closePanel();
-                }
-                // If result === 'cancel', do nothing (stay in panel)
-            });
         });
     }
 

@@ -669,14 +669,12 @@
   background: #3b82f5;
 }
 
-.formbuilder-fieldset-menu-option.disabled,
-.formbuilder-fieldset-menu-option.disabled-location-type {
+.formbuilder-fieldset-menu-option.disabled {
   color: #555;
   cursor: not-allowed;
 }
 
-.formbuilder-fieldset-menu-option.disabled:hover,
-.formbuilder-fieldset-menu-option.disabled-location-type:hover {
+.formbuilder-fieldset-menu-option.disabled:hover {
   background: transparent;
 }
 
@@ -1114,39 +1112,6 @@
 
 .formbuilder-fee-input::placeholder {
   color: #666;
-}
-
-.formbuilder-calculator-btn {
-  height: 36px;
-  padding: 0 12px;
-  background: #ff6b35;
-  border: 1px solid #ff6b35;
-  border-radius: 5px;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-  margin-left: 8px;
-}
-
-.formbuilder-calculator-btn:hover {
-  background: #ff8555;
-  border-color: #ff8555;
-}
-
-.formbuilder-calculator-btn:active {
-  background: #e55a2a;
-  border-color: #e55a2a;
-}
-
-.formbuilder-calculator-surcharge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #333;
 }
 
 /* Type Row */

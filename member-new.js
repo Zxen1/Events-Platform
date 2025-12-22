@@ -40,15 +40,6 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var CURRENT_KEY = 'member-auth-current';
-    
-    /* --------------------------------------------------------------------------
-       SVG ICONS
-       -------------------------------------------------------------------------- */
-    
-    var icons = {
-        plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-        minus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-    };
 
     /* --------------------------------------------------------------------------
        STATE
@@ -77,7 +68,6 @@ const MemberModule = (function() {
     var profileName = null;
     var profileEmail = null;
     var logoutBtn = null;
-    var profileTabBtn = null;
     
     // Create post elements
     var submitBtn = null;
@@ -165,7 +155,6 @@ const MemberModule = (function() {
         profileName = document.getElementById('member-profile-name');
         profileEmail = document.getElementById('member-profile-email');
         logoutBtn = document.getElementById('member-logout-btn');
-        profileTabBtn = document.getElementById('member-tab-profile-btn');
     }
 
     function bindEvents() {
@@ -311,7 +300,7 @@ const MemberModule = (function() {
     var formWrapper = null;
     var formFields = null;
     var checkoutOptions = [];
-    var siteCurrency = null;
+    var siteCurrency = 'USD';
     var checkoutInstance = null;
     
     function loadFormpicker() {
@@ -391,6 +380,10 @@ const MemberModule = (function() {
         subcategoryWrapper.className = 'member-panel-field';
         subcategoryWrapper.hidden = true;
         
+        var subcategoryLabel = document.createElement('label');
+        subcategoryLabel.className = 'member-panel-field-label';
+        subcategoryLabel.textContent = 'Subcategory';
+        
         var subcategoryMenu = document.createElement('div');
         subcategoryMenu.className = 'member-formpicker-menu';
         
@@ -404,6 +397,7 @@ const MemberModule = (function() {
         
         subcategoryMenu.appendChild(subcategoryBtn);
         subcategoryMenu.appendChild(subcategoryOpts);
+        subcategoryWrapper.appendChild(subcategoryLabel);
         subcategoryWrapper.appendChild(subcategoryMenu);
         
         // Category dropdown
@@ -412,7 +406,7 @@ const MemberModule = (function() {
         
         var categoryLabel = document.createElement('label');
         categoryLabel.className = 'member-panel-field-label';
-        categoryLabel.textContent = 'Category/Subcategory';
+        categoryLabel.textContent = 'Category';
         
         var categoryMenu = document.createElement('div');
         categoryMenu.className = 'member-formpicker-menu';
@@ -585,13 +579,6 @@ const MemberModule = (function() {
 
         if (formFields) formFields.innerHTML = '';
 
-        // Track location quantity and repeat fieldsets
-        var locationQuantity = 1;
-        var locationFieldset = null;
-        var locationFieldsetType = null;
-        var mustRepeatFieldsets = [];
-        var autofillRepeatFieldsets = [];
-
         // FieldsetComponent auto-loads its own picklist data
         if (fields.length === 0) {
             var placeholder = document.createElement('p');
@@ -599,389 +586,28 @@ const MemberModule = (function() {
             placeholder.textContent = 'No fields configured for this subcategory yet.';
             if (formFields) formFields.appendChild(placeholder);
         } else {
-            // First pass: identify location fieldset and collect repeat fieldsets
-            // Also get subcategory data to check for must-repeat and autofill-repeat CSV strings
-            var subcategoryData = null;
-            if (selectedCategory && selectedSubcategory) {
-                var category = memberCategories.find(function(c) {
-                    return c.name === selectedCategory;
-                });
-                if (category && category.subFields && category.subFields[selectedSubcategory]) {
-                    // Get subcategory metadata from category data
-                    var subcats = category.subcategories || [];
-                    subcategoryData = subcats.find(function(sub) {
-                        return sub.name === selectedSubcategory || sub.subcategory_key === selectedSubcategory;
-                    });
-                }
-            }
-            
-            // Parse must_repeat and autofill_repeat CSV strings if available
-            var mustRepeatIndices = [];
-            var autofillRepeatIndices = [];
-            if (subcategoryData) {
-                if (subcategoryData.must_repeat && typeof subcategoryData.must_repeat === 'string') {
-                    mustRepeatIndices = subcategoryData.must_repeat.split(',').map(function(s) {
-                        return parseInt(s.trim(), 10);
-                    }).filter(function(n) {
-                        return !isNaN(n);
-                    });
-                }
-                if (subcategoryData.autofill_repeat && typeof subcategoryData.autofill_repeat === 'string') {
-                    autofillRepeatIndices = subcategoryData.autofill_repeat.split(',').map(function(s) {
-                        return parseInt(s.trim(), 10);
-                    }).filter(function(n) {
-                        return !isNaN(n);
-                    });
-                }
-            }
-            
+            // Render each field using FieldsetComponent
             fields.forEach(function(fieldData, index) {
                 var field = ensureFieldDefaults(fieldData);
-                
-                // Get fieldset key - check fieldData first (source of truth)
-                var fieldsetKey = '';
-                if (fieldData && typeof fieldData === 'object') {
-                    if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
-                        fieldsetKey = fieldData.fieldset_key.toLowerCase();
-                    } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
-                        fieldsetKey = fieldData.fieldsetKey.toLowerCase();
-                    } else if (fieldData.key && typeof fieldData.key === 'string') {
-                        fieldsetKey = fieldData.key.toLowerCase();
-                    }
-                }
-                
-                console.log('[Member] Checking field', index, 'fieldsetKey:', fieldsetKey, 'fieldData:', fieldData);
-                
-                // Check if this is a location fieldset (venue, city, address, location)
-                // 'location' is legacy support for 'address'
-                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
-                    if (!locationFieldset) {
-                        locationFieldset = fieldData;
-                        locationFieldsetType = fieldsetKey === 'location' ? 'address' : fieldsetKey;
-                        console.log('[Member] Found location fieldset:', fieldsetKey, 'stored as:', locationFieldset);
-                    }
-                }
-                
-                // Check for must-repeat and autofill-repeat flags
-                // Check field data properties first, then CSV indices
-                var isMustRepeat = field.must_repeat || field.mustRepeat || mustRepeatIndices.indexOf(index) !== -1;
-                var isAutofillRepeat = field.autofill_repeat || field.autofillRepeat || autofillRepeatIndices.indexOf(index) !== -1;
-                
-                if (isMustRepeat) {
-                    mustRepeatFieldsets.push(field);
-                }
-                if (isAutofillRepeat) {
-                    autofillRepeatFieldsets.push(field);
-                }
-            });
-            
-            // Second pass: render fields with location quantity selector
-            fields.forEach(function(fieldData, index) {
-                var field = ensureFieldDefaults(fieldData);
-                
-                // Get fieldset key - check fieldData first (source of truth)
-                var fieldsetKey = '';
-                if (fieldData && typeof fieldData === 'object') {
-                    if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
-                        fieldsetKey = fieldData.fieldset_key.toLowerCase();
-                    } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
-                        fieldsetKey = fieldData.fieldsetKey.toLowerCase();
-                    } else if (fieldData.key && typeof fieldData.key === 'string') {
-                        fieldsetKey = fieldData.key.toLowerCase();
-                    }
-                }
-                
-                // Compare using original fieldData, not normalized field
-                var isLocationFieldset = false;
-                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
-                    if (fieldData === locationFieldset) {
-                        isLocationFieldset = true;
-                    }
-                }
-                
-                if (isLocationFieldset) {
-                    console.log('[Member] Rendering location fieldset with quantity selector:', fieldsetKey);
-                }
+                if (!field.name) field.name = 'Field ' + (index + 1);
 
                 var fieldset = FieldsetComponent.buildFieldset(field, {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
-                    container: formFields,
-                    defaultCurrency: null
+                    container: formFields
                 });
-                
-                // Add location quantity selector to location fieldset
-                if (isLocationFieldset) {
-                    console.log('[Member] Adding quantity selector to location fieldset. Fieldset:', fieldset, 'Field data:', field);
-                    // Find the label element - it should be the first child with class fieldset-label
-                    var labelEl = fieldset.querySelector('.fieldset-label');
-                    if (labelEl) {
-                        console.log('[Member] Found label element, adding quantity controls. Label:', labelEl);
-                        // Create quantity selector row
-                        var quantityRow = document.createElement('div');
-                        quantityRow.className = 'member-location-quantity-row';
-                        
-                        var quantityLabel = document.createElement('span');
-                        quantityLabel.className = 'member-location-quantity-label';
-                        quantityLabel.textContent = 'Number of locations:';
-                        
-                        var quantityControls = document.createElement('div');
-                        quantityControls.className = 'member-location-quantity-controls';
-                        
-                        var minusBtn = document.createElement('button');
-                        minusBtn.type = 'button';
-                        minusBtn.className = 'member-location-quantity-btn member-location-quantity-btn--minus';
-                        minusBtn.innerHTML = icons.minus;
-                        minusBtn.setAttribute('aria-label', 'Decrease location quantity');
-                        
-                        var quantityDisplay = document.createElement('span');
-                        quantityDisplay.className = 'member-location-quantity-display';
-                        quantityDisplay.textContent = locationQuantity;
-                        
-                        var plusBtn = document.createElement('button');
-                        plusBtn.type = 'button';
-                        plusBtn.className = 'member-location-quantity-btn member-location-quantity-btn--plus';
-                        plusBtn.innerHTML = icons.plus;
-                        plusBtn.setAttribute('aria-label', 'Increase location quantity');
-                        
-                        quantityControls.appendChild(minusBtn);
-                        quantityControls.appendChild(quantityDisplay);
-                        quantityControls.appendChild(plusBtn);
-                        
-                        quantityRow.appendChild(quantityLabel);
-                        quantityRow.appendChild(quantityControls);
-                        
-                        // Insert after label
-                        labelEl.parentNode.insertBefore(quantityRow, labelEl.nextSibling);
-                        
-                        // Update label text if quantity > 1
-                        if (locationQuantity > 1) {
-                            var labelTextEl = labelEl.querySelector('.fieldset-label-text');
-                            if (labelTextEl) {
-                                var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                labelTextEl.textContent = baseName + ' 1';
-                            }
-                        }
-                        
-                        // Quantity button handlers
-                        minusBtn.addEventListener('click', function() {
-                            if (locationQuantity > 1) {
-                                locationQuantity--;
-                                quantityDisplay.textContent = locationQuantity;
-                                
-                                // Update label
-                                var labelTextEl = labelEl.querySelector('.fieldset-label-text');
-                                if (labelTextEl) {
-                                    var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                    if (locationQuantity === 1) {
-                                        labelTextEl.textContent = baseName;
-                                    } else {
-                                        labelTextEl.textContent = baseName + ' 1';
-                                    }
-                                }
-                                
-                                // Re-render additional locations (after checkout section)
-                                console.log('[Member] Minus clicked, quantity now:', locationQuantity);
-                                setTimeout(function() {
-                                    renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
-                                }, 100);
-                            }
-                        });
-                        
-                        plusBtn.addEventListener('click', function() {
-                            locationQuantity++;
-                            quantityDisplay.textContent = locationQuantity;
-                            
-                            // Update label
-                            var labelTextEl = labelEl.querySelector('.fieldset-label-text');
-                            if (labelTextEl) {
-                                var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                labelTextEl.textContent = baseName + ' 1';
-                            }
-                            
-                            // Re-render additional locations (after checkout section)
-                            console.log('[Member] Plus clicked, quantity now:', locationQuantity);
-                            setTimeout(function() {
-                                renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
-                            }, 100);
-                        });
-                    } else {
-                        console.warn('[Member] Could not find label element in location fieldset. Fieldset children:', fieldset.children);
-                    }
-                }
                 
                 formFields.appendChild(fieldset);
             });
-            
         }
         
         // Render checkout options at the bottom of the form
         renderCheckoutOptionsSection();
         
-        // Render additional locations if quantity > 1 (after checkout section is rendered)
-        if (locationQuantity > 1 && locationFieldset) {
-            setTimeout(function() {
-                renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
-            }, 100);
-        }
-        
         // Render terms agreement and submit buttons after checkout options
         renderTermsAndSubmitSection();
         
         if (formWrapper) formWrapper.hidden = false;
-    }
-    
-    function renderAdditionalLocations(quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
-        console.log('[Member] renderAdditionalLocations called:', { quantity: quantity, locationType: locationType, mustRepeatCount: mustRepeatFieldsets.length, locationFieldsetData: locationFieldsetData });
-        
-        // Remove existing additional locations
-        var existingLocations = formFields.querySelectorAll('.member-additional-location');
-        existingLocations.forEach(function(el) {
-            el.remove();
-        });
-        
-        // Don't render if quantity is 1 or less
-        if (quantity <= 1) {
-            console.log('[Member] Quantity is 1 or less, not rendering additional locations');
-            return;
-        }
-        
-        // Find insertion point - before checkout options section
-        var checkoutSection = formFields.querySelector('.member-checkout-wrapper');
-        if (!checkoutSection) {
-            console.warn('[Member] Checkout section not found, cannot render additional locations');
-            return;
-        }
-        
-        if (!locationFieldsetData) {
-            console.warn('[Member] locationFieldsetData is not set, cannot render additional locations');
-            return;
-        }
-        
-        // Render locations 2, 3, 4, etc.
-        for (var i = 2; i <= quantity; i++) {
-            var locationSection = document.createElement('div');
-            locationSection.className = 'member-additional-location';
-            locationSection.dataset.locationNumber = i;
-            
-            // Location header
-            var locationHeader = document.createElement('h3');
-            locationHeader.className = 'member-additional-location-header';
-            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + ' ' + i;
-            locationHeader.textContent = locationName;
-            locationSection.appendChild(locationHeader);
-            
-            // First, render the location fieldset again (venue/city/address)
-            console.log('[Member] Rendering location', i, 'for type:', locationType);
-            
-            // Create a copy of the field data with updated name
-            var locationFieldData = {};
-            for (var prop in locationFieldsetData) {
-                if (locationFieldsetData.hasOwnProperty(prop)) {
-                    locationFieldData[prop] = locationFieldsetData[prop];
-                }
-            }
-            locationFieldData.name = locationName;
-            
-            console.log('[Member] Building fieldset for location', i, 'with data:', locationFieldData);
-            
-            var locationFieldsetClone = FieldsetComponent.buildFieldset(locationFieldData, {
-                idPrefix: 'memberCreate',
-                fieldIndex: 0,
-                locationNumber: i,
-                container: locationSection,
-                defaultCurrency: null
-            });
-            
-            console.log('[Member] Built fieldset for location', i, ':', locationFieldsetClone);
-            locationSection.appendChild(locationFieldsetClone);
-            
-            // Then, render must-repeat fieldsets
-            mustRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
-                var fieldset = FieldsetComponent.buildFieldset(fieldData, {
-                    idPrefix: 'memberCreate',
-                    fieldIndex: fieldIndex,
-                    locationNumber: i,
-                    container: locationSection,
-                    defaultCurrency: null
-                });
-                
-                locationSection.appendChild(fieldset);
-                
-                // If autofill-repeat, copy values from first location
-                var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
-                if (isAutofill) {
-                    // Copy from location 1
-                    setTimeout(function() {
-                        copyFieldsetValues(fieldset, fieldData, 1, i);
-                    }, 100);
-                }
-            });
-            
-            // Insert before checkout options
-            console.log('[Member] Inserting location section', i, 'before checkout section');
-            formFields.insertBefore(locationSection, checkoutSection);
-        }
-        
-        console.log('[Member] Finished rendering additional locations. Total rendered:', quantity - 1);
-        
-        console.log('[Member] Finished rendering additional locations. Total rendered:', quantity - 1);
-    }
-    
-    function copyFieldsetValues(targetFieldset, fieldData, sourceLocation, targetLocation) {
-        // Find source fieldset (location 1 is the main fieldset, not in additional-location)
-        // We need to find the fieldset with the same fieldset key in the main form
-        var fieldsetKey = (fieldData.key || fieldData.fieldset_key || '').toLowerCase();
-        var sourceFieldset = null;
-        
-        // Find the first occurrence of this fieldset type in the main form
-        var allFieldsets = formFields.querySelectorAll('.fieldset');
-        for (var i = 0; i < allFieldsets.length; i++) {
-            var fs = allFieldsets[i];
-            // Check if this fieldset matches by looking at its structure or data attributes
-            // For now, match by fieldset type (venue, city, address have specific structures)
-            if (fieldsetKey === 'venue' && fs.querySelector('.fieldset-sublabel') && fs.querySelector('.fieldset-sublabel').textContent === 'Venue Name') {
-                sourceFieldset = fs;
-                break;
-            } else if (fieldsetKey === 'city' && fs.querySelector('.fieldset-input[placeholder*="city"]')) {
-                sourceFieldset = fs;
-                break;
-            } else if ((fieldsetKey === 'address' || fieldsetKey === 'location') && fs.querySelector('.fieldset-input[placeholder*="address"]')) {
-                sourceFieldset = fs;
-                break;
-            }
-        }
-        
-        if (!sourceFieldset) {
-            // Fallback: use first fieldset of same type by matching input structure
-            var targetInputs = targetFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
-            if (targetInputs.length > 0) {
-                // Find fieldset with similar structure
-                for (var j = 0; j < allFieldsets.length; j++) {
-                    var fs2 = allFieldsets[j];
-                    var fs2Inputs = fs2.querySelectorAll('input:not([type="hidden"]), textarea, select');
-                    if (fs2Inputs.length === targetInputs.length && !fs2.closest('.member-additional-location')) {
-                        sourceFieldset = fs2;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        if (sourceFieldset) {
-            var sourceInputs = sourceFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
-            var targetInputs = targetFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
-            
-            // Match inputs by position and copy values
-            sourceInputs.forEach(function(sourceInput, index) {
-                if (targetInputs[index]) {
-                    targetInputs[index].value = sourceInput.value;
-                    // Trigger change event
-                    var event = new Event('input', { bubbles: true });
-                    targetInputs[index].dispatchEvent(event);
-                }
-            });
-        }
     }
     
     function renderCheckoutOptionsSection() {
@@ -997,10 +623,7 @@ const MemberModule = (function() {
             if (category && category.subFees && category.subFees[selectedSubcategory]) {
                 var subData = category.subFees[selectedSubcategory];
                 if (subData.checkout_surcharge !== null && subData.checkout_surcharge !== undefined) {
-                    var parsedSurcharge = parseFloat(subData.checkout_surcharge);
-                    if (!isNaN(parsedSurcharge)) {
-                        surcharge = parsedSurcharge;
-                    }
+                    surcharge = parseFloat(subData.checkout_surcharge) || 0;
                 }
                 if (subData.subcategory_type) {
                     subcategoryType = subData.subcategory_type;
@@ -1037,6 +660,12 @@ const MemberModule = (function() {
                     // Selection handler - can be used for validation
                 }
             });
+        } else {
+            // Fallback if component not loaded
+            var placeholder = document.createElement('div');
+            placeholder.className = 'member-checkout-placeholder';
+            placeholder.textContent = 'Checkout options not available.';
+            wrapper.appendChild(placeholder);
         }
         
         formFields.appendChild(wrapper);
@@ -1219,55 +848,19 @@ const MemberModule = (function() {
     // Ensure field has safe defaults
     function ensureFieldDefaults(field) {
         if (!field || typeof field !== 'object') {
-            return { name: '', placeholder: '', options: [], fieldsetKey: '', key: '', type: '', min_length: 0, max_length: 500 };
+            return { name: '', placeholder: '', options: [], fieldsetKey: '' };
         }
-        var result = {
-            name: '',
-            placeholder: '',
-            tooltip: '',
-            options: [],
-            fieldsetKey: '',
-            key: '',
-            type: '',
-            min_length: 0,
-            max_length: 500
+        return {
+            name: field.name || '',
+            placeholder: field.placeholder || '',
+            tooltip: field.tooltip || field.fieldset_tooltip || '',
+            options: Array.isArray(field.options) ? field.options : [],
+            fieldsetKey: field.fieldsetKey || field.key || field.type || '',
+            key: field.key || '',
+            type: field.type || '',
+            min_length: field.min_length || 0,
+            max_length: field.max_length || 500
         };
-        
-        if (field.name && typeof field.name === 'string') {
-            result.name = field.name;
-        }
-        if (field.placeholder && typeof field.placeholder === 'string') {
-            result.placeholder = field.placeholder;
-        }
-        if (field.tooltip && typeof field.tooltip === 'string') {
-            result.tooltip = field.tooltip;
-        } else if (field.fieldset_tooltip && typeof field.fieldset_tooltip === 'string') {
-            result.tooltip = field.fieldset_tooltip;
-        }
-        if (Array.isArray(field.options)) {
-            result.options = field.options;
-        }
-        if (field.fieldsetKey && typeof field.fieldsetKey === 'string') {
-            result.fieldsetKey = field.fieldsetKey;
-        } else if (field.key && typeof field.key === 'string') {
-            result.fieldsetKey = field.key;
-        } else if (field.type && typeof field.type === 'string') {
-            result.fieldsetKey = field.type;
-        }
-        if (field.key && typeof field.key === 'string') {
-            result.key = field.key;
-        }
-        if (field.type && typeof field.type === 'string') {
-            result.type = field.type;
-        }
-        if (typeof field.min_length === 'number') {
-            result.min_length = field.min_length;
-        }
-        if (typeof field.max_length === 'number') {
-            result.max_length = field.max_length;
-        }
-        
-        return result;
     }
     
     function getFieldsForSelection(categoryName, subcategoryName) {
@@ -1358,11 +951,7 @@ const MemberModule = (function() {
         var password = passwordInput ? passwordInput.value : '';
         
         if (!username || !password) {
-            getMessage('msg_auth_login_empty', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showError(message);
-                }
-            });
+            showStatus('Please enter email and password', { error: true });
             if (!username && emailInput) {
                 emailInput.focus();
             } else if (passwordInput) {
@@ -1374,11 +963,7 @@ const MemberModule = (function() {
         // Call backend verification
         verifyLogin(username, password).then(function(result) {
             if (!result || result.success !== true) {
-                getMessage('msg_auth_login_incorrect', {}, false).then(function(message) {
-                    if (message) {
-                        ToastComponent.showError(message);
-                    }
-                });
+                showStatus('Invalid email or password', { error: true });
                 if (passwordInput) {
                     passwordInput.focus();
                     passwordInput.select();
@@ -1396,19 +981,11 @@ const MemberModule = (function() {
             render();
             
             var displayName = currentUser.name || currentUser.email || currentUser.username;
-            getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showSuccess(message);
-                }
-            });
+            showStatus('Welcome back, ' + displayName);
             
         }).catch(function(err) {
             console.error('Login failed', err);
-            getMessage('msg_auth_login_failed', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showError(message);
-                }
-            });
+            showStatus('Login failed. Please try again.', { error: true });
         });
     }
 
@@ -1427,11 +1004,7 @@ const MemberModule = (function() {
         
         // Validation
         if (!name || !email || !password) {
-            getMessage('msg_auth_register_empty', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showError(message);
-                }
-            });
+            showStatus('Please fill in all required fields', { error: true });
             if (!name && nameInput) { nameInput.focus(); return; }
             if (!email && emailInput) { emailInput.focus(); return; }
             if (!password && passwordInput) { passwordInput.focus(); return; }
@@ -1439,21 +1012,13 @@ const MemberModule = (function() {
         }
         
         if (password.length < 4) {
-            getMessage('msg_auth_register_password_short', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showError(message);
-                }
-            });
+            showStatus('Password must be at least 4 characters', { error: true });
             if (passwordInput) passwordInput.focus();
             return;
         }
         
         if (password !== confirm) {
-            getMessage('msg_auth_register_password_mismatch', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showError(message);
-                }
-            });
+            showStatus('Passwords do not match', { error: true });
             if (confirmInput) {
                 confirmInput.focus();
                 confirmInput.select();
@@ -1483,16 +1048,8 @@ const MemberModule = (function() {
             }
             
             if (!payload || payload.error) {
-                var errorMsg = payload && payload.message ? payload.message : '';
-                if (errorMsg) {
-                    ToastComponent.showError(errorMsg);
-                } else {
-                    getMessage('msg_auth_register_failed', {}, false).then(function(message) {
-                        if (message) {
-                            ToastComponent.showError(message);
-                        }
-                    });
-                }
+                var errorMsg = payload && payload.message ? payload.message : 'Registration failed';
+                showStatus(errorMsg, { error: true });
                 return;
             }
             
@@ -1510,19 +1067,11 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
-            getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showSuccess(message);
-                }
-            });
+            showStatus('Account created! Welcome, ' + name);
             
         }).catch(function(err) {
             console.error('Registration failed', err);
-            getMessage('msg_auth_register_failed', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showError(message);
-                }
-            });
+            showStatus('Registration failed. Please try again.', { error: true });
         });
     }
 
@@ -1530,11 +1079,7 @@ const MemberModule = (function() {
         currentUser = null;
         storeCurrent(null);
         render();
-        getMessage('msg_auth_logout_success', {}, false).then(function(message) {
-            if (message) {
-                ToastComponent.show(message);
-            }
-        });
+        showStatus('You have been logged out');
         
         // Notify admin auth manager if it exists
         if (window.adminAuthManager && typeof window.adminAuthManager.setAuthenticated === 'function') {
@@ -1716,19 +1261,9 @@ const MemberModule = (function() {
             // Update header avatar
             updateHeaderAvatar(currentUser);
             
-            // Update profile tab label
-            if (profileTabBtn) {
-                profileTabBtn.textContent = 'Profile';
-            }
-            
         } else {
             // Logged out state
             authForm.dataset.state = 'logged-out';
-            
-            // Update profile tab label
-            if (profileTabBtn) {
-                profileTabBtn.textContent = 'Log In';
-            }
             
             // Hide profile panel
             if (profilePanel) {
