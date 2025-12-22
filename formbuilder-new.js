@@ -149,9 +149,18 @@
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
-                // Get location type from checked radio button
-                var locationTypeRadio = option.querySelector('input[name^="locationType-"]:checked');
-                var locationType = locationTypeRadio ? locationTypeRadio.value : null;
+                // Get location type from checked radio button (same pattern as subcategory_type)
+                var venueRadio = option.querySelector('input[type="radio"][value="Venue"][name^="locationType-"]');
+                var cityRadio = option.querySelector('input[type="radio"][value="City"][name^="locationType-"]');
+                var addressRadio = option.querySelector('input[type="radio"][value="Address"][name^="locationType-"]');
+                var locationType = null;
+                if (venueRadio && venueRadio.checked) {
+                    locationType = 'Venue';
+                } else if (cityRadio && cityRadio.checked) {
+                    locationType = 'City';
+                } else if (addressRadio && addressRadio.checked) {
+                    locationType = 'Address';
+                }
                 category.subFees[subName] = {
                     checkout_surcharge: surchargeValue,
                     subcategory_type: subcategoryType,
