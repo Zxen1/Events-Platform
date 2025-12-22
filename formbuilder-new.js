@@ -2356,8 +2356,8 @@
                 
                 var prices = document.createElement('div');
                 prices.className = 'formbuilder-checkout-prices';
-                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + price30.toFixed(2) + '</span></div>' +
-                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + price365.toFixed(2) + '</span></div>';
+                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + ' ' + price30.toFixed(2) + '</span></div>' +
+                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + ' ' + price365.toFixed(2) + '</span></div>';
                 
                 var calculator = document.createElement('div');
                 calculator.className = 'formbuilder-checkout-calculator';
@@ -2374,16 +2374,16 @@
                 
                 var calcTotal = document.createElement('span');
                 calcTotal.className = 'formbuilder-checkout-calc-total';
-                calcTotal.textContent = currency + '0.00';
+                calcTotal.textContent = currency + ' 0.00';
                 
                 calcInput.addEventListener('input', function() {
                     var days = parseFloat(calcInput.value) || 0;
                     if (days <= 0) {
-                        calcTotal.textContent = currency + '0.00';
+                        calcTotal.textContent = currency + ' 0.00';
                         return;
                     }
                     var total = calculatePrice(days);
-                    calcTotal.textContent = currency + total.toFixed(2);
+                    calcTotal.textContent = currency + ' ' + total.toFixed(2);
                 });
                 
                 calculator.appendChild(calcLabel);
