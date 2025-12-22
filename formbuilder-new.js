@@ -2264,18 +2264,18 @@
                 var discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
                     ? parseFloat(opt.checkout_discount_day_rate) : null;
                 
-                function calculatePrice(days) {
-                    var basePrice = flagfall;
-                    if (days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)) {
-                        basePrice += discountDayRate * days;
-                    } else if (basicDayRate !== null && !isNaN(basicDayRate)) {
-                        basePrice += basicDayRate * days;
+                    function calculatePrice(days) {
+                        var basePrice = flagfall;
+                        if (days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)) {
+                            basePrice += discountDayRate * days;
+                        } else if (basicDayRate !== null && !isNaN(basicDayRate)) {
+                            basePrice += basicDayRate * days;
+                        }
+                        if (currentSurcharge !== 0 && !isNaN(currentSurcharge)) {
+                            basePrice = basePrice * (1 + currentSurcharge / 100);
+                        }
+                        return basePrice;
                     }
-                    if (surcharge !== 0 && !isNaN(surcharge)) {
-                        basePrice = basePrice * (1 + surcharge / 100);
-                    }
-                    return basePrice;
-                }
                 
                 var price30 = calculatePrice(30);
                 var price365 = calculatePrice(365);
