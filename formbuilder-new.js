@@ -475,18 +475,24 @@
     }
     
     function bindDocumentListeners() {
-        // Helper function to check if click is on save/discard button
+        // Helper function to check if click is on save/discard button or calculator
         function isSaveOrDiscardButton(target) {
             return target.closest('.admin-panel-actions-icon-btn--save') ||
                    target.closest('.admin-panel-actions-icon-btn--discard') ||
                    target.closest('.admin-panel-actions');
         }
         
+        // Helper function to check if click is on calculator button or popup
+        function isCalculatorButtonOrPopup(target) {
+            return target.closest('.formbuilder-calculator-btn') ||
+                   target.closest('.formbuilder-formpreview-modal');
+        }
+        
         // Close category/subcategory edit panels when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
-            // Don't close if clicking on save/discard buttons
-            if (isSaveOrDiscardButton(e.target)) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel') && 
                 !e.target.closest('.formbuilder-accordion-option-editpanel') &&
                 !e.target.closest('.formbuilder-accordion-header-editarea') &&
@@ -500,8 +506,8 @@
         // Close 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
-            // Don't close if clicking on save/discard buttons
-            if (isSaveOrDiscardButton(e.target)) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
                 container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -512,8 +518,8 @@
         // Close fieldset menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
-            // Don't close if clicking on save/discard buttons
-            if (isSaveOrDiscardButton(e.target)) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-fieldset-menu')) {
                 container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -524,8 +530,8 @@
         // Close icon picker menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
-            // Don't close if clicking on save/discard buttons
-            if (isSaveOrDiscardButton(e.target)) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-menu')) {
                 container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -536,8 +542,8 @@
         // Close field 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
-            // Don't close if clicking on save/discard buttons
-            if (isSaveOrDiscardButton(e.target)) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-field-more')) {
                 container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -548,8 +554,8 @@
         // Close field edit panels when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
-            // Don't close if clicking on save/discard buttons
-            if (isSaveOrDiscardButton(e.target)) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-field-wrapper')) {
                 closeAllFieldEditPanels();
             }
@@ -2127,7 +2133,7 @@
         // Get subcategory data
         var subFees = cat.subFees || {};
         var subFeeData = subFees[subName] || {};
-        var surcharge = parseFloat(subFeeData.checkout_surcharge) || 0;
+        var currentSurcharge = parseFloat(subFeeData.checkout_surcharge) || 0;
         
         // Get active checkout options
         var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
@@ -2165,9 +2171,79 @@
         var body = document.createElement('div');
         body.className = 'formbuilder-formpreview-modal-body';
         
+        // Add surcharge input at top of body
+        var surchargeSection = document.createElement('div');
+        surchargeSection.className = 'formbuilder-calculator-surcharge';
+        
+        var surchargeLabel = document.createElement('span');
+        surchargeLabel.className = 'formbuilder-fee-row-label';
+        surchargeLabel.textContent = 'Checkout Surcharge';
+        
+        var surchargePercent = document.createElement('span');
+        surchargePercent.className = 'formbuilder-fee-percent';
+        surchargePercent.textContent = '%';
+        
+        var popupSurchargeInput = document.createElement('input');
+        popupSurchargeInput.type = 'number';
+        popupSurchargeInput.step = '0.01';
+        popupSurchargeInput.min = '-100';
+        popupSurchargeInput.className = 'formbuilder-fee-input';
+        popupSurchargeInput.placeholder = 'N/A';
+        
+        if (subFeeData.checkout_surcharge !== null && subFeeData.checkout_surcharge !== undefined) {
+            popupSurchargeInput.value = parseFloat(subFeeData.checkout_surcharge).toFixed(2);
+        }
+        
+        // Store reference to update function
+        var updatePrices = function() {
+            // Re-render all checkout cards with new surcharge
+            checkoutList.innerHTML = '';
+            renderCheckoutCards();
+        };
+        
+        popupSurchargeInput.addEventListener('input', function() {
+            var value = popupSurchargeInput.value ? parseFloat(popupSurchargeInput.value) : null;
+            if (value !== null && value < -100) {
+                value = -100;
+                popupSurchargeInput.value = value.toFixed(2);
+            }
+            if (!cat.subFees) cat.subFees = {};
+            if (!cat.subFees[subName]) cat.subFees[subName] = {};
+            cat.subFees[subName].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
+            currentSurcharge = value !== null ? value : 0;
+            
+            // Update the surcharge input in the edit panel if it exists
+            var editPanelInput = document.querySelector('.formbuilder-accordion-option--editing .formbuilder-fee-input');
+            if (editPanelInput) {
+                editPanelInput.value = value !== null ? value.toFixed(2) : '';
+            }
+            
+            // Recalculate and update prices
+            updatePrices();
+            notifyChange();
+        });
+        
+        popupSurchargeInput.addEventListener('blur', function() {
+            var value = popupSurchargeInput.value ? parseFloat(popupSurchargeInput.value) : null;
+            if (value !== null && value < -100) {
+                value = -100;
+            }
+            if (value !== null) {
+                popupSurchargeInput.value = value.toFixed(2);
+            }
+        });
+        
+        surchargeSection.appendChild(surchargeLabel);
+        surchargeSection.appendChild(surchargePercent);
+        surchargeSection.appendChild(popupSurchargeInput);
+        body.appendChild(surchargeSection);
+        
         // Create checkout list container
         var checkoutList = document.createElement('div');
         checkoutList.className = 'formbuilder-checkout-list';
+        
+        // Function to render checkout cards
+        function renderCheckoutCards() {
         
         // Render checkout options
         if (activeCheckoutOptions.length === 0) {
@@ -2244,12 +2320,16 @@
                 calculator.appendChild(calcInput);
                 calculator.appendChild(calcTotal);
                 
-                card.appendChild(title);
-                card.appendChild(prices);
-                card.appendChild(calculator);
-                checkoutList.appendChild(card);
-            });
+                    card.appendChild(title);
+                    card.appendChild(prices);
+                    card.appendChild(calculator);
+                    checkoutList.appendChild(card);
+                });
+            }
         }
+        
+        // Initial render
+        renderCheckoutCards();
         
         body.appendChild(checkoutList);
         
