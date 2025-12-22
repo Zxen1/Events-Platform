@@ -2023,10 +2023,9 @@
             fieldsetOpts.appendChild(opt);
         });
         
-        // Apply initial location type filtering and management now that fieldsetOpts exists
+        // Apply initial location type filtering (gray-out state) now that fieldsetOpts exists
         if (initialLocationType) {
             updateLocationTypeFieldsets(initialLocationType);
-            manageLocationTypeFieldsets(initialLocationType);
         } else {
             // No location type selected - hide Add Field button and gray out all location fieldsets
             if (fieldsetMenu) {
@@ -2038,7 +2037,7 @@
         // Apply initial sessions fieldset gray-out state
         updateSessionsFieldset(currentSubcategoryType);
         
-        // Load existing fields from database
+        // Load existing fields from database FIRST
         var subFieldsMap = cat.subFields || {};
         var existingFields = subFieldsMap[subName] || [];
         existingFields.forEach(function(fieldData) {
@@ -2054,7 +2053,7 @@
             if (menuOpt) menuOpt.classList.add('disabled');
         });
         
-        // After loading existing fields, ensure location type fieldset management is correct
+        // AFTER loading existing fields, manage location type fieldset (will only add if missing)
         if (initialLocationType) {
             manageLocationTypeFieldsets(initialLocationType);
         }
