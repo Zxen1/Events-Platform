@@ -762,7 +762,7 @@ const MemberModule = (function() {
                             var labelTextEl = labelEl.querySelector('.fieldset-label-text');
                             if (labelTextEl) {
                                 var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                labelTextEl.textContent = baseName + '1';
+                                labelTextEl.textContent = baseName + ' 1';
                             }
                         }
                         
@@ -779,14 +779,14 @@ const MemberModule = (function() {
                                     if (locationQuantity === 1) {
                                         labelTextEl.textContent = baseName;
                                     } else {
-                                        labelTextEl.textContent = baseName + '1';
+                                        labelTextEl.textContent = baseName + ' 1';
                                     }
                                 }
                                 
                                 // Re-render additional locations (after checkout section)
                                 var checkoutSection = formFields.querySelector('.member-checkout-options-section');
                                 if (checkoutSection) {
-                                    renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
+                                    renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
                                 }
                             }
                         });
@@ -799,13 +799,13 @@ const MemberModule = (function() {
                             var labelTextEl = labelEl.querySelector('.fieldset-label-text');
                             if (labelTextEl) {
                                 var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                labelTextEl.textContent = baseName + '1';
+                                labelTextEl.textContent = baseName + ' 1';
                             }
                             
                             // Re-render additional locations (after checkout section)
                             var checkoutSection = formFields.querySelector('.member-checkout-options-section');
                             if (checkoutSection) {
-                                renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
+                                renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
                             }
                         });
                     } else {
@@ -823,7 +823,7 @@ const MemberModule = (function() {
         
         // Render additional locations if quantity > 1 (after checkout section is rendered)
         if (locationQuantity > 1 && locationFieldset) {
-            renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
+            renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
         }
         
         // Render terms agreement and submit buttons after checkout options
@@ -832,7 +832,9 @@ const MemberModule = (function() {
         if (formWrapper) formWrapper.hidden = false;
     }
     
-    function renderAdditionalLocations(quantity, locationType, mustRepeatFieldsets, autofillRepeatFieldsets) {
+    function renderAdditionalLocations(quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
+        console.log('[Member] renderAdditionalLocations called:', { quantity: quantity, locationType: locationType, mustRepeatCount: mustRepeatFieldsets.length, locationFieldsetData: locationFieldsetData });
+        
         // Remove existing additional locations
         var existingLocations = formFields.querySelectorAll('.member-additional-location');
         existingLocations.forEach(function(el) {
@@ -841,6 +843,7 @@ const MemberModule = (function() {
         
         // Don't render if quantity is 1 or less
         if (quantity <= 1) {
+            console.log('[Member] Quantity is 1 or less, not rendering additional locations');
             return;
         }
         
@@ -848,6 +851,11 @@ const MemberModule = (function() {
         var checkoutSection = formFields.querySelector('.member-checkout-options-section');
         if (!checkoutSection) {
             console.warn('[Member] Checkout section not found, cannot render additional locations');
+            return;
+        }
+        
+        if (!locationFieldsetData) {
+            console.warn('[Member] locationFieldsetData is not set, cannot render additional locations');
             return;
         }
         
@@ -860,31 +868,34 @@ const MemberModule = (function() {
             // Location header
             var locationHeader = document.createElement('h3');
             locationHeader.className = 'member-additional-location-header';
-            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + i;
+            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + ' ' + i;
             locationHeader.textContent = locationName;
             locationSection.appendChild(locationHeader);
             
             // First, render the location fieldset again (venue/city/address)
-            if (locationFieldset) {
-                // Create a copy of the field data with updated name
-                var locationFieldData = {};
-                for (var prop in locationFieldset) {
-                    if (locationFieldset.hasOwnProperty(prop)) {
-                        locationFieldData[prop] = locationFieldset[prop];
-                    }
+            console.log('[Member] Rendering location', i, 'for type:', locationType);
+            
+            // Create a copy of the field data with updated name
+            var locationFieldData = {};
+            for (var prop in locationFieldsetData) {
+                if (locationFieldsetData.hasOwnProperty(prop)) {
+                    locationFieldData[prop] = locationFieldsetData[prop];
                 }
-                locationFieldData.name = locationName;
-                
-                var locationFieldsetClone = FieldsetComponent.buildFieldset(locationFieldData, {
-                    idPrefix: 'memberCreate',
-                    fieldIndex: 0,
-                    locationNumber: i,
-                    container: locationSection,
-                    defaultCurrency: null
-                });
-                
-                locationSection.appendChild(locationFieldsetClone);
             }
+            locationFieldData.name = locationName;
+            
+            console.log('[Member] Building fieldset for location', i, 'with data:', locationFieldData);
+            
+            var locationFieldsetClone = FieldsetComponent.buildFieldset(locationFieldData, {
+                idPrefix: 'memberCreate',
+                fieldIndex: 0,
+                locationNumber: i,
+                container: locationSection,
+                defaultCurrency: null
+            });
+            
+            console.log('[Member] Built fieldset for location', i, ':', locationFieldsetClone);
+            locationSection.appendChild(locationFieldsetClone);
             
             // Then, render must-repeat fieldsets
             mustRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
@@ -909,8 +920,13 @@ const MemberModule = (function() {
             });
             
             // Insert before checkout options
+            console.log('[Member] Inserting location section', i, 'before checkout section');
             formFields.insertBefore(locationSection, checkoutSection);
         }
+        
+        console.log('[Member] Finished rendering additional locations. Total rendered:', quantity - 1);
+        
+        console.log('[Member] Finished rendering additional locations. Total rendered:', quantity - 1);
     }
     
     function copyFieldsetValues(targetFieldset, fieldData, sourceLocation, targetLocation) {
