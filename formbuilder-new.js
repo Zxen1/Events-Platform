@@ -150,9 +150,9 @@
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
                 // Get location type from checked radio button (same pattern as subcategory_type)
-                var venueRadio = option.querySelector('input[type="radio"][value="Venue"][name^="locationType-"]');
-                var cityRadio = option.querySelector('input[type="radio"][value="City"][name^="locationType-"]');
-                var addressRadio = option.querySelector('input[type="radio"][value="Address"][name^="locationType-"]');
+                var venueRadio = option.querySelector('input[type="radio"][value="Venue"]');
+                var cityRadio = option.querySelector('input[type="radio"][value="City"]');
+                var addressRadio = option.querySelector('input[type="radio"][value="Address"]');
                 var locationType = null;
                 if (venueRadio && venueRadio.checked) {
                     locationType = 'Venue';
