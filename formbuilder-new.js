@@ -1017,7 +1017,8 @@
         locationTypeLabel.textContent = 'Location Type';
         
         // No default selection - admin must choose
-        var currentLocationType = subFeeData.location_type || null;
+        // EXCEPTION: Events mode forces Venue (enforced by change handler, not fallback)
+        var currentLocationType = subFeeData.location_type;
         
         var venueLabel = document.createElement('label');
         venueLabel.className = 'formbuilder-type-option';
@@ -1026,10 +1027,6 @@
         venueInput.name = 'locationType-' + cat.name + '-' + subName;
         venueInput.value = 'Venue';
         venueInput.checked = currentLocationType === 'Venue';
-        // Only force Venue if Events is selected AND location_type is already set in database
-        if (currentType === 'Events' && currentLocationType === 'Venue') {
-            // Venue stays enabled in Events mode, but only if already saved
-        }
         var venueText = document.createElement('span');
         venueText.textContent = 'Venue';
         venueLabel.appendChild(venueInput);
@@ -1159,21 +1156,16 @@
         // Update when Events/General type changes
         eventsInput.addEventListener('change', function() {
             if (eventsInput.checked) {
-                // Only auto-select Venue if location_type is already set to Venue in database
-                // Otherwise, admin must choose (no pre-selection)
-                if (currentLocationType === 'Venue') {
-                    venueInput.checked = true;
-                }
-                // City and Address are disabled in Events mode
+                // Events mode MUST have Venue selected
+                venueInput.checked = true;
                 cityInput.disabled = true;
                 addressInput.disabled = true;
-                // Only set location_type if Venue was already selected
-                if (venueInput.checked) {
-                    if (!cat.subFees) cat.subFees = {};
-                    if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                    cat.subFees[subName].location_type = 'Venue';
-                    updateLocationTypeFieldsets('Venue');
-                }
+                // Set location_type to Venue (required for Events mode)
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'Venue';
+                updateLocationTypeFieldsets('Venue');
+                notifyChange();
             }
         });
         
@@ -1740,7 +1732,7 @@
         
         // Populate fieldset options
         // No default - only filter if location_type is actually set
-        var selectedLocationType = subFeeData.location_type || null;
+        var selectedLocationType = subFeeData.location_type;
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
             var opt = document.createElement('div');
