@@ -1821,55 +1821,163 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(smartLatInput);
                 fieldset.appendChild(smartLngInput);
                 
-                // Smart autofill function - only fills empty boxes
+                // Smart autofill function - only fills empty boxes - Uses new API
                 function initSmartVenueAutocomplete(inputEl, otherInputEl, isVenueBox) {
                     if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
                         console.warn('Google Places API not loaded');
                         return;
                     }
                     
-                    // Unrestricted search - finds both venues and addresses
-                    var autocomplete = new google.maps.places.Autocomplete(inputEl, {
-                        fields: ['formatted_address', 'geometry', 'name', 'place_id', 'types']
-                    });
+                    if (!google.maps.places.AutocompleteSuggestion) {
+                        console.warn('Google Places AutocompleteSuggestion API not available');
+                        return;
+                    }
                     
-                    autocomplete.addListener('place_changed', function() {
-                        var place = autocomplete.getPlace();
-                        if (!place.geometry || !place.geometry.location) return;
-                        
-                        var lat = place.geometry.location.lat();
-                        var lng = place.geometry.location.lng();
-                        var venueName = place.name || '';
-                        var address = place.formatted_address || '';
-                        var isEstablishment = place.types && place.types.includes('establishment');
-                        
-                        // Always update lat/lng
-                        smartLatInput.value = lat;
-                        smartLngInput.value = lng;
-                        
-                        if (isVenueBox) {
-                            // User searched in venue box
-                            // Strip venue name to just the name (Google fills with full address)
-                            if (isEstablishment && venueName) {
-                                smartVenueInput.value = venueName;
-                            }
-                            // Address: fill only if empty
-                            if (!smartAddrInput.value.trim()) {
-                                smartAddrInput.value = address;
-                            }
-                        } else {
-                            // User searched in address box
-                            // Address: strip to just address (in case Google added extra)
-                            smartAddrInput.value = address;
-                            // Venue name: fill only if empty AND result is an establishment
-                            if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
-                                smartVenueInput.value = venueName;
-                            }
+                    // Create dropdown for suggestions
+                    var dropdown = document.createElement('div');
+                    dropdown.className = 'fieldset-location-dropdown';
+                    dropdown.style.display = 'none';
+                    dropdown.style.position = 'absolute';
+                    dropdown.style.zIndex = '1000';
+                    dropdown.style.backgroundColor = '#fff';
+                    dropdown.style.border = '1px solid #ccc';
+                    dropdown.style.borderRadius = '4px';
+                    dropdown.style.maxHeight = '200px';
+                    dropdown.style.overflowY = 'auto';
+                    dropdown.style.width = '100%';
+                    dropdown.style.marginTop = '2px';
+                    dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    
+                    var parent = inputEl.parentNode;
+                    if (parent) {
+                        parent.style.position = 'relative';
+                        parent.appendChild(dropdown);
+                    }
+                    
+                    // Fetch suggestions using new API (unrestricted - finds both venues and addresses)
+                    var debounceTimer = null;
+                    async function fetchSuggestions(query) {
+                        if (!query || query.length < 2) {
+                            dropdown.style.display = 'none';
+                            return;
                         }
                         
-                        // Update status
-                        smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
-                        smartStatus.className = 'fieldset-location-status success';
+                        try {
+                            var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                                input: query,
+                                includedTypes: ['geocode', 'establishment']
+                            });
+                            
+                            dropdown.innerHTML = '';
+                            
+                            if (!response || !response.suggestions || response.suggestions.length === 0) {
+                                dropdown.style.display = 'none';
+                                return;
+                            }
+                            
+                            response.suggestions.forEach(function(suggestion) {
+                                var prediction = suggestion.placePrediction;
+                                if (!prediction) return;
+                                
+                                var item = document.createElement('div');
+                                item.className = 'fieldset-location-dropdown-item';
+                                item.style.padding = '8px 12px';
+                                item.style.cursor = 'pointer';
+                                item.style.borderBottom = '1px solid #eee';
+                                
+                                var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
+                                var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
+                                
+                                item.innerHTML = 
+                                    '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
+                                    (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
+                                
+                                item.addEventListener('mouseenter', function() {
+                                    item.style.backgroundColor = '#f5f5f5';
+                                });
+                                item.addEventListener('mouseleave', function() {
+                                    item.style.backgroundColor = 'transparent';
+                                });
+                                
+                                item.addEventListener('click', async function() {
+                                    try {
+                                        var place = prediction.toPlace();
+                                        await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'types'] });
+                                        
+                                        if (!place.location) return;
+                                        
+                                        var lat = place.location.lat();
+                                        var lng = place.location.lng();
+                                        var venueName = place.displayName || '';
+                                        var address = place.formattedAddress || '';
+                                        var types = place.types || [];
+                                        var isEstablishment = types.includes('establishment');
+                                        
+                                        // Always update lat/lng
+                                        smartLatInput.value = lat;
+                                        smartLngInput.value = lng;
+                                        
+                                        if (isVenueBox) {
+                                            // User searched in venue box
+                                            // Strip venue name to just the name (Google fills with full address)
+                                            if (isEstablishment && venueName) {
+                                                smartVenueInput.value = venueName;
+                                            }
+                                            // Address: fill only if empty
+                                            if (!smartAddrInput.value.trim()) {
+                                                smartAddrInput.value = address;
+                                            }
+                                        } else {
+                                            // User searched in address box
+                                            // Address: strip to just address (in case Google added extra)
+                                            smartAddrInput.value = address;
+                                            // Venue name: fill only if empty AND result is an establishment
+                                            if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
+                                                smartVenueInput.value = venueName;
+                                            }
+                                        }
+                                        
+                                        inputEl.value = isVenueBox ? (isEstablishment ? venueName : address) : address;
+                                        dropdown.style.display = 'none';
+                                        
+                                        // Update status
+                                        smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                                        smartStatus.className = 'fieldset-location-status success';
+                                    } catch (err) {
+                                        console.error('Place details error:', err);
+                                    }
+                                });
+                                
+                                dropdown.appendChild(item);
+                            });
+                            
+                            dropdown.style.display = 'block';
+                        } catch (err) {
+                            console.error('Autocomplete error:', err);
+                            dropdown.style.display = 'none';
+                        }
+                    }
+                    
+                    // Input event handler with debounce
+                    inputEl.addEventListener('input', function() {
+                        clearTimeout(debounceTimer);
+                        var query = inputEl.value.trim();
+                        
+                        if (query.length < 2) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+                        
+                        debounceTimer = setTimeout(function() {
+                            fetchSuggestions(query);
+                        }, 300);
+                    });
+                    
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', function(e) {
+                        if (!inputEl.contains(e.target) && !dropdown.contains(e.target)) {
+                            dropdown.style.display = 'none';
+                        }
                     });
                 }
                 

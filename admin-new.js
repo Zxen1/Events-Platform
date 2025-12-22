@@ -2027,19 +2027,120 @@ const AdminModule = (function() {
             wrapper.appendChild(input);
             startingGeocoderContainer.appendChild(wrapper);
             
-            // Initialize Google Places Autocomplete
-            var autocomplete = new google.maps.places.Autocomplete(input, {
-                fields: ['formatted_address', 'geometry', 'name', 'place_id']
+            // Initialize Google Places using new API (AutocompleteSuggestion)
+            if (!google.maps.places.AutocompleteSuggestion) {
+                throw new Error('Google Places AutocompleteSuggestion API not available');
+            }
+            
+            // Create dropdown for suggestions
+            var dropdown = document.createElement('div');
+            dropdown.className = 'admin-starting-location-dropdown';
+            dropdown.style.display = 'none';
+            dropdown.style.position = 'absolute';
+            dropdown.style.zIndex = '1000';
+            dropdown.style.backgroundColor = '#fff';
+            dropdown.style.border = '1px solid #ccc';
+            dropdown.style.borderRadius = '4px';
+            dropdown.style.maxHeight = '200px';
+            dropdown.style.overflowY = 'auto';
+            dropdown.style.width = '100%';
+            dropdown.style.marginTop = '2px';
+            dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            
+            wrapper.style.position = 'relative';
+            wrapper.appendChild(dropdown);
+            
+            // Fetch suggestions using new API
+            var debounceTimer = null;
+            async function fetchSuggestions(query) {
+                if (!query || query.length < 2) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                        input: query
+                    });
+                    
+                    dropdown.innerHTML = '';
+                    
+                    if (!response || !response.suggestions || response.suggestions.length === 0) {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+                    
+                    response.suggestions.forEach(function(suggestion) {
+                        var prediction = suggestion.placePrediction;
+                        if (!prediction) return;
+                        
+                        var item = document.createElement('div');
+                        item.className = 'admin-starting-location-dropdown-item';
+                        item.style.padding = '8px 12px';
+                        item.style.cursor = 'pointer';
+                        item.style.borderBottom = '1px solid #eee';
+                        
+                        var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
+                        var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
+                        
+                        item.innerHTML = 
+                            '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
+                            (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
+                        
+                        item.addEventListener('mouseenter', function() {
+                            item.style.backgroundColor = '#f5f5f5';
+                        });
+                        item.addEventListener('mouseleave', function() {
+                            item.style.backgroundColor = 'transparent';
+                        });
+                        
+                        item.addEventListener('click', async function() {
+                            try {
+                                var place = prediction.toPlace();
+                                await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress'] });
+                                
+                                if (place && place.location) {
+                                    var placeName = place.formattedAddress || place.displayName || mainText;
+                                    var lat = place.location.lat();
+                                    var lng = place.location.lng();
+                                    input.value = placeName;
+                                    dropdown.style.display = 'none';
+                                    saveStartingLocation(placeName, lat, lng);
+                                }
+                            } catch (err) {
+                                console.error('Place details error:', err);
+                            }
+                        });
+                        
+                        dropdown.appendChild(item);
+                    });
+                    
+                    dropdown.style.display = 'block';
+                } catch (err) {
+                    console.error('Autocomplete error:', err);
+                    dropdown.style.display = 'none';
+                }
+            }
+            
+            // Input event handler with debounce
+            input.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                var query = input.value.trim();
+                
+                if (query.length < 2) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                debounceTimer = setTimeout(function() {
+                    fetchSuggestions(query);
+                }, 300);
             });
             
-            // Handle result selection
-            autocomplete.addListener('place_changed', function() {
-                var place = autocomplete.getPlace();
-                if (place && place.geometry && place.geometry.location) {
-                    var placeName = place.formatted_address || place.name || '';
-                    var lat = place.geometry.location.lat();
-                    var lng = place.geometry.location.lng();
-                    saveStartingLocation(placeName, lat, lng);
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
                 }
             });
             
