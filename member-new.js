@@ -595,7 +595,7 @@ const MemberModule = (function() {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
                     container: formFields,
-                    defaultCurrency: siteCurrency
+                    defaultCurrency: null
                 });
                 
                 formFields.appendChild(fieldset);

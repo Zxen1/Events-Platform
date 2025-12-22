@@ -3282,7 +3282,7 @@ const CheckoutOptionsComponent = (function(){
     function create(containerEl, options) {
         options = options || {};
         var checkoutOptions = options.checkoutOptions || [];
-        var currency = options.currency || 'USD';
+        var currency = options.currency || null;
         var surcharge = options.surcharge || 0;
         var isEvent = options.isEvent || false;
         var calculatedDays = options.calculatedDays !== undefined ? options.calculatedDays : null;
@@ -3468,7 +3468,7 @@ const CheckoutOptionsComponent = (function(){
                             var flagfall = parseFloat(card.dataset.flagfall) || 0;
                             var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
                             var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
-                            var curr = card.dataset.currency || 'USD';
+                            var curr = card.dataset.currency || null;
                             var dayRate = newCalculatedDays >= 365 && discountRate !== null ? discountRate : basicRate;
                             var price = dayRate !== null ? flagfall + (dayRate * newCalculatedDays) : flagfall;
                             priceDisplay.textContent = '(' + newCalculatedDays + ' days) — ' + (price > 0 ? curr + ' ' + price.toFixed(2) : 'Free');

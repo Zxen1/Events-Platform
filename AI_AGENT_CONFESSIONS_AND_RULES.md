@@ -4,6 +4,24 @@
 
 **Fallbacks, hardcode, and snapshots cause immense harm to the development of this software. Do not ever use them.**
 
+## ⚠️ CRITICAL COMMUNICATION RULE ⚠️
+
+**ALWAYS TRACK COMMITTED VS WORKSPACE CHANGES**
+
+The user can only see committed/live code, not workspace changes. You can see both:
+- **Committed files** (what's live on the website - what the user sees)
+- **Workspace files** (uncommitted edits you've made)
+
+**CRITICAL RULES:**
+1. When the user asks what something is set to, refer ONLY to the committed/live version
+2. When you read a file, remember what was in the committed version
+3. When you edit a file, remember both: the original (committed) and your changes (workspace)
+4. Never refer to workspace changes as if the user can see them
+5. Only discuss your uncommitted changes if the user explicitly asks about them
+6. Always compare: "In the committed code I see X, but I changed it to Y in the workspace"
+
+This is inherent logic - you must track what you read vs what you changed. Every customer expects this.
+
 ## Critical Information for All Future AI Agents
 
 ---
