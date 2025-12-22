@@ -1413,26 +1413,26 @@ const MemberModule = (function() {
     }
 
     function handleRegister() {
-        var nameInput = document.getElementById('member-register-name');
+        var usernameInput = document.getElementById('member-register-username');
         var emailInput = document.getElementById('member-register-email');
         var passwordInput = document.getElementById('member-register-password');
         var confirmInput = document.getElementById('member-register-confirm');
         var avatarInput = document.getElementById('member-register-avatar');
         
-        var name = nameInput ? nameInput.value.trim() : '';
+        var username = usernameInput ? usernameInput.value.trim() : '';
         var email = emailInput ? emailInput.value.trim() : '';
         var password = passwordInput ? passwordInput.value : '';
         var confirm = confirmInput ? confirmInput.value : '';
         var avatar = avatarInput ? avatarInput.value.trim() : '';
         
         // Validation
-        if (!name || !email || !password) {
+        if (!username || !email || !password) {
             getMessage('msg_auth_register_empty', {}, false).then(function(message) {
                 if (message) {
                     ToastComponent.showError(message);
                 }
             });
-            if (!name && nameInput) { nameInput.focus(); return; }
+            if (!username && usernameInput) { usernameInput.focus(); return; }
             if (!email && emailInput) { emailInput.focus(); return; }
             if (!password && passwordInput) { passwordInput.focus(); return; }
             return;
@@ -1463,7 +1463,7 @@ const MemberModule = (function() {
         
         // Send registration request
         var formData = new FormData();
-        formData.set('display_name', name);
+        formData.set('username', username);
         formData.set('email', email);
         formData.set('password', password);
         formData.set('confirm', confirm);
