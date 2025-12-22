@@ -1355,7 +1355,7 @@ const MemberModule = (function() {
         setAuthPanelState(loginPanel, isLogin, loginInputs);
         setAuthPanelState(registerPanel, !isLogin, registerInputs);
         
-        authForm.dataset.active = target;
+        if (authForm) authForm.dataset.active = target;
         
         // Load avatar options only when register tab is opened (lazy loading)
         if (!isLogin) {
@@ -1599,13 +1599,15 @@ const MemberModule = (function() {
             currentUser = buildUserObject(payload, username);
             
             storeCurrent(currentUser);
-            render();
-            
-            var displayName = currentUser.name || currentUser.email || currentUser.username;
-            getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showSuccess(message);
-                }
+            // Defer render to avoid timing conflicts with Mapbox DOM updates
+            requestAnimationFrame(function() {
+                render();
+                var displayName = currentUser.name || currentUser.email || currentUser.username;
+                getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
+                    if (message) {
+                        ToastComponent.showSuccess(message);
+                    }
+                });
             });
             
         }).catch(function(err) {
@@ -1724,11 +1726,14 @@ const MemberModule = (function() {
             };
             
             storeCurrent(currentUser);
-            render();
-            getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showSuccess(message);
-                }
+            // Defer render to avoid timing conflicts with Mapbox DOM updates
+            requestAnimationFrame(function() {
+                render();
+                getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
+                    if (message) {
+                        ToastComponent.showSuccess(message);
+                    }
+                });
             });
             
         }).catch(function(err) {
@@ -1744,11 +1749,14 @@ const MemberModule = (function() {
     function handleLogout() {
         currentUser = null;
         storeCurrent(null);
-        render();
-        getMessage('msg_auth_logout_success', {}, false).then(function(message) {
-            if (message) {
-                ToastComponent.show(message);
-            }
+        // Defer render to avoid timing conflicts with Mapbox DOM updates
+        requestAnimationFrame(function() {
+            render();
+            getMessage('msg_auth_logout_success', {}, false).then(function(message) {
+                if (message) {
+                    ToastComponent.show(message);
+                }
+            });
         });
         
         // Notify admin auth manager if it exists
@@ -1893,7 +1901,7 @@ const MemberModule = (function() {
         
         if (currentUser) {
             // Logged in state
-            authForm.dataset.state = 'logged-in';
+            if (authForm) authForm.dataset.state = 'logged-in';
             
             // Hide login/register panels
             setAuthPanelState(loginPanel, false, loginInputs);
@@ -1938,7 +1946,7 @@ const MemberModule = (function() {
             
         } else {
             // Logged out state
-            authForm.dataset.state = 'logged-out';
+            if (authForm) authForm.dataset.state = 'logged-out';
             
             // Update profile tab label
             if (profileTabBtn) {
@@ -1965,7 +1973,7 @@ const MemberModule = (function() {
             if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');
             
             // Show appropriate auth panel
-            var active = authForm.dataset.active === 'register' ? 'register' : 'login';
+            var active = (authForm && authForm.dataset.active === 'register') ? 'register' : 'login';
             setAuthPanel(active);
             
             // Update header (no avatar)
