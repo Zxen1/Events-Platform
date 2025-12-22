@@ -794,6 +794,25 @@ const MemberModule = (function() {
             el.remove();
         });
         
+        // Find the original location fieldset to clone it
+        var originalLocationFieldset = null;
+        var allFieldsets = formFields.querySelectorAll('.fieldset');
+        for (var fsIdx = 0; fsIdx < allFieldsets.length; fsIdx++) {
+            var fs = allFieldsets[fsIdx];
+            var fieldsetKey = '';
+            // Try to identify location fieldset by structure
+            if (locationType === 'venue' && fs.querySelector('.fieldset-sublabel') && fs.querySelector('.fieldset-sublabel').textContent === 'Venue Name') {
+                originalLocationFieldset = fs;
+                break;
+            } else if (locationType === 'city' && fs.querySelector('.fieldset-input[placeholder*="city"]')) {
+                originalLocationFieldset = fs;
+                break;
+            } else if ((locationType === 'address' || locationType === 'location') && fs.querySelector('.fieldset-input[placeholder*="address"]')) {
+                originalLocationFieldset = fs;
+                break;
+            }
+        }
+        
         // Render locations 2, 3, 4, etc.
         for (var i = 2; i <= quantity; i++) {
             var locationSection = document.createElement('div');
@@ -807,7 +826,28 @@ const MemberModule = (function() {
             locationHeader.textContent = locationName;
             locationSection.appendChild(locationHeader);
             
-            // Render must-repeat fieldsets
+            // First, render the location fieldset again (venue/city/address)
+            if (originalLocationFieldset && locationFieldset) {
+                var locationField = ensureFieldDefaults(locationFieldset);
+                if (!locationField.name) {
+                    locationField.name = locationName;
+                } else {
+                    // Update name to include location number
+                    locationField.name = locationName;
+                }
+                
+                var locationFieldsetClone = FieldsetComponent.buildFieldset(locationField, {
+                    idPrefix: 'memberCreate',
+                    fieldIndex: 0,
+                    locationNumber: i,
+                    container: locationSection,
+                    defaultCurrency: null
+                });
+                
+                locationSection.appendChild(locationFieldsetClone);
+            }
+            
+            // Then, render must-repeat fieldsets
             mustRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
                 var field = ensureFieldDefaults(fieldData);
                 if (!field.name) field.name = 'Field ' + (fieldIndex + 1);
@@ -824,8 +864,8 @@ const MemberModule = (function() {
                 
                 // If autofill-repeat, copy values from first location
                 var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
-                if (isAutofill && i === 2) {
-                    // For location 2, copy from location 1
+                if (isAutofill) {
+                    // Copy from location 1
                     setTimeout(function() {
                         copyFieldsetValues(fieldset, fieldData, 1, i);
                     }, 100);
