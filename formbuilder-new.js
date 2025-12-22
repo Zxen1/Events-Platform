@@ -149,9 +149,13 @@
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
+                // Get location type from checked radio button
+                var locationTypeRadio = option.querySelector('input[name^="locationType-"]:checked');
+                var locationType = locationTypeRadio ? locationTypeRadio.value : null;
                 category.subFees[subName] = {
                     checkout_surcharge: surchargeValue,
-                    subcategory_type: subcategoryType
+                    subcategory_type: subcategoryType,
+                    location_type: locationType
                 };
                 
                 // Fields
@@ -1012,7 +1016,8 @@
         locationTypeLabel.className = 'formbuilder-type-row-label';
         locationTypeLabel.textContent = 'Location Type';
         
-        var currentLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
+        // No default selection - admin must choose
+        var currentLocationType = subFeeData.location_type || null;
         
         var venueLabel = document.createElement('label');
         venueLabel.className = 'formbuilder-type-option';
@@ -1021,9 +1026,9 @@
         venueInput.name = 'locationType-' + cat.name + '-' + subName;
         venueInput.value = 'Venue';
         venueInput.checked = currentLocationType === 'Venue';
-        if (currentType === 'Events') {
-            venueInput.checked = true;
-            // Venue stays enabled in Events mode
+        // Only force Venue if Events is selected AND location_type is already set in database
+        if (currentType === 'Events' && currentLocationType === 'Venue') {
+            // Venue stays enabled in Events mode, but only if already saved
         }
         var venueText = document.createElement('span');
         venueText.textContent = 'Venue';
@@ -1154,14 +1159,21 @@
         // Update when Events/General type changes
         eventsInput.addEventListener('change', function() {
             if (eventsInput.checked) {
-                venueInput.checked = true;
-                // Venue stays enabled, only City and Address are disabled
+                // Only auto-select Venue if location_type is already set to Venue in database
+                // Otherwise, admin must choose (no pre-selection)
+                if (currentLocationType === 'Venue') {
+                    venueInput.checked = true;
+                }
+                // City and Address are disabled in Events mode
                 cityInput.disabled = true;
                 addressInput.disabled = true;
-                if (!cat.subFees) cat.subFees = {};
-                if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                cat.subFees[subName].location_type = 'Venue';
-                updateLocationTypeFieldsets('Venue');
+                // Only set location_type if Venue was already selected
+                if (venueInput.checked) {
+                    if (!cat.subFees) cat.subFees = {};
+                    if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                    cat.subFees[subName].location_type = 'Venue';
+                    updateLocationTypeFieldsets('Venue');
+                }
             }
         });
         
@@ -1727,7 +1739,8 @@
         }
         
         // Populate fieldset options
-        var selectedLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
+        // No default - only filter if location_type is actually set
+        var selectedLocationType = subFeeData.location_type || null;
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
             var opt = document.createElement('div');
@@ -1768,6 +1781,7 @@
         });
         
         // Apply initial location type filtering now that fieldsetOpts exists
+        // Only filter if location_type is actually set (not null)
         if (initialLocationType) {
             updateLocationTypeFieldsets(initialLocationType);
         }
