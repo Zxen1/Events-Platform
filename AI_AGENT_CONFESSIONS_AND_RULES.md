@@ -91,6 +91,35 @@ Website loading speed is critical. Any changes that slow down initial page load 
 
 ---
 
+## ⚠️ CRITICAL: cPanel IS THE SOURCE OF TRUTH ⚠️
+
+**CRITICAL:** cPanel is where the actual live website files are stored and executed. The files you see in the workspace (GitHub/PC) are NOT necessarily what's running on the live site.
+
+**How File Deployment Works:**
+1. **cPanel is the source of truth** - Files on cPanel are what the internet actually reads and executes
+2. **Files persist on cPanel** - Files on cPanel do NOT delete unless overwritten with the same filename
+3. **Files can exist on cPanel but not in workspace** - If a file exists on cPanel but not in GitHub/workspace, it will still be read by the internet
+4. **Workspace files are not automatically synced** - Changes in workspace must be committed and synced to cPanel to take effect
+
+**CRITICAL RULES:**
+1. **When debugging live site issues**, remember that cPanel files may differ from workspace files
+2. **If a file exists on cPanel but not in workspace**, it will still run on the live site
+3. **Deleting a file in workspace does NOT delete it on cPanel** - it must be explicitly deleted or overwritten
+4. **Old/legacy files on cPanel can cause unexpected behavior** even if they don't exist in the workspace
+5. **When investigating errors**, consider that cPanel may have files that aren't visible in the workspace
+
+**When Troubleshooting:**
+- If you see behavior on the live site that doesn't match the workspace code, cPanel may have different files
+- If errors appear that don't make sense based on workspace code, check if cPanel has legacy files
+- Always consider cPanel as the actual source of truth for what's running on the website
+
+**NEVER:**
+- Assume workspace files match cPanel files
+- Ignore the possibility of legacy files on cPanel causing issues
+- Assume deleting a file in workspace removes it from the live site
+
+---
+
 ## CONFESSIONS: CRITICAL MISTAKES MADE
 
 ### 1. TERMINOLOGY CONFUSION
