@@ -288,7 +288,7 @@ const AdminModule = (function() {
         
         // Initialize Settings tab (default tab)
         initSettingsTab();
-        
+
         console.log('[Admin] Admin module initialized');
     }
     
@@ -811,7 +811,6 @@ const AdminModule = (function() {
             .catch(function(err) {
                 console.error('[Admin] Save failed:', err);
                 isSaving = false;
-                
                 // Keep dirty state on error - don't lose user's changes
                 // Buttons stay lit so user knows save failed and can retry
             });
@@ -3059,7 +3058,7 @@ const AdminModule = (function() {
     function showError(message) {
         showStatus(message, { error: true });
     }
-    
+
     /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
