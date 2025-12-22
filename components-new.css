@@ -2802,3 +2802,99 @@
     background: rgba(0, 0, 0, 0.3);
     outline: none;
 }
+
+/* ============================================================================
+   UNSAVED CHANGES DIALOG
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-unsaved-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-unsaved-dialog-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Appearance - Dialog */
+.component-unsaved-dialog {
+    background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
+    color: #fff;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+    border-radius: 5px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+    padding: 20px;
+    max-width: 360px;
+    width: calc(100% - 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.component-unsaved-dialog-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.component-unsaved-dialog-message {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Appearance - Actions */
+.component-unsaved-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.component-unsaved-dialog-button {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-unsaved-dialog-button:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+.component-unsaved-dialog-button--primary {
+    background: var(--button-selected-bg, var(--btn-selected));
+    border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+    color: var(--button-selected-text, var(--button-active-text));
+}
+
+.component-unsaved-dialog-button--primary:hover {
+    background: var(--button-selected-hover, var(--btn-selected-hover));
+    border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+    color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+.component-unsaved-dialog-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================================================
+   WELCOME MODALbackground: rgba(0, 0, 0, 0.3);
+    outline: none;
+}

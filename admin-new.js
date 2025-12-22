@@ -3115,16 +3115,76 @@ const AdminModule = (function() {
     /* --------------------------------------------------------------------------
        UNSAVED CHANGES DIALOG
        Shows dialog when trying to close panel with unsaved changes
+       Uses UnsavedChangesDialogComponent from components-new.js
        -------------------------------------------------------------------------- */
     
     function showUnsavedChangesDialog() {
-        var promptEl = document.getElementById('adminUnsavedPrompt');
-        if (!promptEl) {
-            console.warn('[Admin] adminUnsavedPrompt element not found');
+        if (!window.UnsavedChangesDialogComponent) {
+            console.warn('[Admin] UnsavedChangesDialogComponent not available');
             return;
         }
         
         // Get messages from database
+        Promise.all([
+            window.getMessage ? window.getMessage('msg_admin_unsaved_title', {}, true) : Promise.resolve('Unsaved Changes'),
+            window.getMessage ? window.getMessage('msg_admin_unsaved_message', {}, true) : Promise.resolve('You have unsaved changes. Save before closing the admin panel?'),
+            window.getMessage ? window.getMessage('msg_button_cancel', {}, true) : Promise.resolve('Cancel'),
+            window.getMessage ? window.getMessage('msg_button_save', {}, true) : Promise.resolve('Save'),
+            window.getMessage ? window.getMessage('msg_button_discard', {}, true) : Promise.resolve('Discard Changes')
+        ]).then(function(messages) {
+            var title = messages[0] || 'Unsaved Changes';
+            var messageText = messages[1] || 'You have unsaved changes. Save before closing the admin panel?';
+            var cancelLabel = messages[2] || 'Cancel';
+            var saveLabel = messages[3] || 'Save';
+            var discardLabel = messages[4] || 'Discard Changes';
+            
+            UnsavedChangesDialogComponent.show({
+                titleText: title,
+                messageText: messageText,
+                cancelLabel: cancelLabel,
+                saveLabel: saveLabel,
+                discardLabel: discardLabel,
+                discardDisabled: true,
+                onCancel: function() {
+                    // Just close, do nothing
+                },
+                onSave: function() {
+                    runSave({ closeAfter: true });
+                },
+                onDiscard: function() {
+                    discardChanges();
+                    closePanel();
+                }
+            });
+        }).catch(function(err) {
+            console.error('[Admin] Error loading unsaved changes dialog messages:', err);
+            // Fallback to default messages
+            UnsavedChangesDialogComponent.show({
+                titleText: 'Unsaved Changes',
+                messageText: 'You have unsaved changes. Save before closing the admin panel?',
+                cancelLabel: 'Cancel',
+                saveLabel: 'Save',
+                discardLabel: 'Discard Changes',
+                discardDisabled: true,
+                onCancel: function() {
+                    // Just close, do nothing
+                },
+                onSave: function() {
+                    runSave({ closeAfter: true });
+                },
+                onDiscard: function() {
+                    discardChanges();
+                    closePanel();
+                }
+            });
+        });
+    }
+
+    /* --------------------------------------------------------------------------
+       PUBLIC API
+       -------------------------------------------------------------------------- */
+    
+    return {
         Promise.all([
             window.getMessage ? window.getMessage('msg_admin_unsaved_title', {}, true) : Promise.resolve('Unsaved Changes'),
             window.getMessage ? window.getMessage('msg_admin_unsaved_message', {}, true) : Promise.resolve('You have unsaved changes. Save before closing the admin panel?'),
