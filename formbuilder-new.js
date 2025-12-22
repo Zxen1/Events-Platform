@@ -1072,6 +1072,8 @@
         function updateLocationTypeFieldsets(selectedType) {
             if (!fieldsetOpts) return;
             var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            var selectedTypeLower = selectedType ? String(selectedType).toLowerCase() : '';
+            
             allOptions.forEach(function(opt) {
                 var fsId = opt.getAttribute('data-fieldset-id');
                 var fieldset = fieldsets.find(function(fs) {
@@ -1086,11 +1088,15 @@
                 var isCity = fieldsetKeyLower === 'city';
                 var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
                 
-                // Normalize selectedType for comparison
-                var selectedTypeLower = String(selectedType).toLowerCase();
+                // Only filter venue, city, and address fieldsets - other fieldsets are always enabled
+                if (!isVenue && !isCity && !isAddress) {
+                    // Not a location fieldset - always enabled (but keep existing disabled state if field already added)
+                    return;
+                }
                 
+                // For location fieldsets, apply filtering based on selected type
                 if (!selectedType || selectedTypeLower === 'null' || selectedTypeLower === '') {
-                    // No selection - enable all options
+                    // No selection - enable all location fieldsets
                     opt.classList.remove('disabled');
                 } else if (selectedTypeLower === 'venue') {
                     if (isCity || isAddress) {
@@ -1493,7 +1499,13 @@
                 fieldWrapper.remove();
                 addedFieldsets[fsId] = false;
                 var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                if (menuOpt) menuOpt.classList.remove('disabled');
+                if (menuOpt) {
+                    menuOpt.classList.remove('disabled');
+                    // Re-apply location type filtering after removing "already added" disabled state
+                    var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
+                    var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
+                    updateLocationTypeFieldsets(currentLocationType);
+                }
                 notifyChange();
             });
             
