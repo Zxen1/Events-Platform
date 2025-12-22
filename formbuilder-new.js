@@ -1023,7 +1023,7 @@
         venueInput.checked = currentLocationType === 'Venue';
         if (currentType === 'Events') {
             venueInput.checked = true;
-            venueInput.disabled = true;
+            // Venue stays enabled in Events mode
         }
         var venueText = document.createElement('span');
         venueText.textContent = 'Venue';
@@ -1097,7 +1097,8 @@
             });
         }
         
-        venueInput.addEventListener('change', function() {
+        venueInput.addEventListener('change', function(e) {
+            e.stopPropagation();
             if (venueInput.checked) {
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
@@ -1107,7 +1108,8 @@
             }
         });
         
-        cityInput.addEventListener('change', function() {
+        cityInput.addEventListener('change', function(e) {
+            e.stopPropagation();
             if (cityInput.checked) {
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
@@ -1117,7 +1119,8 @@
             }
         });
         
-        addressInput.addEventListener('change', function() {
+        addressInput.addEventListener('change', function(e) {
+            e.stopPropagation();
             if (addressInput.checked) {
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
@@ -1127,6 +1130,19 @@
             }
         });
         
+        // Also handle clicks on labels to ensure radio selection works
+        venueLabel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        cityLabel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        addressLabel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
         // Store location type for later use when fieldsetOpts is created
         var initialLocationType = currentLocationType;
         
@@ -1134,7 +1150,7 @@
         eventsInput.addEventListener('change', function() {
             if (eventsInput.checked) {
                 venueInput.checked = true;
-                venueInput.disabled = true;
+                // Venue stays enabled, only City and Address are disabled
                 cityInput.disabled = true;
                 addressInput.disabled = true;
                 if (!cat.subFees) cat.subFees = {};
@@ -1791,6 +1807,14 @@
             closeAllEditPanels();
             if (!isOpen) {
                 option.classList.add('formbuilder-accordion-option--editing');
+            }
+        });
+        
+        // Prevent edit panel from blocking clicks on interactive elements
+        subEditPanel.addEventListener('click', function(e) {
+            // Allow clicks on inputs, labels, buttons, and other interactive elements
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'BUTTON' || e.target.closest('label') || e.target.closest('input')) {
+                return; // Don't stop propagation for interactive elements
             }
         });
         
