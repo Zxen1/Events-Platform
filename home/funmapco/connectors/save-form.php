@@ -537,6 +537,11 @@ try {
                         $insertValues[] = ':subcategory_type';
                         $insertParams[':subcategory_type'] = $subcategoryType;
                     }
+                    if (in_array('location_type', $subcategoryColumns, true)) {
+                        $insertParts[] = 'location_type';
+                        $insertValues[] = ':location_type';
+                        $insertParams[':location_type'] = $locationType;
+                    }
                     if ($insertParts) {
                         $sql = 'INSERT INTO subcategories (' . implode(', ', $insertParts) . ') VALUES (' . implode(', ', $insertValues) . ')';
                         $stmt = $pdo->prepare($sql);
@@ -574,6 +579,7 @@ try {
             
             $checkoutSurcharge = isset($subFees['checkout_surcharge']) && $subFees['checkout_surcharge'] !== null && $subFees['checkout_surcharge'] !== '' ? round((float)$subFees['checkout_surcharge'], 2) : null;
             $subcategoryType = isset($subFees['subcategory_type']) ? $subFees['subcategory_type'] : 'Standard';
+            $locationType = isset($subFees['location_type']) && $subFees['location_type'] !== null && $subFees['location_type'] !== '' ? $subFees['location_type'] : null;
 
             $fieldsPayload = [];
             $hasFieldsForThisSub = false;
@@ -999,6 +1005,10 @@ try {
             if (in_array('subcategory_type', $subcategoryColumns, true)) {
                 $updateParts[] = 'subcategory_type = :subcategory_type';
                 $params[':subcategory_type'] = $subcategoryType;
+            }
+            if (in_array('location_type', $subcategoryColumns, true)) {
+                $updateParts[] = 'location_type = :location_type';
+                $params[':location_type'] = $locationType;
             }
             // Only update icon_path if we have a non-empty icon path to save
             if (in_array('icon_path', $subcategoryColumns, true) && $subIconVariants['icon'] !== '') {

@@ -1004,6 +1004,169 @@
         typeRow.appendChild(generalLabel);
         subEditPanel.appendChild(typeRow);
         
+        // Location Type row
+        var locationTypeRow = document.createElement('div');
+        locationTypeRow.className = 'formbuilder-type-row';
+        
+        var locationTypeLabel = document.createElement('span');
+        locationTypeLabel.className = 'formbuilder-type-row-label';
+        locationTypeLabel.textContent = 'Location Type';
+        
+        var currentLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
+        
+        var venueLabel = document.createElement('label');
+        venueLabel.className = 'formbuilder-type-option';
+        var venueInput = document.createElement('input');
+        venueInput.type = 'radio';
+        venueInput.name = 'locationType-' + cat.name + '-' + subName;
+        venueInput.value = 'Venue';
+        venueInput.checked = currentLocationType === 'Venue';
+        if (currentType === 'Events') {
+            venueInput.checked = true;
+            venueInput.disabled = true;
+        }
+        var venueText = document.createElement('span');
+        venueText.textContent = 'Venue';
+        venueLabel.appendChild(venueInput);
+        venueLabel.appendChild(venueText);
+        
+        var cityLabel = document.createElement('label');
+        cityLabel.className = 'formbuilder-type-option';
+        var cityInput = document.createElement('input');
+        cityInput.type = 'radio';
+        cityInput.name = 'locationType-' + cat.name + '-' + subName;
+        cityInput.value = 'City';
+        cityInput.checked = currentLocationType === 'City';
+        if (currentType === 'Events') {
+            cityInput.disabled = true;
+        }
+        var cityText = document.createElement('span');
+        cityText.textContent = 'City';
+        cityLabel.appendChild(cityInput);
+        cityLabel.appendChild(cityText);
+        
+        var addressLabel = document.createElement('label');
+        addressLabel.className = 'formbuilder-type-option';
+        var addressInput = document.createElement('input');
+        addressInput.type = 'radio';
+        addressInput.name = 'locationType-' + cat.name + '-' + subName;
+        addressInput.value = 'Address';
+        addressInput.checked = currentLocationType === 'Address';
+        if (currentType === 'Events') {
+            addressInput.disabled = true;
+        }
+        var addressText = document.createElement('span');
+        addressText.textContent = 'Address';
+        addressLabel.appendChild(addressInput);
+        addressLabel.appendChild(addressText);
+        
+        function updateLocationTypeFieldsets(selectedType) {
+            if (!fieldsetOpts) return;
+            var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            allOptions.forEach(function(opt) {
+                var fsId = opt.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) === fsId;
+                });
+                if (!fieldset) return;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var isVenue = fieldsetKey === 'venue';
+                var isCity = fieldsetKey === 'city';
+                var isAddress = fieldsetKey === 'address' || fieldsetKey === 'location';
+                
+                if (selectedType === 'Venue') {
+                    if (isCity || isAddress) {
+                        opt.classList.add('disabled');
+                    } else if (isVenue) {
+                        opt.classList.remove('disabled');
+                    }
+                } else if (selectedType === 'City') {
+                    if (isVenue || isAddress) {
+                        opt.classList.add('disabled');
+                    } else if (isCity) {
+                        opt.classList.remove('disabled');
+                    }
+                } else if (selectedType === 'Address') {
+                    if (isVenue || isCity) {
+                        opt.classList.add('disabled');
+                    } else if (isAddress) {
+                        opt.classList.remove('disabled');
+                    }
+                }
+            });
+        }
+        
+        venueInput.addEventListener('change', function() {
+            if (venueInput.checked) {
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'Venue';
+                updateLocationTypeFieldsets('Venue');
+                notifyChange();
+            }
+        });
+        
+        cityInput.addEventListener('change', function() {
+            if (cityInput.checked) {
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'City';
+                updateLocationTypeFieldsets('City');
+                notifyChange();
+            }
+        });
+        
+        addressInput.addEventListener('change', function() {
+            if (addressInput.checked) {
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'Address';
+                updateLocationTypeFieldsets('Address');
+                notifyChange();
+            }
+        });
+        
+        // Store location type for later use when fieldsetOpts is created
+        var initialLocationType = currentLocationType;
+        
+        // Update when Events/General type changes
+        eventsInput.addEventListener('change', function() {
+            if (eventsInput.checked) {
+                venueInput.checked = true;
+                venueInput.disabled = true;
+                cityInput.disabled = true;
+                addressInput.disabled = true;
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'Venue';
+                updateLocationTypeFieldsets('Venue');
+            }
+        });
+        
+        generalInput.addEventListener('change', function() {
+            if (generalInput.checked) {
+                venueInput.disabled = false;
+                cityInput.disabled = false;
+                addressInput.disabled = false;
+                // Ensure at least one is selected
+                if (!venueInput.checked && !cityInput.checked && !addressInput.checked) {
+                    venueInput.checked = true;
+                    if (!cat.subFees) cat.subFees = {};
+                    if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                    cat.subFees[subName].location_type = 'Venue';
+                }
+                var selectedType = venueInput.checked ? 'Venue' : (cityInput.checked ? 'City' : 'Address');
+                updateLocationTypeFieldsets(selectedType);
+            }
+        });
+        
+        locationTypeRow.appendChild(locationTypeLabel);
+        locationTypeRow.appendChild(venueLabel);
+        locationTypeRow.appendChild(cityLabel);
+        locationTypeRow.appendChild(addressLabel);
+        subEditPanel.appendChild(locationTypeRow);
+        
         // Surcharge row
         var surchargeRow = document.createElement('div');
         surchargeRow.className = 'formbuilder-fee-row';
@@ -1543,12 +1706,28 @@
         }
         
         // Populate fieldset options
+        var selectedLocationType = (subFeeData.location_type) || (currentType === 'Events' ? 'Venue' : 'Venue');
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
             var opt = document.createElement('div');
             opt.className = 'formbuilder-fieldset-menu-option';
             opt.textContent = fs.name || fs.key || 'Unnamed';
             opt.setAttribute('data-fieldset-id', fsId);
+            
+            var fieldsetKey = fs.key || fs.fieldset_key || fs.id;
+            var isVenue = fieldsetKey === 'venue';
+            var isCity = fieldsetKey === 'city';
+            var isAddress = fieldsetKey === 'address' || fieldsetKey === 'location';
+            
+            // Grey out fieldsets that don't match selected location type
+            if (selectedLocationType === 'Venue' && (isCity || isAddress)) {
+                opt.classList.add('disabled');
+            } else if (selectedLocationType === 'City' && (isVenue || isAddress)) {
+                opt.classList.add('disabled');
+            } else if (selectedLocationType === 'Address' && (isVenue || isCity)) {
+                opt.classList.add('disabled');
+            }
+            
             opt.onclick = function(e) {
                 e.stopPropagation();
                 if (opt.classList.contains('disabled')) return;
@@ -1561,6 +1740,11 @@
             };
             fieldsetOpts.appendChild(opt);
         });
+        
+        // Apply initial location type filtering now that fieldsetOpts exists
+        if (initialLocationType) {
+            updateLocationTypeFieldsets(initialLocationType);
+        }
         
         // Load existing fields from database
         var subFieldsMap = cat.subFields || {};
