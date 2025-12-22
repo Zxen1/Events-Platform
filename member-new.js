@@ -391,10 +391,6 @@ const MemberModule = (function() {
         subcategoryWrapper.className = 'member-panel-field';
         subcategoryWrapper.hidden = true;
         
-        var subcategoryLabel = document.createElement('label');
-        subcategoryLabel.className = 'member-panel-field-label';
-        subcategoryLabel.textContent = 'Subcategory';
-        
         var subcategoryMenu = document.createElement('div');
         subcategoryMenu.className = 'member-formpicker-menu';
         
@@ -408,7 +404,6 @@ const MemberModule = (function() {
         
         subcategoryMenu.appendChild(subcategoryBtn);
         subcategoryMenu.appendChild(subcategoryOpts);
-        subcategoryWrapper.appendChild(subcategoryLabel);
         subcategoryWrapper.appendChild(subcategoryMenu);
         
         // Category dropdown
@@ -417,7 +412,7 @@ const MemberModule = (function() {
         
         var categoryLabel = document.createElement('label');
         categoryLabel.className = 'member-panel-field-label';
-        categoryLabel.textContent = 'Category';
+        categoryLabel.textContent = 'Category/Subcategory';
         
         var categoryMenu = document.createElement('div');
         categoryMenu.className = 'member-formpicker-menu';
