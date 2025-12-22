@@ -869,6 +869,69 @@
   display: none;
 }
 
+/* ============================================================================
+   AVATAR SELECTOR
+   ============================================================================ */
+
+.member-avatar-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-avatar-options {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.member-avatar-option {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 4px;
+  transition: border-color 0.2s ease;
+}
+
+.member-avatar-option:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.member-avatar-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.member-avatar-option input[type="radio"]:checked + .member-avatar-preview {
+  border: 2px solid #3b82f6;
+}
+
+.member-avatar-option input[type="radio"]:checked ~ .member-avatar-preview,
+.member-avatar-option:has(input[type="radio"]:checked) {
+  border-color: #3b82f6;
+}
+
+.member-avatar-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  display: block;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.member-avatar-option:has(input[type="radio"]:checked) .member-avatar-preview {
+  border-color: #3b82f6;
+}
+
+.member-avatar-upload-btn {
+  width: 100%;
+}
+
 .member-auth-panel--logged-in {
   gap: 16px;
 }

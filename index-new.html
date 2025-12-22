@@ -326,6 +326,20 @@
               <input type="text" class="admin-settings-field-input" id="adminFolderSystemImages" data-setting-key="folder_system_images" autocomplete="off" placeholder="system-images/" />
             </div>
           </div>
+          <div class="admin-settings-avatars-container">
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminAvatarProviderUrl1">Avatar Provider URL 1</label>
+              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl1" data-setting-key="avatar_provider_url_1" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminAvatarProviderUrl2">Avatar Provider URL 2</label>
+              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl2" data-setting-key="avatar_provider_url_2" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminAvatarProviderUrl3">Avatar Provider URL 3</label>
+              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl3" data-setting-key="avatar_provider_url_3" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3" />
+            </div>
+          </div>
           <div class="admin-settings-api-container">
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password (Read-Only)</label>
@@ -582,8 +596,15 @@
               <input type="password" id="member-register-password" class="member-auth-panel-input" name="registerPassword" autocomplete="new-password">
               <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
               <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
-              <label class="member-auth-panel-label" for="member-register-avatar">Avatar URL</label>
-              <input type="url" id="member-register-avatar" class="member-auth-panel-input" name="registerAvatar" placeholder="https://example.com/avatar.jpg">
+              <label class="member-auth-panel-label">Avatar</label>
+              <div class="member-avatar-selector">
+                <div class="member-avatar-options" id="member-avatar-options">
+                  <!-- Avatar options will be populated dynamically from admin settings -->
+                </div>
+                <button type="button" class="member-button-auth member-avatar-upload-btn" id="member-avatar-upload-btn">Upload Your Own</button>
+                <input type="file" id="member-avatar-file" accept="image/*" style="display: none;">
+                <input type="hidden" id="member-register-avatar" name="registerAvatar">
+              </div>
               <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
             </section>
             

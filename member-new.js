@@ -101,6 +101,7 @@ const MemberModule = (function() {
         bindEvents();
         initHeaderDrag();
         loadStoredSession();
+        loadAvatarOptions();
         render();
     }
     
@@ -217,6 +218,38 @@ const MemberModule = (function() {
             registerBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 handleRegister();
+            });
+        }
+        
+        // Avatar upload button (radio binding happens in loadAvatarOptions)
+        var avatarUploadBtn = document.getElementById('member-avatar-upload-btn');
+        var avatarFileInput = document.getElementById('member-avatar-file');
+        
+        if (avatarUploadBtn && avatarFileInput) {
+            avatarUploadBtn.addEventListener('click', function() {
+                avatarFileInput.click();
+            });
+        }
+        
+        if (avatarFileInput) {
+            avatarFileInput.addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (file) {
+                    var avatarHiddenInput = document.getElementById('member-register-avatar');
+                    var avatarRadios = panel ? panel.querySelectorAll('input[name="avatarChoice"]') : [];
+                    
+                    // Uncheck all radio buttons
+                    avatarRadios.forEach(function(radio) {
+                        radio.checked = false;
+                    });
+                    
+                    // Store file reference (don't upload yet - will upload with correct name after member creation)
+                    if (avatarHiddenInput) {
+                        // Clear any previous URL - file will be uploaded during registration
+                        avatarHiddenInput.value = '';
+                        avatarHiddenInput.dataset.hasFile = 'true';
+                    }
+                }
             });
         }
         
@@ -1347,6 +1380,136 @@ const MemberModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
+       AVATAR OPTIONS LOADING
+       -------------------------------------------------------------------------- */
+    
+    function loadAvatarOptions() {
+        var avatarOptionsContainer = document.getElementById('member-avatar-options');
+        if (!avatarOptionsContainer) return;
+        
+        // Fetch admin settings to get avatar provider URLs
+        fetch('/gateway.php?action=get-admin-settings')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.settings) {
+                    var avatarUrl1 = data.settings.avatar_provider_url_1 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1';
+                    var avatarUrl2 = data.settings.avatar_provider_url_2 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2';
+                    var avatarUrl3 = data.settings.avatar_provider_url_3 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3';
+                    
+                    // Clear container
+                    avatarOptionsContainer.innerHTML = '';
+                    
+                    // Create three avatar options
+                    [avatarUrl1, avatarUrl2, avatarUrl3].forEach(function(url, index) {
+                        var label = document.createElement('label');
+                        label.className = 'member-avatar-option';
+                        
+                        var radio = document.createElement('input');
+                        radio.type = 'radio';
+                        radio.name = 'avatarChoice';
+                        radio.value = 'avatar' + (index + 1);
+                        if (index === 0) radio.checked = true;
+                        
+                        var img = document.createElement('img');
+                        img.src = url;
+                        img.alt = 'Avatar ' + (index + 1);
+                        img.className = 'member-avatar-preview';
+                        
+                        label.appendChild(radio);
+                        label.appendChild(img);
+                        avatarOptionsContainer.appendChild(label);
+                    });
+                    
+                    // Re-bind events for the new avatar options
+                    var avatarRadios = panel ? panel.querySelectorAll('input[name="avatarChoice"]') : [];
+                    var avatarHiddenInput = document.getElementById('member-register-avatar');
+                    var avatarFileInput = document.getElementById('member-avatar-file');
+                    
+                    // Handle radio button selection
+                    avatarRadios.forEach(function(radio) {
+                        radio.addEventListener('change', function() {
+                            if (this.checked) {
+                                var img = this.nextElementSibling;
+                                if (img && img.src && avatarHiddenInput) {
+                                    avatarHiddenInput.value = img.src;
+                                }
+                                // Clear file input
+                                if (avatarFileInput) {
+                                    avatarFileInput.value = '';
+                                }
+                            }
+                        });
+                    });
+                    
+                    // Set initial avatar (first option)
+                    if (avatarRadios.length > 0 && avatarRadios[0].checked) {
+                        var firstImg = avatarRadios[0].nextElementSibling;
+                        if (firstImg && firstImg.src && avatarHiddenInput) {
+                            avatarHiddenInput.value = firstImg.src;
+                        }
+                    }
+                }
+            })
+            .catch(function(error) {
+                console.error('[Member] Failed to load avatar options:', error);
+                // Fallback to default DiceBear URLs if settings fail to load
+                var avatarOptionsContainer = document.getElementById('member-avatar-options');
+                if (avatarOptionsContainer) {
+                    avatarOptionsContainer.innerHTML = '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar1" checked><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1" alt="Avatar 1" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar2"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2" alt="Avatar 2" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar3"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3" alt="Avatar 3" class="member-avatar-preview"></label>';
+                }
+            });
+    }
+
+    /* --------------------------------------------------------------------------
+       AVATAR UPLOAD
+       -------------------------------------------------------------------------- */
+    
+    function uploadAvatarFile(file, callback) {
+        if (!file) {
+            if (callback) callback(null);
+            return;
+        }
+        
+        // Validate file type
+        var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            ToastComponent.showError('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
+            if (callback) callback(null);
+            return;
+        }
+        
+        // Validate file size (max 5MB)
+        var maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            ToastComponent.showError('Image file is too large. Maximum size is 5MB.');
+            if (callback) callback(null);
+            return;
+        }
+        
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('type', 'avatar');
+        
+        fetch('/gateway.php?action=upload-avatar', {
+            method: 'POST',
+            body: formData
+        }).then(function(response) {
+            return response.json();
+        }).then(function(data) {
+            if (data.success && data.url) {
+                if (callback) callback(data.url);
+            } else {
+                ToastComponent.showError(data.error || 'Failed to upload avatar');
+                if (callback) callback(null);
+            }
+        }).catch(function(error) {
+            console.error('Avatar upload error:', error);
+            ToastComponent.showError('Failed to upload avatar. Please try again.');
+            if (callback) callback(null);
+        });
+    }
+
+    /* --------------------------------------------------------------------------
        AUTHENTICATION HANDLERS
        -------------------------------------------------------------------------- */
     
@@ -1418,12 +1581,14 @@ const MemberModule = (function() {
         var passwordInput = document.getElementById('member-register-password');
         var confirmInput = document.getElementById('member-register-confirm');
         var avatarInput = document.getElementById('member-register-avatar');
+        var avatarFileInput = document.getElementById('member-avatar-file');
         
         var username = usernameInput ? usernameInput.value.trim() : '';
         var email = emailInput ? emailInput.value.trim() : '';
         var password = passwordInput ? passwordInput.value : '';
         var confirm = confirmInput ? confirmInput.value : '';
         var avatar = avatarInput ? avatarInput.value.trim() : '';
+        var avatarFile = avatarFileInput && avatarFileInput.files && avatarFileInput.files[0] ? avatarFileInput.files[0] : null;
         
         // Validation
         if (!username || !email || !password) {
@@ -1467,7 +1632,14 @@ const MemberModule = (function() {
         formData.set('email', email);
         formData.set('password', password);
         formData.set('confirm', confirm);
-        formData.set('avatar_url', avatar);
+        
+        // If file uploaded, send file (will be uploaded with correct name after member creation)
+        // If pre-selected avatar URL chosen, send URL (works with any avatar provider)
+        if (avatarFile) {
+            formData.append('avatar_file', avatarFile);
+        } else if (avatar) {
+            formData.set('avatar_url', avatar);
+        }
         
         fetch('/gateway.php?action=add-member', {
             method: 'POST',
