@@ -22,6 +22,33 @@ The user can only see committed/live code, not workspace changes. You can see bo
 
 This is inherent logic - you must track what you read vs what you changed. Every customer expects this.
 
+## ⚠️ CRITICAL PERFORMANCE RULE ⚠️
+
+**YOU ARE NOT ALLOWED TO DO ANYTHING THAT WILL JEOPARDIZE THE LOADING SPEED OF THE WEBSITE.**
+
+**CRITICAL RULES:**
+1. **Everything must load when required only** - Use lazy loading for all non-critical features
+2. **Never initialize components, modules, or features on page load** unless they are absolutely essential for the page to function
+3. **Never fetch data, load assets, or make API calls on startup** unless critical for initial page render
+4. **Always defer non-essential operations** until the user actually needs them (e.g., when a panel opens, when a button is clicked)
+5. **Do not create DOM elements on page load** unless they are required for the initial page structure
+6. **Do not preload data** that might not be used
+7. **Respect lazy loading patterns** - If a module only initializes when its panel opens, do not change that behavior
+
+**Examples of what NOT to do:**
+- ❌ Creating toast elements on DOM ready
+- ❌ Loading avatar options on page load
+- ❌ Fetching admin settings on startup (unless needed for initial render)
+- ❌ Initializing modules that are only used when panels open
+
+**Examples of what TO do:**
+- ✅ Create toast elements only when first message is shown
+- ✅ Load avatar options only when register tab is clicked
+- ✅ Initialize modules only when their respective panels/tabs are opened
+- ✅ Fetch data only when user action requires it
+
+Website loading speed is critical. Any changes that slow down initial page load are strictly forbidden.
+
 ## Critical Information for All Future AI Agents
 
 ---

@@ -4246,7 +4246,14 @@ const ToastComponent = (function() {
         toast.setAttribute('role', 'status');
         toast.setAttribute('aria-live', 'polite');
         toast.setAttribute('aria-hidden', 'true');
-        document.body.appendChild(toast);
+        
+        // Defer appendChild to avoid triggering Mapbox mutation observers
+        // Use requestAnimationFrame to push to next frame
+        requestAnimationFrame(function() {
+            if (toast && !toast.parentNode) {
+                document.body.appendChild(toast);
+            }
+        });
         
         toastEl = toast;
         return toast;
@@ -4257,6 +4264,11 @@ const ToastComponent = (function() {
         duration = duration || 2000;
         
         if (!ensureToastElement()) return;
+        
+        // Ensure element is in DOM before modifying (in case appendChild was deferred)
+        if (!toastEl.parentNode) {
+            document.body.appendChild(toastEl);
+        }
         
         toastEl.textContent = message || '';
         toastEl.setAttribute('aria-hidden', 'false');
@@ -4285,8 +4297,10 @@ const ToastComponent = (function() {
         
         // Auto-hide
         toastTimer = setTimeout(function() {
-            toastEl.classList.remove('component-toast--show');
-            toastEl.setAttribute('aria-hidden', 'true');
+            if (toastEl) {
+                toastEl.classList.remove('component-toast--show');
+                toastEl.setAttribute('aria-hidden', 'true');
+            }
         }, duration);
     }
     

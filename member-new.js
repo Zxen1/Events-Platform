@@ -1427,11 +1427,14 @@ const MemberModule = (function() {
         
         // Validation
         if (!name || !email || !password) {
+            // TOAST COMPONENT COMMENTED OUT FOR TESTING MAPBOX ERRORS
+            /*
             getMessage('msg_auth_register_empty', {}, false).then(function(message) {
                 if (message) {
                     ToastComponent.showError(message);
                 }
             });
+            */
             if (!name && nameInput) { nameInput.focus(); return; }
             if (!email && emailInput) { emailInput.focus(); return; }
             if (!password && passwordInput) { passwordInput.focus(); return; }
@@ -1439,21 +1442,27 @@ const MemberModule = (function() {
         }
         
         if (password.length < 4) {
+            // TOAST COMPONENT COMMENTED OUT FOR TESTING MAPBOX ERRORS
+            /*
             getMessage('msg_auth_register_password_short', {}, false).then(function(message) {
                 if (message) {
                     ToastComponent.showError(message);
                 }
             });
+            */
             if (passwordInput) passwordInput.focus();
             return;
         }
         
         if (password !== confirm) {
+            // TOAST COMPONENT COMMENTED OUT FOR TESTING MAPBOX ERRORS
+            /*
             getMessage('msg_auth_register_password_mismatch', {}, false).then(function(message) {
                 if (message) {
                     ToastComponent.showError(message);
                 }
             });
+            */
             if (confirmInput) {
                 confirmInput.focus();
                 confirmInput.select();
@@ -1484,6 +1493,8 @@ const MemberModule = (function() {
             
             if (!payload || payload.error) {
                 var errorMsg = payload && payload.message ? payload.message : '';
+                // TOAST COMPONENT COMMENTED OUT FOR TESTING MAPBOX ERRORS
+                /*
                 if (errorMsg) {
                     ToastComponent.showError(errorMsg);
                 } else {
@@ -1493,6 +1504,7 @@ const MemberModule = (function() {
                         }
                     });
                 }
+                */
                 return;
             }
             
@@ -1510,19 +1522,25 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
+            // TOAST COMPONENT COMMENTED OUT FOR TESTING MAPBOX ERRORS
+            /*
             getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
                 if (message) {
                     ToastComponent.showSuccess(message);
                 }
             });
+            */
             
         }).catch(function(err) {
             console.error('Registration failed', err);
+            // TOAST COMPONENT COMMENTED OUT FOR TESTING MAPBOX ERRORS
+            /*
             getMessage('msg_auth_register_failed', {}, false).then(function(message) {
                 if (message) {
                     ToastComponent.showError(message);
                 }
             });
+            */
         });
     }
 
