@@ -1512,7 +1512,6 @@
             if (!cat.subFees) cat.subFees = {};
             if (!cat.subFees[subName]) cat.subFees[subName] = {};
             cat.subFees[subName].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
-            if (option._renderCheckoutOptions) option._renderCheckoutOptions();
             notifyChange();
         });
         
@@ -1524,125 +1523,24 @@
             if (value !== null) {
                 surchargeInput.value = value.toFixed(2);
             }
-            if (option._renderCheckoutOptions) option._renderCheckoutOptions();
+        });
+        
+        // Calculator button
+        var calculatorBtn = document.createElement('button');
+        calculatorBtn.type = 'button';
+        calculatorBtn.className = 'formbuilder-calculator-btn';
+        calculatorBtn.textContent = 'Calculator';
+        calculatorBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            showCheckoutCalculator(cat, subName);
         });
         
         surchargeRow.appendChild(surchargeLabel);
         surchargeRow.appendChild(surchargePercent);
         surchargeRow.appendChild(surchargeInput);
+        surchargeRow.appendChild(calculatorBtn);
         subEditPanel.appendChild(surchargeRow);
         
-        // Checkout Options Editor
-        var checkoutEditor = document.createElement('div');
-        checkoutEditor.className = 'formbuilder-checkout-editor';
-        
-        var checkoutLabel = document.createElement('div');
-        checkoutLabel.className = 'formbuilder-checkout-label';
-        checkoutLabel.textContent = 'Checkout Options';
-        
-        var checkoutList = document.createElement('div');
-        checkoutList.className = 'formbuilder-checkout-list';
-        
-        checkoutEditor.appendChild(checkoutLabel);
-        checkoutEditor.appendChild(checkoutList);
-        subEditPanel.appendChild(checkoutEditor);
-        
-        function renderCheckoutOptions() {
-            checkoutList.innerHTML = '';
-            var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
-                return opt.is_active !== false && opt.is_active !== 0;
-            });
-            
-            var surcharge = 0;
-            if (cat.subFees && cat.subFees[subName] && cat.subFees[subName].checkout_surcharge !== null && cat.subFees[subName].checkout_surcharge !== undefined) {
-                surcharge = parseFloat(cat.subFees[subName].checkout_surcharge) || 0;
-            }
-            
-            if (activeCheckoutOptions.length === 0) {
-                var emptyMsg = document.createElement('div');
-                emptyMsg.className = 'formbuilder-checkout-empty';
-                emptyMsg.textContent = 'No enabled checkout options available.';
-                checkoutList.appendChild(emptyMsg);
-                return;
-            }
-            
-            var currency = siteCurrency;
-            
-            activeCheckoutOptions.forEach(function(opt) {
-                var card = document.createElement('div');
-                card.className = 'formbuilder-checkout-card';
-                
-                var flagfall = parseFloat(opt.checkout_flagfall_price) || 0;
-                var basicDayRate = opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined 
-                    ? parseFloat(opt.checkout_basic_day_rate) : null;
-                var discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
-                    ? parseFloat(opt.checkout_discount_day_rate) : null;
-                
-                function calculatePrice(days) {
-                    var basePrice = flagfall;
-                    if (days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)) {
-                        basePrice += discountDayRate * days;
-                    } else if (basicDayRate !== null && !isNaN(basicDayRate)) {
-                        basePrice += basicDayRate * days;
-                    }
-                    if (surcharge !== 0 && !isNaN(surcharge)) {
-                        basePrice = basePrice * (1 + surcharge / 100);
-                    }
-                    return basePrice;
-                }
-                
-                var price30 = calculatePrice(30);
-                var price365 = calculatePrice(365);
-                
-                var title = document.createElement('div');
-                title.className = 'formbuilder-checkout-title';
-                title.textContent = opt.checkout_title || 'Untitled';
-                
-                var prices = document.createElement('div');
-                prices.className = 'formbuilder-checkout-prices';
-                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + price30.toFixed(2) + '</span></div>' +
-                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + price365.toFixed(2) + '</span></div>';
-                
-                var calculator = document.createElement('div');
-                calculator.className = 'formbuilder-checkout-calculator';
-                
-                var calcLabel = document.createElement('span');
-                calcLabel.textContent = 'Calculator:';
-                
-                var calcInput = document.createElement('input');
-                calcInput.type = 'number';
-                calcInput.className = 'formbuilder-checkout-calc-input';
-                calcInput.placeholder = 'Days';
-                calcInput.min = '1';
-                calcInput.step = '1';
-                
-                var calcTotal = document.createElement('span');
-                calcTotal.className = 'formbuilder-checkout-calc-total';
-                calcTotal.textContent = currency + '0.00';
-                
-                calcInput.addEventListener('input', function() {
-                    var days = parseFloat(calcInput.value) || 0;
-                    if (days <= 0) {
-                        calcTotal.textContent = currency + '0.00';
-                        return;
-                    }
-                    var total = calculatePrice(days);
-                    calcTotal.textContent = currency + total.toFixed(2);
-                });
-                
-                calculator.appendChild(calcLabel);
-                calculator.appendChild(calcInput);
-                calculator.appendChild(calcTotal);
-                
-                card.appendChild(title);
-                card.appendChild(prices);
-                card.appendChild(calculator);
-                checkoutList.appendChild(card);
-            });
-        }
-        
-        option._renderCheckoutOptions = renderCheckoutOptions;
-        renderCheckoutOptions();
         
         // Subcategory body with fieldset menu and form preview
         var optBody = document.createElement('div');
@@ -2218,6 +2116,178 @@
     function discardChanges() {
         isLoaded = false; // Prevent notifyChange during reload
         loadFormData(); // Fetch fresh from database - single source of truth
+    }
+    
+    /* --------------------------------------------------------------------------
+       CHECKOUT CALCULATOR MODAL
+       Shows checkout options in a popup similar to form preview
+       -------------------------------------------------------------------------- */
+    
+    function showCheckoutCalculator(cat, subName) {
+        // Get subcategory data
+        var subFees = cat.subFees || {};
+        var subFeeData = subFees[subName] || {};
+        var surcharge = parseFloat(subFeeData.checkout_surcharge) || 0;
+        
+        // Get active checkout options
+        var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
+            return opt.is_active !== false && opt.is_active !== 0;
+        });
+        
+        // Create modal backdrop
+        var modal = document.createElement('div');
+        modal.className = 'formbuilder-formpreview-modal';
+        
+        // Create modal container
+        var modalContainer = document.createElement('div');
+        modalContainer.className = 'formbuilder-formpreview-modal-container';
+        
+        // Create header
+        var header = document.createElement('div');
+        header.className = 'formbuilder-formpreview-modal-header';
+        
+        var headerTitle = document.createElement('span');
+        headerTitle.className = 'formbuilder-formpreview-modal-title';
+        headerTitle.textContent = 'Checkout Calculator';
+        
+        var closeBtn = ClearButtonComponent.create({
+            className: 'formbuilder-formpreview-modal-close',
+            ariaLabel: 'Close calculator',
+            onClick: function() {
+                closeModal();
+            }
+        });
+        
+        header.appendChild(headerTitle);
+        header.appendChild(closeBtn);
+        
+        // Create body
+        var body = document.createElement('div');
+        body.className = 'formbuilder-formpreview-modal-body';
+        
+        // Create checkout list container
+        var checkoutList = document.createElement('div');
+        checkoutList.className = 'formbuilder-checkout-list';
+        
+        // Render checkout options
+        if (activeCheckoutOptions.length === 0) {
+            var emptyMsg = document.createElement('div');
+            emptyMsg.className = 'formbuilder-checkout-empty';
+            emptyMsg.textContent = 'No enabled checkout options available.';
+            checkoutList.appendChild(emptyMsg);
+        } else {
+            var currency = siteCurrency;
+            
+            activeCheckoutOptions.forEach(function(opt) {
+                var card = document.createElement('div');
+                card.className = 'formbuilder-checkout-card';
+                
+                var flagfall = parseFloat(opt.checkout_flagfall_price) || 0;
+                var basicDayRate = opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined 
+                    ? parseFloat(opt.checkout_basic_day_rate) : null;
+                var discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
+                    ? parseFloat(opt.checkout_discount_day_rate) : null;
+                
+                function calculatePrice(days) {
+                    var basePrice = flagfall;
+                    if (days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)) {
+                        basePrice += discountDayRate * days;
+                    } else if (basicDayRate !== null && !isNaN(basicDayRate)) {
+                        basePrice += basicDayRate * days;
+                    }
+                    if (surcharge !== 0 && !isNaN(surcharge)) {
+                        basePrice = basePrice * (1 + surcharge / 100);
+                    }
+                    return basePrice;
+                }
+                
+                var price30 = calculatePrice(30);
+                var price365 = calculatePrice(365);
+                
+                var title = document.createElement('div');
+                title.className = 'formbuilder-checkout-title';
+                title.textContent = opt.checkout_title || 'Untitled';
+                
+                var prices = document.createElement('div');
+                prices.className = 'formbuilder-checkout-prices';
+                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + price30.toFixed(2) + '</span></div>' +
+                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + price365.toFixed(2) + '</span></div>';
+                
+                var calculator = document.createElement('div');
+                calculator.className = 'formbuilder-checkout-calculator';
+                
+                var calcLabel = document.createElement('span');
+                calcLabel.textContent = 'Calculator:';
+                
+                var calcInput = document.createElement('input');
+                calcInput.type = 'number';
+                calcInput.className = 'formbuilder-checkout-calc-input';
+                calcInput.placeholder = 'Days';
+                calcInput.min = '1';
+                calcInput.step = '1';
+                
+                var calcTotal = document.createElement('span');
+                calcTotal.className = 'formbuilder-checkout-calc-total';
+                calcTotal.textContent = currency + '0.00';
+                
+                calcInput.addEventListener('input', function() {
+                    var days = parseFloat(calcInput.value) || 0;
+                    if (days <= 0) {
+                        calcTotal.textContent = currency + '0.00';
+                        return;
+                    }
+                    var total = calculatePrice(days);
+                    calcTotal.textContent = currency + total.toFixed(2);
+                });
+                
+                calculator.appendChild(calcLabel);
+                calculator.appendChild(calcInput);
+                calculator.appendChild(calcTotal);
+                
+                card.appendChild(title);
+                card.appendChild(prices);
+                card.appendChild(calculator);
+                checkoutList.appendChild(card);
+            });
+        }
+        
+        body.appendChild(checkoutList);
+        
+        modalContainer.appendChild(header);
+        modalContainer.appendChild(body);
+        modal.appendChild(modalContainer);
+        
+        // Add to admin panel content
+        var adminPanelContent = document.querySelector('.admin-panel-content');
+        if (adminPanelContent) {
+            adminPanelContent.appendChild(modal);
+        } else if (container) {
+            container.appendChild(modal);
+        } else {
+            document.body.appendChild(modal);
+        }
+        
+        function closeModal() {
+            if (modal && modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }
+        
+        // Close on backdrop click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Close on Escape key
+        var escapeHandler = function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
     }
     
     /* --------------------------------------------------------------------------
