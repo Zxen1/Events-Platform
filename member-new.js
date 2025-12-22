@@ -77,6 +77,7 @@ const MemberModule = (function() {
     var profileName = null;
     var profileEmail = null;
     var logoutBtn = null;
+    var profileTabBtn = null;
     
     // Create post elements
     var submitBtn = null;
@@ -164,6 +165,7 @@ const MemberModule = (function() {
         profileName = document.getElementById('member-profile-name');
         profileEmail = document.getElementById('member-profile-email');
         logoutBtn = document.getElementById('member-logout-btn');
+        profileTabBtn = document.getElementById('member-tab-profile-btn');
     }
 
     function bindEvents() {
@@ -389,10 +391,6 @@ const MemberModule = (function() {
         subcategoryWrapper.className = 'member-panel-field';
         subcategoryWrapper.hidden = true;
         
-        var subcategoryLabel = document.createElement('label');
-        subcategoryLabel.className = 'member-panel-field-label';
-        subcategoryLabel.textContent = 'Subcategory';
-        
         var subcategoryMenu = document.createElement('div');
         subcategoryMenu.className = 'member-formpicker-menu';
         
@@ -406,7 +404,6 @@ const MemberModule = (function() {
         
         subcategoryMenu.appendChild(subcategoryBtn);
         subcategoryMenu.appendChild(subcategoryOpts);
-        subcategoryWrapper.appendChild(subcategoryLabel);
         subcategoryWrapper.appendChild(subcategoryMenu);
         
         // Category dropdown
@@ -415,7 +412,7 @@ const MemberModule = (function() {
         
         var categoryLabel = document.createElement('label');
         categoryLabel.className = 'member-panel-field-label';
-        categoryLabel.textContent = 'Category';
+        categoryLabel.textContent = 'Category/Subcategory';
         
         var categoryMenu = document.createElement('div');
         categoryMenu.className = 'member-formpicker-menu';
@@ -1719,9 +1716,19 @@ const MemberModule = (function() {
             // Update header avatar
             updateHeaderAvatar(currentUser);
             
+            // Update profile tab label
+            if (profileTabBtn) {
+                profileTabBtn.textContent = 'Profile';
+            }
+            
         } else {
             // Logged out state
             authForm.dataset.state = 'logged-out';
+            
+            // Update profile tab label
+            if (profileTabBtn) {
+                profileTabBtn.textContent = 'Log In';
+            }
             
             // Hide profile panel
             if (profilePanel) {
