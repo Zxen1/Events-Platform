@@ -120,6 +120,40 @@ Website loading speed is critical. Any changes that slow down initial page load 
 
 ---
 
+## ⚠️ CRITICAL: CONNECTOR FILES STRUCTURE (December 23, 2025) ⚠️
+
+**CRITICAL:** Connector files have a dual-location structure that agents must understand.
+
+**File Locations:**
+1. **Development Location** (`home/funmapco/connectors/`): 
+   - These are development copies placed in the website area for agent access during development
+   - Agents can read and edit these files
+   - These are NOT the production files
+
+2. **Production Location** (one level above in cPanel):
+   - The actual connector files that will be used in production
+   - Located outside the website directory, one level above
+   - These are the files that will actually run on the live site
+
+**Gateway.php Routing:**
+- `gateway.php` currently points to the development copies in `home/funmapco/connectors/`
+- Later, `gateway.php` will be updated to point to the production files above
+- All connector access goes through `gateway.php`
+
+**CRITICAL RULES:**
+1. When editing connector files, agents edit the development copies in `home/funmapco/connectors/`
+2. The user must manually copy changes to the production files in cPanel (one level above)
+3. Never assume changes to development files automatically affect production
+4. Always be aware that the production files may differ from development files
+5. When investigating issues, consider that production may have different connector files
+
+**NEVER:**
+- Assume development connector files are the same as production files
+- Claim changes are live when only development files were modified
+- Ignore the possibility of production files being different
+
+---
+
 ## CONFESSIONS: CRITICAL MISTAKES MADE
 
 ### 1. TERMINOLOGY CONFUSION
