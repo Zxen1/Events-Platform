@@ -271,6 +271,11 @@ const MemberModule = (function() {
     function closePanel() {
         if (!panel || !panelContent) return;
         
+        // Remove focus from close button before hiding (fixes aria-hidden warning)
+        if (closeBtn && document.activeElement === closeBtn) {
+            closeBtn.blur();
+        }
+        
         panelContent.classList.remove('member-panel-content--visible');
         panelContent.classList.add('member-panel-content--hidden');
         
