@@ -885,6 +885,8 @@
   flex-direction: column;
   gap: 8px;
   align-items: center;
+  justify-content: flex-start;
+  align-self: flex-start;
 }
 
 .member-avatar-upload-btn {
@@ -892,13 +894,14 @@
   height: 64px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: border-color 0.2s ease, background-color 0.2s ease;
   padding: 0;
+  box-sizing: border-box;
 }
 
 .member-avatar-upload-btn:hover {
@@ -906,9 +909,15 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.member-avatar-upload-btn:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
 .member-avatar-upload-icon {
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
+  display: block;
 }
 
 .member-avatar-options {
@@ -924,8 +933,8 @@
   display: inline-block;
   cursor: pointer;
   border: 2px solid transparent;
-  border-radius: 8px;
-  padding: 4px;
+  border-radius: 6px;
+  padding: 0;
   transition: border-color 0.2s ease;
 }
 

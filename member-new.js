@@ -220,6 +220,8 @@ const MemberModule = (function() {
             });
         }
         
+        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
+        /*
         // Avatar upload button (radio binding happens in loadAvatarOptions)
         var avatarUploadBtn = document.getElementById('member-avatar-upload-btn');
         var avatarFileInput = document.getElementById('member-avatar-file');
@@ -270,6 +272,7 @@ const MemberModule = (function() {
                 }
             });
         }
+        */
         
         // Logout button
         if (logoutBtn) {
@@ -1354,6 +1357,8 @@ const MemberModule = (function() {
         
         if (authForm) authForm.dataset.active = target;
         
+        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
+        /*
         // Load avatar options only when register tab is opened (lazy loading)
         if (!isLogin) {
             var avatarOptionsContainer = document.getElementById('member-avatar-options');
@@ -1362,6 +1367,7 @@ const MemberModule = (function() {
                 avatarOptionsContainer.dataset.loaded = 'true';
             }
         }
+        */
         
         // Focus first field
         focusFirstField(isLogin ? loginPanel : registerPanel);
@@ -1408,8 +1414,10 @@ const MemberModule = (function() {
 
     /* --------------------------------------------------------------------------
        AVATAR OPTIONS LOADING
+       COMMENTED OUT FOR TESTING
        -------------------------------------------------------------------------- */
     
+    /*
     function loadAvatarOptions() {
         var avatarOptionsContainer = document.getElementById('member-avatar-options');
         if (!avatarOptionsContainer) return;
@@ -1535,10 +1543,13 @@ const MemberModule = (function() {
                 }
             });
     }
+    */
 
     /* --------------------------------------------------------------------------
        AVATAR UPLOAD
+       COMMENTED OUT FOR TESTING
        -------------------------------------------------------------------------- */
+    /*
     
     function uploadAvatarFile(file, callback) {
         if (!file) {
@@ -1584,6 +1595,7 @@ const MemberModule = (function() {
             if (callback) callback(null);
         });
     }
+    */
 
     /* --------------------------------------------------------------------------
        AUTHENTICATION HANDLERS
@@ -1658,15 +1670,16 @@ const MemberModule = (function() {
         var emailInput = document.getElementById('member-register-email');
         var passwordInput = document.getElementById('member-register-password');
         var confirmInput = document.getElementById('member-register-confirm');
-        var avatarInput = document.getElementById('member-register-avatar');
-        var avatarFileInput = document.getElementById('member-avatar-file');
+        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
+        // var avatarInput = document.getElementById('member-register-avatar');
+        // var avatarFileInput = document.getElementById('member-avatar-file');
         
         var username = usernameInput ? usernameInput.value.trim() : '';
         var email = emailInput ? emailInput.value.trim() : '';
         var password = passwordInput ? passwordInput.value : '';
         var confirm = confirmInput ? confirmInput.value : '';
-        var avatar = avatarInput ? avatarInput.value.trim() : '';
-        var avatarFile = avatarFileInput && avatarFileInput.files && avatarFileInput.files[0] ? avatarFileInput.files[0] : null;
+        // var avatar = avatarInput ? avatarInput.value.trim() : '';
+        // var avatarFile = avatarFileInput && avatarFileInput.files && avatarFileInput.files[0] ? avatarFileInput.files[0] : null;
         
         // Validation
         if (!username || !email || !password) {
@@ -1711,6 +1724,8 @@ const MemberModule = (function() {
         formData.set('password', password);
         formData.set('confirm', confirm);
         
+        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
+        /*
         // If file uploaded, send file (will be uploaded with correct name after member creation)
         // If pre-selected avatar URL chosen, send URL (works with any avatar provider)
         if (avatarFile) {
@@ -1718,6 +1733,7 @@ const MemberModule = (function() {
         } else if (avatar) {
             formData.set('avatar_url', avatar);
         }
+        */
         
         fetch('/gateway.php?action=add-member', {
             method: 'POST',
