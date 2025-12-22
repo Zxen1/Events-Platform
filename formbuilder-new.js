@@ -1071,23 +1071,28 @@
                 if (!fieldset) return;
                 
                 var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                var isVenue = fieldsetKey === 'venue';
-                var isCity = fieldsetKey === 'city';
-                var isAddress = fieldsetKey === 'address' || fieldsetKey === 'location';
+                // Normalize to lowercase for comparison
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                var isVenue = fieldsetKeyLower === 'venue';
+                var isCity = fieldsetKeyLower === 'city';
+                var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
                 
-                if (selectedType === 'Venue') {
+                // Normalize selectedType for comparison
+                var selectedTypeLower = String(selectedType).toLowerCase();
+                
+                if (selectedTypeLower === 'venue') {
                     if (isCity || isAddress) {
                         opt.classList.add('disabled');
                     } else if (isVenue) {
                         opt.classList.remove('disabled');
                     }
-                } else if (selectedType === 'City') {
+                } else if (selectedTypeLower === 'city') {
                     if (isVenue || isAddress) {
                         opt.classList.add('disabled');
                     } else if (isCity) {
                         opt.classList.remove('disabled');
                     }
-                } else if (selectedType === 'Address') {
+                } else if (selectedTypeLower === 'address') {
                     if (isVenue || isCity) {
                         opt.classList.add('disabled');
                     } else if (isAddress) {
@@ -1731,16 +1736,21 @@
             opt.setAttribute('data-fieldset-id', fsId);
             
             var fieldsetKey = fs.key || fs.fieldset_key || fs.id;
-            var isVenue = fieldsetKey === 'venue';
-            var isCity = fieldsetKey === 'city';
-            var isAddress = fieldsetKey === 'address' || fieldsetKey === 'location';
+            // Normalize to lowercase for comparison
+            var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+            var isVenue = fieldsetKeyLower === 'venue';
+            var isCity = fieldsetKeyLower === 'city';
+            var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
+            
+            // Normalize selectedLocationType for comparison
+            var selectedTypeLower = String(selectedLocationType).toLowerCase();
             
             // Grey out fieldsets that don't match selected location type
-            if (selectedLocationType === 'Venue' && (isCity || isAddress)) {
+            if (selectedTypeLower === 'venue' && (isCity || isAddress)) {
                 opt.classList.add('disabled');
-            } else if (selectedLocationType === 'City' && (isVenue || isAddress)) {
+            } else if (selectedTypeLower === 'city' && (isVenue || isAddress)) {
                 opt.classList.add('disabled');
-            } else if (selectedLocationType === 'Address' && (isVenue || isCity)) {
+            } else if (selectedTypeLower === 'address' && (isVenue || isCity)) {
                 opt.classList.add('disabled');
             }
             
