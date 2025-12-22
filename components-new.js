@@ -68,6 +68,12 @@ const MenuManager = (function(){
     
     // Close all menus when clicking outside
     document.addEventListener('click', function(e) {
+        // Don't close if clicking on save/discard buttons
+        if (e.target.closest('.admin-panel-actions-icon-btn--save') ||
+            e.target.closest('.admin-panel-actions-icon-btn--discard') ||
+            e.target.closest('.admin-panel-actions')) {
+            return;
+        }
         openMenus.forEach(function(menu) {
             if (!menu.contains(e.target)) {
                 menu.classList.remove('open');
@@ -302,13 +308,15 @@ const FieldsetComponent = (function(){
     }
     
     // Build compact currency menu - uses CurrencyComponent
-    function buildCurrencyMenuCompact(container) {
+    function buildCurrencyMenuCompact(container, defaultCurrency) {
         if (typeof CurrencyComponent === 'undefined') {
             console.error('[FieldsetComponent] CurrencyComponent not available');
             return document.createElement('div');
         }
+        // Use defaultCurrency if provided, otherwise null (user must select)
+        var initialValue = defaultCurrency || null;
         var result = CurrencyComponent.buildCompactMenu({
-            initialValue: 'USD',
+            initialValue: initialValue,
             container: container
         });
         return result.element;
@@ -320,8 +328,10 @@ const FieldsetComponent = (function(){
             console.error('[FieldsetComponent] PhonePrefixComponent not available');
             return document.createElement('div');
         }
+        // No default - user must select
+        var initialValue = null;
         var result = PhonePrefixComponent.buildCompactMenu({
-            initialValue: '+1',
+            initialValue: initialValue,
             container: container
         });
         return result.element;
@@ -462,6 +472,7 @@ const FieldsetComponent = (function(){
         var idPrefix = options.idPrefix || 'fieldset';
         var index = options.fieldIndex || 0;
         var container = options.container || null;
+        var defaultCurrency = options.defaultCurrency || null;
         
         var fieldset = document.createElement('div');
         fieldset.className = 'fieldset';
@@ -808,15 +819,29 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip));
 
                 // Track shared currency state for item pricing
-                var itemCurrencyState = { flag: 'us', code: 'USD' };
+                // Use defaultCurrency if provided, otherwise null (user must select)
+                var initialCurrencyCode = defaultCurrency || null;
+                var initialCurrency = null;
+                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var found = CurrencyComponent.getData().find(function(item) {
+                        return item.value === initialCurrencyCode;
+                    });
+                    if (found) {
+                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
+                    }
+                }
+                var itemCurrencyState = initialCurrency || { flag: null, code: null };
                 var itemCurrencyMenus = [];
 
                 function syncAllItemCurrencies() {
                     itemCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
                         var input = menu.querySelector('.fieldset-menu-button-input');
-                        img.src = window.App.getImageUrl('currencies', itemCurrencyState.flag + '.svg');
-                        input.value = itemCurrencyState.code;
+                        if (itemCurrencyState.flag) {
+                            img.src = window.App.getImageUrl('currencies', itemCurrencyState.flag + '.svg');
+                        }
+                        input.value = itemCurrencyState.code || '';
                     });
                 }
 
@@ -985,15 +1010,29 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(seatingAreasContainer);
                 
                 // Track shared currency state
-                var ticketCurrencyState = { flag: 'us', code: 'USD' };
+                // Use defaultCurrency if provided, otherwise null (user must select)
+                var initialCurrencyCode = defaultCurrency || null;
+                var initialCurrency = null;
+                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var found = CurrencyComponent.getData().find(function(item) {
+                        return item.value === initialCurrencyCode;
+                    });
+                    if (found) {
+                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
+                    }
+                }
+                var ticketCurrencyState = initialCurrency || { flag: null, code: null };
                 var ticketCurrencyMenus = [];
 
                 function syncAllTicketCurrencies() {
                     ticketCurrencyMenus.forEach(function(menu) {
                         var img = menu.querySelector('.fieldset-menu-button-image');
                         var input = menu.querySelector('.fieldset-menu-button-input');
-                        img.src = window.App.getImageUrl('currencies', ticketCurrencyState.flag + '.svg');
-                        input.value = ticketCurrencyState.code;
+                        if (ticketCurrencyState.flag) {
+                            img.src = window.App.getImageUrl('currencies', ticketCurrencyState.flag + '.svg');
+                        }
+                        input.value = ticketCurrencyState.code || '';
                     });
                 }
 
@@ -2062,8 +2101,9 @@ const CurrencyComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getImageUrl('currencies', 'us.svg');
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        // No default flag - leave empty until user selects
+        var initialFlagUrl = '';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
@@ -2080,7 +2120,13 @@ const CurrencyComponent = (function(){
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
-                btnImg.src = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
+                if (countryCode) {
+                    btnImg.src = window.App.getImageUrl('currencies', countryCode + '.svg');
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = found.value;
                 selectedCode = code;
             }
@@ -2106,7 +2152,13 @@ const CurrencyComponent = (function(){
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = flagUrl;
+                if (countryCode) {
+                    btnImg.src = flagUrl;
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = item.value;
                 selectedCode = item.value;
                 menu.classList.remove('open');
@@ -2193,13 +2245,14 @@ const CurrencyComponent = (function(){
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var containerEl = options.container || null;
-        var initialValue = options.initialValue || 'USD';
+        var initialValue = options.initialValue || null;
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
         menu.className = 'admin-currency-wrapper';
-        var usFlagUrl = window.App.getImageUrl('currencies', 'us.svg');
-        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="' + usFlagUrl + '" alt=""><input type="text" class="admin-currency-button-input" placeholder="Search currency..." autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
+        // No default flag - leave empty until user selects
+        var initialFlagUrl = '';
+        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="' + initialFlagUrl + '" alt=""><input type="text" class="admin-currency-button-input" placeholder="Select currency" autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
         
         var btn = menu.querySelector('.admin-currency-button');
         var opts = menu.querySelector('.admin-currency-options');
@@ -2259,8 +2312,10 @@ const CurrencyComponent = (function(){
             });
         });
 
-        // Set initial value
-        setValue(initialValue);
+        // Set initial value (only if provided)
+        if (initialValue) {
+            setValue(initialValue);
+        }
 
         // Register with MenuManager
         MenuManager.register(menu);
@@ -2388,8 +2443,9 @@ const PhonePrefixComponent = (function(){
 
         var menu = document.createElement('div');
         menu.className = 'fieldset-menu fieldset-currency-compact';
-        var usFlagUrl = window.App.getImageUrl('phonePrefixes', 'us.svg');
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + usFlagUrl + '" alt=""><input type="text" class="fieldset-menu-button-input" placeholder="Search..." autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        // No default flag - leave empty until user selects
+        var initialFlagUrl = '';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
         var btn = menu.querySelector('.fieldset-menu-button');
         var opts = menu.querySelector('.fieldset-menu-options');
@@ -2406,7 +2462,13 @@ const PhonePrefixComponent = (function(){
             });
             if (found) {
                 var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
-                btnImg.src = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
+                if (countryCode) {
+                    btnImg.src = window.App.getImageUrl('phonePrefixes', countryCode + '.svg');
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = found.value;
                 selectedCode = code;
             }
@@ -2421,8 +2483,12 @@ const PhonePrefixComponent = (function(){
             });
         }
 
-        // Build options
+        // Build options - filter out entries without proper data
         prefixData.forEach(function(item) {
+            // Skip entries without filename, value, or label
+            if (!item.filename || !item.value || !item.label) {
+                return;
+            }
             var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
             var displayText = item.value + ' - ' + item.label;
 
@@ -2432,7 +2498,13 @@ const PhonePrefixComponent = (function(){
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
-                btnImg.src = flagUrl;
+                if (countryCode) {
+                    btnImg.src = flagUrl;
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
                 btnInput.value = item.value;
                 selectedCode = item.value;
                 menu.classList.remove('open');
@@ -3240,7 +3312,7 @@ const CheckoutOptionsComponent = (function(){
     function create(containerEl, options) {
         options = options || {};
         var checkoutOptions = options.checkoutOptions || [];
-        var currency = options.currency || 'USD';
+        var currency = options.currency || null;
         var surcharge = options.surcharge || 0;
         var isEvent = options.isEvent || false;
         var calculatedDays = options.calculatedDays !== undefined ? options.calculatedDays : null;
@@ -3426,7 +3498,7 @@ const CheckoutOptionsComponent = (function(){
                             var flagfall = parseFloat(card.dataset.flagfall) || 0;
                             var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
                             var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
-                            var curr = card.dataset.currency || 'USD';
+                            var curr = card.dataset.currency || null;
                             var dayRate = newCalculatedDays >= 365 && discountRate !== null ? discountRate : basicRate;
                             var price = dayRate !== null ? flagfall + (dayRate * newCalculatedDays) : flagfall;
                             priceDisplay.textContent = '(' + newCalculatedDays + ' days) — ' + (price > 0 ? curr + ' ' + price.toFixed(2) : 'Free');
@@ -3961,6 +4033,280 @@ const ConfirmDialogComponent = (function() {
     
     return {
         show: show
+    };
+})();
+
+
+/* ============================================================================
+   THREE BUTTON DIALOG COMPONENT
+   Duplicated from ConfirmDialogComponent with independent classes
+   Used for unsaved changes dialogs (Cancel, Save, Discard)
+   ============================================================================ */
+
+const ThreeButtonDialogComponent = (function() {
+    var overlayEl = null;
+    
+    function ensureOverlay() {
+        if (overlayEl) return overlayEl;
+        
+        var overlay = document.createElement('div');
+        overlay.className = 'component-three-button-dialog-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('tabindex', '-1');
+        
+        var dialog = document.createElement('div');
+        dialog.className = 'component-three-button-dialog';
+        dialog.setAttribute('role', 'alertdialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', 'threeButtonDialogTitle');
+        dialog.setAttribute('aria-describedby', 'threeButtonDialogMessage');
+        
+        var title = document.createElement('h2');
+        title.id = 'threeButtonDialogTitle';
+        title.className = 'component-three-button-dialog-title';
+        
+        var message = document.createElement('p');
+        message.id = 'threeButtonDialogMessage';
+        message.className = 'component-three-button-dialog-message';
+        
+        var actions = document.createElement('div');
+        actions.className = 'component-three-button-dialog-actions';
+        
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'component-three-button-dialog-button--cancel';
+        cancelBtn.dataset.role = 'cancel';
+        cancelBtn.textContent = 'Cancel';
+        
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'component-three-button-dialog-button--save';
+        saveBtn.dataset.role = 'save';
+        saveBtn.textContent = 'Save';
+        
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.className = 'component-three-button-dialog-button--discard';
+        discardBtn.dataset.role = 'discard';
+        discardBtn.textContent = 'Discard';
+        
+        actions.appendChild(cancelBtn);
+        actions.appendChild(saveBtn);
+        actions.appendChild(discardBtn);
+        dialog.appendChild(title);
+        dialog.appendChild(message);
+        dialog.appendChild(actions);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        
+        overlayEl = overlay;
+        return overlay;
+    }
+    
+    function show(options) {
+        options = options || {};
+        var titleText = options.titleText || 'Unsaved Changes';
+        var messageText = options.messageText || 'You have unsaved changes. What would you like to do?';
+        var cancelLabel = options.cancelLabel || 'Cancel';
+        var saveLabel = options.saveLabel || 'Save';
+        var discardLabel = options.discardLabel || 'Discard';
+        var focusCancel = options.focusCancel !== false;
+        
+        var overlay = ensureOverlay();
+        var title = overlay.querySelector('#threeButtonDialogTitle');
+        var message = overlay.querySelector('#threeButtonDialogMessage');
+        var cancelBtn = overlay.querySelector('[data-role="cancel"]');
+        var saveBtn = overlay.querySelector('[data-role="save"]');
+        var discardBtn = overlay.querySelector('[data-role="discard"]');
+        var previousFocused = document.activeElement;
+        
+        // Clone buttons to remove old event listeners
+        var newCancelBtn = cancelBtn.cloneNode(true);
+        var newSaveBtn = saveBtn.cloneNode(true);
+        var newDiscardBtn = discardBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+        discardBtn.parentNode.replaceChild(newDiscardBtn, discardBtn);
+        cancelBtn = newCancelBtn;
+        saveBtn = newSaveBtn;
+        discardBtn = newDiscardBtn;
+        
+        // Set content
+        title.textContent = titleText;
+        message.textContent = messageText;
+        cancelBtn.textContent = cancelLabel;
+        saveBtn.textContent = saveLabel;
+        discardBtn.textContent = discardLabel;
+        
+        // Show overlay
+        overlay.classList.add('component-three-button-dialog-overlay--visible');
+        overlay.setAttribute('aria-hidden', 'false');
+        
+        // Focus appropriate button
+        if (focusCancel) {
+            cancelBtn.focus();
+        } else {
+            saveBtn.focus();
+        }
+        
+        return new Promise(function(resolve) {
+            function cleanup(result) {
+                overlay.classList.remove('component-three-button-dialog-overlay--visible');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', onKeyDown, true);
+                overlay.removeEventListener('click', onOverlayClick);
+                
+                if (previousFocused && typeof previousFocused.focus === 'function') {
+                    try {
+                        previousFocused.focus({ preventScroll: true });
+                    } catch (e) {
+                        // ignore focus errors
+                    }
+                }
+                
+                resolve(result);
+            }
+            
+            function onKeyDown(e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cleanup('cancel');
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var focused = document.activeElement;
+                    if (focused === cancelBtn) {
+                        cleanup('cancel');
+                    } else if (focused === saveBtn) {
+                        cleanup('save');
+                    } else if (focused === discardBtn) {
+                        cleanup('discard');
+                    }
+                } else if (e.key === 'Tab') {
+                    // Trap focus inside dialog
+                    var buttons = [cancelBtn, saveBtn, discardBtn];
+                    var first = buttons[0];
+                    var last = buttons[buttons.length - 1];
+                    
+                    if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    } else if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+            
+            function onOverlayClick(e) {
+                if (e.target === overlay) {
+                    cleanup('cancel');
+                }
+            }
+            
+            cancelBtn.addEventListener('click', function() {
+                cleanup('cancel');
+            });
+            
+            saveBtn.addEventListener('click', function() {
+                cleanup('save');
+            });
+            
+            discardBtn.addEventListener('click', function() {
+                cleanup('discard');
+            });
+            
+            document.addEventListener('keydown', onKeyDown, true);
+            overlay.addEventListener('click', onOverlayClick);
+        });
+    }
+    
+    return {
+        show: show
+    };
+})();
+
+
+/* ============================================================================
+   TOAST COMPONENT
+   Toast notifications matching old site design
+   Variants: success (green), error (red), warning (yellow/orange)
+   ============================================================================ */
+
+const ToastComponent = (function() {
+    var toastEl = null;
+    var toastTimer = null;
+    
+    function ensureToastElement() {
+        if (toastEl) return toastEl;
+        
+        var toast = document.createElement('div');
+        toast.className = 'component-toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        toast.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(toast);
+        
+        toastEl = toast;
+        return toast;
+    }
+    
+    function show(message, variant, duration) {
+        variant = variant || 'default';
+        duration = duration || 2000;
+        
+        if (!ensureToastElement()) return;
+        
+        toastEl.textContent = message || '';
+        toastEl.setAttribute('aria-hidden', 'false');
+        
+        // Remove all variant classes
+        toastEl.classList.remove(
+            'component-toast--success',
+            'component-toast--error',
+            'component-toast--warning',
+            'component-toast--show'
+        );
+        
+        // Add variant class
+        if (variant !== 'default') {
+            toastEl.classList.add('component-toast--' + variant);
+        }
+        
+        // Clear existing timer
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+            toastTimer = null;
+        }
+        
+        // Show toast
+        toastEl.classList.add('component-toast--show');
+        
+        // Auto-hide
+        toastTimer = setTimeout(function() {
+            toastEl.classList.remove('component-toast--show');
+            toastEl.setAttribute('aria-hidden', 'true');
+        }, duration);
+    }
+    
+    function showSuccess(message, duration) {
+        show(message, 'success', duration);
+    }
+    
+    function showError(message, duration) {
+        show(message, 'error', duration);
+    }
+    
+    function showWarning(message, duration) {
+        show(message, 'warning', duration);
+    }
+    
+    return {
+        show: show,
+        showSuccess: showSuccess,
+        showError: showError,
+        showWarning: showWarning
     };
 })();
 

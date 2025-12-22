@@ -123,7 +123,10 @@ const App = (function() {
   }
 
   function getModule(name) {
-    return modules[name] || null;
+    if (!modules[name]) {
+      throw new Error(`[App] Module "${name}" not found. Register it with registerModule() first.`);
+    }
+    return modules[name];
   }
 
 
@@ -152,6 +155,7 @@ const App = (function() {
         callback(data);
       } catch (err) {
         console.error(`[App] Event handler error for "${event}":`, err);
+        throw err;
       }
     });
   }

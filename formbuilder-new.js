@@ -149,9 +149,18 @@
                 // Fee data
                 var surchargeValue = surchargeInput && surchargeInput.value ? parseFloat(surchargeInput.value) : null;
                 var subcategoryType = eventsRadio && eventsRadio.checked ? 'Events' : 'General';
+                
+                // Location type - read from radio buttons (name pattern: locationType-{catName}-{subName})
+                var locationTypeRadio = option.querySelector('input[type="radio"][name^="locationType-"]:checked');
+                var locationType = null;
+                if (locationTypeRadio && locationTypeRadio.value) {
+                    locationType = locationTypeRadio.value;
+                }
+                
                 category.subFees[subName] = {
                     checkout_surcharge: surchargeValue,
-                    subcategory_type: subcategoryType
+                    subcategory_type: subcategoryType,
+                    location_type: locationType
                 };
                 
                 // Fields
@@ -466,9 +475,24 @@
     }
     
     function bindDocumentListeners() {
+        // Helper function to check if click is on save/discard button or calculator
+        function isSaveOrDiscardButton(target) {
+            return target.closest('.admin-panel-actions-icon-btn--save') ||
+                   target.closest('.admin-panel-actions-icon-btn--discard') ||
+                   target.closest('.admin-panel-actions');
+        }
+        
+        // Helper function to check if click is on calculator button or popup
+        function isCalculatorButtonOrPopup(target) {
+            return target.closest('.formbuilder-calculator-btn') ||
+                   target.closest('.formbuilder-formpreview-modal');
+        }
+        
         // Close category/subcategory edit panels when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel') && 
                 !e.target.closest('.formbuilder-accordion-option-editpanel') &&
                 !e.target.closest('.formbuilder-accordion-header-editarea') &&
@@ -482,6 +506,8 @@
         // Close 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
                 container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -492,7 +518,12 @@
         // Close fieldset menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
-            if (!e.target.closest('.formbuilder-fieldset-menu')) {
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
+            // Check if click is inside any fieldset menu (button or options)
+            var clickedInsideMenu = e.target.closest('.formbuilder-fieldset-menu');
+            if (!clickedInsideMenu) {
+                // Click was outside - close all open fieldset menus
                 container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                     el.classList.remove('open');
                 });
@@ -502,6 +533,8 @@
         // Close icon picker menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-menu')) {
                 container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -512,6 +545,8 @@
         // Close field 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-field-more')) {
                 container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
                     el.classList.remove('open');
@@ -522,6 +557,8 @@
         // Close field edit panels when clicking outside
         document.addEventListener('click', function(e) {
             if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-field-wrapper')) {
                 closeAllFieldEditPanels();
             }
@@ -981,28 +1018,476 @@
         generalLabel.appendChild(generalInput);
         generalLabel.appendChild(generalText);
         
+        typeRow.appendChild(typeLabel);
+        typeRow.appendChild(eventsLabel);
+        typeRow.appendChild(generalLabel);
+        subEditPanel.appendChild(typeRow);
+        
+        // Location Type row
+        var locationTypeRow = document.createElement('div');
+        locationTypeRow.className = 'formbuilder-type-row';
+        
+        var locationTypeLabel = document.createElement('span');
+        locationTypeLabel.className = 'formbuilder-type-row-label';
+        locationTypeLabel.textContent = 'Location Type';
+        
+        // Only use existing value from database, NO FALLBACKS
+        var currentLocationType = subFeeData.location_type;
+        
+        var venueLabel = document.createElement('label');
+        venueLabel.className = 'formbuilder-type-option';
+        var venueInput = document.createElement('input');
+        venueInput.type = 'radio';
+        venueInput.name = 'locationType-' + cat.name + '-' + subName;
+        venueInput.value = 'Venue';
+        // Only check if explicitly 'Venue', not null/undefined/empty
+        venueInput.checked = (currentLocationType === 'Venue');
+        var venueText = document.createElement('span');
+        venueText.textContent = 'Venue';
+        venueLabel.appendChild(venueInput);
+        venueLabel.appendChild(venueText);
+        
+        var cityLabel = document.createElement('label');
+        cityLabel.className = 'formbuilder-type-option';
+        var cityInput = document.createElement('input');
+        cityInput.type = 'radio';
+        cityInput.name = 'locationType-' + cat.name + '-' + subName;
+        cityInput.value = 'City';
+        // Only check if explicitly 'City', not null/undefined/empty
+        cityInput.checked = (currentLocationType === 'City');
+        if (currentType === 'Events') {
+            cityInput.disabled = true;
+        }
+        var cityText = document.createElement('span');
+        cityText.textContent = 'City';
+        cityLabel.appendChild(cityInput);
+        cityLabel.appendChild(cityText);
+        
+        var addressLabel = document.createElement('label');
+        addressLabel.className = 'formbuilder-type-option';
+        var addressInput = document.createElement('input');
+        addressInput.type = 'radio';
+        addressInput.name = 'locationType-' + cat.name + '-' + subName;
+        addressInput.value = 'Address';
+        // Only check if explicitly 'Address', not null/undefined/empty
+        addressInput.checked = (currentLocationType === 'Address');
+        if (currentType === 'Events') {
+            addressInput.disabled = true;
+        }
+        var addressText = document.createElement('span');
+        addressText.textContent = 'Address';
+        addressLabel.appendChild(addressInput);
+        addressLabel.appendChild(addressText);
+        
+        function updateLocationTypeFieldsets(selectedType) {
+            if (!fieldsetOpts) return;
+            var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            var selectedTypeLower = selectedType ? String(selectedType).toLowerCase() : '';
+            
+            allOptions.forEach(function(opt) {
+                var fsId = opt.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (!fieldset) return;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                // Normalize to lowercase for comparison
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                var isVenue = fieldsetKeyLower === 'venue';
+                var isCity = fieldsetKeyLower === 'city';
+                var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
+                
+                // Only filter venue, city, and address fieldsets - other fieldsets are always enabled
+                if (!isVenue && !isCity && !isAddress) {
+                    // Not a location fieldset - always enabled (but keep existing disabled state if field already added)
+                    return;
+                }
+                
+                // For location fieldsets, apply filtering based on selected type
+                // Use separate class 'disabled-location-type' to avoid breaking "already added" disabled state
+                if (!selectedType || selectedTypeLower === 'null' || selectedTypeLower === '') {
+                    // No selection - enable all location fieldsets
+                    opt.classList.remove('disabled-location-type');
+                } else if (selectedTypeLower === 'venue') {
+                    if (isCity || isAddress) {
+                        opt.classList.add('disabled-location-type');
+                    } else if (isVenue) {
+                        opt.classList.remove('disabled-location-type');
+                    }
+                } else if (selectedTypeLower === 'city') {
+                    if (isVenue || isAddress) {
+                        opt.classList.add('disabled-location-type');
+                    } else if (isCity) {
+                        opt.classList.remove('disabled-location-type');
+                    }
+                } else if (selectedTypeLower === 'address') {
+                    if (isVenue || isCity) {
+                        opt.classList.add('disabled-location-type');
+                    } else if (isAddress) {
+                        opt.classList.remove('disabled-location-type');
+                    }
+                }
+            });
+        }
+        
+        // Update sessions fieldset gray-out state based on subcategory type
+        function updateSessionsFieldset(subcategoryType) {
+            if (!fieldsetOpts) return;
+            var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            
+            allOptions.forEach(function(opt) {
+                var fsId = opt.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (!fieldset) return;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                var isSessions = fieldsetKeyLower === 'sessions';
+                
+                if (isSessions) {
+                    if (subcategoryType === 'Events') {
+                        opt.classList.remove('disabled-location-type');
+                    } else {
+                        opt.classList.add('disabled-location-type');
+                    }
+                }
+            });
+        }
+        
+        function manageLocationTypeFieldsets(selectedType) {
+            if (!selectedType) {
+                // No location type selected - hide Add Field button
+                if (fieldsetMenu) {
+                    fieldsetMenu.style.display = 'none';
+                }
+                // Update gray-out state for all location fieldsets
+                updateLocationTypeFieldsets(null);
+                return;
+            }
+            
+            // Show Add Field button
+            if (fieldsetMenu) {
+                fieldsetMenu.style.display = '';
+            }
+            
+            // Update gray-out state based on selected type
+            updateLocationTypeFieldsets(selectedType);
+            
+            var selectedTypeLower = String(selectedType).toLowerCase();
+            var targetFieldsetKey = null;
+            
+            // Determine which fieldset key to use
+            if (selectedTypeLower === 'venue') {
+                targetFieldsetKey = 'venue';
+            } else if (selectedTypeLower === 'city') {
+                targetFieldsetKey = 'city';
+            } else if (selectedTypeLower === 'address') {
+                targetFieldsetKey = 'address';
+            }
+            
+            if (!targetFieldsetKey) return;
+            
+            // Find all location type fieldsets in the fields container
+            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+            var targetFieldsetExists = false;
+            
+            // Remove any location fieldsets that don't match the selected type
+            allFieldWrappers.forEach(function(wrapper) {
+                var fsId = wrapper.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (!fieldset) return;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                
+                // Check if this is a location fieldset
+                var isLocationFieldset = fieldsetKeyLower === 'venue' || 
+                                        fieldsetKeyLower === 'city' || 
+                                        fieldsetKeyLower === 'address' || 
+                                        fieldsetKeyLower === 'location';
+                
+                if (isLocationFieldset) {
+                    // Check if it matches the selected type
+                    var matches = false;
+                    if (targetFieldsetKey === 'address') {
+                        matches = (fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location');
+                    } else {
+                        matches = (fieldsetKeyLower === targetFieldsetKey);
+                    }
+                    
+                    // Remove if it doesn't match the selected type
+                    if (!matches) {
+                        wrapper.remove();
+                        addedFieldsets[fsId] = false;
+                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                        if (menuOpt) {
+                            menuOpt.classList.remove('disabled');
+                        }
+                    } else {
+                        // This is the matching fieldset
+                        targetFieldsetExists = true;
+                    }
+                }
+            });
+            
+            // If target fieldset doesn't exist, add it automatically
+            if (!targetFieldsetExists) {
+                // Try to find fieldset by target key, or 'location' if target is 'address'
+                var targetFieldset = null;
+                if (targetFieldsetKey === 'address') {
+                    // Try 'address' first, then 'location'
+                    targetFieldset = fieldsets.find(function(fs) {
+                        var fsKey = fs.key || fs.fieldset_key || fs.id;
+                        return String(fsKey).toLowerCase() === 'address';
+                    });
+                    if (!targetFieldset) {
+                        targetFieldset = fieldsets.find(function(fs) {
+                            var fsKey = fs.key || fs.fieldset_key || fs.id;
+                            return String(fsKey).toLowerCase() === 'location';
+                        });
+                    }
+                } else {
+                    targetFieldset = fieldsets.find(function(fs) {
+                        var fsKey = fs.key || fs.fieldset_key || fs.id;
+                        return String(fsKey).toLowerCase() === targetFieldsetKey;
+                    });
+                }
+                
+                if (targetFieldset) {
+                    var result = createFieldElement(targetFieldset, true, targetFieldset);
+                    fieldsContainer.appendChild(result.wrapper);
+                    addedFieldsets[result.fsId] = true;
+                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
+                    if (menuOpt) {
+                        menuOpt.classList.add('disabled');
+                    }
+                    notifyChange();
+                }
+            }
+        }
+        
+        // Manage sessions fieldset based on subcategory type (Events vs General)
+        function manageSessionsFieldset(isEvents) {
+            // Update gray-out state in menu
+            updateSessionsFieldset(isEvents ? 'Events' : 'General');
+            
+            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+            
+            // If General is selected, remove sessions fieldset if it exists
+            if (!isEvents) {
+                allFieldWrappers.forEach(function(wrapper) {
+                    var fsId = wrapper.getAttribute('data-fieldset-id');
+                    var fieldset = fieldsets.find(function(fs) {
+                        return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                    });
+                    if (!fieldset) return;
+                    
+                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                    
+                    if (fieldsetKeyLower === 'sessions') {
+                        wrapper.remove();
+                        addedFieldsets[fsId] = false;
+                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                        if (menuOpt) {
+                            menuOpt.classList.remove('disabled');
+                        }
+                    }
+                });
+                notifyChange();
+                return;
+            }
+            
+            // If Events is selected, check if sessions fieldset exists and add it automatically if not
+            var sessionsFieldsetExists = false;
+            allFieldWrappers.forEach(function(wrapper) {
+                var fsId = wrapper.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (fieldset) {
+                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                    if (fieldsetKeyLower === 'sessions') {
+                        sessionsFieldsetExists = true;
+                    }
+                }
+            });
+            
+            // If sessions fieldset doesn't exist, add it automatically
+            if (!sessionsFieldsetExists) {
+                var sessionsFieldset = fieldsets.find(function(fs) {
+                    var fsKey = fs.key || fs.fieldset_key || fs.id;
+                    return String(fsKey).toLowerCase() === 'sessions';
+                });
+                
+                if (sessionsFieldset) {
+                    var result = createFieldElement(sessionsFieldset, true, sessionsFieldset);
+                    fieldsContainer.appendChild(result.wrapper);
+                    addedFieldsets[result.fsId] = true;
+                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
+                    if (menuOpt) {
+                        menuOpt.classList.add('disabled');
+                    }
+                    notifyChange();
+                }
+            }
+        }
+        
+        venueInput.addEventListener('change', function(e) {
+            e.stopPropagation();
+            if (venueInput.checked) {
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'Venue';
+                updateLocationTypeFieldsets('Venue');
+                manageLocationTypeFieldsets('Venue');
+                notifyChange();
+            }
+        });
+        
+        cityInput.addEventListener('change', function(e) {
+            e.stopPropagation();
+            if (cityInput.checked) {
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'City';
+                updateLocationTypeFieldsets('City');
+                manageLocationTypeFieldsets('City');
+                notifyChange();
+            }
+        });
+        
+        addressInput.addEventListener('change', function(e) {
+            e.stopPropagation();
+            if (addressInput.checked) {
+                if (!cat.subFees) cat.subFees = {};
+                if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                cat.subFees[subName].location_type = 'Address';
+                updateLocationTypeFieldsets('Address');
+                manageLocationTypeFieldsets('Address');
+                notifyChange();
+            }
+        });
+        
+        // Also handle clicks on labels to ensure radio selection works
+        venueLabel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        cityLabel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        addressLabel.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // Store location type for later use when fieldsetOpts is created
+        var initialLocationType = currentLocationType;
+        
+        // Update when Events/General type changes
         eventsInput.addEventListener('change', function() {
             if (eventsInput.checked) {
+                // Venue stays enabled, only City and Address are disabled
+                cityInput.disabled = true;
+                addressInput.disabled = true;
+                // When switching to Events, location type must be Venue
+                // Get current location type from data structure
+                var existingLocationType = (cat.subFees && cat.subFees[subName] && cat.subFees[subName].location_type) ? cat.subFees[subName].location_type : null;
+                if (!existingLocationType || existingLocationType === null || existingLocationType === '') {
+                    // No location type set - set to Venue
+                    venueInput.checked = true;
+                    cityInput.checked = false;
+                    addressInput.checked = false;
+                    if (!cat.subFees) cat.subFees = {};
+                    if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                    cat.subFees[subName].location_type = 'Venue';
+                    updateLocationTypeFieldsets('Venue');
+                    manageLocationTypeFieldsets('Venue');
+                } else {
+                    // Location type already set - if it's not Venue, change to Venue (Events requires Venue)
+                    if (existingLocationType === 'Venue') {
+                        venueInput.checked = true;
+                        cityInput.checked = false;
+                        addressInput.checked = false;
+                        // Keep Venue, just update UI
+                        updateLocationTypeFieldsets('Venue');
+                        manageLocationTypeFieldsets('Venue');
+                    } else {
+                        // If it was City or Address, change to Venue (Events requires Venue)
+                        venueInput.checked = true;
+                        cityInput.checked = false;
+                        addressInput.checked = false;
+                        if (!cat.subFees) cat.subFees = {};
+                        if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                        cat.subFees[subName].location_type = 'Venue';
+                        updateLocationTypeFieldsets('Venue');
+                        manageLocationTypeFieldsets('Venue');
+                    }
+                }
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'Events';
+                manageSessionsFieldset(true); // Add sessions fieldset for Events
                 notifyChange();
             }
         });
         
         generalInput.addEventListener('change', function() {
             if (generalInput.checked) {
+                venueInput.disabled = false;
+                cityInput.disabled = false;
+                addressInput.disabled = false;
+                // When switching to General, keep the current location type (don't clear it)
+                // Get current location type from data structure
+                var existingLocationType = (cat.subFees && cat.subFees[subName] && cat.subFees[subName].location_type) ? cat.subFees[subName].location_type : null;
+                // Update radio button states to match current location type
+                if (existingLocationType === 'Venue') {
+                    venueInput.checked = true;
+                    cityInput.checked = false;
+                    addressInput.checked = false;
+                } else if (existingLocationType === 'City') {
+                    venueInput.checked = false;
+                    cityInput.checked = true;
+                    addressInput.checked = false;
+                } else if (existingLocationType === 'Address') {
+                    venueInput.checked = false;
+                    cityInput.checked = false;
+                    addressInput.checked = true;
+                } else {
+                    // No location type set - leave all unchecked
+                    venueInput.checked = false;
+                    cityInput.checked = false;
+                    addressInput.checked = false;
+                }
+                // Update fieldset states based on current location type
+                if (existingLocationType) {
+                    updateLocationTypeFieldsets(existingLocationType);
+                    manageLocationTypeFieldsets(existingLocationType);
+                } else {
+                    updateLocationTypeFieldsets(null);
+                    manageLocationTypeFieldsets(null);
+                }
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'General';
+                // Keep existing location_type - don't set to null
+                manageSessionsFieldset(false); // Remove sessions fieldset for General
                 notifyChange();
             }
         });
         
-        typeRow.appendChild(typeLabel);
-        typeRow.appendChild(eventsLabel);
-        typeRow.appendChild(generalLabel);
-        subEditPanel.appendChild(typeRow);
+        locationTypeRow.appendChild(locationTypeLabel);
+        locationTypeRow.appendChild(venueLabel);
+        locationTypeRow.appendChild(cityLabel);
+        locationTypeRow.appendChild(addressLabel);
+        subEditPanel.appendChild(locationTypeRow);
         
         // Surcharge row
         var surchargeRow = document.createElement('div');
@@ -1027,146 +1512,79 @@
             surchargeInput.value = parseFloat(subFeeData.checkout_surcharge).toFixed(2);
         }
         
+        // Only allow numbers and minus sign
+        surchargeInput.addEventListener('keypress', function(e) {
+            var char = String.fromCharCode(e.which);
+            // Allow: numbers, minus sign (only at start), decimal point
+            if (!/[0-9]/.test(char) && char !== '-' && char !== '.') {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow minus at the start
+            if (char === '-' && (this.selectionStart !== 0 || this.value.indexOf('-') !== -1)) {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow one decimal point
+            if (char === '.' && this.value.indexOf('.') !== -1) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
         surchargeInput.addEventListener('input', function() {
-            var value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
-            if (value !== null && value < -100) {
-                value = -100;
-                surchargeInput.value = value.toFixed(2);
+            // Filter out any non-numeric characters except minus and decimal
+            var value = this.value;
+            // Remove any characters that aren't numbers, minus, or decimal
+            value = value.replace(/[^0-9.\-]/g, '');
+            // Ensure minus is only at the start
+            if (value.indexOf('-') > 0) {
+                value = value.replace(/-/g, '');
+            }
+            // Ensure only one decimal point
+            var parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            this.value = value;
+            
+            var numValue = value ? parseFloat(value) : null;
+            if (numValue !== null && numValue < -100) {
+                numValue = -100;
+                this.value = numValue.toFixed(2);
             }
             if (!cat.subFees) cat.subFees = {};
             if (!cat.subFees[subName]) cat.subFees[subName] = {};
-            cat.subFees[subName].checkout_surcharge = value !== null ? Math.round(value * 100) / 100 : null;
-            if (option._renderCheckoutOptions) option._renderCheckoutOptions();
+            cat.subFees[subName].checkout_surcharge = numValue !== null ? Math.round(numValue * 100) / 100 : null;
             notifyChange();
         });
         
         surchargeInput.addEventListener('blur', function() {
-            var value = surchargeInput.value ? parseFloat(surchargeInput.value) : null;
+            var value = this.value ? parseFloat(this.value) : null;
             if (value !== null && value < -100) {
                 value = -100;
             }
             if (value !== null) {
-                surchargeInput.value = value.toFixed(2);
+                this.value = value.toFixed(2);
             }
-            if (option._renderCheckoutOptions) option._renderCheckoutOptions();
+        });
+        
+        // Calculator button
+        var calculatorBtn = document.createElement('button');
+        calculatorBtn.type = 'button';
+        calculatorBtn.className = 'formbuilder-calculator-btn';
+        calculatorBtn.textContent = 'Calculator';
+        calculatorBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            showCheckoutCalculator(cat, subName);
         });
         
         surchargeRow.appendChild(surchargeLabel);
         surchargeRow.appendChild(surchargePercent);
         surchargeRow.appendChild(surchargeInput);
+        surchargeRow.appendChild(calculatorBtn);
         subEditPanel.appendChild(surchargeRow);
         
-        // Checkout Options Editor
-        var checkoutEditor = document.createElement('div');
-        checkoutEditor.className = 'formbuilder-checkout-editor';
-        
-        var checkoutLabel = document.createElement('div');
-        checkoutLabel.className = 'formbuilder-checkout-label';
-        checkoutLabel.textContent = 'Checkout Options';
-        
-        var checkoutList = document.createElement('div');
-        checkoutList.className = 'formbuilder-checkout-list';
-        
-        checkoutEditor.appendChild(checkoutLabel);
-        checkoutEditor.appendChild(checkoutList);
-        subEditPanel.appendChild(checkoutEditor);
-        
-        function renderCheckoutOptions() {
-            checkoutList.innerHTML = '';
-            var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
-                return opt.is_active !== false && opt.is_active !== 0;
-            });
-            
-            var surcharge = 0;
-            if (cat.subFees && cat.subFees[subName] && cat.subFees[subName].checkout_surcharge !== null && cat.subFees[subName].checkout_surcharge !== undefined) {
-                surcharge = parseFloat(cat.subFees[subName].checkout_surcharge) || 0;
-            }
-            
-            if (activeCheckoutOptions.length === 0) {
-                var emptyMsg = document.createElement('div');
-                emptyMsg.className = 'formbuilder-checkout-empty';
-                emptyMsg.textContent = 'No enabled checkout options available.';
-                checkoutList.appendChild(emptyMsg);
-                return;
-            }
-            
-            var currency = siteCurrency;
-            
-            activeCheckoutOptions.forEach(function(opt) {
-                var card = document.createElement('div');
-                card.className = 'formbuilder-checkout-card';
-                
-                var flagfall = parseFloat(opt.checkout_flagfall_price) || 0;
-                var basicDayRate = opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined 
-                    ? parseFloat(opt.checkout_basic_day_rate) : null;
-                var discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
-                    ? parseFloat(opt.checkout_discount_day_rate) : null;
-                
-                function calculatePrice(days) {
-                    var basePrice = flagfall;
-                    if (days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)) {
-                        basePrice += discountDayRate * days;
-                    } else if (basicDayRate !== null && !isNaN(basicDayRate)) {
-                        basePrice += basicDayRate * days;
-                    }
-                    if (surcharge !== 0 && !isNaN(surcharge)) {
-                        basePrice = basePrice * (1 + surcharge / 100);
-                    }
-                    return basePrice;
-                }
-                
-                var price30 = calculatePrice(30);
-                var price365 = calculatePrice(365);
-                
-                var title = document.createElement('div');
-                title.className = 'formbuilder-checkout-title';
-                title.textContent = opt.checkout_title || 'Untitled';
-                
-                var prices = document.createElement('div');
-                prices.className = 'formbuilder-checkout-prices';
-                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + price30.toFixed(2) + '</span></div>' +
-                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + price365.toFixed(2) + '</span></div>';
-                
-                var calculator = document.createElement('div');
-                calculator.className = 'formbuilder-checkout-calculator';
-                
-                var calcLabel = document.createElement('span');
-                calcLabel.textContent = 'Calculator:';
-                
-                var calcInput = document.createElement('input');
-                calcInput.type = 'number';
-                calcInput.className = 'formbuilder-checkout-calc-input';
-                calcInput.placeholder = 'Days';
-                calcInput.min = '1';
-                calcInput.step = '1';
-                
-                var calcTotal = document.createElement('span');
-                calcTotal.className = 'formbuilder-checkout-calc-total';
-                calcTotal.textContent = currency + '0.00';
-                
-                calcInput.addEventListener('input', function() {
-                    var days = parseFloat(calcInput.value) || 0;
-                    if (days <= 0) {
-                        calcTotal.textContent = currency + '0.00';
-                        return;
-                    }
-                    var total = calculatePrice(days);
-                    calcTotal.textContent = currency + total.toFixed(2);
-                });
-                
-                calculator.appendChild(calcLabel);
-                calculator.appendChild(calcInput);
-                calculator.appendChild(calcTotal);
-                
-                card.appendChild(title);
-                card.appendChild(prices);
-                card.appendChild(calculator);
-                checkoutList.appendChild(card);
-            });
-        }
-        
-        option._renderCheckoutOptions = renderCheckoutOptions;
-        renderCheckoutOptions();
         
         // Subcategory body with fieldset menu and form preview
         var optBody = document.createElement('div');
@@ -1291,7 +1709,13 @@
                 fieldWrapper.remove();
                 addedFieldsets[fsId] = false;
                 var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                if (menuOpt) menuOpt.classList.remove('disabled');
+                if (menuOpt) {
+                    menuOpt.classList.remove('disabled');
+                    // Re-apply location type filtering after removing "already added" disabled state
+                    var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
+                    var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
+                    updateLocationTypeFieldsets(currentLocationType);
+                }
                 notifyChange();
             });
             
@@ -1542,27 +1966,81 @@
             return { wrapper: fieldWrapper, fsId: fsId };
         }
         
-        // Populate fieldset options
+        // Populate fieldset options - NO FALLBACKS
+        // All fieldsets appear in menu, but location fieldsets and sessions are grayed out when not selectable
+        var selectedLocationType = subFeeData.location_type;
+        var currentSubcategoryType = subFeeData.subcategory_type;
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
+            var fieldsetKey = fs.key || fs.fieldset_key || fs.id;
+            // Normalize to lowercase for comparison
+            var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+            var isVenue = fieldsetKeyLower === 'venue';
+            var isCity = fieldsetKeyLower === 'city';
+            var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
+            var isSessions = fieldsetKeyLower === 'sessions';
+            
             var opt = document.createElement('div');
             opt.className = 'formbuilder-fieldset-menu-option';
             opt.textContent = fs.name || fs.key || 'Unnamed';
             opt.setAttribute('data-fieldset-id', fsId);
+            
+            // Apply initial gray-out state for location fieldsets
+            if (isVenue || isCity || isAddress) {
+                var selectedTypeLower = selectedLocationType ? String(selectedLocationType).toLowerCase() : '';
+                if (!selectedTypeLower || selectedTypeLower === 'null' || selectedTypeLower === '') {
+                    // No location type selected - all location fieldsets are grayed out
+                    opt.classList.add('disabled-location-type');
+                } else if (selectedTypeLower === 'venue') {
+                    if (isCity || isAddress) {
+                        opt.classList.add('disabled-location-type');
+                    }
+                } else if (selectedTypeLower === 'city') {
+                    if (isVenue || isAddress) {
+                        opt.classList.add('disabled-location-type');
+                    }
+                } else if (selectedTypeLower === 'address') {
+                    if (isVenue || isCity) {
+                        opt.classList.add('disabled-location-type');
+                    }
+                }
+            }
+            
+            // Apply initial gray-out state for sessions (only available for Events)
+            if (isSessions && currentSubcategoryType !== 'Events') {
+                opt.classList.add('disabled-location-type');
+            }
+            
             opt.onclick = function(e) {
                 e.stopPropagation();
-                if (opt.classList.contains('disabled')) return;
+                // Check for both "already added" disabled AND location type/sessions disabled
+                if (opt.classList.contains('disabled') || opt.classList.contains('disabled-location-type')) return;
                 
                 var result = createFieldElement(fs, true, fs);
                 fieldsContainer.appendChild(result.wrapper);
                 addedFieldsets[result.fsId] = true;
                 opt.classList.add('disabled');
                 fieldsetMenu.classList.remove('open');
+                notifyChange();
             };
             fieldsetOpts.appendChild(opt);
         });
         
-        // Load existing fields from database
+        // Apply initial location type filtering (gray-out state) now that fieldsetOpts exists
+        if (initialLocationType) {
+            updateLocationTypeFieldsets(initialLocationType);
+        } else {
+            // No location type selected - hide Add Field button and gray out all location fieldsets
+            if (fieldsetMenu) {
+                fieldsetMenu.style.display = 'none';
+            }
+            updateLocationTypeFieldsets(null);
+        }
+        
+        // Apply initial sessions fieldset gray-out state
+        updateSessionsFieldset(currentSubcategoryType);
+        
+        // Load existing fields from database FIRST
         var subFieldsMap = cat.subFields || {};
         var existingFields = subFieldsMap[subName] || [];
         existingFields.forEach(function(fieldData) {
@@ -1578,11 +2056,30 @@
             if (menuOpt) menuOpt.classList.add('disabled');
         });
         
+        // AFTER loading existing fields, manage location type fieldset (will only add if missing)
+        if (initialLocationType) {
+            manageLocationTypeFieldsets(initialLocationType);
+        }
+        
+        // Also manage sessions fieldset based on current subcategory type
+        var currentSubcategoryType = subFeeData.subcategory_type;
+        if (currentSubcategoryType === 'Events') {
+            manageSessionsFieldset(true);
+        } else {
+            manageSessionsFieldset(false);
+        }
+        
         fieldsetBtn.onclick = function(e) {
             e.stopPropagation();
             var wasOpen = fieldsetMenu.classList.contains('open');
             closeAllMenus();
-            if (!wasOpen) fieldsetMenu.classList.add('open');
+            if (!wasOpen) {
+                fieldsetMenu.classList.add('open');
+                // Register with MenuManager for click-away handling
+                if (typeof MenuManager !== 'undefined' && MenuManager.register) {
+                    MenuManager.register(fieldsetMenu);
+                }
+            }
         };
         
         optBody.appendChild(fieldsetMenu);
@@ -1607,6 +2104,14 @@
             closeAllEditPanels();
             if (!isOpen) {
                 option.classList.add('formbuilder-accordion-option--editing');
+            }
+        });
+        
+        // Prevent edit panel from blocking clicks on interactive elements
+        subEditPanel.addEventListener('click', function(e) {
+            // Allow clicks on inputs, labels, buttons, and other interactive elements
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'LABEL' || e.target.tagName === 'BUTTON' || e.target.closest('label') || e.target.closest('input')) {
+                return; // Don't stop propagation for interactive elements
             }
         });
         
@@ -1658,6 +2163,287 @@
     function discardChanges() {
         isLoaded = false; // Prevent notifyChange during reload
         loadFormData(); // Fetch fresh from database - single source of truth
+    }
+    
+    /* --------------------------------------------------------------------------
+       CHECKOUT CALCULATOR MODAL
+       Shows checkout options in a popup similar to form preview
+       -------------------------------------------------------------------------- */
+    
+    function showCheckoutCalculator(cat, subName) {
+        // Get subcategory data
+        var subFees = cat.subFees || {};
+        var subFeeData = subFees[subName] || {};
+        var currentSurcharge = parseFloat(subFeeData.checkout_surcharge) || 0;
+        
+        // Get active checkout options
+        var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
+            return opt.is_active !== false && opt.is_active !== 0;
+        });
+        
+        // Create modal backdrop
+        var modal = document.createElement('div');
+        modal.className = 'formbuilder-formpreview-modal';
+        
+        // Create modal container
+        var modalContainer = document.createElement('div');
+        modalContainer.className = 'formbuilder-formpreview-modal-container';
+        
+        // Create header
+        var header = document.createElement('div');
+        header.className = 'formbuilder-formpreview-modal-header';
+        
+        var headerTitle = document.createElement('span');
+        headerTitle.className = 'formbuilder-formpreview-modal-title';
+        headerTitle.textContent = 'Checkout Calculator';
+        
+        var closeBtn = ClearButtonComponent.create({
+            className: 'formbuilder-formpreview-modal-close',
+            ariaLabel: 'Close calculator',
+            onClick: function() {
+                closeModal();
+            }
+        });
+        
+        header.appendChild(headerTitle);
+        header.appendChild(closeBtn);
+        
+        // Create body
+        var body = document.createElement('div');
+        body.className = 'formbuilder-formpreview-modal-body';
+        
+        // Add surcharge input at top of body
+        var surchargeSection = document.createElement('div');
+        surchargeSection.className = 'formbuilder-calculator-surcharge';
+        
+        var surchargeLabel = document.createElement('span');
+        surchargeLabel.className = 'formbuilder-fee-row-label';
+        surchargeLabel.textContent = 'Checkout Surcharge';
+        
+        var surchargePercent = document.createElement('span');
+        surchargePercent.className = 'formbuilder-fee-percent';
+        surchargePercent.textContent = '%';
+        
+        var popupSurchargeInput = document.createElement('input');
+        popupSurchargeInput.type = 'number';
+        popupSurchargeInput.step = '0.01';
+        popupSurchargeInput.min = '-100';
+        popupSurchargeInput.className = 'formbuilder-fee-input';
+        popupSurchargeInput.placeholder = 'N/A';
+        
+        if (subFeeData.checkout_surcharge !== null && subFeeData.checkout_surcharge !== undefined) {
+            popupSurchargeInput.value = parseFloat(subFeeData.checkout_surcharge).toFixed(2);
+        }
+        
+        // Store reference to update function
+        var updatePrices = function() {
+            // Re-render all checkout cards with new surcharge
+            checkoutList.innerHTML = '';
+            renderCheckoutCards();
+        };
+        
+        // Only allow numbers and minus sign
+        popupSurchargeInput.addEventListener('keypress', function(e) {
+            var char = String.fromCharCode(e.which);
+            // Allow: numbers, minus sign (only at start), decimal point
+            if (!/[0-9]/.test(char) && char !== '-' && char !== '.') {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow minus at the start
+            if (char === '-' && (this.selectionStart !== 0 || this.value.indexOf('-') !== -1)) {
+                e.preventDefault();
+                return false;
+            }
+            // Only allow one decimal point
+            if (char === '.' && this.value.indexOf('.') !== -1) {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        popupSurchargeInput.addEventListener('input', function() {
+            // Filter out any non-numeric characters except minus and decimal
+            var value = this.value;
+            // Remove any characters that aren't numbers, minus, or decimal
+            value = value.replace(/[^0-9.\-]/g, '');
+            // Ensure minus is only at the start
+            if (value.indexOf('-') > 0) {
+                value = value.replace(/-/g, '');
+            }
+            // Ensure only one decimal point
+            var parts = value.split('.');
+            if (parts.length > 2) {
+                value = parts[0] + '.' + parts.slice(1).join('');
+            }
+            this.value = value;
+            
+            var numValue = value ? parseFloat(value) : null;
+            if (numValue !== null && numValue < -100) {
+                numValue = -100;
+                this.value = numValue.toFixed(2);
+            }
+            if (!cat.subFees) cat.subFees = {};
+            if (!cat.subFees[subName]) cat.subFees[subName] = {};
+            cat.subFees[subName].checkout_surcharge = numValue !== null ? Math.round(numValue * 100) / 100 : null;
+            currentSurcharge = numValue !== null ? numValue : 0;
+            
+            // Update the surcharge input in the edit panel if it exists
+            var editPanelInput = document.querySelector('.formbuilder-accordion-option--editing .formbuilder-fee-input');
+            if (editPanelInput) {
+                editPanelInput.value = numValue !== null ? numValue.toFixed(2) : '';
+            }
+            
+            // Recalculate and update prices
+            updatePrices();
+            notifyChange();
+        });
+        
+        popupSurchargeInput.addEventListener('blur', function() {
+            var value = this.value ? parseFloat(this.value) : null;
+            if (value !== null && value < -100) {
+                value = -100;
+            }
+            if (value !== null) {
+                this.value = value.toFixed(2);
+            }
+        });
+        
+        surchargeSection.appendChild(surchargeLabel);
+        surchargeSection.appendChild(surchargePercent);
+        surchargeSection.appendChild(popupSurchargeInput);
+        body.appendChild(surchargeSection);
+        
+        // Create checkout list container
+        var checkoutList = document.createElement('div');
+        checkoutList.className = 'formbuilder-checkout-list';
+        
+        // Function to render checkout cards
+        function renderCheckoutCards() {
+        
+        // Render checkout options
+        if (activeCheckoutOptions.length === 0) {
+            var emptyMsg = document.createElement('div');
+            emptyMsg.className = 'formbuilder-checkout-empty';
+            emptyMsg.textContent = 'No enabled checkout options available.';
+            checkoutList.appendChild(emptyMsg);
+        } else {
+            var currency = siteCurrency;
+            
+            activeCheckoutOptions.forEach(function(opt) {
+                var card = document.createElement('div');
+                card.className = 'formbuilder-checkout-card';
+                
+                var flagfall = parseFloat(opt.checkout_flagfall_price) || 0;
+                var basicDayRate = opt.checkout_basic_day_rate !== null && opt.checkout_basic_day_rate !== undefined 
+                    ? parseFloat(opt.checkout_basic_day_rate) : null;
+                var discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
+                    ? parseFloat(opt.checkout_discount_day_rate) : null;
+                
+                    function calculatePrice(days) {
+                        var basePrice = flagfall;
+                        if (days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)) {
+                            basePrice += discountDayRate * days;
+                        } else if (basicDayRate !== null && !isNaN(basicDayRate)) {
+                            basePrice += basicDayRate * days;
+                        }
+                        if (currentSurcharge !== 0 && !isNaN(currentSurcharge)) {
+                            basePrice = basePrice * (1 + currentSurcharge / 100);
+                        }
+                        return basePrice;
+                    }
+                
+                var price30 = calculatePrice(30);
+                var price365 = calculatePrice(365);
+                
+                var title = document.createElement('div');
+                title.className = 'formbuilder-checkout-title';
+                title.textContent = opt.checkout_title || 'Untitled';
+                
+                var prices = document.createElement('div');
+                prices.className = 'formbuilder-checkout-prices';
+                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + ' ' + price30.toFixed(2) + '</span></div>' +
+                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + ' ' + price365.toFixed(2) + '</span></div>';
+                
+                var calculator = document.createElement('div');
+                calculator.className = 'formbuilder-checkout-calculator';
+                
+                var calcLabel = document.createElement('span');
+                calcLabel.textContent = 'Calculator:';
+                
+                var calcInput = document.createElement('input');
+                calcInput.type = 'number';
+                calcInput.className = 'formbuilder-checkout-calc-input';
+                calcInput.placeholder = 'Days';
+                calcInput.min = '1';
+                calcInput.step = '1';
+                
+                var calcTotal = document.createElement('span');
+                calcTotal.className = 'formbuilder-checkout-calc-total';
+                calcTotal.textContent = currency + ' 0.00';
+                
+                calcInput.addEventListener('input', function() {
+                    var days = parseFloat(calcInput.value) || 0;
+                    if (days <= 0) {
+                        calcTotal.textContent = currency + ' 0.00';
+                        return;
+                    }
+                    var total = calculatePrice(days);
+                    calcTotal.textContent = currency + ' ' + total.toFixed(2);
+                });
+                
+                calculator.appendChild(calcLabel);
+                calculator.appendChild(calcInput);
+                calculator.appendChild(calcTotal);
+                
+                    card.appendChild(title);
+                    card.appendChild(prices);
+                    card.appendChild(calculator);
+                    checkoutList.appendChild(card);
+                });
+            }
+        }
+        
+        // Initial render
+        renderCheckoutCards();
+        
+        body.appendChild(checkoutList);
+        
+        modalContainer.appendChild(header);
+        modalContainer.appendChild(body);
+        modal.appendChild(modalContainer);
+        
+        // Add to admin panel content
+        var adminPanelContent = document.querySelector('.admin-panel-content');
+        if (adminPanelContent) {
+            adminPanelContent.appendChild(modal);
+        } else if (container) {
+            container.appendChild(modal);
+        } else {
+            document.body.appendChild(modal);
+        }
+        
+        function closeModal() {
+            if (modal && modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }
+        
+        // Close on backdrop click
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Close on Escape key
+        var escapeHandler = function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
     }
     
     /* --------------------------------------------------------------------------

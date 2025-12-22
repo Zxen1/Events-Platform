@@ -113,16 +113,13 @@ try {
         // Continue without fields
     }
     
-    // Fetch currency options from picklist table
+    // Fetch currency options from currencies table
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'picklist'");
-        if ($stmt->rowCount() > 0) {
-            $stmt = $pdo->query("SELECT `option_value` FROM `picklist` WHERE `option_group` = 'currency' AND `is_active` = 1 ORDER BY `sort_order` ASC");
-            $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            if (!empty($rows)) {
-                $currencyOptions = array_map('strtoupper', $rows);
-                $currencyOptions = array_values(array_unique($currencyOptions));
-            }
+        $stmt = $pdo->query("SELECT `option_value` FROM `currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC");
+        $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        if (!empty($rows)) {
+            $currencyOptions = array_map('strtoupper', $rows);
+            $currencyOptions = array_values(array_unique($currencyOptions));
         }
     } catch (PDOException $e) {
         // Continue without currencies
@@ -403,6 +400,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     if (in_array('subcategory_type', $columns, true)) {
         $select[] = 's.`subcategory_type`';
     }
+    if (in_array('location_type', $columns, true)) {
+        $select[] = 's.`location_type`';
+    }
 
     $order = [];
     if ($hasCategoryId) {
@@ -520,6 +520,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         }
         if (isset($row['subcategory_type'])) {
             $result['subcategory_type'] = $row['subcategory_type'];
+        }
+        if (isset($row['location_type'])) {
+            $result['location_type'] = $row['location_type'];
         }
         // Load editable fieldsets from subcategory_edits table (keyed by subcategory_key -> fieldset_key)
         if ($hasEditableFieldsets) {
@@ -978,6 +981,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
         $categoriesMap[$categoryName]['subFees'][$sub['name']] = [
             'checkout_surcharge' => isset($sub['checkout_surcharge']) ? (float)$sub['checkout_surcharge'] : null,
             'subcategory_type' => $sub['subcategory_type'] ?? 'Standard',
+            'location_type' => isset($sub['location_type']) ? $sub['location_type'] : null,
         ];
 
         // Get fieldset_ids and required flags from CSV columns

@@ -1108,3 +1108,82 @@
   color: #fff;
 }
 
+/* ============================================================================
+   LOCATION QUANTITY CONTROLS
+   ============================================================================ */
+
+.member-location-quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 12px;
+  padding: 8px 0;
+}
+
+.member-location-quantity-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.member-location-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-location-quantity-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  padding: 0;
+}
+
+.member-location-quantity-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.member-location-quantity-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.member-location-quantity-btn--minus:disabled,
+.member-location-quantity-btn--plus:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.member-location-quantity-display {
+  min-width: 24px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============================================================================
+   ADDITIONAL LOCATIONS
+   ============================================================================ */
+
+.member-additional-location {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.member-additional-location-header {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
