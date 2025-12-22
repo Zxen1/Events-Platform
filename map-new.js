@@ -148,14 +148,14 @@ const MapModule = (function() {
     // Handle errors
     map.on('error', onMapError);
 
-    console.log('[Map] Map initialized');
+    // Map initialized
   }
 
   /**
    * Called when map finishes loading
    */
   function onMapLoad() {
-    console.log('[Map] Map loaded');
+    // Map loaded
     
     // Show the map (fade in)
     const mapEl = document.querySelector('.map-container');
@@ -327,14 +327,14 @@ const MapModule = (function() {
     // Admin starting location uses Mapbox geocoder (separate)
     initAdminStartingGeocoder();
 
-    console.log('[Map] Controls initialized');
+    // Map controls initialized
   }
 
   /**
    * Handle Google Places geocoder result (from MapControlRowComponent)
    */
   function handleGeocoderResult(result, geocoderKey) {
-    console.log('[Map] Geocoder result:', result, geocoderKey);
+    // Geocoder result received
     if (!result || !result.center) return;
 
     const lng = result.center[0];
@@ -558,7 +558,7 @@ const MapModule = (function() {
 
     // Clusters are created when post source is added
     // This sets up the layer configuration
-    console.log('[Map] Cluster system ready');
+    // Cluster system ready
   }
 
   /**
@@ -962,7 +962,7 @@ const MapModule = (function() {
    * Initialize the map module
    */
   function init() {
-    console.log('[Map] Initializing map module...');
+    // Map initializing...
     
     // Mark first visit
     if (!localStorage.getItem('funmap_visited')) {

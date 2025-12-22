@@ -44,7 +44,7 @@ const FilterModule = (function() {
        -------------------------------------------------------------------------- */
     
     function init() {
-        console.log('[Filter] Initializing filter module...');
+        // Filter initializing...
         
         panelEl = document.querySelector('.filter-panel');
         if (!panelEl) {
@@ -67,7 +67,7 @@ const FilterModule = (function() {
         initBackdropClose();
         bindPanelEvents();
         
-        console.log('[Filter] Filter module initialized');
+        // Filter initialized
     }
     
     function initBackdropClose() {
@@ -187,7 +187,7 @@ const FilterModule = (function() {
     }
     
     function handleGeocoderResult(result) {
-        console.log('[Filter] Geocoder result received:', result);
+        // Geocoder result received
         if (!result || !result.center) {
             console.warn('[Filter] Invalid result');
             return;
@@ -195,7 +195,7 @@ const FilterModule = (function() {
         
         var lng = result.center[0];
         var lat = result.center[1];
-        console.log('[Filter] Flying to:', lng, lat, 'bbox:', result.bbox);
+        // Flying to location
         
         // Pass to MapModule to handle bbox/viewport for proper zoom
         if (typeof MapModule !== 'undefined' && MapModule.handleGeocoderResult) {
@@ -703,7 +703,7 @@ const FilterModule = (function() {
             return;
         }
         
-        console.log('[Filter] Loading category filters...');
+        // Loading category filters...
         
         // Fetch categories from database
         fetch('/gateway.php?action=get-form')
@@ -722,7 +722,7 @@ const FilterModule = (function() {
                 var categoryIconPaths = res.formData.categoryIconPaths || {};
                 var subcategoryIconPaths = res.formData.subcategoryIconPaths || {};
                 
-                console.log('[Filter] Loaded categories:', categories.length, 'categories');
+                // Categories loaded
                 if (categories.length === 0) {
                     console.warn('[Filter] No categories found in formData');
                     return;
@@ -821,7 +821,7 @@ const FilterModule = (function() {
                     container.appendChild(accordion);
                 });
                 
-                console.log('[Filter] Category filters rendered successfully');
+                // Category filters rendered
             })
             .catch(function(err) {
                 console.error('[Filter] Failed to load categories:', err);

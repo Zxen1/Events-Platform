@@ -119,7 +119,7 @@ const App = (function() {
 
   function registerModule(name, module) {
     modules[name] = module;
-    console.log(`[App] Module registered: ${name}`);
+    // Module registered
   }
 
   function getModule(name) {
@@ -472,7 +472,7 @@ const App = (function() {
      Called on DOMContentLoaded
      -------------------------------------------------------------------------- */
   function init() {
-    console.log('[App] Initializing...');
+    // App initializing...
 
     // Load startup settings (favicon, welcome modal)
     loadStartupSettings();
@@ -491,14 +491,14 @@ const App = (function() {
       if (module && typeof module.init === 'function') {
         try {
           module.init();
-          console.log(`[App] Initialized: ${name}`);
+          // App module initialized
         } catch (err) {
           console.error(`[App] Init error for "${name}":`, err);
         }
       }
     });
 
-    console.log('[App] Initialization complete');
+    // App initialization complete
   }
 
 
