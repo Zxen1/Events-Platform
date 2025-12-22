@@ -43,7 +43,6 @@ $map = [
   'get-admin-settings' => $connectorDir . '/get-admin-settings.php',
   'save-admin-settings' => $connectorDir . '/save-admin-settings.php',
   'list-files' => $connectorDir . '/list-files.php',
-  'upload-avatar' => $connectorDir . '/upload-avatar.php',
   // add more routes later, e.g. 'register' => $connectorDir . '/register.php',
 ];
 

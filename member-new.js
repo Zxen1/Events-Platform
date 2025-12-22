@@ -202,19 +202,6 @@ const MemberModule = (function() {
             });
         }
         
-        // Form submit handler (prevents default and routes to correct handler)
-        if (authForm) {
-            authForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                var submitter = e.submitter || document.activeElement;
-                if (submitter && submitter.dataset.action === 'login') {
-                    handleLogin();
-                } else if (submitter && submitter.dataset.action === 'register') {
-                    handleRegister();
-                }
-            });
-        }
-        
         // Login button click
         var loginBtn = panel.querySelector('.member-auth-submit[data-action="login"]');
         if (loginBtn) {
@@ -232,60 +219,6 @@ const MemberModule = (function() {
                 handleRegister();
             });
         }
-        
-        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
-        /*
-        // Avatar upload button (radio binding happens in loadAvatarOptions)
-        var avatarUploadBtn = document.getElementById('member-avatar-upload-btn');
-        var avatarFileInput = document.getElementById('member-avatar-file');
-        
-        if (avatarUploadBtn && avatarFileInput) {
-            avatarUploadBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (avatarFileInput) {
-                    avatarFileInput.click();
-                }
-            });
-        }
-        
-        if (avatarFileInput) {
-            avatarFileInput.addEventListener('change', function(e) {
-                var file = e.target.files[0];
-                if (file) {
-                    var avatarHiddenInput = document.getElementById('member-register-avatar');
-                    var avatarRadios = panel ? panel.querySelectorAll('input[name="avatarChoice"]') : [];
-                    var avatarOptionsContainer = document.getElementById('member-avatar-options');
-                    var avatarPreviewContainer = document.getElementById('member-avatar-upload-preview');
-                    var avatarPreviewImg = document.getElementById('member-avatar-preview-img');
-                    
-                    // Uncheck all radio buttons
-                    avatarRadios.forEach(function(radio) {
-                        radio.checked = false;
-                    });
-                    
-                    // Show preview (keep avatar options visible so user can still choose)
-                    if (avatarPreviewContainer && avatarPreviewImg) {
-                        avatarPreviewContainer.style.display = 'block';
-                        
-                        // Read file and display preview
-                        var reader = new FileReader();
-                        reader.onload = function(e) {
-                            avatarPreviewImg.src = e.target.result;
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                    
-                    // Store file reference (don't upload yet - will upload with correct name after member creation)
-                    if (avatarHiddenInput) {
-                        // Clear any previous URL - file will be uploaded during registration
-                        avatarHiddenInput.value = '';
-                        avatarHiddenInput.dataset.hasFile = 'true';
-                    }
-                }
-            });
-        }
-        */
         
         // Logout button
         if (logoutBtn) {
@@ -1368,19 +1301,7 @@ const MemberModule = (function() {
         setAuthPanelState(loginPanel, isLogin, loginInputs);
         setAuthPanelState(registerPanel, !isLogin, registerInputs);
         
-        if (authForm) authForm.dataset.active = target;
-        
-        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
-        /*
-        // Load avatar options only when register tab is opened (lazy loading)
-        if (!isLogin) {
-            var avatarOptionsContainer = document.getElementById('member-avatar-options');
-            if (avatarOptionsContainer && !avatarOptionsContainer.dataset.loaded) {
-                loadAvatarOptions();
-                avatarOptionsContainer.dataset.loaded = 'true';
-            }
-        }
-        */
+        authForm.dataset.active = target;
         
         // Focus first field
         focusFirstField(isLogin ? loginPanel : registerPanel);
@@ -1424,191 +1345,6 @@ const MemberModule = (function() {
             });
         }
     }
-
-    /* --------------------------------------------------------------------------
-       AVATAR OPTIONS LOADING
-       COMMENTED OUT FOR TESTING
-       -------------------------------------------------------------------------- */
-    
-    /*
-    function loadAvatarOptions() {
-        var avatarOptionsContainer = document.getElementById('member-avatar-options');
-        if (!avatarOptionsContainer) return;
-        
-        // Fetch admin settings to get avatar provider URLs
-        fetch('/gateway.php?action=get-admin-settings')
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success && data.settings) {
-                    // Generate random seeds for each avatar
-                    var randomSeeds = [];
-                    for (var i = 0; i < 3; i++) {
-                        randomSeeds.push(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
-                    }
-                    
-                    // Use admin settings if provided, otherwise generate random DiceBear URLs
-                    var baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=';
-                    var avatarUrl1 = data.settings.avatar_provider_url_1 || (baseUrl + randomSeeds[0]);
-                    var avatarUrl2 = data.settings.avatar_provider_url_2 || (baseUrl + randomSeeds[1]);
-                    var avatarUrl3 = data.settings.avatar_provider_url_3 || (baseUrl + randomSeeds[2]);
-                    
-                    // Use DocumentFragment to batch DOM changes and avoid triggering Mapbox mutation observers
-                    var fragment = document.createDocumentFragment();
-                    
-                    // Create three avatar options
-                    [avatarUrl1, avatarUrl2, avatarUrl3].forEach(function(url, index) {
-                        var label = document.createElement('label');
-                        label.className = 'member-avatar-option';
-                        
-                        var radio = document.createElement('input');
-                        radio.type = 'radio';
-                        radio.name = 'avatarChoice';
-                        radio.value = 'avatar' + (index + 1);
-                        if (index === 0) radio.checked = true;
-                        
-                        var img = document.createElement('img');
-                        img.src = url;
-                        img.alt = 'Avatar ' + (index + 1);
-                        img.className = 'member-avatar-preview';
-                        
-                        label.appendChild(radio);
-                        label.appendChild(img);
-                        fragment.appendChild(label);
-                    });
-                    
-                    // Clear container and append all at once (single DOM mutation)
-                    avatarOptionsContainer.innerHTML = '';
-                    avatarOptionsContainer.appendChild(fragment);
-                    
-                    // Re-bind events for the new avatar options
-                    var avatarRadios = panel ? panel.querySelectorAll('input[name="avatarChoice"]') : [];
-                    var avatarHiddenInput = document.getElementById('member-register-avatar');
-                    var avatarFileInput = document.getElementById('member-avatar-file');
-                    
-                    // Handle radio button selection
-                    avatarRadios.forEach(function(radio) {
-                        radio.addEventListener('change', function() {
-                            if (this.checked) {
-                                var img = this.nextElementSibling;
-                                if (img && img.src && avatarHiddenInput) {
-                                    avatarHiddenInput.value = img.src;
-                                }
-                                // Clear file input and hide preview when preset avatar is selected
-                                if (avatarFileInput) {
-                                    avatarFileInput.value = '';
-                                }
-                                var avatarPreviewContainer = document.getElementById('member-avatar-upload-preview');
-                                if (avatarPreviewContainer) {
-                                    avatarPreviewContainer.style.display = 'none';
-                                }
-                                if (avatarHiddenInput) {
-                                    avatarHiddenInput.removeAttribute('data-has-file');
-                                }
-                            }
-                        });
-                    });
-                    
-                    // Set initial avatar (first option)
-                    if (avatarRadios.length > 0 && avatarRadios[0].checked) {
-                        var firstImg = avatarRadios[0].nextElementSibling;
-                        if (firstImg && firstImg.src && avatarHiddenInput) {
-                            avatarHiddenInput.value = firstImg.src;
-                        }
-                    }
-                }
-            })
-            .catch(function(error) {
-                console.error('[Member] Failed to load avatar options:', error);
-                // Fallback to random DiceBear URLs if settings fail to load
-                var avatarOptionsContainer = document.getElementById('member-avatar-options');
-                if (avatarOptionsContainer) {
-                    var baseUrl = 'https://api.dicebear.com/7.x/avataaars/svg?seed=';
-                    var randomSeeds = [];
-                    for (var i = 0; i < 3; i++) {
-                        randomSeeds.push(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
-                    }
-                    
-                    // Use DocumentFragment to batch DOM changes
-                    var fragment = document.createDocumentFragment();
-                    for (var j = 0; j < 3; j++) {
-                        var label = document.createElement('label');
-                        label.className = 'member-avatar-option';
-                        
-                        var radio = document.createElement('input');
-                        radio.type = 'radio';
-                        radio.name = 'avatarChoice';
-                        radio.value = 'avatar' + (j + 1);
-                        if (j === 0) radio.checked = true;
-                        
-                        var img = document.createElement('img');
-                        img.src = baseUrl + randomSeeds[j];
-                        img.alt = 'Avatar ' + (j + 1);
-                        img.className = 'member-avatar-preview';
-                        
-                        label.appendChild(radio);
-                        label.appendChild(img);
-                        fragment.appendChild(label);
-                    }
-                    
-                    // Single DOM mutation
-                    avatarOptionsContainer.innerHTML = '';
-                    avatarOptionsContainer.appendChild(fragment);
-                }
-            });
-    }
-    */
-
-    /* --------------------------------------------------------------------------
-       AVATAR UPLOAD
-       COMMENTED OUT FOR TESTING
-       -------------------------------------------------------------------------- */
-    /*
-    
-    function uploadAvatarFile(file, callback) {
-        if (!file) {
-            if (callback) callback(null);
-            return;
-        }
-        
-        // Validate file type
-        var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            ToastComponent.showError('Please upload a valid image file (JPEG, PNG, GIF, or WebP)');
-            if (callback) callback(null);
-            return;
-        }
-        
-        // Validate file size (max 5MB)
-        var maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
-            ToastComponent.showError('Image file is too large. Maximum size is 5MB.');
-            if (callback) callback(null);
-            return;
-        }
-        
-        var formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', 'avatar');
-        
-        fetch('/gateway.php?action=upload-avatar', {
-            method: 'POST',
-            body: formData
-        }).then(function(response) {
-            return response.json();
-        }).then(function(data) {
-            if (data.success && data.url) {
-                if (callback) callback(data.url);
-            } else {
-                ToastComponent.showError(data.error || 'Failed to upload avatar');
-                if (callback) callback(null);
-            }
-        }).catch(function(error) {
-            console.error('Avatar upload error:', error);
-            ToastComponent.showError('Failed to upload avatar. Please try again.');
-            if (callback) callback(null);
-        });
-    }
-    */
 
     /* --------------------------------------------------------------------------
        AUTHENTICATION HANDLERS
@@ -1657,15 +1393,13 @@ const MemberModule = (function() {
             currentUser = buildUserObject(payload, username);
             
             storeCurrent(currentUser);
-            // Defer render to avoid timing conflicts with Mapbox DOM updates
-            requestAnimationFrame(function() {
-                render();
-                var displayName = currentUser.name || currentUser.email || currentUser.username;
-                getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
-                    if (message) {
-                        ToastComponent.showSuccess(message);
-                    }
-                });
+            render();
+            
+            var displayName = currentUser.name || currentUser.email || currentUser.username;
+            getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showSuccess(message);
+                }
             });
             
         }).catch(function(err) {
@@ -1679,29 +1413,26 @@ const MemberModule = (function() {
     }
 
     function handleRegister() {
-        var usernameInput = document.getElementById('member-register-username');
+        var nameInput = document.getElementById('member-register-name');
         var emailInput = document.getElementById('member-register-email');
         var passwordInput = document.getElementById('member-register-password');
         var confirmInput = document.getElementById('member-register-confirm');
-        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
-        // var avatarInput = document.getElementById('member-register-avatar');
-        // var avatarFileInput = document.getElementById('member-avatar-file');
+        var avatarInput = document.getElementById('member-register-avatar');
         
-        var username = usernameInput ? usernameInput.value.trim() : '';
+        var name = nameInput ? nameInput.value.trim() : '';
         var email = emailInput ? emailInput.value.trim() : '';
         var password = passwordInput ? passwordInput.value : '';
         var confirm = confirmInput ? confirmInput.value : '';
-        // var avatar = avatarInput ? avatarInput.value.trim() : '';
-        // var avatarFile = avatarFileInput && avatarFileInput.files && avatarFileInput.files[0] ? avatarFileInput.files[0] : null;
+        var avatar = avatarInput ? avatarInput.value.trim() : '';
         
         // Validation
-        if (!username || !email || !password) {
+        if (!name || !email || !password) {
             getMessage('msg_auth_register_empty', {}, false).then(function(message) {
                 if (message) {
                     ToastComponent.showError(message);
                 }
             });
-            if (!username && usernameInput) { usernameInput.focus(); return; }
+            if (!name && nameInput) { nameInput.focus(); return; }
             if (!email && emailInput) { emailInput.focus(); return; }
             if (!password && passwordInput) { passwordInput.focus(); return; }
             return;
@@ -1732,21 +1463,11 @@ const MemberModule = (function() {
         
         // Send registration request
         var formData = new FormData();
-        formData.set('username', username);
+        formData.set('display_name', name);
         formData.set('email', email);
         formData.set('password', password);
         formData.set('confirm', confirm);
-        
-        // AVATAR SYSTEM COMMENTED OUT FOR TESTING
-        /*
-        // If file uploaded, send file (will be uploaded with correct name after member creation)
-        // If pre-selected avatar URL chosen, send URL (works with any avatar provider)
-        if (avatarFile) {
-            formData.append('avatar_file', avatarFile);
-        } else if (avatar) {
-            formData.set('avatar_url', avatar);
-        }
-        */
+        formData.set('avatar_url', avatar);
         
         fetch('/gateway.php?action=add-member', {
             method: 'POST',
@@ -1788,14 +1509,11 @@ const MemberModule = (function() {
             };
             
             storeCurrent(currentUser);
-            // Defer render to avoid timing conflicts with Mapbox DOM updates
-            requestAnimationFrame(function() {
-                render();
-                getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
-                    if (message) {
-                        ToastComponent.showSuccess(message);
-                    }
-                });
+            render();
+            getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showSuccess(message);
+                }
             });
             
         }).catch(function(err) {
@@ -1811,14 +1529,11 @@ const MemberModule = (function() {
     function handleLogout() {
         currentUser = null;
         storeCurrent(null);
-        // Defer render to avoid timing conflicts with Mapbox DOM updates
-        requestAnimationFrame(function() {
-            render();
-            getMessage('msg_auth_logout_success', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.show(message);
-                }
-            });
+        render();
+        getMessage('msg_auth_logout_success', {}, false).then(function(message) {
+            if (message) {
+                ToastComponent.show(message);
+            }
         });
         
         // Notify admin auth manager if it exists
@@ -1963,7 +1678,7 @@ const MemberModule = (function() {
         
         if (currentUser) {
             // Logged in state
-            if (authForm) authForm.dataset.state = 'logged-in';
+            authForm.dataset.state = 'logged-in';
             
             // Hide login/register panels
             setAuthPanelState(loginPanel, false, loginInputs);
@@ -2008,7 +1723,7 @@ const MemberModule = (function() {
             
         } else {
             // Logged out state
-            if (authForm) authForm.dataset.state = 'logged-out';
+            authForm.dataset.state = 'logged-out';
             
             // Update profile tab label
             if (profileTabBtn) {
@@ -2035,7 +1750,7 @@ const MemberModule = (function() {
             if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');
             
             // Show appropriate auth panel
-            var active = (authForm && authForm.dataset.active === 'register') ? 'register' : 'login';
+            var active = authForm.dataset.active === 'register' ? 'register' : 'login';
             setAuthPanel(active);
             
             // Update header (no avatar)

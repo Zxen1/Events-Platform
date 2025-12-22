@@ -229,7 +229,6 @@
         
         <!-- Settings Tab -->
         <section id="admin-tab-settings" class="admin-tab-panel admin-tab-panel--active" role="tabpanel" aria-labelledby="admin-tab-settings-btn">
-          <form id="admin-settings-form" class="admin-settings-form">
           <div class="admin-settings-general-container">
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminWebsiteName">Website Name</label>
@@ -327,30 +326,6 @@
               <input type="text" class="admin-settings-field-input" id="adminFolderSystemImages" data-setting-key="folder_system_images" autocomplete="off" placeholder="system-images/" />
             </div>
           </div>
-          <!-- AVATAR SYSTEM COMMENTED OUT FOR TESTING
-          <div class="admin-settings-avatars-container">
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminAvatarProviderUrl1">Avatar Provider URL 1</label>
-              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl1" data-setting-key="avatar_provider_url_1" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminAvatarProviderUrl2">Avatar Provider URL 2</label>
-              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl2" data-setting-key="avatar_provider_url_2" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminAvatarProviderUrl3">Avatar Provider URL 3</label>
-              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl3" data-setting-key="avatar_provider_url_3" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminAvatarProviderUrl4">Avatar Provider URL 4</label>
-              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl4" data-setting-key="avatar_provider_url_4" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar4" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminAvatarProviderUrl5">Avatar Provider URL 5</label>
-              <input type="url" class="admin-settings-field-input" id="adminAvatarProviderUrl5" data-setting-key="avatar_provider_url_5" autocomplete="off" placeholder="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar5" />
-            </div>
-          </div>
-          -->
           <div class="admin-settings-api-container">
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password (Read-Only)</label>
@@ -599,34 +574,18 @@
             
             <!-- Register Panel -->
             <section id="member-auth-register" class="member-auth-panel member-auth-panel--hidden" role="tabpanel" hidden>
-                <label class="member-auth-panel-label" for="member-register-username">Username</label>
-                <input type="text" id="member-register-username" class="member-auth-panel-input" name="registerUsername" autocomplete="off">
-                <label class="member-auth-panel-label" for="member-register-email">Email</label>
-                <input type="email" id="member-register-email" class="member-auth-panel-input" name="registerEmail" autocomplete="email">
-                <label class="member-auth-panel-label" for="member-register-password">Password</label>
-                <input type="password" id="member-register-password" class="member-auth-panel-input" name="registerPassword" autocomplete="new-password">
-                <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
-                <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
-                <!-- AVATAR SYSTEM COMMENTED OUT FOR TESTING
-                <label class="member-auth-panel-label">Avatar</label>
-                <div class="member-avatar-selector">
-                  <div class="member-avatar-upload-btn-container">
-                    <button type="button" class="member-avatar-upload-btn" id="member-avatar-upload-btn" aria-label="Upload your own avatar">
-                      <div class="member-avatar-upload-icon">📷</div>
-                    </button>
-                    <div class="member-avatar-upload-preview" id="member-avatar-upload-preview" style="display: none;">
-                      <img id="member-avatar-preview-img" src="" alt="Uploaded avatar preview" class="member-avatar-preview">
-                    </div>
-                  </div>
-                  <div class="member-avatar-options" id="member-avatar-options">
-                    <!-- Avatar options will be populated dynamically from admin settings -->
-                  </div>
-                  <input type="file" id="member-avatar-file" accept="image/*" style="display: none;">
-                  <input type="hidden" id="member-register-avatar" name="registerAvatar">
-                </div>
-                -->
-                <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
-              </section>
+              <label class="member-auth-panel-label" for="member-register-name">Display Name</label>
+              <input type="text" id="member-register-name" class="member-auth-panel-input" name="registerName" autocomplete="name">
+              <label class="member-auth-panel-label" for="member-register-email">Email</label>
+              <input type="email" id="member-register-email" class="member-auth-panel-input" name="registerEmail" autocomplete="email">
+              <label class="member-auth-panel-label" for="member-register-password">Password</label>
+              <input type="password" id="member-register-password" class="member-auth-panel-input" name="registerPassword" autocomplete="new-password">
+              <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
+              <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
+              <label class="member-auth-panel-label" for="member-register-avatar">Avatar URL</label>
+              <input type="url" id="member-register-avatar" class="member-auth-panel-input" name="registerAvatar" placeholder="https://example.com/avatar.jpg">
+              <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
+            </section>
             
             <!-- Profile Panel (shown when logged in) -->
             <section id="member-auth-profile" class="member-auth-panel member-auth-profile member-auth-panel--hidden" role="region" aria-live="polite" hidden>
