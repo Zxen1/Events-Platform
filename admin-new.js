@@ -349,8 +349,7 @@ const AdminModule = (function() {
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
                 if (isDirty) {
-                    // TODO: Show unsaved changes dialog
-                    closePanel();
+                    showUnsavedChangesDialog();
                 } else {
                     closePanel();
                 }
@@ -801,6 +800,13 @@ const AdminModule = (function() {
                 // Update baselines to saved values
                 markSaved();
                 
+                // Show success message
+                getMessage('msg_admin_saved', {}, true).then(function(message) {
+                    if (message) {
+                        ToastComponent.showSuccess(message);
+                    }
+                });
+                
                 // If user made changes during save, recheckDirtyState will detect them
                 // via the next input event - no need to check here
                 
@@ -811,6 +817,18 @@ const AdminModule = (function() {
             .catch(function(err) {
                 console.error('[Admin] Save failed:', err);
                 isSaving = false;
+                
+                // Show error message
+                var errorKey = 'msg_admin_save_error_response';
+                if (err && (err.message && err.message.includes('fetch')) || err.name === 'TypeError') {
+                    errorKey = 'msg_admin_save_error_network';
+                }
+                getMessage(errorKey, {}, true).then(function(message) {
+                    if (message) {
+                        ToastComponent.showError(message);
+                    }
+                });
+                
                 // Keep dirty state on error - don't lose user's changes
                 // Buttons stay lit so user knows save failed and can retry
             });
@@ -855,6 +873,13 @@ const AdminModule = (function() {
         console.log('[Admin] Changes discarded');
         isDirty = false;
         updateButtonStates();
+        
+        // Show discard message
+        getMessage('msg_admin_discarded', {}, true).then(function(message) {
+            if (message) {
+                ToastComponent.show(message);
+            }
+        });
     }
     
     function scheduleAutoSave() {
@@ -3010,6 +3035,37 @@ const AdminModule = (function() {
                     if (placeholder) placeholder.style.display = '';
                 }
             }
+        });
+    }
+
+    /* --------------------------------------------------------------------------
+       UNSAVED CHANGES DIALOG
+       -------------------------------------------------------------------------- */
+    
+    function showUnsavedChangesDialog() {
+        Promise.all([
+            getMessage('msg_admin_unsaved_title', {}, true),
+            getMessage('msg_admin_unsaved_message', {}, true)
+        ]).then(function(messages) {
+            var title = messages[0] || 'Unsaved Changes';
+            var message = messages[1] || 'You have unsaved changes. What would you like to do?';
+            
+            ThreeButtonDialogComponent.show({
+                titleText: title,
+                messageText: message,
+                cancelLabel: 'Cancel',
+                saveLabel: 'Save',
+                discardLabel: 'Discard',
+                focusCancel: true
+            }).then(function(result) {
+                if (result === 'save') {
+                    runSave({ closeAfter: true });
+                } else if (result === 'discard') {
+                    discardChanges();
+                    closePanel();
+                }
+                // If result === 'cancel', do nothing (stay in panel)
+            });
         });
     }
 

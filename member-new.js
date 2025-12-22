@@ -952,7 +952,11 @@ const MemberModule = (function() {
         var password = passwordInput ? passwordInput.value : '';
         
         if (!username || !password) {
-            showStatus('Please enter email and password', { error: true });
+            getMessage('msg_auth_login_empty', {}, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showError(message);
+                }
+            });
             if (!username && emailInput) {
                 emailInput.focus();
             } else if (passwordInput) {
@@ -964,7 +968,11 @@ const MemberModule = (function() {
         // Call backend verification
         verifyLogin(username, password).then(function(result) {
             if (!result || result.success !== true) {
-                showStatus('Invalid email or password', { error: true });
+                getMessage('msg_auth_login_incorrect', {}, false).then(function(message) {
+                    if (message) {
+                        ToastComponent.showError(message);
+                    }
+                });
                 if (passwordInput) {
                     passwordInput.focus();
                     passwordInput.select();
@@ -982,11 +990,19 @@ const MemberModule = (function() {
             render();
             
             var displayName = currentUser.name || currentUser.email || currentUser.username;
-            showStatus('Welcome back, ' + displayName);
+            getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showSuccess(message);
+                }
+            });
             
         }).catch(function(err) {
             console.error('Login failed', err);
-            showStatus('Login failed. Please try again.', { error: true });
+            getMessage('msg_auth_login_failed', {}, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showError(message);
+                }
+            });
         });
     }
 
@@ -1005,7 +1021,11 @@ const MemberModule = (function() {
         
         // Validation
         if (!name || !email || !password) {
-            showStatus('Please fill in all required fields', { error: true });
+            getMessage('msg_auth_register_empty', {}, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showError(message);
+                }
+            });
             if (!name && nameInput) { nameInput.focus(); return; }
             if (!email && emailInput) { emailInput.focus(); return; }
             if (!password && passwordInput) { passwordInput.focus(); return; }
@@ -1013,13 +1033,21 @@ const MemberModule = (function() {
         }
         
         if (password.length < 4) {
-            showStatus('Password must be at least 4 characters', { error: true });
+            getMessage('msg_auth_register_password_short', {}, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showError(message);
+                }
+            });
             if (passwordInput) passwordInput.focus();
             return;
         }
         
         if (password !== confirm) {
-            showStatus('Passwords do not match', { error: true });
+            getMessage('msg_auth_register_password_mismatch', {}, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showError(message);
+                }
+            });
             if (confirmInput) {
                 confirmInput.focus();
                 confirmInput.select();
@@ -1049,8 +1077,16 @@ const MemberModule = (function() {
             }
             
             if (!payload || payload.error) {
-                var errorMsg = payload && payload.message ? payload.message : 'Registration failed';
-                showStatus(errorMsg, { error: true });
+                var errorMsg = payload && payload.message ? payload.message : '';
+                if (errorMsg) {
+                    ToastComponent.showError(errorMsg);
+                } else {
+                    getMessage('msg_auth_register_failed', {}, false).then(function(message) {
+                        if (message) {
+                            ToastComponent.showError(message);
+                        }
+                    });
+                }
                 return;
             }
             
@@ -1068,11 +1104,19 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
-            showStatus('Account created! Welcome, ' + name);
+            getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showSuccess(message);
+                }
+            });
             
         }).catch(function(err) {
             console.error('Registration failed', err);
-            showStatus('Registration failed. Please try again.', { error: true });
+            getMessage('msg_auth_register_failed', {}, false).then(function(message) {
+                if (message) {
+                    ToastComponent.showError(message);
+                }
+            });
         });
     }
 
@@ -1080,7 +1124,11 @@ const MemberModule = (function() {
         currentUser = null;
         storeCurrent(null);
         render();
-        showStatus('You have been logged out');
+        getMessage('msg_auth_logout_success', {}, false).then(function(message) {
+            if (message) {
+                ToastComponent.show(message);
+            }
+        });
         
         // Notify admin auth manager if it exists
         if (window.adminAuthManager && typeof window.adminAuthManager.setAuthenticated === 'function') {

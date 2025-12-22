@@ -4038,6 +4038,280 @@ const ConfirmDialogComponent = (function() {
 
 
 /* ============================================================================
+   THREE BUTTON DIALOG COMPONENT
+   Duplicated from ConfirmDialogComponent with independent classes
+   Used for unsaved changes dialogs (Cancel, Save, Discard)
+   ============================================================================ */
+
+const ThreeButtonDialogComponent = (function() {
+    var overlayEl = null;
+    
+    function ensureOverlay() {
+        if (overlayEl) return overlayEl;
+        
+        var overlay = document.createElement('div');
+        overlay.className = 'component-three-button-dialog-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('tabindex', '-1');
+        
+        var dialog = document.createElement('div');
+        dialog.className = 'component-three-button-dialog';
+        dialog.setAttribute('role', 'alertdialog');
+        dialog.setAttribute('aria-modal', 'true');
+        dialog.setAttribute('aria-labelledby', 'threeButtonDialogTitle');
+        dialog.setAttribute('aria-describedby', 'threeButtonDialogMessage');
+        
+        var title = document.createElement('h2');
+        title.id = 'threeButtonDialogTitle';
+        title.className = 'component-three-button-dialog-title';
+        
+        var message = document.createElement('p');
+        message.id = 'threeButtonDialogMessage';
+        message.className = 'component-three-button-dialog-message';
+        
+        var actions = document.createElement('div');
+        actions.className = 'component-three-button-dialog-actions';
+        
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'component-three-button-dialog-button--cancel';
+        cancelBtn.dataset.role = 'cancel';
+        cancelBtn.textContent = 'Cancel';
+        
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'component-three-button-dialog-button--save';
+        saveBtn.dataset.role = 'save';
+        saveBtn.textContent = 'Save';
+        
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.className = 'component-three-button-dialog-button--discard';
+        discardBtn.dataset.role = 'discard';
+        discardBtn.textContent = 'Discard';
+        
+        actions.appendChild(cancelBtn);
+        actions.appendChild(saveBtn);
+        actions.appendChild(discardBtn);
+        dialog.appendChild(title);
+        dialog.appendChild(message);
+        dialog.appendChild(actions);
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        
+        overlayEl = overlay;
+        return overlay;
+    }
+    
+    function show(options) {
+        options = options || {};
+        var titleText = options.titleText || 'Unsaved Changes';
+        var messageText = options.messageText || 'You have unsaved changes. What would you like to do?';
+        var cancelLabel = options.cancelLabel || 'Cancel';
+        var saveLabel = options.saveLabel || 'Save';
+        var discardLabel = options.discardLabel || 'Discard';
+        var focusCancel = options.focusCancel !== false;
+        
+        var overlay = ensureOverlay();
+        var title = overlay.querySelector('#threeButtonDialogTitle');
+        var message = overlay.querySelector('#threeButtonDialogMessage');
+        var cancelBtn = overlay.querySelector('[data-role="cancel"]');
+        var saveBtn = overlay.querySelector('[data-role="save"]');
+        var discardBtn = overlay.querySelector('[data-role="discard"]');
+        var previousFocused = document.activeElement;
+        
+        // Clone buttons to remove old event listeners
+        var newCancelBtn = cancelBtn.cloneNode(true);
+        var newSaveBtn = saveBtn.cloneNode(true);
+        var newDiscardBtn = discardBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+        discardBtn.parentNode.replaceChild(newDiscardBtn, discardBtn);
+        cancelBtn = newCancelBtn;
+        saveBtn = newSaveBtn;
+        discardBtn = newDiscardBtn;
+        
+        // Set content
+        title.textContent = titleText;
+        message.textContent = messageText;
+        cancelBtn.textContent = cancelLabel;
+        saveBtn.textContent = saveLabel;
+        discardBtn.textContent = discardLabel;
+        
+        // Show overlay
+        overlay.classList.add('component-three-button-dialog-overlay--visible');
+        overlay.setAttribute('aria-hidden', 'false');
+        
+        // Focus appropriate button
+        if (focusCancel) {
+            cancelBtn.focus();
+        } else {
+            saveBtn.focus();
+        }
+        
+        return new Promise(function(resolve) {
+            function cleanup(result) {
+                overlay.classList.remove('component-three-button-dialog-overlay--visible');
+                overlay.setAttribute('aria-hidden', 'true');
+                document.removeEventListener('keydown', onKeyDown, true);
+                overlay.removeEventListener('click', onOverlayClick);
+                
+                if (previousFocused && typeof previousFocused.focus === 'function') {
+                    try {
+                        previousFocused.focus({ preventScroll: true });
+                    } catch (e) {
+                        // ignore focus errors
+                    }
+                }
+                
+                resolve(result);
+            }
+            
+            function onKeyDown(e) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cleanup('cancel');
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var focused = document.activeElement;
+                    if (focused === cancelBtn) {
+                        cleanup('cancel');
+                    } else if (focused === saveBtn) {
+                        cleanup('save');
+                    } else if (focused === discardBtn) {
+                        cleanup('discard');
+                    }
+                } else if (e.key === 'Tab') {
+                    // Trap focus inside dialog
+                    var buttons = [cancelBtn, saveBtn, discardBtn];
+                    var first = buttons[0];
+                    var last = buttons[buttons.length - 1];
+                    
+                    if (e.shiftKey && document.activeElement === first) {
+                        e.preventDefault();
+                        last.focus();
+                    } else if (!e.shiftKey && document.activeElement === last) {
+                        e.preventDefault();
+                        first.focus();
+                    }
+                }
+            }
+            
+            function onOverlayClick(e) {
+                if (e.target === overlay) {
+                    cleanup('cancel');
+                }
+            }
+            
+            cancelBtn.addEventListener('click', function() {
+                cleanup('cancel');
+            });
+            
+            saveBtn.addEventListener('click', function() {
+                cleanup('save');
+            });
+            
+            discardBtn.addEventListener('click', function() {
+                cleanup('discard');
+            });
+            
+            document.addEventListener('keydown', onKeyDown, true);
+            overlay.addEventListener('click', onOverlayClick);
+        });
+    }
+    
+    return {
+        show: show
+    };
+})();
+
+
+/* ============================================================================
+   TOAST COMPONENT
+   Toast notifications matching old site design
+   Variants: success (green), error (red), warning (yellow/orange)
+   ============================================================================ */
+
+const ToastComponent = (function() {
+    var toastEl = null;
+    var toastTimer = null;
+    
+    function ensureToastElement() {
+        if (toastEl) return toastEl;
+        
+        var toast = document.createElement('div');
+        toast.className = 'component-toast';
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        toast.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(toast);
+        
+        toastEl = toast;
+        return toast;
+    }
+    
+    function show(message, variant, duration) {
+        variant = variant || 'default';
+        duration = duration || 2000;
+        
+        if (!ensureToastElement()) return;
+        
+        toastEl.textContent = message || '';
+        toastEl.setAttribute('aria-hidden', 'false');
+        
+        // Remove all variant classes
+        toastEl.classList.remove(
+            'component-toast--success',
+            'component-toast--error',
+            'component-toast--warning',
+            'component-toast--show'
+        );
+        
+        // Add variant class
+        if (variant !== 'default') {
+            toastEl.classList.add('component-toast--' + variant);
+        }
+        
+        // Clear existing timer
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+            toastTimer = null;
+        }
+        
+        // Show toast
+        toastEl.classList.add('component-toast--show');
+        
+        // Auto-hide
+        toastTimer = setTimeout(function() {
+            toastEl.classList.remove('component-toast--show');
+            toastEl.setAttribute('aria-hidden', 'true');
+        }, duration);
+    }
+    
+    function showSuccess(message, duration) {
+        show(message, 'success', duration);
+    }
+    
+    function showError(message, duration) {
+        show(message, 'error', duration);
+    }
+    
+    function showWarning(message, duration) {
+        show(message, 'warning', duration);
+    }
+    
+    return {
+        show: show,
+        showSuccess: showSuccess,
+        showError: showError,
+        showWarning: showWarning
+    };
+})();
+
+
+/* ============================================================================
    WELCOME MODAL
    Full-screen modal with logo and map controls (geocoder, geolocate, compass)
    Uses big_logo from admin settings
