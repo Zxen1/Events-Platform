@@ -1070,16 +1070,26 @@
         addressLabel.appendChild(addressText);
         
         function updateLocationTypeFieldsets(selectedType) {
-            if (!fieldsetOpts) return;
+            if (!fieldsetOpts) {
+                console.log('[Formbuilder] updateLocationTypeFieldsets: fieldsetOpts is null');
+                return;
+            }
             var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            console.log('[Formbuilder] updateLocationTypeFieldsets: found', allOptions.length, 'options, selectedType:', selectedType);
+            console.log('[Formbuilder] updateLocationTypeFieldsets: available fieldsets:', fieldsets.map(function(fs) { 
+                return { id: fs.id, key: fs.key, fieldset_key: fs.fieldset_key, name: fs.name }; 
+            }));
             var selectedTypeLower = selectedType ? String(selectedType).toLowerCase() : '';
             
             allOptions.forEach(function(opt) {
                 var fsId = opt.getAttribute('data-fieldset-id');
                 var fieldset = fieldsets.find(function(fs) {
-                    return (fs.id || fs.key || fs.fieldset_key) === fsId;
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
                 });
-                if (!fieldset) return;
+                if (!fieldset) {
+                    console.log('[Formbuilder] updateLocationTypeFieldsets: fieldset not found for fsId:', fsId);
+                    return;
+                }
                 
                 var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
                 // Normalize to lowercase for comparison
@@ -1087,6 +1097,8 @@
                 var isVenue = fieldsetKeyLower === 'venue';
                 var isCity = fieldsetKeyLower === 'city';
                 var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
+                
+                console.log('[Formbuilder] updateLocationTypeFieldsets: fieldsetKey:', fieldsetKey, 'isVenue:', isVenue, 'isCity:', isCity, 'isAddress:', isAddress);
                 
                 // Only filter venue, city, and address fieldsets - other fieldsets are always enabled
                 if (!isVenue && !isCity && !isAddress) {
@@ -1098,23 +1110,30 @@
                 if (!selectedType || selectedTypeLower === 'null' || selectedTypeLower === '') {
                     // No selection - enable all location fieldsets
                     opt.classList.remove('disabled');
+                    console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(no selection)');
                 } else if (selectedTypeLower === 'venue') {
                     if (isCity || isAddress) {
                         opt.classList.add('disabled');
+                        console.log('[Formbuilder] updateLocationTypeFieldsets: disabling', fieldsetKey, '(venue selected)');
                     } else if (isVenue) {
                         opt.classList.remove('disabled');
+                        console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(venue selected)');
                     }
                 } else if (selectedTypeLower === 'city') {
                     if (isVenue || isAddress) {
                         opt.classList.add('disabled');
+                        console.log('[Formbuilder] updateLocationTypeFieldsets: disabling', fieldsetKey, '(city selected)');
                     } else if (isCity) {
                         opt.classList.remove('disabled');
+                        console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(city selected)');
                     }
                 } else if (selectedTypeLower === 'address') {
                     if (isVenue || isCity) {
                         opt.classList.add('disabled');
+                        console.log('[Formbuilder] updateLocationTypeFieldsets: disabling', fieldsetKey, '(address selected)');
                     } else if (isAddress) {
                         opt.classList.remove('disabled');
+                        console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(address selected)');
                     }
                 }
             });
