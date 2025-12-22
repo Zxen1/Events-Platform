@@ -225,8 +225,12 @@ const MemberModule = (function() {
         var avatarFileInput = document.getElementById('member-avatar-file');
         
         if (avatarUploadBtn && avatarFileInput) {
-            avatarUploadBtn.addEventListener('click', function() {
-                avatarFileInput.click();
+            avatarUploadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (avatarFileInput) {
+                    avatarFileInput.click();
+                }
             });
         }
         
@@ -247,6 +251,17 @@ const MemberModule = (function() {
                         // Clear any previous URL - file will be uploaded during registration
                         avatarHiddenInput.value = '';
                         avatarHiddenInput.dataset.hasFile = 'true';
+                    }
+                    
+                    // Show visual feedback that file was selected
+                    if (avatarUploadBtn) {
+                        var originalText = avatarUploadBtn.textContent;
+                        avatarUploadBtn.textContent = 'File Selected: ' + file.name;
+                        setTimeout(function() {
+                            if (avatarUploadBtn) {
+                                avatarUploadBtn.textContent = originalText;
+                            }
+                        }, 2000);
                     }
                 }
             });
