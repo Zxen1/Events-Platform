@@ -759,10 +759,11 @@ const MemberModule = (function() {
                         
                         // Update label text if quantity > 1
                         if (locationQuantity > 1) {
-                            var labelText = labelEl.textContent.trim();
-                            // Remove existing number suffix if present
-                            labelText = labelText.replace(/^\d+/, '').trim();
-                            labelEl.textContent = labelText.charAt(0).toUpperCase() + labelText.slice(1) + '1';
+                            var labelTextEl = labelEl.querySelector('.fieldset-label-text');
+                            if (labelTextEl) {
+                                var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
+                                labelTextEl.textContent = baseName + '1';
+                            }
                         }
                         
                         // Quantity button handlers
@@ -772,20 +773,21 @@ const MemberModule = (function() {
                                 quantityDisplay.textContent = locationQuantity;
                                 
                                 // Update label
-                                if (locationQuantity === 1) {
+                                var labelTextEl = labelEl.querySelector('.fieldset-label-text');
+                                if (labelTextEl) {
                                     var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                    labelEl.textContent = baseName;
-                                } else {
-                                    var currentLabel = labelEl.textContent.trim();
-                                    var baseName = currentLabel.replace(/^\d+/, '').trim();
-                                    labelEl.textContent = baseName.charAt(0).toUpperCase() + baseName.slice(1) + '1';
+                                    if (locationQuantity === 1) {
+                                        labelTextEl.textContent = baseName;
+                                    } else {
+                                        labelTextEl.textContent = baseName + '1';
+                                    }
                                 }
                                 
-                            // Re-render additional locations (after checkout section)
-                            var checkoutSection = formFields.querySelector('.member-checkout-options-section');
-                            if (checkoutSection) {
-                                renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
-                            }
+                                // Re-render additional locations (after checkout section)
+                                var checkoutSection = formFields.querySelector('.member-checkout-options-section');
+                                if (checkoutSection) {
+                                    renderAdditionalLocations(locationQuantity, locationFieldsetType, mustRepeatFieldsets, autofillRepeatFieldsets);
+                                }
                             }
                         });
                         
@@ -794,9 +796,11 @@ const MemberModule = (function() {
                             quantityDisplay.textContent = locationQuantity;
                             
                             // Update label
-                            var currentLabel = labelEl.textContent.trim();
-                            var baseName = currentLabel.replace(/^\d+/, '').trim();
-                            labelEl.textContent = baseName.charAt(0).toUpperCase() + baseName.slice(1) + '1';
+                            var labelTextEl = labelEl.querySelector('.fieldset-label-text');
+                            if (labelTextEl) {
+                                var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
+                                labelTextEl.textContent = baseName + '1';
+                            }
                             
                             // Re-render additional locations (after checkout section)
                             var checkoutSection = formFields.querySelector('.member-checkout-options-section');
@@ -835,23 +839,16 @@ const MemberModule = (function() {
             el.remove();
         });
         
-        // Find the original location fieldset to clone it
-        var originalLocationFieldset = null;
-        var allFieldsets = formFields.querySelectorAll('.fieldset');
-        for (var fsIdx = 0; fsIdx < allFieldsets.length; fsIdx++) {
-            var fs = allFieldsets[fsIdx];
-            var fieldsetKey = '';
-            // Try to identify location fieldset by structure
-            if (locationType === 'venue' && fs.querySelector('.fieldset-sublabel') && fs.querySelector('.fieldset-sublabel').textContent === 'Venue Name') {
-                originalLocationFieldset = fs;
-                break;
-            } else if (locationType === 'city' && fs.querySelector('.fieldset-input[placeholder*="city"]')) {
-                originalLocationFieldset = fs;
-                break;
-            } else if ((locationType === 'address' || locationType === 'location') && fs.querySelector('.fieldset-input[placeholder*="address"]')) {
-                originalLocationFieldset = fs;
-                break;
-            }
+        // Don't render if quantity is 1 or less
+        if (quantity <= 1) {
+            return;
+        }
+        
+        // Find insertion point - before checkout options section
+        var checkoutSection = formFields.querySelector('.member-checkout-options-section');
+        if (!checkoutSection) {
+            console.warn('[Member] Checkout section not found, cannot render additional locations');
+            return;
         }
         
         // Render locations 2, 3, 4, etc.
@@ -868,16 +865,17 @@ const MemberModule = (function() {
             locationSection.appendChild(locationHeader);
             
             // First, render the location fieldset again (venue/city/address)
-            if (originalLocationFieldset && locationFieldset) {
-                var locationField = ensureFieldDefaults(locationFieldset);
-                if (!locationField.name) {
-                    locationField.name = locationName;
-                } else {
-                    // Update name to include location number
-                    locationField.name = locationName;
+            if (locationFieldset) {
+                // Create a copy of the field data with updated name
+                var locationFieldData = {};
+                for (var prop in locationFieldset) {
+                    if (locationFieldset.hasOwnProperty(prop)) {
+                        locationFieldData[prop] = locationFieldset[prop];
+                    }
                 }
+                locationFieldData.name = locationName;
                 
-                var locationFieldsetClone = FieldsetComponent.buildFieldset(locationField, {
+                var locationFieldsetClone = FieldsetComponent.buildFieldset(locationFieldData, {
                     idPrefix: 'memberCreate',
                     fieldIndex: 0,
                     locationNumber: i,
@@ -890,10 +888,7 @@ const MemberModule = (function() {
             
             // Then, render must-repeat fieldsets
             mustRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
-                var field = ensureFieldDefaults(fieldData);
-                if (!field.name) field.name = 'Field ' + (fieldIndex + 1);
-                
-                var fieldset = FieldsetComponent.buildFieldset(field, {
+                var fieldset = FieldsetComponent.buildFieldset(fieldData, {
                     idPrefix: 'memberCreate',
                     fieldIndex: fieldIndex,
                     locationNumber: i,
@@ -914,12 +909,7 @@ const MemberModule = (function() {
             });
             
             // Insert before checkout options
-            var checkoutSection = formFields.querySelector('.member-checkout-options-section');
-            if (checkoutSection) {
-                formFields.insertBefore(locationSection, checkoutSection);
-            } else {
-                formFields.appendChild(locationSection);
-            }
+            formFields.insertBefore(locationSection, checkoutSection);
         }
     }
     
