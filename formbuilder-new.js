@@ -1009,24 +1009,6 @@
         generalLabel.appendChild(generalInput);
         generalLabel.appendChild(generalText);
         
-        eventsInput.addEventListener('change', function() {
-            if (eventsInput.checked) {
-                if (!cat.subFees) cat.subFees = {};
-                if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                cat.subFees[subName].subcategory_type = 'Events';
-                notifyChange();
-            }
-        });
-        
-        generalInput.addEventListener('change', function() {
-            if (generalInput.checked) {
-                if (!cat.subFees) cat.subFees = {};
-                if (!cat.subFees[subName]) cat.subFees[subName] = {};
-                cat.subFees[subName].subcategory_type = 'General';
-                notifyChange();
-            }
-        });
-        
         typeRow.appendChild(typeLabel);
         typeRow.appendChild(eventsLabel);
         typeRow.appendChild(generalLabel);
@@ -1406,17 +1388,43 @@
                 // Venue stays enabled, only City and Address are disabled
                 cityInput.disabled = true;
                 addressInput.disabled = true;
-                // Don't auto-select - user must click Venue to trigger save button
-                // Clear any existing selection so user must choose
-                venueInput.checked = false;
-                cityInput.checked = false;
-                addressInput.checked = false;
+                // When switching to Events, location type must be Venue
+                // Get current location type from data structure
+                var existingLocationType = (cat.subFees && cat.subFees[subName] && cat.subFees[subName].location_type) ? cat.subFees[subName].location_type : null;
+                if (!existingLocationType || existingLocationType === null || existingLocationType === '') {
+                    // No location type set - set to Venue
+                    venueInput.checked = true;
+                    cityInput.checked = false;
+                    addressInput.checked = false;
+                    if (!cat.subFees) cat.subFees = {};
+                    if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                    cat.subFees[subName].location_type = 'Venue';
+                    updateLocationTypeFieldsets('Venue');
+                    manageLocationTypeFieldsets('Venue');
+                } else {
+                    // Location type already set - if it's not Venue, change to Venue (Events requires Venue)
+                    if (existingLocationType === 'Venue') {
+                        venueInput.checked = true;
+                        cityInput.checked = false;
+                        addressInput.checked = false;
+                        // Keep Venue, just update UI
+                        updateLocationTypeFieldsets('Venue');
+                        manageLocationTypeFieldsets('Venue');
+                    } else {
+                        // If it was City or Address, change to Venue (Events requires Venue)
+                        venueInput.checked = true;
+                        cityInput.checked = false;
+                        addressInput.checked = false;
+                        if (!cat.subFees) cat.subFees = {};
+                        if (!cat.subFees[subName]) cat.subFees[subName] = {};
+                        cat.subFees[subName].location_type = 'Venue';
+                        updateLocationTypeFieldsets('Venue');
+                        manageLocationTypeFieldsets('Venue');
+                    }
+                }
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'Events';
-                cat.subFees[subName].location_type = null;
-                updateLocationTypeFieldsets(null);
-                manageLocationTypeFieldsets(null);
                 manageSessionsFieldset(true); // Add sessions fieldset for Events
                 notifyChange();
             }
@@ -1427,18 +1435,41 @@
                 venueInput.disabled = false;
                 cityInput.disabled = false;
                 addressInput.disabled = false;
-                // Don't auto-select - user must choose one to trigger save button
-                // Clear any existing selection so user must choose
-                venueInput.checked = false;
-                cityInput.checked = false;
-                addressInput.checked = false;
+                // When switching to General, keep the current location type (don't clear it)
+                // Get current location type from data structure
+                var existingLocationType = (cat.subFees && cat.subFees[subName] && cat.subFees[subName].location_type) ? cat.subFees[subName].location_type : null;
+                // Update radio button states to match current location type
+                if (existingLocationType === 'Venue') {
+                    venueInput.checked = true;
+                    cityInput.checked = false;
+                    addressInput.checked = false;
+                } else if (existingLocationType === 'City') {
+                    venueInput.checked = false;
+                    cityInput.checked = true;
+                    addressInput.checked = false;
+                } else if (existingLocationType === 'Address') {
+                    venueInput.checked = false;
+                    cityInput.checked = false;
+                    addressInput.checked = true;
+                } else {
+                    // No location type set - leave all unchecked
+                    venueInput.checked = false;
+                    cityInput.checked = false;
+                    addressInput.checked = false;
+                }
+                // Update fieldset states based on current location type
+                if (existingLocationType) {
+                    updateLocationTypeFieldsets(existingLocationType);
+                    manageLocationTypeFieldsets(existingLocationType);
+                } else {
+                    updateLocationTypeFieldsets(null);
+                    manageLocationTypeFieldsets(null);
+                }
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'General';
-                cat.subFees[subName].location_type = null;
-                updateLocationTypeFieldsets(null);
-                manageLocationTypeFieldsets(null);
-                manageSessionsFieldset(false); // Gray out sessions fieldset for General
+                // Keep existing location_type - don't set to null
+                manageSessionsFieldset(false); // Remove sessions fieldset for General
                 notifyChange();
             }
         });
