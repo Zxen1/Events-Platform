@@ -298,19 +298,7 @@ const FieldsetComponent = (function(){
             parent.appendChild(dropdown);
         }
         
-        // Determine included types for new API
-        var includedTypes = [];
-        if (type === 'address') {
-            includedTypes = ['geocode'];
-        } else if (type === 'establishment') {
-            includedTypes = ['establishment'];
-        } else if (type === '(cities)') {
-            includedTypes = ['(cities)'];
-        } else {
-            includedTypes = ['geocode', 'establishment'];
-        }
-        
-        // Fetch suggestions using new API
+        // Fetch suggestions using new API (same as map controls - no type restrictions)
         var debounceTimer = null;
         async function fetchSuggestions(query) {
             if (!query || query.length < 2) {
@@ -319,16 +307,10 @@ const FieldsetComponent = (function(){
             }
             
             try {
-                var requestOptions = {
+                // Use same API call as map controls (no type restrictions)
+                var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
                     input: query
-                };
-                
-                // Add type restrictions if specified
-                if (includedTypes.length > 0) {
-                    requestOptions.includedTypes = includedTypes;
-                }
-                
-                var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(requestOptions);
+                });
                 
                 dropdown.innerHTML = '';
                 
@@ -1863,9 +1845,9 @@ const FieldsetComponent = (function(){
                         }
                         
                         try {
+                            // Use same API call as map controls (no type restrictions)
                             var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-                                input: query,
-                                includedTypes: ['geocode', 'establishment']
+                                input: query
                             });
                             
                             dropdown.innerHTML = '';
