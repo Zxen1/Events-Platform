@@ -147,6 +147,8 @@ const MemberModule = (function() {
         
         // Auth elements
         authForm = panel.querySelector('.member-auth');
+        var loginForm = document.getElementById('memberAuthFormLogin');
+        var registerForm = document.getElementById('memberAuthFormRegister');
         authTabs = panel.querySelector('.member-auth-tabs');
         loginTab = panel.querySelector('.member-auth-tab[data-target="login"]');
         registerTab = panel.querySelector('.member-auth-tab[data-target="register"]');
@@ -199,6 +201,22 @@ const MemberModule = (function() {
         if (registerTab) {
             registerTab.addEventListener('click', function() {
                 setAuthPanel('register');
+            });
+        }
+        
+        // Form submit handlers (for Enter key support)
+        var loginForm = document.getElementById('memberAuthFormLogin');
+        var registerForm = document.getElementById('memberAuthFormRegister');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleLogin();
+            });
+        }
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleRegister();
             });
         }
         
