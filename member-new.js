@@ -101,7 +101,6 @@ const MemberModule = (function() {
         bindEvents();
         initHeaderDrag();
         loadStoredSession();
-        loadAvatarOptions();
         render();
     }
     
@@ -1336,6 +1335,15 @@ const MemberModule = (function() {
         
         authForm.dataset.active = target;
         
+        // Load avatar options only when register tab is opened (lazy loading)
+        if (!isLogin) {
+            var avatarOptionsContainer = document.getElementById('member-avatar-options');
+            if (avatarOptionsContainer && !avatarOptionsContainer.dataset.loaded) {
+                loadAvatarOptions();
+                avatarOptionsContainer.dataset.loaded = 'true';
+            }
+        }
+        
         // Focus first field
         focusFirstField(isLogin ? loginPanel : registerPanel);
     }
@@ -1395,12 +1403,14 @@ const MemberModule = (function() {
                     var avatarUrl1 = data.settings.avatar_provider_url_1 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1';
                     var avatarUrl2 = data.settings.avatar_provider_url_2 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2';
                     var avatarUrl3 = data.settings.avatar_provider_url_3 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3';
+                    var avatarUrl4 = data.settings.avatar_provider_url_4 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar4';
+                    var avatarUrl5 = data.settings.avatar_provider_url_5 || 'https://api.dicebear.com/7.x/avataaars/svg?seed=avatar5';
                     
                     // Clear container
                     avatarOptionsContainer.innerHTML = '';
                     
-                    // Create three avatar options
-                    [avatarUrl1, avatarUrl2, avatarUrl3].forEach(function(url, index) {
+                    // Create five avatar options
+                    [avatarUrl1, avatarUrl2, avatarUrl3, avatarUrl4, avatarUrl5].forEach(function(url, index) {
                         var label = document.createElement('label');
                         label.className = 'member-avatar-option';
                         
@@ -1455,7 +1465,7 @@ const MemberModule = (function() {
                 // Fallback to default DiceBear URLs if settings fail to load
                 var avatarOptionsContainer = document.getElementById('member-avatar-options');
                 if (avatarOptionsContainer) {
-                    avatarOptionsContainer.innerHTML = '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar1" checked><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1" alt="Avatar 1" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar2"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2" alt="Avatar 2" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar3"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3" alt="Avatar 3" class="member-avatar-preview"></label>';
+                    avatarOptionsContainer.innerHTML = '<label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar1" checked><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar1" alt="Avatar 1" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar2"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar2" alt="Avatar 2" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar3"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar3" alt="Avatar 3" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar4"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar4" alt="Avatar 4" class="member-avatar-preview"></label><label class="member-avatar-option"><input type="radio" name="avatarChoice" value="avatar5"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=avatar5" alt="Avatar 5" class="member-avatar-preview"></label>';
                 }
             });
     }
