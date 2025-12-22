@@ -1070,15 +1070,8 @@
         addressLabel.appendChild(addressText);
         
         function updateLocationTypeFieldsets(selectedType) {
-            if (!fieldsetOpts) {
-                console.log('[Formbuilder] updateLocationTypeFieldsets: fieldsetOpts is null');
-                return;
-            }
+            if (!fieldsetOpts) return;
             var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
-            console.log('[Formbuilder] updateLocationTypeFieldsets: found', allOptions.length, 'options, selectedType:', selectedType);
-            console.log('[Formbuilder] updateLocationTypeFieldsets: available fieldsets:', fieldsets.map(function(fs) { 
-                return { id: fs.id, key: fs.key, fieldset_key: fs.fieldset_key, name: fs.name }; 
-            }));
             var selectedTypeLower = selectedType ? String(selectedType).toLowerCase() : '';
             
             allOptions.forEach(function(opt) {
@@ -1086,10 +1079,7 @@
                 var fieldset = fieldsets.find(function(fs) {
                     return (fs.id || fs.key || fs.fieldset_key) == fsId;
                 });
-                if (!fieldset) {
-                    console.log('[Formbuilder] updateLocationTypeFieldsets: fieldset not found for fsId:', fsId);
-                    return;
-                }
+                if (!fieldset) return;
                 
                 var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
                 // Normalize to lowercase for comparison
@@ -1098,8 +1088,6 @@
                 var isCity = fieldsetKeyLower === 'city';
                 var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
                 
-                console.log('[Formbuilder] updateLocationTypeFieldsets: fieldsetKey:', fieldsetKey, 'isVenue:', isVenue, 'isCity:', isCity, 'isAddress:', isAddress);
-                
                 // Only filter venue, city, and address fieldsets - other fieldsets are always enabled
                 if (!isVenue && !isCity && !isAddress) {
                     // Not a location fieldset - always enabled (but keep existing disabled state if field already added)
@@ -1107,33 +1095,27 @@
                 }
                 
                 // For location fieldsets, apply filtering based on selected type
+                // Use separate class 'disabled-location-type' to avoid breaking "already added" disabled state
                 if (!selectedType || selectedTypeLower === 'null' || selectedTypeLower === '') {
                     // No selection - enable all location fieldsets
-                    opt.classList.remove('disabled');
-                    console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(no selection)');
+                    opt.classList.remove('disabled-location-type');
                 } else if (selectedTypeLower === 'venue') {
                     if (isCity || isAddress) {
-                        opt.classList.add('disabled');
-                        console.log('[Formbuilder] updateLocationTypeFieldsets: disabling', fieldsetKey, '(venue selected)');
+                        opt.classList.add('disabled-location-type');
                     } else if (isVenue) {
-                        opt.classList.remove('disabled');
-                        console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(venue selected)');
+                        opt.classList.remove('disabled-location-type');
                     }
                 } else if (selectedTypeLower === 'city') {
                     if (isVenue || isAddress) {
-                        opt.classList.add('disabled');
-                        console.log('[Formbuilder] updateLocationTypeFieldsets: disabling', fieldsetKey, '(city selected)');
+                        opt.classList.add('disabled-location-type');
                     } else if (isCity) {
-                        opt.classList.remove('disabled');
-                        console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(city selected)');
+                        opt.classList.remove('disabled-location-type');
                     }
                 } else if (selectedTypeLower === 'address') {
                     if (isVenue || isCity) {
-                        opt.classList.add('disabled');
-                        console.log('[Formbuilder] updateLocationTypeFieldsets: disabling', fieldsetKey, '(address selected)');
+                        opt.classList.add('disabled-location-type');
                     } else if (isAddress) {
-                        opt.classList.remove('disabled');
-                        console.log('[Formbuilder] updateLocationTypeFieldsets: enabling', fieldsetKey, '(address selected)');
+                        opt.classList.remove('disabled-location-type');
                     }
                 }
             });
@@ -1795,32 +1777,34 @@
             var selectedTypeLower = selectedLocationType ? String(selectedLocationType).toLowerCase() : '';
             
             // Grey out fieldsets that don't match selected location type
+            // Use separate class 'disabled-location-type' to avoid breaking "already added" disabled state
             if (selectedTypeLower === 'venue') {
                 if (isCity || isAddress) {
-                    opt.classList.add('disabled');
+                    opt.classList.add('disabled-location-type');
                 } else if (isVenue) {
-                    opt.classList.remove('disabled');
+                    opt.classList.remove('disabled-location-type');
                 }
             } else if (selectedTypeLower === 'city') {
                 if (isVenue || isAddress) {
-                    opt.classList.add('disabled');
+                    opt.classList.add('disabled-location-type');
                 } else if (isCity) {
-                    opt.classList.remove('disabled');
+                    opt.classList.remove('disabled-location-type');
                 }
             } else if (selectedTypeLower === 'address') {
                 if (isVenue || isCity) {
-                    opt.classList.add('disabled');
+                    opt.classList.add('disabled-location-type');
                 } else if (isAddress) {
-                    opt.classList.remove('disabled');
+                    opt.classList.remove('disabled-location-type');
                 }
             } else {
-                // No location type selected - enable all
-                opt.classList.remove('disabled');
+                // No location type selected - enable all location fieldsets
+                opt.classList.remove('disabled-location-type');
             }
             
             opt.onclick = function(e) {
                 e.stopPropagation();
-                if (opt.classList.contains('disabled')) return;
+                // Check for both "already added" disabled AND location type disabled
+                if (opt.classList.contains('disabled') || opt.classList.contains('disabled-location-type')) return;
                 
                 var result = createFieldElement(fs, true, fs);
                 fieldsContainer.appendChild(result.wrapper);
