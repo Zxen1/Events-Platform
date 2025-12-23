@@ -531,8 +531,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $placeholderColumnName = in_array('fieldset_placeholder', $columns, true) ? 'fieldset_placeholder' : 'placeholder';
     $hasFieldsetTooltip = in_array('fieldset_tooltip', $columns, true);
     // Check for new column name, fallback to old column name
-    $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true) || in_array('formbuilder_editable', $columns, true);
-    $editableColumnName = in_array('fieldset_editable', $columns, true) ? 'fieldset_editable' : 'formbuilder_editable';
     $hasFieldsetFields = in_array('fieldset_fields', $columns, true);
 
     if ($hasId) {
@@ -557,9 +555,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     }
     if ($hasFieldsetTooltip) {
         $selectColumns[] = '`fieldset_tooltip`';
-    }
-    if ($hasFormbuilderEditable) {
-        $selectColumns[] = '`' . $editableColumnName . '`';
     }
     if ($hasFieldsetFields) {
         if (in_array('fieldset_fields', $columns, true)) {
@@ -674,12 +669,6 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         }
         if ($hasFieldsetTooltip && isset($row['fieldset_tooltip']) && is_string($row['fieldset_tooltip'])) {
             $entry['fieldset_tooltip'] = trim($row['fieldset_tooltip']);
-        }
-        // Always set formbuilder_editable (default to false if column missing or NULL)
-        if ($hasFormbuilderEditable && isset($row[$editableColumnName])) {
-            $entry['formbuilder_editable'] = (bool) $row[$editableColumnName];
-        } else {
-            $entry['formbuilder_editable'] = false;
         }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])
@@ -988,7 +977,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
         }
         $fieldsetNames = array_values(array_unique($fieldsetNames));
 
-        // Load editable fieldsets from subcategory_edits table (fieldset_id keyed map)
+        // Load fieldset customizations from fieldset_mods JSON (keyed by fieldset_key)
         $editableFieldsets = [];
         if (isset($sub['editable_fieldsets']) && is_array($sub['editable_fieldsets'])) {
             $editableFieldsets = $sub['editable_fieldsets'];
@@ -1152,21 +1141,14 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
             }
             // Otherwise → create ONE field object using fieldset properties, with all items as children
             else {
-                // Check if this field type is editable and has customizations
-                $isEditable = isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true;
+                // Load customizations from fieldset_mods JSON
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 $customName = null;
                 $customCheckoutOptions = null;
-                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
+                if ($fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
-                    }
-                } elseif ($isEditable && !$fieldEdit) {
-                    // No subcategory_edits entry yet - use default name from fieldsets table
-                    $defaultName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
-                    if ($defaultName !== '') {
-                        $customName = $defaultName;
                     }
                 }
                 // For checkout fields, use checkout_options_id column

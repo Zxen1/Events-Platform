@@ -2004,12 +2004,6 @@ function fetchFieldsetDefinitions(PDO $pdo): array
             $select[] = 'fieldset_key';
         }
         // Check for new column name, fallback to old column name
-        $hasFormbuilderEditable = in_array('fieldset_editable', $columns, true) || in_array('formbuilder_editable', $columns, true);
-        $editableColumnName = in_array('fieldset_editable', $columns, true) ? 'fieldset_editable' : 'formbuilder_editable';
-        if ($hasFormbuilderEditable) {
-            $select[] = $editableColumnName;
-        }
-        // Check for new column name, fallback to old column name
         $hasPlaceholder = in_array('fieldset_placeholder', $columns, true) || in_array('placeholder', $columns, true);
         $placeholderColumnName = in_array('fieldset_placeholder', $columns, true) ? 'fieldset_placeholder' : 'placeholder';
         if ($hasPlaceholder) {
@@ -2034,9 +2028,6 @@ function fetchFieldsetDefinitions(PDO $pdo): array
                 'name' => $name,
                 'key' => $key,
             ];
-            if ($hasFormbuilderEditable && isset($row[$editableColumnName])) {
-                $entry['fieldset_editable'] = (bool) $row[$editableColumnName];
-            }
             if ($hasPlaceholder && isset($row[$placeholderColumnName])) {
                 $entry['fieldset_placeholder'] = trim((string) $row[$placeholderColumnName]);
             }

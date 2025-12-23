@@ -278,7 +278,7 @@
         })
         .then(function(result) {
             if (!result.success) {
-                throw new Error(result.message || 'Save failed');
+                throw new Error(result.message);
             }
             // Saved successfully
             
@@ -481,7 +481,7 @@
     function buildIconPicker(currentSrc, onSelect) {
         // Use standard IconPickerComponent (has sync functionality built in)
         var picker = IconPickerComponent.buildPicker({
-            currentIcon: currentSrc || null,
+            currentIcon: currentSrc,
             onSelect: onSelect
         });
         return picker.element;
@@ -593,7 +593,9 @@
                 if (!iconFolder) {
                     throw new Error('folder_category_icons not found in admin settings');
                 }
-                checkoutOptions = checkoutOptions || {};
+                if (!checkoutOptions) {
+                    checkoutOptions = {};
+                }
                 checkoutOptions.icon_folder = iconFolder;
                 // IconPickerComponent handles icon loading and syncing internally
                 // No need to fetch icon list here - IconPickerComponent does it when menu opens
@@ -611,12 +613,12 @@
         container.innerHTML = '';
         
         // Store reference data (not for change tracking - just data needed to build UI)
-        loadedFieldsets = formData.fieldsets || [];
-        loadedCurrencies = formData.currencies || [];
+        loadedFieldsets = formData.fieldsets;
+        loadedCurrencies = formData.currencies;
         
-        var categories = formData.categories || [];
-        var categoryIconPaths = formData.categoryIconPaths || {};
-        var subcategoryIconPaths = formData.subcategoryIconPaths || {};
+        var categories = formData.categories;
+        var categoryIconPaths = formData.categoryIconPaths;
+        var subcategoryIconPaths = formData.subcategoryIconPaths;
         var fieldsets = loadedFieldsets;
         
         categories.forEach(function(cat) {
@@ -656,8 +658,8 @@
         var catIconSrc = '';
         if (cat.id && categoryIconPaths['id:' + cat.id]) {
             catIconSrc = categoryIconPaths['id:' + cat.id];
-        } else if (categoryIconPaths['name:' + (cat.name || '').toLowerCase()]) {
-            catIconSrc = categoryIconPaths['name:' + (cat.name || '').toLowerCase()];
+        } else if (cat.name && categoryIconPaths['name:' + cat.name.toLowerCase()]) {
+            catIconSrc = categoryIconPaths['name:' + cat.name.toLowerCase()];
         } else if (categoryIconPaths[cat.name]) {
             catIconSrc = categoryIconPaths[cat.name];
         }
@@ -672,7 +674,7 @@
         
         var headerText = document.createElement('span');
         headerText.className = 'formbuilder-accordion-header-text';
-        headerText.textContent = cat.name || 'New Category';
+        headerText.textContent = cat.name;
         
         var headerArrow = document.createElement('span');
         headerArrow.className = 'formbuilder-accordion-header-arrow';
@@ -750,9 +752,9 @@
         var nameInput = document.createElement('input');
         nameInput.type = 'text';
         nameInput.className = 'formbuilder-accordion-editpanel-input';
-        nameInput.value = cat.name || '';
+        nameInput.value = cat.name;
         nameInput.oninput = function() {
-            headerText.textContent = nameInput.value || 'New Category';
+            headerText.textContent = nameInput.value;
             notifyChange();
         };
         
@@ -796,7 +798,7 @@
         var body = document.createElement('div');
         body.className = 'formbuilder-accordion-body';
         
-        var subs = cat.subs || [];
+        var subs = cat.subs;
         subs.forEach(function(subName) {
             var option = buildSubcategoryOption(cat, subName, subcategoryIconPaths, fieldsets, body);
             body.appendChild(option);
@@ -852,8 +854,8 @@
         var subIconSrc = '';
         if (subId && subcategoryIconPaths['id:' + subId]) {
             subIconSrc = subcategoryIconPaths['id:' + subId];
-        } else if (subcategoryIconPaths['name:' + (subName || '').toLowerCase()]) {
-            subIconSrc = subcategoryIconPaths['name:' + (subName || '').toLowerCase()];
+        } else if (subName && subcategoryIconPaths['name:' + subName.toLowerCase()]) {
+            subIconSrc = subcategoryIconPaths['name:' + subName.toLowerCase()];
         } else if (subcategoryIconPaths[subName]) {
             subIconSrc = subcategoryIconPaths[subName];
         }
@@ -870,7 +872,7 @@
         
         var optText = document.createElement('span');
         optText.className = 'formbuilder-accordion-option-text';
-        optText.textContent = subName || 'New Subcategory';
+        optText.textContent = subName;
         
         var optArrow = document.createElement('span');
         optArrow.className = 'formbuilder-accordion-option-arrow';
@@ -951,9 +953,9 @@
         var subNameInput = document.createElement('input');
         subNameInput.type = 'text';
         subNameInput.className = 'formbuilder-accordion-editpanel-input';
-        subNameInput.value = subName || '';
+        subNameInput.value = subName;
         subNameInput.oninput = function() {
-            optText.textContent = subNameInput.value || 'New Subcategory';
+            optText.textContent = subNameInput.value;
             notifyChange();
         };
         
@@ -994,8 +996,8 @@
         subEditPanel.appendChild(subIconPicker);
         
         // Get surcharge from subFees if available
-        var subFees = cat.subFees || {};
-        var subFeeData = subFees[subName] || {};
+        var subFees = cat.subFees;
+        var subFeeData = subFees && subFees[subName] ? subFees[subName] : null;
         
         // Subcategory Type row
         var typeRow = document.createElement('div');
@@ -1005,7 +1007,7 @@
         typeLabel.className = 'formbuilder-type-row-label';
         typeLabel.textContent = 'Subcategory Type';
         
-        var currentType = (subFeeData.subcategory_type) || 'General';
+        var currentType = subFeeData && subFeeData.subcategory_type ? subFeeData.subcategory_type : null;
         
         var eventsLabel = document.createElement('label');
         eventsLabel.className = 'formbuilder-type-option';
@@ -1619,7 +1621,7 @@
         
         function createFieldElement(fieldData, isRequired, fieldsetDef) {
             var fsId = fieldData.id || fieldData.fieldsetKey || fieldData.key || fieldData.name;
-            var fieldName = fieldData.name || fieldData.key || 'Unnamed';
+            var fieldName = fieldData.name || fieldData.key;
             
             var fieldWrapper = document.createElement('div');
             fieldWrapper.className = 'formbuilder-field-wrapper';
@@ -1815,19 +1817,19 @@
             fieldEditPanel.appendChild(switchRow);
             
             // Check field type
-            var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.fieldset_key || fieldsetDef.key || '';
+            var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.fieldset_key || fieldsetDef.key;
             var needsAmenities = fieldType === 'amenities';
             var needsOptions = fieldType === 'dropdown' || fieldType === 'radio' || fieldType === 'select';
             
             // Declare variables that will be used in checkModifiedState
-            var selectedAmenities = fieldData.selectedAmenities || [];
+            var selectedAmenities = fieldData.selectedAmenities;
             var optionsContainer = null;
             var nameInput, placeholderInput, tooltipInput, modifyButton;
             
             // Get default values from fieldset definition
-            var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name || '') : '';
-            var defaultPlaceholder = fieldsetDef ? (fieldsetDef.fieldset_placeholder || fieldsetDef.placeholder || '') : '';
-            var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || fieldsetDef.tooltip || '') : '';
+            var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name) : '';
+            var defaultPlaceholder = fieldsetDef ? (fieldsetDef.fieldset_placeholder || fieldsetDef.placeholder) : '';
+            var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || fieldsetDef.tooltip) : '';
             var defaultOptions = fieldsetDef && fieldsetDef.fieldset_fields ? [] : []; // Options are typically empty by default
             
             // Track modification state (must be defined before it's called)
@@ -1917,7 +1919,9 @@
             nameInput = document.createElement('input');
             nameInput.type = 'text';
             nameInput.className = 'formbuilder-field-input';
-            nameInput.placeholder = defaultName || 'Field name';
+            if (defaultName) {
+                nameInput.placeholder = defaultName;
+            }
             // Only set value if it's different from default (meaning it was modified)
             var customName = fieldData.name || '';
             if (customName && customName !== defaultName) {

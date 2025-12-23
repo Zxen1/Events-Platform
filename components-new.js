@@ -106,7 +106,9 @@ const ClearButtonComponent = (function(){
      * @returns {HTMLButtonElement} The clear button element
      */
     function create(options) {
-        options = options || {};
+        if (!options) {
+            throw new Error('ClearButtonComponent.create: options parameter is required');
+        }
         
         var btn = document.createElement('button');
         btn.type = 'button';
@@ -114,7 +116,9 @@ const ClearButtonComponent = (function(){
         if (options.className) {
             btn.className += ' ' + options.className;
         }
-        btn.setAttribute('aria-label', options.ariaLabel || 'Clear');
+        if (options.ariaLabel) {
+            btn.setAttribute('aria-label', options.ariaLabel);
+        }
         btn.innerHTML = Icons.clear;
         
         if (typeof options.onClick === 'function') {
@@ -164,10 +168,12 @@ const SwitchComponent = (function(){
      * @returns {Object} Object with element and control methods
      */
     function create(options) {
-        options = options || {};
+        if (!options) {
+            throw new Error('SwitchComponent.create: options parameter is required');
+        }
         
-        var size = options.size || 'medium';
-        var checked = options.checked || false;
+        var size = options.size;
+        var checked = options.checked;
         
         // Build class prefix based on size
         var prefix = size === 'medium' ? 'component-switch' : 'component-' + size + '-switch';
@@ -426,8 +432,8 @@ const FieldsetComponent = (function(){
             console.error('[FieldsetComponent] CurrencyComponent not available');
             return document.createElement('div');
         }
-        // Use defaultCurrency if provided, otherwise null (user must select)
-        var initialValue = defaultCurrency || null;
+        // Use defaultCurrency if provided (user must select if not provided)
+        var initialValue = defaultCurrency;
         var result = CurrencyComponent.buildCompactMenu({
             initialValue: initialValue,
             container: container
@@ -451,15 +457,36 @@ const FieldsetComponent = (function(){
     }
     
     // Build label with required asterisk and tooltip
-    function buildLabel(name, tooltip) {
+    function buildLabel(name, tooltip, minLength, maxLength) {
         var label = document.createElement('div');
         label.className = 'fieldset-label';
         label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">*</span>';
-        if (tooltip) {
+        
+        // Build tooltip text with character limits appended
+        var tooltipText = tooltip;
+        var charLimitText = '';
+        
+        if (minLength !== null && minLength !== undefined && maxLength !== null && maxLength !== undefined) {
+            charLimitText = minLength + '-' + maxLength + ' characters';
+        } else if (maxLength !== null && maxLength !== undefined) {
+            charLimitText = 'Maximum ' + maxLength + ' characters';
+        } else if (minLength !== null && minLength !== undefined) {
+            charLimitText = 'Minimum ' + minLength + ' characters';
+        }
+        
+        if (charLimitText) {
+            if (tooltipText) {
+                tooltipText = tooltipText + '\n\n' + charLimitText;
+            } else {
+                tooltipText = charLimitText;
+            }
+        }
+        
+        if (tooltipText) {
             var tip = document.createElement('span');
             tip.className = 'fieldset-label-tooltip';
             tip.textContent = 'i';
-            tip.setAttribute('data-tooltip', tooltip);
+            tip.setAttribute('data-tooltip', tooltipText);
             label.appendChild(tip);
         }
         return label;
@@ -561,7 +588,7 @@ const FieldsetComponent = (function(){
     
     // Set dropdown options data and propagate to external components
     function setPicklist(data) {
-        dropdownOptions = data || {};
+        dropdownOptions = data;
         // Also set data in Currency and PhonePrefix components
         if (data && data.currency && typeof CurrencyComponent !== 'undefined') {
             CurrencyComponent.setData(data.currency);
@@ -581,39 +608,36 @@ const FieldsetComponent = (function(){
      * @returns {HTMLElement} Complete fieldset element
      */
     function buildFieldset(fieldData, options) {
-        options = options || {};
-        var idPrefix = options.idPrefix || 'fieldset';
-        var index = options.fieldIndex || 0;
-        var container = options.container || null;
-        var defaultCurrency = options.defaultCurrency || null;
+        if (!options) {
+            throw new Error('FieldsetComponent.buildFieldset: options parameter is required');
+        }
+        var idPrefix = options.idPrefix;
+        var index = options.fieldIndex;
+        var container = options.container;
+        var defaultCurrency = options.defaultCurrency;
         
         var fieldset = document.createElement('div');
         fieldset.className = 'fieldset';
         
-        var key = fieldData.fieldset_key || fieldData.key || '';
-        var name = fieldData.fieldset_name || fieldData.name || 'Unnamed';
+        var key = fieldData.fieldset_key || fieldData.key;
+        var name = fieldData.fieldset_name || fieldData.name;
         
         // Get tooltip: check customTooltip first (editable fieldsets), then tooltip, then fieldset_tooltip
-        // If still empty, try to match against fieldset definitions (like live site)
-        var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip || '';
-        if (!tooltip && key) {
-            // No fallbacks - fieldsets must be provided
-            var availableFieldsets = fieldsets || [];
-            if (availableFieldsets && availableFieldsets.length > 0) {
-                var matchingFieldset = availableFieldsets.find(function(fs) {
-                    return fs.value === key || fs.key === key || fs.fieldset_key === key || fs.fieldsetKey === key;
-                });
-                if (matchingFieldset && matchingFieldset.fieldset_tooltip) {
-                    tooltip = matchingFieldset.fieldset_tooltip;
-                }
+        var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip;
+        if (!tooltip && key && fieldsets && fieldsets.length > 0) {
+            var matchingFieldset = fieldsets.find(function(fs) {
+                return fs.value === key || fs.key === key || fs.fieldset_key === key || fs.fieldsetKey === key;
+            });
+            if (matchingFieldset && matchingFieldset.fieldset_tooltip) {
+                tooltip = matchingFieldset.fieldset_tooltip;
             }
         }
         
-        var placeholder = fieldData.fieldset_placeholder || '';
-        var minLength = fieldData.min_length || 0;
-        var maxLength = fieldData.max_length || 500;
-        var fieldOptions = fieldData.fieldset_options || fieldData.options || [];
-        var fields = fieldData.fieldset_fields || [];
+        var placeholder = fieldData.fieldset_placeholder;
+        var minLength = fieldData.min_length;
+        var maxLength = fieldData.max_length;
+        var fieldOptions = fieldData.fieldset_options || fieldData.options;
+        var fields = fieldData.fieldset_fields;
         
         // Build based on fieldset type
         switch (key) {
@@ -640,7 +664,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'description':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var descTextarea = document.createElement('textarea');
                 descTextarea.className = 'fieldset-textarea';
                 descTextarea.placeholder = placeholder;
@@ -650,7 +674,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'text-box':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
                 var textBoxInput = document.createElement('input');
                 textBoxInput.type = 'text';
                 textBoxInput.className = 'fieldset-input';
@@ -661,7 +685,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'text-area':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
                 var editableTextarea = document.createElement('textarea');
                 editableTextarea.className = 'fieldset-textarea';
                 editableTextarea.placeholder = placeholder;
@@ -671,7 +695,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'dropdown':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
                 var select = document.createElement('select');
                 select.className = 'fieldset-select';
                 select.innerHTML = '<option value="">Select an option...</option>';
@@ -687,7 +711,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'radio':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip));
+                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
                 var radioGroup = document.createElement('div');
                 radioGroup.className = 'fieldset-radio-group';
                 if (Array.isArray(fieldOptions)) {
@@ -702,7 +726,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'email':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
                 emailInput.className = 'fieldset-input';
@@ -713,7 +737,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'phone':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var phoneRow = document.createElement('div');
                 phoneRow.className = 'fieldset-row';
                 phoneRow.appendChild(buildPhonePrefixMenu(container));
@@ -730,11 +754,13 @@ const FieldsetComponent = (function(){
                 
             case 'address':
             case 'location': // legacy support
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var addrInputEl = document.createElement('input');
                 addrInputEl.type = 'text';
                 addrInputEl.className = 'fieldset-input';
-                addrInputEl.placeholder = placeholder || 'Search for address...';
+                if (placeholder) {
+                    addrInputEl.placeholder = placeholder;
+                }
                 fieldset.appendChild(addrInputEl);
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
@@ -754,11 +780,13 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'city':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var cityInputEl = document.createElement('input');
                 cityInputEl.type = 'text';
                 cityInputEl.className = 'fieldset-input';
-                cityInputEl.placeholder = placeholder || 'Search for city or town...';
+                if (placeholder) {
+                    cityInputEl.placeholder = placeholder;
+                }
                 fieldset.appendChild(cityInputEl);
                 // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
@@ -779,7 +807,7 @@ const FieldsetComponent = (function(){
                 
             case 'website-url':
             case 'tickets-url':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var urlInput = document.createElement('input');
                 urlInput.type = 'text'; // text not url, we handle protocol
                 urlInput.className = 'fieldset-input';
@@ -791,7 +819,7 @@ const FieldsetComponent = (function(){
                 break;
                 
             case 'images':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
                 var imagesContainer = document.createElement('div');
                 imagesContainer.className = 'fieldset-images-container';
@@ -881,11 +909,13 @@ const FieldsetComponent = (function(){
                 if (selectedAmenities && Array.isArray(selectedAmenities) && selectedAmenities.length > 0) {
                     // Normalize selectedAmenities for comparison (trim and lowercase)
                     var normalizedSelected = selectedAmenities.map(function(val) {
-                        return (val || '').toString().trim().toLowerCase();
+                        if (!val) return '';
+                        return val.toString().trim().toLowerCase();
                     });
                     // Only show amenities that are in the selected list
                     amenities = allAmenities.filter(function(item) {
-                        var itemValue = (item.value || '').toString().trim().toLowerCase();
+                        if (!item || !item.value) return false;
+                        var itemValue = item.value.toString().trim().toLowerCase();
                         return normalizedSelected.indexOf(itemValue) !== -1;
                     });
                 } else {
@@ -895,7 +925,7 @@ const FieldsetComponent = (function(){
                 
                 amenities.forEach(function(item, i) {
                     // Use database values directly
-                    var amenityName = item.value || ''; // Display name (e.g., "Parking", "Wheelchair Access")
+                    var amenityName = item.value; // Display name (e.g., "Parking", "Wheelchair Access")
                     var description = item.label || ''; // Full description for tooltip
                     var filename = item.filename || ''; // Icon filename (e.g., "parking.svg")
                     
@@ -961,7 +991,7 @@ const FieldsetComponent = (function(){
                 
             case 'item-pricing':
                 // Item Name (full width), then variants with currency + price
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
 
                 // Track shared currency state for item pricing
                 // Use defaultCurrency if provided, otherwise null (user must select)
@@ -1148,7 +1178,7 @@ const FieldsetComponent = (function(){
                 
             case 'ticket-pricing':
                 // Seating Areas container with nested Pricing Tiers
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
                 var seatingAreasContainer = document.createElement('div');
                 seatingAreasContainer.className = 'fieldset-seating-areas-container';
@@ -1412,7 +1442,7 @@ const FieldsetComponent = (function(){
                 
             case 'sessions':
                 // Horizontal scrolling calendar + auto-generated session rows with autofill
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
                 // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
                 var sessionData = {};
@@ -1793,7 +1823,7 @@ const FieldsetComponent = (function(){
                 // - Both inputs have Google Places (unrestricted)
                 // - Auto-fill ONLY empty boxes
                 // - User edits are protected
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
                 // Hidden lat/lng fields
                 var smartLatInput = document.createElement('input');
@@ -2002,7 +2032,7 @@ const FieldsetComponent = (function(){
                 
             default:
                 // Unknown field type - use generic text input
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'fieldset-input';
