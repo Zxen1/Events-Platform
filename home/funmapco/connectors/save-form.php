@@ -775,6 +775,14 @@ try {
                         }
                     }
                     
+                    // Save selectedAmenities for amenities fieldsets (stored in fieldset_options as JSON)
+                    if ($fieldsetKey === 'amenities' && isset($fieldData['selectedAmenities'])) {
+                        $selectedAmenitiesArray = is_array($fieldData['selectedAmenities']) ? array_values($fieldData['selectedAmenities']) : [];
+                        if (!empty($selectedAmenitiesArray)) {
+                            $customOptions = json_encode($selectedAmenitiesArray, JSON_UNESCAPED_UNICODE);
+                        }
+                    }
+                    
                     // Save custom placeholder if provided (any non-empty value)
                     $customPlaceholderValue = $fieldData['customPlaceholder'] ?? '';
                     if (is_string($customPlaceholderValue) && trim($customPlaceholderValue) !== '') {

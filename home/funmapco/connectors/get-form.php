@@ -446,7 +446,12 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             if (isset($editRow['fieldset_options']) && $editRow['fieldset_options'] !== null && $editRow['fieldset_options'] !== '') {
                 $decodedOptions = json_decode($editRow['fieldset_options'], true);
                 if (is_array($decodedOptions)) {
-                    $editData['options'] = $decodedOptions;
+                    // For amenities fieldsets, store as selectedAmenities; for dropdown/radio, store as options
+                    if ($fsKey === 'amenities') {
+                        $editData['selectedAmenities'] = $decodedOptions;
+                    } else {
+                        $editData['options'] = $decodedOptions;
+                    }
                 }
             }
             if (isset($editRow['fieldset_placeholder']) && $editRow['fieldset_placeholder'] !== null && trim($editRow['fieldset_placeholder']) !== '') {
