@@ -45,6 +45,8 @@
     // Reference data (not for change tracking - just data needed to build the UI)
     var loadedFieldsets = [];
     var loadedCurrencies = [];
+    var loadedCategoryIconPaths = {};
+    var loadedSubcategoryIconPaths = {};
     
     // Use central icon registry from AdminModule
     function getIcon(name) {
@@ -374,19 +376,39 @@
         var body = categoryAccordion.querySelector('.formbuilder-accordion-body');
         if (!body) return;
         
-        var newSubName = 'New Subcategory';
-        
         // Get category info
         var catNameInput = categoryAccordion.querySelector('.formbuilder-accordion-editpanel-input');
         var catName = catNameInput ? catNameInput.value.trim() : 'Category';
         
+        // Get existing subcategory names from UI to ensure uniqueness
+        var existingSubs = [];
+        var existingOptions = body.querySelectorAll('.formbuilder-accordion-option');
+        existingOptions.forEach(function(opt) {
+            var optNameInput = opt.querySelector('.formbuilder-accordion-editpanel-input');
+            if (optNameInput && optNameInput.value.trim()) {
+                existingSubs.push(optNameInput.value.trim());
+            }
+        });
+        
+        // Generate unique subcategory name
+        var baseName = 'New Subcategory';
+        var existingSet = new Set(existingSubs);
+        var newSubName = baseName;
+        var counter = 2;
+        while (existingSet.has(newSubName)) {
+            newSubName = baseName + ' ' + counter;
+            counter++;
+        }
+        
+        // Get category data structure (needed for buildSubcategoryOption)
         var cat = {
             name: catName,
+            subs: existingSubs,
             subFees: {}
         };
         
         // Build the subcategory option
-        var option = buildSubcategoryOption(cat, newSubName, {}, loadedFieldsets, body);
+        var option = buildSubcategoryOption(cat, newSubName, loadedSubcategoryIconPaths, loadedFieldsets, body);
         
         // Insert before the Add Subcategory button
         var addSubBtn = body.querySelector('.formbuilder-add-button');
@@ -615,10 +637,12 @@
         // Store reference data (not for change tracking - just data needed to build UI)
         loadedFieldsets = formData.fieldsets;
         loadedCurrencies = formData.currencies;
+        loadedCategoryIconPaths = formData.categoryIconPaths;
+        loadedSubcategoryIconPaths = formData.subcategoryIconPaths;
         
         var categories = formData.categories;
-        var categoryIconPaths = formData.categoryIconPaths;
-        var subcategoryIconPaths = formData.subcategoryIconPaths;
+        var categoryIconPaths = loadedCategoryIconPaths;
+        var subcategoryIconPaths = loadedSubcategoryIconPaths;
         var fieldsets = loadedFieldsets;
         
         categories.forEach(function(cat) {
@@ -799,10 +823,12 @@
         body.className = 'formbuilder-accordion-body';
         
         var subs = cat.subs;
-        subs.forEach(function(subName) {
-            var option = buildSubcategoryOption(cat, subName, subcategoryIconPaths, fieldsets, body);
-            body.appendChild(option);
-        });
+        if (subs && Array.isArray(subs)) {
+            subs.forEach(function(subName) {
+                var option = buildSubcategoryOption(cat, subName, subcategoryIconPaths, fieldsets, body);
+                body.appendChild(option);
+            });
+        }
         
         // Add Subcategory button
         var addSubBtn = document.createElement('div');
