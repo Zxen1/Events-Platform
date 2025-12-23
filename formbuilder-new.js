@@ -1610,7 +1610,7 @@
         // Fieldset menu
         var fieldsetMenu = document.createElement('div');
         fieldsetMenu.className = 'formbuilder-fieldset-menu';
-        fieldsetMenu.innerHTML = '<div class="formbuilder-fieldset-menu-button">+ Add Field</div><div class="formbuilder-fieldset-menu-options"></div>';
+        fieldsetMenu.innerHTML = '<div class="formbuilder-fieldset-menu-button">+ Add Fieldset</div><div class="formbuilder-fieldset-menu-options"></div>';
         
         var fieldsetBtn = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-button');
         var fieldsetOpts = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-options');
