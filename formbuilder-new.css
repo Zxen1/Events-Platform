@@ -9,14 +9,17 @@
 /* Container */
 .admin-formbuilder-container {
   width: 100%;
-  
-  /* QUICK TEST: bottom slack to prevent scroll clamp/yank near bottom when accordions auto-close.
-     If this works, we'll replace it with an "invisible/dynamic" slack system later. */
-  padding-bottom: 1000px;
 }
 
 /* Scroll gap spacer (used to keep clicked headers stationary when content above collapses) */
 .formbuilder-scroll-gap {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Dynamic bottom slack spacer (only grows when needed to prevent bottom clamp/yank) */
+.formbuilder-scroll-gap-bottom {
   width: 100%;
   height: 0;
   pointer-events: none;

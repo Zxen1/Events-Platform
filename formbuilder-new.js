@@ -45,6 +45,7 @@
     // Scroll anchoring (keeps clicked accordion headers stationary when panels above collapse)
     var scrollContainer = null;
     var scrollGapEl = null;
+    var scrollGapBottomEl = null;
     var isAdjustingScroll = false;
     
     // Reference data (not for change tracking - just data needed to build the UI)
@@ -75,8 +76,32 @@
             scrollGapEl.className = 'formbuilder-scroll-gap';
             scrollGapEl.setAttribute('aria-hidden', 'true');
             container.insertBefore(scrollGapEl, container.firstChild);
+        } else {
+            // Keep it at the top
+            if (container.firstChild !== scrollGapEl) {
+                container.insertBefore(scrollGapEl, container.firstChild);
+            }
         }
         return scrollGapEl;
+    }
+
+    function ensureScrollGapBottom() {
+        if (!container) return null;
+        if (scrollGapBottomEl && scrollGapBottomEl.isConnected) {
+            // Keep it at the bottom
+            container.appendChild(scrollGapBottomEl);
+            return scrollGapBottomEl;
+        }
+
+        scrollGapBottomEl = container.querySelector('.formbuilder-scroll-gap-bottom');
+        if (!scrollGapBottomEl) {
+            scrollGapBottomEl = document.createElement('div');
+            scrollGapBottomEl.className = 'formbuilder-scroll-gap-bottom';
+            scrollGapBottomEl.setAttribute('aria-hidden', 'true');
+        }
+        // Always ensure it's last
+        container.appendChild(scrollGapBottomEl);
+        return scrollGapBottomEl;
     }
     
     function getGapHeight() {
@@ -91,6 +116,19 @@
         var next = Math.max(0, Math.round(px || 0));
         el.style.height = next ? (next + 'px') : '0px';
     }
+
+    function getBottomGapHeight() {
+        var el = ensureScrollGapBottom();
+        if (!el) return 0;
+        return el.offsetHeight || 0;
+    }
+
+    function setBottomGapHeight(px) {
+        var el = ensureScrollGapBottom();
+        if (!el) return;
+        var next = Math.max(0, Math.round(px || 0));
+        el.style.height = next ? (next + 'px') : '0px';
+    }
     
     function maybeConsumeGapOnScroll() {
         if (isAdjustingScroll) return;
@@ -99,7 +137,8 @@
         if (!sc) return;
         
         var gap = getGapHeight();
-        if (!gap) return;
+        var bottomGap = getBottomGapHeight();
+        if (!gap && !bottomGap) return;
         
         // If the user scrolls up into the gap, remove the gap so they never see blank space.
         if (sc.scrollTop < gap) {
@@ -108,6 +147,19 @@
             setGapHeight(gap - reduceBy);
             sc.scrollTop = 0;
             isAdjustingScroll = false;
+        }
+
+        // If the user scrolls down into the bottom gap, remove it so they never see blank space.
+        if (bottomGap) {
+            var maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
+            var distanceToBottom = maxScrollTop - sc.scrollTop;
+            if (distanceToBottom < bottomGap) {
+                var reduceBottomBy = bottomGap - distanceToBottom;
+                isAdjustingScroll = true;
+                setBottomGapHeight(bottomGap - reduceBottomBy);
+                sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
+                isAdjustingScroll = false;
+            }
         }
     }
     
@@ -119,10 +171,12 @@
         }
         
         ensureScrollGap();
+        ensureScrollGapBottom();
         
         var scRect = sc.getBoundingClientRect();
         var anchorRect = anchorEl.getBoundingClientRect();
         var oldTop = anchorRect.top - scRect.top;
+        var oldScrollTop = sc.scrollTop;
         
         fn();
         
@@ -130,6 +184,20 @@
             if (!anchorEl.isConnected) return;
             var scNow = findScrollContainer();
             if (!scNow) return;
+
+            // If content collapse shrank scrollHeight, the browser may clamp scrollTop down.
+            // Add bottom slack so the original scrollTop stays valid, then restore it.
+            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (oldScrollTop > maxAfter) {
+                var clampSlack = oldScrollTop - maxAfter;
+                setBottomGapHeight(getBottomGapHeight() + clampSlack);
+                // Force layout so new maxScrollTop applies before we restore
+                void scNow.scrollHeight;
+            }
+            
+            isAdjustingScroll = true;
+            scNow.scrollTop = oldScrollTop;
+            isAdjustingScroll = false;
             
             var scNowRect = scNow.getBoundingClientRect();
             var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
@@ -137,13 +205,20 @@
             if (!delta) return;
             
             var currentScrollTop = scNow.scrollTop;
-            var slack = 0;
             
             // If we'd need to scroll above 0 to keep the anchor stationary, create gap slack instead.
             if (currentScrollTop + delta < 0) {
-                slack = -(currentScrollTop + delta);
-                setGapHeight(getGapHeight() + slack);
-                delta = delta + slack;
+                var topSlack = -(currentScrollTop + delta);
+                setGapHeight(getGapHeight() + topSlack);
+                delta = delta + topSlack;
+            }
+
+            // If we'd need to scroll past maxScrollTop, create bottom slack instead.
+            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (currentScrollTop + delta > maxNow) {
+                var bottomSlack = (currentScrollTop + delta) - maxNow;
+                setBottomGapHeight(getBottomGapHeight() + bottomSlack);
+                void scNow.scrollHeight;
             }
             
             isAdjustingScroll = true;
@@ -2518,6 +2593,7 @@
         
         // Ensure gap exists early and bind scroll handler (kept lightweight; only runs for admin panel scroll events)
         ensureScrollGap();
+        ensureScrollGapBottom();
         var sc = findScrollContainer();
         if (sc) {
             sc.addEventListener('scroll', maybeConsumeGapOnScroll, { passive: true });
