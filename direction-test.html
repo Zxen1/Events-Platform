@@ -149,26 +149,21 @@
         var menu3Button = menu3.querySelector('.menu-button');
         var spacer = document.getElementById('spacer');
         var openMenu = null;
+        var menuHeights = new Map();
         
         function closeAllMenus(targetMenu) {
             if (openMenu && openMenu !== targetMenu) {
-                // Get the height of the menu that's closing
-                var contentWrapper = openMenu.querySelector('.menu-content-wrapper');
-                var height = contentWrapper.scrollHeight;
+                // Use stored height (measured when menu was open)
+                var height = menuHeights.get(openMenu) || 0;
                 
-                // Set spacer height to maintain space
                 spacer.style.height = height + 'px';
-                
-                // Close the menu
                 openMenu.classList.remove('open');
                 openMenu = null;
                 
-                // After transition, remove spacer
                 setTimeout(function() {
                     spacer.style.height = '0';
                 }, 300);
             } else if (openMenu === targetMenu) {
-                // Closing the same menu that was clicked
                 openMenu.classList.remove('open');
                 openMenu = null;
                 spacer.style.height = '0';
@@ -177,15 +172,17 @@
         
         function toggleMenu(menu) {
             var isCurrentlyOpen = menu.classList.contains('open');
-            
-            // Close all menus first (this handles the spacer)
             closeAllMenus(isCurrentlyOpen ? menu : null);
             
-            // If this menu wasn't open, open it now
             if (!isCurrentlyOpen) {
+                menu.classList.add('open');
+                openMenu = menu;
+                
+                // Measure height after menu opens (use requestAnimationFrame to ensure DOM updated)
                 requestAnimationFrame(function() {
-                    menu.classList.add('open');
-                    openMenu = menu;
+                    var menuOptions = menu.querySelector('.menu-options');
+                    var height = menuOptions.scrollHeight;
+                    menuHeights.set(menu, height);
                 });
             }
         }
@@ -205,7 +202,6 @@
             toggleMenu(menu3);
         });
         
-        // Close menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.menu')) {
                 closeAllMenus(null);
