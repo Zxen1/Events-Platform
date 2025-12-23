@@ -131,46 +131,51 @@ const AdminModule = (function() {
         ensureAnchorGap(hostEl, 'top');
         ensureAnchorGap(hostEl, 'bottom');
         
+        // Measure BEFORE change
         var scRect = sc.getBoundingClientRect();
         var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
         var oldScrollTop = sc.scrollTop;
+        var oldScrollHeight = sc.scrollHeight;
         
         fn();
         
-        requestAnimationFrame(function() {
-            if (!anchorEl.isConnected) return;
-            var scNow = getAdminScrollContainer();
-            if (!scNow) return;
-            
-            // Bottom clamp protection: if collapse shrinks max scroll, add bottom slack and restore scrollTop.
-            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (oldScrollTop > maxAfter) {
-                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + (oldScrollTop - maxAfter));
-                void scNow.scrollHeight;
-            }
-            scNow.scrollTop = oldScrollTop;
-            
-            var scNowRect = scNow.getBoundingClientRect();
-            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-            var delta = newTop - oldTop;
-            if (!delta) return;
-            
-            var currentScrollTop = scNow.scrollTop;
-            
-            if (currentScrollTop + delta < 0) {
-                var topSlack = -(currentScrollTop + delta);
-                setGapPx(hostEl, 'top', getGapPx(hostEl, 'top') + topSlack);
-                delta += topSlack;
-            }
-            
-            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (currentScrollTop + delta > maxNow) {
-                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + ((currentScrollTop + delta) - maxNow));
-                void scNow.scrollHeight;
-            }
-            
-            scNow.scrollTop = currentScrollTop + delta;
-        });
+        // Measure/adjust IMMEDIATELY after change (no 1-frame jump)
+        if (!anchorEl.isConnected) return;
+        var scNow = getAdminScrollContainer();
+        if (!scNow) return;
+        
+        // Bottom clamp protection: if collapse shrinks max scroll, add bottom slack and restore scrollTop.
+        var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+        if (oldScrollTop > maxAfter) {
+            setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + (oldScrollTop - maxAfter));
+        } else {
+            // If content grew a lot, we don't need to add slack, but keeping scrollTop stable is still desirable
+            // so we anchor based on oldScrollTop regardless.
+        }
+        
+        // Restore scrollTop to pre-change (prevents clamp yank)
+        scNow.scrollTop = oldScrollTop;
+        
+        // Compute anchor delta and compensate
+        var scNowRect = scNow.getBoundingClientRect();
+        var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+        var delta = newTop - oldTop;
+        if (!delta) return;
+        
+        var currentScrollTop = scNow.scrollTop;
+        
+        if (currentScrollTop + delta < 0) {
+            var topSlack = -(currentScrollTop + delta);
+            setGapPx(hostEl, 'top', getGapPx(hostEl, 'top') + topSlack);
+            delta += topSlack;
+        }
+        
+        var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+        if (currentScrollTop + delta > maxNow) {
+            setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + ((currentScrollTop + delta) - maxNow));
+        }
+        
+        scNow.scrollTop = currentScrollTop + delta;
     }
 
     /* --------------------------------------------------------------------------
@@ -2705,7 +2710,7 @@ const AdminModule = (function() {
             var header = imageManagerAccordion.querySelector('.admin-settings-imagemanager-accordion-header');
             if (header) {
                 header.addEventListener('click', function() {
-                    runWithAdminAnchor(settingsContainer, header, function() {
+                    runWithAdminAnchor(getAdminScrollContainer(), header, function() {
                         imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
                     });
                 });
@@ -3074,7 +3079,7 @@ const AdminModule = (function() {
 
             // Header click - toggle edit panel
             header.addEventListener('click', function(e) {
-                runWithAdminAnchor(container, header, function() {
+                runWithAdminAnchor(getAdminScrollContainer(), header, function() {
                     var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
                     closeAllCheckoutEditPanels(accordion);
                     if (!isEditing) {

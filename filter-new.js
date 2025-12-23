@@ -115,47 +115,49 @@ const FilterModule = (function() {
             return;
         }
         
+        // Always attach slack to the REAL scroll container so bottom slack is truly at the bottom.
+        hostEl = bodyEl;
+        
         bindGapConsumerOnce(hostEl);
         ensureAnchorGap(hostEl, 'top');
         ensureAnchorGap(hostEl, 'bottom');
         
+        // Measure BEFORE change
         var scRect = bodyEl.getBoundingClientRect();
         var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
         var oldScrollTop = bodyEl.scrollTop;
         
         fn();
         
-        requestAnimationFrame(function() {
-            if (!anchorEl.isConnected) return;
-            
-            var maxAfter = Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight);
-            if (oldScrollTop > maxAfter) {
-                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + (oldScrollTop - maxAfter));
-                void bodyEl.scrollHeight;
-            }
-            bodyEl.scrollTop = oldScrollTop;
-            
-            var scNowRect = bodyEl.getBoundingClientRect();
-            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-            var delta = newTop - oldTop;
-            if (!delta) return;
-            
-            var currentScrollTop = bodyEl.scrollTop;
-            
-            if (currentScrollTop + delta < 0) {
-                var topSlack = -(currentScrollTop + delta);
-                setGapPx(hostEl, 'top', getGapPx(hostEl, 'top') + topSlack);
-                delta += topSlack;
-            }
-            
-            var maxNow = Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight);
-            if (currentScrollTop + delta > maxNow) {
-                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + ((currentScrollTop + delta) - maxNow));
-                void bodyEl.scrollHeight;
-            }
-            
-            bodyEl.scrollTop = currentScrollTop + delta;
-        });
+        // Adjust IMMEDIATELY after change (no 1-frame jump)
+        if (!anchorEl.isConnected) return;
+        
+        var maxAfter = Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight);
+        if (oldScrollTop > maxAfter) {
+            setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + (oldScrollTop - maxAfter));
+        }
+        
+        bodyEl.scrollTop = oldScrollTop;
+        
+        var scNowRect = bodyEl.getBoundingClientRect();
+        var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+        var delta = newTop - oldTop;
+        if (!delta) return;
+        
+        var currentScrollTop = bodyEl.scrollTop;
+        
+        if (currentScrollTop + delta < 0) {
+            var topSlack = -(currentScrollTop + delta);
+            setGapPx(hostEl, 'top', getGapPx(hostEl, 'top') + topSlack);
+            delta += topSlack;
+        }
+        
+        var maxNow = Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight);
+        if (currentScrollTop + delta > maxNow) {
+            setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + ((currentScrollTop + delta) - maxNow));
+        }
+        
+        bodyEl.scrollTop = currentScrollTop + delta;
     }
 
 
@@ -827,8 +829,8 @@ const FilterModule = (function() {
             return;
         }
         
-        // Anchor gaps live inside the category container so they only affect this section.
-        bindGapConsumerOnce(container);
+        // Anchor gaps live on the actual scroll container (filter-panel-body) so bottom slack works reliably.
+        bindGapConsumerOnce(bodyEl);
         
         // Loading category filters...
         
@@ -928,7 +930,7 @@ const FilterModule = (function() {
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        runWithFilterAnchor(container, header, function() {
+                        runWithFilterAnchor(bodyEl, header, function() {
                             headerToggle.classList.toggle('on');
                             if (headerToggle.classList.contains('on')) {
                                 accordion.classList.remove('filter-categoryfilter-accordion--disabled');
@@ -944,7 +946,7 @@ const FilterModule = (function() {
                     // Click anywhere except toggle area expands/collapses
                     header.addEventListener('click', function(e) {
                         if (e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
-                        runWithFilterAnchor(container, header, function() {
+                        runWithFilterAnchor(bodyEl, header, function() {
                             accordion.classList.toggle('filter-categoryfilter-accordion--open');
                         });
                     });
