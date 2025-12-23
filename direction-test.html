@@ -41,16 +41,19 @@
 <body>
     <script>
         const rectangles = [];
-        const spacing = 500;
+        const spacing = 300;
         const numRectangles = 20;
         let isAnimating = false;
+        const rectPositions = [];
         
         // Create rectangles
         for (let i = 0; i < numRectangles; i++) {
             const rect = document.createElement('div');
             rect.className = 'rectangle';
             rect.id = 'rect' + i;
-            rect.style.top = (i * spacing) + 'px';
+            const topPos = i * spacing;
+            rect.style.top = topPos + 'px';
+            rectPositions[i] = topPos;
             document.body.appendChild(rect);
             rectangles.push(rect);
         }
@@ -58,42 +61,162 @@
         // Set body height to accommodate all rectangles
         document.body.style.height = ((numRectangles - 1) * spacing + 36 + 100) + 'px';
         
+        function isTouching(aboveIndex, belowIndex) {
+            return rectPositions[aboveIndex] === rectPositions[belowIndex] - 36;
+        }
+        
         function flyDown(clickedIndex) {
-            if (isAnimating || clickedIndex === 0) return;
+            if (isAnimating) return;
             
-            isAnimating = true;
-            const clickedRect = rectangles[clickedIndex];
-            const aboveRect = rectangles[clickedIndex - 1];
+            const clickedTop = rectPositions[clickedIndex];
+            let hasAboveAction = false;
+            let hasBelowDropAction = false;
+            let hasBelowMoveUpAction = false;
             
-            const clickedTop = parseInt(clickedRect.style.top);
-            const targetTop = clickedTop - 36;
-            const aboveStartTop = parseInt(aboveRect.style.top);
-            
-            const speed = 8;
-            let currentAboveTop = aboveStartTop;
-            
-            function animate() {
-                currentAboveTop += speed;
-                
-                if (currentAboveTop >= targetTop) {
-                    currentAboveTop = targetTop;
-                    aboveRect.style.top = currentAboveTop + 'px';
-                    
-                    // Move all rectangles above to maintain spacing
-                    for (let i = clickedIndex - 2; i >= 0; i--) {
-                        const prevTop = parseInt(rectangles[i + 1].style.top);
-                        rectangles[i].style.top = (prevTop - 36 - spacing) + 'px';
-                    }
-                    
-                    isAnimating = false;
-                    return;
-                }
-                
-                aboveRect.style.top = currentAboveTop + 'px';
-                requestAnimationFrame(animate);
+            // Check if rectangle below is touching (drop down 300px)
+            if (clickedIndex < numRectangles - 1 && rectPositions[clickedIndex + 1] === rectPositions[clickedIndex] + 36) {
+                hasBelowDropAction = true;
+            }
+            // Check if rectangle below is NOT touching (move up until first touches)
+            else if (clickedIndex < numRectangles - 1) {
+                hasBelowMoveUpAction = true;
             }
             
-            animate();
+            // Check if we can move rectangle above
+            if (clickedIndex > 0) {
+                const aboveIndex = clickedIndex - 1;
+                if (!isTouching(aboveIndex, clickedIndex)) {
+                    hasAboveAction = true;
+                }
+            }
+            
+            if (!hasAboveAction && !hasBelowDropAction && !hasBelowMoveUpAction) {
+                return;
+            }
+            
+            isAnimating = true;
+            let aboveComplete = !hasAboveAction;
+            let belowComplete = !hasBelowDropAction && !hasBelowMoveUpAction;
+            
+            function checkComplete() {
+                if (aboveComplete && belowComplete) {
+                    isAnimating = false;
+                }
+            }
+            
+            // Handle moving rectangle above
+            if (hasAboveAction) {
+                const aboveIndex = clickedIndex - 1;
+                const targetTop = clickedTop - 36;
+                const distanceToMove = targetTop - rectPositions[aboveIndex];
+                
+                const speed = 8;
+                let currentOffset = 0;
+                
+                function animateAbove() {
+                    currentOffset += speed;
+                    
+                    if (currentOffset >= distanceToMove) {
+                        currentOffset = distanceToMove;
+                        
+                        // Move all rectangles above, maintaining their spacing
+                        for (let i = 0; i <= aboveIndex; i++) {
+                            const newTop = rectPositions[i] + currentOffset;
+                            rectangles[i].style.top = newTop + 'px';
+                            rectPositions[i] = newTop;
+                        }
+                        
+                        aboveComplete = true;
+                        checkComplete();
+                        return;
+                    }
+                    
+                    // Move all rectangles above together
+                    for (let i = 0; i <= aboveIndex; i++) {
+                        const newTop = rectPositions[i] + currentOffset;
+                        rectangles[i].style.top = newTop + 'px';
+                    }
+                    
+                    requestAnimationFrame(animateAbove);
+                }
+                
+                animateAbove();
+            }
+            
+            // Handle dropping rectangles below (when touching)
+            if (hasBelowDropAction) {
+                const dropDistance = 300;
+                const speed = 8;
+                let currentOffset = 0;
+                
+                function animateBelowDrop() {
+                    currentOffset += speed;
+                    
+                    if (currentOffset >= dropDistance) {
+                        currentOffset = dropDistance;
+                        
+                        // Move all rectangles below
+                        for (let i = clickedIndex + 1; i < numRectangles; i++) {
+                            const newTop = rectPositions[i] + currentOffset;
+                            rectangles[i].style.top = newTop + 'px';
+                            rectPositions[i] = newTop;
+                        }
+                        
+                        belowComplete = true;
+                        checkComplete();
+                        return;
+                    }
+                    
+                    // Move all rectangles below
+                    for (let i = clickedIndex + 1; i < numRectangles; i++) {
+                        const newTop = rectPositions[i] + currentOffset;
+                        rectangles[i].style.top = newTop + 'px';
+                    }
+                    
+                    requestAnimationFrame(animateBelowDrop);
+                }
+                
+                animateBelowDrop();
+            }
+            
+            // Handle moving rectangles below up (when not touching)
+            if (hasBelowMoveUpAction) {
+                const firstBelowIndex = clickedIndex + 1;
+                const targetTop = clickedTop + 36;
+                const distanceToMove = rectPositions[firstBelowIndex] - targetTop;
+                
+                const speed = 8;
+                let currentOffset = 0;
+                
+                function animateBelowMoveUp() {
+                    currentOffset += speed;
+                    
+                    if (currentOffset >= distanceToMove) {
+                        currentOffset = distanceToMove;
+                        
+                        // Move all rectangles below up, maintaining their current spacing
+                        for (let i = firstBelowIndex; i < numRectangles; i++) {
+                            const newTop = rectPositions[i] - currentOffset;
+                            rectangles[i].style.top = newTop + 'px';
+                            rectPositions[i] = newTop;
+                        }
+                        
+                        belowComplete = true;
+                        checkComplete();
+                        return;
+                    }
+                    
+                    // Move all rectangles below up together, maintaining their current spacing
+                    for (let i = firstBelowIndex; i < numRectangles; i++) {
+                        const newTop = rectPositions[i] - currentOffset;
+                        rectangles[i].style.top = newTop + 'px';
+                    }
+                    
+                    requestAnimationFrame(animateBelowMoveUp);
+                }
+                
+                animateBelowMoveUp();
+            }
         }
         
         // Add click listeners to all rectangles
