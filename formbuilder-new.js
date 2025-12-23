@@ -713,7 +713,7 @@
                 ) || e.target;
                 
                 runWithScrollAnchor(anchor, function() {
-                    closeAllFieldEditPanels();
+                closeAllFieldEditPanels();
                 });
             }
         });
@@ -967,11 +967,11 @@
         headerEditArea.addEventListener('click', function(e) {
             e.stopPropagation();
             runWithScrollAnchor(header, function() {
-                var isOpen = accordion.classList.contains('formbuilder-accordion--editing');
-                closeAllEditPanels();
-                if (!isOpen) {
-                    accordion.classList.add('formbuilder-accordion--editing');
-                }
+            var isOpen = accordion.classList.contains('formbuilder-accordion--editing');
+            closeAllEditPanels();
+            if (!isOpen) {
+                accordion.classList.add('formbuilder-accordion--editing');
+            }
             });
         });
         
@@ -979,10 +979,10 @@
         header.addEventListener('click', function(e) {
             if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
             runWithScrollAnchor(header, function() {
-                if (!accordion.classList.contains('formbuilder-accordion--editing')) {
-                    closeAllEditPanels();
-                }
-                accordion.classList.toggle('formbuilder-accordion--open');
+            if (!accordion.classList.contains('formbuilder-accordion--editing')) {
+                closeAllEditPanels();
+            }
+            accordion.classList.toggle('formbuilder-accordion--open');
             });
         });
         
@@ -2271,10 +2271,10 @@
             field.addEventListener('click', function(ev) {
                 ev.stopPropagation();
                 runWithScrollAnchor(field, function() {
-                    container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                        if (el !== fieldWrapper) {
-                            el.classList.remove('formbuilder-field-wrapper--editing');
-                        }
+                container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                    if (el !== fieldWrapper) {
+                        el.classList.remove('formbuilder-field-wrapper--editing');
+                    }
                     });
                 });
             });
@@ -2282,13 +2282,13 @@
             fieldEdit.addEventListener('click', function(ev) {
                 ev.stopPropagation();
                 runWithScrollAnchor(field, function() {
-                    var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
-                    container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                        el.classList.remove('formbuilder-field-wrapper--editing');
-                    });
-                    if (!isOpen) {
-                        fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
-                    }
+                var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
+                container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                    el.classList.remove('formbuilder-field-wrapper--editing');
+                });
+                if (!isOpen) {
+                    fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
+                }
                 });
             });
             
@@ -2478,11 +2478,11 @@
         optEditArea.addEventListener('click', function(e) {
             e.stopPropagation();
             runWithScrollAnchor(optHeader, function() {
-                var isOpen = option.classList.contains('formbuilder-accordion-option--editing');
-                closeAllEditPanels();
-                if (!isOpen) {
-                    option.classList.add('formbuilder-accordion-option--editing');
-                }
+            var isOpen = option.classList.contains('formbuilder-accordion-option--editing');
+            closeAllEditPanels();
+            if (!isOpen) {
+                option.classList.add('formbuilder-accordion-option--editing');
+            }
             });
         });
         
@@ -2498,10 +2498,10 @@
         optHeader.addEventListener('click', function(e) {
             if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
             runWithScrollAnchor(optHeader, function() {
-                if (!option.classList.contains('formbuilder-accordion-option--editing')) {
-                    closeAllEditPanels();
-                }
-                option.classList.toggle('formbuilder-accordion-option--open');
+            if (!option.classList.contains('formbuilder-accordion-option--editing')) {
+                closeAllEditPanels();
+            }
+            option.classList.toggle('formbuilder-accordion-option--open');
             });
         });
         
