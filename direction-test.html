@@ -89,6 +89,30 @@
         .menu-option:hover {
             background: #111;
         }
+        
+        .spacer {
+            width: 100%;
+            height: 500px;
+        }
+        
+        .magnet-button {
+            width: 400px;
+            height: 36px;
+            background: #3b82f6;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .magnet-button:hover {
+            background: #2563eb;
+        }
+        
+        .magnet-button--locked {
+            position: fixed;
+        }
     </style>
 </head>
 <body>
@@ -134,6 +158,9 @@
                 </div>
             </div>
         </div>
+        
+        <div class="spacer"></div>
+        <button class="magnet-button" id="magnetButton" type="button">Magnet Button</button>
     </div>
     
     <script>
@@ -284,13 +311,66 @@
         });
         
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.menu')) {
+            if (!e.target.closest('.menu') && e.target.id !== 'magnetButton') {
                 if (openMenu) {
                     openMenu.classList.remove('open');
                     openMenu = null;
                 }
                 unlockButtons();
             }
+        });
+        
+        // Magnet button - collapses all menus above downward
+        var magnetButton = document.getElementById('magnetButton');
+        magnetButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Lock the magnet button in place
+            var rect = magnetButton.getBoundingClientRect();
+            magnetButton.style.position = 'fixed';
+            magnetButton.style.top = rect.top + 'px';
+            magnetButton.style.left = rect.left + 'px';
+            magnetButton.style.width = rect.width + 'px';
+            magnetButton.classList.add('magnet-button--locked');
+            
+            // Close all menus above (all three menus)
+            var allMenus = [menu1, menu2, menu3];
+            allMenus.forEach(function(menu) {
+                if (menu.classList.contains('open')) {
+                    var wrapper = menu.querySelector('.menu-content-wrapper');
+                    var options = menu.querySelector('.menu-options');
+                    var currentHeight = wrapper.scrollHeight;
+                    
+                    // Set explicit height before closing
+                    wrapper.style.height = currentHeight + 'px';
+                    
+                    // Remove open class
+                    menu.classList.remove('open');
+                    
+                    // Animate height to 0 and scale to 0 (downward collapse)
+                    requestAnimationFrame(function() {
+                        wrapper.style.height = '0';
+                        options.style.transform = 'scaleY(0)';
+                        
+                        // Clean up after animation
+                        setTimeout(function() {
+                            wrapper.style.height = '';
+                            options.style.transform = '';
+                        }, 300);
+                    });
+                }
+            });
+            
+            openMenu = null;
+            
+            // Unlock magnet button after animation
+            setTimeout(function() {
+                magnetButton.style.position = '';
+                magnetButton.style.top = '';
+                magnetButton.style.left = '';
+                magnetButton.style.width = '';
+                magnetButton.classList.remove('magnet-button--locked');
+            }, 300);
         });
     </script>
 </body>
