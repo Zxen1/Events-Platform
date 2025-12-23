@@ -132,6 +132,8 @@ const MapModule = (function() {
 
     // Create map (pass DOM element directly, not ID)
     // Performance optimizations: renderWorldCopies=false reduces initial load, preserveDrawingBuffer only if needed
+    // attributionControl: false - Disabled to prevent "Cannot read properties of null" errors
+    // Mapbox attribution control has mutation observers that fail when DOM elements are manipulated
     map = new mapboxgl.Map({
       container: container,
       style: 'mapbox://styles/mapbox/standard',
@@ -140,7 +142,7 @@ const MapModule = (function() {
       zoom: startZoom,
       pitch: startPitch,
       bearing: startBearing,
-      attributionControl: true,
+      attributionControl: false, // Disabled to fix null dataset errors
       renderWorldCopies: false, // Reduce initial rendering load
       antialias: false // Disable antialiasing for better performance (can enable if quality needed)
     });
