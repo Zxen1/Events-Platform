@@ -646,25 +646,49 @@ var ScrollBufferModule = {
             topContainer: topContainer,
             bottomContainer: bottomContainer,
             isClicking: false,
-            scrollTimeout: null
+            scrollTimeout: null,
+            infiniteScrollEnabled: false
         };
         
         this.buffers.set(container, bufferData);
         
-        // When scrolling ends, set height = auto (prepare containers to be flexible)
+        // When scrolling ends: enable infinite scroll (remove boundaries)
+        // When scrolling starts: disable infinite scroll (restore boundaries)
         container.addEventListener('scroll', function() {
             // Clear existing timeout
             if (bufferData.scrollTimeout) {
                 clearTimeout(bufferData.scrollTimeout);
             }
             
+            // Scrolling started: disable infinite scroll (restore boundaries)
+            if (bufferData.infiniteScrollEnabled) {
+                bufferData.infiniteScrollEnabled = false;
+                // Restore boundaries by clamping scroll
+                var headerHeight = header.offsetHeight;
+                var scrollTop = container.scrollTop;
+                var clientHeight = container.clientHeight;
+                var scrollHeight = container.scrollHeight;
+                
+                // Clamp to header
+                if (scrollTop < (headerHeight + 10)) {
+                    container.scrollTop = headerHeight + 10;
+                }
+                // Clamp to footer
+                else if ((scrollTop + clientHeight) > (scrollHeight - 10)) {
+                    container.scrollTop = scrollHeight - clientHeight - 10;
+                }
+            }
+            
             // Set height back to 1px during scrolling
             topContainer.style.height = '1px';
             bottomContainer.style.height = '1px';
             
-            // When scrolling ends, set height = auto (ready for clicks)
+            // When scrolling ends: enable infinite scroll (remove boundaries)
             bufferData.scrollTimeout = setTimeout(function() {
                 if (!bufferData.isClicking) {
+                    bufferData.infiniteScrollEnabled = true;
+                    // Allow infinite scroll by removing boundaries
+                    // Browser can't anchor if there are no boundaries
                     topContainer.style.height = 'auto';
                     bottomContainer.style.height = 'auto';
                 }
