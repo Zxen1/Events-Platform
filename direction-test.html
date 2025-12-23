@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direction Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #111;
+            color: #fff;
+            font-family: system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .test-container {
+            width: 400px;
+            background: #222;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .test-header {
+            width: 100%;
+            height: 1236px;
+            background: #3b82f6;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: max-height 0.3s ease, padding-top 0.3s ease, padding-bottom 0.3s ease, transform 0.3s ease;
+        }
+        
+        .test-header-top {
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .test-header-bottom {
+            border-radius: 0 0 10px 10px;
+        }
+        
+        .test-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding-top 0.3s ease, padding-bottom 0.3s ease, transform 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .test-content.open {
+            max-height: 12360px; /* 10 items * 1236px each */
+        }
+        
+        .test-item {
+            width: 100%;
+            height: 1236px;
+            background: #000;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .test-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .test-header.closing-upward {
+            transform: translateY(-100%);
+        }
+        
+        .test-header.closing-downward {
+            transform: translateY(100%);
+        }
+        
+        .test-content.closing-upward {
+            transform: translateY(-100%);
+        }
+        
+        .test-content.closing-downward {
+            transform: translateY(100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header test-header-top" id="topHeader"></div>
+        <div class="test-content" id="content">
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+            <div class="test-item"></div>
+        </div>
+        <div class="test-header test-header-bottom" id="bottomHeader"></div>
+    </div>
+    
+    <script>
+        var isOpen = false;
+        var topHeader = document.getElementById('topHeader');
+        var bottomHeader = document.getElementById('bottomHeader');
+        var content = document.getElementById('content');
+        
+        function toggleContent(clickedHeader) {
+            if (isOpen) {
+                // Closing
+                var clickedRect = clickedHeader.getBoundingClientRect();
+                var topRect = topHeader.getBoundingClientRect();
+                var bottomRect = bottomHeader.getBoundingClientRect();
+                
+                if (clickedHeader === bottomHeader) {
+                    // Close downward (towards bottom)
+                    content.classList.add('closing-downward');
+                    topHeader.classList.add('closing-downward');
+                } else if (clickedHeader === topHeader) {
+                    // Close upward (towards top)
+                    content.classList.add('closing-upward');
+                    bottomHeader.classList.add('closing-upward');
+                }
+                
+                content.classList.remove('open');
+                
+                // Clean up classes after animation
+                setTimeout(function() {
+                    content.classList.remove('closing-downward', 'closing-upward');
+                    topHeader.classList.remove('closing-downward', 'closing-upward');
+                    bottomHeader.classList.remove('closing-downward', 'closing-upward');
+                }, 300);
+            } else {
+                // Opening
+                content.classList.add('open');
+            }
+            
+            isOpen = !isOpen;
+        }
+        
+        topHeader.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleContent(topHeader);
+        });
+        
+        bottomHeader.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleContent(bottomHeader);
+        });
+    </script>
+</body>
+</html>
+
