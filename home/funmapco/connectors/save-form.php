@@ -773,6 +773,19 @@ try {
                         }
                     }
                     
+                    // For amenities fieldsets, also save name from fieldData or fieldset definition
+                    // (needed even if not editable, since we're saving selectedAmenities)
+                    if ($isAmenities && $customName === null) {
+                        $customNameValue = $fieldData['name'] ?? '';
+                        if ($customNameValue === '') {
+                            // Fall back to fieldset definition name
+                            $customNameValue = $fieldsetDef['fieldset_name'] ?? $fieldsetDef['name'] ?? '';
+                        }
+                        if ($customNameValue !== '') {
+                            $customName = $customNameValue;
+                        }
+                    }
+                    
                     // Always save options for editable dropdown/radio types (so defaults are captured)
                     if ($isEditable && isset($fieldData['options'])) {
                         $customOptionsArray = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];

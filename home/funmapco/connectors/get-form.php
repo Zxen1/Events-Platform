@@ -1116,6 +1116,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 $isEditable = isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true;
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
+                $isAmenities = ($fieldsetKey === 'amenities');
                 
                 $customName = null;
                 $customOptions = null;
@@ -1164,6 +1165,14 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                         if (!empty($defaultOptions)) {
                             $customOptions = $defaultOptions;
                         }
+                    }
+                }
+                
+                // Load selectedAmenities for amenities fieldsets even if not editable
+                // (since amenities menu is always shown in edit panel)
+                if ($isAmenities && !$isEditable && $fieldEdit && is_array($fieldEdit)) {
+                    if (isset($fieldEdit['selectedAmenities']) && is_array($fieldEdit['selectedAmenities'])) {
+                        $selectedAmenities = $fieldEdit['selectedAmenities'];
                     }
                 }
                 
