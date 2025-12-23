@@ -605,9 +605,10 @@ const App = (function() {
 window.App = App;
 
 /* ============================================================================
-   SCROLL BUFFER SYSTEM
+   INFINITY SCROLL BUFFER
    Prevents content from jumping when accordions open/close
-   Top: Sticky element | Bottom: Regular container
+   When scrolling stops: Remove all scroll limits (infinite scroll)
+   When scrolling starts: Restore boundaries (clamp to header/footer)
    ============================================================================ */
 
 var ScrollBufferModule = {
@@ -663,6 +664,8 @@ var ScrollBufferModule = {
             // Scrolling started: disable infinite scroll (restore boundaries)
             if (bufferData.infiniteScrollEnabled) {
                 bufferData.infiniteScrollEnabled = false;
+                // Restore body height constraint (restore boundaries)
+                body.style.height = '';
                 // Restore boundaries by clamping scroll
                 var headerHeight = header.offsetHeight;
                 var scrollTop = container.scrollTop;
@@ -683,14 +686,18 @@ var ScrollBufferModule = {
             topContainer.style.height = '1px';
             bottomContainer.style.height = '1px';
             
-            // When scrolling ends: enable infinite scroll (remove boundaries)
+            // When scrolling ends: enable infinite scroll (remove ALL scroll limits)
             bufferData.scrollTimeout = setTimeout(function() {
                 if (!bufferData.isClicking) {
                     bufferData.infiniteScrollEnabled = true;
-                    // Allow infinite scroll by removing boundaries
-                    // Browser can't anchor if there are no boundaries
+                    // Remove ALL scroll limits - expand containers to create infinite space
+                    // Browser can't anchor if there are no boundaries at all
                     topContainer.style.height = 'auto';
+                    topContainer.style.maxHeight = 'none';
                     bottomContainer.style.height = 'auto';
+                    bottomContainer.style.maxHeight = 'none';
+                    // Body can expand freely
+                    body.style.height = 'auto';
                 }
             }, 150);
             
