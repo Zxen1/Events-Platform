@@ -196,6 +196,57 @@ const MapModule = (function() {
   }
 
   /**
+   * Clear Mapbox tile cache (IndexedDB)
+   * Call this after upgrading Mapbox version to get fresh tiles
+   */
+  function clearMapboxCache() {
+    return new Promise(function(resolve, reject) {
+      if (!window.indexedDB) {
+        resolve(); // No IndexedDB support, nothing to clear
+        return;
+      }
+
+      // Mapbox stores tiles in IndexedDB databases
+      // We need to delete all databases that start with 'mapbox-'
+      var deletePromises = [];
+      
+      // Get list of all databases
+      indexedDB.databases().then(function(databases) {
+        databases.forEach(function(db) {
+          if (db.name && db.name.indexOf('mapbox') !== -1) {
+            var deleteReq = indexedDB.deleteDatabase(db.name);
+            deletePromises.push(new Promise(function(res, rej) {
+              deleteReq.onsuccess = function() { res(); };
+              deleteReq.onerror = function() { rej(deleteReq.error); };
+              deleteReq.onblocked = function() { res(); }; // Continue even if blocked
+            }));
+          }
+        });
+        
+        Promise.all(deletePromises).then(function() {
+          resolve();
+        }).catch(function(err) {
+          reject(err);
+        });
+      }).catch(function(err) {
+        // If databases() is not supported, try to delete known Mapbox DB names
+        var knownDbs = ['mapbox-tiles', 'mapbox-cache'];
+        var fallbackPromises = knownDbs.map(function(dbName) {
+          return new Promise(function(res) {
+            var deleteReq = indexedDB.deleteDatabase(dbName);
+            deleteReq.onsuccess = function() { res(); };
+            deleteReq.onerror = function() { res(); }; // Ignore errors
+            deleteReq.onblocked = function() { res(); };
+          });
+        });
+        Promise.all(fallbackPromises).then(function() {
+          resolve();
+        });
+      });
+    });
+  }
+
+  /**
    * Handle map errors
    */
   function onMapError(e) {
@@ -1024,7 +1075,10 @@ const MapModule = (function() {
     removePostMap,
     
     // Zoom indicator
-    updateZoomIndicator
+    updateZoomIndicator,
+    
+    // Cache management
+    clearMapboxCache
   };
 
 })();
