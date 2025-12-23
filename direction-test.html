@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Direction Test - Spacer Solution</title>
+    <title>Menu Direction Test - Brief Lock</title>
     <style>
         * {
             margin: 0;
@@ -27,13 +27,6 @@
             position: relative;
         }
         
-        .menu-spacer {
-            width: 100%;
-            height: 0;
-            transition: height 0.3s ease;
-            background: transparent;
-        }
-        
         .menu {
             width: 100%;
         }
@@ -46,8 +39,6 @@
             cursor: pointer;
             color: #fff;
             font-size: 14px;
-            position: relative;
-            z-index: 2;
         }
         
         .menu-button:hover {
@@ -95,9 +86,7 @@
 </head>
 <body>
     <div class="menu-container">
-        <div class="menu-spacer" id="spacer"></div>
-        
-        <!-- First Menu - 3 options (108px) -->
+        <!-- First Menu - 3 options -->
         <div class="menu" id="menu1">
             <button class="menu-button" type="button">Menu 1 (3 options)</button>
             <div class="menu-content-wrapper">
@@ -109,7 +98,7 @@
             </div>
         </div>
         
-        <!-- Second Menu - 5 options (180px) -->
+        <!-- Second Menu - 5 options -->
         <div class="menu" id="menu2">
             <button class="menu-button" type="button">Menu 2 (5 options)</button>
             <div class="menu-content-wrapper">
@@ -123,7 +112,7 @@
             </div>
         </div>
         
-        <!-- Third Menu - 7 options (252px) -->
+        <!-- Third Menu - 7 options -->
         <div class="menu" id="menu3">
             <button class="menu-button" type="button">Menu 3 (7 options)</button>
             <div class="menu-content-wrapper">
@@ -147,43 +136,77 @@
         var menu1Button = menu1.querySelector('.menu-button');
         var menu2Button = menu2.querySelector('.menu-button');
         var menu3Button = menu3.querySelector('.menu-button');
-        var spacer = document.getElementById('spacer');
         var openMenu = null;
-        var menuHeights = new Map();
+        var lockedButtons = [];
         
-        function closeAllMenus(targetMenu) {
-            if (openMenu && openMenu !== targetMenu) {
-                // Use stored height (measured when menu was open)
-                var height = menuHeights.get(openMenu) || 0;
+        function lockButtonsBelow(clickedMenu) {
+            var allMenus = [menu1, menu2, menu3];
+            var clickedIndex = allMenus.indexOf(clickedMenu);
+            
+            // Lock all buttons below the clicked menu
+            for (var i = clickedIndex + 1; i < allMenus.length; i++) {
+                var button = allMenus[i].querySelector('.menu-button');
+                var rect = button.getBoundingClientRect();
                 
-                spacer.style.height = height + 'px';
-                openMenu.classList.remove('open');
-                openMenu = null;
+                button.style.position = 'fixed';
+                button.style.top = rect.top + 'px';
+                button.style.left = rect.left + 'px';
+                button.style.width = rect.width + 'px';
                 
-                setTimeout(function() {
-                    spacer.style.height = '0';
-                }, 300);
-            } else if (openMenu === targetMenu) {
-                openMenu.classList.remove('open');
-                openMenu = null;
-                spacer.style.height = '0';
+                lockedButtons.push(button);
+            }
+        }
+        
+        function unlockButtons() {
+            lockedButtons.forEach(function(button) {
+                button.style.position = '';
+                button.style.top = '';
+                button.style.left = '';
+                button.style.width = '';
+            });
+            lockedButtons = [];
+        }
+        
+        function closeAllMenusAbove(targetMenu) {
+            var allMenus = [menu1, menu2, menu3];
+            var targetIndex = allMenus.indexOf(targetMenu);
+            
+            // Close all menus above the target
+            for (var i = 0; i < targetIndex; i++) {
+                if (allMenus[i].classList.contains('open')) {
+                    allMenus[i].classList.remove('open');
+                }
             }
         }
         
         function toggleMenu(menu) {
             var isCurrentlyOpen = menu.classList.contains('open');
-            closeAllMenus(isCurrentlyOpen ? menu : null);
             
+            // Lock buttons below for just a moment to prevent initial jump
+            if (!isCurrentlyOpen) {
+                lockButtonsBelow(menu);
+            }
+            
+            // Close all menus above this one
+            closeAllMenusAbove(menu);
+            
+            // Close any other open menu
+            if (openMenu && openMenu !== menu) {
+                openMenu.classList.remove('open');
+            }
+            
+            // Toggle this menu
             if (!isCurrentlyOpen) {
                 menu.classList.add('open');
                 openMenu = menu;
                 
-                // Measure height after menu opens (use requestAnimationFrame to ensure DOM updated)
-                requestAnimationFrame(function() {
-                    var menuOptions = menu.querySelector('.menu-options');
-                    var height = menuOptions.scrollHeight;
-                    menuHeights.set(menu, height);
-                });
+                // Unlock immediately (1ms) - just enough to prevent the jump
+                setTimeout(function() {
+                    unlockButtons();
+                }, 1);
+            } else {
+                openMenu = null;
+                unlockButtons();
             }
         }
         
@@ -204,7 +227,11 @@
         
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.menu')) {
-                closeAllMenus(null);
+                if (openMenu) {
+                    openMenu.classList.remove('open');
+                    openMenu = null;
+                }
+                unlockButtons();
             }
         });
     </script>
