@@ -1905,43 +1905,43 @@
             });
             fieldEditPanel.appendChild(modifyButton);
             
-            // Modify section (name, placeholder, tooltip, options, amenities - hidden by default)
+            // Modify section (name, options, amenities, placeholder, tooltip - hidden by default)
             var modifyContainer = document.createElement('div');
             modifyContainer.className = 'formbuilder-field-modify-container';
             modifyContainer.style.display = 'none';
             
-            // Amenities menu (inside Modify drawer)
-            if (needsAmenities) {
-                var amenitiesLabel = document.createElement('label');
-                amenitiesLabel.className = 'formbuilder-field-label';
-                amenitiesLabel.textContent = 'Amenities';
-                modifyContainer.appendChild(amenitiesLabel);
-                
-                if (!selectedAmenities) {
-                    selectedAmenities = [];
-                }
-                
-                if (window.AmenitiesMenuComponent) {
-                    var amenitiesMenu = AmenitiesMenuComponent.buildMenu({
-                        onSelect: function(amenities) {
-                            fieldData.selectedAmenities = amenities;
-                            selectedAmenities = amenities;
-                            // Store in data attribute for capture
-                            fieldWrapper.dataset.selectedAmenities = JSON.stringify(amenities);
-                            checkModifiedState();
-                            notifyChange();
-                        },
-                        selectedAmenities: selectedAmenities
-                    });
-                    // Store initial value in data attribute
-                    if (selectedAmenities.length > 0) {
-                        fieldWrapper.dataset.selectedAmenities = JSON.stringify(selectedAmenities);
-                    }
-                    modifyContainer.appendChild(amenitiesMenu.element);
-                }
+            // Name field (first)
+            var nameLabel = document.createElement('label');
+            nameLabel.className = 'formbuilder-field-label';
+            nameLabel.textContent = 'Name';
+            nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'formbuilder-field-input';
+            nameInput.placeholder = defaultName || 'Field name';
+            // Only set value if it's different from default (meaning it was modified)
+            var customName = fieldData.name || '';
+            if (customName && customName !== defaultName) {
+                nameInput.value = customName;
+                nameInput.style.color = '#fff';
+            } else {
+                nameInput.value = '';
+                nameInput.style.color = '#888';
             }
+            nameInput.addEventListener('input', function() {
+                if (nameInput.value && nameInput.value !== defaultName) {
+                    nameInput.style.color = '#fff';
+                } else {
+                    nameInput.value = '';
+                    nameInput.style.color = '#888';
+                }
+                fieldNameSpan.textContent = nameInput.value || defaultName || 'Unnamed';
+                checkModifiedState();
+                notifyChange();
+            });
+            modifyContainer.appendChild(nameLabel);
+            modifyContainer.appendChild(nameInput);
             
-            // Options editor (inside Modify drawer for dropdown/radio)
+            // Options editor (after Name, for dropdown/radio)
             if (needsOptions) {
                 var optionsLabel = document.createElement('label');
                 optionsLabel.className = 'formbuilder-field-label';
@@ -2005,35 +2005,36 @@
                 modifyContainer.appendChild(optionsContainer);
             }
             
-            var nameLabel = document.createElement('label');
-            nameLabel.className = 'formbuilder-field-label';
-            nameLabel.textContent = 'Name';
-            nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.className = 'formbuilder-field-input';
-            nameInput.placeholder = defaultName || 'Field name';
-            // Only set value if it's different from default (meaning it was modified)
-            var customName = fieldData.name || '';
-            if (customName && customName !== defaultName) {
-                nameInput.value = customName;
-                nameInput.style.color = '#fff';
-            } else {
-                nameInput.value = '';
-                nameInput.style.color = '#888';
-            }
-            nameInput.addEventListener('input', function() {
-                if (nameInput.value && nameInput.value !== defaultName) {
-                    nameInput.style.color = '#fff';
-                } else {
-                    nameInput.value = '';
-                    nameInput.style.color = '#888';
+            // Amenities menu (after Options, or after Name if no options)
+            if (needsAmenities) {
+                var amenitiesLabel = document.createElement('label');
+                amenitiesLabel.className = 'formbuilder-field-label';
+                amenitiesLabel.textContent = 'Amenities';
+                modifyContainer.appendChild(amenitiesLabel);
+                
+                if (!selectedAmenities) {
+                    selectedAmenities = [];
                 }
-                fieldNameSpan.textContent = nameInput.value || defaultName || 'Unnamed';
-                checkModifiedState();
-                notifyChange();
-            });
-            modifyContainer.appendChild(nameLabel);
-            modifyContainer.appendChild(nameInput);
+                
+                if (window.AmenitiesMenuComponent) {
+                    var amenitiesMenu = AmenitiesMenuComponent.buildMenu({
+                        onSelect: function(amenities) {
+                            fieldData.selectedAmenities = amenities;
+                            selectedAmenities = amenities;
+                            // Store in data attribute for capture
+                            fieldWrapper.dataset.selectedAmenities = JSON.stringify(amenities);
+                            checkModifiedState();
+                            notifyChange();
+                        },
+                        selectedAmenities: selectedAmenities
+                    });
+                    // Store initial value in data attribute
+                    if (selectedAmenities.length > 0) {
+                        fieldWrapper.dataset.selectedAmenities = JSON.stringify(selectedAmenities);
+                    }
+                    modifyContainer.appendChild(amenitiesMenu.element);
+                }
+            }
             
             var placeholderLabel = document.createElement('label');
             placeholderLabel.className = 'formbuilder-field-label';

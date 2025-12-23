@@ -873,11 +873,20 @@ const FieldsetComponent = (function(){
                 
                 // Filter to only show selected amenities (if specified in fieldData)
                 var selectedAmenities = fieldData.selectedAmenities;
+                if (selectedAmenities && !Array.isArray(selectedAmenities)) {
+                    // Handle case where it might be a string or other type
+                    selectedAmenities = null;
+                }
                 var amenities = [];
                 if (selectedAmenities && Array.isArray(selectedAmenities) && selectedAmenities.length > 0) {
+                    // Normalize selectedAmenities for comparison (trim and lowercase)
+                    var normalizedSelected = selectedAmenities.map(function(val) {
+                        return (val || '').toString().trim().toLowerCase();
+                    });
                     // Only show amenities that are in the selected list
                     amenities = allAmenities.filter(function(item) {
-                        return selectedAmenities.indexOf(item.value) !== -1;
+                        var itemValue = (item.value || '').toString().trim().toLowerCase();
+                        return normalizedSelected.indexOf(itemValue) !== -1;
                     });
                 } else {
                     // If no selection, show all amenities (backward compatibility)
