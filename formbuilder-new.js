@@ -222,6 +222,19 @@
                             }
                         }
                         
+                        // Collect selected amenities for amenities fieldset
+                        var selectedAmenitiesData = wrapper.dataset.selectedAmenities;
+                        if (selectedAmenitiesData) {
+                            try {
+                                var selectedAmenities = JSON.parse(selectedAmenitiesData);
+                                if (Array.isArray(selectedAmenities) && selectedAmenities.length > 0) {
+                                    field.selectedAmenities = selectedAmenities;
+                                }
+                            } catch (e) {
+                                // Ignore parse errors
+                            }
+                        }
+                        
                         fields.push(field);
                     });
                 }
@@ -1813,6 +1826,7 @@
                 
                 var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.key || '';
                 var needsOptions = fieldType === 'dropdown' || fieldType === 'radio' || fieldType === 'select';
+                var needsAmenities = fieldType === 'amenities';
                 
                 if (needsOptions) {
                     var optionsLabel = document.createElement('label');
@@ -1867,6 +1881,35 @@
                     }
                     
                     fieldEditPanel.appendChild(optionsContainer);
+                }
+                
+                if (needsAmenities) {
+                    var amenitiesLabel = document.createElement('label');
+                    amenitiesLabel.className = 'formbuilder-field-label';
+                    amenitiesLabel.textContent = 'Amenities';
+                    fieldEditPanel.appendChild(amenitiesLabel);
+                    
+                    var selectedAmenities = fieldData.selectedAmenities;
+                    if (!selectedAmenities) {
+                        selectedAmenities = [];
+                    }
+                    
+                    if (window.AmenitiesMenuComponent) {
+                        var amenitiesMenu = AmenitiesMenuComponent.buildMenu({
+                            onSelect: function(amenities) {
+                                fieldData.selectedAmenities = amenities;
+                                // Store in data attribute for capture
+                                fieldWrapper.dataset.selectedAmenities = JSON.stringify(amenities);
+                                notifyChange();
+                            },
+                            selectedAmenities: selectedAmenities
+                        });
+                        // Store initial value in data attribute
+                        if (selectedAmenities.length > 0) {
+                            fieldWrapper.dataset.selectedAmenities = JSON.stringify(selectedAmenities);
+                        }
+                        fieldEditPanel.appendChild(amenitiesMenu.element);
+                    }
                 }
                 
                 var placeholderLabel = document.createElement('label');

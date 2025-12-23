@@ -368,7 +368,7 @@ const MemberModule = (function() {
                 memberSubcategoryIconPaths = formResponse.formData.subcategoryIconPaths || {};
             }
             
-            // Get checkout options, currency, and picklist from admin settings
+            // Get checkout options, currency, and dropdown options from admin settings
             if (settingsResponse && settingsResponse.checkout_options) {
                 checkoutOptions = (settingsResponse.checkout_options || []).filter(function(opt) {
                     return opt.is_active !== false && opt.is_active !== 0;

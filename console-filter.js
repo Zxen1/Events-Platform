@@ -19,7 +19,6 @@
   'use strict';
   
   const originalWarn = console.warn;
-  const originalError = console.error;
   
   // ========================================
   // SUPPRESSION PATTERNS - Edit as needed
@@ -35,28 +34,6 @@
     // Mapbox GL JS - Missing marker composites (JS warning, expected during load)
     /Image "marker-label-composite.*could not be loaded/i,
   ];
-  
-  // Mapbox error patterns - suppress only specific known harmless Mapbox errors
-  const suppressedErrors = [
-    // Mapbox internal error: "Cannot read properties of null (reading 'dataset')"
-    // This is a known harmless Mapbox internal error from their minified code
-    // Match both parts to ensure we only catch this specific error
-    /Cannot read properties of null.*dataset/i,
-  ];
-  
-  // Check if error matches Mapbox dataset error specifically
-  function isMapboxDatasetError(args) {
-    var message = '';
-    for(var i = 0; i < args.length; i++) {
-      if(args[i] instanceof Error) {
-        message += args[i].message + ' ' + (args[i].stack || '');
-      } else {
-        message += String(args[i]);
-      }
-      message += ' ';
-    }
-    return /Cannot read properties of null/i.test(message) && /dataset/i.test(message);
-  }
   
   // ========================================
   // FILTER LOGIC - Do not edit below
@@ -82,65 +59,12 @@
     }
   };
   
-  // Suppress only specific known harmless Mapbox errors
-  console.error = function(...args) {
-    // Check if it's the specific Mapbox dataset error
-    if(isMapboxDatasetError(args)){
-      return; // Suppress only this specific error
-    }
-    // Also check the call stack to see if error originates from Mapbox files
-    try {
-      throw new Error();
-    } catch(e) {
-      var stack = e.stack || '';
-      if(/Cannot read properties of null/i.test(args.join(' ')) && /dataset/i.test(args.join(' ')) && /6\.js|5\.js|mapbox/i.test(stack)){
-        return; // Suppress Mapbox dataset errors even if pattern matching missed them
-      }
-    }
-    originalError.apply(console, args); // Show all other errors (including other Mapbox errors)
-  };
-  
-  // Intercept uncaught errors (browser logs these directly, bypassing console.error)
-  var originalOnError = window.onerror;
-  window.onerror = function(message, source, lineno, colno, error) {
-    var errorText = (message || '') + ' ' + (error ? (error.message + ' ' + (error.stack || '')) : '') + ' ' + (source || '');
-    // Check if it's the dataset error - match the specific error pattern
-    // Stack traces show marker.ts, camera.ts, map.ts which are Mapbox internal files
-    var isDatasetError = /Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText);
-    // Check if it's from Mapbox files (6.js, 5.js, or Mapbox TypeScript files in stack)
-    var isFromMapbox = /6\.js|5\.js|mapbox|marker\.ts|camera\.ts|map\.ts|evented\.ts/i.test(errorText);
-    if(isDatasetError && isFromMapbox){
-      return true; // Suppress this specific error
-    }
-    // Call original handler if it exists
-    if(originalOnError) {
-      return originalOnError.apply(this, arguments);
-    }
-    return false; // Let other errors through
-  };
-  
-  // Intercept unhandled promise rejections (for "Uncaught (in promise)" errors)
-  window.addEventListener('unhandledrejection', function(event) {
-    var reason = event.reason;
-    var errorText = '';
-    if(reason instanceof Error) {
-      errorText = reason.message + ' ' + (reason.stack || '');
-    } else {
-      errorText = String(reason);
-    }
-    // Check if it's the dataset error from Mapbox files
-    var isDatasetError = /Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText);
-    var isFromMapbox = /6\.js|5\.js|mapbox|marker\.ts|camera\.ts|map\.ts|evented\.ts/i.test(errorText);
-    if(isDatasetError && isFromMapbox){
-      event.preventDefault(); // Suppress this specific error
-      event.stopPropagation(); // Stop it from bubbling
-      event.stopImmediatePropagation(); // Stop other handlers
-    }
-  }, true); // Use capture phase to catch it early
+  // DO NOT FILTER ERRORS - All errors are important and must be visible
+  // console.error remains unchanged
   
   // Confirmation message
   console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
-    'Suppressing', suppressedWarnings.length, 'warning patterns and', suppressedErrors.length, 'specific Mapbox error pattern.');
+    'Suppressing', suppressedWarnings.length, 'JavaScript warning patterns. All errors remain visible.');
   
 })();
 

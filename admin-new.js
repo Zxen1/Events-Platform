@@ -447,8 +447,8 @@ const AdminModule = (function() {
             .then(function(res) {
                 if (!res.settings) return;
                 
-                // Sync ALL picklist types from their Bunny CDN folders
-                // Each folder syncs to its corresponding option_group in the unified picklist table
+                // Sync ALL data types from their Bunny CDN folders
+                // Each folder syncs to its corresponding table (category_icons, system_images, amenities, currencies, phone_prefixes)
                 // This ensures all available filenames are in the database "basket" for instant menu loading
                 var foldersToSync = [
                     { folder: res.settings.folder_system_images, option_group: 'system-image' },
@@ -474,7 +474,7 @@ const AdminModule = (function() {
                             .then(function(r) { return r.json(); })
                             .then(function(fileRes) {
                                 if (fileRes.success && Array.isArray(fileRes.icons) && fileRes.icons.length > 0) {
-                                    // Sync to picklist table
+                                    // Sync to corresponding table (category_icons, system_images, amenities, currencies, or phone_prefixes)
                                     return fetch('/gateway.php?action=list-files', {
                                         method: 'POST',
                                         headers: {
@@ -2424,8 +2424,8 @@ const AdminModule = (function() {
                     }
 
                     // Initialize CurrencyComponent data if available
-                    if (window.CurrencyComponent && data.picklist && data.picklist.currency) {
-                        CurrencyComponent.setData(data.picklist.currency);
+                    if (window.CurrencyComponent && data.dropdown_options && data.dropdown_options.currency) {
+                        CurrencyComponent.setData(data.dropdown_options.currency);
                     }
 
                     // Render checkout options and register for tracking

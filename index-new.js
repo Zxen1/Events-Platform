@@ -37,7 +37,7 @@
    
    3. home/funmapco/connectors/get-admin-settings.php
       - Fetches admin_settings table (folder paths, system image assignments)
-      - Fetches picklist table (basket of available filenames for all option_groups)
+      - Fetches data from multiple tables (category_icons, system_images, amenities, currencies, phone_prefixes)
       - Returns all data needed for instant menu loading
    
    4. home/funmapco/connectors/save-admin-settings.php
@@ -47,12 +47,11 @@
    5. Database Tables:
       - admin_settings: Stores folder paths (folder_system_images, folder_category_icons, etc.)
                         and system image assignments (small_logo, big_logo, etc.)
-      - picklist: Unified basket table - stores all available filenames for all picklist types
-                  - option_group: 'system-image' (IDs 1-99), 'category-icon' (IDs 100-299),
-                    'currency' (IDs 300-499), 'phone-prefix' (IDs 500-699), 'amenity' (IDs 700-799)
-                  - option_filename: The image filename
-                  - option_value: The value (currency code, prefix, etc.)
-                  - option_label: Display label
+      - category_icons: Stores available category icon filenames (option_filename, option_value, option_label, sort_order, is_active)
+      - system_images: Stores available system image filenames (option_filename, option_value, option_label, sort_order, is_active)
+      - amenities: Stores available amenity options (option_filename, option_value, option_label, sort_order, is_active)
+      - currencies: Stores currency data (option_filename, option_value, option_label, sort_order, is_active)
+      - phone_prefixes: Stores phone prefix data (option_filename, option_value, option_label, sort_order, is_active)
       - categories.icon_path: Source of truth for category icon assignments
       - subcategories.icon_path: Source of truth for subcategory icon assignments
    

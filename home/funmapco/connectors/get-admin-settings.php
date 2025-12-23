@@ -192,22 +192,22 @@ try {
         // If query fails, don't break the whole response
     }
 
-    // Fetch picklist data for dropdown settings (currencies, phone prefixes, amenities, etc.)
+    // Fetch dropdown options data from multiple tables (currencies, phone prefixes, amenities, etc.)
     // Query each separate table and combine into the same response format
     try {
-        $picklist = [];
+        $dropdownOptions = [];
         
         // Fetch currencies
         try {
             $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $currencyRows = $stmt->fetchAll();
-            $picklist['currency'] = [];
+            $dropdownOptions['currency'] = [];
             foreach ($currencyRows as $row) {
                 // Currency needs filename, value, and label (they need flags and proper data)
                 if (empty($row['option_filename']) || empty($row['option_value']) || empty($row['option_label'])) {
                     continue;
                 }
-                $picklist['currency'][] = [
+                $dropdownOptions['currency'][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
                     'filename' => $row['option_filename'] ? $row['option_filename'] : null,
@@ -221,13 +221,13 @@ try {
         try {
             $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `phone_prefixes` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $phoneRows = $stmt->fetchAll();
-            $picklist['phone-prefix'] = [];
+            $dropdownOptions['phone-prefix'] = [];
             foreach ($phoneRows as $row) {
                 // Phone-prefix needs filename, value, and label (they need flags and proper data)
                 if (empty($row['option_filename']) || empty($row['option_value']) || empty($row['option_label'])) {
                     continue;
                 }
-                $picklist['phone-prefix'][] = [
+                $dropdownOptions['phone-prefix'][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
                     'filename' => $row['option_filename'] ? $row['option_filename'] : null,
@@ -241,13 +241,13 @@ try {
         try {
             $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `amenities` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $amenityRows = $stmt->fetchAll();
-            $picklist['amenity'] = [];
+            $dropdownOptions['amenity'] = [];
             foreach ($amenityRows as $row) {
                 // Amenities need value and label (filename is optional)
                 if (empty($row['option_value']) || empty($row['option_label'])) {
                     continue;
                 }
-                $picklist['amenity'][] = [
+                $dropdownOptions['amenity'][] = [
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
                     'filename' => $row['option_filename'] ? $row['option_filename'] : null,
@@ -257,8 +257,8 @@ try {
             // Table might not exist yet, continue
         }
         
-        if (!empty($picklist)) {
-            $response['picklist'] = $picklist;
+        if (!empty($dropdownOptions)) {
+            $response['dropdown_options'] = $dropdownOptions;
         }
     } catch (Throwable $optionsError) {
         // If options fail, don't break the whole response

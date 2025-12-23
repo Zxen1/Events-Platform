@@ -225,20 +225,20 @@ const SwitchComponent = (function(){
    ============================================================================ */
 
 const FieldsetComponent = (function(){
-    var picklist = {};
+    var dropdownOptions = {};
     var fieldsets = [];
     var dataLoaded = false;
     var loadPromise = null;
     
-    // Load picklist data and fieldset definitions from database
+    // Load data from various tables (currencies, phone_prefixes, amenities, etc.) and fieldset definitions from database
     function loadFromDatabase() {
         if (loadPromise) return loadPromise;
         loadPromise = fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.picklist) {
-                    // Set picklist data and propagate to CurrencyComponent and PhonePrefixComponent
-                    setPicklist(res.picklist);
+                if (res.dropdown_options) {
+                    // Set dropdown options data and propagate to CurrencyComponent and PhonePrefixComponent
+                    setPicklist(res.dropdown_options);
                 }
                 // Also fetch fieldset definitions for tooltip matching
                 return fetch('/gateway.php?action=get-form');
@@ -249,7 +249,7 @@ const FieldsetComponent = (function(){
                     fieldsets = res.formData.fieldsets;
                 }
                 dataLoaded = true;
-                return { picklist: picklist, fieldsets: fieldsets };
+                return { dropdown_options: dropdownOptions, fieldsets: fieldsets };
             });
         return loadPromise;
     }
@@ -559,9 +559,9 @@ const FieldsetComponent = (function(){
         });
     }
     
-    // Set picklist data and propagate to external components
+    // Set dropdown options data and propagate to external components
     function setPicklist(data) {
-        picklist = data || {};
+        dropdownOptions = data || {};
         // Also set data in Currency and PhonePrefix components
         if (data && data.currency && typeof CurrencyComponent !== 'undefined') {
             CurrencyComponent.setData(data.currency);
@@ -865,8 +865,24 @@ const FieldsetComponent = (function(){
                 var amenitiesGrid = document.createElement('div');
                 amenitiesGrid.className = 'fieldset-amenities';
                 
-                // Get amenities from picklist table
-                var amenities = picklist['amenity'] || [];
+                // Get amenities from amenities table (via picklist response structure)
+                var allAmenities = dropdownOptions['amenity'];
+                if (!allAmenities) {
+                    allAmenities = [];
+                }
+                
+                // Filter to only show selected amenities (if specified in fieldData)
+                var selectedAmenities = fieldData.selectedAmenities;
+                var amenities = [];
+                if (selectedAmenities && Array.isArray(selectedAmenities) && selectedAmenities.length > 0) {
+                    // Only show amenities that are in the selected list
+                    amenities = allAmenities.filter(function(item) {
+                        return selectedAmenities.indexOf(item.value) !== -1;
+                    });
+                } else {
+                    // If no selection, show all amenities (backward compatibility)
+                    amenities = allAmenities;
+                }
                 
                 amenities.forEach(function(item, i) {
                     // Parse value: "parking Parking" -> icon: parking, name: Parking
@@ -1994,7 +2010,7 @@ const FieldsetComponent = (function(){
         makePhoneDigitsOnly: makePhoneDigitsOnly,
         autoUrlProtocol: autoUrlProtocol,
         setPicklist: setPicklist,
-        getPicklist: function() { return picklist; },
+        getPicklist: function() { return dropdownOptions; },
         getFieldsets: function() { return fieldsets; },
         isLoaded: function() { return dataLoaded; },
         loadFromDatabase: loadFromDatabase,
@@ -2303,8 +2319,8 @@ const CurrencyComponent = (function(){
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.picklist && res.picklist.currency) {
-                    currencyData = res.picklist.currency;
+                if (res.dropdown_options && res.dropdown_options.currency) {
+                    currencyData = res.dropdown_options.currency;
                     dataLoaded = true;
                 }
                 return currencyData;
@@ -2645,8 +2661,8 @@ const PhonePrefixComponent = (function(){
         return fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                if (res.picklist && res.picklist['phone-prefix']) {
-                    prefixData = res.picklist['phone-prefix'];
+                if (res.dropdown_options && res.dropdown_options['phone-prefix']) {
+                    prefixData = res.dropdown_options['phone-prefix'];
                     dataLoaded = true;
                 }
                 return prefixData;
@@ -2820,15 +2836,15 @@ const PhonePrefixComponent = (function(){
    ICON PICKER COMPONENT
    
    IMAGE SYNC SYSTEM (Category Icons):
-   This component uses the unified picklist table with option_group 'category-icon'.
-   The picklist table serves as a "basket" of all available filenames for instant menu loading.
+   This component uses the category_icons table.
+   The category_icons table serves as a "basket" of all available filenames for instant menu loading.
    
-   1. Menu opens instantly with images from database basket (picklist table, option_group='category-icon')
+   1. Menu opens instantly with images from database basket (category_icons table)
    2. API call fetches current file list from Bunny CDN folder_category_icons in background
    3. New images from API are appended to menu (if not already in database basket)
    
    NO API CALLS AT STARTUP - all API calls happen only when menu opens.
-   Database sync is handled by syncAllPicklists() when admin panel opens (ALL picklist types synced together).
+   Database sync is handled by syncAllPicklists() when admin panel opens (ALL table types synced together).
    ============================================================================ */
 
 const IconPickerComponent = (function(){
@@ -3761,15 +3777,15 @@ const CheckoutOptionsComponent = (function(){
    SYSTEM IMAGE PICKER COMPONENT
    
    IMAGE SYNC SYSTEM (System Images):
-   This component uses the unified picklist table with option_group 'system-image'.
-   The picklist table serves as a "basket" of all available filenames for instant menu loading.
+   This component uses the system_images table.
+   The system_images table serves as a "basket" of all available filenames for instant menu loading.
    
-   1. Menu opens instantly with images from database basket (picklist table, option_group='system-image')
+   1. Menu opens instantly with images from database basket (system_images table)
    2. API call fetches current file list from Bunny CDN folder_system_images in background
    3. New images from API are appended to menu (if not already in database basket)
    
    NO API CALLS AT STARTUP - all API calls happen only when menu opens.
-   Database sync is handled by syncAllPicklists() when admin panel opens (ALL picklist types synced together).
+   Database sync is handled by syncAllPicklists() when admin panel opens (ALL table types synced together).
    ============================================================================ */
 
 const SystemImagePickerComponent = (function(){
@@ -4063,6 +4079,222 @@ const SystemImagePickerComponent = (function(){
         loadFolderFromSettings: loadFolderFromSettings,
         loadImagesFromFolder: loadImagesFromFolder,
         buildPicker: buildPicker
+    };
+})();
+
+
+/* ============================================================================
+   AMENITIES MENU COMPONENT
+   
+   Multi-select menu for choosing amenities in formbuilder edit panel.
+   Similar to SystemImagePickerComponent but with checkboxes for multiple selection.
+   ============================================================================ */
+
+const AmenitiesMenuComponent = (function(){
+    
+    var amenitiesData = null; // Amenities from amenities table (fetched via get-admin-settings API)
+    
+    // Load amenities from amenities table (via get-admin-settings API)
+    function loadAmenities() {
+        if (amenitiesData) {
+            return Promise.resolve(amenitiesData);
+        }
+        
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.dropdown_options && res.dropdown_options.amenity && Array.isArray(res.dropdown_options.amenity)) {
+                    amenitiesData = res.dropdown_options.amenity;
+                } else {
+                    amenitiesData = [];
+                }
+                return amenitiesData;
+            })
+            .catch(function(err) {
+                console.warn('Failed to load amenities:', err);
+                amenitiesData = [];
+                return [];
+            });
+    }
+    
+    // Build amenities menu with checkboxes
+    // options: { onSelect, selectedAmenities }
+    // onSelect: function(selectedAmenities) - called when selection changes
+    // selectedAmenities: array of amenity values that are currently selected
+    function buildMenu(options) {
+        if (!options) {
+            options = {};
+        }
+        var onSelect = options.onSelect;
+        if (!onSelect) {
+            onSelect = function() {};
+        }
+        var selectedAmenities = options.selectedAmenities;
+        if (!selectedAmenities) {
+            selectedAmenities = [];
+        }
+        
+        var menu = document.createElement('div');
+        menu.className = 'component-amenitiesmenu';
+        
+        // Button
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'component-amenitiesmenu-button';
+        
+        var buttonText = document.createElement('span');
+        buttonText.className = 'component-amenitiesmenu-button-text';
+        buttonText.textContent = 'Select amenities...';
+        
+        var buttonArrow = document.createElement('span');
+        buttonArrow.className = 'component-amenitiesmenu-button-arrow';
+        buttonArrow.textContent = '▼';
+        
+        button.appendChild(buttonText);
+        button.appendChild(buttonArrow);
+        menu.appendChild(button);
+        
+        // Options dropdown
+        var optionsDiv = document.createElement('div');
+        optionsDiv.className = 'component-amenitiesmenu-options';
+        menu.appendChild(optionsDiv);
+        
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
+        // Update button text based on selected count
+        function updateButtonText() {
+            var count = selectedAmenities.length;
+            if (count === 0) {
+                buttonText.textContent = 'Select amenities...';
+            } else if (count === 1) {
+                buttonText.textContent = '1 amenity selected';
+            } else {
+                buttonText.textContent = count + ' amenities selected';
+            }
+        }
+        
+        // Render amenity options
+        function renderAmenityOptions(amenities) {
+            optionsDiv.innerHTML = '';
+            
+            if (!amenities || amenities.length === 0) {
+                var msg = document.createElement('div');
+                msg.className = 'component-amenitiesmenu-error';
+                msg.textContent = 'No amenities found.';
+                optionsDiv.appendChild(msg);
+                return;
+            }
+            
+            amenities.forEach(function(amenity) {
+                var option = document.createElement('div');
+                option.className = 'component-amenitiesmenu-option';
+                
+                // Checkbox
+                var checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'component-amenitiesmenu-option-checkbox';
+                checkbox.value = amenity.value || '';
+                checkbox.checked = selectedAmenities.indexOf(amenity.value) !== -1;
+                
+                // Icon (if filename exists)
+                var iconContainer = document.createElement('div');
+                iconContainer.className = 'component-amenitiesmenu-option-icon';
+                if (amenity.filename) {
+                    var iconUrl = window.App ? window.App.getImageUrl('amenities', amenity.filename) : '';
+                    if (iconUrl) {
+                        var iconImg = document.createElement('img');
+                        iconImg.src = iconUrl;
+                        iconImg.alt = amenity.label || '';
+                        iconContainer.appendChild(iconImg);
+                    }
+                }
+                
+                // Label text
+                var label = document.createElement('label');
+                label.className = 'component-amenitiesmenu-option-label';
+                label.textContent = amenity.label || amenity.value || '';
+                
+                // Wrap checkbox and label together
+                var checkboxLabel = document.createElement('label');
+                checkboxLabel.className = 'component-amenitiesmenu-option-row';
+                checkboxLabel.appendChild(checkbox);
+                checkboxLabel.appendChild(iconContainer);
+                checkboxLabel.appendChild(label);
+                
+                // Handle checkbox change
+                checkboxLabel.onclick = function(ev) {
+                    ev.stopPropagation();
+                    // Toggle checkbox (browser handles it, but we track state)
+                    var isChecked = checkbox.checked;
+                    if (isChecked) {
+                        // Add to selected
+                        if (selectedAmenities.indexOf(amenity.value) === -1) {
+                            selectedAmenities.push(amenity.value);
+                        }
+                    } else {
+                        // Remove from selected
+                        var index = selectedAmenities.indexOf(amenity.value);
+                        if (index !== -1) {
+                            selectedAmenities.splice(index, 1);
+                        }
+                    }
+                    updateButtonText();
+                    onSelect(selectedAmenities.slice()); // Pass copy of array
+                };
+                
+                option.appendChild(checkboxLabel);
+                optionsDiv.appendChild(option);
+            });
+        }
+        
+        // Initialize button text
+        updateButtonText();
+        
+        // Toggle menu
+        button.onclick = function(e) {
+            e.stopPropagation();
+            var isOpen = menu.classList.contains('open');
+            if (isOpen) {
+                menu.classList.remove('open');
+            } else {
+                // Close all other menus first
+                MenuManager.closeAll(menu);
+                // Open menu immediately
+                menu.classList.add('open');
+                
+                // Load amenities and render
+                loadAmenities().then(function(amenities) {
+                    renderAmenityOptions(amenities);
+                });
+            }
+        };
+        
+        return {
+            element: menu,
+            getSelected: function() {
+                return selectedAmenities.slice(); // Return copy
+            },
+            setSelected: function(amenities) {
+                if (!amenities) {
+                    selectedAmenities = [];
+                } else {
+                    selectedAmenities = amenities;
+                }
+                updateButtonText();
+                // Re-render if menu is open
+                if (menu.classList.contains('open')) {
+                    loadAmenities().then(function(amenitiesList) {
+                        renderAmenityOptions(amenitiesList);
+                    });
+                }
+            }
+        };
+    }
+    
+    return {
+        loadAmenities: loadAmenities,
+        buildMenu: buildMenu
     };
 })();
 
@@ -4692,6 +4924,7 @@ window.CurrencyComponent = CurrencyComponent;
 window.PhonePrefixComponent = PhonePrefixComponent;
 window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;
+window.AmenitiesMenuComponent = AmenitiesMenuComponent;
 window.MapControlRowComponent = MapControlRowComponent;
 window.CheckoutOptionsComponent = CheckoutOptionsComponent;
 window.ConfirmDialogComponent = ConfirmDialogComponent;
