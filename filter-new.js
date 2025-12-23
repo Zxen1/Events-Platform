@@ -88,6 +88,11 @@ const FilterModule = (function() {
     function openPanel() {
         if (!panelEl || !contentEl) return;
         
+        // Initialize scroll buffer for filter panel
+        if (window.ScrollBufferModule) {
+            ScrollBufferModule.init(contentEl);
+        }
+        
         panelEl.classList.add('show');
         panelEl.setAttribute('aria-hidden', 'false');
         panelEl.removeAttribute('inert');

@@ -638,8 +638,20 @@ var ScrollBufferModule = {
         container.style.paddingTop = 'var(--scroll-buffer-size, ' + bufferSize + 'px)';
         
         // Set initial scroll position to buffer start (so content is visible)
-        container.scrollTop = bufferSize;
-        bufferData.previousScrollTop = bufferSize;
+        // Wait for next frame to ensure padding is applied and content is measured
+        requestAnimationFrame(function() {
+            // Only set scrollTop to bufferSize if content is taller than buffer
+            // Otherwise content might be shorter and we'd scroll past it
+            var currentScrollHeight = container.scrollHeight;
+            if (currentScrollHeight > bufferSize) {
+                container.scrollTop = bufferSize;
+                bufferData.previousScrollTop = bufferSize;
+            } else {
+                // Content is shorter than buffer, stay at top (scrollTop = 0)
+                container.scrollTop = 0;
+                bufferData.previousScrollTop = 0;
+            }
+        });
         
         // Watch for scroll events - stop at header when scrolling up
         container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
