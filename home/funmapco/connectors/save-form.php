@@ -1509,6 +1509,16 @@ function sanitizeField(array $field, array $fieldsetDefinitions = []): array
         $safe['fieldsetKey'] = sanitizeString($field['key'], 128);
     }
     
+    // Include selectedAmenities for amenities field type (stores array of amenity IDs/values)
+    if (isset($field['selectedAmenities']) && is_array($field['selectedAmenities'])) {
+        $safe['selectedAmenities'] = array_values(array_filter(
+            array_map(function($item) {
+                return is_string($item) || is_numeric($item) ? (string)$item : null;
+            }, $field['selectedAmenities']),
+            function($item) { return $item !== null && $item !== ''; }
+        ));
+    }
+    
     // Include checkoutOptions for checkout field type (stores numeric IDs)
     if (isset($field['checkoutOptions']) && is_array($field['checkoutOptions'])) {
         $safe['checkoutOptions'] = array_values(array_filter(
