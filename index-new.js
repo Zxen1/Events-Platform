@@ -627,17 +627,28 @@ var ScrollBufferModule = {
         
         if (!header || !body) return;
         
-        // Top: Sticky container (enables natural shrinking)
+        // Top: Sticky container - permanent infinite scroll
         var topContainer = document.createElement('div');
         topContainer.className = 'scroll-buffer-container scroll-buffer-container--top';
-        topContainer.style.cssText = 'position: sticky; top: 0; height: 1px; max-height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
+        topContainer.style.cssText = 'position: sticky; top: 0; height: auto; max-height: none; width: 100%; flex-shrink: 0; z-index: -1;';
         body.insertBefore(topContainer, body.firstChild);
         
-        // Bottom: Try sticky first (if it doesn't work, regular container is acceptable)
+        // Bottom: Sticky container - permanent infinite scroll
         var bottomContainer = document.createElement('div');
         bottomContainer.className = 'scroll-buffer-container scroll-buffer-container--bottom';
-        bottomContainer.style.cssText = 'position: sticky; bottom: 0; height: 1px; max-height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
+        bottomContainer.style.cssText = 'position: sticky; bottom: 0; height: auto; max-height: none; width: 100%; flex-shrink: 0; z-index: -1;';
         body.appendChild(bottomContainer);
+        
+        // Body: permanent infinite scroll
+        body.style.height = 'auto';
+        body.style.minHeight = 'none';
+        body.style.maxHeight = 'none';
+        
+        // Set initial scroll position to top of body at header
+        var headerHeight = header.offsetHeight;
+        requestAnimationFrame(function() {
+            container.scrollTop = headerHeight + 10;
+        });
         
         // Store buffer data
         var bufferData = {
@@ -645,106 +656,10 @@ var ScrollBufferModule = {
             header: header,
             body: body,
             topContainer: topContainer,
-            bottomContainer: bottomContainer,
-            isClicking: false,
-            scrollTimeout: null,
-            infiniteScrollEnabled: false
+            bottomContainer: bottomContainer
         };
         
         this.buffers.set(container, bufferData);
-        
-        // When scrolling ends: enable infinite scroll (remove boundaries)
-        // When scrolling starts: disable infinite scroll (restore boundaries)
-        container.addEventListener('scroll', function() {
-            // Clear existing timeout
-            if (bufferData.scrollTimeout) {
-                clearTimeout(bufferData.scrollTimeout);
-            }
-            
-            // Scrolling started: disable infinite scroll (restore boundaries)
-            if (bufferData.infiniteScrollEnabled) {
-                bufferData.infiniteScrollEnabled = false;
-                // Restore body height constraint (restore boundaries)
-                body.style.height = '';
-                // Restore boundaries by clamping scroll
-                var headerHeight = header.offsetHeight;
-                var scrollTop = container.scrollTop;
-                var clientHeight = container.clientHeight;
-                var scrollHeight = container.scrollHeight;
-                
-                // Clamp to header
-                if (scrollTop < (headerHeight + 10)) {
-                    container.scrollTop = headerHeight + 10;
-                }
-                // Clamp to footer
-                else if ((scrollTop + clientHeight) > (scrollHeight - 10)) {
-                    container.scrollTop = scrollHeight - clientHeight - 10;
-                }
-            }
-            
-            // Set height back to 1px during scrolling
-            topContainer.style.height = '1px';
-            bottomContainer.style.height = '1px';
-            
-            // When scrolling ends: enable infinite scroll (remove ALL scroll limits)
-            bufferData.scrollTimeout = setTimeout(function() {
-                if (!bufferData.isClicking) {
-                    bufferData.infiniteScrollEnabled = true;
-                    // Remove ALL scroll limits - expand containers to create infinite space
-                    // Browser can't anchor if there are no boundaries at all
-                    topContainer.style.height = 'auto';
-                    topContainer.style.maxHeight = 'none';
-                    bottomContainer.style.height = 'auto';
-                    bottomContainer.style.maxHeight = 'none';
-                    // Body can expand freely
-                    body.style.height = 'auto';
-                }
-            }, 150);
-            
-            // Ratchet max-height down as elements shrink
-            if (!bufferData.isClicking) {
-                var topHeight = topContainer.offsetHeight;
-                var bottomHeight = bottomContainer.offsetHeight;
-                var topMax = parseFloat(topContainer.style.maxHeight);
-                var bottomMax = parseFloat(bottomContainer.style.maxHeight);
-                
-                // Ratchet down: if current height < max-height, reduce max-height to current
-                if (!topMax || topHeight < topMax) {
-                    topContainer.style.maxHeight = topHeight + 'px';
-                }
-                if (!bottomMax || bottomHeight < bottomMax) {
-                    bottomContainer.style.maxHeight = bottomHeight + 'px';
-                }
-            }
-        }, { passive: true });
-        
-        // Detect accordion/drawer clicks - remove max-height when clicking
-        if (body) {
-            body.addEventListener('click', function(e) {
-                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .filter-categoryfilter-accordion-option, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
-                if (accordionHeader) {
-                    // Set clicking flag
-                    bufferData.isClicking = true;
-                    
-                    // Ensure height is auto (should already be from scroll end, but make sure)
-                    topContainer.style.height = 'auto';
-                    bottomContainer.style.height = 'auto';
-                    
-                    // Rule 2: When clicking, no max-height (allow expansion)
-                    topContainer.style.maxHeight = 'none';
-                    bottomContainer.style.maxHeight = 'none';
-                    
-                    // Rule 3: After clicking, max-height = current height
-                    setTimeout(function() {
-                        var topHeight = topContainer.offsetHeight;
-                        var bottomHeight = bottomContainer.offsetHeight;
-                        topContainer.style.maxHeight = topHeight + 'px';
-                        bottomContainer.style.maxHeight = bottomHeight + 'px';
-                        bufferData.isClicking = false;
-                    }, 500);
-                }
-            }, true);
-        }
     },
     
     /**
