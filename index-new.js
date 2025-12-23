@@ -607,7 +607,7 @@ window.App = App;
 /* ============================================================================
    SCROLL BUFFER SYSTEM
    Prevents content from jumping when accordions open/close
-   Uses sticky header/footer elements that expand during clicking
+   Top: Sticky element | Bottom: Regular container
    ============================================================================ */
 
 var ScrollBufferModule = {
@@ -626,56 +626,31 @@ var ScrollBufferModule = {
         
         if (!header || !body) return;
         
-        // Create invisible sticky element at top of body (sticks to header)
-        // Starts at 1px, can expand to fill gaps when content collapses
-        var topSticky = document.createElement('div');
-        topSticky.className = 'scroll-buffer-sticky scroll-buffer-sticky--top';
-        topSticky.style.cssText = 'position: sticky; top: 0; min-height: 1px; height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
-        body.insertBefore(topSticky, body.firstChild);
+        // Top: Sticky container (enables natural shrinking)
+        var topContainer = document.createElement('div');
+        topContainer.className = 'scroll-buffer-container scroll-buffer-container--top';
+        topContainer.style.cssText = 'position: sticky; top: 0; height: 1px; max-height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
+        body.insertBefore(topContainer, body.firstChild);
         
-        // Create invisible sticky element at bottom of body (sticks to bottom of viewport)
-        // Starts at 1px, can expand to fill gaps when content collapses
-        var bottomSticky = document.createElement('div');
-        bottomSticky.className = 'scroll-buffer-sticky scroll-buffer-sticky--bottom';
-        bottomSticky.style.cssText = 'position: sticky; bottom: 0; min-height: 1px; height: 1px; width: 100%; flex-shrink: 0; z-index: -1; margin-top: auto;';
-        body.appendChild(bottomSticky);
+        // Bottom: Try sticky first (if it doesn't work, regular container is acceptable)
+        var bottomContainer = document.createElement('div');
+        bottomContainer.className = 'scroll-buffer-container scroll-buffer-container--bottom';
+        bottomContainer.style.cssText = 'position: sticky; bottom: 0; height: 1px; max-height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
+        body.appendChild(bottomContainer);
         
         // Store buffer data
         var bufferData = {
             container: container,
             header: header,
             body: body,
-            topSticky: topSticky,
-            bottomSticky: bottomSticky,
+            topContainer: topContainer,
+            bottomContainer: bottomContainer,
             isClicking: false
         };
         
         this.buffers.set(container, bufferData);
         
-        // Watch scroll to continuously update max-height as sticky elements shrink
-        container.addEventListener('scroll', function() {
-            // Only update if not currently clicking (to avoid conflicts)
-            if (!bufferData.isClicking) {
-                var topHeight = topSticky.offsetHeight;
-                var bottomHeight = bottomSticky.offsetHeight;
-                
-                // Top sticky: reduce max-height as it shrinks (prevents gaps at top)
-                if (topHeight < parseFloat(topSticky.style.maxHeight) || !topSticky.style.maxHeight) {
-                    topSticky.style.maxHeight = topHeight + 'px';
-                }
-                
-                // Bottom sticky: reduce max-height as it shrinks, but allow expansion if content grows
-                // Only reduce if sticky is actually shrinking (not if content is expanding)
-                var currentBottomMax = parseFloat(bottomSticky.style.maxHeight);
-                if (!currentBottomMax || bottomHeight < currentBottomMax) {
-                    // Sticky is shrinking - reduce max-height to match
-                    bottomSticky.style.maxHeight = bottomHeight + 'px';
-                }
-                // If bottomHeight > currentBottomMax, content is expanding - don't constrain it
-            }
-        }, { passive: true });
-        
-        // Detect accordion/drawer clicks - remove max-height constraint when clicking
+        // Detect accordion/drawer clicks - remove max-height when clicking
         if (body) {
             body.addEventListener('click', function(e) {
                 var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .filter-categoryfilter-accordion-option, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
@@ -683,26 +658,41 @@ var ScrollBufferModule = {
                     // Set clicking flag
                     bufferData.isClicking = true;
                     
-                    // Remove max-height and height constraints (allow free expansion to fill gaps)
-                    topSticky.style.maxHeight = 'none';
-                    topSticky.style.height = 'auto';
-                    bottomSticky.style.maxHeight = 'none';
-                    bottomSticky.style.height = 'auto';
+                    // Rule 2: When clicking, height = auto, no max-height (allow expansion)
+                    topContainer.style.height = 'auto';
+                    topContainer.style.maxHeight = 'none';
+                    bottomContainer.style.height = 'auto';
+                    bottomContainer.style.maxHeight = 'none';
                     
-                    // After animation completes, set max-height to current height
-                    // Keep height: auto so it can shrink, but max-height prevents it from growing beyond current size
+                    // Rule 3: After clicking, max-height = current height
                     setTimeout(function() {
-                        var topHeight = topSticky.offsetHeight;
-                        var bottomHeight = bottomSticky.offsetHeight;
-                        topSticky.style.maxHeight = topHeight + 'px';
-                        // Keep height: auto (not 1px) so it can shrink naturally as user scrolls
-                        bottomSticky.style.maxHeight = bottomHeight + 'px';
-                        // Keep height: auto (not 1px) so it can shrink naturally as user scrolls
+                        var topHeight = topContainer.offsetHeight;
+                        var bottomHeight = bottomContainer.offsetHeight;
+                        topContainer.style.maxHeight = topHeight + 'px';
+                        bottomContainer.style.maxHeight = bottomHeight + 'px';
                         bufferData.isClicking = false;
                     }, 500);
                 }
             }, true);
         }
+        
+        // Watch scroll - ratchet max-height down as elements shrink
+        container.addEventListener('scroll', function() {
+            if (!bufferData.isClicking) {
+                var topHeight = topContainer.offsetHeight;
+                var bottomHeight = bottomContainer.offsetHeight;
+                var topMax = parseFloat(topContainer.style.maxHeight);
+                var bottomMax = parseFloat(bottomContainer.style.maxHeight);
+                
+                // Ratchet down: if current height < max-height, reduce max-height to current
+                if (!topMax || topHeight < topMax) {
+                    topContainer.style.maxHeight = topHeight + 'px';
+                }
+                if (!bottomMax || bottomHeight < bottomMax) {
+                    bottomContainer.style.maxHeight = bottomHeight + 'px';
+                }
+            }
+        }, { passive: true });
     },
     
     /**
@@ -712,12 +702,12 @@ var ScrollBufferModule = {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
         
-        // Remove sticky elements
-        if (bufferData.topSticky && bufferData.topSticky.parentNode) {
-            bufferData.topSticky.parentNode.removeChild(bufferData.topSticky);
+        // Remove elements
+        if (bufferData.topContainer && bufferData.topContainer.parentNode) {
+            bufferData.topContainer.parentNode.removeChild(bufferData.topContainer);
         }
-        if (bufferData.bottomSticky && bufferData.bottomSticky.parentNode) {
-            bufferData.bottomSticky.parentNode.removeChild(bufferData.bottomSticky);
+        if (bufferData.bottomContainer && bufferData.bottomContainer.parentNode) {
+            bufferData.bottomContainer.parentNode.removeChild(bufferData.bottomContainer);
         }
         
         this.buffers.delete(container);
