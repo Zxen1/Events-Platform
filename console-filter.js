@@ -91,6 +91,29 @@
     originalError.apply(console, args); // Show all other errors (including other Mapbox errors)
   };
   
+  // Intercept uncaught errors (browser logs these directly, bypassing console.error)
+  window.onerror = function(message, source, lineno, colno, error) {
+    var errorText = message + ' ' + (error ? error.stack : '') + ' ' + source;
+    if(/Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText) && /6\.js|5\.js/.test(source || '')){
+      return true; // Suppress this specific Mapbox error
+    }
+    return false; // Let other errors through
+  };
+  
+  // Intercept unhandled promise rejections (for "Uncaught (in promise)" errors)
+  window.addEventListener('unhandledrejection', function(event) {
+    var reason = event.reason;
+    var errorText = '';
+    if(reason instanceof Error) {
+      errorText = reason.message + ' ' + (reason.stack || '');
+    } else {
+      errorText = String(reason);
+    }
+    if(/Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText)){
+      event.preventDefault(); // Suppress this specific Mapbox error
+    }
+  });
+  
   // Confirmation message
   console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
     'Suppressing', suppressedWarnings.length, 'warning patterns and', suppressedErrors.length, 'specific Mapbox error pattern.');
