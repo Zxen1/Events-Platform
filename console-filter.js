@@ -40,16 +40,40 @@
   const suppressedErrors = [
     // Mapbox internal error: "Cannot read properties of null (reading 'dataset')"
     // This is a known harmless Mapbox internal error from their minified code
-    /Cannot read properties of null.*reading 'dataset'/i,
+    // Match both parts to ensure we only catch this specific error
+    /Cannot read properties of null.*dataset/i,
   ];
+  
+  // Check if error matches Mapbox dataset error specifically
+  function isMapboxDatasetError(args) {
+    var message = '';
+    for(var i = 0; i < args.length; i++) {
+      if(args[i] instanceof Error) {
+        message += args[i].message + ' ' + (args[i].stack || '');
+      } else {
+        message += String(args[i]);
+      }
+      message += ' ';
+    }
+    return /Cannot read properties of null/i.test(message) && /dataset/i.test(message);
+  }
   
   // ========================================
   // FILTER LOGIC - Do not edit below
   // ========================================
   
   function shouldSuppress(patterns, args) {
-    const message = args.join(' ');
-    return patterns.some(pattern => pattern.test(message));
+    // Convert all args to strings (handles Error objects)
+    var message = '';
+    for(var i = 0; i < args.length; i++) {
+      if(args[i] instanceof Error) {
+        message += args[i].message + ' ' + (args[i].stack || '');
+      } else {
+        message += String(args[i]);
+      }
+      message += ' ';
+    }
+    return patterns.some(function(pattern) { return pattern.test(message); });
   }
   
   console.warn = function(...args) {
@@ -60,8 +84,8 @@
   
   // Suppress only specific known harmless Mapbox errors
   console.error = function(...args) {
-    // Check if it matches the specific harmless Mapbox error pattern
-    if(shouldSuppress(suppressedErrors, args)){
+    // Check if it's the specific Mapbox dataset error
+    if(isMapboxDatasetError(args)){
       return; // Suppress only this specific error
     }
     originalError.apply(console, args); // Show all other errors (including other Mapbox errors)
