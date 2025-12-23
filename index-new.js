@@ -640,16 +640,18 @@ var ScrollBufferModule = {
         container.style.paddingTop = this.BUFFER_SIZE + 'px';
         container.style.paddingBottom = this.BUFFER_SIZE + 'px';
         
-        // Set initial scroll position to skip top buffer + header (so content is visible)
+        // Set initial scroll position to skip top buffer (so content is visible)
+        // Wait for content to be ready before setting scroll position
         var self = this;
         requestAnimationFrame(function() {
-            var headerHeight = 0;
-            if (bufferData.header) {
-                headerHeight = bufferData.header.offsetHeight;
-            }
-            var contentStart = self.BUFFER_SIZE + headerHeight + 10;
-            container.scrollTop = contentStart;
-            bufferData.previousScrollTop = contentStart;
+            requestAnimationFrame(function() {
+                // Only set scroll if content exists
+                if (container.scrollHeight > self.BUFFER_SIZE) {
+                    // Skip the top padding buffer - content starts at BUFFER_SIZE
+                    container.scrollTop = self.BUFFER_SIZE;
+                    bufferData.previousScrollTop = self.BUFFER_SIZE;
+                }
+            });
         });
         
         // Detect accordion clicks - disable clamping temporarily (Branch 1: clicking)
