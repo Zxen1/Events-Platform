@@ -645,39 +645,32 @@ var ScrollBufferModule = {
             body: body,
             topContainer: topContainer,
             bottomContainer: bottomContainer,
-            isClicking: false
+            isClicking: false,
+            scrollTimeout: null
         };
         
         this.buffers.set(container, bufferData);
         
-        // Detect accordion/drawer clicks - remove max-height when clicking
-        if (body) {
-            body.addEventListener('click', function(e) {
-                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .filter-categoryfilter-accordion-option, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
-                if (accordionHeader) {
-                    // Set clicking flag
-                    bufferData.isClicking = true;
-                    
-                    // Rule 2: When clicking, height = auto, no max-height (allow expansion)
-                    topContainer.style.height = 'auto';
-                    topContainer.style.maxHeight = 'none';
-                    bottomContainer.style.height = 'auto';
-                    bottomContainer.style.maxHeight = 'none';
-                    
-                    // Rule 3: After clicking, max-height = current height
-                    setTimeout(function() {
-                        var topHeight = topContainer.offsetHeight;
-                        var bottomHeight = bottomContainer.offsetHeight;
-                        topContainer.style.maxHeight = topHeight + 'px';
-                        bottomContainer.style.maxHeight = bottomHeight + 'px';
-                        bufferData.isClicking = false;
-                    }, 500);
-                }
-            }, true);
-        }
-        
-        // Watch scroll - ratchet max-height down as elements shrink
+        // When scrolling ends, set height = auto (prepare containers to be flexible)
         container.addEventListener('scroll', function() {
+            // Clear existing timeout
+            if (bufferData.scrollTimeout) {
+                clearTimeout(bufferData.scrollTimeout);
+            }
+            
+            // Set height back to 1px during scrolling
+            topContainer.style.height = '1px';
+            bottomContainer.style.height = '1px';
+            
+            // When scrolling ends, set height = auto (ready for clicks)
+            bufferData.scrollTimeout = setTimeout(function() {
+                if (!bufferData.isClicking) {
+                    topContainer.style.height = 'auto';
+                    bottomContainer.style.height = 'auto';
+                }
+            }, 150);
+            
+            // Ratchet max-height down as elements shrink
             if (!bufferData.isClicking) {
                 var topHeight = topContainer.offsetHeight;
                 var bottomHeight = bottomContainer.offsetHeight;
@@ -693,6 +686,34 @@ var ScrollBufferModule = {
                 }
             }
         }, { passive: true });
+        
+        // Detect accordion/drawer clicks - remove max-height when clicking
+        if (body) {
+            body.addEventListener('click', function(e) {
+                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .filter-categoryfilter-accordion-option, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
+                if (accordionHeader) {
+                    // Set clicking flag
+                    bufferData.isClicking = true;
+                    
+                    // Ensure height is auto (should already be from scroll end, but make sure)
+                    topContainer.style.height = 'auto';
+                    bottomContainer.style.height = 'auto';
+                    
+                    // Rule 2: When clicking, no max-height (allow expansion)
+                    topContainer.style.maxHeight = 'none';
+                    bottomContainer.style.maxHeight = 'none';
+                    
+                    // Rule 3: After clicking, max-height = current height
+                    setTimeout(function() {
+                        var topHeight = topContainer.offsetHeight;
+                        var bottomHeight = bottomContainer.offsetHeight;
+                        topContainer.style.maxHeight = topHeight + 'px';
+                        bottomContainer.style.maxHeight = bottomHeight + 'px';
+                        bufferData.isClicking = false;
+                    }, 500);
+                }
+            }, true);
+        }
     },
     
     /**
