@@ -647,11 +647,14 @@ var ScrollBufferModule = {
         // Disable header sticky positioning to allow scrolling above it
         header.style.position = 'relative';
         
+        // Disable scroll anchoring on container (prevents browser from adjusting scroll when content changes)
+        container.style.overflowAnchor = 'none';
+        
         // Set initial scroll position: top of body content starts at header
         var headerHeight = header.offsetHeight;
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
-                container.scrollTop = 5000 + headerHeight + 10;
+                container.scrollTop = 5000 + 10;
             });
         });
         
