@@ -104,12 +104,13 @@
   var originalOnError = window.onerror;
   window.onerror = function(message, source, lineno, colno, error) {
     var errorText = (message || '') + ' ' + (error ? (error.message + ' ' + (error.stack || '')) : '') + ' ' + (source || '');
-    // Check if it's the Mapbox dataset error - be more lenient with source matching
-    var isMapboxError = /Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText);
-    // Source might be full URL or just filename, check both
-    var isFromMapbox = !source || /6\.js|5\.js|mapbox/i.test(source) || (error && error.stack && /6\.js|5\.js|mapbox/i.test(error.stack));
-    if(isMapboxError && (isFromMapbox || !source)){ // If no source, assume it's Mapbox if pattern matches
-      return true; // Suppress this specific Mapbox error
+    // Check if it's the dataset error - match the specific error pattern
+    // Stack traces show marker.ts, camera.ts, map.ts which are Mapbox internal files
+    var isDatasetError = /Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText);
+    // Check if it's from Mapbox files (6.js, 5.js, or Mapbox TypeScript files in stack)
+    var isFromMapbox = /6\.js|5\.js|mapbox|marker\.ts|camera\.ts|map\.ts|evented\.ts/i.test(errorText);
+    if(isDatasetError && isFromMapbox){
+      return true; // Suppress this specific error
     }
     // Call original handler if it exists
     if(originalOnError) {
