@@ -172,40 +172,50 @@
             var scNow = findScrollContainer();
             if (!scNow) return;
 
-            // Prevent clamp-caused flick by preserving old scrollTop with bottom slack if needed
+            // Frame 1: prevent the browser's clamp (the "footer anchoring") by adding bottom slack
+            // BEFORE we attempt any anchoring scroll correction.
             var newMaxScrollTop = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
             if (oldScrollTop > newMaxScrollTop) {
                 var clampSlack = oldScrollTop - newMaxScrollTop;
                 setBottomGapHeight(getBottomGapHeight() + clampSlack);
+                // Force a sync layout read so the new scrollHeight is realized ASAP
+                void scNow.scrollHeight;
             }
 
-            isAdjustingScroll = true;
-            scNow.scrollTop = oldScrollTop;
-            isAdjustingScroll = false;
+            // Frame 2: now that bottom slack exists (if needed), restore scrollTop and anchor the row.
+            requestAnimationFrame(function() {
+                if (!anchorEl.isConnected) return;
+                var sc2 = findScrollContainer();
+                if (!sc2) return;
 
-            // Keep anchor at same screen position
-            var scNowRect = scNow.getBoundingClientRect();
-            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-            var delta = newTop - oldTop;
-            if (!delta) return;
+                isAdjustingScroll = true;
+                sc2.scrollTop = oldScrollTop;
+                isAdjustingScroll = false;
 
-            var currentScrollTop = scNow.scrollTop;
+                var sc2Rect = sc2.getBoundingClientRect();
+                var newTop = anchorEl.getBoundingClientRect().top - sc2Rect.top;
+                var delta = newTop - oldTop;
+                if (!delta) return;
 
-            if (currentScrollTop + delta < 0) {
-                var topSlack = -(currentScrollTop + delta);
-                setGapHeight(getGapHeight() + topSlack);
-                delta = delta + topSlack;
-            }
+                var currentScrollTop = sc2.scrollTop;
 
-            var maxScrollTopNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (currentScrollTop + delta > maxScrollTopNow) {
-                var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
-                setBottomGapHeight(getBottomGapHeight() + bottomSlack);
-            }
+                if (currentScrollTop + delta < 0) {
+                    var topSlack = -(currentScrollTop + delta);
+                    setGapHeight(getGapHeight() + topSlack);
+                    delta = delta + topSlack;
+                }
 
-            isAdjustingScroll = true;
-            scNow.scrollTop = currentScrollTop + delta;
-            isAdjustingScroll = false;
+                var maxScrollTopNow = Math.max(0, sc2.scrollHeight - sc2.clientHeight);
+                if (currentScrollTop + delta > maxScrollTopNow) {
+                    var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
+                    setBottomGapHeight(getBottomGapHeight() + bottomSlack);
+                    void sc2.scrollHeight;
+                }
+
+                isAdjustingScroll = true;
+                sc2.scrollTop = currentScrollTop + delta;
+                isAdjustingScroll = false;
+            });
         });
     }
     
@@ -235,47 +245,51 @@
             var scNow = findScrollContainer();
             if (!scNow) return;
             
-            // Step 1: prevent clamp-caused flick by preserving the old scrollTop using bottom slack.
-            // If the DOM change reduced maxScrollTop below our previous scrollTop, the browser will
-            // force scNow.scrollTop down. We counter that by adding bottom gap so maxScrollTop grows.
+            // Frame 1: prevent clamp-caused flick by preserving old scrollTop using bottom slack.
             var newMaxScrollTop = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
             if (oldScrollTop > newMaxScrollTop) {
                 var clampSlack = oldScrollTop - newMaxScrollTop;
                 setBottomGapHeight(getBottomGapHeight() + clampSlack);
+                void scNow.scrollHeight;
             }
             
-            // After bottom slack, try to restore the original scrollTop (prevents visible jump).
-            isAdjustingScroll = true;
-            scNow.scrollTop = oldScrollTop;
-            isAdjustingScroll = false;
-            
-            // Step 2: normal anchoring (keep the clicked header at the same screen position).
-            var scNowRect = scNow.getBoundingClientRect();
-            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-            var delta = newTop - oldTop;
-            if (!delta) return;
-            
-            var currentScrollTop = scNow.scrollTop;
-            var slack = 0;
-            
-            // If we'd need to scroll above 0 to keep the anchor stationary, create gap slack instead.
-            if (currentScrollTop + delta < 0) {
-                slack = -(currentScrollTop + delta);
-                setGapHeight(getGapHeight() + slack);
-                delta = delta + slack;
-            }
+            // Frame 2: restore scrollTop, then do the normal anchor correction.
+            requestAnimationFrame(function() {
+                if (!anchorEl.isConnected) return;
+                var sc2 = findScrollContainer();
+                if (!sc2) return;
+                
+                isAdjustingScroll = true;
+                sc2.scrollTop = oldScrollTop;
+                isAdjustingScroll = false;
+                
+                var sc2Rect = sc2.getBoundingClientRect();
+                var newTop = anchorEl.getBoundingClientRect().top - sc2Rect.top;
+                var delta = newTop - oldTop;
+                if (!delta) return;
+                
+                var currentScrollTop = sc2.scrollTop;
+                var slack = 0;
+                
+                // If we'd need to scroll above 0 to keep the anchor stationary, create gap slack instead.
+                if (currentScrollTop + delta < 0) {
+                    slack = -(currentScrollTop + delta);
+                    setGapHeight(getGapHeight() + slack);
+                    delta = delta + slack;
+                }
 
-            // If we'd need to scroll past maxScrollTop to keep the anchor stationary, create bottom gap slack instead.
-            var maxScrollTopNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (currentScrollTop + delta > maxScrollTopNow) {
-                var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
-                setBottomGapHeight(getBottomGapHeight() + bottomSlack);
-                // maxScrollTop increases as soon as bottom gap applies
-            }
-            
-            isAdjustingScroll = true;
-            scNow.scrollTop = currentScrollTop + delta;
-            isAdjustingScroll = false;
+                // If we'd need to scroll past maxScrollTop to keep the anchor stationary, create bottom gap slack instead.
+                var maxScrollTopNow = Math.max(0, sc2.scrollHeight - sc2.clientHeight);
+                if (currentScrollTop + delta > maxScrollTopNow) {
+                    var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
+                    setBottomGapHeight(getBottomGapHeight() + bottomSlack);
+                    void sc2.scrollHeight;
+                }
+                
+                isAdjustingScroll = true;
+                sc2.scrollTop = currentScrollTop + delta;
+                isAdjustingScroll = false;
+            });
         });
     }
     
