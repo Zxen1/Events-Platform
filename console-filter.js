@@ -128,10 +128,13 @@
     } else {
       errorText = String(reason);
     }
-    // Check if it's the Mapbox dataset error
-    if(/Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText)){
-      event.preventDefault(); // Suppress this specific Mapbox error
+    // Check if it's the dataset error from Mapbox files
+    var isDatasetError = /Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText);
+    var isFromMapbox = /6\.js|5\.js|mapbox|marker\.ts|camera\.ts|map\.ts|evented\.ts/i.test(errorText);
+    if(isDatasetError && isFromMapbox){
+      event.preventDefault(); // Suppress this specific error
       event.stopPropagation(); // Stop it from bubbling
+      event.stopImmediatePropagation(); // Stop other handlers
     }
   }, true); // Use capture phase to catch it early
   
