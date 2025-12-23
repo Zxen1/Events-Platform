@@ -152,6 +152,62 @@
             }
         }
     }
+
+    // Arms a scroll anchor for a click without changing the click's actual behavior.
+    // Use this when we want "keep clicked row stationary" but we don't want to wrap/modify
+    // the existing click handler logic (prevents regressions).
+    function armScrollAnchor(anchorEl) {
+        var sc = findScrollContainer();
+        if (!sc || !anchorEl) return;
+
+        ensureScrollGap();
+        ensureScrollGapBottom();
+
+        var scRect = sc.getBoundingClientRect();
+        var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
+        var oldScrollTop = sc.scrollTop;
+
+        requestAnimationFrame(function() {
+            if (!anchorEl.isConnected) return;
+            var scNow = findScrollContainer();
+            if (!scNow) return;
+
+            // Prevent clamp-caused flick by preserving old scrollTop with bottom slack if needed
+            var newMaxScrollTop = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (oldScrollTop > newMaxScrollTop) {
+                var clampSlack = oldScrollTop - newMaxScrollTop;
+                setBottomGapHeight(getBottomGapHeight() + clampSlack);
+            }
+
+            isAdjustingScroll = true;
+            scNow.scrollTop = oldScrollTop;
+            isAdjustingScroll = false;
+
+            // Keep anchor at same screen position
+            var scNowRect = scNow.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+
+            var currentScrollTop = scNow.scrollTop;
+
+            if (currentScrollTop + delta < 0) {
+                var topSlack = -(currentScrollTop + delta);
+                setGapHeight(getGapHeight() + topSlack);
+                delta = delta + topSlack;
+            }
+
+            var maxScrollTopNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (currentScrollTop + delta > maxScrollTopNow) {
+                var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
+                setBottomGapHeight(getBottomGapHeight() + bottomSlack);
+            }
+
+            isAdjustingScroll = true;
+            scNow.scrollTop = currentScrollTop + delta;
+            isAdjustingScroll = false;
+        });
+    }
     
     function runWithScrollAnchor(anchorEl, fn) {
         var sc = findScrollContainer();
@@ -712,6 +768,23 @@
                 closeAllEditPanels();
             }
         });
+
+        // Scroll anchoring for field rows / field edit buttons.
+        // This runs in capture phase so it can "arm" the anchor BEFORE other click handlers
+        // close/open panels, then we adjust scroll in rAF after the DOM has changed.
+        document.addEventListener('click', function(e) {
+            if (!container) return;
+            if (!container.contains(e.target)) return;
+
+            var fieldRow = e.target.closest('.formbuilder-field');
+            var fieldEditBtn = e.target.closest('.formbuilder-field-edit');
+            if (!fieldRow && !fieldEditBtn) return;
+
+            // Use the row as the anchor (even if the click was on the edit button).
+            var anchor = fieldRow || (fieldEditBtn ? fieldEditBtn.closest('.formbuilder-field') : null);
+            if (!anchor) return;
+            armScrollAnchor(anchor);
+        }, true);
         
         // Close 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
@@ -2326,26 +2399,22 @@
             
             field.addEventListener('click', function(ev) {
                 ev.stopPropagation();
-                runWithScrollAnchor(field, function() {
-                    container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                        if (el !== fieldWrapper) {
-                            el.classList.remove('formbuilder-field-wrapper--editing');
-                        }
-                    });
+                container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                    if (el !== fieldWrapper) {
+                        el.classList.remove('formbuilder-field-wrapper--editing');
+                    }
                 });
             });
             
             fieldEdit.addEventListener('click', function(ev) {
                 ev.stopPropagation();
-                runWithScrollAnchor(field, function() {
-                    var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
-                    container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                        el.classList.remove('formbuilder-field-wrapper--editing');
-                    });
-                    if (!isOpen) {
-                        fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
-                    }
+                var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
+                container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                    el.classList.remove('formbuilder-field-wrapper--editing');
                 });
+                if (!isOpen) {
+                    fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
+                }
             });
             
             // Field drag and drop - only via drag handle
