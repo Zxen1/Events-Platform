@@ -88,7 +88,7 @@ const FilterModule = (function() {
     function openPanel() {
         if (!panelEl || !contentEl) return;
         
-        // Initialize scroll buffer for filter panel
+        // Initialize scroll buffer (prevents content jumping when accordions open/close)
         if (window.ScrollBufferModule) {
             ScrollBufferModule.init(contentEl);
         }

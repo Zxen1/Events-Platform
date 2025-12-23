@@ -606,7 +606,8 @@ window.App = App;
 
 /* ============================================================================
    SCROLL BUFFER SYSTEM
-   Prevents content from jumping when height changes, stops at header when scrolling up
+   Prevents content from jumping when accordions open/close
+   Only clamps scroll at top/bottom edges, allows free scrolling in middle
    ============================================================================ */
 
 var ScrollBufferModule = {
@@ -619,61 +620,53 @@ var ScrollBufferModule = {
     init: function(container) {
         if (!container) return;
         
+        // Find header and body elements
+        var header = container.querySelector('.panel-header, .filter-panel-header, .admin-panel-header, .member-panel-header');
+        var body = container.querySelector('.panel-body, .filter-panel-body, .admin-panel-body, .member-panel-body');
+        
         // Store buffer data
         var bufferData = {
             container: container,
-            previousHeight: container.scrollHeight,
-            previousScrollTop: container.scrollTop
+            header: header,
+            body: body
         };
         
         this.buffers.set(container, bufferData);
         
-        // Monitor height changes
-        var self = this;
-        var resizeObserver = new ResizeObserver(function() {
-            self.compensateScroll(container);
-        });
-        resizeObserver.observe(container);
-        bufferData.resizeObserver = resizeObserver;
-        
-        // Watch for scroll events - stop at header when scrolling up
+        // Watch for scroll events - clamp at edges only
         container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
     },
     
     /**
-     * Compensate scroll position when content height decreases
-     */
-    compensateScroll: function(container) {
-        var bufferData = this.buffers.get(container);
-        if (!bufferData) return;
-        
-        var currentHeight = container.scrollHeight;
-        var heightDiff = currentHeight - bufferData.previousHeight;
-        
-        // If height decreased (content closed), scroll down to keep visible area stable
-        if (heightDiff < 0) {
-            container.scrollTop = container.scrollTop + Math.abs(heightDiff);
-        }
-        
-        bufferData.previousHeight = currentHeight;
-        bufferData.previousScrollTop = container.scrollTop;
-    },
-    
-    /**
-     * Handle scroll events - stop at header when scrolling up
+     * Handle scroll events - clamp at top/bottom edges only
      */
     handleScroll: function(container) {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
         
         var scrollTop = container.scrollTop;
+        var clientHeight = container.clientHeight;
+        var scrollHeight = container.scrollHeight;
         
-        // Stop at header (scrollTop = 0) when scrolling up
-        if (scrollTop < 0) {
-            container.scrollTop = 0;
+        // Calculate header height (where list content starts)
+        var headerHeight = 0;
+        if (bufferData.header) {
+            headerHeight = bufferData.header.offsetHeight;
         }
         
-        bufferData.previousScrollTop = scrollTop;
+        // Check if top of list is visible (scrollTop is at or near header)
+        var topOfListVisible = scrollTop <= (headerHeight + 10);
+        
+        // Check if bottom of list is visible (scrollTop + clientHeight is near scrollHeight)
+        var bottomOfListVisible = (scrollTop + clientHeight) >= (scrollHeight - 10);
+        
+        // Clamp scroll position only when at edges
+        if (topOfListVisible && scrollTop < (headerHeight + 10)) {
+            container.scrollTop = headerHeight + 10;
+        } else if (bottomOfListVisible && (scrollTop + clientHeight) > (scrollHeight - 10)) {
+            container.scrollTop = scrollHeight - clientHeight - 10;
+        }
+        // Otherwise, allow free scrolling (no clamping in middle)
     },
     
     /**
@@ -682,10 +675,6 @@ var ScrollBufferModule = {
     remove: function(container) {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
-        
-        if (bufferData.resizeObserver) {
-            bufferData.resizeObserver.disconnect();
-        }
         
         this.buffers.delete(container);
     }

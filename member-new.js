@@ -369,7 +369,7 @@ const MemberModule = (function() {
     function openPanel() {
         if (!panel || !panelContent) return;
         
-        // Initialize scroll buffer for member panel
+        // Initialize scroll buffer (prevents content jumping when accordions open/close)
         if (window.ScrollBufferModule) {
             ScrollBufferModule.init(panelContent);
         }
