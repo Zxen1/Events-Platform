@@ -4215,11 +4215,27 @@ const AmenitiesMenuComponent = (function(){
                 option.appendChild(optImg);
                 option.appendChild(optText);
                 
+                // Make checkbox display-only (non-interactive)
+                checkbox.style.pointerEvents = 'none';
+                
+                // Update visual state based on checkbox
+                function updateOptionState() {
+                    if (checkbox.checked) {
+                        option.classList.add('component-amenitiespicker-option--selected');
+                    } else {
+                        option.classList.remove('component-amenitiespicker-option--selected');
+                    }
+                }
+                updateOptionState();
+                
+                // Single click handler on entire row
                 option.onclick = function(ev) {
                     ev.stopPropagation();
-                    // Toggle checkbox
+                    // Toggle checkbox (display only)
                     checkbox.checked = !checkbox.checked;
                     var isChecked = checkbox.checked;
+                    
+                    updateOptionState();
                     
                     if (isChecked) {
                         // Add to selected

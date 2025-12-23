@@ -2094,6 +2094,12 @@
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
+    filter: brightness(0) invert(1);
+    transition: filter 0.2s;
+}
+
+.component-amenitiespicker-option--selected .component-amenitiespicker-option-image {
+    filter: brightness(0) saturate(100%) invert(47%) sepia(95%) saturate(1352%) hue-rotate(201deg) brightness(98%) contrast(96%);
 }
 
 .component-amenitiespicker-option-text {
