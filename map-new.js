@@ -129,6 +129,21 @@ const MapModule = (function() {
 
     // Load admin settings for starting position
     await loadSettings();
+    
+    // Determine initial style (member setting > admin setting > localStorage > default)
+    var initialStyle = 'standard';
+    if (window.MemberModule && window.MemberModule.getCurrentUser) {
+      var member = window.MemberModule.getCurrentUser();
+      if (member && member.map_style) {
+        initialStyle = member.map_style;
+      }
+    }
+    if (initialStyle === 'standard') {
+      initialStyle = adminSettings.map_style || localStorage.getItem('map_style') || 'standard';
+    }
+    var styleUrl = initialStyle === 'standard-satellite' 
+      ? 'mapbox://styles/mapbox/standard-satellite'
+      : 'mapbox://styles/mapbox/standard';
 
     // Create map (pass DOM element directly, not ID)
     // Performance optimizations: renderWorldCopies=false reduces initial load, preserveDrawingBuffer only if needed
@@ -136,7 +151,7 @@ const MapModule = (function() {
     // Mapbox attribution control has mutation observers that fail when DOM elements are manipulated
     map = new mapboxgl.Map({
       container: container,
-      style: 'mapbox://styles/mapbox/standard',
+      style: styleUrl,
       projection: 'globe',
       center: startCenter,
       zoom: startZoom,
@@ -191,6 +206,22 @@ const MapModule = (function() {
       // Start spin if enabled (deferred)
       if (spinEnabled) {
         startSpin();
+      }
+      
+      // Apply lighting preset (deferred, after map is fully loaded)
+      // Priority: member settings > admin settings > localStorage > default
+      var lighting = 'day';
+      if (window.MemberModule && window.MemberModule.getCurrentUser) {
+        var member = window.MemberModule.getCurrentUser();
+        if (member && member.map_lighting) {
+          lighting = member.map_lighting;
+        }
+      }
+      if (lighting === 'day') {
+        lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
+      }
+      if (lighting && setMapLighting) {
+        setMapLighting(lighting);
       }
     });
   }
@@ -1038,6 +1069,40 @@ const MapModule = (function() {
      SECTION 11: PUBLIC API
      ========================================================================== */
   
+  /**
+   * Update map style (standard or standard-satellite)
+   */
+  function setMapStyle(style) {
+    if (!map) return;
+    var styleUrl = style === 'standard-satellite' 
+      ? 'mapbox://styles/mapbox/standard-satellite'
+      : 'mapbox://styles/mapbox/standard';
+    map.setStyle(styleUrl);
+  }
+
+  /**
+   * Update map lighting preset
+   */
+  function setMapLighting(preset) {
+    if (!map) return;
+    if (!map.isStyleLoaded()) {
+      map.once('style.load', function() {
+        setMapLighting(preset);
+      });
+      return;
+    }
+    
+    try {
+      map.setConfig({
+        basemap: {
+          lightPreset: preset
+        }
+      });
+    } catch (e) {
+      console.warn('[Map] Failed to set lighting preset:', e);
+    }
+  }
+
   return {
     init,
     
@@ -1046,6 +1111,8 @@ const MapModule = (function() {
     getBounds,
     flyTo,
     handleGeocoderResult,
+    setMapStyle,
+    setMapLighting,
     
     // Geocoders
     getGeocoder: (key) => geocoders[key],

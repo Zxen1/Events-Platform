@@ -1748,6 +1748,64 @@ const AdminModule = (function() {
     function attachMapTabHandlers() {
         if (!mapTabContainer) return;
         
+        // Map Lighting buttons
+        var lightingButtons = mapTabContainer.querySelectorAll('.admin-lighting-button');
+        if (lightingButtons.length) {
+            var initialLighting = mapTabData.map_lighting || 'day';
+            lightingButtons.forEach(function(btn) {
+                var lighting = btn.dataset.lighting;
+                var isActive = lighting === initialLighting;
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                btn.classList.toggle('admin-lighting-button--active', isActive);
+                
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+                    
+                    lightingButtons.forEach(function(b) {
+                        b.setAttribute('aria-pressed', 'false');
+                        b.classList.remove('admin-lighting-button--active');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.classList.add('admin-lighting-button--active');
+                    
+                    updateField('map.map_lighting', lighting);
+                    if (window.MapModule && window.MapModule.setMapLighting) {
+                        window.MapModule.setMapLighting(lighting);
+                    }
+                });
+            });
+            registerField('map.map_lighting', initialLighting);
+        }
+        
+        // Map Style buttons
+        var styleButtons = mapTabContainer.querySelectorAll('.admin-style-button');
+        if (styleButtons.length) {
+            var initialStyle = mapTabData.map_style || 'standard';
+            styleButtons.forEach(function(btn) {
+                var style = btn.dataset.style;
+                var isActive = style === initialStyle;
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                btn.classList.toggle('admin-style-button--active', isActive);
+                
+                btn.addEventListener('click', function() {
+                    if (btn.getAttribute('aria-pressed') === 'true') return;
+                    
+                    styleButtons.forEach(function(b) {
+                        b.setAttribute('aria-pressed', 'false');
+                        b.classList.remove('admin-style-button--active');
+                    });
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.classList.add('admin-style-button--active');
+                    
+                    updateField('map.map_style', style);
+                    if (window.MapModule && window.MapModule.setMapStyle) {
+                        window.MapModule.setMapStyle(style);
+                    }
+                });
+            });
+            registerField('map.map_style', initialStyle);
+        }
+        
         // Starting Zoom slider
         var startingZoomSlider = document.getElementById('adminStartingZoom');
         var startingZoomDisplay = document.getElementById('adminStartingZoomDisplay');

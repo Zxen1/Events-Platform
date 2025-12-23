@@ -425,6 +425,38 @@
             </div>
           </div>
           
+          <!-- Map Lighting & Style -->
+          <div class="admin-map-lighting-container" id="admin-map-lighting-container">
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label">Map Lighting</label>
+              <div class="admin-lighting-buttons">
+                <button type="button" class="admin-lighting-button" data-lighting="dawn" aria-pressed="false">
+                  <span class="admin-lighting-button-text">Dawn</span>
+                </button>
+                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="day" aria-pressed="true">
+                  <span class="admin-lighting-button-text">Day</span>
+                </button>
+                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="dusk" aria-pressed="false">
+                  <span class="admin-lighting-button-text">Dusk</span>
+                </button>
+                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="night" aria-pressed="false">
+                  <span class="admin-lighting-button-text">Night</span>
+                </button>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label">Map Style</label>
+              <div class="admin-style-buttons">
+                <button type="button" class="admin-style-button" data-style="standard" aria-pressed="true">
+                  <span class="admin-style-button-text">Standard</span>
+                </button>
+                <button type="button" class="admin-style-button admin-style-button--bordered" data-style="standard-satellite" aria-pressed="false">
+                  <span class="admin-style-button-text">Satellite</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
           <!-- Map Shadow -->
           <div class="admin-map-shadow-container" id="admin-map-shadow-container">
             <div class="admin-panel-field">
@@ -558,6 +590,38 @@
              PROFILE TAB
              ================================================================ -->
         <section id="member-tab-profile" class="member-tab-panel member-tab-panel--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
+          
+          <!-- Map Settings (always visible) -->
+          <div class="member-map-settings-container">
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Map Lighting</label>
+              <div class="member-lighting-buttons">
+                <button type="button" class="member-lighting-button" data-lighting="dawn" aria-pressed="false">
+                  <span class="member-lighting-button-text">Dawn</span>
+                </button>
+                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="day" aria-pressed="true">
+                  <span class="member-lighting-button-text">Day</span>
+                </button>
+                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="dusk" aria-pressed="false">
+                  <span class="member-lighting-button-text">Dusk</span>
+                </button>
+                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="night" aria-pressed="false">
+                  <span class="member-lighting-button-text">Night</span>
+                </button>
+              </div>
+            </div>
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Map Style</label>
+              <div class="member-style-buttons">
+                <button type="button" class="member-style-button" data-style="standard" aria-pressed="true">
+                  <span class="member-style-button-text">Standard</span>
+                </button>
+                <button type="button" class="member-style-button member-style-button--bordered" data-style="standard-satellite" aria-pressed="false">
+                  <span class="member-style-button-text">Satellite</span>
+                </button>
+              </div>
+            </div>
+          </div>
           
           <div class="member-auth" data-state="logged-out">
             

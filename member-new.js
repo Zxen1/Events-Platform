@@ -246,7 +246,120 @@ const MemberModule = (function() {
             });
         }
         
+        // Map Lighting buttons
+        initMapLightingButtons();
+        
+        // Map Style buttons
+        initMapStyleButtons();
+        
         // Panel toggle is handled by lazy init wrapper outside module
+    }
+    
+    function initMapLightingButtons() {
+        var lightingButtons = panel.querySelectorAll('.member-lighting-button');
+        if (!lightingButtons.length) return;
+        
+        // Load from localStorage (guests) or database (members)
+        var currentLighting = 'day';
+        if (currentUser) {
+            // Load from member data (will be set when member data loads)
+            currentLighting = currentUser.map_lighting || 'day';
+        } else {
+            currentLighting = localStorage.getItem('map_lighting') || 'day';
+        }
+        
+        lightingButtons.forEach(function(btn) {
+            var lighting = btn.dataset.lighting;
+            var isActive = lighting === currentLighting;
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            btn.classList.toggle('member-lighting-button--active', isActive);
+            
+            btn.addEventListener('click', function() {
+                if (btn.getAttribute('aria-pressed') === 'true') return;
+                
+                lightingButtons.forEach(function(b) {
+                    b.setAttribute('aria-pressed', 'false');
+                    b.classList.remove('member-lighting-button--active');
+                });
+                btn.setAttribute('aria-pressed', 'true');
+                btn.classList.add('member-lighting-button--active');
+                
+                // Update map
+                if (window.MapModule && window.MapModule.setMapLighting) {
+                    window.MapModule.setMapLighting(lighting);
+                }
+                
+                // Save to localStorage (guests) or database (members)
+                if (currentUser) {
+                    saveMemberSetting('map_lighting', lighting);
+                } else {
+                    localStorage.setItem('map_lighting', lighting);
+                }
+            });
+        });
+    }
+    
+    function initMapStyleButtons() {
+        var styleButtons = panel.querySelectorAll('.member-style-button');
+        if (!styleButtons.length) return;
+        
+        // Load from localStorage (guests) or database (members)
+        var currentStyle = 'standard';
+        if (currentUser) {
+            currentStyle = currentUser.map_style || 'standard';
+        } else {
+            currentStyle = localStorage.getItem('map_style') || 'standard';
+        }
+        
+        styleButtons.forEach(function(btn) {
+            var style = btn.dataset.style;
+            var isActive = style === currentStyle;
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            btn.classList.toggle('member-style-button--active', isActive);
+            
+            btn.addEventListener('click', function() {
+                if (btn.getAttribute('aria-pressed') === 'true') return;
+                
+                styleButtons.forEach(function(b) {
+                    b.setAttribute('aria-pressed', 'false');
+                    b.classList.remove('member-style-button--active');
+                });
+                btn.setAttribute('aria-pressed', 'true');
+                btn.classList.add('member-style-button--active');
+                
+                // Update map
+                if (window.MapModule && window.MapModule.setMapStyle) {
+                    window.MapModule.setMapStyle(style);
+                }
+                
+                // Save to localStorage (guests) or database (members)
+                if (currentUser) {
+                    saveMemberSetting('map_style', style);
+                } else {
+                    localStorage.setItem('map_style', style);
+                }
+            });
+        });
+    }
+    
+    function saveMemberSetting(key, value) {
+        if (!currentUser) return;
+        
+        // Save to database via API
+        fetch('/gateway.php?action=edit-member', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                [key]: value
+            })
+        }).catch(function(err) {
+            console.error('[Member] Failed to save setting:', err);
+        });
+        
+        // Update local state
+        if (currentUser) {
+            currentUser[key] = value;
+        }
     }
 
     /* --------------------------------------------------------------------------
@@ -260,6 +373,10 @@ const MemberModule = (function() {
         panel.setAttribute('aria-hidden', 'false');
         panelContent.classList.remove('member-panel-content--hidden');
         panelContent.classList.add('member-panel-content--visible');
+        
+        // Refresh map settings buttons (in case member logged in/out)
+        initMapLightingButtons();
+        initMapStyleButtons();
         
         // Bring panel to front of stack
         App.bringToTop(panel);
@@ -1416,6 +1533,18 @@ const MemberModule = (function() {
             storeCurrent(currentUser);
             render();
             
+            // Apply member map settings
+            if (currentUser.map_lighting && window.MapModule && window.MapModule.setMapLighting) {
+                window.MapModule.setMapLighting(currentUser.map_lighting);
+            }
+            if (currentUser.map_style && window.MapModule && window.MapModule.setMapStyle) {
+                window.MapModule.setMapStyle(currentUser.map_style);
+            }
+            
+            // Refresh map settings buttons
+            initMapLightingButtons();
+            initMapStyleButtons();
+            
             var displayName = currentUser.name || currentUser.email || currentUser.username;
             getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
                 if (message) {
@@ -1551,6 +1680,23 @@ const MemberModule = (function() {
         currentUser = null;
         storeCurrent(null);
         render();
+        
+        // Revert to admin/localStorage settings
+        var lighting = localStorage.getItem('map_lighting') || 'day';
+        var style = localStorage.getItem('map_style') || 'standard';
+        if (window.MapModule) {
+            if (window.MapModule.setMapLighting) {
+                window.MapModule.setMapLighting(lighting);
+            }
+            if (window.MapModule.setMapStyle) {
+                window.MapModule.setMapStyle(style);
+            }
+        }
+        
+        // Refresh map settings buttons
+        initMapLightingButtons();
+        initMapStyleButtons();
+        
         getMessage('msg_auth_logout_success', {}, false).then(function(message) {
             if (message) {
                 ToastComponent.show(message);
