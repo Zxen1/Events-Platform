@@ -627,15 +627,17 @@ var ScrollBufferModule = {
         if (!header || !body) return;
         
         // Create invisible sticky element at top of body (sticks to header)
+        // Starts at 1px, can expand to fill gaps when content collapses
         var topSticky = document.createElement('div');
         topSticky.className = 'scroll-buffer-sticky scroll-buffer-sticky--top';
-        topSticky.style.cssText = 'position: sticky; top: 0; height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
+        topSticky.style.cssText = 'position: sticky; top: 0; min-height: 1px; height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
         body.insertBefore(topSticky, body.firstChild);
         
         // Create invisible sticky element at bottom of body (sticks to bottom of viewport)
+        // Starts at 1px, can expand to fill gaps when content collapses
         var bottomSticky = document.createElement('div');
         bottomSticky.className = 'scroll-buffer-sticky scroll-buffer-sticky--bottom';
-        bottomSticky.style.cssText = 'position: sticky; bottom: 0; height: 1px; width: 100%; flex-shrink: 0; z-index: -1; margin-top: auto;';
+        bottomSticky.style.cssText = 'position: sticky; bottom: 0; min-height: 1px; height: 1px; width: 100%; flex-shrink: 0; z-index: -1; margin-top: auto;';
         body.appendChild(bottomSticky);
         
         // Store buffer data
@@ -681,16 +683,21 @@ var ScrollBufferModule = {
                     // Set clicking flag
                     bufferData.isClicking = true;
                     
-                    // Remove max-height constraint (allow free expansion)
+                    // Remove max-height and height constraints (allow free expansion to fill gaps)
                     topSticky.style.maxHeight = 'none';
+                    topSticky.style.height = 'auto';
                     bottomSticky.style.maxHeight = 'none';
+                    bottomSticky.style.height = 'auto';
                     
-                    // After animation completes, set max-height to current height and clear flag
+                    // After animation completes, set max-height to current height
+                    // Keep height: auto so it can shrink, but max-height prevents it from growing beyond current size
                     setTimeout(function() {
                         var topHeight = topSticky.offsetHeight;
                         var bottomHeight = bottomSticky.offsetHeight;
                         topSticky.style.maxHeight = topHeight + 'px';
+                        // Keep height: auto (not 1px) so it can shrink naturally as user scrolls
                         bottomSticky.style.maxHeight = bottomHeight + 'px';
+                        // Keep height: auto (not 1px) so it can shrink naturally as user scrolls
                         bufferData.isClicking = false;
                     }, 500);
                 }
