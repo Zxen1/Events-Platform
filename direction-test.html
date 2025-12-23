@@ -47,18 +47,25 @@
         
         .menu-content-wrapper {
             width: 100%;
-            max-height: 0;
+            height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: height 0.3s ease;
         }
         
         .menu.open .menu-content-wrapper {
-            max-height: 500px;
+            height: auto;
         }
         
         .menu-options {
             width: 100%;
             background: #000;
+            transform: scaleY(0);
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+        }
+        
+        .menu.open .menu-options {
+            transform: scaleY(1);
         }
         
         .menu-option {
@@ -174,7 +181,27 @@
             // Close all menus above the target
             for (var i = 0; i < targetIndex; i++) {
                 if (allMenus[i].classList.contains('open')) {
+                    var wrapper = allMenus[i].querySelector('.menu-content-wrapper');
+                    var options = allMenus[i].querySelector('.menu-options');
+                    var currentHeight = wrapper.scrollHeight;
+                    
+                    // Set explicit height before closing
+                    wrapper.style.height = currentHeight + 'px';
+                    
+                    // Remove open class to trigger collapse
                     allMenus[i].classList.remove('open');
+                    
+                    // Animate height to 0 and scale to 0
+                    requestAnimationFrame(function() {
+                        wrapper.style.height = '0';
+                        options.style.transform = 'scaleY(0)';
+                        
+                        // Clean up after animation
+                        setTimeout(function() {
+                            wrapper.style.height = '';
+                            options.style.transform = '';
+                        }, 300);
+                    });
                 }
             }
         }
@@ -197,14 +224,45 @@
             
             // Toggle this menu
             if (!isCurrentlyOpen) {
+                var wrapper = menu.querySelector('.menu-content-wrapper');
+                var options = menu.querySelector('.menu-options');
+                
                 menu.classList.add('open');
                 openMenu = menu;
+                
+                // Set height explicitly and scale
+                var targetHeight = options.scrollHeight;
+                wrapper.style.height = targetHeight + 'px';
+                options.style.transform = 'scaleY(1)';
+                
+                // Clean up after animation
+                setTimeout(function() {
+                    wrapper.style.height = '';
+                    options.style.transform = '';
+                }, 300);
                 
                 // Unlock immediately (1ms) - just enough to prevent the jump
                 setTimeout(function() {
                     unlockButtons();
                 }, 1);
             } else {
+                var wrapper = menu.querySelector('.menu-content-wrapper');
+                var options = menu.querySelector('.menu-options');
+                var currentHeight = wrapper.scrollHeight;
+                
+                wrapper.style.height = currentHeight + 'px';
+                menu.classList.remove('open');
+                
+                requestAnimationFrame(function() {
+                    wrapper.style.height = '0';
+                    options.style.transform = 'scaleY(0)';
+                    
+                    setTimeout(function() {
+                        wrapper.style.height = '';
+                        options.style.transform = '';
+                    }, 300);
+                });
+                
                 openMenu = null;
                 unlockButtons();
             }
