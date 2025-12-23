@@ -88,14 +88,32 @@
     if(isMapboxDatasetError(args)){
       return; // Suppress only this specific error
     }
+    // Also check the call stack to see if error originates from Mapbox files
+    try {
+      throw new Error();
+    } catch(e) {
+      var stack = e.stack || '';
+      if(/Cannot read properties of null/i.test(args.join(' ')) && /dataset/i.test(args.join(' ')) && /6\.js|5\.js|mapbox/i.test(stack)){
+        return; // Suppress Mapbox dataset errors even if pattern matching missed them
+      }
+    }
     originalError.apply(console, args); // Show all other errors (including other Mapbox errors)
   };
   
   // Intercept uncaught errors (browser logs these directly, bypassing console.error)
+  var originalOnError = window.onerror;
   window.onerror = function(message, source, lineno, colno, error) {
-    var errorText = message + ' ' + (error ? error.stack : '') + ' ' + source;
-    if(/Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText) && /6\.js|5\.js/.test(source || '')){
+    var errorText = (message || '') + ' ' + (error ? (error.message + ' ' + (error.stack || '')) : '') + ' ' + (source || '');
+    // Check if it's the Mapbox dataset error - be more lenient with source matching
+    var isMapboxError = /Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText);
+    // Source might be full URL or just filename, check both
+    var isFromMapbox = !source || /6\.js|5\.js|mapbox/i.test(source) || (error && error.stack && /6\.js|5\.js|mapbox/i.test(error.stack));
+    if(isMapboxError && (isFromMapbox || !source)){ // If no source, assume it's Mapbox if pattern matches
       return true; // Suppress this specific Mapbox error
+    }
+    // Call original handler if it exists
+    if(originalOnError) {
+      return originalOnError.apply(this, arguments);
     }
     return false; // Let other errors through
   };
@@ -109,10 +127,12 @@
     } else {
       errorText = String(reason);
     }
+    // Check if it's the Mapbox dataset error
     if(/Cannot read properties of null/i.test(errorText) && /dataset/i.test(errorText)){
       event.preventDefault(); // Suppress this specific Mapbox error
+      event.stopPropagation(); // Stop it from bubbling
     }
-  });
+  }, true); // Use capture phase to catch it early
   
   // Confirmation message
   console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
