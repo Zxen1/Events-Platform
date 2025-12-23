@@ -466,22 +466,62 @@
     
     function closeAllEditPanels() {
         if (!container) return;
+        
+        // Find scrollable container (admin panel content)
+        var scrollContainer = container.closest('.admin-panel-content');
+        if (!scrollContainer) scrollContainer = document.querySelector('.admin-panel-content');
+        
+        // Get all closing elements and their heights before closing
+        var closingElements = [];
         container.querySelectorAll('.formbuilder-accordion--editing').forEach(function(el) {
+            var editPanel = el.querySelector('.formbuilder-accordion-editpanel');
+            if (editPanel) {
+                closingElements.push({ element: editPanel, height: editPanel.offsetHeight });
+            }
             el.classList.remove('formbuilder-accordion--editing');
         });
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
+            var editPanel = el.querySelector('.formbuilder-accordion-option-editpanel');
+            if (editPanel) {
+                closingElements.push({ element: editPanel, height: editPanel.offsetHeight });
+            }
             el.classList.remove('formbuilder-accordion-option--editing');
         });
         container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
             el.classList.remove('open');
         });
+        
+        // Compensate scroll for each closing element
+        if (scrollContainer && window.ScrollBufferModule) {
+            closingElements.forEach(function(item) {
+                ScrollBufferModule.compensateScroll(scrollContainer, item.element);
+            });
+        }
     }
     
     function closeAllFieldEditPanels() {
         if (!container) return;
+        
+        // Find scrollable container (admin panel content)
+        var scrollContainer = container.closest('.admin-panel-content');
+        if (!scrollContainer) scrollContainer = document.querySelector('.admin-panel-content');
+        
+        // Get all closing elements and their heights before closing
+        var closingElements = [];
         container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+            var editPanel = el.querySelector('.formbuilder-field-editpanel');
+            if (editPanel) {
+                closingElements.push({ element: editPanel, height: editPanel.offsetHeight });
+            }
             el.classList.remove('formbuilder-field-wrapper--editing');
         });
+        
+        // Compensate scroll for each closing element
+        if (scrollContainer && window.ScrollBufferModule) {
+            closingElements.forEach(function(item) {
+                ScrollBufferModule.compensateScroll(scrollContainer, item.element);
+            });
+        }
     }
     
     function closeAllMenus() {

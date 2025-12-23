@@ -662,10 +662,43 @@ var ScrollBufferModule = {
         var bufferData = {
             container: container,
             header: header,
-            body: body
+            body: body,
+            topBuffer: topBuffer,
+            bottomBuffer: bottomBuffer
         };
         
         this.buffers.set(container, bufferData);
+    },
+    
+    /**
+     * Compensate scroll when content above viewport is removed
+     * Call this BEFORE closing a drawer to prevent buttons from jumping
+     * @param {HTMLElement} container - Scrollable container
+     * @param {HTMLElement} closingElement - Element that's about to close/be removed
+     */
+    compensateScroll: function(container, closingElement) {
+        if (!container || !closingElement) return;
+        
+        // Get current scroll position
+        var scrollTop = container.scrollTop;
+        
+        // Get position of closing element relative to scrollable container
+        var elementRect = closingElement.getBoundingClientRect();
+        var containerRect = container.getBoundingClientRect();
+        
+        // Calculate element's position relative to container's scroll position
+        var elementTopRelativeToScroll = scrollTop + (elementRect.top - containerRect.top);
+        var elementHeight = closingElement.offsetHeight;
+        var elementBottomRelativeToScroll = elementTopRelativeToScroll + elementHeight;
+        
+        // If any part of element is above current scroll position, compensate
+        if (elementBottomRelativeToScroll < scrollTop) {
+            // Element is fully above viewport - adjust scroll by its full height
+            container.scrollTop = scrollTop - elementHeight;
+        } else if (elementTopRelativeToScroll < scrollTop) {
+            // Element is partially above viewport - adjust by the amount above
+            container.scrollTop = scrollTop - (scrollTop - elementTopRelativeToScroll);
+        }
     },
     
     /**
