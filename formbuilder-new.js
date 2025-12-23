@@ -464,64 +464,79 @@
         }
     }
     
-    function closeAllEditPanels() {
+    function closeAllEditPanels(clickedElement) {
         if (!container) return;
         
-        // Find scrollable container (admin panel content)
-        var scrollContainer = container.closest('.admin-panel-content');
-        if (!scrollContainer) scrollContainer = document.querySelector('.admin-panel-content');
+        // Get clicked element position if provided
+        var clickedRect = null;
+        if (clickedElement) {
+            clickedRect = clickedElement.getBoundingClientRect();
+        }
         
-        // Get all closing elements and their heights before closing
-        var closingElements = [];
+        // Close accordion edit panels with downward collapse if above clicked element
         container.querySelectorAll('.formbuilder-accordion--editing').forEach(function(el) {
             var editPanel = el.querySelector('.formbuilder-accordion-editpanel');
-            if (editPanel) {
-                closingElements.push({ element: editPanel, height: editPanel.offsetHeight });
+            if (editPanel && clickedRect) {
+                var panelRect = editPanel.getBoundingClientRect();
+                // If drawer is above clicked element, make it collapse downward
+                if (panelRect.bottom < clickedRect.top) {
+                    editPanel.classList.add('formbuilder-editpanel-closing-downward');
+                    // Remove class after animation completes
+                    setTimeout(function() {
+                        editPanel.classList.remove('formbuilder-editpanel-closing-downward');
+                    }, 300);
+                }
             }
             el.classList.remove('formbuilder-accordion--editing');
         });
+        
+        // Close option edit panels with downward collapse if above clicked element
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
             var editPanel = el.querySelector('.formbuilder-accordion-option-editpanel');
-            if (editPanel) {
-                closingElements.push({ element: editPanel, height: editPanel.offsetHeight });
+            if (editPanel && clickedRect) {
+                var panelRect = editPanel.getBoundingClientRect();
+                // If drawer is above clicked element, make it collapse downward
+                if (panelRect.bottom < clickedRect.top) {
+                    editPanel.classList.add('formbuilder-editpanel-closing-downward');
+                    // Remove class after animation completes
+                    setTimeout(function() {
+                        editPanel.classList.remove('formbuilder-editpanel-closing-downward');
+                    }, 300);
+                }
             }
             el.classList.remove('formbuilder-accordion-option--editing');
         });
+        
         container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
             el.classList.remove('open');
         });
-        
-        // Compensate scroll for each closing element
-        if (scrollContainer && window.ScrollBufferModule) {
-            closingElements.forEach(function(item) {
-                ScrollBufferModule.compensateScroll(scrollContainer, item.element);
-            });
-        }
     }
     
-    function closeAllFieldEditPanels() {
+    function closeAllFieldEditPanels(clickedElement) {
         if (!container) return;
         
-        // Find scrollable container (admin panel content)
-        var scrollContainer = container.closest('.admin-panel-content');
-        if (!scrollContainer) scrollContainer = document.querySelector('.admin-panel-content');
+        // Get clicked element position if provided
+        var clickedRect = null;
+        if (clickedElement) {
+            clickedRect = clickedElement.getBoundingClientRect();
+        }
         
-        // Get all closing elements and their heights before closing
-        var closingElements = [];
+        // Close field edit panels with downward collapse if above clicked element
         container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
             var editPanel = el.querySelector('.formbuilder-field-editpanel');
-            if (editPanel) {
-                closingElements.push({ element: editPanel, height: editPanel.offsetHeight });
+            if (editPanel && clickedRect) {
+                var panelRect = editPanel.getBoundingClientRect();
+                // If drawer is above clicked element, make it collapse downward
+                if (panelRect.bottom < clickedRect.top) {
+                    editPanel.classList.add('formbuilder-editpanel-closing-downward');
+                    // Remove class after animation completes
+                    setTimeout(function() {
+                        editPanel.classList.remove('formbuilder-editpanel-closing-downward');
+                    }, 300);
+                }
             }
             el.classList.remove('formbuilder-field-wrapper--editing');
         });
-        
-        // Compensate scroll for each closing element
-        if (scrollContainer && window.ScrollBufferModule) {
-            closingElements.forEach(function(item) {
-                ScrollBufferModule.compensateScroll(scrollContainer, item.element);
-            });
-        }
     }
     
     function closeAllMenus() {
@@ -574,7 +589,7 @@
                 !e.target.closest('.formbuilder-accordion-option-editarea') &&
                 !e.target.closest('.formbuilder-accordion-header') &&
                 !e.target.closest('.formbuilder-accordion-option-header')) {
-                closeAllEditPanels();
+                closeAllEditPanels(e.target);
             }
         });
         
@@ -635,7 +650,7 @@
             // Don't close if clicking on save/discard buttons or calculator
             if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-field-wrapper')) {
-                closeAllFieldEditPanels();
+                closeAllFieldEditPanels(e.target);
             }
         });
     }
@@ -888,7 +903,7 @@
         headerEditArea.addEventListener('click', function(e) {
             e.stopPropagation();
             var isOpen = accordion.classList.contains('formbuilder-accordion--editing');
-            closeAllEditPanels();
+            closeAllEditPanels(e.target);
             if (!isOpen) {
                 accordion.classList.add('formbuilder-accordion--editing');
             }
@@ -898,7 +913,7 @@
         header.addEventListener('click', function(e) {
             if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
             if (!accordion.classList.contains('formbuilder-accordion--editing')) {
-                closeAllEditPanels();
+                closeAllEditPanels(e.target);
             }
             accordion.classList.toggle('formbuilder-accordion--open');
         });
@@ -2197,9 +2212,7 @@
             fieldEdit.addEventListener('click', function(ev) {
                 ev.stopPropagation();
                 var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
-                container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                    el.classList.remove('formbuilder-field-wrapper--editing');
-                });
+                closeAllFieldEditPanels(ev.target);
                 if (!isOpen) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
                 }
@@ -2391,7 +2404,7 @@
         optEditArea.addEventListener('click', function(e) {
             e.stopPropagation();
             var isOpen = option.classList.contains('formbuilder-accordion-option--editing');
-            closeAllEditPanels();
+            closeAllEditPanels(e.target);
             if (!isOpen) {
                 option.classList.add('formbuilder-accordion-option--editing');
             }
@@ -2409,7 +2422,7 @@
         optHeader.addEventListener('click', function(e) {
             if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
             if (!option.classList.contains('formbuilder-accordion-option--editing')) {
-                closeAllEditPanels();
+                closeAllEditPanels(e.target);
             }
             option.classList.toggle('formbuilder-accordion-option--open');
         });
