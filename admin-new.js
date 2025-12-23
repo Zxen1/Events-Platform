@@ -44,17 +44,21 @@ const AdminModule = (function() {
        -------------------------------------------------------------------------- */
     
     function getAdminScrollContainer() {
+        // Admin panel has TWO scrollable candidates (content and body). Use whichever is actually scrolling.
         if (panel) {
             var body = panel.querySelector('.admin-panel-body');
-            if (body) return body;
+            var content = panel.querySelector('.admin-panel-content');
+            if (body && (body.scrollTop > 0 || (body.scrollHeight - body.clientHeight) > 1)) return body;
+            if (content && (content.scrollTop > 0 || (content.scrollHeight - content.clientHeight) > 1)) return content;
+            return body || content || document.scrollingElement || document.documentElement;
         }
-        return document.querySelector('.admin-panel-body') || document.scrollingElement || document.documentElement;
+        return document.querySelector('.admin-panel-body') || document.querySelector('.admin-panel-content') || document.scrollingElement || document.documentElement;
     }
     
-    function ensureAnchorGap(hostEl, which) {
-        if (!hostEl) return null;
+    function ensureAnchorGap(scrollerEl, which) {
+        if (!scrollerEl) return null;
         var selector = which === 'bottom' ? '[data-admin-anchor-gap="bottom"]' : '[data-admin-anchor-gap="top"]';
-        var el = hostEl.querySelector(selector);
+        var el = scrollerEl.querySelector(selector);
         if (!el) {
             el = document.createElement('div');
             el.setAttribute('data-admin-anchor-gap', which === 'bottom' ? 'bottom' : 'top');
@@ -64,118 +68,110 @@ const AdminModule = (function() {
             el.style.pointerEvents = 'none';
         }
         if (which === 'bottom') {
-            hostEl.appendChild(el);
+            scrollerEl.appendChild(el);
         } else {
-            hostEl.insertBefore(el, hostEl.firstChild);
+            scrollerEl.insertBefore(el, scrollerEl.firstChild);
         }
         return el;
     }
     
-    function getGapPx(hostEl, which) {
-        var el = ensureAnchorGap(hostEl, which);
+    function getGapPx(scrollerEl, which) {
+        var el = ensureAnchorGap(scrollerEl, which);
         return el ? (el.offsetHeight || 0) : 0;
     }
     
-    function setGapPx(hostEl, which, px) {
-        var el = ensureAnchorGap(hostEl, which);
+    function setGapPx(scrollerEl, which, px) {
+        var el = ensureAnchorGap(scrollerEl, which);
         if (!el) return;
         var next = Math.max(0, Math.round(px || 0));
         el.style.height = next ? (next + 'px') : '0px';
     }
     
-    function bindGapConsumerOnce(hostEl) {
-        if (!hostEl) return;
-        if (hostEl.dataset && hostEl.dataset.adminAnchorConsumerBound === 'true') return;
-        if (hostEl.dataset) hostEl.dataset.adminAnchorConsumerBound = 'true';
+    function bindGapConsumerOnce(scrollerEl) {
+        if (!scrollerEl) return;
+        if (scrollerEl.dataset && scrollerEl.dataset.adminAnchorConsumerBound === 'true') return;
+        if (scrollerEl.dataset) scrollerEl.dataset.adminAnchorConsumerBound = 'true';
         
-        var sc = getAdminScrollContainer();
-        if (!sc || !sc.addEventListener) return;
+        if (!scrollerEl.addEventListener) return;
         
-        sc.addEventListener('scroll', function() {
-            var topGap = getGapPx(hostEl, 'top');
-            var bottomGap = getGapPx(hostEl, 'bottom');
+        scrollerEl.addEventListener('scroll', function() {
+            var topGap = getGapPx(scrollerEl, 'top');
+            var bottomGap = getGapPx(scrollerEl, 'bottom');
             if (!topGap && !bottomGap) return;
             
             // Consume top gap if user scrolls up into it
-            if (topGap && sc.scrollTop < topGap) {
-                var reduceBy = topGap - sc.scrollTop;
-                setGapPx(hostEl, 'top', topGap - reduceBy);
-                sc.scrollTop = 0;
+            if (topGap && scrollerEl.scrollTop < topGap) {
+                var reduceBy = topGap - scrollerEl.scrollTop;
+                setGapPx(scrollerEl, 'top', topGap - reduceBy);
+                scrollerEl.scrollTop = 0;
             }
             
             // Consume bottom gap if user scrolls down into it
             if (bottomGap) {
-                var maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
-                var distanceToBottom = maxScrollTop - sc.scrollTop;
+                var maxScrollTop = Math.max(0, scrollerEl.scrollHeight - scrollerEl.clientHeight);
+                var distanceToBottom = maxScrollTop - scrollerEl.scrollTop;
                 if (distanceToBottom < bottomGap) {
                     var reduceBottomBy = bottomGap - distanceToBottom;
-                    setGapPx(hostEl, 'bottom', bottomGap - reduceBottomBy);
-                    sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
+                    setGapPx(scrollerEl, 'bottom', bottomGap - reduceBottomBy);
+                    scrollerEl.scrollTop = Math.max(0, scrollerEl.scrollTop - reduceBottomBy);
                 }
             }
         }, { passive: true });
     }
     
-    function runWithAdminAnchor(hostEl, anchorEl, fn) {
+    function runWithAdminAnchor(anchorEl, fn) {
         var sc = getAdminScrollContainer();
         if (!sc || !anchorEl || typeof fn !== 'function') {
             fn();
             return;
         }
-        if (!hostEl) {
-            fn();
-            return;
-        }
         
-        bindGapConsumerOnce(hostEl);
-        ensureAnchorGap(hostEl, 'top');
-        ensureAnchorGap(hostEl, 'bottom');
+        bindGapConsumerOnce(sc);
+        ensureAnchorGap(sc, 'top');
+        ensureAnchorGap(sc, 'bottom');
         
         // Measure BEFORE change
         var scRect = sc.getBoundingClientRect();
         var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
         var oldScrollTop = sc.scrollTop;
-        var oldScrollHeight = sc.scrollHeight;
         
         fn();
         
-        // Measure/adjust IMMEDIATELY after change (no 1-frame jump)
-        if (!anchorEl.isConnected) return;
-        var scNow = getAdminScrollContainer();
-        if (!scNow) return;
-        
-        // Bottom clamp protection: if collapse shrinks max scroll, add bottom slack and restore scrollTop.
-        var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-        if (oldScrollTop > maxAfter) {
-            setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + (oldScrollTop - maxAfter));
-        } else {
-            // If content grew a lot, we don't need to add slack, but keeping scrollTop stable is still desirable
-            // so we anchor based on oldScrollTop regardless.
-        }
-        
-        // Restore scrollTop to pre-change (prevents clamp yank)
-        scNow.scrollTop = oldScrollTop;
-        
-        // Compute anchor delta and compensate
-        var scNowRect = scNow.getBoundingClientRect();
-        var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-        var delta = newTop - oldTop;
-        if (!delta) return;
-        
-        var currentScrollTop = scNow.scrollTop;
-        
-        if (currentScrollTop + delta < 0) {
-            var topSlack = -(currentScrollTop + delta);
-            setGapPx(hostEl, 'top', getGapPx(hostEl, 'top') + topSlack);
-            delta += topSlack;
-        }
-        
-        var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-        if (currentScrollTop + delta > maxNow) {
-            setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + ((currentScrollTop + delta) - maxNow));
-        }
-        
-        scNow.scrollTop = currentScrollTop + delta;
+        // Use rAF like formbuilder (lets layout settle), then apply correction.
+        requestAnimationFrame(function() {
+            if (!anchorEl.isConnected) return;
+            var scNow = getAdminScrollContainer();
+            if (!scNow) return;
+            
+            // Bottom clamp protection: if collapse shrinks max scroll, add bottom slack and restore scrollTop.
+            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (oldScrollTop > maxAfter) {
+                setGapPx(scNow, 'bottom', getGapPx(scNow, 'bottom') + (oldScrollTop - maxAfter));
+                void scNow.scrollHeight;
+            }
+            scNow.scrollTop = oldScrollTop;
+            
+            var scNowRect = scNow.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+            
+            var currentScrollTop = scNow.scrollTop;
+            
+            if (currentScrollTop + delta < 0) {
+                var topSlack = -(currentScrollTop + delta);
+                setGapPx(scNow, 'top', getGapPx(scNow, 'top') + topSlack);
+                delta += topSlack;
+            }
+            
+            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (currentScrollTop + delta > maxNow) {
+                setGapPx(scNow, 'bottom', getGapPx(scNow, 'bottom') + ((currentScrollTop + delta) - maxNow));
+                void scNow.scrollHeight;
+            }
+            
+            scNow.scrollTop = currentScrollTop + delta;
+        });
     }
 
     /* --------------------------------------------------------------------------
@@ -2710,7 +2706,7 @@ const AdminModule = (function() {
             var header = imageManagerAccordion.querySelector('.admin-settings-imagemanager-accordion-header');
             if (header) {
                 header.addEventListener('click', function() {
-                    runWithAdminAnchor(getAdminScrollContainer(), header, function() {
+                    runWithAdminAnchor(header, function() {
                         imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
                     });
                 });
@@ -3079,7 +3075,7 @@ const AdminModule = (function() {
 
             // Header click - toggle edit panel
             header.addEventListener('click', function(e) {
-                runWithAdminAnchor(getAdminScrollContainer(), header, function() {
+                runWithAdminAnchor(header, function() {
                     var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
                     closeAllCheckoutEditPanels(accordion);
                     if (!isEditing) {
