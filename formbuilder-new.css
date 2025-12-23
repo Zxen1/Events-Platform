@@ -11,6 +11,13 @@
   width: 100%;
 }
 
+/* Scroll gap spacer (used to keep clicked headers stationary when content above collapses) */
+.formbuilder-scroll-gap {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+
 /* Category Accordion */
 .formbuilder-accordion {
   width: 100%;

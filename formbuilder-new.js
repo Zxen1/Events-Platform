@@ -42,11 +42,115 @@
     var checkoutOptions = []; // Module-local storage
     var siteCurrency = ''; // Module-local storage
     
+    // Scroll anchoring (keeps clicked accordion headers stationary when panels above collapse)
+    var scrollContainer = null;
+    var scrollGapEl = null;
+    var isAdjustingScroll = false;
+    
     // Reference data (not for change tracking - just data needed to build the UI)
     var loadedFieldsets = [];
     var loadedCurrencies = [];
     var loadedCategoryIconPaths = {};
     var loadedSubcategoryIconPaths = {};
+    
+    function findScrollContainer() {
+        if (!container) return null;
+        if (scrollContainer && scrollContainer.isConnected) return scrollContainer;
+        
+        // Admin panel body is the intended scroll container in the new site
+        scrollContainer = container.closest('.admin-panel-body') || container.closest('.admin-panel-content');
+        if (!scrollContainer) {
+            scrollContainer = document.scrollingElement || document.documentElement;
+        }
+        return scrollContainer;
+    }
+    
+    function ensureScrollGap() {
+        if (!container) return null;
+        if (scrollGapEl && scrollGapEl.isConnected) return scrollGapEl;
+        
+        scrollGapEl = container.querySelector('.formbuilder-scroll-gap');
+        if (!scrollGapEl) {
+            scrollGapEl = document.createElement('div');
+            scrollGapEl.className = 'formbuilder-scroll-gap';
+            scrollGapEl.setAttribute('aria-hidden', 'true');
+            container.insertBefore(scrollGapEl, container.firstChild);
+        }
+        return scrollGapEl;
+    }
+    
+    function getGapHeight() {
+        var el = ensureScrollGap();
+        if (!el) return 0;
+        return el.offsetHeight || 0;
+    }
+    
+    function setGapHeight(px) {
+        var el = ensureScrollGap();
+        if (!el) return;
+        var next = Math.max(0, Math.round(px || 0));
+        el.style.height = next ? (next + 'px') : '0px';
+    }
+    
+    function maybeConsumeGapOnScroll() {
+        if (isAdjustingScroll) return;
+        
+        var sc = findScrollContainer();
+        if (!sc) return;
+        
+        var gap = getGapHeight();
+        if (!gap) return;
+        
+        // If the user scrolls up into the gap, remove the gap so they never see blank space.
+        if (sc.scrollTop < gap) {
+            var reduceBy = gap - sc.scrollTop;
+            isAdjustingScroll = true;
+            setGapHeight(gap - reduceBy);
+            sc.scrollTop = 0;
+            isAdjustingScroll = false;
+        }
+    }
+    
+    function runWithScrollAnchor(anchorEl, fn) {
+        var sc = findScrollContainer();
+        if (!sc || !anchorEl || typeof fn !== 'function') {
+            if (typeof fn === 'function') fn();
+            return;
+        }
+        
+        ensureScrollGap();
+        
+        var scRect = sc.getBoundingClientRect();
+        var anchorRect = anchorEl.getBoundingClientRect();
+        var oldTop = anchorRect.top - scRect.top;
+        
+        fn();
+        
+        requestAnimationFrame(function() {
+            if (!anchorEl.isConnected) return;
+            var scNow = findScrollContainer();
+            if (!scNow) return;
+            
+            var scNowRect = scNow.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+            
+            var currentScrollTop = scNow.scrollTop;
+            var slack = 0;
+            
+            // If we'd need to scroll above 0 to keep the anchor stationary, create gap slack instead.
+            if (currentScrollTop + delta < 0) {
+                slack = -(currentScrollTop + delta);
+                setGapHeight(getGapHeight() + slack);
+                delta = delta + slack;
+            }
+            
+            isAdjustingScroll = true;
+            scNow.scrollTop = currentScrollTop + delta;
+            isAdjustingScroll = false;
+        });
+    }
     
     // Use central icon registry from AdminModule
     function getIcon(name) {
@@ -847,20 +951,24 @@
         // Header edit area click
         headerEditArea.addEventListener('click', function(e) {
             e.stopPropagation();
-            var isOpen = accordion.classList.contains('formbuilder-accordion--editing');
-            closeAllEditPanels();
-            if (!isOpen) {
-                accordion.classList.add('formbuilder-accordion--editing');
-            }
+            runWithScrollAnchor(header, function() {
+                var isOpen = accordion.classList.contains('formbuilder-accordion--editing');
+                closeAllEditPanels();
+                if (!isOpen) {
+                    accordion.classList.add('formbuilder-accordion--editing');
+                }
+            });
         });
         
         // Header click (except edit area) expands/collapses
         header.addEventListener('click', function(e) {
             if (e.target.closest('.formbuilder-accordion-header-editarea')) return;
-            if (!accordion.classList.contains('formbuilder-accordion--editing')) {
-                closeAllEditPanels();
-            }
-            accordion.classList.toggle('formbuilder-accordion--open');
+            runWithScrollAnchor(header, function() {
+                if (!accordion.classList.contains('formbuilder-accordion--editing')) {
+                    closeAllEditPanels();
+                }
+                accordion.classList.toggle('formbuilder-accordion--open');
+            });
         });
         
         return accordion;
@@ -2350,11 +2458,13 @@
         // Sub edit area click
         optEditArea.addEventListener('click', function(e) {
             e.stopPropagation();
-            var isOpen = option.classList.contains('formbuilder-accordion-option--editing');
-            closeAllEditPanels();
-            if (!isOpen) {
-                option.classList.add('formbuilder-accordion-option--editing');
-            }
+            runWithScrollAnchor(optHeader, function() {
+                var isOpen = option.classList.contains('formbuilder-accordion-option--editing');
+                closeAllEditPanels();
+                if (!isOpen) {
+                    option.classList.add('formbuilder-accordion-option--editing');
+                }
+            });
         });
         
         // Prevent edit panel from blocking clicks on interactive elements
@@ -2368,10 +2478,12 @@
         // Sub header click (except edit area)
         optHeader.addEventListener('click', function(e) {
             if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
-            if (!option.classList.contains('formbuilder-accordion-option--editing')) {
-                closeAllEditPanels();
-            }
-            option.classList.toggle('formbuilder-accordion-option--open');
+            runWithScrollAnchor(optHeader, function() {
+                if (!option.classList.contains('formbuilder-accordion-option--editing')) {
+                    closeAllEditPanels();
+                }
+                option.classList.toggle('formbuilder-accordion-option--open');
+            });
         });
         
         return option;
@@ -2384,6 +2496,13 @@
         
         container = document.getElementById('admin-formbuilder');
         if (!container) return;
+        
+        // Ensure gap exists early and bind scroll handler (kept lightweight; only runs for admin panel scroll events)
+        ensureScrollGap();
+        var sc = findScrollContainer();
+        if (sc) {
+            sc.addEventListener('scroll', maybeConsumeGapOnScroll, { passive: true });
+        }
         
         bindDocumentListeners();
         loadFormData();
