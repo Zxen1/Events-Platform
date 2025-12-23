@@ -56,14 +56,21 @@
     
     function findScrollContainer() {
         if (!container) return null;
-        if (scrollContainer && scrollContainer.isConnected) return scrollContainer;
         
-        // Admin panel body is the intended scroll container in the new site
-        scrollContainer = container.closest('.admin-panel-body') || container.closest('.admin-panel-content');
-        if (!scrollContainer) {
-            scrollContainer = document.scrollingElement || document.documentElement;
-        }
-        return scrollContainer;
+        // IMPORTANT: do NOT cache this. Admin panels can scroll either the panel body OR panel content,
+        // and the active scroller can change depending on layout, screen size, and content.
+        var body = container.closest('.admin-panel-body');
+        var content = container.closest('.admin-panel-content');
+        
+        // Prefer the element that is actually being scrolled right now.
+        if (body && body.scrollTop > 0) return body;
+        if (content && content.scrollTop > 0) return content;
+        
+        // Otherwise prefer the element that can scroll (has overflow content).
+        if (body && (body.scrollHeight - body.clientHeight) > 1) return body;
+        if (content && (content.scrollHeight - content.clientHeight) > 1) return content;
+        
+        return body || content || document.scrollingElement || document.documentElement;
     }
     
     function ensureScrollGap() {
@@ -2594,9 +2601,16 @@
         // Ensure gap exists early and bind scroll handler (kept lightweight; only runs for admin panel scroll events)
         ensureScrollGap();
         ensureScrollGapBottom();
-        var sc = findScrollContainer();
-        if (sc) {
-            sc.addEventListener('scroll', maybeConsumeGapOnScroll, { passive: true });
+        // Bind to BOTH possible admin scroll containers so gap consumption always works.
+        var body = container.closest('.admin-panel-body');
+        var content = container.closest('.admin-panel-content');
+        if (body && (!body.dataset || body.dataset.formbuilderGapScrollBound !== 'true')) {
+            if (body.dataset) body.dataset.formbuilderGapScrollBound = 'true';
+            body.addEventListener('scroll', maybeConsumeGapOnScroll, { passive: true });
+        }
+        if (content && content !== body && (!content.dataset || content.dataset.formbuilderGapScrollBound !== 'true')) {
+            if (content.dataset) content.dataset.formbuilderGapScrollBound = 'true';
+            content.addEventListener('scroll', maybeConsumeGapOnScroll, { passive: true });
         }
         
         bindDocumentListeners();
