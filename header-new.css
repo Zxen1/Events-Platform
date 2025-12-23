@@ -132,7 +132,7 @@
 }
 
 .header-modeswitch-button:hover {
-  background: rgba(255,255,255,0.1);
+  background: #3b82f6;
 }
 
 /* Active mode - blue background, white text */

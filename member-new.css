@@ -417,7 +417,7 @@
 
 .member-lighting-button:hover,
 .member-style-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #3b82f6;
 }
 
 .member-lighting-button--active,
@@ -521,8 +521,8 @@
 }
 
 .member-button-auth:hover {
-  background: var(--btn-hover);
-  border-color: var(--btn-hover);
+  background: #3b82f6;
+  border-color: #3b82f6;
   color: var(--button-hover-text);
 }
 
@@ -1101,7 +1101,8 @@
 }
 
 .member-formpicker-menu-button:hover {
-  border-color: rgba(255,255,255,0.3);
+  border-color: #3b82f6;
+  background: #3b82f6;
 }
 
 .member-formpicker-menu.open .member-formpicker-menu-button {
