@@ -631,13 +631,6 @@
     }
     
     function renderForm(formData) {
-        // Initialize scroll buffer (prevents content jumping when accordions open/close)
-        if (container && window.ScrollBufferModule) {
-            var scrollableParent = container.closest('.admin-panel-content');
-            if (scrollableParent) {
-                ScrollBufferModule.init(scrollableParent);
-            }
-        }
         if (!container) return;
         container.innerHTML = '';
         
