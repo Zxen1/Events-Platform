@@ -19,6 +19,7 @@
   'use strict';
   
   const originalWarn = console.warn;
+  const originalError = console.error;
   
   // ========================================
   // SUPPRESSION PATTERNS - Edit as needed
@@ -33,16 +34,14 @@
     
     // Mapbox GL JS - Missing marker composites (JS warning, expected during load)
     /Image "marker-label-composite.*could not be loaded/i,
-    
-    // NOTE: Browser engine warnings like [Violation], [Intervention], [DOM]
-    // CANNOT be suppressed here. They are not JavaScript console.warn() calls.
-    
-    // Add your own JavaScript warning patterns below:
-    // /pattern to match/i,
   ];
   
-  // NOTE: We do NOT suppress console.error() - errors are always critical
-  // const suppressedErrors = [];
+  // Mapbox error patterns - suppress only specific known harmless Mapbox errors
+  const suppressedErrors = [
+    // Mapbox internal error: "Cannot read properties of null (reading 'dataset')"
+    // This is a known harmless Mapbox internal error from their minified code
+    /Cannot read properties of null.*reading 'dataset'/i,
+  ];
   
   // ========================================
   // FILTER LOGIC - Do not edit below
@@ -59,12 +58,18 @@
     }
   };
   
-  // DO NOT FILTER ERRORS - They are always critical
-  // console.error remains unchanged
+  // Suppress only specific known harmless Mapbox errors
+  console.error = function(...args) {
+    // Check if it matches the specific harmless Mapbox error pattern
+    if(shouldSuppress(suppressedErrors, args)){
+      return; // Suppress only this specific error
+    }
+    originalError.apply(console, args); // Show all other errors (including other Mapbox errors)
+  };
   
   // Confirmation message
   console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
-    'Suppressing', suppressedWarnings.length, 'warning patterns. Errors are never suppressed.');
+    'Suppressing', suppressedWarnings.length, 'warning patterns and', suppressedErrors.length, 'specific Mapbox error pattern.');
   
 })();
 
