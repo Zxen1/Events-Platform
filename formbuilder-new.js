@@ -1620,7 +1620,6 @@
         function createFieldElement(fieldData, isRequired, fieldsetDef) {
             var fsId = fieldData.id || fieldData.fieldsetKey || fieldData.key || fieldData.name;
             var fieldName = fieldData.name || fieldData.key || 'Unnamed';
-            var isEditable = fieldsetDef && fieldsetDef.formbuilder_editable === true;
             
             var fieldWrapper = document.createElement('div');
             fieldWrapper.className = 'formbuilder-field-wrapper';
@@ -1809,17 +1808,45 @@
             switchRow.appendChild(autofillRepeatLabel);
             fieldEditPanel.appendChild(switchRow);
             
-            // Check field type for amenities menu (needs to be outside isEditable check)
+            // Check field type
             var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.fieldset_key || fieldsetDef.key || '';
             var needsAmenities = fieldType === 'amenities';
+            var needsOptions = fieldType === 'dropdown' || fieldType === 'radio' || fieldType === 'select';
             
+            // Declare variables that will be used in checkModifiedState
+            var selectedAmenities = fieldData.selectedAmenities || [];
+            var optionsContainer = null;
+            var nameInput, placeholderInput, tooltipInput, modifyButton;
+            var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name || '') : '';
+            
+            // Track modification state (must be defined before it's called)
+            function checkModifiedState() {
+                var hasNameOverride = nameInput && nameInput.value !== '' && nameInput.value !== defaultName;
+                var hasPlaceholderOverride = placeholderInput && placeholderInput.value !== '';
+                var hasTooltipOverride = tooltipInput && tooltipInput.value !== '';
+                var hasOptions = needsOptions && optionsContainer && optionsContainer.querySelectorAll('.formbuilder-field-option-input').length > 0 && Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).some(function(inp) { return inp.value.trim() !== ''; });
+                var hasAmenities = needsAmenities && selectedAmenities && selectedAmenities.length > 0;
+                
+                var isModified = hasNameOverride || hasPlaceholderOverride || hasTooltipOverride || hasOptions || hasAmenities;
+                
+                if (modifyButton) {
+                    if (isModified) {
+                        modifyButton.classList.add('formbuilder-field-modify-button--modified');
+                        fieldWrapper.classList.add('formbuilder-field-wrapper--modified');
+                    } else {
+                        modifyButton.classList.remove('formbuilder-field-modify-button--modified');
+                        fieldWrapper.classList.remove('formbuilder-field-wrapper--modified');
+                    }
+                }
+            }
+            
+            // Amenities menu (always visible)
             if (needsAmenities) {
                 var amenitiesLabel = document.createElement('label');
                 amenitiesLabel.className = 'formbuilder-field-label';
                 amenitiesLabel.textContent = 'Amenities';
                 fieldEditPanel.appendChild(amenitiesLabel);
                 
-                var selectedAmenities = fieldData.selectedAmenities;
                 if (!selectedAmenities) {
                     selectedAmenities = [];
                 }
@@ -1828,8 +1855,10 @@
                     var amenitiesMenu = AmenitiesMenuComponent.buildMenu({
                         onSelect: function(amenities) {
                             fieldData.selectedAmenities = amenities;
+                            selectedAmenities = amenities;
                             // Store in data attribute for capture
                             fieldWrapper.dataset.selectedAmenities = JSON.stringify(amenities);
+                            checkModifiedState();
                             notifyChange();
                         },
                         selectedAmenities: selectedAmenities
@@ -1842,100 +1871,139 @@
                 }
             }
             
-            if (isEditable) {
-                var nameLabel = document.createElement('label');
-                nameLabel.className = 'formbuilder-field-label';
-                nameLabel.textContent = 'Name';
-                var nameInput = document.createElement('input');
-                nameInput.type = 'text';
-                nameInput.className = 'formbuilder-field-input';
-                nameInput.placeholder = 'Field name';
-                nameInput.value = fieldData.name || '';
-                nameInput.oninput = function() {
-                    fieldNameSpan.textContent = nameInput.value || fieldsetDef.name || 'Unnamed';
-                };
-                fieldEditPanel.appendChild(nameLabel);
-                fieldEditPanel.appendChild(nameInput);
+            // Options editor (always visible for dropdown/radio)
+            if (needsOptions) {
+                var optionsLabel = document.createElement('label');
+                optionsLabel.className = 'formbuilder-field-label';
+                optionsLabel.textContent = 'Options';
+                fieldEditPanel.appendChild(optionsLabel);
                 
-                var needsOptions = fieldType === 'dropdown' || fieldType === 'radio' || fieldType === 'select';
+                optionsContainer = document.createElement('div');
+                optionsContainer.className = 'formbuilder-field-options';
                 
-                if (needsOptions) {
-                    var optionsLabel = document.createElement('label');
-                    optionsLabel.className = 'formbuilder-field-label';
-                    optionsLabel.textContent = 'Options';
-                    fieldEditPanel.appendChild(optionsLabel);
+                function createOptionRow(value) {
+                    var row = document.createElement('div');
+                    row.className = 'formbuilder-field-option-row';
                     
-                    var optionsContainer = document.createElement('div');
-                    optionsContainer.className = 'formbuilder-field-options';
+                    var input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'formbuilder-field-option-input';
+                    input.value = value || '';
+                    input.placeholder = 'Option';
+                    input.addEventListener('input', function() {
+                        checkModifiedState();
+                        notifyChange();
+                    });
                     
-                    function createOptionRow(value) {
-                        var row = document.createElement('div');
-                        row.className = 'formbuilder-field-option-row';
-                        
-                        var input = document.createElement('input');
-                        input.type = 'text';
-                        input.className = 'formbuilder-field-option-input';
-                        input.value = value || '';
-                        input.placeholder = 'Option';
-                        
-                        var addBtn = document.createElement('div');
-                        addBtn.className = 'formbuilder-field-option-add';
-                        addBtn.innerHTML = getIcon('plus');
-                        addBtn.onclick = function() {
-                            var newRow = createOptionRow('');
-                            row.parentNode.insertBefore(newRow, row.nextSibling);
-                        };
-                        
-                        var removeBtn = document.createElement('div');
-                        removeBtn.className = 'formbuilder-field-option-remove';
-                        removeBtn.innerHTML = getIcon('minus');
-                        removeBtn.onclick = function() {
-                            if (optionsContainer.querySelectorAll('.formbuilder-field-option-row').length > 1) {
-                                row.remove();
-                            }
-                        };
-                        
-                        row.appendChild(input);
-                        row.appendChild(addBtn);
-                        row.appendChild(removeBtn);
-                        return row;
-                    }
+                    var addBtn = document.createElement('div');
+                    addBtn.className = 'formbuilder-field-option-add';
+                    addBtn.innerHTML = getIcon('plus');
+                    addBtn.onclick = function() {
+                        var newRow = createOptionRow('');
+                        row.parentNode.insertBefore(newRow, row.nextSibling);
+                        checkModifiedState();
+                        notifyChange();
+                    };
                     
-                    var existingOptions = fieldData.options || fieldData.checkoutOptions || [];
-                    if (Array.isArray(existingOptions) && existingOptions.length > 0) {
-                        existingOptions.forEach(function(o) {
-                            var val = typeof o === 'string' ? o : (o.label || o.name || o.value || '');
-                            optionsContainer.appendChild(createOptionRow(val));
-                        });
-                    } else {
-                        optionsContainer.appendChild(createOptionRow(''));
-                    }
+                    var removeBtn = document.createElement('div');
+                    removeBtn.className = 'formbuilder-field-option-remove';
+                    removeBtn.innerHTML = getIcon('minus');
+                    removeBtn.onclick = function() {
+                        if (optionsContainer.querySelectorAll('.formbuilder-field-option-row').length > 1) {
+                            row.remove();
+                            checkModifiedState();
+                            notifyChange();
+                        }
+                    };
                     
-                    fieldEditPanel.appendChild(optionsContainer);
+                    row.appendChild(input);
+                    row.appendChild(addBtn);
+                    row.appendChild(removeBtn);
+                    return row;
                 }
                 
-                var placeholderLabel = document.createElement('label');
-                placeholderLabel.className = 'formbuilder-field-label';
-                placeholderLabel.textContent = 'Placeholder';
-                var placeholderInput = document.createElement('input');
-                placeholderInput.type = 'text';
-                placeholderInput.className = 'formbuilder-field-input';
-                placeholderInput.placeholder = 'Placeholder text';
-                placeholderInput.value = fieldData.placeholder || '';
-                fieldEditPanel.appendChild(placeholderLabel);
-                fieldEditPanel.appendChild(placeholderInput);
+                var existingOptions = fieldData.options || fieldData.checkoutOptions || [];
+                if (Array.isArray(existingOptions) && existingOptions.length > 0) {
+                    existingOptions.forEach(function(o) {
+                        var val = typeof o === 'string' ? o : (o.label || o.name || o.value || '');
+                        optionsContainer.appendChild(createOptionRow(val));
+                    });
+                } else {
+                    optionsContainer.appendChild(createOptionRow(''));
+                }
                 
-                var tooltipLabel = document.createElement('label');
-                tooltipLabel.className = 'formbuilder-field-label';
-                tooltipLabel.textContent = 'Tooltip';
-                var tooltipInput = document.createElement('input');
-                tooltipInput.type = 'text';
-                tooltipInput.className = 'formbuilder-field-input';
-                tooltipInput.placeholder = 'Tooltip text';
-                tooltipInput.value = fieldData.tooltip || fieldData.fieldset_tooltip || '';
-                fieldEditPanel.appendChild(tooltipLabel);
-                fieldEditPanel.appendChild(tooltipInput);
+                fieldEditPanel.appendChild(optionsContainer);
             }
+            
+            // Modify section (name, placeholder, tooltip - hidden by default)
+            var modifyContainer = document.createElement('div');
+            modifyContainer.className = 'formbuilder-field-modify-container';
+            modifyContainer.style.display = 'none';
+            
+            var nameLabel = document.createElement('label');
+            nameLabel.className = 'formbuilder-field-label';
+            nameLabel.textContent = 'Name';
+            nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'formbuilder-field-input';
+            nameInput.placeholder = 'Field name';
+            nameInput.value = fieldData.name || '';
+            nameInput.addEventListener('input', function() {
+                fieldNameSpan.textContent = nameInput.value || defaultName || 'Unnamed';
+                checkModifiedState();
+                notifyChange();
+            });
+            modifyContainer.appendChild(nameLabel);
+            modifyContainer.appendChild(nameInput);
+            
+            var placeholderLabel = document.createElement('label');
+            placeholderLabel.className = 'formbuilder-field-label';
+            placeholderLabel.textContent = 'Placeholder';
+            placeholderInput = document.createElement('input');
+            placeholderInput.type = 'text';
+            placeholderInput.className = 'formbuilder-field-input';
+            placeholderInput.placeholder = 'Placeholder text';
+            placeholderInput.value = fieldData.placeholder || '';
+            placeholderInput.addEventListener('input', function() {
+                checkModifiedState();
+                notifyChange();
+            });
+            modifyContainer.appendChild(placeholderLabel);
+            modifyContainer.appendChild(placeholderInput);
+            
+            var tooltipLabel = document.createElement('label');
+            tooltipLabel.className = 'formbuilder-field-label';
+            tooltipLabel.textContent = 'Tooltip';
+            tooltipInput = document.createElement('input');
+            tooltipInput.type = 'text';
+            tooltipInput.className = 'formbuilder-field-input';
+            tooltipInput.placeholder = 'Tooltip text';
+            tooltipInput.value = fieldData.tooltip || fieldData.fieldset_tooltip || '';
+            tooltipInput.addEventListener('input', function() {
+                checkModifiedState();
+                notifyChange();
+            });
+            modifyContainer.appendChild(tooltipLabel);
+            modifyContainer.appendChild(tooltipInput);
+            
+            fieldEditPanel.appendChild(modifyContainer);
+            
+            // Modify toggle button
+            modifyButton = document.createElement('button');
+            modifyButton.type = 'button';
+            modifyButton.className = 'formbuilder-field-modify-button';
+            modifyButton.textContent = 'Modify';
+            modifyButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = modifyContainer.style.display !== 'none';
+                modifyContainer.style.display = isOpen ? 'none' : 'block';
+                modifyButton.classList.toggle('formbuilder-field-modify-button--open');
+                notifyChange();
+            });
+            fieldEditPanel.appendChild(modifyButton);
+            
+            // Check initial modified state
+            checkModifiedState();
             
             fieldWrapper.appendChild(field);
             fieldWrapper.appendChild(fieldEditPanel);

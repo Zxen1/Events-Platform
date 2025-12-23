@@ -722,10 +722,8 @@ try {
 
             $fieldsetIds = array_values(array_unique(array_map('intval', $fieldsetIds)));
 
-            // Process editable fieldsets and save to subcategory_edits table
-            // This is completely separate from checkout options
-            $subcategoryEditsToSave = [];
-            $hasEditableColumnInfo = false; // Track if we found fieldset_editable info
+            // Process fieldset customizations and save to subcategories.fieldset_mods JSON
+            $fieldsetModified = [];
             
             if ($hasFieldsForThisSub && !empty($sanitizedFields)) {
                 // Create a map of fieldsetKey to field data for quick lookup
@@ -745,86 +743,61 @@ try {
                     $fieldsetKey = $fieldsetDef['key'] ?? null;
                     if (!$fieldsetKey) continue;
                     
-                    // Only process field types marked as editable in the database
-                    // Track if we found any fieldset with editable info (to prevent accidental deletion)
-                    if (isset($fieldsetDef['fieldset_editable'])) {
-                        $hasEditableColumnInfo = true;
-                    }
-                    $isEditable = isset($fieldsetDef['fieldset_editable']) && $fieldsetDef['fieldset_editable'] === true;
-                    $isAmenities = ($fieldsetKey === 'amenities');
-                    
-                    // Allow amenities fieldsets to save selectedAmenities even if not marked as editable
-                    // (since the amenities menu is always shown in the edit panel)
-                    if (!$isEditable && !$isAmenities) continue;
-                    
                     $fieldData = isset($fieldsByFieldsetKey[$fieldsetKey]) ? $fieldsByFieldsetKey[$fieldsetKey] : null;
                     if (!$fieldData) continue;
                     
-                    $customName = null;
-                    $customOptions = null;
-                    $customPlaceholder = null;
-                    $customTooltip = null;
+                    $fieldsetCustom = [];
+                    $hasCustomizations = false;
                     
-                    // Always save name for editable fieldsets (so defaults are captured and can be customized)
-                    if ($isEditable) {
-                        $customNameValue = $fieldData['name'] ?? '';
-                        if ($customNameValue !== '') {
-                            $customName = $customNameValue;
+                    // Get default name from fieldset definition
+                    $defaultName = $fieldsetDef['fieldset_name'] ?? $fieldsetDef['name'] ?? '';
+                    
+                    // Save name if it differs from default
+                    $customNameValue = $fieldData['name'] ?? '';
+                    if ($customNameValue !== '' && $customNameValue !== $defaultName) {
+                        $fieldsetCustom['name'] = $customNameValue;
+                        $hasCustomizations = true;
+                    }
+                    
+                    // Save options for dropdown/radio
+                    if (isset($fieldData['options']) && is_array($fieldData['options'])) {
+                        $optionsArray = array_values(array_filter($fieldData['options'], function($opt) {
+                            return is_string($opt) && trim($opt) !== '';
+                        }));
+                        if (!empty($optionsArray)) {
+                            $fieldsetCustom['options'] = $optionsArray;
+                            $hasCustomizations = true;
                         }
                     }
                     
-                    // For amenities fieldsets, also save name from fieldData or fieldset definition
-                    // (needed even if not editable, since we're saving selectedAmenities)
-                    if ($isAmenities && $customName === null) {
-                        $customNameValue = $fieldData['name'] ?? '';
-                        if ($customNameValue === '') {
-                            // Fall back to fieldset definition name
-                            $customNameValue = $fieldsetDef['fieldset_name'] ?? $fieldsetDef['name'] ?? '';
-                        }
-                        if ($customNameValue !== '') {
-                            $customName = $customNameValue;
-                        }
-                    }
-                    
-                    // Always save options for editable dropdown/radio types (so defaults are captured)
-                    if ($isEditable && isset($fieldData['options'])) {
-                        $customOptionsArray = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
-                        if (!empty($customOptionsArray)) {
-                            $customOptions = json_encode($customOptionsArray, JSON_UNESCAPED_UNICODE);
-                        }
-                    }
-                    
-                    // Save selectedAmenities for amenities fieldsets (stored in fieldset_options as JSON)
-                    // This works even if amenities fieldset is not marked as editable
-                    if ($isAmenities && isset($fieldData['selectedAmenities'])) {
-                        $selectedAmenitiesArray = is_array($fieldData['selectedAmenities']) ? array_values($fieldData['selectedAmenities']) : [];
+                    // Save selectedAmenities for amenities
+                    if (isset($fieldData['selectedAmenities']) && is_array($fieldData['selectedAmenities'])) {
+                        $selectedAmenitiesArray = array_values(array_filter($fieldData['selectedAmenities'], function($item) {
+                            return (is_string($item) || is_numeric($item)) && trim((string)$item) !== '';
+                        }));
                         if (!empty($selectedAmenitiesArray)) {
-                            $customOptions = json_encode($selectedAmenitiesArray, JSON_UNESCAPED_UNICODE);
+                            $fieldsetCustom['selectedAmenities'] = $selectedAmenitiesArray;
+                            $hasCustomizations = true;
                         }
                     }
                     
-                    // Save custom placeholder if provided (any non-empty value)
-                    $customPlaceholderValue = $fieldData['customPlaceholder'] ?? '';
+                    // Save placeholder if provided
+                    $customPlaceholderValue = $fieldData['customPlaceholder'] ?? $fieldData['placeholder'] ?? '';
                     if (is_string($customPlaceholderValue) && trim($customPlaceholderValue) !== '') {
-                        $customPlaceholder = trim($customPlaceholderValue);
+                        $fieldsetCustom['placeholder'] = trim($customPlaceholderValue);
+                        $hasCustomizations = true;
                     }
                     
-                    // Save custom tooltip if provided (any non-empty value)
-                    $customTooltipValue = $fieldData['customTooltip'] ?? '';
+                    // Save tooltip if provided
+                    $customTooltipValue = $fieldData['customTooltip'] ?? $fieldData['tooltip'] ?? '';
                     if (is_string($customTooltipValue) && trim($customTooltipValue) !== '') {
-                        $customTooltip = trim($customTooltipValue);
+                        $fieldsetCustom['tooltip'] = trim($customTooltipValue);
+                        $hasCustomizations = true;
                     }
                     
-                    // Only save if there's actual custom data
-                    if ($customName !== null || $customOptions !== null || $customPlaceholder !== null || $customTooltip !== null) {
-                        $subcategoryEditsToSave[] = [
-                            'subcategory_key' => $subKey,
-                            'fieldset_key' => $fieldsetKey,
-                            'fieldset_name' => $customName,
-                            'fieldset_options' => $customOptions,
-                            'fieldset_placeholder' => $customPlaceholder,
-                            'fieldset_tooltip' => $customTooltip,
-                        ];
+                    // Only add to JSON if there are customizations
+                    if ($hasCustomizations) {
+                        $fieldsetModified[$fieldsetKey] = $fieldsetCustom;
                     }
                 }
             }
@@ -982,33 +955,15 @@ try {
                     $updateParts[] = 'required = :required';
                     $params[':required'] = $requiredCsv !== null && $requiredCsv !== '' ? $requiredCsv : null;
                 }
-                // Save subcategory_edits to database table (replaces editable_fieldsets JSON)
-                if ($hasFieldsForThisSub && !empty($subcategoryEditsToSave)) {
-                    // Delete existing edits for this subcategory first
-                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_key = :subcategory_key");
-                    $deleteStmt->execute([':subcategory_key' => $subKey]);
+                // Save fieldset_mods JSON to subcategories table
+                if ($hasFieldsForThisSub) {
+                    $fieldsetModsJson = !empty($fieldsetModified) ? json_encode($fieldsetModified, JSON_UNESCAPED_UNICODE) : null;
                     
-                    // Insert new edits
-                    $insertStmt = $pdo->prepare("
-                        INSERT INTO subcategory_edits (subcategory_key, fieldset_key, fieldset_name, fieldset_options, fieldset_placeholder, fieldset_tooltip)
-                        VALUES (:subcategory_key, :fieldset_key, :fieldset_name, :fieldset_options, :fieldset_placeholder, :fieldset_tooltip)
-                    ");
-                    
-                    foreach ($subcategoryEditsToSave as $edit) {
-                        $insertStmt->execute([
-                            ':subcategory_key' => $edit['subcategory_key'],
-                            ':fieldset_key' => $edit['fieldset_key'],
-                            ':fieldset_name' => $edit['fieldset_name'],
-                            ':fieldset_options' => $edit['fieldset_options'],
-                            ':fieldset_placeholder' => $edit['fieldset_placeholder'],
-                            ':fieldset_tooltip' => $edit['fieldset_tooltip'],
-                        ]);
+                    // Update subcategories.fieldset_mods
+                    if (in_array('fieldset_mods', $subcategoryColumns, true)) {
+                        $updateParts[] = 'fieldset_mods = :fieldset_mods';
+                        $params[':fieldset_mods'] = $fieldsetModsJson;
                     }
-                } elseif ($hasFieldsForThisSub && empty($subcategoryEditsToSave) && $hasEditableColumnInfo) {
-                    // If fields were provided but no customizations AND we confirmed editable column exists,
-                    // remove any existing edits. Skip deletion if editable column wasn't detected (safety measure).
-                    $deleteStmt = $pdo->prepare("DELETE FROM subcategory_edits WHERE subcategory_key = :subcategory_key");
-                    $deleteStmt->execute([':subcategory_key' => $subKey]);
                 }
                 // Save checkout_options_id as CSV of checkout option IDs
                 if ($hasFieldsForThisSub && in_array('checkout_options_id', $subcategoryColumns, true)) {

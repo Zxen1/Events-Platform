@@ -384,9 +384,11 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         }
     }
     
-    // Note: editable_fieldsets column is deprecated, now using subcategory_edits table
-    // Always load from subcategory_edits table (regardless of whether old column exists)
-    $hasEditableFieldsets = true;
+    // Load fieldset_mods JSON column from subcategories table
+    $hasFieldsetMods = in_array('fieldset_mods', $columns, true);
+    if ($hasFieldsetMods) {
+        $select[] = 's.`fieldset_mods`';
+    }
     
     $hasCheckoutOptionsId = in_array('checkout_options_id', $columns, true);
     if ($hasCheckoutOptionsId) {
@@ -424,47 +426,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
 
     $stmt = $pdo->query($sql);
-    
-    // Fetch subcategory_edits for all subcategories if needed
-    $subcategoryEditsMap = [];
-    if ($hasEditableFieldsets) {
-        $editsStmt = $pdo->query("
-            SELECT subcategory_key, fieldset_key, fieldset_name, fieldset_options, fieldset_placeholder, fieldset_tooltip
-            FROM subcategory_edits
-        ");
-        while ($editRow = $editsStmt->fetch(PDO::FETCH_ASSOC)) {
-            $subKey = isset($editRow['subcategory_key']) ? trim($editRow['subcategory_key']) : '';
-            $fsKey = isset($editRow['fieldset_key']) ? trim($editRow['fieldset_key']) : '';
-            if ($subKey === '' || $fsKey === '') continue;
-            if (!isset($subcategoryEditsMap[$subKey])) {
-                $subcategoryEditsMap[$subKey] = [];
-            }
-            $editData = [];
-            if (isset($editRow['fieldset_name']) && $editRow['fieldset_name'] !== null && trim($editRow['fieldset_name']) !== '') {
-                $editData['name'] = trim($editRow['fieldset_name']);
-            }
-            if (isset($editRow['fieldset_options']) && $editRow['fieldset_options'] !== null && $editRow['fieldset_options'] !== '') {
-                $decodedOptions = json_decode($editRow['fieldset_options'], true);
-                if (is_array($decodedOptions)) {
-                    // For amenities fieldsets, store as selectedAmenities; for dropdown/radio, store as options
-                    if ($fsKey === 'amenities') {
-                        $editData['selectedAmenities'] = $decodedOptions;
-                    } else {
-                        $editData['options'] = $decodedOptions;
-                    }
-                }
-            }
-            if (isset($editRow['fieldset_placeholder']) && $editRow['fieldset_placeholder'] !== null && trim($editRow['fieldset_placeholder']) !== '') {
-                $editData['placeholder'] = trim($editRow['fieldset_placeholder']);
-            }
-            if (isset($editRow['fieldset_tooltip']) && $editRow['fieldset_tooltip'] !== null && trim($editRow['fieldset_tooltip']) !== '') {
-                $editData['tooltip'] = trim($editRow['fieldset_tooltip']);
-            }
-            if (!empty($editData)) {
-                $subcategoryEditsMap[$subKey][$fsKey] = $editData;
-            }
-        }
-    }
 
     $categoryById = [];
     foreach ($categories as $category) {
@@ -529,13 +490,16 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
         if (isset($row['location_type'])) {
             $result['location_type'] = $row['location_type'];
         }
-        // Load editable fieldsets from subcategory_edits table (keyed by subcategory_key -> fieldset_key)
-        if ($hasEditableFieldsets) {
-            if ($subcategoryKey !== '' && isset($subcategoryEditsMap[$subcategoryKey])) {
-                $result['editable_fieldsets'] = $subcategoryEditsMap[$subcategoryKey];
+        // Load fieldset customizations from fieldset_mods JSON column
+        if ($hasFieldsetMods && isset($row['fieldset_mods']) && $row['fieldset_mods'] !== null) {
+            $decodedModified = json_decode($row['fieldset_mods'], true);
+            if (is_array($decodedModified)) {
+                $result['editable_fieldsets'] = $decodedModified;
             } else {
                 $result['editable_fieldsets'] = [];
             }
+        } else {
+            $result['editable_fieldsets'] = [];
         }
         if ($hasCheckoutOptionsId && isset($row['checkout_options_id'])) {
             $checkoutIdsCsv = $row['checkout_options_id'];
@@ -1112,8 +1076,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     }
                 }
                 
-                // Check if this field type is editable and has customizations
-                $isEditable = isset($matchingFieldset['formbuilder_editable']) && $matchingFieldset['formbuilder_editable'] === true;
+                // Load fieldset customizations from fieldset_mods JSON
                 $fieldsetKey = isset($matchingFieldset['fieldset_key']) ? trim((string) $matchingFieldset['fieldset_key']) : (isset($matchingFieldset['key']) ? trim((string) $matchingFieldset['key']) : '');
                 $isCheckout = ($fieldsetKey === 'checkout');
                 $isAmenities = ($fieldsetKey === 'amenities');
@@ -1125,54 +1088,22 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 $customTooltip = null;
                 $selectedAmenities = null;
                 
-                // Load customizations for editable fields
-                if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
-                    // Use values from subcategory_edits table
+                // Load customizations from fieldset_mods JSON
+                if ($fieldEdit && is_array($fieldEdit)) {
                     if (isset($fieldEdit['name']) && is_string($fieldEdit['name']) && trim($fieldEdit['name']) !== '') {
                         $customName = trim($fieldEdit['name']);
                     }
                     if (isset($fieldEdit['options']) && is_array($fieldEdit['options'])) {
                         $customOptions = $fieldEdit['options'];
                     }
+                    if (isset($fieldEdit['selectedAmenities']) && is_array($fieldEdit['selectedAmenities'])) {
+                        $selectedAmenities = $fieldEdit['selectedAmenities'];
+                    }
                     if (isset($fieldEdit['placeholder']) && is_string($fieldEdit['placeholder']) && trim($fieldEdit['placeholder']) !== '') {
                         $customPlaceholder = trim($fieldEdit['placeholder']);
                     }
                     if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
                         $customTooltip = trim($fieldEdit['tooltip']);
-                    }
-                    // Load selectedAmenities for amenities fieldsets
-                    if (isset($fieldEdit['selectedAmenities']) && is_array($fieldEdit['selectedAmenities'])) {
-                        $selectedAmenities = $fieldEdit['selectedAmenities'];
-                    }
-                } elseif ($isEditable && !$fieldEdit) {
-                    // No subcategory_edits entry yet - use defaults from fieldsets table
-                    // These will be shown in the edit panel and saved when admin saves
-                    $defaultName = isset($matchingFieldset['fieldset_name']) ? $matchingFieldset['fieldset_name'] : (isset($matchingFieldset['name']) ? $matchingFieldset['name'] : '');
-                    if ($defaultName !== '') {
-                        $customName = $defaultName;
-                    }
-                    $defaultPlaceholder = isset($matchingFieldset['fieldset_placeholder']) ? $matchingFieldset['fieldset_placeholder'] : (isset($matchingFieldset['placeholder']) ? $matchingFieldset['placeholder'] : '');
-                    if ($defaultPlaceholder !== '') {
-                        $customPlaceholder = $defaultPlaceholder;
-                    }
-                    $defaultTooltip = isset($matchingFieldset['fieldset_tooltip']) ? $matchingFieldset['fieldset_tooltip'] : '';
-                    if ($defaultTooltip !== '') {
-                        $customTooltip = $defaultTooltip;
-                    }
-                    // For dropdown/radio, parse placeholder as comma-separated options
-                    if (($fieldsetKey === 'dropdown' || $fieldsetKey === 'radio') && $defaultPlaceholder !== '') {
-                        $defaultOptions = array_values(array_filter(array_map('trim', explode(',', $defaultPlaceholder)), function($o) { return $o !== ''; }));
-                        if (!empty($defaultOptions)) {
-                            $customOptions = $defaultOptions;
-                        }
-                    }
-                }
-                
-                // Load selectedAmenities for amenities fieldsets even if not editable
-                // (since amenities menu is always shown in edit panel)
-                if ($isAmenities && !$isEditable && $fieldEdit && is_array($fieldEdit)) {
-                    if (isset($fieldEdit['selectedAmenities']) && is_array($fieldEdit['selectedAmenities'])) {
-                        $selectedAmenities = $fieldEdit['selectedAmenities'];
                     }
                 }
                 
