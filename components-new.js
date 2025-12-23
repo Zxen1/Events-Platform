@@ -885,11 +885,10 @@ const FieldsetComponent = (function(){
                 }
                 
                 amenities.forEach(function(item, i) {
-                    // Parse value: "parking Parking" -> icon: parking, name: Parking
-                    var parts = item.value.split(' ');
-                    var iconKey = parts[0];
-                    var amenityName = parts.slice(1).join(' ');
-                    var description = item.label;
+                    // Use database values directly
+                    var amenityName = item.value || ''; // Display name (e.g., "Parking", "Wheelchair Access")
+                    var description = item.label || ''; // Full description for tooltip
+                    var filename = item.filename || ''; // Icon filename (e.g., "parking.svg")
                     
                     var row = document.createElement('div');
                     row.className = 'fieldset-amenity-row';
@@ -898,7 +897,12 @@ const FieldsetComponent = (function(){
                     // Icon
                     var iconEl = document.createElement('div');
                     iconEl.className = 'fieldset-amenity-icon';
-                    var amenityUrl = window.App.getImageUrl('amenities', iconKey + '.svg');
+                    var amenityUrl = '';
+                    if (filename) {
+                        // Remove .svg extension if present (getImageUrl may add it, or filename may already include it)
+                        var cleanFilename = filename.replace(/\.svg$/i, '');
+                        amenityUrl = window.App.getImageUrl('amenities', cleanFilename + '.svg');
+                    }
                     iconEl.innerHTML = '<img src="' + amenityUrl + '" alt="' + amenityName + '">';
                     row.appendChild(iconEl);
                     
@@ -912,14 +916,17 @@ const FieldsetComponent = (function(){
                     var optionsEl = document.createElement('div');
                     optionsEl.className = 'fieldset-amenity-options';
                     
+                    // Use value as unique identifier for radio button names
+                    var radioName = 'amenity-' + (item.value || i).replace(/[^a-z0-9]/gi, '-').toLowerCase();
+                    
                     var yesLabel = document.createElement('label');
                     yesLabel.className = 'fieldset-amenity-option';
-                    yesLabel.innerHTML = '<input type="radio" name="amenity-' + iconKey + '" value="1"> Yes';
+                    yesLabel.innerHTML = '<input type="radio" name="' + radioName + '" value="1"> Yes';
                     optionsEl.appendChild(yesLabel);
                     
                     var noLabel = document.createElement('label');
                     noLabel.className = 'fieldset-amenity-option';
-                    noLabel.innerHTML = '<input type="radio" name="amenity-' + iconKey + '" value="0"> No';
+                    noLabel.innerHTML = '<input type="radio" name="' + radioName + '" value="0"> No';
                     optionsEl.appendChild(noLabel);
                     
                     // Add change listeners to update row styling
