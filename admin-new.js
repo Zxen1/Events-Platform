@@ -31,12 +31,19 @@ const AdminModule = (function() {
     // DOM references
     var panel = null;
     var panelContent = null;
+    var panelBody = null;
     var closeBtn = null;
     var saveBtn = null;
     var discardBtn = null;
     var autosaveCheckbox = null;
     var tabButtons = null;
     var tabPanels = null;
+    
+    // Panel-body scroll anchoring/slack (prevents "yank up" at bottom and keeps clicked controls stationary)
+    var panelScrollGapTopEl = null;
+    var panelScrollGapBottomEl = null;
+    var panelScrollAnchorBound = false;
+    var isPanelAdjustingScroll = false;
 
     /* --------------------------------------------------------------------------
        SVG ICONS REGISTRY
@@ -297,12 +304,180 @@ const AdminModule = (function() {
         if (!panel) return;
         
         panelContent = panel.querySelector('.admin-panel-content');
+        panelBody = panel.querySelector('.admin-panel-body');
         closeBtn = panel.querySelector('.admin-panel-actions-icon-btn--close');
         saveBtn = panel.querySelector('.admin-panel-actions-icon-btn--save');
         discardBtn = panel.querySelector('.admin-panel-actions-icon-btn--discard');
         autosaveCheckbox = document.getElementById('admin-autosave-checkbox');
         tabButtons = panel.querySelectorAll('.admin-tab-bar-button');
         tabPanels = panel.querySelectorAll('.admin-tab-panel');
+    }
+    
+    function ensurePanelScrollGaps() {
+        if (!panelBody) return;
+        
+        if (!panelScrollGapTopEl || !panelScrollGapTopEl.isConnected) {
+            panelScrollGapTopEl = panelBody.querySelector('.admin-panel-scroll-gap-top');
+            if (!panelScrollGapTopEl) {
+                panelScrollGapTopEl = document.createElement('div');
+                panelScrollGapTopEl.className = 'admin-panel-scroll-gap-top';
+                panelScrollGapTopEl.setAttribute('aria-hidden', 'true');
+                panelBody.insertBefore(panelScrollGapTopEl, panelBody.firstChild);
+            }
+        }
+        
+        if (!panelScrollGapBottomEl || !panelScrollGapBottomEl.isConnected) {
+            panelScrollGapBottomEl = panelBody.querySelector('.admin-panel-scroll-gap-bottom');
+            if (!panelScrollGapBottomEl) {
+                panelScrollGapBottomEl = document.createElement('div');
+                panelScrollGapBottomEl.className = 'admin-panel-scroll-gap-bottom';
+                panelScrollGapBottomEl.setAttribute('aria-hidden', 'true');
+                panelBody.appendChild(panelScrollGapBottomEl);
+            }
+        }
+    }
+    
+    function getPanelGapTop() {
+        ensurePanelScrollGaps();
+        return panelScrollGapTopEl ? (panelScrollGapTopEl.offsetHeight || 0) : 0;
+    }
+    
+    function setPanelGapTop(px) {
+        ensurePanelScrollGaps();
+        if (!panelScrollGapTopEl) return;
+        var next = Math.max(0, Math.round(px || 0));
+        panelScrollGapTopEl.style.height = next ? (next + 'px') : '0px';
+    }
+    
+    function getPanelGapBottom() {
+        ensurePanelScrollGaps();
+        return panelScrollGapBottomEl ? (panelScrollGapBottomEl.offsetHeight || 0) : 0;
+    }
+    
+    function setPanelGapBottom(px) {
+        ensurePanelScrollGaps();
+        if (!panelScrollGapBottomEl) return;
+        var next = Math.max(0, Math.round(px || 0));
+        panelScrollGapBottomEl.style.height = next ? (next + 'px') : '0px';
+    }
+    
+    function maybeConsumePanelGapsOnScroll() {
+        if (isPanelAdjustingScroll) return;
+        if (!panelBody) return;
+        
+        var topGap = getPanelGapTop();
+        var bottomGap = getPanelGapBottom();
+        if (!topGap && !bottomGap) return;
+        
+        // Consume top gap if user scrolls up into it
+        if (topGap && panelBody.scrollTop < topGap) {
+            var reduceBy = topGap - panelBody.scrollTop;
+            isPanelAdjustingScroll = true;
+            setPanelGapTop(topGap - reduceBy);
+            panelBody.scrollTop = 0;
+            isPanelAdjustingScroll = false;
+        }
+        
+        // Consume bottom gap if user scrolls down into it
+        if (bottomGap) {
+            var maxScrollTop = Math.max(0, panelBody.scrollHeight - panelBody.clientHeight);
+            var distanceToBottom = maxScrollTop - panelBody.scrollTop;
+            if (distanceToBottom < bottomGap) {
+                var reduceBottomBy = bottomGap - distanceToBottom;
+                isPanelAdjustingScroll = true;
+                setPanelGapBottom(bottomGap - reduceBottomBy);
+                panelBody.scrollTop = Math.max(0, panelBody.scrollTop - reduceBottomBy);
+                isPanelAdjustingScroll = false;
+            }
+        }
+    }
+    
+    function findPanelAnchorFromClickTarget(target) {
+        if (!target) return null;
+        if (!panelBody || !panelBody.contains(target)) return null;
+        
+        // Prefer stable "row/header/button" anchors, fallback to the direct target.
+        return target.closest(
+            '.formbuilder-accordion-header,' +
+            '.formbuilder-accordion-option-header,' +
+            '.formbuilder-field,' +
+            '.admin-tab-bar-button,' +
+            '.admin-panel-field,' +
+            'button,' +
+            'label'
+        ) || target;
+    }
+    
+    function armPanelScrollAnchor(anchorEl) {
+        if (!panelBody || !anchorEl) return;
+        ensurePanelScrollGaps();
+        
+        var bodyRect = panelBody.getBoundingClientRect();
+        var oldTop = anchorEl.getBoundingClientRect().top - bodyRect.top;
+        var oldScrollTop = panelBody.scrollTop;
+        
+        requestAnimationFrame(function() {
+            if (!panelBody) return;
+            if (!anchorEl.isConnected) return;
+            
+            // Frame 1: defeat scrollTop clamp by adding bottom slack if maxScrollTop shrank below oldScrollTop
+            var newMaxScrollTop = Math.max(0, panelBody.scrollHeight - panelBody.clientHeight);
+            if (oldScrollTop > newMaxScrollTop) {
+                var clampSlack = oldScrollTop - newMaxScrollTop;
+                setPanelGapBottom(getPanelGapBottom() + clampSlack);
+                void panelBody.scrollHeight;
+            }
+            
+            // Frame 2: restore scrollTop, then keep anchor stationary
+            requestAnimationFrame(function() {
+                if (!panelBody) return;
+                if (!anchorEl.isConnected) return;
+                
+                isPanelAdjustingScroll = true;
+                panelBody.scrollTop = oldScrollTop;
+                isPanelAdjustingScroll = false;
+                
+                var bodyRect2 = panelBody.getBoundingClientRect();
+                var newTop = anchorEl.getBoundingClientRect().top - bodyRect2.top;
+                var delta = newTop - oldTop;
+                if (!delta) return;
+                
+                var currentScrollTop = panelBody.scrollTop;
+                
+                if (currentScrollTop + delta < 0) {
+                    var topSlack = -(currentScrollTop + delta);
+                    setPanelGapTop(getPanelGapTop() + topSlack);
+                    delta = delta + topSlack;
+                }
+                
+                var maxScrollTopNow = Math.max(0, panelBody.scrollHeight - panelBody.clientHeight);
+                if (currentScrollTop + delta > maxScrollTopNow) {
+                    var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
+                    setPanelGapBottom(getPanelGapBottom() + bottomSlack);
+                    void panelBody.scrollHeight;
+                }
+                
+                isPanelAdjustingScroll = true;
+                panelBody.scrollTop = currentScrollTop + delta;
+                isPanelAdjustingScroll = false;
+            });
+        });
+    }
+    
+    function bindPanelScrollAnchoring() {
+        if (!panelBody || panelScrollAnchorBound) return;
+        panelScrollAnchorBound = true;
+        
+        ensurePanelScrollGaps();
+        panelBody.addEventListener('scroll', maybeConsumePanelGapsOnScroll, { passive: true });
+        
+        // Capture phase so we record the anchor BEFORE other click handlers collapse/expand things
+        panelBody.addEventListener('click', function(e) {
+            if (!panelBody) return;
+            var anchor = findPanelAnchorFromClickTarget(e.target);
+            if (!anchor) return;
+            armPanelScrollAnchor(anchor);
+        }, true);
     }
     
     function initHeaderDrag() {
@@ -419,6 +594,9 @@ const AdminModule = (function() {
         panel.setAttribute('aria-hidden', 'false');
         panelContent.classList.remove('admin-panel-content--hidden');
         panelContent.classList.add('admin-panel-content--visible');
+        
+        // Ensure panel-body scroll anchoring is active (prevents bottom clamp yank across all tabs)
+        bindPanelScrollAnchoring();
         
         // Bring panel to front of stack
         App.bringToTop(panel);

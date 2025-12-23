@@ -250,6 +250,15 @@
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 
+/* Scroll slack spacers (used to keep clicked controls stationary when content above/below collapses) */
+.admin-panel-scroll-gap-top,
+.admin-panel-scroll-gap-bottom {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+  flex: 0 0 auto;
+}
+
 .admin-panel-body::-webkit-scrollbar {
   width: 12px;
 }
