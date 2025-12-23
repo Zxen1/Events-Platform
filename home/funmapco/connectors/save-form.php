@@ -751,7 +751,11 @@ try {
                         $hasEditableColumnInfo = true;
                     }
                     $isEditable = isset($fieldsetDef['fieldset_editable']) && $fieldsetDef['fieldset_editable'] === true;
-                    if (!$isEditable) continue;
+                    $isAmenities = ($fieldsetKey === 'amenities');
+                    
+                    // Allow amenities fieldsets to save selectedAmenities even if not marked as editable
+                    // (since the amenities menu is always shown in the edit panel)
+                    if (!$isEditable && !$isAmenities) continue;
                     
                     $fieldData = isset($fieldsByFieldsetKey[$fieldsetKey]) ? $fieldsByFieldsetKey[$fieldsetKey] : null;
                     if (!$fieldData) continue;
@@ -762,13 +766,15 @@ try {
                     $customTooltip = null;
                     
                     // Always save name for editable fieldsets (so defaults are captured and can be customized)
-                    $customNameValue = $fieldData['name'] ?? '';
-                    if ($customNameValue !== '') {
-                        $customName = $customNameValue;
+                    if ($isEditable) {
+                        $customNameValue = $fieldData['name'] ?? '';
+                        if ($customNameValue !== '') {
+                            $customName = $customNameValue;
+                        }
                     }
                     
                     // Always save options for editable dropdown/radio types (so defaults are captured)
-                    if (isset($fieldData['options'])) {
+                    if ($isEditable && isset($fieldData['options'])) {
                         $customOptionsArray = is_array($fieldData['options']) ? array_values($fieldData['options']) : [];
                         if (!empty($customOptionsArray)) {
                             $customOptions = json_encode($customOptionsArray, JSON_UNESCAPED_UNICODE);
@@ -776,7 +782,8 @@ try {
                     }
                     
                     // Save selectedAmenities for amenities fieldsets (stored in fieldset_options as JSON)
-                    if ($fieldsetKey === 'amenities' && isset($fieldData['selectedAmenities'])) {
+                    // This works even if amenities fieldset is not marked as editable
+                    if ($isAmenities && isset($fieldData['selectedAmenities'])) {
                         $selectedAmenitiesArray = is_array($fieldData['selectedAmenities']) ? array_values($fieldData['selectedAmenities']) : [];
                         if (!empty($selectedAmenitiesArray)) {
                             $customOptions = json_encode($selectedAmenitiesArray, JSON_UNESCAPED_UNICODE);
