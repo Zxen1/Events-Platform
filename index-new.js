@@ -607,11 +607,13 @@ window.App = App;
 /* ============================================================================
    SCROLL BUFFER SYSTEM
    Prevents content from jumping when accordions open/close
+   Uses invisible spacer elements (air bubbles) that adjust naturally
    Only clamps when scrolling, never when clicking
    ============================================================================ */
 
 var ScrollBufferModule = {
     buffers: new Map(), // Map of container -> buffer data
+    BUFFER_MAX_HEIGHT: 5000, // Maximum height for spacer elements
     
     /**
      * Initialize scroll buffer for a container
@@ -624,15 +626,31 @@ var ScrollBufferModule = {
         var header = container.querySelector('.panel-header, .filter-panel-header, .admin-panel-header, .member-panel-header');
         var body = container.querySelector('.panel-body, .filter-panel-body, .admin-panel-body, .member-panel-body');
         
+        if (!header || !body) return;
+        
+        // Create invisible spacer at top of body (air bubble above content)
+        // Bodies use flexbox column, so spacer needs flex-grow to adjust naturally
+        // Starts at 0, can grow up to max-height when content changes
+        var topSpacer = document.createElement('div');
+        topSpacer.className = 'scroll-buffer-spacer scroll-buffer-spacer--top';
+        topSpacer.style.cssText = 'flex: 1 1 0; min-height: 0; max-height: ' + this.BUFFER_MAX_HEIGHT + 'px; width: 100%; flex-basis: 0;';
+        body.insertBefore(topSpacer, body.firstChild);
+        
+        // Create invisible spacer at bottom of body (air bubble below content)
+        var bottomSpacer = document.createElement('div');
+        bottomSpacer.className = 'scroll-buffer-spacer scroll-buffer-spacer--bottom';
+        bottomSpacer.style.cssText = 'flex: 1 1 0; min-height: 0; max-height: ' + this.BUFFER_MAX_HEIGHT + 'px; width: 100%; flex-basis: 0;';
+        body.appendChild(bottomSpacer);
+        
         // Store buffer data
         var bufferData = {
             container: container,
             header: header,
             body: body,
+            topSpacer: topSpacer,
+            bottomSpacer: bottomSpacer,
             previousScrollTop: container.scrollTop,
-            previousScrollHeight: container.scrollHeight,
-            isUserScrolling: false,
-            clampDisabled: false
+            isUserScrolling: false
         };
         
         this.buffers.set(container, bufferData);
@@ -655,35 +673,6 @@ var ScrollBufferModule = {
             }, 100);
         }, { passive: true });
         
-        // Detect accordion clicks - disable clamping immediately (Branch 1: clicking)
-        if (body) {
-            body.addEventListener('click', function(e) {
-                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header, .filter-categoryfilter-accordion-option-header');
-                if (accordionHeader) {
-                    // Disable clamping immediately (before content height changes)
-                    bufferData.clampDisabled = true;
-                    setTimeout(function() {
-                        bufferData.clampDisabled = false;
-                    }, 500);
-                }
-            }, true);
-        }
-        
-        // Watch for content height changes (accordion opening/closing)
-        if (window.ResizeObserver && body) {
-            var resizeObserver = new ResizeObserver(function() {
-                // Content height changed - if not from user scrolling, disable clamping temporarily
-                if (!bufferData.isUserScrolling) {
-                    bufferData.clampDisabled = true;
-                    setTimeout(function() {
-                        bufferData.clampDisabled = false;
-                    }, 200);
-                }
-            });
-            resizeObserver.observe(body);
-            bufferData.resizeObserver = resizeObserver;
-        }
-        
         // Watch for scroll events - only clamp when user actively scrolls
         container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
     },
@@ -695,13 +684,7 @@ var ScrollBufferModule = {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
         
-        // Branch 1: User clicking accordion? → No clamping (free movement)
-        if (bufferData.clampDisabled) {
-            bufferData.previousScrollTop = container.scrollTop;
-            return;
-        }
-        
-        // Branch 2: User scrolling? → Clamp at edges
+        // Branch 1: User scrolling? → Clamp at edges
         if (!bufferData.isUserScrolling) {
             bufferData.previousScrollTop = container.scrollTop;
             return;
@@ -710,21 +693,7 @@ var ScrollBufferModule = {
         var scrollTop = container.scrollTop;
         var clientHeight = container.clientHeight;
         var scrollHeight = container.scrollHeight;
-        var previousScrollTop = bufferData.previousScrollTop;
-        
-        // Calculate header height (where content starts)
-        var headerHeight = 0;
-        if (bufferData.header) {
-            headerHeight = bufferData.header.offsetHeight;
-        }
-        
-        // Check for gap at top (content below header)
-        var gapAtTop = scrollTop < headerHeight;
-        var gapAtBottom = (scrollTop + clientHeight) > scrollHeight;
-        
-        // Determine scroll direction
-        var scrollingUp = scrollTop < previousScrollTop;
-        var scrollingDown = scrollTop > previousScrollTop;
+        var headerHeight = bufferData.header.offsetHeight;
         
         // Clamp header to top of content (10px gap)
         if (scrollTop < (headerHeight + 10)) {
@@ -733,15 +702,6 @@ var ScrollBufferModule = {
         // Clamp footer to bottom of content (10px gap)
         else if ((scrollTop + clientHeight) > (scrollHeight - 10)) {
             container.scrollTop = scrollHeight - clientHeight - 10;
-        }
-        // Prevent scrolling that increases on-screen gap
-        else if (gapAtTop && scrollingDown) {
-            // Gap visible at top while scrolling down → prevent downward scroll
-            container.scrollTop = previousScrollTop;
-        }
-        else if (gapAtBottom && scrollingUp) {
-            // Gap visible at bottom while scrolling up → prevent upward scroll
-            container.scrollTop = previousScrollTop;
         }
         
         bufferData.previousScrollTop = container.scrollTop;
@@ -754,9 +714,12 @@ var ScrollBufferModule = {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
         
-        // Disconnect ResizeObserver if it exists
-        if (bufferData.resizeObserver) {
-            bufferData.resizeObserver.disconnect();
+        // Remove spacer elements
+        if (bufferData.topSpacer && bufferData.topSpacer.parentNode) {
+            bufferData.topSpacer.parentNode.removeChild(bufferData.topSpacer);
+        }
+        if (bufferData.bottomSpacer && bufferData.bottomSpacer.parentNode) {
+            bufferData.bottomSpacer.parentNode.removeChild(bufferData.bottomSpacer);
         }
         
         this.buffers.delete(container);
