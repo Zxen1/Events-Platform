@@ -627,36 +627,24 @@ var ScrollBufferModule = {
         
         if (!header || !body) return;
         
-        // Top: Sticky container - permanent infinite scroll
-        var topContainer = document.createElement('div');
-        topContainer.className = 'scroll-buffer-container scroll-buffer-container--top';
-        topContainer.style.cssText = 'position: sticky; top: 0; height: auto; max-height: none; width: 100%; flex-shrink: 0; z-index: -1;';
-        body.insertBefore(topContainer, body.firstChild);
-        
-        // Bottom: Sticky container - permanent infinite scroll
-        var bottomContainer = document.createElement('div');
-        bottomContainer.className = 'scroll-buffer-container scroll-buffer-container--bottom';
-        bottomContainer.style.cssText = 'position: sticky; bottom: 0; height: auto; max-height: none; width: 100%; flex-shrink: 0; z-index: -1;';
-        body.appendChild(bottomContainer);
-        
-        // Body: permanent infinite scroll
+        // Body: allow infinite expansion
         body.style.height = 'auto';
         body.style.minHeight = 'none';
         body.style.maxHeight = 'none';
         
-        // Set initial scroll position to top of body at header
+        // Set initial scroll position: top of body content starts at header
         var headerHeight = header.offsetHeight;
         requestAnimationFrame(function() {
-            container.scrollTop = headerHeight + 10;
+            requestAnimationFrame(function() {
+                container.scrollTop = headerHeight + 10;
+            });
         });
         
         // Store buffer data
         var bufferData = {
             container: container,
             header: header,
-            body: body,
-            topContainer: topContainer,
-            bottomContainer: bottomContainer
+            body: body
         };
         
         this.buffers.set(container, bufferData);
