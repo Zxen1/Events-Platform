@@ -627,7 +627,9 @@ var ScrollBufferModule = {
         
         if (!header || !body) return;
         
-        // Body: allow infinite expansion
+        // Body: add infinite padding for scroll in both directions
+        body.style.paddingTop = '50000px';
+        body.style.paddingBottom = '50000px';
         body.style.height = 'auto';
         body.style.minHeight = 'none';
         body.style.maxHeight = 'none';
@@ -636,7 +638,7 @@ var ScrollBufferModule = {
         var headerHeight = header.offsetHeight;
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
-                container.scrollTop = headerHeight + 10;
+                container.scrollTop = 50000 + headerHeight + 10;
             });
         });
         
