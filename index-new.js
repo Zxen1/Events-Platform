@@ -630,7 +630,8 @@ var ScrollBufferModule = {
             container: container,
             header: header,
             body: body,
-            previousScrollTop: container.scrollTop
+            previousScrollTop: container.scrollTop,
+            clampDisabled: false
         };
         
         this.buffers.set(container, bufferData);
@@ -639,17 +640,44 @@ var ScrollBufferModule = {
         container.style.paddingTop = this.BUFFER_SIZE + 'px';
         container.style.paddingBottom = this.BUFFER_SIZE + 'px';
         
+        // Set initial scroll position to skip top buffer (so content is visible)
+        var self = this;
+        requestAnimationFrame(function() {
+            container.scrollTop = self.BUFFER_SIZE;
+            bufferData.previousScrollTop = self.BUFFER_SIZE;
+        });
+        
+        // Detect accordion clicks - disable clamping temporarily (Branch 1: clicking)
+        if (body) {
+            body.addEventListener('click', function(e) {
+                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
+                if (accordionHeader) {
+                    bufferData.clampDisabled = true;
+                    setTimeout(function() {
+                        bufferData.clampDisabled = false;
+                    }, 300);
+                }
+            }, true);
+        }
+        
         // Watch for scroll events - only clamp when user actively scrolls to edges
         container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
     },
     
     /**
-     * Handle scroll events - only clamp when user scrolls to edges
+     * Handle scroll events - only clamp when user actively scrolls to edges
      */
     handleScroll: function(container) {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
         
+        // Branch 1: User clicking accordion? → Free movement
+        if (bufferData.clampDisabled) {
+            bufferData.previousScrollTop = container.scrollTop;
+            return;
+        }
+        
+        // Branch 2: User scrolling? → Clamp at edges
         var scrollTop = container.scrollTop;
         var clientHeight = container.clientHeight;
         var scrollHeight = container.scrollHeight;
@@ -667,15 +695,12 @@ var ScrollBufferModule = {
         var contentStart = this.BUFFER_SIZE + headerHeight;
         var contentEnd = scrollHeight - this.BUFFER_SIZE;
         
-        // Only clamp when user actively scrolls to edges
+        // Clamp at edges (10px gap/padding)
         if (scrollingUp && scrollTop < (contentStart + 10)) {
-            // User scrolling up and reached top - clamp at header + 10px
             container.scrollTop = contentStart + 10;
         } else if (scrollingDown && (scrollTop + clientHeight) > (contentEnd - 10)) {
-            // User scrolling down and reached bottom - clamp at footer - 10px
             container.scrollTop = contentEnd - clientHeight - 10;
         }
-        // Otherwise, allow free scrolling (including into buffer areas)
         
         bufferData.previousScrollTop = container.scrollTop;
     },
