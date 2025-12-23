@@ -1891,12 +1891,31 @@
                 }
             }
             
-            // Amenities menu (always visible)
+            // Modify toggle button (placed before container so it stays visible)
+            modifyButton = document.createElement('button');
+            modifyButton.type = 'button';
+            modifyButton.className = 'formbuilder-field-modify-button';
+            modifyButton.textContent = 'Modify';
+            modifyButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = modifyContainer.style.display !== 'none';
+                modifyContainer.style.display = isOpen ? 'none' : 'block';
+                modifyButton.classList.toggle('formbuilder-field-modify-button--open');
+                notifyChange();
+            });
+            fieldEditPanel.appendChild(modifyButton);
+            
+            // Modify section (name, placeholder, tooltip, options, amenities - hidden by default)
+            var modifyContainer = document.createElement('div');
+            modifyContainer.className = 'formbuilder-field-modify-container';
+            modifyContainer.style.display = 'none';
+            
+            // Amenities menu (inside Modify drawer)
             if (needsAmenities) {
                 var amenitiesLabel = document.createElement('label');
                 amenitiesLabel.className = 'formbuilder-field-label';
                 amenitiesLabel.textContent = 'Amenities';
-                fieldEditPanel.appendChild(amenitiesLabel);
+                modifyContainer.appendChild(amenitiesLabel);
                 
                 if (!selectedAmenities) {
                     selectedAmenities = [];
@@ -1918,16 +1937,16 @@
                     if (selectedAmenities.length > 0) {
                         fieldWrapper.dataset.selectedAmenities = JSON.stringify(selectedAmenities);
                     }
-                    fieldEditPanel.appendChild(amenitiesMenu.element);
+                    modifyContainer.appendChild(amenitiesMenu.element);
                 }
             }
             
-            // Options editor (always visible for dropdown/radio)
+            // Options editor (inside Modify drawer for dropdown/radio)
             if (needsOptions) {
                 var optionsLabel = document.createElement('label');
                 optionsLabel.className = 'formbuilder-field-label';
                 optionsLabel.textContent = 'Options';
-                fieldEditPanel.appendChild(optionsLabel);
+                modifyContainer.appendChild(optionsLabel);
                 
                 optionsContainer = document.createElement('div');
                 optionsContainer.className = 'formbuilder-field-options';
@@ -1983,27 +2002,8 @@
                     optionsContainer.appendChild(createOptionRow(''));
                 }
                 
-                fieldEditPanel.appendChild(optionsContainer);
+                modifyContainer.appendChild(optionsContainer);
             }
-            
-            // Modify toggle button (placed before container so it stays visible)
-            modifyButton = document.createElement('button');
-            modifyButton.type = 'button';
-            modifyButton.className = 'formbuilder-field-modify-button';
-            modifyButton.textContent = 'Modify';
-            modifyButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var isOpen = modifyContainer.style.display !== 'none';
-                modifyContainer.style.display = isOpen ? 'none' : 'block';
-                modifyButton.classList.toggle('formbuilder-field-modify-button--open');
-                notifyChange();
-            });
-            fieldEditPanel.appendChild(modifyButton);
-            
-            // Modify section (name, placeholder, tooltip - hidden by default)
-            var modifyContainer = document.createElement('div');
-            modifyContainer.className = 'formbuilder-field-modify-container';
-            modifyContainer.style.display = 'none';
             
             var nameLabel = document.createElement('label');
             nameLabel.className = 'formbuilder-field-label';
