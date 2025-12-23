@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bouncing Rectangle</title>
+    <title>Flying Rectangle</title>
     <style>
         * {
             margin: 0;
@@ -16,79 +16,90 @@
             overflow: hidden;
             width: 100vw;
             height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         
-        #rectangle {
-            width: 36px;
-            height: 400px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        .container {
+            position: relative;
+            width: 400px;
+        }
+        
+        .rectangle {
+            width: 400px;
+            height: 36px;
+            background: #3b82f6;
             position: absolute;
-            cursor: pointer;
             border-radius: 4px;
             box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
             transition: box-shadow 0.2s;
         }
         
-        #rectangle:hover {
+        .rectangle:hover {
             box-shadow: 0 6px 30px rgba(59, 130, 246, 0.8);
+        }
+        
+        #topRectangle {
+            top: 0;
+            left: 0;
+        }
+        
+        #bottomRectangle {
+            top: 500px;
+            left: 0;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <div id="rectangle"></div>
+    <div class="container">
+        <div id="topRectangle" class="rectangle"></div>
+        <div id="bottomRectangle" class="rectangle"></div>
+    </div>
     
     <script>
-        const rectangle = document.getElementById('rectangle');
-        let x = 100;
-        let y = 100;
-        let vx = 3;
-        let vy = 2;
-        let isBouncing = false;
+        const topRectangle = document.getElementById('topRectangle');
+        const bottomRectangle = document.getElementById('bottomRectangle');
+        let isFlying = false;
+        let animationId = null;
         
-        function updatePosition() {
-            const rect = rectangle.getBoundingClientRect();
-            const maxX = window.innerWidth - 36;
-            const maxY = window.innerHeight - 400;
+        const topStartY = 0;
+        const bottomY = 500;
+        const targetY = bottomY - 36;
+        
+        function flyDown() {
+            if (isFlying) return;
             
-            if (isBouncing) {
-                // Diagonal bouncing mode
-                x += vx;
-                y += vy;
+            isFlying = true;
+            let currentY = topStartY;
+            const speed = 8;
+            
+            function animate() {
+                currentY += speed;
                 
-                // Bounce off walls
-                if (x <= 0 || x >= maxX) {
-                    vx = -vx;
-                    x = Math.max(0, Math.min(x, maxX));
+                if (currentY >= targetY) {
+                    currentY = targetY;
+                    topRectangle.style.top = currentY + 'px';
+                    isFlying = false;
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
+                    return;
                 }
-                if (y <= 0 || y >= maxY) {
-                    vy = -vy;
-                    y = Math.max(0, Math.min(y, maxY));
-                }
-            } else {
-                // Initial movement across screen
-                x += vx;
-                if (x > maxX) {
-                    x = -36;
-                }
+                
+                topRectangle.style.top = currentY + 'px';
+                animationId = requestAnimationFrame(animate);
             }
             
-            rectangle.style.left = x + 'px';
-            rectangle.style.top = y + 'px';
-            
-            requestAnimationFrame(updatePosition);
+            animate();
         }
         
-        rectangle.addEventListener('click', function() {
-            if (!isBouncing) {
-                isBouncing = true;
-                // Set diagonal velocity
-                vx = 5;
-                vy = 4;
+        bottomRectangle.addEventListener('click', function() {
+            if (!isFlying) {
+                flyDown();
             }
         });
-        
-        // Start animation
-        updatePosition();
     </script>
 </body>
 </html>
