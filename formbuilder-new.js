@@ -2326,22 +2326,26 @@
             
             field.addEventListener('click', function(ev) {
                 ev.stopPropagation();
-                container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                    if (el !== fieldWrapper) {
-                        el.classList.remove('formbuilder-field-wrapper--editing');
-                    }
+                runWithScrollAnchor(field, function() {
+                    container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                        if (el !== fieldWrapper) {
+                            el.classList.remove('formbuilder-field-wrapper--editing');
+                        }
+                    });
                 });
             });
             
             fieldEdit.addEventListener('click', function(ev) {
                 ev.stopPropagation();
-                var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
-                container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
-                    el.classList.remove('formbuilder-field-wrapper--editing');
+                runWithScrollAnchor(field, function() {
+                    var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
+                    container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
+                        el.classList.remove('formbuilder-field-wrapper--editing');
+                    });
+                    if (!isOpen) {
+                        fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
+                    }
                 });
-                if (!isOpen) {
-                    fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
-                }
             });
             
             // Field drag and drop - only via drag handle
