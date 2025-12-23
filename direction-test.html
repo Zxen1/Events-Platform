@@ -55,36 +55,30 @@
         }
         
         .test-content {
-            max-height: 0;
+            height: 460px;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: transform 0.3s ease;
+            transform: scaleY(0);
+            transform-origin: top;
             position: relative;
             z-index: 1;
         }
         
         .test-content.open {
-            max-height: 460px; /* 10 items * 36px each + 9 gaps * 10px = 360px + 100px buffer */
+            transform: scaleY(1);
         }
         
         .test-content.expanding-from-bottom {
+            transform-origin: bottom;
             position: absolute;
             bottom: 36px;
             left: 0;
             right: 0;
-            max-height: 0;
-        }
-        
-        .test-content.expanding-from-bottom.open {
-            max-height: 460px;
         }
         
         .test-content.expanding-from-top {
+            transform-origin: top;
             position: relative;
-            max-height: 0;
-        }
-        
-        .test-content.expanding-from-top.open {
-            max-height: 460px;
         }
         
         .test-item {
