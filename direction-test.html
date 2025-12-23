@@ -24,12 +24,12 @@
         
         .test-container {
             width: 400px;
+            height: 500px;
             background: #222;
             border-radius: 10px;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             position: relative;
-            display: flex;
-            flex-direction: column;
         }
         
         .test-header {
@@ -40,10 +40,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 2;
-            transition: transform 0.3s ease;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         .test-header-top {
@@ -51,34 +50,20 @@
         }
         
         .test-header-bottom {
+            position: sticky;
+            bottom: 0;
             border-radius: 0 0 10px 10px;
         }
         
         .test-content {
-            height: 460px;
+            max-height: 0;
             overflow: hidden;
-            transition: transform 0.3s ease;
-            transform: scaleY(0);
-            transform-origin: top;
-            position: relative;
-            z-index: 1;
+            transition: max-height 0.3s ease;
+            background: #333;
         }
         
         .test-content.open {
-            transform: scaleY(1);
-        }
-        
-        .test-content.expanding-from-bottom {
-            transform-origin: bottom;
-            position: absolute;
-            bottom: 36px;
-            left: 0;
-            right: 0;
-        }
-        
-        .test-content.expanding-from-top {
-            transform-origin: top;
-            position: relative;
+            max-height: 460px;
         }
         
         .test-item {
@@ -89,32 +74,28 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
         }
         
         .test-item:last-child {
             margin-bottom: 0;
         }
         
-        .test-header.closing-upward {
-            transform: translateY(-100%);
+        .test-spacer {
+            height: 200px;
+            background: #1a1a1a;
         }
         
-        .test-header.closing-downward {
-            transform: translateY(100%);
-        }
-        
-        .test-content.closing-upward {
-            transform: translateY(-100%);
-        }
-        
-        .test-content.closing-downward {
-            transform: translateY(100%);
+        .scroll-lock {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            pointer-events: none;
+            opacity: 0;
         }
     </style>
 </head>
 <body>
-    <div class="test-container">
+    <div class="test-container" id="container">
         <div class="test-header test-header-top" id="topHeader"></div>
         <div class="test-content" id="content">
             <div class="test-item"></div>
@@ -128,6 +109,7 @@
             <div class="test-item"></div>
             <div class="test-item"></div>
         </div>
+        <div class="test-spacer"></div>
         <div class="test-header test-header-bottom" id="bottomHeader"></div>
     </div>
     
@@ -136,50 +118,53 @@
         var topHeader = document.getElementById('topHeader');
         var bottomHeader = document.getElementById('bottomHeader');
         var content = document.getElementById('content');
+        var container = document.getElementById('container');
         
         function toggleContent(clickedHeader) {
             if (isOpen) {
-                // Closing - clicked header stays stationary
-                var wasExpandingFromBottom = content.classList.contains('expanding-from-bottom');
+                // Closing - scroll down to keep button in place
+                var contentHeight = content.offsetHeight;
+                var currentScroll = container.scrollTop;
+                var clickedRect = clickedHeader.getBoundingClientRect();
+                var containerRect = container.getBoundingClientRect();
+                var clickedPositionInContainer = currentScroll + (clickedRect.top - containerRect.top);
                 
-                if (clickedHeader === bottomHeader) {
-                    // Close downward: content collapses down toward bottom header
-                    content.classList.add('closing-downward');
-                    if (!wasExpandingFromBottom) {
-                        topHeader.classList.add('closing-downward');
-                    }
-                } else if (clickedHeader === topHeader) {
-                    // Close upward: content collapses up toward top header
-                    content.classList.add('closing-upward');
-                    if (wasExpandingFromBottom) {
-                        bottomHeader.classList.add('closing-upward');
-                    }
-                }
+                // Close the content
+                content.classList.remove('open');
                 
-                content.classList.remove('open', 'expanding-from-bottom', 'expanding-from-top');
+                // METHOD 1: Immediate scroll compensation
+                container.scrollTop = currentScroll + contentHeight;
                 
-                // Clean up classes after animation
+                // METHOD 2: Lock scroll with invisible spacer
+                var lockSpacer = document.createElement('div');
+                lockSpacer.className = 'scroll-lock';
+                lockSpacer.style.height = contentHeight + 'px';
+                lockSpacer.style.position = 'absolute';
+                lockSpacer.style.top = (clickedPositionInContainer - contentHeight) + 'px';
+                container.appendChild(lockSpacer);
+                
+                // METHOD 3: Expand container height to lock position
+                var originalHeight = container.style.height;
+                container.style.height = (container.scrollHeight + contentHeight) + 'px';
+                
+                // After animation, remove locks and restore
                 setTimeout(function() {
-                    content.classList.remove('closing-downward', 'closing-upward');
-                    topHeader.classList.remove('closing-downward', 'closing-upward');
-                    bottomHeader.classList.remove('closing-downward', 'closing-upward');
-                }, 300);
+                    lockSpacer.remove();
+                    container.style.height = originalHeight || '';
+                    
+                    // Final scroll adjustment to ensure button position
+                    var finalScroll = clickedPositionInContainer;
+                    container.scrollTop = finalScroll;
+                    
+                    // Lock with min-height to prevent bounce
+                    container.style.minHeight = container.scrollHeight + 'px';
+                    setTimeout(function() {
+                        container.style.minHeight = '';
+                    }, 100);
+                }, 350);
+                
             } else {
-                // Opening - expand from clicked header
-                // Remove any previous direction classes
-                content.classList.remove('expanding-from-bottom', 'expanding-from-top', 'closing-downward', 'closing-upward');
-                
-                if (clickedHeader === bottomHeader) {
-                    // Open upward from bottom header - content grows up
-                    content.classList.add('expanding-from-bottom');
-                } else if (clickedHeader === topHeader) {
-                    // Open downward from top header - content grows down
-                    content.classList.add('expanding-from-top');
-                }
-                
-                // Force reflow to ensure classes are applied
-                content.offsetHeight;
-                
+                // Opening
                 content.classList.add('open');
             }
             
@@ -198,4 +183,3 @@
     </script>
 </body>
 </html>
-
