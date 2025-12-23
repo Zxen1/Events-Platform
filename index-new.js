@@ -630,6 +630,7 @@ var ScrollBufferModule = {
             header: header,
             body: body,
             previousScrollTop: container.scrollTop,
+            previousScrollHeight: container.scrollHeight,
             isUserScrolling: false,
             clampDisabled: false
         };
@@ -654,17 +655,33 @@ var ScrollBufferModule = {
             }, 100);
         }, { passive: true });
         
-        // Detect accordion clicks - disable clamping (Branch 1: clicking)
+        // Detect accordion clicks - disable clamping immediately (Branch 1: clicking)
         if (body) {
             body.addEventListener('click', function(e) {
-                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
+                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header, .filter-categoryfilter-accordion-option-header');
                 if (accordionHeader) {
+                    // Disable clamping immediately (before content height changes)
                     bufferData.clampDisabled = true;
                     setTimeout(function() {
                         bufferData.clampDisabled = false;
-                    }, 300);
+                    }, 500);
                 }
             }, true);
+        }
+        
+        // Watch for content height changes (accordion opening/closing)
+        if (window.ResizeObserver && body) {
+            var resizeObserver = new ResizeObserver(function() {
+                // Content height changed - if not from user scrolling, disable clamping temporarily
+                if (!bufferData.isUserScrolling) {
+                    bufferData.clampDisabled = true;
+                    setTimeout(function() {
+                        bufferData.clampDisabled = false;
+                    }, 200);
+                }
+            });
+            resizeObserver.observe(body);
+            bufferData.resizeObserver = resizeObserver;
         }
         
         // Watch for scroll events - only clamp when user actively scrolls
@@ -736,6 +753,11 @@ var ScrollBufferModule = {
     remove: function(container) {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
+        
+        // Disconnect ResizeObserver if it exists
+        if (bufferData.resizeObserver) {
+            bufferData.resizeObserver.disconnect();
+        }
         
         this.buffers.delete(container);
     }
