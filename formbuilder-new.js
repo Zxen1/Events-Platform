@@ -167,6 +167,11 @@
         var anchorRect = anchorEl.getBoundingClientRect();
         var oldTop = anchorRect.top - scRect.top;
         
+        // Capture scroll metrics BEFORE the DOM change. Near the bottom, collapsing content above can
+        // shrink scrollHeight and cause the browser to clamp scrollTop down (the "upward flick").
+        var oldScrollTop = sc.scrollTop;
+        var oldMaxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
+        
         fn();
         
         requestAnimationFrame(function() {
@@ -174,6 +179,21 @@
             var scNow = findScrollContainer();
             if (!scNow) return;
             
+            // Step 1: prevent clamp-caused flick by preserving the old scrollTop using bottom slack.
+            // If the DOM change reduced maxScrollTop below our previous scrollTop, the browser will
+            // force scNow.scrollTop down. We counter that by adding bottom gap so maxScrollTop grows.
+            var newMaxScrollTop = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (oldScrollTop > newMaxScrollTop) {
+                var clampSlack = oldScrollTop - newMaxScrollTop;
+                setBottomGapHeight(getBottomGapHeight() + clampSlack);
+            }
+            
+            // After bottom slack, try to restore the original scrollTop (prevents visible jump).
+            isAdjustingScroll = true;
+            scNow.scrollTop = oldScrollTop;
+            isAdjustingScroll = false;
+            
+            // Step 2: normal anchoring (keep the clicked header at the same screen position).
             var scNowRect = scNow.getBoundingClientRect();
             var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
             var delta = newTop - oldTop;
