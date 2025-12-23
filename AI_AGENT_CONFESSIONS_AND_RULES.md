@@ -1635,6 +1635,35 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 ## INCIDENTS AND RESOLUTIONS
 
+### 2025-12-24/25: SUCCESS - “Button Anchor” (No More Flicking Accordion Buttons)
+
+**Problem:** In the new site’s Admin → Forms → Formbuilder, accordion sections often auto-close to save space. When something above closed, everything below jumped upward. This made the clicked button/header “fly away” and caused terrible UX (especially when thousands of posts later will behave the same way).
+
+**Goal:** When the user clicks a button/header, it must stay **completely stationary** on-screen. Anything above that closes should effectively “collapse downward” relative to the user’s view. Gaps are acceptable temporarily (especially near the bottom), as long as the clicked button does not move.
+
+**Reference:** `direction-test.html` demonstrates the intended behavior (clicked element stays fixed; surrounding elements move around it).
+
+**What Was Implemented (New Site):**
+- **Core idea:** Treat the clicked header/row as an “anchor”. After the UI changes (panels open/close), adjust the scroll position so the anchor ends up in the **same screen position** as before.
+- **Top slack (“gap”)**: When the math would require scrolling above the top (negative scroll), create a temporary invisible gap above content, then auto-remove it as the user scrolls up.
+- **Bottom slack (“gap”)**: Near the bottom, collapsing content can force the browser to clamp scroll (causing a yank). We add a temporary invisible gap at the bottom so the browser has room, then auto-remove it as the user scrolls down.
+
+**Exact Files Changed:**
+- `formbuilder-new.js`
+  - Implemented `runWithScrollAnchor(anchorEl, fn)` and applied it to:
+    - Category header open/close + category edit panel toggles
+    - Subcategory header open/close + subcategory edit panel toggles
+    - Field/fieldset row clicks + field edit button clicks (so closing another field edit panel above doesn’t yank the clicked row)
+    - Field edit panel “click-away close” (closing panels above while clicking below doesn’t yank the clicked control)
+  - Implemented **dynamic bottom slack** using a `.formbuilder-scroll-gap-bottom` element so there is no permanent dead space.
+- `formbuilder-new.css`
+  - Added `.formbuilder-scroll-gap` (top gap) and `.formbuilder-scroll-gap-bottom` (bottom gap) as invisible spacers.
+  - Removed the temporary “quick test” `padding-bottom: 1000px` once the dynamic bottom slack worked.
+
+**Result:** The clicked button stays fixed in place across categories, subcategories, and fieldsets. Auto-closing above no longer causes “flicking/jumping”. Bottom-of-panel yank was eliminated without keeping permanent extra space.
+
+**Lesson for future work:** This is the pattern to use for all future “accordion-like” UX (including Posts with thousands of items). Anchor the clicked header/row, then adjust scroll after DOM changes, using temporary invisible top/bottom slack when necessary.
+
 ### History of Failed Website Starts
 
 **FIRST TEST: Check website load speed on phone using 5G (not WiFi).** If the site loads fast on phone 5G, the issue is the router/local network. Reset the router.
