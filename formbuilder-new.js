@@ -699,7 +699,22 @@
             // Don't close if clicking on save/discard buttons or calculator
             if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-field-wrapper')) {
-                closeAllFieldEditPanels();
+                // Keep the clicked thing stationary while the field edit panel above collapses.
+                // This matches the category/subcategory anchoring behavior.
+                var anchor = e.target.closest(
+                    '.formbuilder-fieldset-menu-button,' +
+                    '.formbuilder-menu-button,' +
+                    '.formbuilder-add-button,' +
+                    '.formbuilder-form-preview,' +
+                    '.formbuilder-calculator-btn,' +
+                    '.formbuilder-accordion-option-header,' +
+                    '.formbuilder-accordion-header,' +
+                    'button'
+                ) || e.target;
+                
+                runWithScrollAnchor(anchor, function() {
+                    closeAllFieldEditPanels();
+                });
             }
         });
     }
