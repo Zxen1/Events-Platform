@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Category Filter Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; font-size: 13px; }
+        
+        .filter-categoryfilter-accordion {
+            width: 400px;
+            margin-bottom: 3px;
+            background: #222222;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .filter-categoryfilter-accordion-header {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            cursor: pointer;
+            background: #2e3a72;
+        }
+        .filter-categoryfilter-accordion-header-image {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        .filter-categoryfilter-accordion-header-text {
+            flex: 1;
+            padding-left: 10px;
+            font-weight: bold;
+        }
+        .filter-categoryfilter-accordion-header-arrow {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+        .filter-categoryfilter-accordion--open .filter-categoryfilter-accordion-header-arrow {
+            transform: rotate(180deg);
+        }
+        .filter-categoryfilter-accordion-header-togglearea {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            padding-right: 10px;
+            margin-right: -10px;
+            cursor: pointer;
+        }
+        .filter-categoryfilter-accordion-header-toggle {
+            width: 36px;
+            height: 20px;
+            background: #444;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+        }
+        .filter-categoryfilter-accordion-header-toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #888;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .filter-categoryfilter-accordion-header-toggle.on {
+            background: #3b82f5;
+        }
+        .filter-categoryfilter-accordion-header-toggle.on::after {
+            transform: translateX(16px);
+            background: #fff;
+        }
+        
+        .filter-categoryfilter-accordion-body {
+            display: none;
+            padding: 5px;
+        }
+        .filter-categoryfilter-accordion--open .filter-categoryfilter-accordion-body {
+            display: block;
+        }
+        
+        .filter-categoryfilter-accordion-option {
+            height: 36px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .filter-categoryfilter-accordion-option:hover {
+            background: #333;
+        }
+        .filter-categoryfilter-accordion-option-image {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            border-radius: 3px;
+        }
+        .filter-categoryfilter-accordion-option-text {
+            flex: 1;
+            padding-left: 10px;
+        }
+        .filter-categoryfilter-accordion-option-toggle {
+            width: 32px;
+            height: 18px;
+            background: #444;
+            border-radius: 9px;
+            position: relative;
+            cursor: pointer;
+        }
+        .filter-categoryfilter-accordion-option-toggle::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: #888;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .filter-categoryfilter-accordion-option-toggle.on {
+            background: #3b82f5;
+        }
+        .filter-categoryfilter-accordion-option-toggle.on::after {
+            transform: translateX(14px);
+            background: #fff;
+        }
+        
+        /* Disabled state */
+        .filter-categoryfilter-accordion--disabled .filter-categoryfilter-accordion-header {
+            opacity: 0.5;
+        }
+        .filter-categoryfilter-accordion--disabled .filter-categoryfilter-accordion-option {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="categoryFilters"></div>
+
+<script>
+(function(){
+    var container = document.getElementById('categoryFilters');
+    
+    fetch('/gateway.php?action=get-form')
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (!res.success || !res.snapshot) return;
+            
+            var categories = res.snapshot.categories || [];
+            var categoryIconPaths = res.snapshot.categoryIconPaths || {};
+            var subcategoryIconPaths = res.snapshot.subcategoryIconPaths || {};
+            
+            categories.forEach(function(cat) {
+                var accordion = document.createElement('div');
+                accordion.className = 'filter-categoryfilter-accordion';
+                
+                // Header
+                var header = document.createElement('div');
+                header.className = 'filter-categoryfilter-accordion-header';
+                
+                var headerImg = document.createElement('img');
+                headerImg.className = 'filter-categoryfilter-accordion-header-image';
+                headerImg.src = categoryIconPaths[cat.name] || '';
+                
+                var headerText = document.createElement('span');
+                headerText.className = 'filter-categoryfilter-accordion-header-text';
+                headerText.textContent = cat.name;
+                
+                var headerArrow = document.createElement('span');
+                headerArrow.className = 'filter-categoryfilter-accordion-header-arrow';
+                headerArrow.textContent = '▼';
+                
+                var headerToggleArea = document.createElement('div');
+                headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';
+                var headerToggle = document.createElement('div');
+                headerToggle.className = 'filter-categoryfilter-accordion-header-toggle on';
+                headerToggleArea.appendChild(headerToggle);
+                
+                header.appendChild(headerImg);
+                header.appendChild(headerText);
+                header.appendChild(headerArrow);
+                header.appendChild(headerToggleArea);
+                
+                // Body
+                var body = document.createElement('div');
+                body.className = 'filter-categoryfilter-accordion-body';
+                
+                var subs = cat.subs || [];
+                subs.forEach(function(subName) {
+                    var option = document.createElement('div');
+                    option.className = 'filter-categoryfilter-accordion-option';
+                    
+                    var optImg = document.createElement('img');
+                    optImg.className = 'filter-categoryfilter-accordion-option-image';
+                    optImg.src = subcategoryIconPaths[subName] || '';
+                    
+                    var optText = document.createElement('span');
+                    optText.className = 'filter-categoryfilter-accordion-option-text';
+                    optText.textContent = subName;
+                    
+                    var optToggle = document.createElement('div');
+                    optToggle.className = 'filter-categoryfilter-accordion-option-toggle on';
+                    
+                    option.appendChild(optImg);
+                    option.appendChild(optText);
+                    option.appendChild(optToggle);
+                    
+                    // Click anywhere on option toggles the switch
+                    option.addEventListener('click', function(e) {
+                        optToggle.classList.toggle('on');
+                    });
+                    
+                    body.appendChild(option);
+                });
+                
+                accordion.appendChild(header);
+                accordion.appendChild(body);
+                
+                // Category toggle area click - disable and force close
+                headerToggleArea.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    headerToggle.classList.toggle('on');
+                    if(headerToggle.classList.contains('on')) {
+                        accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+                    } else {
+                        accordion.classList.add('filter-categoryfilter-accordion--disabled');
+                        accordion.classList.remove('filter-categoryfilter-accordion--open');
+                    }
+                });
+                
+                // Click anywhere except toggle area expands/collapses
+                header.addEventListener('click', function(e) {
+                    if(e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
+                    accordion.classList.toggle('filter-categoryfilter-accordion--open');
+                });
+                
+                container.appendChild(accordion);
+            });
+        });
+})();
+</script>
+
+</body>
+</html>

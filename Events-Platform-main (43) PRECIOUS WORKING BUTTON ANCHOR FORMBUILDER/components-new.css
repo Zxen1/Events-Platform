@@ -1,0 +1,3107 @@
+/* ============================================================================
+   COMPONENTS.CSS - Reusable UI Component Styles
+   ============================================================================
+   
+   Shared component styles used across multiple sections.
+   
+   STRUCTURE:
+   - CLEAR BUTTON        - Reusable X/clear button
+   - SWITCH              - Toggle switch (has size variants)
+   - FIELDSETS           - Form field types
+   - CALENDAR            - Horizontal scrolling date picker
+   - CURRENCY            - Currency selector (has variants)
+   - PHONE PREFIX        - Phone prefix selector
+   - ICON PICKER         - Category icon picker
+   - SYSTEM IMAGE PICKER - System image picker
+   - MAP CONTROL ROW     - Geocoder + Geolocate + Compass (has variants)
+   - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
+   - CONFIRM DIALOG      - Confirmation dialog for destructive actions
+   
+   ============================================================================ */
+
+
+/* ============================================================================
+   CLEAR BUTTON
+   
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance */
+.clear-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: inherit;
+    transition: opacity 0.15s ease;
+}
+
+.clear-button-icon {
+    display: block;
+}
+
+/* States */
+.clear-button:hover {
+    opacity: 0.7;
+}
+
+
+/* ============================================================================
+   SWITCH
+   
+   Size variants: small, medium (default), large
+   ============================================================================ */
+
+/* Base - Medium (default) */
+.component-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    transition: background 0.2s;
+}
+
+.component-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+/* States */
+.component-switch-input:checked + .component-switch-slider {
+    background: #3b82f6;
+}
+
+.component-switch-input:checked + .component-switch-slider::before {
+    transform: translateX(20px);
+}
+
+/* Size: Small */
+.component-small-switch {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-small-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-small-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9px;
+    transition: background 0.2s;
+}
+
+.component-small-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    left: 2px;
+    bottom: 2px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.component-small-switch-input:checked + .component-small-switch-slider {
+    background: #3b82f6;
+}
+
+.component-small-switch-input:checked + .component-small-switch-slider::before {
+    transform: translateX(14px);
+}
+
+/* Size: Large */
+.component-large-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.component-large-switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.component-large-switch-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 13px;
+    transition: background 0.2s;
+}
+
+.component-large-switch-slider::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.component-large-switch-input:checked + .component-large-switch-slider {
+    background: #3b82f6;
+}
+
+.component-large-switch-input:checked + .component-large-switch-slider::before {
+    transform: translateX(24px);
+}
+
+
+/* ============================================================================
+   FIELDSETS
+   
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance - Container */
+.fieldset-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.fieldset-header {
+    font-size: 14px;
+    font-weight: bold;
+    color: #3b82f5;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+}
+
+.fieldset {
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.fieldset-divider {
+    width: 100%;
+    height: 1px;
+    background: #333;
+    margin: 8px 0;
+}
+
+/* Appearance - Label */
+.fieldset-label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.fieldset-label-text {
+    font-size: 13px;
+    color: #fff;
+}
+
+.fieldset-label-required {
+    color: #f87171;
+    font-weight: bold;
+    margin-left: 3px;
+}
+
+.fieldset-label-tooltip {
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #333;
+    border-radius: 50%;
+    color: #888;
+    font-size: 10px;
+    font-style: italic;
+    font-family: serif;
+    cursor: help;
+    position: relative;
+}
+
+.fieldset-sublabel {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+/* Appearance - Input */
+.fieldset-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 13px;
+    caret-color: #fff;
+}
+
+.fieldset-input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.fieldset-input[type="number"]::-webkit-outer-spin-button,
+.fieldset-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.fieldset-input::placeholder {
+    color: #666;
+}
+
+.fieldset-char-count {
+    font-size: 11px;
+    color: #666;
+    text-align: right;
+    margin-top: 3px;
+}
+
+/* Appearance - Textarea */
+.fieldset-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 13px;
+    resize: vertical;
+    caret-color: #fff;
+}
+
+.fieldset-textarea::placeholder {
+    color: #666;
+}
+
+/* Appearance - Menu */
+.fieldset-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.fieldset-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.fieldset-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.fieldset-menu-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fieldset-menu-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+}
+
+.fieldset-menu-button-input::placeholder {
+    color: #666;
+}
+
+.fieldset-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.fieldset-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.fieldset-menu-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.fieldset-menu-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.fieldset-menu-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+    background: transparent;
+    border: none;
+}
+
+.fieldset-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.fieldset-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    color: #fff;
+}
+
+/* Appearance - Select */
+.fieldset-select {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.fieldset-select option {
+    background: #222;
+    color: #fff;
+}
+
+.fieldset-select option:checked,
+.fieldset-select option:focus {
+    background: #3b82f6;
+    color: #fff;
+}
+
+/* Appearance - Radio */
+.fieldset-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fieldset-radio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.fieldset-radio-input {
+    width: 18px;
+    height: 18px;
+    accent-color: #3b82f5;
+    cursor: pointer;
+}
+
+.fieldset-radio-text {
+    font-size: 13px;
+    color: #fff;
+}
+
+/* Appearance - Row */
+.fieldset-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.fieldset-row > * {
+    flex: 1;
+}
+
+.fieldset-row > .fieldset-menu {
+    flex: 0 0 120px;
+}
+
+.fieldset-row > .fieldset-currency-wrapper {
+    flex: 0 0 120px;
+}
+
+.fieldset-row > .fieldset-input-small {
+    flex: 0 0 100px;
+}
+
+/* Appearance - Images Grid */
+.fieldset-images-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+    width: 100%;
+}
+
+.fieldset-image-thumb {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #222;
+    border: 1px solid #333;
+}
+
+.fieldset-image-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.fieldset-image-thumb-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fieldset-image-thumb-remove:hover {
+    background: rgba(239, 68, 68, 0.9);
+}
+
+/* Appearance - Images Upload Button */
+.fieldset-images {
+    aspect-ratio: 1;
+    padding: 0;
+    background: #222;
+    border: 2px dashed #333;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.fieldset-images-icon {
+    font-size: 22px;
+    color: #555;
+}
+
+.fieldset-images-text {
+    font-size: 10px;
+    color: #888;
+}
+
+/* Appearance - Date and Time */
+.fieldset-date,
+.fieldset-time {
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 13px;
+    caret-color: #fff;
+}
+
+.fieldset-date::-webkit-calendar-picker-indicator,
+.fieldset-time::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* Appearance - Sessions */
+.fieldset-sessions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fieldset-session-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.fieldset-session-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fieldset-session-date {
+    flex: 1;
+    height: 36px;
+    padding: 0 10px;
+    background: #333;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+}
+
+.fieldset-session-date-spacer {
+    flex: 1;
+    height: 36px;
+}
+
+.fieldset-session-time {
+    flex: 0 0 100px;
+}
+
+.fieldset-session-add,
+.fieldset-session-remove,
+.fieldset-pricing-add,
+.fieldset-pricing-remove {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #666;
+    cursor: pointer;
+    font-size: 18px;
+    flex: 0 0 36px;
+}
+
+/* Appearance - Location */
+.fieldset-location-status {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+}
+
+/* Appearance - Amenities */
+.fieldset-amenities {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fieldset-amenity-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 0;
+}
+
+.fieldset-amenity-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.fieldset-amenity-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.fieldset-amenity-name {
+    flex: 1;
+    font-size: 13px;
+    color: #fff;
+}
+
+.fieldset-amenity-options {
+    display: flex;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.fieldset-amenity-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #ccc;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 8px;
+    border-radius: 5px;
+}
+
+.fieldset-amenity-option input {
+    cursor: pointer;
+    accent-color: #3b82f5;
+}
+
+/* Appearance - Google Places */
+.pac-container {
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    font-family: sans-serif;
+    font-size: 13px;
+    z-index: var(--layer-modal, 90);
+}
+
+.pac-item {
+    padding: 8px 10px;
+    color: #fff;
+    cursor: pointer;
+    border-top: 1px solid #333;
+}
+
+.pac-item:first-child {
+    border-top: none;
+}
+
+.pac-item-query {
+    color: #fff;
+    font-weight: bold;
+}
+
+.pac-matched {
+    color: #3b82f5;
+}
+
+.pac-icon {
+    display: none;
+}
+
+/* States - Input */
+.fieldset-input:hover {
+    border-color: #555;
+}
+
+.fieldset-input:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+.fieldset-input--invalid {
+    border-color: #ef4444;
+}
+
+.fieldset-input--invalid:focus {
+    border-color: #ef4444;
+}
+
+/* States - Char Count */
+.fieldset-char-count--warning {
+    color: #f59e0b;
+}
+
+.fieldset-char-count--danger {
+    color: #ef4444;
+}
+
+/* States - Textarea */
+.fieldset-textarea:hover {
+    border-color: #555;
+}
+
+.fieldset-textarea:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+.fieldset-textarea.fieldset-input--invalid {
+    border-color: #ef4444;
+}
+
+.fieldset-textarea.fieldset-input--invalid:focus {
+    border-color: #ef4444;
+}
+
+/* States - Menu */
+.fieldset-menu-button:hover {
+    border-color: #555;
+}
+
+.fieldset-menu.open .fieldset-menu-button {
+    border-color: #3b82f5;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.fieldset-menu.open .fieldset-menu-button-arrow {
+    transform: rotate(180deg);
+}
+
+.fieldset-menu.open .fieldset-menu-options {
+    display: block;
+}
+
+.fieldset-menu-option:hover {
+    background: #3b82f5;
+}
+
+/* States - Select */
+.fieldset-select:hover {
+    border-color: #555;
+}
+
+.fieldset-select:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+/* States - Images Upload */
+.fieldset-images:hover {
+    border-color: #3b82f5;
+}
+
+/* States - Date and Time */
+.fieldset-date:hover,
+.fieldset-time:hover {
+    border-color: #555;
+}
+
+.fieldset-date:focus,
+.fieldset-time:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+/* States - Session Buttons */
+.fieldset-session-add:hover,
+.fieldset-pricing-add:hover {
+    border-color: #3b82f5;
+    color: #3b82f5;
+}
+
+.fieldset-session-remove:hover,
+.fieldset-pricing-remove:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
+
+/* States - Location */
+.fieldset-location-status.success {
+    color: #22c55e;
+}
+
+.fieldset-location-status.error {
+    color: #ef4444;
+}
+
+/* States - Amenities */
+.fieldset-amenity-row.selected-yes .fieldset-amenity-icon img {
+    filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
+}
+
+.fieldset-amenity-row.selected-no .fieldset-amenity-icon img {
+    filter: brightness(0) invert(0.4);
+}
+
+.fieldset-amenity-row.selected-no .fieldset-amenity-name {
+    color: #666;
+}
+
+/* States - Google Places */
+.pac-item:hover {
+    background: #3b82f5;
+}
+
+.pac-item:hover .pac-matched {
+    color: #fff;
+}
+
+.pac-item-selected {
+    background: #3b82f5;
+}
+
+/* States - Tooltip */
+.fieldset-label-tooltip:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    background: #000;
+    border: 1px solid #3b82f5;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-style: normal;
+    font-family: sans-serif;
+    color: #fff;
+    width: 250px;
+    max-width: calc(100vw - 40px);
+    white-space: normal;
+    z-index: var(--layer-menu, 85);
+    line-height: 1.4;
+}
+
+/* Appearance - Fieldset Calendar (for Sessions) */
+.fieldset-calendar-container {
+    width: 100%;
+    overflow: hidden;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.fieldset-calendar-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #222;
+}
+
+.fieldset-calendar-scroll::-webkit-scrollbar {
+    height: 8px;
+    background: #222;
+}
+
+.fieldset-calendar-scroll::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.fieldset-calendar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+.fieldset-calendar {
+    display: flex;
+    width: max-content;
+}
+
+.fieldset-calendar-month {
+    flex: 0 0 auto;
+    width: 250px;
+}
+
+.fieldset-calendar-month:not(:first-child) {
+    border-left: 1px solid #1a1a1a;
+}
+
+.fieldset-calendar-header {
+    height: 34px;
+    line-height: 34px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    background: #2e3a72;
+}
+
+.fieldset-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.fieldset-calendar-weekday,
+.fieldset-calendar-day {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+
+.fieldset-calendar-weekday {
+    font-weight: bold;
+}
+
+.fieldset-calendar-day {
+    cursor: pointer;
+}
+
+.fieldset-calendar-day.empty {
+    cursor: default;
+    background: #222;
+}
+
+.fieldset-calendar-day.past {
+    background: #1a1a1a;
+    color: #808080;
+}
+
+.fieldset-calendar-day.future {
+    background: #222;
+}
+
+.fieldset-calendar-day.today {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.fieldset-calendar-day:not(.selected):not(.empty):hover {
+    background: #333;
+}
+
+.fieldset-calendar-day:not(.selected):not(.empty):active {
+    background: #2e3a72;
+    color: #fff;
+}
+
+.fieldset-calendar-day.selected {
+    background: #2e3a72;
+    color: #fff;
+}
+
+.fieldset-calendar-day.selected.today {
+    color: #ff0000;
+}
+
+.fieldset-calendar-today-marker {
+    position: absolute;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
+    background: #ff0000;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10;
+}
+
+/* Compact Currency/Phone Prefix (for Item/Ticket Pricing and Phone fields) */
+.fieldset-currency-compact {
+    width: 120px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-compact .fieldset-menu-button {
+    width: 120px;
+}
+
+.fieldset-currency-compact .fieldset-menu-button-text {
+    padding-left: 6px;
+    font-size: 12px;
+}
+
+.fieldset-currency-compact .fieldset-menu-button-input {
+    padding-left: 6px;
+    font-size: 12px;
+}
+
+.fieldset-currency-compact .fieldset-menu-options {
+    width: 250px;
+    left: 0;
+    right: auto;
+    border-top: 1px solid #3b82f5;
+    border-radius: 5px;
+    z-index: var(--layer-menu, 85);
+}
+
+.fieldset-row > .fieldset-currency-compact {
+    flex: 0 0 120px;
+}
+
+
+/* ============================================================================
+   CALENDAR
+   
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance */
+.calendar-container {
+    width: 100%;
+    overflow: hidden;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    position: relative;
+}
+
+.calendar-scroll-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.calendar-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 #222;
+}
+
+.calendar-scroll::-webkit-scrollbar {
+    height: 8px;
+    background: #222;
+}
+
+.calendar-scroll::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.calendar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+.calendar-body {
+    display: flex;
+    width: max-content;
+}
+
+.calendar-month {
+    flex: 0 0 auto;
+    width: 250px;
+}
+
+.calendar-month:not(:first-child) {
+    border-left: 1px solid #1a1a1a;
+}
+
+.calendar-header {
+    height: 34px;
+    line-height: 34px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    background: #2e3a72;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-weekday,
+.calendar-day {
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+}
+
+.calendar-weekday {
+    font-weight: bold;
+}
+
+.calendar-day {
+    cursor: pointer;
+    background: #222;
+}
+
+.calendar-today-marker {
+    position: absolute;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff0000;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.calendar-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 8px 12px;
+    border-top: 1px solid #333;
+}
+
+.calendar-ok,
+.calendar-cancel {
+    height: 32px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.calendar-ok {
+    background: #3b82f5;
+    color: #fff;
+}
+
+.calendar-cancel {
+    background: #333;
+    color: #fff;
+}
+
+/* States */
+.calendar-day.empty {
+    cursor: default;
+    background: #222;
+}
+
+.calendar-day.past {
+    background: #1a1a1a;
+    color: #808080;
+}
+
+.calendar-day.future {
+    background: #222;
+}
+
+.calendar-day.today {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.calendar-day:not(.selected):not(.empty):hover {
+    background: #333;
+}
+
+.calendar-day:not(.selected):not(.empty):active {
+    background: #2e3a72;
+    color: #fff;
+}
+
+.calendar-day.selected {
+    background: #2e3a72;
+    color: #fff;
+}
+
+.calendar-day.selected.today {
+    color: #ff0000;
+}
+
+.calendar-day.range-start {
+    border-radius: 5px 0 0 5px;
+}
+
+.calendar-day.range-end {
+    border-radius: 0 5px 5px 0;
+}
+
+.calendar-day.in-range {
+    background: rgba(46, 58, 114, 0.5);
+    color: #fff;
+}
+
+.calendar-ok:hover {
+    background: #2563eb;
+}
+
+.calendar-cancel:hover {
+    background: #444;
+}
+
+
+/* ============================================================================
+   CURRENCY
+   
+   This component has variants - no base styles.
+   Each location where it appears has its own complete CSS block.
+   ============================================================================ */
+
+
+/* ----------------------------------------------------------------------------
+   FIELDSET VARIANT (compact)
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.fieldset-currency-wrapper {
+    width: 100px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-button {
+    width: 100px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.fieldset-currency-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 6px;
+    font-size: 12px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fieldset-currency-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.fieldset-currency-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 250px;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-radius: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.fieldset-currency-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.fieldset-currency-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.fieldset-currency-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+}
+
+.fieldset-currency-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.fieldset-currency-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+}
+
+
+/* ----------------------------------------------------------------------------
+   ADMIN VARIANT (full width)
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.admin-currency-wrapper {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.admin-currency-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.admin-currency-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.admin-currency-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-currency-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+}
+
+.admin-currency-button-input::placeholder {
+    color: #888;
+}
+
+.admin-currency-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.admin-currency-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.admin-currency-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.admin-currency-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.admin-currency-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 14px;
+}
+
+.admin-currency-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.admin-currency-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+
+/* ----------------------------------------------------------------------------
+   STATES (shared)
+   ---------------------------------------------------------------------------- */
+
+.fieldset-currency-button:hover,
+.admin-currency-button:hover {
+    border-color: #555;
+}
+
+.fieldset-currency-wrapper.open .fieldset-currency-button,
+.admin-currency-wrapper.open .admin-currency-button {
+    border-color: #3b82f5;
+}
+
+.admin-currency-wrapper.open .admin-currency-button {
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.fieldset-currency-wrapper.open .fieldset-currency-button-arrow,
+.admin-currency-wrapper.open .admin-currency-button-arrow {
+    transform: rotate(180deg);
+}
+
+.fieldset-currency-wrapper.open .fieldset-currency-options,
+.admin-currency-wrapper.open .admin-currency-options {
+    display: block;
+}
+
+.fieldset-currency-option:hover,
+.admin-currency-option:hover {
+    background: #3b82f5;
+}
+
+
+/* ============================================================================
+   PHONE PREFIX
+   
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance */
+.phoneprefix-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.phoneprefix-button-wrapper {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.phoneprefix-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.phoneprefix-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.phoneprefix-button-text {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    line-height: 1;
+    flex: 1;
+}
+
+.phoneprefix-button-arrow {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 0.15s;
+}
+
+.phoneprefix-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 280px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #222;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    margin-top: 4px;
+    z-index: var(--layer-menu, 85);
+}
+
+.phoneprefix-options[hidden] {
+    display: none;
+}
+
+.phoneprefix-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 10px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.phoneprefix-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.phoneprefix-option-text {
+    flex: 1;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.phoneprefix-input {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    font: inherit;
+}
+
+/* States */
+.phoneprefix-button:hover {
+    border-color: rgba(255,255,255,0.4);
+}
+
+.phoneprefix-button[aria-expanded="true"] .phoneprefix-button-arrow {
+    transform: rotate(180deg);
+}
+
+.phoneprefix-option:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.phoneprefix-option:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+.phoneprefix-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+
+/* ============================================================================
+   ICON PICKER
+   
+   Dropdown menu for selecting category icons.
+   Matches admin currency menu style.
+   ============================================================================ */
+
+/* Appearance */
+.component-iconpicker {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-iconpicker-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font: inherit;
+}
+
+.component-iconpicker-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-iconpicker-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-iconpicker-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.component-iconpicker-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-iconpicker-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.component-iconpicker-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.component-iconpicker-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+}
+
+.component-iconpicker-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-iconpicker-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-iconpicker-error {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+}
+
+/* States */
+.component-iconpicker-button:hover {
+    border-color: #555;
+}
+
+.component-iconpicker.open .component-iconpicker-button {
+    border-color: #3b82f5;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.component-iconpicker.open .component-iconpicker-button-arrow {
+    transform: rotate(180deg);
+}
+
+.component-iconpicker.open .component-iconpicker-options {
+    display: block;
+}
+
+.component-iconpicker-loading {
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
+}
+
+.component-iconpicker-option:hover {
+    background: #3b82f5;
+}
+
+
+/* ============================================================================
+   SYSTEM IMAGE PICKER
+   
+   Dropdown menu for selecting system images (logos, map pills, etc).
+   Matches admin currency menu style.
+   ============================================================================ */
+
+/* Appearance */
+.component-systemimagepicker {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-systemimagepicker-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font: inherit;
+}
+
+.component-systemimagepicker-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-systemimagepicker-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-systemimagepicker-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.component-systemimagepicker-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-systemimagepicker-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.component-systemimagepicker-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.component-systemimagepicker-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+}
+
+.component-systemimagepicker-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-systemimagepicker-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-systemimagepicker-error {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+}
+
+/* States */
+.component-systemimagepicker-button:hover {
+    border-color: #555;
+}
+
+.component-systemimagepicker.open .component-systemimagepicker-button {
+    border-color: #3b82f5;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.component-systemimagepicker.open .component-systemimagepicker-button-arrow {
+    transform: rotate(180deg);
+}
+
+.component-systemimagepicker.open .component-systemimagepicker-options {
+    display: block;
+}
+
+.component-systemimagepicker-loading {
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
+}
+
+.component-systemimagepicker-option:hover {
+    background: #3b82f5;
+}
+
+
+/* ============================================================================
+   AMENITIES PICKER COMPONENT
+   ============================================================================ */
+
+.component-amenitiespicker {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-amenitiespicker-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font: inherit;
+}
+
+.component-amenitiespicker-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-amenitiespicker-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.component-amenitiespicker-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-amenitiespicker-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.component-amenitiespicker-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.component-amenitiespicker-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+}
+
+.component-amenitiespicker-option-checkbox {
+    margin-right: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.component-amenitiespicker-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: brightness(0) invert(1);
+    transition: filter 0.2s;
+}
+
+.component-amenitiespicker-option--selected .component-amenitiespicker-option-image {
+    filter: brightness(0) saturate(100%) invert(47%) sepia(95%) saturate(1352%) hue-rotate(201deg) brightness(98%) contrast(96%);
+}
+
+.component-amenitiespicker-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-amenitiespicker-error {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+}
+
+/* States */
+.component-amenitiespicker-button:hover {
+    border-color: #555;
+}
+
+.component-amenitiespicker.open .component-amenitiespicker-button {
+    border-color: #3b82f5;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.component-amenitiespicker.open .component-amenitiespicker-button-arrow {
+    transform: rotate(180deg);
+}
+
+.component-amenitiespicker.open .component-amenitiespicker-options {
+    display: block;
+}
+
+.component-amenitiespicker-option:hover {
+    background: #3b82f5;
+}
+
+
+/* ============================================================================
+   MAP CONTROL ROW
+   
+   This component has variants - no base styles.
+   Each location where it appears has its own complete CSS block.
+   ============================================================================ */
+
+
+/* ----------------------------------------------------------------------------
+   FILTER PANEL VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.filter-mapcontrol-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.filter-mapcontrol-geocoder {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.filter-mapcontrol-geocoder-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 36px 0 12px;
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    font-size: 14px;
+    color: #ffffff;
+    caret-color: #ffffff;
+    box-sizing: border-box;
+}
+
+.filter-mapcontrol-geocoder-input::placeholder {
+    color: #888888;
+}
+
+.filter-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    background: #222222;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    font-family: Roboto, Arial, sans-serif;
+}
+
+.filter-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.filter-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.filter-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #aaaaaa;
+    margin-top: 2px;
+}
+
+.filter-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    color: #aaaaaa;
+    cursor: pointer;
+    padding: 0;
+}
+
+.filter-mapcontrol-geolocate {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #ffffff;
+}
+
+.filter-mapcontrol-geolocate-icon {
+    display: block;
+    width: 30px;
+    height: 30px;
+}
+
+.filter-mapcontrol-compass {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #ffffff;
+}
+
+.filter-mapcontrol-compass-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out;
+}
+
+
+/* ----------------------------------------------------------------------------
+   MAP VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.map-mapcontrol-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
+.map-mapcontrol-geocoder {
+    position: relative;
+    flex: 1 1 240px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.map-mapcontrol-geocoder-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 36px 0 12px;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
+    font-size: 14px;
+    color: #000000;
+    caret-color: #000000;
+    box-sizing: border-box;
+}
+
+.map-mapcontrol-geocoder-input::placeholder {
+    color: #888888;
+}
+
+.map-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    background: #ffffff;
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    font-family: Roboto, Arial, sans-serif;
+}
+
+.map-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.map-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.map-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #70757a;
+    margin-top: 2px;
+}
+
+.map-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    font-size: 18px;
+    color: #888888;
+    cursor: pointer;
+    padding: 0;
+}
+
+.map-mapcontrol-geolocate {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.map-mapcontrol-geolocate-icon {
+    display: block;
+    width: 30px;
+    height: 30px;
+}
+
+.map-mapcontrol-compass {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.map-mapcontrol-compass-icon {
+    display: block;
+    width: 20px;
+    height: 20px;
+    transition: transform 0.1s ease-out;
+}
+
+
+/* ----------------------------------------------------------------------------
+   WELCOME MODAL VARIANT
+   ---------------------------------------------------------------------------- */
+
+/* Appearance */
+.welcome-mapcontrol-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+.welcome-mapcontrol-geocoder {
+    position: relative;
+    flex: 0 1 420px;
+    max-width: 420px;
+    min-width: 0;
+}
+
+.welcome-mapcontrol-geocoder-input {
+    width: 100%;
+    height: 28px;
+    padding: 0 28px 0 10px;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
+    font-size: 13px;
+    color: #000000;
+    caret-color: #000000;
+    box-sizing: border-box;
+}
+
+.welcome-mapcontrol-geocoder-input::placeholder {
+    color: #888888;
+}
+
+.welcome-mapcontrol-geocoder-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 2px;
+    background: #ffffff;
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    font-family: Roboto, Arial, sans-serif;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-item {
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-main {
+    font-size: 14px;
+    font-weight: 500;
+    color: #202124;
+}
+
+.welcome-mapcontrol-geocoder-dropdown-secondary {
+    font-size: 12px;
+    color: #70757a;
+    margin-top: 2px;
+}
+
+.welcome-mapcontrol-geocoder-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #888888;
+    cursor: pointer;
+    padding: 0;
+}
+
+.welcome-mapcontrol-geolocate {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.welcome-mapcontrol-geolocate-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
+.welcome-mapcontrol-compass {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 5px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    color: #333333;
+}
+
+.welcome-mapcontrol-compass-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+    transition: transform 0.1s ease-out;
+}
+
+
+/* ----------------------------------------------------------------------------
+   STATES (shared)
+   ---------------------------------------------------------------------------- */
+
+.filter-mapcontrol-geocoder-input:focus,
+.map-mapcontrol-geocoder-input:focus,
+.welcome-mapcontrol-geocoder-input:focus {
+    outline: none;
+    border-color: #3b82f5;
+}
+
+.filter-mapcontrol-geocoder-dropdown-item:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.map-mapcontrol-geocoder-dropdown-item:hover,
+.welcome-mapcontrol-geocoder-dropdown-item:hover {
+    background-color: #f1f3f4;
+}
+
+.filter-mapcontrol-geocoder-clear:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: #ffffff;
+}
+
+.map-mapcontrol-geocoder-clear:hover,
+.welcome-mapcontrol-geocoder-clear:hover {
+    background-color: rgba(0,0,0,0.05);
+    color: #000000;
+}
+
+.filter-mapcontrol-geolocate:hover,
+.filter-mapcontrol-compass:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+
+/* ----------------------------------------------------------------------------
+   USER LOCATION MARKER (pulsing dot with direction)
+   ---------------------------------------------------------------------------- */
+
+.user-location-marker {
+    position: relative;
+    width: 16px;
+    height: 16px;
+}
+
+.user-location-marker-dot {
+    width: 16px;
+    height: 16px;
+    background-color: #3b82f6;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
+    animation: user-location-pulse 2s infinite;
+}
+
+.user-location-marker-heading {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 20px solid rgba(59, 130, 246, 0.6);
+    transform-origin: center bottom;
+}
+
+@keyframes user-location-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
+}
+
+.map-mapcontrol-geolocate:hover,
+.welcome-mapcontrol-geolocate:hover,
+.map-mapcontrol-compass:hover,
+.welcome-mapcontrol-compass:hover {
+    background-color: #f2f2f2;
+}
+
+.filter-mapcontrol-geolocate.loading,
+.map-mapcontrol-geolocate.loading,
+.welcome-mapcontrol-geolocate.loading {
+    pointer-events: none;
+}
+
+.filter-mapcontrol-geolocate.loading .filter-mapcontrol-geolocate-icon,
+.map-mapcontrol-geolocate.loading .map-mapcontrol-geolocate-icon,
+.welcome-mapcontrol-geolocate.loading .welcome-mapcontrol-geolocate-icon {
+    -webkit-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -moz-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -o-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    -ms-animation: mapcontrol-geolocate-spin 2s infinite linear;
+    animation: mapcontrol-geolocate-spin 2s infinite linear;
+}
+
+@-webkit-keyframes mapcontrol-geolocate-spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@-moz-keyframes mapcontrol-geolocate-spin {
+    0% { -moz-transform: rotate(0deg); }
+    100% { -moz-transform: rotate(360deg); }
+}
+
+@-o-keyframes mapcontrol-geolocate-spin {
+    0% { -o-transform: rotate(0deg); }
+    100% { -o-transform: rotate(360deg); }
+}
+
+@-ms-keyframes mapcontrol-geolocate-spin {
+    0% { -ms-transform: rotate(0deg); }
+    100% { -ms-transform: rotate(360deg); }
+}
+
+@keyframes mapcontrol-geolocate-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.filter-mapcontrol-geolocate.loading,
+.map-mapcontrol-geolocate.loading,
+.welcome-mapcontrol-geolocate.loading,
+.filter-mapcontrol-geolocate.active,
+.map-mapcontrol-geolocate.active,
+.welcome-mapcontrol-geolocate.active {
+    color: #3b82f6;
+}
+
+
+/* ============================================================================
+   CHECKOUT OPTIONS
+   
+   Radio card selector for checkout tiers.
+   Used in member panel create post form.
+   ============================================================================ */
+
+/* Appearance - Group */
+.member-checkout-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.member-checkout-placeholder {
+    color: #888;
+    font-style: italic;
+    padding: 12px;
+}
+
+/* Appearance - Option Card */
+.member-checkout-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #444;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.member-checkout-option-radio {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 3px 0 0 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.member-checkout-option-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.member-checkout-option-title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.member-checkout-option-name {
+    color: #fff;
+}
+
+.member-checkout-option-description {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.4;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Appearance - Price Section */
+.member-checkout-price-section {
+    margin-top: 8px;
+}
+
+.member-checkout-price-display {
+    color: #3b82f5;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* Appearance - Duration Buttons (General posts) */
+.member-checkout-duration-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.member-checkout-duration-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #444;
+    border-radius: 5px;
+    background: transparent;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.member-checkout-duration-radio {
+    flex-shrink: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    cursor: pointer;
+}
+
+.member-checkout-duration-text {
+    color: inherit;
+}
+
+/* States - Option Card */
+.member-checkout-option:hover {
+    border-color: #3b82f5;
+    background: rgba(59, 130, 245, 0.05);
+}
+
+.member-checkout-option:has(input:checked) {
+    border-color: #3b82f5;
+    background: rgba(59, 130, 245, 0.1);
+}
+
+/* States - Disabled (no dates for events) */
+.member-checkout-option--disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    border-style: dashed;
+}
+
+.member-checkout-option--disabled:hover {
+    border-color: #444;
+    background: transparent;
+}
+
+.member-checkout-option--disabled .member-checkout-price-display {
+    color: #888;
+    font-style: italic;
+}
+
+/* States - Duration Option */
+.member-checkout-duration-option:hover {
+    border-color: #3b82f5;
+    color: #fff;
+}
+
+.member-checkout-duration-option:has(input:checked) {
+    border-color: #3b82f5;
+    background: rgba(59, 130, 245, 0.15);
+    color: #3b82f5;
+}
+
+
+/* ============================================================================
+   CONFIRM DIALOG
+   
+   Reusable confirmation dialog for destructive actions.
+   No variants - same everywhere.
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-confirm-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-confirm-dialog-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Appearance - Dialog */
+.component-confirm-dialog {
+    background: #222222;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    padding: 24px;
+    width: min(90vw, 360px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.component-confirm-dialog-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.component-confirm-dialog-message {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Appearance - Actions */
+.component-confirm-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.component-confirm-dialog-button {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-confirm-dialog-button--cancel {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.component-confirm-dialog-button--confirm {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* States */
+.component-confirm-dialog-button--cancel:focus-visible,
+.component-confirm-dialog-button--cancel:hover {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+.component-confirm-dialog-button--confirm:focus-visible,
+.component-confirm-dialog-button--confirm:hover {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+/* ============================================================================
+   THREE BUTTON DIALOG COMPONENT
+   Duplicated from ConfirmDialogComponent with independent classes
+   ============================================================================ */
+
+/* Appearance - Overlay */
+.component-three-button-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-three-button-dialog-overlay--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Appearance - Dialog */
+.component-three-button-dialog {
+    background: #222222;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    padding: 24px;
+    width: min(90vw, 360px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.component-three-button-dialog-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.component-three-button-dialog-message {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Appearance - Actions */
+.component-three-button-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.component-three-button-dialog-button--cancel {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-three-button-dialog-button--save {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.component-three-button-dialog-button--discard {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* States */
+.component-three-button-dialog-button--cancel:focus-visible,
+.component-three-button-dialog-button--cancel:hover {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+.component-three-button-dialog-button--save:focus-visible,
+.component-three-button-dialog-button--save:hover {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+.component-three-button-dialog-button--discard:focus-visible,
+.component-three-button-dialog-button--discard:hover {
+    background: rgba(0, 0, 0, 0.3);
+    outline: none;
+}
+
+/* ============================================================================
+   TOAST COMPONENT
+   Toast notifications matching old site design
+   ============================================================================ */
+
+.component-toast {
+    position: fixed;
+    top: calc(var(--safe-top, 0px) + 20px);
+    left: 50%;
+    transform: translate(-50%, -10px);
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: var(--layer-dialog, 95);
+}
+
+.component-toast--show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+.component-toast--success {
+    background: #2ea060;
+    color: #fff;
+}
+
+.component-toast--error {
+    background: #c62828;
+    color: #fff;
+}
+
+.component-toast--warning {
+    background: #ff9800;
+    color: #fff;
+}

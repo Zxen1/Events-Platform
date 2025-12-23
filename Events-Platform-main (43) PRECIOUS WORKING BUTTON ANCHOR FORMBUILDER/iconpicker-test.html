@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Picker Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #1a1a1a; color: #fff; font-size: 13px; overflow-x: hidden; }
+        .menu { width: 400px; height: 36px; margin-bottom: 20px; position: relative; }
+        .menu-button { width: 400px; height: 36px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; background: #333; border-radius: 5px; cursor: pointer; }
+        .menu-button-image { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
+        .menu-button-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .menu-button-arrow { width: 16px; height: 36px; margin-left: 10px; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; font-size: 10px; line-height: 1; flex-shrink: 0; }
+        .menu.open .menu-button-arrow { transform: rotate(180deg); }
+        .menu-options { display: none; position: absolute; top: 36px; left: 0; width: 400px; background: #333; border-radius: 5px; max-height: 200px; overflow-y: auto; overflow-x: hidden; z-index: 10; }
+        .menu.open .menu-options { display: block; }
+        .menu-option { width: 100%; height: 36px; display: flex; align-items: center; padding: 0 10px; box-sizing: border-box; cursor: pointer; }
+        .menu-option:hover { background: #444; }
+        .menu-option-image { width: 30px; height: 30px; object-fit: contain; flex-shrink: 0; }
+        .menu-option-text { flex: 1; text-align: left; padding-left: 10px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    </style>
+</head>
+<body>
+
+<!-- SUBCATEGORY ICONS MENU -->
+<div class="menu" image-folder="assets/icons-30/" text-source="folder" text-format="{filename}"></div>
+<script>
+(function(){
+    var c=document.currentScript.previousElementSibling,f=c.getAttribute('image-folder'),t=c.getAttribute('text-format');
+    c.innerHTML='<div class="menu-button"><img class="menu-button-image" src="" alt=""><span class="menu-button-text">Select...</span><span class="menu-button-arrow">▼</span></div><div class="menu-options"></div>';
+    var b=c.querySelector('.menu-button'),o=c.querySelector('.menu-options'),bi=c.querySelector('.menu-button-image'),bt=c.querySelector('.menu-button-text');
+    fetch('/gateway.php?action=list-icons&folder='+encodeURIComponent(f)).then(function(r){return r.json();}).then(function(res){
+        var d=res.icons||[];
+        if(d.length>0){bi.src=f+d[0];bt.textContent=t.replace('{filename}',d[0]);}
+        d.forEach(function(item){var op=document.createElement('div');op.className='menu-option';op.innerHTML='<img class="menu-option-image" src="'+f+item+'" alt=""><span class="menu-option-text">'+t.replace('{filename}',item)+'</span>';op.onclick=function(){bi.src=f+item;bt.textContent=t.replace('{filename}',item);c.classList.remove('open');};o.appendChild(op);});
+    });
+    b.onclick=function(){c.classList.toggle('open');};
+    document.addEventListener('click',function(e){if(!c.contains(e.target))c.classList.remove('open');});
+})();
+</script>
+
+</body>
+</html>
+

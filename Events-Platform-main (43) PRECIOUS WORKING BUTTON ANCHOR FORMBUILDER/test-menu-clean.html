@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu</title>
+  <style>
+    body { font-family: system-ui; background: #1a1a2e; color: #fff; padding: 40px; }
+    .menu { position: relative; display: inline-block; }
+    .menu-button { display: flex; align-items: center; gap: 8px; width: 400px; height: 40px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; background: rgba(0,0,0,0.35); color: #fff; font: inherit; cursor: pointer; }
+    .menu-button:hover { background: rgba(255,255,255,0.1); }
+    .menu-button-image { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; }
+    .menu-button-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .menu-button-arrow { font-size: 10px; opacity: 0.6; }
+    .menu-options { position: absolute; top: 100%; left: 0; z-index: 100; margin-top: 4px; width: 400px; max-height: 200px; overflow-y: auto; background: #222; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; }
+    .menu-options[hidden] { display: none; }
+    .menu-option { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; border: none; background: none; color: #fff; font: inherit; text-align: left; cursor: pointer; }
+    .menu-option:hover { background: rgba(255,255,255,0.1); }
+    .menu-option-image { width: 20px; height: 15px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
+    .menu-option-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+  <div class="menu" id="menu"></div>
+
+  <script>
+    // ========================================
+    // CONFIG: Change these two things only
+    // ========================================
+    const imageFolder = 'assets/flags';
+    const items = [
+      { file: 'us.svg', text: 'USD' },
+      { file: 'gb.svg', text: 'GBP' },
+      { file: 'eu.svg', text: 'EUR' },
+      { file: 'au.svg', text: 'AUD' },
+      { file: 'jp.svg', text: 'JPY' },
+    ];
+    // ========================================
+
+    const el = document.getElementById('menu');
+    el.innerHTML = `
+      <button class="menu-button">
+        <img class="menu-button-image" src="" alt="" hidden>
+        <span class="menu-button-text">Select...</span>
+        <span class="menu-button-arrow">▼</span>
+      </button>
+      <div class="menu-options" hidden></div>`;
+
+    const btn = el.querySelector('.menu-button');
+    const img = el.querySelector('.menu-button-image');
+    const txt = el.querySelector('.menu-button-text');
+    const opt = el.querySelector('.menu-options');
+
+    items.forEach(d => {
+      const src = `${imageFolder}/${d.file}`;
+      const o = document.createElement('button');
+      o.className = 'menu-option';
+      o.innerHTML = `<img class="menu-option-image" src="${src}"><span class="menu-option-text">${d.text}</span>`;
+      o.onclick = () => { img.src = src; img.hidden = false; txt.textContent = d.text; opt.hidden = true; };
+      opt.appendChild(o);
+    });
+
+    btn.onclick = () => opt.hidden = !opt.hidden;
+    document.addEventListener('click', e => { if (!el.contains(e.target)) opt.hidden = true; });
+  </script>
+</body>
+</html>

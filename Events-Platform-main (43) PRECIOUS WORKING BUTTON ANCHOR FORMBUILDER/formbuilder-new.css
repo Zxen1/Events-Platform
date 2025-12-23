@@ -1,0 +1,1522 @@
+/* ============================================================================
+   FORMBUILDER - Category/Subcategory/Field Editor
+   Used in Admin Panel > Forms Tab
+   
+   Z-INDEX NOTE: All z-index values must respect base.css layer system.
+   Menus use var(--layer-menu) = 85, never exceed 100.
+   ============================================================================ */
+
+/* Container */
+.admin-formbuilder-container {
+  width: 100%;
+}
+
+/* Scroll gap spacer (used to keep clicked headers stationary when content above collapses) */
+.formbuilder-scroll-gap {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Dynamic bottom slack spacer (only grows when needed to prevent bottom clamp/yank) */
+.formbuilder-scroll-gap-bottom {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Category Accordion */
+.formbuilder-accordion {
+  width: 100%;
+  margin-bottom: 3px;
+  background: #080808;
+  border-radius: 5px;
+  overflow: visible;
+}
+
+.formbuilder-accordion-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  background: #0c4070;
+  border-radius: 5px 5px 0 0;
+  border: 1px solid transparent;
+}
+
+.formbuilder-accordion:not(.formbuilder-accordion--open) .formbuilder-accordion-header {
+  border-radius: 5px;
+}
+
+.formbuilder-accordion-header:hover {
+  border-color: #3b82f5;
+}
+
+.formbuilder-accordion--editing .formbuilder-accordion-header {
+  border-color: #3b82f5;
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.formbuilder-accordion-header-image {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.formbuilder-accordion-header-text {
+  flex: 1;
+  padding-left: 10px;
+  font-weight: bold;
+}
+
+.formbuilder-accordion-header-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.formbuilder-accordion--open > .formbuilder-accordion-header .formbuilder-accordion-header-arrow {
+  transform: rotate(180deg);
+}
+
+.formbuilder-accordion-header-drag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #888;
+}
+
+.formbuilder-accordion-header-drag:hover {
+  color: #fff;
+}
+
+.formbuilder-accordion-header-drag svg {
+  width: 16px;
+  height: 16px;
+}
+
+.formbuilder-accordion.dragging {
+  opacity: 0.5;
+}
+
+.formbuilder-accordion-header-editarea {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.formbuilder-accordion-header-edit {
+  width: 16px;
+  height: 16px;
+  color: #888;
+}
+
+.formbuilder-accordion-header-editarea:hover .formbuilder-accordion-header-edit,
+.formbuilder-accordion--editing .formbuilder-accordion-header-edit {
+  color: #3b82f5;
+}
+
+/* Edit Panel */
+.formbuilder-accordion-editpanel {
+  display: none;
+  padding: 10px;
+  background: #0c4070;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+}
+
+.formbuilder-accordion--editing > .formbuilder-accordion-editpanel {
+  display: block;
+}
+
+.formbuilder-accordion-editpanel-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.formbuilder-accordion-editpanel-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  background: #062038;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-accordion-editpanel-input:hover,
+.formbuilder-accordion-editpanel-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+/* More button (3-dot menu) */
+.formbuilder-accordion-editpanel-more {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #062038;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  position: relative;
+}
+
+.formbuilder-accordion-editpanel-more:hover {
+  border-color: #3b82f5;
+  color: #3b82f5;
+}
+
+.formbuilder-accordion-editpanel-more svg {
+  width: 16px;
+  height: 16px;
+}
+
+.formbuilder-accordion-editpanel-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  background: #111;
+  border: 1px solid #3b82f5;
+  border-radius: 5px;
+  padding: 5px 0;
+  z-index: var(--layer-menu, 85);
+  display: none;
+}
+
+.formbuilder-accordion-editpanel-more.open .formbuilder-accordion-editpanel-more-menu {
+  display: block;
+}
+
+.formbuilder-accordion-editpanel-more-item {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-accordion-editpanel-more-item:hover {
+  background: #222;
+}
+
+.formbuilder-accordion-editpanel-more-item-text {
+  flex: 1;
+}
+
+.formbuilder-accordion-editpanel-more-switch {
+  width: 36px;
+  height: 20px;
+  background: #444;
+  border-radius: 5px;
+  position: relative;
+  cursor: pointer;
+}
+
+.formbuilder-accordion-editpanel-more-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s;
+}
+
+.formbuilder-accordion-editpanel-more-switch.on {
+  background: #3b82f5;
+}
+
+.formbuilder-accordion-editpanel-more-switch.on::after {
+  left: 18px;
+}
+
+.formbuilder-accordion-editpanel-more-delete {
+  color: #f87171;
+}
+
+.formbuilder-accordion-editpanel-more-delete:hover {
+  background: #7f1d1d;
+}
+
+/* Accordion Body */
+.formbuilder-accordion-body {
+  display: none;
+  padding: 3px 0 0 0;
+}
+
+.formbuilder-accordion--open > .formbuilder-accordion-body {
+  display: block;
+}
+
+/* Subcategory Option */
+.formbuilder-accordion-option {
+  margin-bottom: 3px;
+  border-radius: 5px;
+  overflow: visible;
+}
+
+.formbuilder-accordion-option-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: #000;
+}
+
+.formbuilder-accordion-option-header:hover {
+  border-color: #3b82f5;
+}
+
+.formbuilder-accordion-option--editing .formbuilder-accordion-option-header {
+  border-color: #3b82f5;
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.formbuilder-accordion-option-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.formbuilder-accordion-option-text {
+  flex: 1;
+  padding-left: 10px;
+}
+
+.formbuilder-accordion-option-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.formbuilder-accordion-option--open > .formbuilder-accordion-option-header .formbuilder-accordion-option-arrow {
+  transform: rotate(180deg);
+}
+
+.formbuilder-accordion-option--open > .formbuilder-accordion-option-header {
+  border-color: #3b82f5;
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.formbuilder-accordion-option-drag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #888;
+}
+
+.formbuilder-accordion-option-drag:hover {
+  color: #fff;
+}
+
+.formbuilder-accordion-option-drag svg {
+  width: 16px;
+  height: 16px;
+}
+
+.formbuilder-accordion-option.dragging {
+  opacity: 0.5;
+}
+
+.formbuilder-accordion-option-editarea {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.formbuilder-accordion-option-edit {
+  width: 16px;
+  height: 16px;
+  color: #888;
+}
+
+.formbuilder-accordion-option-editarea:hover .formbuilder-accordion-option-edit,
+.formbuilder-accordion-option--editing .formbuilder-accordion-option-edit {
+  color: #3b82f5;
+}
+
+.formbuilder-accordion-option-editpanel {
+  display: none;
+  padding: 10px;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: #000;
+}
+
+.formbuilder-accordion-option--editing > .formbuilder-accordion-option-editpanel {
+  display: block;
+}
+
+.formbuilder-accordion-option-body {
+  display: none;
+  padding: 0 10px 10px 10px;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  background: #000;
+}
+
+.formbuilder-accordion-option--open > .formbuilder-accordion-option-body {
+  display: block;
+}
+
+/* When both editing and open */
+.formbuilder-accordion-option--editing.formbuilder-accordion-option--open > .formbuilder-accordion-option-editpanel {
+  border-radius: 0;
+  border-bottom: none;
+}
+
+.formbuilder-accordion-option--editing.formbuilder-accordion-option--open > .formbuilder-accordion-option-body {
+  border-top: none;
+}
+
+/* Subcategory edit panel overrides */
+.formbuilder-accordion-option-editpanel .formbuilder-accordion-editpanel-input {
+  background: #111111;
+}
+
+.formbuilder-accordion-option-editpanel .formbuilder-accordion-editpanel-more {
+  background: #111111;
+}
+
+.formbuilder-accordion-option-editpanel .formbuilder-menu-button {
+  background: #111111;
+}
+
+.formbuilder-accordion-option-editpanel .formbuilder-menu-options {
+  background: #111111;
+}
+
+/* Icon Picker Menu */
+.formbuilder-menu {
+  width: 100%;
+  height: 36px;
+  position: relative;
+}
+
+.formbuilder-menu-button {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+  background: #062038;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.formbuilder-menu-button:hover {
+  border-color: #3b82f5;
+}
+
+.formbuilder-menu.open .formbuilder-menu-button {
+  border-color: #3b82f5;
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.formbuilder-menu-button-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.formbuilder-menu-button-text {
+  flex: 1;
+  text-align: left;
+  padding-left: 10px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.formbuilder-menu-button-arrow {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.formbuilder-menu.open .formbuilder-menu-button-arrow {
+  transform: rotate(180deg);
+}
+
+.formbuilder-menu-options {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: #062038;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: var(--layer-menu, 85);
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.formbuilder-menu-options::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.formbuilder-menu-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formbuilder-menu-options::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.formbuilder-menu.open .formbuilder-menu-options {
+  display: block;
+}
+
+.formbuilder-menu-option {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-menu-option:hover {
+  background: #0c4070;
+}
+
+.formbuilder-menu-option-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.formbuilder-menu-option-text {
+  flex: 1;
+  text-align: left;
+  padding-left: 10px;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Add Buttons */
+.formbuilder-add-button {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 3px;
+}
+
+.formbuilder-add-button:hover {
+  border-color: #3b82f5;
+  color: #fff;
+}
+
+.formbuilder-add-category {
+  width: 100%;
+  margin-top: 3px;
+}
+
+.formbuilder-form-preview {
+  margin-top: 3px;
+  background: #0c4070;
+  color: #fff;
+}
+
+.formbuilder-form-preview:hover {
+  background: #0d4a82;
+}
+
+/* Fieldset Menu */
+.formbuilder-fieldset-menu {
+  width: 100%;
+  position: relative;
+}
+
+.formbuilder-fieldset-menu-button {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.formbuilder-fieldset-menu-button:hover {
+  border-color: #3b82f5;
+  color: #fff;
+}
+
+.formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-button {
+  border-color: #3b82f5;
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+  color: #fff;
+}
+
+.formbuilder-fieldset-menu-options {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  background: #111;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: var(--layer-menu, 85);
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.formbuilder-fieldset-menu-options::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.formbuilder-fieldset-menu-options::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formbuilder-fieldset-menu-options::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-options {
+  display: block;
+}
+
+.formbuilder-fieldset-menu-option {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-fieldset-menu-option:hover {
+  background: #3b82f5;
+}
+
+.formbuilder-fieldset-menu-option.disabled,
+.formbuilder-fieldset-menu-option.disabled-location-type {
+  color: #555;
+  cursor: not-allowed;
+}
+
+.formbuilder-fieldset-menu-option.disabled:hover,
+.formbuilder-fieldset-menu-option.disabled-location-type:hover {
+  background: transparent;
+}
+
+/* Fields Container */
+.formbuilder-fields-container {
+  width: 100%;
+}
+
+/* Field Rows */
+.formbuilder-field {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 10px;
+  margin-bottom: 3px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-field:hover {
+  border-color: #3b82f5;
+}
+
+.formbuilder-field-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.formbuilder-field-required {
+  color: #f87171;
+  font-weight: bold;
+  margin-left: 3px;
+  display: none;
+}
+
+.formbuilder-field-wrapper--required .formbuilder-field-required {
+  display: inline;
+}
+
+.formbuilder-field-drag {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #888;
+}
+
+.formbuilder-field-drag:hover {
+  color: #fff;
+}
+
+.formbuilder-field-drag svg {
+  width: 16px;
+  height: 16px;
+}
+
+.formbuilder-field-edit {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #888;
+}
+
+.formbuilder-field-edit:hover {
+  color: #3b82f5;
+}
+
+.formbuilder-field-edit svg {
+  width: 16px;
+  height: 16px;
+}
+
+.formbuilder-field.dragging,
+.formbuilder-field-wrapper.dragging {
+  opacity: 0.5;
+}
+
+.formbuilder-field-wrapper {
+  margin-bottom: 3px;
+}
+
+.formbuilder-field-wrapper--editing > .formbuilder-field {
+  border-color: #3b82f5;
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.formbuilder-field-wrapper--editing .formbuilder-field-edit {
+  color: #3b82f5;
+}
+
+/* Field Edit Panel */
+.formbuilder-field-editpanel {
+  display: none;
+  padding: 10px;
+  background: #111;
+  border: 1px solid #3b82f5;
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+}
+
+.formbuilder-field-wrapper--editing > .formbuilder-field-editpanel {
+  display: block;
+}
+
+.formbuilder-field-editpanel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.formbuilder-field-editpanel-row:last-child {
+  margin-bottom: 0;
+}
+
+.formbuilder-field-required-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.formbuilder-field-required-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #3b82f5;
+  cursor: pointer;
+}
+
+/* Field More Menu */
+.formbuilder-field-more {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  position: relative;
+  margin-left: auto;
+}
+
+.formbuilder-field-more:hover {
+  border-color: #3b82f5;
+  color: #3b82f5;
+}
+
+.formbuilder-field-more svg {
+  width: 16px;
+  height: 16px;
+}
+
+.formbuilder-field-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  background: #111;
+  border: 1px solid #3b82f5;
+  border-radius: 5px;
+  padding: 5px 0;
+  z-index: var(--layer-menu, 85);
+  display: none;
+}
+
+.formbuilder-field-more.open .formbuilder-field-more-menu {
+  display: block;
+}
+
+.formbuilder-field-more-item {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+}
+
+.formbuilder-field-more-item:hover {
+  background: #222;
+}
+
+.formbuilder-field-more-delete {
+  color: #f87171;
+}
+
+.formbuilder-field-more-delete:hover {
+  background: #7f1d1d;
+}
+
+/* Field Inputs */
+.formbuilder-field-input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  margin-bottom: 0;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-field-input:hover,
+.formbuilder-field-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.formbuilder-field-input::placeholder {
+  color: #666;
+}
+
+.formbuilder-field-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.4;
+  margin-bottom: 0;
+}
+
+.formbuilder-field-textarea:hover,
+.formbuilder-field-textarea:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.formbuilder-field-textarea::placeholder {
+  color: #666;
+}
+
+.formbuilder-field-label {
+  display: block;
+  color: #888;
+  font-size: 11px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.formbuilder-field-label:first-child {
+  margin-top: 0;
+}
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+
+/* Field Options */
+.formbuilder-field-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.formbuilder-field-option-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.formbuilder-field-option-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-field-option-input:hover,
+.formbuilder-field-option-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.formbuilder-field-option-input::placeholder {
+  color: #666;
+}
+
+.formbuilder-field-option-remove,
+.formbuilder-field-option-add {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #888;
+  cursor: pointer;
+}
+
+.formbuilder-field-option-remove:hover,
+.formbuilder-field-option-add:hover {
+  border-color: #3b82f5;
+  color: #fff;
+}
+
+/* Field Switches */
+.formbuilder-field-switch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.formbuilder-field-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  flex: 1;
+}
+
+.formbuilder-field-switch-label.disabled {
+  color: #555;
+  cursor: not-allowed;
+}
+
+.formbuilder-field-switch {
+  width: 36px;
+  height: 20px;
+  background: #444;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.formbuilder-field-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s;
+}
+
+.formbuilder-field-switch.on {
+  background: #3b82f5;
+}
+
+.formbuilder-field-switch.on::after {
+  left: 18px;
+}
+
+.formbuilder-field-switch.disabled {
+  background: #333;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.formbuilder-field-switch.disabled::after {
+  background: #666;
+}
+
+/* Modify Section */
+.formbuilder-field-modify-container {
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.formbuilder-field-modify-button {
+  width: 100%;
+  height: 36px;
+  margin-top: 10px;
+  margin-bottom: 0;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.formbuilder-field-modify-button:hover {
+  border-color: #3b82f5;
+  color: #fff;
+}
+
+.formbuilder-field-modify-button--open {
+  border-color: #3b82f5;
+  color: #fff;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.formbuilder-field-modify-button--modified {
+  border-color: #FF8C00;
+  color: #FF8C00;
+  background: rgba(255, 140, 0, 0.1);
+}
+
+.formbuilder-field-modify-button--modified:hover {
+  border-color: #FF8C00;
+  color: #FF8C00;
+  background: rgba(255, 140, 0, 0.2);
+}
+
+/* Modified label on fieldset - appears after indicators */
+.formbuilder-field-modified-label {
+  display: none;
+  color: #FF8C00;
+  font-size: 11px;
+  font-weight: normal;
+  margin-left: 6px;
+}
+
+.formbuilder-field-wrapper--modified .formbuilder-field-modified-label {
+  display: inline;
+}
+
+/* Ensure proper spacing and order */
+.formbuilder-field-text {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.formbuilder-field-name {
+  flex-shrink: 0;
+}
+
+.formbuilder-field-required {
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+.formbuilder-field-indicators {
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+.formbuilder-field-modified-label {
+  margin-left: 10px;
+}
+
+/* Default text color for inputs */
+.formbuilder-field-input {
+  color: #fff;
+}
+
+/* Field Indicators */
+.formbuilder-field-indicators {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+}
+
+.formbuilder-field-indicator {
+  font-size: 16px;
+  color: #3b82f5;
+  display: none;
+  line-height: 1;
+}
+
+.formbuilder-field-wrapper--location-repeat .formbuilder-field-indicator-repeat {
+  display: inline;
+}
+
+.formbuilder-field-wrapper--must-repeat .formbuilder-field-indicator-must {
+  display: inline;
+}
+
+.formbuilder-field-wrapper--autofill-repeat .formbuilder-field-indicator-autofill {
+  display: inline;
+}
+
+/* Fee Row */
+.formbuilder-fee-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.formbuilder-fee-row-label {
+  min-width: 120px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.formbuilder-fee-percent {
+  font-weight: 600;
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-fee-input {
+  width: 100px;
+  height: 36px;
+  padding: 0 10px;
+  background: #111111;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-fee-input::-webkit-inner-spin-button,
+.formbuilder-fee-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.formbuilder-fee-input:hover,
+.formbuilder-fee-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.formbuilder-fee-input::placeholder {
+  color: #666;
+}
+
+.formbuilder-calculator-btn {
+  height: 36px;
+  padding: 0 12px;
+  background: #ff6b35;
+  border: 1px solid #ff6b35;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  margin-left: 8px;
+}
+
+.formbuilder-calculator-btn:hover {
+  background: #ff8555;
+  border-color: #ff8555;
+}
+
+.formbuilder-calculator-btn:active {
+  background: #e55a2a;
+  border-color: #e55a2a;
+}
+
+.formbuilder-calculator-surcharge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #333;
+}
+
+/* Type Row */
+.formbuilder-type-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  margin-top: 10px;
+}
+
+.formbuilder-type-row-label {
+  min-width: 120px;
+  font-size: 13px;
+  color: #fff;
+}
+
+.formbuilder-type-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.formbuilder-type-option input[type="radio"] {
+  cursor: pointer;
+  accent-color: #3b82f5;
+}
+
+.formbuilder-type-option span {
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Checkout Options Editor */
+.formbuilder-checkout-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.formbuilder-checkout-label {
+  font-size: 13px;
+  color: #fff;
+}
+
+.formbuilder-checkout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.formbuilder-checkout-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  background: #111111;
+}
+
+.formbuilder-checkout-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.formbuilder-checkout-prices {
+  display: flex;
+  gap: 16px;
+}
+
+.formbuilder-checkout-price-item {
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-checkout-price-item .price-value {
+  color: #fff;
+  font-weight: 600;
+}
+
+.formbuilder-checkout-calculator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #888;
+}
+
+.formbuilder-checkout-calc-input {
+  width: 80px;
+  height: 36px;
+  padding: 0 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  cursor: text;
+  caret-color: #fff;
+}
+
+.formbuilder-checkout-calc-input::-webkit-inner-spin-button,
+.formbuilder-checkout-calc-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.formbuilder-checkout-calc-input:hover,
+.formbuilder-checkout-calc-input:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.formbuilder-checkout-calc-total {
+  color: #fff;
+  font-weight: 600;
+}
+
+.formbuilder-checkout-empty {
+  color: #888;
+  padding: 12px;
+  text-align: center;
+}
+
+/* ============================================================================
+   FORM PREVIEW MODAL
+   Shows form as it appears to members
+   ============================================================================ */
+
+.formbuilder-formpreview-modal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: var(--layer-modal, 90);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-formpreview-modal-container {
+  width: 100%;
+  height: 80%;
+  background: #111;
+  border: 1px solid #3b82f5;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.formbuilder-formpreview-modal-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: #0c4070;
+  border-bottom: 1px solid #3b82f5;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+}
+
+.formbuilder-formpreview-modal-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.formbuilder-formpreview-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #888;
+  cursor: pointer;
+}
+
+.formbuilder-formpreview-modal-close:hover {
+  border-color: #3b82f5;
+  color: #fff;
+}
+
+.formbuilder-formpreview-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #888 transparent;
+}
+
+.formbuilder-formpreview-modal-body::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+
+.formbuilder-formpreview-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.formbuilder-formpreview-modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+.formbuilder-formpreview-modal-body .fieldset {
+  margin-bottom: 10px;
+}
+
+.formbuilder-formpreview-modal-body .fieldset:last-child {
+  margin-bottom: 0;
+}
+
+.formbuilder-formpreview-empty {
+  color: #888;
+  text-align: center;
+  padding: 10px;
+}
+
+.formbuilder-formpreview-checkout {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #333;
+}
