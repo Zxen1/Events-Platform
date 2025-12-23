@@ -58,22 +58,32 @@
   height: 40px;
   padding: 0;
   border: 1px solid #333;
-  border-radius: 5px;
+  border-radius: 20px;
   background: #333;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .header-filter-button:hover {
+  background: #3b82f6;
   border-color: #3b82f6;
 }
 
-.header-filter-button--active {
+.header-filter-button--active,
+.header-filter-button[aria-expanded="true"] {
   background: #3b82f6;
   border-color: #3b82f6;
+}
+
+/* When counter is present, button becomes wider */
+.header-filter-button:has(.header-filter-button-counter) {
+  width: auto;
+  padding: 0 10px 0 0;
+  border-radius: 20px 0 0 20px;
 }
 
 .header-filter-button-icon {
@@ -82,19 +92,21 @@
 }
 
 .header-filter-button-counter {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
+  position: relative;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: 6px;
   background: #ef4444;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
-  line-height: 18px;
+  line-height: 20px;
   text-align: center;
-  border-radius: 5px;
+  border-radius: 0 20px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Mode switch container */

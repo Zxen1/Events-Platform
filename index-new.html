@@ -287,56 +287,64 @@
               </label>
             </div>
           </div>
-          <div class="admin-settings-folders-container">
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderAmenities">Amenities Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderAmenities" data-setting-key="folder_amenities" autocomplete="off" placeholder="amenities/" />
+          <div class="admin-settings-imagemanager-accordion admin-settings-imagemanager-accordion--open">
+            <div class="admin-settings-imagemanager-accordion-header">
+              <span class="admin-settings-imagemanager-accordion-header-text">Image Manager</span>
+              <span class="admin-settings-imagemanager-accordion-header-arrow">▼</span>
             </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderAvatars">Avatars Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderAvatars" data-setting-key="folder_avatars" autocomplete="off" placeholder="avatars/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderCategoryIcons">Category Icons Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderCategoryIcons" data-setting-key="folder_category_icons" autocomplete="off" placeholder="category-icons/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderCurrencies">Currencies Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderCurrencies" data-setting-key="folder_currencies" autocomplete="off" placeholder="currencies/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderDummyImages">Dummy Images Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderDummyImages" data-setting-key="folder_dummy_images" autocomplete="off" placeholder="dummy-images/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderPhonePrefixes">Phone Prefixes Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderPhonePrefixes" data-setting-key="folder_phone_prefixes" autocomplete="off" placeholder="phone-prefixes/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderPostImages">Post Images Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderPostImages" data-setting-key="folder_post_images" autocomplete="off" placeholder="post-images/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderSiteAvatars">Site Avatars Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderSiteAvatars" data-setting-key="folder_site_avatars" autocomplete="off" placeholder="site-avatars/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderSiteImages">Site Images Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderSiteImages" data-setting-key="folder_site_images" autocomplete="off" placeholder="site-images/" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminFolderSystemImages">System Images Folder</label>
-              <input type="text" class="admin-settings-field-input" id="adminFolderSystemImages" data-setting-key="folder_system_images" autocomplete="off" placeholder="system-images/" />
-            </div>
-          </div>
-          <div class="admin-settings-api-container">
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password (Read-Only)</label>
-              <input type="password" class="admin-settings-field-input" id="adminStorageApiKey" data-setting-key="storage_api_key" autocomplete="new-password" data-lpignore="true" data-form-type="other" placeholder="Enter read-only password from Bunny Storage Zone" />
-            </div>
-            <div class="admin-settings-field">
-              <label class="admin-settings-field-label" for="adminStorageZoneName">Bunny Storage Zone Name</label>
-              <input type="text" class="admin-settings-field-input" id="adminStorageZoneName" data-setting-key="storage_zone_name" autocomplete="off" placeholder="Enter storage zone name" />
+            <div class="admin-settings-imagemanager-accordion-body">
+              <div class="admin-settings-folders-container">
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderAmenities">Amenities Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderAmenities" data-setting-key="folder_amenities" autocomplete="off" placeholder="amenities/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderAvatars">Avatars Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderAvatars" data-setting-key="folder_avatars" autocomplete="off" placeholder="avatars/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderCategoryIcons">Category Icons Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderCategoryIcons" data-setting-key="folder_category_icons" autocomplete="off" placeholder="category-icons/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderCurrencies">Currencies Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderCurrencies" data-setting-key="folder_currencies" autocomplete="off" placeholder="currencies/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderDummyImages">Dummy Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderDummyImages" data-setting-key="folder_dummy_images" autocomplete="off" placeholder="dummy-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderPhonePrefixes">Phone Prefixes Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderPhonePrefixes" data-setting-key="folder_phone_prefixes" autocomplete="off" placeholder="phone-prefixes/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderPostImages">Post Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderPostImages" data-setting-key="folder_post_images" autocomplete="off" placeholder="post-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderSiteAvatars">Site Avatars Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderSiteAvatars" data-setting-key="folder_site_avatars" autocomplete="off" placeholder="site-avatars/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderSiteImages">Site Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderSiteImages" data-setting-key="folder_site_images" autocomplete="off" placeholder="site-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderSystemImages">System Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderSystemImages" data-setting-key="folder_system_images" autocomplete="off" placeholder="system-images/" />
+                </div>
+              </div>
+              <div class="admin-settings-api-container">
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password (Read-Only)</label>
+                  <input type="password" class="admin-settings-field-input" id="adminStorageApiKey" data-setting-key="storage_api_key" autocomplete="new-password" data-lpignore="true" data-form-type="other" placeholder="Enter read-only password from Bunny Storage Zone" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminStorageZoneName">Bunny Storage Zone Name</label>
+                  <input type="text" class="admin-settings-field-input" id="adminStorageZoneName" data-setting-key="storage_zone_name" autocomplete="off" placeholder="Enter storage zone name" />
+                </div>
+              </div>
             </div>
           </div>
           </form>
