@@ -1817,14 +1817,29 @@
             var selectedAmenities = fieldData.selectedAmenities || [];
             var optionsContainer = null;
             var nameInput, placeholderInput, tooltipInput, modifyButton;
+            
+            // Get default values from fieldset definition
             var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name || '') : '';
+            var defaultPlaceholder = fieldsetDef ? (fieldsetDef.fieldset_placeholder || fieldsetDef.placeholder || '') : '';
+            var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || fieldsetDef.tooltip || '') : '';
+            var defaultOptions = fieldsetDef && fieldsetDef.fieldset_fields ? [] : []; // Options are typically empty by default
             
             // Track modification state (must be defined before it's called)
             function checkModifiedState() {
                 var hasNameOverride = nameInput && nameInput.value !== '' && nameInput.value !== defaultName;
-                var hasPlaceholderOverride = placeholderInput && placeholderInput.value !== '';
-                var hasTooltipOverride = tooltipInput && tooltipInput.value !== '';
-                var hasOptions = needsOptions && optionsContainer && optionsContainer.querySelectorAll('.formbuilder-field-option-input').length > 0 && Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).some(function(inp) { return inp.value.trim() !== ''; });
+                var hasPlaceholderOverride = placeholderInput && placeholderInput.value !== '' && placeholderInput.value !== defaultPlaceholder;
+                var hasTooltipOverride = tooltipInput && tooltipInput.value !== '' && tooltipInput.value !== defaultTooltip;
+                
+                // Check if options differ from defaults (default is empty array)
+                var hasOptions = false;
+                if (needsOptions && optionsContainer) {
+                    var currentOptions = Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input'))
+                        .map(function(inp) { return inp.value.trim(); })
+                        .filter(function(val) { return val !== ''; });
+                    hasOptions = currentOptions.length > 0; // Any options = modified (since default is empty)
+                }
+                
+                // Check if amenities differ from defaults (default is empty array)
                 var hasAmenities = needsAmenities && selectedAmenities && selectedAmenities.length > 0;
                 
                 var isModified = hasNameOverride || hasPlaceholderOverride || hasTooltipOverride || hasOptions || hasAmenities;
@@ -1837,6 +1852,19 @@
                         modifyButton.classList.remove('formbuilder-field-modify-button--modified');
                         fieldWrapper.classList.remove('formbuilder-field-wrapper--modified');
                     }
+                }
+                
+                // Update Field Tracker
+                if (window.AdminModule && typeof window.AdminModule.updateField === 'function' && typeof subKey !== 'undefined') {
+                    var fieldId = 'formbuilder.' + subKey + '.' + fieldsetKey;
+                    var currentState = {
+                        name: nameInput ? nameInput.value : '',
+                        placeholder: placeholderInput ? placeholderInput.value : '',
+                        tooltip: tooltipInput ? tooltipInput.value : '',
+                        options: hasOptions && optionsContainer ? Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).map(function(inp) { return inp.value.trim(); }).filter(function(v) { return v !== ''; }) : [],
+                        selectedAmenities: hasAmenities ? selectedAmenities : []
+                    };
+                    window.AdminModule.updateField(fieldId, JSON.stringify(currentState));
                 }
             }
             
@@ -1935,6 +1963,20 @@
                 fieldEditPanel.appendChild(optionsContainer);
             }
             
+            // Modify toggle button (placed before container so it stays visible)
+            modifyButton = document.createElement('button');
+            modifyButton.type = 'button';
+            modifyButton.className = 'formbuilder-field-modify-button';
+            modifyButton.textContent = 'Modify';
+            modifyButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = modifyContainer.style.display !== 'none';
+                modifyContainer.style.display = isOpen ? 'none' : 'block';
+                modifyButton.classList.toggle('formbuilder-field-modify-button--open');
+                notifyChange();
+            });
+            fieldEditPanel.appendChild(modifyButton);
+            
             // Modify section (name, placeholder, tooltip - hidden by default)
             var modifyContainer = document.createElement('div');
             modifyContainer.className = 'formbuilder-field-modify-container';
@@ -1946,9 +1988,18 @@
             nameInput = document.createElement('input');
             nameInput.type = 'text';
             nameInput.className = 'formbuilder-field-input';
-            nameInput.placeholder = 'Field name';
+            nameInput.placeholder = defaultName || 'Field name';
             nameInput.value = fieldData.name || '';
+            // Show placeholder style when empty (grey text)
+            if (!nameInput.value) {
+                nameInput.style.color = '#888';
+            }
             nameInput.addEventListener('input', function() {
+                if (nameInput.value) {
+                    nameInput.style.color = '#fff';
+                } else {
+                    nameInput.style.color = '#888';
+                }
                 fieldNameSpan.textContent = nameInput.value || defaultName || 'Unnamed';
                 checkModifiedState();
                 notifyChange();
@@ -1962,9 +2013,18 @@
             placeholderInput = document.createElement('input');
             placeholderInput.type = 'text';
             placeholderInput.className = 'formbuilder-field-input';
-            placeholderInput.placeholder = 'Placeholder text';
+            placeholderInput.placeholder = defaultPlaceholder || 'Placeholder text';
             placeholderInput.value = fieldData.placeholder || '';
+            // Show placeholder style when empty (grey text)
+            if (!placeholderInput.value) {
+                placeholderInput.style.color = '#888';
+            }
             placeholderInput.addEventListener('input', function() {
+                if (placeholderInput.value) {
+                    placeholderInput.style.color = '#fff';
+                } else {
+                    placeholderInput.style.color = '#888';
+                }
                 checkModifiedState();
                 notifyChange();
             });
@@ -1977,9 +2037,18 @@
             tooltipInput = document.createElement('input');
             tooltipInput.type = 'text';
             tooltipInput.className = 'formbuilder-field-input';
-            tooltipInput.placeholder = 'Tooltip text';
+            tooltipInput.placeholder = defaultTooltip || 'Tooltip text';
             tooltipInput.value = fieldData.tooltip || fieldData.fieldset_tooltip || '';
+            // Show placeholder style when empty (grey text)
+            if (!tooltipInput.value) {
+                tooltipInput.style.color = '#888';
+            }
             tooltipInput.addEventListener('input', function() {
+                if (tooltipInput.value) {
+                    tooltipInput.style.color = '#fff';
+                } else {
+                    tooltipInput.style.color = '#888';
+                }
                 checkModifiedState();
                 notifyChange();
             });
@@ -1988,19 +2057,18 @@
             
             fieldEditPanel.appendChild(modifyContainer);
             
-            // Modify toggle button
-            modifyButton = document.createElement('button');
-            modifyButton.type = 'button';
-            modifyButton.className = 'formbuilder-field-modify-button';
-            modifyButton.textContent = 'Modify';
-            modifyButton.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var isOpen = modifyContainer.style.display !== 'none';
-                modifyContainer.style.display = isOpen ? 'none' : 'block';
-                modifyButton.classList.toggle('formbuilder-field-modify-button--open');
-                notifyChange();
-            });
-            fieldEditPanel.appendChild(modifyButton);
+            // Register with Field Tracker
+            if (window.AdminModule && typeof window.AdminModule.registerField === 'function' && typeof subKey !== 'undefined') {
+                var fieldId = 'formbuilder.' + subKey + '.' + fieldsetKey;
+                var originalState = {
+                    name: fieldData.name || defaultName || '',
+                    placeholder: fieldData.placeholder || defaultPlaceholder || '',
+                    tooltip: fieldData.tooltip || fieldData.fieldset_tooltip || defaultTooltip || '',
+                    options: fieldData.options || [],
+                    selectedAmenities: fieldData.selectedAmenities || []
+                };
+                window.AdminModule.registerField(fieldId, JSON.stringify(originalState));
+            }
             
             // Check initial modified state
             checkModifiedState();
