@@ -45,7 +45,6 @@
     // Scroll anchoring (keeps clicked accordion headers stationary when panels above collapse)
     var scrollContainer = null;
     var scrollGapEl = null;
-    var scrollGapBottomEl = null;
     var isAdjustingScroll = false;
     
     // Reference data (not for change tracking - just data needed to build the UI)
@@ -79,20 +78,6 @@
         }
         return scrollGapEl;
     }
-
-    function ensureScrollGapBottom() {
-        if (!container) return null;
-        if (scrollGapBottomEl && scrollGapBottomEl.isConnected) return scrollGapBottomEl;
-
-        scrollGapBottomEl = container.querySelector('.formbuilder-scroll-gap-bottom');
-        if (!scrollGapBottomEl) {
-            scrollGapBottomEl = document.createElement('div');
-            scrollGapBottomEl.className = 'formbuilder-scroll-gap-bottom';
-            scrollGapBottomEl.setAttribute('aria-hidden', 'true');
-            container.appendChild(scrollGapBottomEl);
-        }
-        return scrollGapBottomEl;
-    }
     
     function getGapHeight() {
         var el = ensureScrollGap();
@@ -106,19 +91,6 @@
         var next = Math.max(0, Math.round(px || 0));
         el.style.height = next ? (next + 'px') : '0px';
     }
-
-    function getBottomGapHeight() {
-        var el = ensureScrollGapBottom();
-        if (!el) return 0;
-        return el.offsetHeight || 0;
-    }
-
-    function setBottomGapHeight(px) {
-        var el = ensureScrollGapBottom();
-        if (!el) return;
-        var next = Math.max(0, Math.round(px || 0));
-        el.style.height = next ? (next + 'px') : '0px';
-    }
     
     function maybeConsumeGapOnScroll() {
         if (isAdjustingScroll) return;
@@ -127,8 +99,7 @@
         if (!sc) return;
         
         var gap = getGapHeight();
-        var bottomGap = getBottomGapHeight();
-        if (!gap && !bottomGap) return;
+        if (!gap) return;
         
         // If the user scrolls up into the gap, remove the gap so they never see blank space.
         if (sc.scrollTop < gap) {
@@ -138,85 +109,6 @@
             sc.scrollTop = 0;
             isAdjustingScroll = false;
         }
-
-        // If the user scrolls down into the bottom gap, remove it so they never see blank space.
-        if (bottomGap) {
-            var maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
-            var distanceToBottom = maxScrollTop - sc.scrollTop;
-            if (distanceToBottom < bottomGap) {
-                var reduceBottomBy = bottomGap - distanceToBottom;
-                isAdjustingScroll = true;
-                setBottomGapHeight(bottomGap - reduceBottomBy);
-                sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
-                isAdjustingScroll = false;
-            }
-        }
-    }
-
-    // Arms a scroll anchor for a click without changing the click's actual behavior.
-    // Use this when we want "keep clicked row stationary" but we don't want to wrap/modify
-    // the existing click handler logic (prevents regressions).
-    function armScrollAnchor(anchorEl) {
-        var sc = findScrollContainer();
-        if (!sc || !anchorEl) return;
-
-        ensureScrollGap();
-        ensureScrollGapBottom();
-
-        var scRect = sc.getBoundingClientRect();
-        var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
-        var oldScrollTop = sc.scrollTop;
-
-        requestAnimationFrame(function() {
-            if (!anchorEl.isConnected) return;
-            var scNow = findScrollContainer();
-            if (!scNow) return;
-
-            // Frame 1: prevent the browser's clamp (the "footer anchoring") by adding bottom slack
-            // BEFORE we attempt any anchoring scroll correction.
-            var newMaxScrollTop = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (oldScrollTop > newMaxScrollTop) {
-                var clampSlack = oldScrollTop - newMaxScrollTop;
-                setBottomGapHeight(getBottomGapHeight() + clampSlack);
-                // Force a sync layout read so the new scrollHeight is realized ASAP
-                void scNow.scrollHeight;
-            }
-
-            // Frame 2: now that bottom slack exists (if needed), restore scrollTop and anchor the row.
-            requestAnimationFrame(function() {
-                if (!anchorEl.isConnected) return;
-                var sc2 = findScrollContainer();
-                if (!sc2) return;
-
-                isAdjustingScroll = true;
-                sc2.scrollTop = oldScrollTop;
-                isAdjustingScroll = false;
-
-                var sc2Rect = sc2.getBoundingClientRect();
-                var newTop = anchorEl.getBoundingClientRect().top - sc2Rect.top;
-                var delta = newTop - oldTop;
-                if (!delta) return;
-
-                var currentScrollTop = sc2.scrollTop;
-
-                if (currentScrollTop + delta < 0) {
-                    var topSlack = -(currentScrollTop + delta);
-                    setGapHeight(getGapHeight() + topSlack);
-                    delta = delta + topSlack;
-                }
-
-                var maxScrollTopNow = Math.max(0, sc2.scrollHeight - sc2.clientHeight);
-                if (currentScrollTop + delta > maxScrollTopNow) {
-                    var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
-                    setBottomGapHeight(getBottomGapHeight() + bottomSlack);
-                    void sc2.scrollHeight;
-                }
-
-                isAdjustingScroll = true;
-                sc2.scrollTop = currentScrollTop + delta;
-                isAdjustingScroll = false;
-            });
-        });
     }
     
     function runWithScrollAnchor(anchorEl, fn) {
@@ -227,16 +119,10 @@
         }
         
         ensureScrollGap();
-        ensureScrollGapBottom();
         
         var scRect = sc.getBoundingClientRect();
         var anchorRect = anchorEl.getBoundingClientRect();
         var oldTop = anchorRect.top - scRect.top;
-        
-        // Capture scroll metrics BEFORE the DOM change. Near the bottom, collapsing content above can
-        // shrink scrollHeight and cause the browser to clamp scrollTop down (the "upward flick").
-        var oldScrollTop = sc.scrollTop;
-        var oldMaxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
         
         fn();
         
@@ -245,51 +131,24 @@
             var scNow = findScrollContainer();
             if (!scNow) return;
             
-            // Frame 1: prevent clamp-caused flick by preserving old scrollTop using bottom slack.
-            var newMaxScrollTop = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (oldScrollTop > newMaxScrollTop) {
-                var clampSlack = oldScrollTop - newMaxScrollTop;
-                setBottomGapHeight(getBottomGapHeight() + clampSlack);
-                void scNow.scrollHeight;
+            var scNowRect = scNow.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+            
+            var currentScrollTop = scNow.scrollTop;
+            var slack = 0;
+            
+            // If we'd need to scroll above 0 to keep the anchor stationary, create gap slack instead.
+            if (currentScrollTop + delta < 0) {
+                slack = -(currentScrollTop + delta);
+                setGapHeight(getGapHeight() + slack);
+                delta = delta + slack;
             }
             
-            // Frame 2: restore scrollTop, then do the normal anchor correction.
-            requestAnimationFrame(function() {
-                if (!anchorEl.isConnected) return;
-                var sc2 = findScrollContainer();
-                if (!sc2) return;
-                
-                isAdjustingScroll = true;
-                sc2.scrollTop = oldScrollTop;
-                isAdjustingScroll = false;
-                
-                var sc2Rect = sc2.getBoundingClientRect();
-                var newTop = anchorEl.getBoundingClientRect().top - sc2Rect.top;
-                var delta = newTop - oldTop;
-                if (!delta) return;
-                
-                var currentScrollTop = sc2.scrollTop;
-                var slack = 0;
-                
-                // If we'd need to scroll above 0 to keep the anchor stationary, create gap slack instead.
-                if (currentScrollTop + delta < 0) {
-                    slack = -(currentScrollTop + delta);
-                    setGapHeight(getGapHeight() + slack);
-                    delta = delta + slack;
-                }
-
-                // If we'd need to scroll past maxScrollTop to keep the anchor stationary, create bottom gap slack instead.
-                var maxScrollTopNow = Math.max(0, sc2.scrollHeight - sc2.clientHeight);
-                if (currentScrollTop + delta > maxScrollTopNow) {
-                    var bottomSlack = (currentScrollTop + delta) - maxScrollTopNow;
-                    setBottomGapHeight(getBottomGapHeight() + bottomSlack);
-                    void sc2.scrollHeight;
-                }
-                
-                isAdjustingScroll = true;
-                sc2.scrollTop = currentScrollTop + delta;
-                isAdjustingScroll = false;
-            });
+            isAdjustingScroll = true;
+            scNow.scrollTop = currentScrollTop + delta;
+            isAdjustingScroll = false;
         });
     }
     
@@ -782,23 +641,6 @@
                 closeAllEditPanels();
             }
         });
-
-        // Scroll anchoring for field rows / field edit buttons.
-        // This runs in capture phase so it can "arm" the anchor BEFORE other click handlers
-        // close/open panels, then we adjust scroll in rAF after the DOM has changed.
-        document.addEventListener('click', function(e) {
-            if (!container) return;
-            if (!container.contains(e.target)) return;
-
-            var fieldRow = e.target.closest('.formbuilder-field');
-            var fieldEditBtn = e.target.closest('.formbuilder-field-edit');
-            if (!fieldRow && !fieldEditBtn) return;
-
-            // Use the row as the anchor (even if the click was on the edit button).
-            var anchor = fieldRow || (fieldEditBtn ? fieldEditBtn.closest('.formbuilder-field') : null);
-            if (!anchor) return;
-            armScrollAnchor(anchor);
-        }, true);
         
         // Close 3-dot menus when clicking outside
         document.addEventListener('click', function(e) {
@@ -2657,7 +2499,6 @@
         
         // Ensure gap exists early and bind scroll handler (kept lightweight; only runs for admin panel scroll events)
         ensureScrollGap();
-        ensureScrollGapBottom();
         var sc = findScrollContainer();
         if (sc) {
             sc.addEventListener('scroll', maybeConsumeGapOnScroll, { passive: true });

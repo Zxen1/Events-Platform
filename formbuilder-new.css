@@ -18,13 +18,6 @@
   pointer-events: none;
 }
 
-/* Bottom scroll gap spacer (used when anchoring needs extra space near bottom) */
-.formbuilder-scroll-gap-bottom {
-  width: 100%;
-  height: 0;
-  pointer-events: none;
-}
-
 /* Category Accordion */
 .formbuilder-accordion {
   width: 100%;
