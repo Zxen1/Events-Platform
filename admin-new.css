@@ -294,8 +294,8 @@
 .admin-panel-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 0;
+  gap: 6px;
+  margin: 8px auto;
 }
 
 .admin-panel-field-label {
@@ -844,25 +844,37 @@
 .admin-map-spin-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto;
+  margin: 0 auto 12px auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 0 10px 10px;
+  padding: 16px;
+}
+
+.admin-map-spin-container .admin-panel-field {
+  margin: 0 0 16px 0;
+}
+
+.admin-map-spin-container .admin-panel-field:last-child {
+  margin-bottom: 0;
 }
 
 .admin-map-lighting-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 10px auto;
+  margin: 0 auto 12px auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 10px;
+  padding: 16px;
 }
 
-.admin-map-lighting-container .admin-panel-field + .admin-panel-field {
-  margin-top: 10px;
+.admin-map-lighting-container .admin-panel-field {
+  margin: 0 0 16px 0;
+}
+
+.admin-map-lighting-container .admin-panel-field:last-child {
+  margin-bottom: 0;
 }
 
 .admin-lighting-buttons,
@@ -945,10 +957,18 @@
 .admin-map-defaults-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto;
+  margin: 0 auto 12px auto;
   background: rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   padding: 16px;
+}
+
+.admin-map-defaults-container .admin-panel-field {
+  margin: 0 0 16px 0;
+}
+
+.admin-map-defaults-container .admin-panel-field:last-child {
+  margin-bottom: 0;
 }
 
 .admin-map-controls-starting {
@@ -2188,7 +2208,7 @@
   width: 100%;
   max-width: 420px;
   margin: 12px auto;
-  padding: 10px;
+  padding: 16px;
   border-radius: 5px;
 }
 

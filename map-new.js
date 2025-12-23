@@ -1081,7 +1081,24 @@ const MapModule = (function() {
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
     console.log('[Map] Setting style to:', styleUrl);
+    
+    // Store current lighting to re-apply after style loads
+    var currentLighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
+    if (window.MemberModule && window.MemberModule.getCurrentUser) {
+      var member = window.MemberModule.getCurrentUser();
+      if (member && member.map_lighting) {
+        currentLighting = member.map_lighting;
+      }
+    }
+    
     map.setStyle(styleUrl);
+    
+    // Re-apply lighting after style loads (only for Standard style, not Satellite)
+    if (style === 'standard') {
+      map.once('style.load', function() {
+        setMapLighting(currentLighting);
+      });
+    }
   }
 
   /**
@@ -1104,15 +1121,20 @@ const MapModule = (function() {
     }
     
     try {
-      if (typeof map.setConfig === 'function') {
+      // Use setConfigProperty for lighting (works with Standard style)
+      if (typeof map.setConfigProperty === 'function') {
+        map.setConfigProperty('basemap', 'lightPreset', preset);
+        console.log('[Map] Lighting preset applied:', preset);
+      } else if (typeof map.setConfig === 'function') {
+        // Fallback to setConfig if setConfigProperty not available
         map.setConfig({
           basemap: {
             lightPreset: preset
           }
         });
-        console.log('[Map] Lighting preset applied:', preset);
+        console.log('[Map] Lighting preset applied via setConfig:', preset);
       } else {
-        console.warn('[Map] setConfig not available - map may not be using Standard style');
+        console.warn('[Map] setConfigProperty/setConfig not available - lighting only works with Standard style, not Satellite');
       }
     } catch (e) {
       console.error('[Map] Failed to set lighting preset:', e);
