@@ -38,135 +38,6 @@ const FilterModule = (function() {
     var dateStart = null;
     var dateEnd = null;
 
-    /* --------------------------------------------------------------------------
-       BUTTON ANCHOR (Filter panel)
-       Keeps clicked controls stationary when accordions close/collapse above.
-       -------------------------------------------------------------------------- */
-    
-    function getFilterScrollContainer() {
-        // The filter panel has TWO scrollable candidates (content and body). Use whichever is actually scrolling.
-        if (bodyEl && (bodyEl.scrollTop > 0 || (bodyEl.scrollHeight - bodyEl.clientHeight) > 1)) return bodyEl;
-        if (contentEl && (contentEl.scrollTop > 0 || (contentEl.scrollHeight - contentEl.clientHeight) > 1)) return contentEl;
-        return bodyEl || contentEl || document.scrollingElement || document.documentElement;
-    }
-    
-    function ensureAnchorGap(scrollerEl, which) {
-        if (!scrollerEl) return null;
-        var selector = which === 'bottom' ? '[data-filter-anchor-gap="bottom"]' : '[data-filter-anchor-gap="top"]';
-        var el = scrollerEl.querySelector(selector);
-        if (!el) {
-            el = document.createElement('div');
-            el.setAttribute('data-filter-anchor-gap', which === 'bottom' ? 'bottom' : 'top');
-            el.setAttribute('aria-hidden', 'true');
-            el.style.width = '100%';
-            el.style.height = '0px';
-            el.style.pointerEvents = 'none';
-        }
-        if (which === 'bottom') {
-            scrollerEl.appendChild(el);
-        } else {
-            scrollerEl.insertBefore(el, scrollerEl.firstChild);
-        }
-        return el;
-    }
-    
-    function getGapPx(scrollerEl, which) {
-        var el = ensureAnchorGap(scrollerEl, which);
-        return el ? (el.offsetHeight || 0) : 0;
-    }
-    
-    function setGapPx(scrollerEl, which, px) {
-        var el = ensureAnchorGap(scrollerEl, which);
-        if (!el) return;
-        var next = Math.max(0, Math.round(px || 0));
-        el.style.height = next ? (next + 'px') : '0px';
-    }
-    
-    function bindGapConsumerOnce(scrollerEl) {
-        if (!scrollerEl) return;
-        if (scrollerEl.dataset && scrollerEl.dataset.filterAnchorConsumerBound === 'true') return;
-        if (scrollerEl.dataset) scrollerEl.dataset.filterAnchorConsumerBound = 'true';
-        
-        scrollerEl.addEventListener('scroll', function() {
-            var topGap = getGapPx(scrollerEl, 'top');
-            var bottomGap = getGapPx(scrollerEl, 'bottom');
-            if (!topGap && !bottomGap) return;
-            
-            // Consume top gap if user scrolls up into it
-            if (topGap && scrollerEl.scrollTop < topGap) {
-                var reduceBy = topGap - scrollerEl.scrollTop;
-                setGapPx(scrollerEl, 'top', topGap - reduceBy);
-                scrollerEl.scrollTop = 0;
-            }
-            
-            // Consume bottom gap if user scrolls down into it
-            if (bottomGap) {
-                var maxScrollTop = Math.max(0, scrollerEl.scrollHeight - scrollerEl.clientHeight);
-                var distanceToBottom = maxScrollTop - scrollerEl.scrollTop;
-                if (distanceToBottom < bottomGap) {
-                    var reduceBottomBy = bottomGap - distanceToBottom;
-                    setGapPx(scrollerEl, 'bottom', bottomGap - reduceBottomBy);
-                    scrollerEl.scrollTop = Math.max(0, scrollerEl.scrollTop - reduceBottomBy);
-                }
-            }
-        }, { passive: true });
-    }
-    
-    function runWithFilterAnchor(anchorEl, fn) {
-        var sc = getFilterScrollContainer();
-        if (!sc || !anchorEl || typeof fn !== 'function') {
-            fn();
-            return;
-        }
-        
-        bindGapConsumerOnce(sc);
-        ensureAnchorGap(sc, 'top');
-        ensureAnchorGap(sc, 'bottom');
-        
-        // Measure BEFORE change
-        var scRect = sc.getBoundingClientRect();
-        var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
-        var oldScrollTop = sc.scrollTop;
-        
-        fn();
-        
-        // Use rAF like formbuilder (lets layout settle), then apply correction.
-        requestAnimationFrame(function() {
-            if (!anchorEl.isConnected) return;
-            var scNow = getFilterScrollContainer();
-            if (!scNow) return;
-            
-            // Bottom clamp protection: if collapse shrinks max scroll, add bottom slack and restore scrollTop.
-            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (oldScrollTop > maxAfter) {
-                setGapPx(scNow, 'bottom', getGapPx(scNow, 'bottom') + (oldScrollTop - maxAfter));
-                void scNow.scrollHeight;
-            }
-            scNow.scrollTop = oldScrollTop;
-            
-            var scNowRect = scNow.getBoundingClientRect();
-            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-            var delta = newTop - oldTop;
-            if (!delta) return;
-            
-            var currentScrollTop = scNow.scrollTop;
-            
-            if (currentScrollTop + delta < 0) {
-                var topSlack = -(currentScrollTop + delta);
-                setGapPx(scNow, 'top', getGapPx(scNow, 'top') + topSlack);
-                delta += topSlack;
-            }
-            
-            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (currentScrollTop + delta > maxNow) {
-                setGapPx(scNow, 'bottom', getGapPx(scNow, 'bottom') + ((currentScrollTop + delta) - maxNow));
-                void scNow.scrollHeight;
-            }
-            
-            scNow.scrollTop = currentScrollTop + delta;
-        });
-    }
-
 
     /* --------------------------------------------------------------------------
        INITIALIZATION
@@ -360,10 +231,8 @@ const FilterModule = (function() {
         if (resetFiltersBtn) {
             resetFiltersBtn.addEventListener('click', function() {
                 if (!resetFiltersBtn.disabled) {
-                    runWithFilterAnchor(resetFiltersBtn, function() {
-                        resetAllFilters();
-                        App.emit('filter:resetAll');
-                    });
+                    resetAllFilters();
+                    App.emit('filter:resetAll');
                 }
             });
         }
@@ -371,10 +240,8 @@ const FilterModule = (function() {
         if (resetCategoriesBtn) {
             resetCategoriesBtn.addEventListener('click', function() {
                 if (!resetCategoriesBtn.disabled) {
-                    runWithFilterAnchor(resetCategoriesBtn, function() {
-                        resetAllCategories();
-                        App.emit('filter:resetCategories');
-                    });
+                    resetAllCategories();
+                    App.emit('filter:resetCategories');
                 }
             });
         }
@@ -836,8 +703,6 @@ const FilterModule = (function() {
             return;
         }
         
-        // Anchor gaps bind lazily per scroll container when first used.
-        
         // Loading category filters...
         
         // Fetch categories from database
@@ -936,25 +801,21 @@ const FilterModule = (function() {
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        runWithFilterAnchor(header, function() {
-                            headerToggle.classList.toggle('on');
-                            if (headerToggle.classList.contains('on')) {
-                                accordion.classList.remove('filter-categoryfilter-accordion--disabled');
-                            } else {
-                                accordion.classList.add('filter-categoryfilter-accordion--disabled');
-                                accordion.classList.remove('filter-categoryfilter-accordion--open');
-                            }
-                            applyFilters();
-                            updateResetCategoriesButton();
-                        });
+                        headerToggle.classList.toggle('on');
+                        if (headerToggle.classList.contains('on')) {
+                            accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+                        } else {
+                            accordion.classList.add('filter-categoryfilter-accordion--disabled');
+                            accordion.classList.remove('filter-categoryfilter-accordion--open');
+                        }
+                        applyFilters();
+                        updateResetCategoriesButton();
                     });
                     
                     // Click anywhere except toggle area expands/collapses
                     header.addEventListener('click', function(e) {
                         if (e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
-                        runWithFilterAnchor(header, function() {
-                            accordion.classList.toggle('filter-categoryfilter-accordion--open');
-                        });
+                        accordion.classList.toggle('filter-categoryfilter-accordion--open');
                     });
                     
                     container.appendChild(accordion);

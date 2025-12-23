@@ -43,8 +43,6 @@
   color: #fff;
   font-family: system-ui, sans-serif;
   overflow-y: auto;
-  /* Prevent browser scroll anchoring from fighting our button-anchor logic */
-  overflow-anchor: none;
   padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
 
@@ -105,8 +103,6 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  /* Prevent browser scroll anchoring from fighting our button-anchor logic */
-  overflow-anchor: none;
   padding: 0 10px calc(var(--gap) + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   display: flex;

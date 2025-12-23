@@ -39,142 +39,6 @@ const AdminModule = (function() {
     var tabPanels = null;
 
     /* --------------------------------------------------------------------------
-       BUTTON ANCHOR (Admin panel)
-       Keeps clicked controls stationary when accordions/edit panels close above.
-       -------------------------------------------------------------------------- */
-    
-    function getAdminScrollContainer() {
-        // Admin panel has TWO scrollable candidates (content and body). Use whichever is actually scrolling.
-        if (panel) {
-            var body = panel.querySelector('.admin-panel-body');
-            var content = panel.querySelector('.admin-panel-content');
-            if (body && (body.scrollTop > 0 || (body.scrollHeight - body.clientHeight) > 1)) return body;
-            if (content && (content.scrollTop > 0 || (content.scrollHeight - content.clientHeight) > 1)) return content;
-            return body || content || document.scrollingElement || document.documentElement;
-        }
-        return document.querySelector('.admin-panel-body') || document.querySelector('.admin-panel-content') || document.scrollingElement || document.documentElement;
-    }
-    
-    function ensureAnchorGap(scrollerEl, which) {
-        if (!scrollerEl) return null;
-        var selector = which === 'bottom' ? '[data-admin-anchor-gap="bottom"]' : '[data-admin-anchor-gap="top"]';
-        var el = scrollerEl.querySelector(selector);
-        if (!el) {
-            el = document.createElement('div');
-            el.setAttribute('data-admin-anchor-gap', which === 'bottom' ? 'bottom' : 'top');
-            el.setAttribute('aria-hidden', 'true');
-            el.style.width = '100%';
-            el.style.height = '0px';
-            el.style.pointerEvents = 'none';
-        }
-        if (which === 'bottom') {
-            scrollerEl.appendChild(el);
-        } else {
-            scrollerEl.insertBefore(el, scrollerEl.firstChild);
-        }
-        return el;
-    }
-    
-    function getGapPx(scrollerEl, which) {
-        var el = ensureAnchorGap(scrollerEl, which);
-        return el ? (el.offsetHeight || 0) : 0;
-    }
-    
-    function setGapPx(scrollerEl, which, px) {
-        var el = ensureAnchorGap(scrollerEl, which);
-        if (!el) return;
-        var next = Math.max(0, Math.round(px || 0));
-        el.style.height = next ? (next + 'px') : '0px';
-    }
-    
-    function bindGapConsumerOnce(scrollerEl) {
-        if (!scrollerEl) return;
-        if (scrollerEl.dataset && scrollerEl.dataset.adminAnchorConsumerBound === 'true') return;
-        if (scrollerEl.dataset) scrollerEl.dataset.adminAnchorConsumerBound = 'true';
-        
-        if (!scrollerEl.addEventListener) return;
-        
-        scrollerEl.addEventListener('scroll', function() {
-            var topGap = getGapPx(scrollerEl, 'top');
-            var bottomGap = getGapPx(scrollerEl, 'bottom');
-            if (!topGap && !bottomGap) return;
-            
-            // Consume top gap if user scrolls up into it
-            if (topGap && scrollerEl.scrollTop < topGap) {
-                var reduceBy = topGap - scrollerEl.scrollTop;
-                setGapPx(scrollerEl, 'top', topGap - reduceBy);
-                scrollerEl.scrollTop = 0;
-            }
-            
-            // Consume bottom gap if user scrolls down into it
-            if (bottomGap) {
-                var maxScrollTop = Math.max(0, scrollerEl.scrollHeight - scrollerEl.clientHeight);
-                var distanceToBottom = maxScrollTop - scrollerEl.scrollTop;
-                if (distanceToBottom < bottomGap) {
-                    var reduceBottomBy = bottomGap - distanceToBottom;
-                    setGapPx(scrollerEl, 'bottom', bottomGap - reduceBottomBy);
-                    scrollerEl.scrollTop = Math.max(0, scrollerEl.scrollTop - reduceBottomBy);
-                }
-            }
-        }, { passive: true });
-    }
-    
-    function runWithAdminAnchor(anchorEl, fn) {
-        var sc = getAdminScrollContainer();
-        if (!sc || !anchorEl || typeof fn !== 'function') {
-            fn();
-            return;
-        }
-        
-        bindGapConsumerOnce(sc);
-        ensureAnchorGap(sc, 'top');
-        ensureAnchorGap(sc, 'bottom');
-        
-        // Measure BEFORE change
-        var scRect = sc.getBoundingClientRect();
-        var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
-        var oldScrollTop = sc.scrollTop;
-        
-        fn();
-        
-        // Use rAF like formbuilder (lets layout settle), then apply correction.
-        requestAnimationFrame(function() {
-            if (!anchorEl.isConnected) return;
-            var scNow = getAdminScrollContainer();
-            if (!scNow) return;
-            
-            // Bottom clamp protection: if collapse shrinks max scroll, add bottom slack and restore scrollTop.
-            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (oldScrollTop > maxAfter) {
-                setGapPx(scNow, 'bottom', getGapPx(scNow, 'bottom') + (oldScrollTop - maxAfter));
-                void scNow.scrollHeight;
-            }
-            scNow.scrollTop = oldScrollTop;
-            
-            var scNowRect = scNow.getBoundingClientRect();
-            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
-            var delta = newTop - oldTop;
-            if (!delta) return;
-            
-            var currentScrollTop = scNow.scrollTop;
-            
-            if (currentScrollTop + delta < 0) {
-                var topSlack = -(currentScrollTop + delta);
-                setGapPx(scNow, 'top', getGapPx(scNow, 'top') + topSlack);
-                delta += topSlack;
-            }
-            
-            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
-            if (currentScrollTop + delta > maxNow) {
-                setGapPx(scNow, 'bottom', getGapPx(scNow, 'bottom') + ((currentScrollTop + delta) - maxNow));
-                void scNow.scrollHeight;
-            }
-            
-            scNow.scrollTop = currentScrollTop + delta;
-        });
-    }
-
-    /* --------------------------------------------------------------------------
        SVG ICONS REGISTRY
        
        DEVELOPER NOTE:
@@ -2706,9 +2570,7 @@ const AdminModule = (function() {
             var header = imageManagerAccordion.querySelector('.admin-settings-imagemanager-accordion-header');
             if (header) {
                 header.addEventListener('click', function() {
-                    runWithAdminAnchor(header, function() {
-                        imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
-                    });
+                    imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
                 });
             }
         }
@@ -3075,17 +2937,15 @@ const AdminModule = (function() {
 
             // Header click - toggle edit panel
             header.addEventListener('click', function(e) {
-                runWithAdminAnchor(header, function() {
-                    var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
-                    closeAllCheckoutEditPanels(accordion);
-                    if (!isEditing) {
-                        accordion.classList.add('admin-checkout-accordion--editing');
-                        editPanel.style.display = 'block';
-                    } else {
-                        accordion.classList.remove('admin-checkout-accordion--editing');
-                        editPanel.style.display = 'none';
-                    }
-                });
+                var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
+                closeAllCheckoutEditPanels(accordion);
+                if (!isEditing) {
+                    accordion.classList.add('admin-checkout-accordion--editing');
+                    editPanel.style.display = 'block';
+                } else {
+                    accordion.classList.remove('admin-checkout-accordion--editing');
+                    editPanel.style.display = 'none';
+                }
             });
 
             // Description textarea
