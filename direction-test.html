@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Direction Test</title>
+    <title>Menu Direction Test - Downward Collapse</title>
     <style>
         * {
             margin: 0;
@@ -12,141 +12,163 @@
         }
         
         body {
-            background: #111;
+            background: #333;
             color: #fff;
             font-family: system-ui, sans-serif;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
         }
         
-        .test-container {
+        .menu-container {
             width: 400px;
-            height: 500px;
-            background: #222;
-            border-radius: 10px;
-            overflow-y: auto;
-            overflow-x: hidden;
         }
         
-        .test-header {
+        .menu {
+            width: 100%;
+        }
+        
+        .menu-button {
             width: 100%;
             height: 36px;
             background: #3b82f6;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            font-size: 14px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .menu-button:hover {
+            background: #2563eb;
+        }
+        
+        .menu-content-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .menu.open .menu-content-wrapper {
+            grid-template-rows: 1fr;
+        }
+        
+        .menu-content {
+            min-height: 0;
+            overflow: hidden;
+        }
+        
+        .menu-options {
+            width: 100%;
+            background: #000;
+        }
+        
+        .menu-option {
+            width: 100%;
+            height: 36px;
+            background: #000;
+            border: none;
+            border-top: 1px solid #222;
+            color: #fff;
+            font-size: 14px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
-        .test-header-top {
-            border-radius: 10px 10px 0 0;
+        .menu-option:first-child {
+            border-top: none;
         }
         
-        .test-header-bottom {
-            border-radius: 0 0 10px 10px;
-        }
-        
-        .test-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: #333;
-        }
-        
-        .test-content.open {
-            max-height: 460px;
-        }
-        
-        .test-item {
-            width: 100%;
-            height: 36px;
-            background: #000;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .test-item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .test-spacer {
-            height: 200px;
-            background: #1a1a1a;
+        .menu-option:hover {
+            background: #111;
         }
     </style>
 </head>
 <body>
-    <div class="test-container" id="container">
-        <div class="test-header test-header-top" id="topHeader"></div>
-        <div class="test-content" id="content">
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
-            <div class="test-item"></div>
+    <div class="menu-container">
+        <!-- First Menu -->
+        <div class="menu" id="menu1">
+            <button class="menu-button" type="button">Menu 1</button>
+            <div class="menu-content-wrapper">
+                <div class="menu-content">
+                    <div class="menu-options">
+                        <button class="menu-option" type="button">Option 1</button>
+                        <button class="menu-option" type="button">Option 2</button>
+                        <button class="menu-option" type="button">Option 3</button>
+                        <button class="menu-option" type="button">Option 4</button>
+                        <button class="menu-option" type="button">Option 5</button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="test-spacer"></div>
-        <div class="test-header test-header-bottom" id="bottomHeader"></div>
+        
+        <!-- Second Menu -->
+        <div class="menu" id="menu2">
+            <button class="menu-button" type="button">Menu 2</button>
+            <div class="menu-content-wrapper">
+                <div class="menu-content">
+                    <div class="menu-options">
+                        <button class="menu-option" type="button">Option 1</button>
+                        <button class="menu-option" type="button">Option 2</button>
+                        <button class="menu-option" type="button">Option 3</button>
+                        <button class="menu-option" type="button">Option 4</button>
+                        <button class="menu-option" type="button">Option 5</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
-        var isOpen = false;
-        var topHeader = document.getElementById('topHeader');
-        var bottomHeader = document.getElementById('bottomHeader');
-        var content = document.getElementById('content');
-        var container = document.getElementById('container');
+        var menu1 = document.getElementById('menu1');
+        var menu2 = document.getElementById('menu2');
+        var menu1Button = menu1.querySelector('.menu-button');
+        var menu2Button = menu2.querySelector('.menu-button');
+        var openMenu = null;
         
-        function toggleContent(clickedHeader) {
-            if (isOpen) {
-                // Get content height before closing
-                var contentHeight = content.offsetHeight;
-                
-                // Get clicked button position
-                var clickedRect = clickedHeader.getBoundingClientRect();
-                var containerRect = container.getBoundingClientRect();
-                var clickedTop = clickedRect.top - containerRect.top;
-                
-                // Get content position
-                var contentRect = content.getBoundingClientRect();
-                var contentTop = contentRect.top - containerRect.top;
-                
-                // If content is above clicked button, scroll down by content height
-                var needsScrollCompensation = contentTop < clickedTop;
-                
-                // Close content
-                content.classList.remove('open');
-                
-                // Scroll compensation: if drawer was above button, scroll down
-                if (needsScrollCompensation) {
-                    container.scrollTop = container.scrollTop + contentHeight;
-                }
-                
-            } else {
-                // Opening
-                content.classList.add('open');
+        function closeAllMenus() {
+            if (openMenu) {
+                openMenu.classList.remove('open');
+                openMenu = null;
             }
-            
-            isOpen = !isOpen;
         }
         
-        topHeader.addEventListener('click', function(e) {
+        function toggleMenu(menu) {
+            var isCurrentlyOpen = menu.classList.contains('open');
+            
+            // Close all menus first
+            closeAllMenus();
+            
+            // If this menu wasn't open, open it now
+            if (!isCurrentlyOpen) {
+                requestAnimationFrame(function() {
+                    menu.classList.add('open');
+                    openMenu = menu;
+                });
+            }
+        }
+        
+        menu1Button.addEventListener('click', function(e) {
             e.stopPropagation();
-            toggleContent(topHeader);
+            toggleMenu(menu1);
         });
         
-        bottomHeader.addEventListener('click', function(e) {
+        menu2Button.addEventListener('click', function(e) {
             e.stopPropagation();
-            toggleContent(bottomHeader);
+            toggleMenu(menu2);
+        });
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.menu')) {
+                closeAllMenus();
+            }
         });
     </script>
 </body>
