@@ -38,6 +38,126 @@ const FilterModule = (function() {
     var dateStart = null;
     var dateEnd = null;
 
+    /* --------------------------------------------------------------------------
+       BUTTON ANCHOR (Filter panel)
+       Keeps clicked controls stationary when accordions close/collapse above.
+       -------------------------------------------------------------------------- */
+    
+    function ensureAnchorGap(hostEl, which) {
+        if (!hostEl) return null;
+        var selector = which === 'bottom' ? '[data-filter-anchor-gap="bottom"]' : '[data-filter-anchor-gap="top"]';
+        var el = hostEl.querySelector(selector);
+        if (!el) {
+            el = document.createElement('div');
+            el.setAttribute('data-filter-anchor-gap', which === 'bottom' ? 'bottom' : 'top');
+            el.setAttribute('aria-hidden', 'true');
+            el.style.width = '100%';
+            el.style.height = '0px';
+            el.style.pointerEvents = 'none';
+        }
+        if (which === 'bottom') {
+            hostEl.appendChild(el);
+        } else {
+            hostEl.insertBefore(el, hostEl.firstChild);
+        }
+        return el;
+    }
+    
+    function getGapPx(hostEl, which) {
+        var el = ensureAnchorGap(hostEl, which);
+        return el ? (el.offsetHeight || 0) : 0;
+    }
+    
+    function setGapPx(hostEl, which, px) {
+        var el = ensureAnchorGap(hostEl, which);
+        if (!el) return;
+        var next = Math.max(0, Math.round(px || 0));
+        el.style.height = next ? (next + 'px') : '0px';
+    }
+    
+    function bindGapConsumerOnce(hostEl) {
+        if (!hostEl || !bodyEl) return;
+        if (hostEl.dataset && hostEl.dataset.filterAnchorConsumerBound === 'true') return;
+        if (hostEl.dataset) hostEl.dataset.filterAnchorConsumerBound = 'true';
+        
+        bodyEl.addEventListener('scroll', function() {
+            var topGap = getGapPx(hostEl, 'top');
+            var bottomGap = getGapPx(hostEl, 'bottom');
+            if (!topGap && !bottomGap) return;
+            
+            // Consume top gap if user scrolls up into it
+            if (topGap && bodyEl.scrollTop < topGap) {
+                var reduceBy = topGap - bodyEl.scrollTop;
+                setGapPx(hostEl, 'top', topGap - reduceBy);
+                bodyEl.scrollTop = 0;
+            }
+            
+            // Consume bottom gap if user scrolls down into it
+            if (bottomGap) {
+                var maxScrollTop = Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight);
+                var distanceToBottom = maxScrollTop - bodyEl.scrollTop;
+                if (distanceToBottom < bottomGap) {
+                    var reduceBottomBy = bottomGap - distanceToBottom;
+                    setGapPx(hostEl, 'bottom', bottomGap - reduceBottomBy);
+                    bodyEl.scrollTop = Math.max(0, bodyEl.scrollTop - reduceBottomBy);
+                }
+            }
+        }, { passive: true });
+    }
+    
+    function runWithFilterAnchor(hostEl, anchorEl, fn) {
+        if (!bodyEl || !anchorEl || typeof fn !== 'function') {
+            fn();
+            return;
+        }
+        if (!hostEl) {
+            fn();
+            return;
+        }
+        
+        bindGapConsumerOnce(hostEl);
+        ensureAnchorGap(hostEl, 'top');
+        ensureAnchorGap(hostEl, 'bottom');
+        
+        var scRect = bodyEl.getBoundingClientRect();
+        var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
+        var oldScrollTop = bodyEl.scrollTop;
+        
+        fn();
+        
+        requestAnimationFrame(function() {
+            if (!anchorEl.isConnected) return;
+            
+            var maxAfter = Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight);
+            if (oldScrollTop > maxAfter) {
+                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + (oldScrollTop - maxAfter));
+                void bodyEl.scrollHeight;
+            }
+            bodyEl.scrollTop = oldScrollTop;
+            
+            var scNowRect = bodyEl.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+            
+            var currentScrollTop = bodyEl.scrollTop;
+            
+            if (currentScrollTop + delta < 0) {
+                var topSlack = -(currentScrollTop + delta);
+                setGapPx(hostEl, 'top', getGapPx(hostEl, 'top') + topSlack);
+                delta += topSlack;
+            }
+            
+            var maxNow = Math.max(0, bodyEl.scrollHeight - bodyEl.clientHeight);
+            if (currentScrollTop + delta > maxNow) {
+                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + ((currentScrollTop + delta) - maxNow));
+                void bodyEl.scrollHeight;
+            }
+            
+            bodyEl.scrollTop = currentScrollTop + delta;
+        });
+    }
+
 
     /* --------------------------------------------------------------------------
        INITIALIZATION
@@ -231,8 +351,10 @@ const FilterModule = (function() {
         if (resetFiltersBtn) {
             resetFiltersBtn.addEventListener('click', function() {
                 if (!resetFiltersBtn.disabled) {
-                    resetAllFilters();
-                    App.emit('filter:resetAll');
+                    runWithFilterAnchor(bodyEl, resetFiltersBtn, function() {
+                        resetAllFilters();
+                        App.emit('filter:resetAll');
+                    });
                 }
             });
         }
@@ -240,8 +362,10 @@ const FilterModule = (function() {
         if (resetCategoriesBtn) {
             resetCategoriesBtn.addEventListener('click', function() {
                 if (!resetCategoriesBtn.disabled) {
-                    resetAllCategories();
-                    App.emit('filter:resetCategories');
+                    runWithFilterAnchor(bodyEl, resetCategoriesBtn, function() {
+                        resetAllCategories();
+                        App.emit('filter:resetCategories');
+                    });
                 }
             });
         }
@@ -703,6 +827,9 @@ const FilterModule = (function() {
             return;
         }
         
+        // Anchor gaps live inside the category container so they only affect this section.
+        bindGapConsumerOnce(container);
+        
         // Loading category filters...
         
         // Fetch categories from database
@@ -801,21 +928,25 @@ const FilterModule = (function() {
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        headerToggle.classList.toggle('on');
-                        if (headerToggle.classList.contains('on')) {
-                            accordion.classList.remove('filter-categoryfilter-accordion--disabled');
-                        } else {
-                            accordion.classList.add('filter-categoryfilter-accordion--disabled');
-                            accordion.classList.remove('filter-categoryfilter-accordion--open');
-                        }
-                        applyFilters();
-                        updateResetCategoriesButton();
+                        runWithFilterAnchor(container, header, function() {
+                            headerToggle.classList.toggle('on');
+                            if (headerToggle.classList.contains('on')) {
+                                accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+                            } else {
+                                accordion.classList.add('filter-categoryfilter-accordion--disabled');
+                                accordion.classList.remove('filter-categoryfilter-accordion--open');
+                            }
+                            applyFilters();
+                            updateResetCategoriesButton();
+                        });
                     });
                     
                     // Click anywhere except toggle area expands/collapses
                     header.addEventListener('click', function(e) {
                         if (e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
-                        accordion.classList.toggle('filter-categoryfilter-accordion--open');
+                        runWithFilterAnchor(container, header, function() {
+                            accordion.classList.toggle('filter-categoryfilter-accordion--open');
+                        });
                     });
                     
                     container.appendChild(accordion);

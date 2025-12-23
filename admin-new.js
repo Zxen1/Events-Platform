@@ -39,6 +39,141 @@ const AdminModule = (function() {
     var tabPanels = null;
 
     /* --------------------------------------------------------------------------
+       BUTTON ANCHOR (Admin panel)
+       Keeps clicked controls stationary when accordions/edit panels close above.
+       -------------------------------------------------------------------------- */
+    
+    function getAdminScrollContainer() {
+        if (panel) {
+            var body = panel.querySelector('.admin-panel-body');
+            if (body) return body;
+        }
+        return document.querySelector('.admin-panel-body') || document.scrollingElement || document.documentElement;
+    }
+    
+    function ensureAnchorGap(hostEl, which) {
+        if (!hostEl) return null;
+        var selector = which === 'bottom' ? '[data-admin-anchor-gap="bottom"]' : '[data-admin-anchor-gap="top"]';
+        var el = hostEl.querySelector(selector);
+        if (!el) {
+            el = document.createElement('div');
+            el.setAttribute('data-admin-anchor-gap', which === 'bottom' ? 'bottom' : 'top');
+            el.setAttribute('aria-hidden', 'true');
+            el.style.width = '100%';
+            el.style.height = '0px';
+            el.style.pointerEvents = 'none';
+        }
+        if (which === 'bottom') {
+            hostEl.appendChild(el);
+        } else {
+            hostEl.insertBefore(el, hostEl.firstChild);
+        }
+        return el;
+    }
+    
+    function getGapPx(hostEl, which) {
+        var el = ensureAnchorGap(hostEl, which);
+        return el ? (el.offsetHeight || 0) : 0;
+    }
+    
+    function setGapPx(hostEl, which, px) {
+        var el = ensureAnchorGap(hostEl, which);
+        if (!el) return;
+        var next = Math.max(0, Math.round(px || 0));
+        el.style.height = next ? (next + 'px') : '0px';
+    }
+    
+    function bindGapConsumerOnce(hostEl) {
+        if (!hostEl) return;
+        if (hostEl.dataset && hostEl.dataset.adminAnchorConsumerBound === 'true') return;
+        if (hostEl.dataset) hostEl.dataset.adminAnchorConsumerBound = 'true';
+        
+        var sc = getAdminScrollContainer();
+        if (!sc || !sc.addEventListener) return;
+        
+        sc.addEventListener('scroll', function() {
+            var topGap = getGapPx(hostEl, 'top');
+            var bottomGap = getGapPx(hostEl, 'bottom');
+            if (!topGap && !bottomGap) return;
+            
+            // Consume top gap if user scrolls up into it
+            if (topGap && sc.scrollTop < topGap) {
+                var reduceBy = topGap - sc.scrollTop;
+                setGapPx(hostEl, 'top', topGap - reduceBy);
+                sc.scrollTop = 0;
+            }
+            
+            // Consume bottom gap if user scrolls down into it
+            if (bottomGap) {
+                var maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
+                var distanceToBottom = maxScrollTop - sc.scrollTop;
+                if (distanceToBottom < bottomGap) {
+                    var reduceBottomBy = bottomGap - distanceToBottom;
+                    setGapPx(hostEl, 'bottom', bottomGap - reduceBottomBy);
+                    sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
+                }
+            }
+        }, { passive: true });
+    }
+    
+    function runWithAdminAnchor(hostEl, anchorEl, fn) {
+        var sc = getAdminScrollContainer();
+        if (!sc || !anchorEl || typeof fn !== 'function') {
+            fn();
+            return;
+        }
+        if (!hostEl) {
+            fn();
+            return;
+        }
+        
+        bindGapConsumerOnce(hostEl);
+        ensureAnchorGap(hostEl, 'top');
+        ensureAnchorGap(hostEl, 'bottom');
+        
+        var scRect = sc.getBoundingClientRect();
+        var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
+        var oldScrollTop = sc.scrollTop;
+        
+        fn();
+        
+        requestAnimationFrame(function() {
+            if (!anchorEl.isConnected) return;
+            var scNow = getAdminScrollContainer();
+            if (!scNow) return;
+            
+            // Bottom clamp protection: if collapse shrinks max scroll, add bottom slack and restore scrollTop.
+            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (oldScrollTop > maxAfter) {
+                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + (oldScrollTop - maxAfter));
+                void scNow.scrollHeight;
+            }
+            scNow.scrollTop = oldScrollTop;
+            
+            var scNowRect = scNow.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+            
+            var currentScrollTop = scNow.scrollTop;
+            
+            if (currentScrollTop + delta < 0) {
+                var topSlack = -(currentScrollTop + delta);
+                setGapPx(hostEl, 'top', getGapPx(hostEl, 'top') + topSlack);
+                delta += topSlack;
+            }
+            
+            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (currentScrollTop + delta > maxNow) {
+                setGapPx(hostEl, 'bottom', getGapPx(hostEl, 'bottom') + ((currentScrollTop + delta) - maxNow));
+                void scNow.scrollHeight;
+            }
+            
+            scNow.scrollTop = currentScrollTop + delta;
+        });
+    }
+
+    /* --------------------------------------------------------------------------
        SVG ICONS REGISTRY
        
        DEVELOPER NOTE:
@@ -2570,7 +2705,9 @@ const AdminModule = (function() {
             var header = imageManagerAccordion.querySelector('.admin-settings-imagemanager-accordion-header');
             if (header) {
                 header.addEventListener('click', function() {
-                    imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
+                    runWithAdminAnchor(settingsContainer, header, function() {
+                        imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
+                    });
                 });
             }
         }
@@ -2937,15 +3074,17 @@ const AdminModule = (function() {
 
             // Header click - toggle edit panel
             header.addEventListener('click', function(e) {
-                var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
-                closeAllCheckoutEditPanels(accordion);
-                if (!isEditing) {
-                    accordion.classList.add('admin-checkout-accordion--editing');
-                    editPanel.style.display = 'block';
-                } else {
-                    accordion.classList.remove('admin-checkout-accordion--editing');
-                    editPanel.style.display = 'none';
-                }
+                runWithAdminAnchor(container, header, function() {
+                    var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
+                    closeAllCheckoutEditPanels(accordion);
+                    if (!isEditing) {
+                        accordion.classList.add('admin-checkout-accordion--editing');
+                        editPanel.style.display = 'block';
+                    } else {
+                        accordion.classList.remove('admin-checkout-accordion--editing');
+                        editPanel.style.display = 'none';
+                    }
+                });
             });
 
             // Description textarea
