@@ -294,8 +294,8 @@
 .admin-panel-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin: 8px auto;
+  gap: 10px;
+  margin: 0;
 }
 
 .admin-panel-field-label {
@@ -854,11 +854,15 @@
 .admin-map-lighting-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 12px auto;
+  margin: 0 auto 10px auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 10px;
+}
+
+.admin-map-lighting-container .admin-panel-field + .admin-panel-field {
+  margin-top: 10px;
 }
 
 .admin-lighting-buttons,
@@ -912,9 +916,11 @@
   color: var(--button-active-text, #fff);
 }
 
-.admin-lighting-button-text {
-  font-size: 14px;
-  white-space: nowrap;
+.admin-lighting-button-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .admin-style-button-text {
@@ -929,7 +935,7 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 0 10px 10px;
+  padding: 10px;
 }
 
 /* ============================================================================

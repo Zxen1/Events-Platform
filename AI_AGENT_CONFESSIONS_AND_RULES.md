@@ -1468,6 +1468,20 @@ Mapbox layers in rendering order (bottom to top):
 - Single source of truth: database → API → component
 - This rule exists because snapshots and fallbacks caused immense debugging trouble on the old site
 
+**EXCEPTION: Settings System Fallback Pattern (December 23, 2025)**
+The settings system uses a fallback pattern that is acceptable and intentional:
+- **Admin settings** (`admin_settings` table) provide site-wide defaults
+- **Member settings** (`members` table columns) override admin defaults for logged-in users
+- **Guest settings** (`localStorage`) override admin defaults for non-logged-in users
+- **Priority order:** Member saved setting → Guest localStorage → Admin default
+- This pattern makes sense because:
+  - Admin settings are the foundation (site-wide defaults)
+  - Members can customize their experience (overrides stored in database)
+  - Guests can customize temporarily (overrides stored in localStorage)
+  - On logout, member settings clear and revert to admin defaults or guest localStorage
+  - This is a configuration hierarchy, not an error-handling fallback
+- **This is the ONLY acceptable fallback pattern** - all other fallbacks are forbidden
+
 ### Rule 20: NEW SITE - DEFAULT BUTTON AND INPUT SIZING
 **CRITICAL:** On the new site, buttons and inputs have standard default sizing:
 - Height: 36px
@@ -2461,6 +2475,91 @@ How text displays in the four reusable dropdown menus:
 - Users must consider value before posting
 - Special permission required for free posts (rare exceptions)
 - Not an open forum - quality over quantity
+
+---
+
+## SETTINGS SYSTEM: ADMIN DEFAULTS WITH USER OVERRIDES
+
+**Date:** December 23, 2025
+
+**CRITICAL:** This is the ONLY acceptable fallback pattern in the entire codebase. All other fallbacks are forbidden.
+
+### How It Works
+
+**Three-Tier Settings Hierarchy:**
+
+1. **Admin Settings (Defaults):**
+   - Stored in `admin_settings` table
+   - Provide site-wide defaults for all users
+   - Examples: `map_lighting: 'day'`, `map_style: 'standard'`
+   - Applied to all users (guests and members) unless overridden
+
+2. **Member Settings (Overrides):**
+   - Stored in `members` table columns (e.g., `map_lighting`, `map_style`)
+   - Override admin defaults for logged-in members
+   - Applied automatically when member logs in
+   - Persist across sessions (saved to database)
+   - Cleared from session on logout (reverts to admin default or guest localStorage)
+
+3. **Guest Settings (Temporary Overrides):**
+   - Stored in browser `localStorage`
+   - Override admin defaults for non-logged-in users
+   - Persist only in current browser
+   - Cleared when browser localStorage is cleared
+
+### Priority Order
+
+When applying settings, the system checks in this order:
+
+1. **Member's saved setting** (if logged in and has saved value)
+2. **Guest's localStorage setting** (if not logged in and has saved value)
+3. **Admin default** (fallback if no user override exists)
+
+### Implementation
+
+**On Page Load:**
+- Load admin settings from `admin_settings` table
+- If member is logged in: Load member settings from `members` table and apply
+- If guest: Check `localStorage` and apply if present
+- Otherwise: Use admin defaults
+
+**On Setting Change:**
+- **Member:** Save to `members` table immediately (automatic saving)
+- **Guest:** Save to `localStorage` immediately
+- Apply change to map/UI immediately
+
+**On Logout:**
+- Clear member settings from session
+- Revert to admin defaults (or guest localStorage if present)
+
+### Why This Pattern Is Acceptable
+
+- **Not error handling:** This is a configuration hierarchy, not a fallback for missing data
+- **Intentional design:** Admin → Member/Guest override is the intended behavior
+- **User experience:** Members expect their preferences to persist and override defaults
+- **Clear hierarchy:** Each tier has a clear purpose and source of truth
+- **No silent failures:** If admin setting is missing, it's a database error (should throw)
+- **Predictable:** Users understand that their settings override site defaults
+
+### Settings That Use This Pattern
+
+- `map_lighting` (dawn, day, dusk, night)
+- `map_style` (standard, standard-satellite)
+- Future settings: currency, language, password, avatar (as implemented)
+
+### Code Pattern
+
+```javascript
+// Load settings in priority order
+var lighting = currentUser?.map_lighting || localStorage.getItem('map_lighting') || adminSettings.map_lighting;
+var style = currentUser?.map_style || localStorage.getItem('map_style') || adminSettings.map_style;
+
+// Apply to map
+MapModule.setMapLighting(lighting);
+MapModule.setMapStyle(style);
+```
+
+**CRITICAL:** This is the ONLY fallback pattern allowed. All other code must throw errors if data is missing, not fall back to defaults.
 
 ---
 

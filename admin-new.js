@@ -1761,6 +1761,8 @@ const AdminModule = (function() {
                 btn.addEventListener('click', function() {
                     if (btn.getAttribute('aria-pressed') === 'true') return;
                     
+                    console.log('[Admin] Lighting button clicked:', lighting);
+                    
                     lightingButtons.forEach(function(b) {
                         b.setAttribute('aria-pressed', 'false');
                         b.classList.remove('admin-lighting-button--active');
@@ -1770,7 +1772,10 @@ const AdminModule = (function() {
                     
                     updateField('map.map_lighting', lighting);
                     if (window.MapModule && window.MapModule.setMapLighting) {
+                        console.log('[Admin] Calling MapModule.setMapLighting');
                         window.MapModule.setMapLighting(lighting);
+                    } else {
+                        console.warn('[Admin] MapModule not available or setMapLighting missing');
                     }
                 });
             });
@@ -1790,6 +1795,8 @@ const AdminModule = (function() {
                 btn.addEventListener('click', function() {
                     if (btn.getAttribute('aria-pressed') === 'true') return;
                     
+                    console.log('[Admin] Style button clicked:', style);
+                    
                     styleButtons.forEach(function(b) {
                         b.setAttribute('aria-pressed', 'false');
                         b.classList.remove('admin-style-button--active');
@@ -1799,7 +1806,10 @@ const AdminModule = (function() {
                     
                     updateField('map.map_style', style);
                     if (window.MapModule && window.MapModule.setMapStyle) {
+                        console.log('[Admin] Calling MapModule.setMapStyle');
                         window.MapModule.setMapStyle(style);
+                    } else {
+                        console.warn('[Admin] MapModule not available or setMapStyle missing');
                     }
                 });
             });

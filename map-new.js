@@ -1073,10 +1073,14 @@ const MapModule = (function() {
    * Update map style (standard or standard-satellite)
    */
   function setMapStyle(style) {
-    if (!map) return;
+    if (!map) {
+      console.warn('[Map] setMapStyle: Map not initialized');
+      return;
+    }
     var styleUrl = style === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
+    console.log('[Map] Setting style to:', styleUrl);
     map.setStyle(styleUrl);
   }
 
@@ -1084,8 +1088,15 @@ const MapModule = (function() {
    * Update map lighting preset
    */
   function setMapLighting(preset) {
-    if (!map) return;
+    if (!map) {
+      console.warn('[Map] setMapLighting: Map not initialized');
+      return;
+    }
+    
+    console.log('[Map] Setting lighting to:', preset);
+    
     if (!map.isStyleLoaded()) {
+      console.log('[Map] Style not loaded yet, waiting...');
       map.once('style.load', function() {
         setMapLighting(preset);
       });
@@ -1093,13 +1104,18 @@ const MapModule = (function() {
     }
     
     try {
-      map.setConfig({
-        basemap: {
-          lightPreset: preset
-        }
-      });
+      if (typeof map.setConfig === 'function') {
+        map.setConfig({
+          basemap: {
+            lightPreset: preset
+          }
+        });
+        console.log('[Map] Lighting preset applied:', preset);
+      } else {
+        console.warn('[Map] setConfig not available - map may not be using Standard style');
+      }
     } catch (e) {
-      console.warn('[Map] Failed to set lighting preset:', e);
+      console.error('[Map] Failed to set lighting preset:', e);
     }
   }
 
@@ -1152,3 +1168,6 @@ const MapModule = (function() {
 
 // Register module with App
 App.registerModule('map', MapModule);
+
+// Expose globally for consistency with other modules
+window.MapModule = MapModule;

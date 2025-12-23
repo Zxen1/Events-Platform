@@ -334,7 +334,7 @@
 .member-panel-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .member-panel-field[hidden] {
@@ -366,11 +366,15 @@
 .member-map-settings-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 20px auto;
+  margin: 0 auto 10px auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 10px;
+}
+
+.member-map-settings-container .member-panel-field + .member-panel-field {
+  margin-top: 10px;
 }
 
 .member-lighting-buttons,
@@ -424,9 +428,11 @@
   color: var(--button-active-text, #fff);
 }
 
-.member-lighting-button-text {
-  font-size: 14px;
-  white-space: nowrap;
+.member-lighting-button-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .member-style-button-text {
