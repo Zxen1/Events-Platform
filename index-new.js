@@ -607,11 +607,12 @@ window.App = App;
 /* ============================================================================
    SCROLL BUFFER SYSTEM
    Prevents content from jumping when accordions open/close
-   Only clamps scroll at top/bottom edges, allows free scrolling in middle
+   Adds visible buffer areas, only clamps when user scrolls to edges
    ============================================================================ */
 
 var ScrollBufferModule = {
     buffers: new Map(), // Map of container -> buffer data
+    BUFFER_SIZE: 5000, // Visible buffer space above and below content
     
     /**
      * Initialize scroll buffer for a container
@@ -628,17 +629,22 @@ var ScrollBufferModule = {
         var bufferData = {
             container: container,
             header: header,
-            body: body
+            body: body,
+            previousScrollTop: container.scrollTop
         };
         
         this.buffers.set(container, bufferData);
         
-        // Watch for scroll events - clamp at edges only
+        // Add visible buffer padding (top and bottom)
+        container.style.paddingTop = this.BUFFER_SIZE + 'px';
+        container.style.paddingBottom = this.BUFFER_SIZE + 'px';
+        
+        // Watch for scroll events - only clamp when user actively scrolls to edges
         container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
     },
     
     /**
-     * Handle scroll events - clamp at top/bottom edges only
+     * Handle scroll events - only clamp when user scrolls to edges
      */
     handleScroll: function(container) {
         var bufferData = this.buffers.get(container);
@@ -647,26 +653,31 @@ var ScrollBufferModule = {
         var scrollTop = container.scrollTop;
         var clientHeight = container.clientHeight;
         var scrollHeight = container.scrollHeight;
+        var previousScrollTop = bufferData.previousScrollTop;
         
-        // Calculate header height (where list content starts)
+        // Determine scroll direction
+        var scrollingUp = scrollTop < previousScrollTop;
+        var scrollingDown = scrollTop > previousScrollTop;
+        
+        // Calculate header height (where list content starts after buffer)
         var headerHeight = 0;
         if (bufferData.header) {
             headerHeight = bufferData.header.offsetHeight;
         }
+        var contentStart = this.BUFFER_SIZE + headerHeight;
+        var contentEnd = scrollHeight - this.BUFFER_SIZE;
         
-        // Check if top of list is visible (scrollTop is at or near header)
-        var topOfListVisible = scrollTop <= (headerHeight + 10);
-        
-        // Check if bottom of list is visible (scrollTop + clientHeight is near scrollHeight)
-        var bottomOfListVisible = (scrollTop + clientHeight) >= (scrollHeight - 10);
-        
-        // Clamp scroll position only when at edges
-        if (topOfListVisible && scrollTop < (headerHeight + 10)) {
-            container.scrollTop = headerHeight + 10;
-        } else if (bottomOfListVisible && (scrollTop + clientHeight) > (scrollHeight - 10)) {
-            container.scrollTop = scrollHeight - clientHeight - 10;
+        // Only clamp when user actively scrolls to edges
+        if (scrollingUp && scrollTop < (contentStart + 10)) {
+            // User scrolling up and reached top - clamp at header + 10px
+            container.scrollTop = contentStart + 10;
+        } else if (scrollingDown && (scrollTop + clientHeight) > (contentEnd - 10)) {
+            // User scrolling down and reached bottom - clamp at footer - 10px
+            container.scrollTop = contentEnd - clientHeight - 10;
         }
-        // Otherwise, allow free scrolling (no clamping in middle)
+        // Otherwise, allow free scrolling (including into buffer areas)
+        
+        bufferData.previousScrollTop = container.scrollTop;
     },
     
     /**
@@ -675,6 +686,10 @@ var ScrollBufferModule = {
     remove: function(container) {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
+        
+        // Remove padding
+        container.style.paddingTop = '';
+        container.style.paddingBottom = '';
         
         this.buffers.delete(container);
     }
