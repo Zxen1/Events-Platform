@@ -9,7 +9,6 @@
 /* Container */
 .admin-formbuilder-container {
   width: 100%;
-  position: relative;
 }
 
 /* Category Accordion */
@@ -19,11 +18,6 @@
   background: #080808;
   border-radius: 5px;
   overflow: visible;
-  position: absolute;
-  left: 0;
-  right: 0;
-  transition: top 0.1s linear;
-  will-change: top;
 }
 
 .formbuilder-accordion-header {
@@ -35,8 +29,6 @@
   background: #0c4070;
   border-radius: 5px 5px 0 0;
   border: 1px solid transparent;
-  position: relative;
-  z-index: 1;
 }
 
 .formbuilder-accordion:not(.formbuilder-accordion--open) .formbuilder-accordion-header {
