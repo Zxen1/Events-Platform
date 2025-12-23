@@ -2388,6 +2388,9 @@ const AdminModule = (function() {
         settingsContainer = document.getElementById('admin-tab-settings');
         if (!settingsContainer) return;
         
+        // Initialize console filter system first (before attaching handlers)
+        initConsoleFilter();
+        
         // Load settings from database then attach to existing HTML
         loadSettingsFromDatabase().then(function() {
             attachSettingsHandlers();
@@ -2405,6 +2408,14 @@ const AdminModule = (function() {
                     // Store system_images data separately
                     if (data.system_images) {
                         settingsData.system_images = data.system_images;
+                    }
+                    
+                    // Store console_filter setting from database and sync to localStorage for next page load
+                    if (data.settings.console_filter !== undefined) {
+                        window._consoleFilterEnabled = data.settings.console_filter;
+                        localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
+                        // Enable filter immediately if it was enabled in database
+                        enableConsoleFilterIfNeeded();
                     }
 
                     // Use database setting for system images folder
@@ -2428,6 +2439,58 @@ const AdminModule = (function() {
             .catch(function(err) {
                 console.error('[Admin] Failed to load settings:', err);
             });
+    }
+    
+    // Console filter system - loads only when admin panel opens (lazy loading)
+    function initConsoleFilter() {
+        var consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
+        if (!consoleFilterCheckbox) return;
+        
+        // Store original console.warn to restore when disabling
+        var originalConsoleWarn = console.warn;
+        var consoleFilterActive = false;
+        
+        // Suppression patterns (same as console-filter.js)
+        var suppressedWarnings = [
+            /featureNamespace.*selector/i,
+            /cutoff.*disabled.*terrain/i,
+            /Image "marker-label-composite.*could not be loaded/i
+        ];
+        
+        // Function to enable console filter
+        function enableConsoleFilter() {
+            if (consoleFilterActive) return;
+            
+            console.warn = function(...args) {
+                var message = args.join(' ');
+                if (!suppressedWarnings.some(function(pattern) { return pattern.test(message); })) {
+                    originalConsoleWarn.apply(console, args);
+                }
+            };
+            
+            consoleFilterActive = true;
+            console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
+                'Suppressing', suppressedWarnings.length, 'warning patterns.');
+        }
+        
+        // Function to disable console filter
+        function disableConsoleFilter() {
+            if (!consoleFilterActive) return;
+            console.warn = originalConsoleWarn;
+            consoleFilterActive = false;
+            console.log('%c[Console Filter Disabled]', 'color: #ff9900; font-weight: bold;');
+        }
+        
+        // Expose functions globally so checkbox handler can use them
+        window.enableConsoleFilter = enableConsoleFilter;
+        window.disableConsoleFilter = disableConsoleFilter;
+    }
+    
+    // Enable console filter after settings load (called from loadSettingsFromDatabase)
+    function enableConsoleFilterIfNeeded() {
+        if (window._consoleFilterEnabled === true && window.enableConsoleFilter) {
+            window.enableConsoleFilter();
+        }
     }
     
     function attachSettingsHandlers() {
@@ -2456,6 +2519,19 @@ const AdminModule = (function() {
             
             checkbox.addEventListener('change', function() {
                 updateField('settings.' + key, checkbox.checked);
+                
+                // Special handling for console_filter: enable/disable immediately and sync localStorage for next page load
+                if (key === 'console_filter') {
+                    window._consoleFilterEnabled = checkbox.checked;
+                    localStorage.setItem('enableConsoleFilter', checkbox.checked ? 'true' : 'false');
+                    
+                    // Enable/disable filter immediately
+                    if (checkbox.checked) {
+                        enableConsoleFilter();
+                    } else {
+                        disableConsoleFilter();
+                    }
+                }
             });
         });
         
