@@ -607,13 +607,11 @@ window.App = App;
 /* ============================================================================
    SCROLL BUFFER SYSTEM
    Prevents content from jumping when accordions open/close
-   Uses invisible spacer elements (air bubbles) that adjust naturally
-   Only clamps when scrolling, never when clicking
+   Uses sticky header/footer elements that expand during clicking
    ============================================================================ */
 
 var ScrollBufferModule = {
     buffers: new Map(), // Map of container -> buffer data
-    BUFFER_MAX_HEIGHT: 5000, // Maximum height for spacer elements
     
     /**
      * Initialize scroll buffer for a container
@@ -628,83 +626,76 @@ var ScrollBufferModule = {
         
         if (!header || !body) return;
         
-        // Create invisible spacer at top of body (air bubble above content)
-        // Bodies use flexbox column, so spacer needs flex-grow to adjust naturally
-        // Starts at 0, can grow up to max-height when content changes
-        var topSpacer = document.createElement('div');
-        topSpacer.className = 'scroll-buffer-spacer scroll-buffer-spacer--top';
-        topSpacer.style.cssText = 'flex: 1 1 0; min-height: 0; max-height: ' + this.BUFFER_MAX_HEIGHT + 'px; width: 100%; flex-basis: 0;';
-        body.insertBefore(topSpacer, body.firstChild);
+        // Create invisible sticky element at top of body (sticks to header)
+        var topSticky = document.createElement('div');
+        topSticky.className = 'scroll-buffer-sticky scroll-buffer-sticky--top';
+        topSticky.style.cssText = 'position: sticky; top: 0; height: 1px; width: 100%; flex-shrink: 0; z-index: -1;';
+        body.insertBefore(topSticky, body.firstChild);
         
-        // Create invisible spacer at bottom of body (air bubble below content)
-        var bottomSpacer = document.createElement('div');
-        bottomSpacer.className = 'scroll-buffer-spacer scroll-buffer-spacer--bottom';
-        bottomSpacer.style.cssText = 'flex: 1 1 0; min-height: 0; max-height: ' + this.BUFFER_MAX_HEIGHT + 'px; width: 100%; flex-basis: 0;';
-        body.appendChild(bottomSpacer);
+        // Create invisible sticky element at bottom of body (sticks to bottom of viewport)
+        var bottomSticky = document.createElement('div');
+        bottomSticky.className = 'scroll-buffer-sticky scroll-buffer-sticky--bottom';
+        bottomSticky.style.cssText = 'position: sticky; bottom: 0; height: 1px; width: 100%; flex-shrink: 0; z-index: -1; margin-top: auto;';
+        body.appendChild(bottomSticky);
         
         // Store buffer data
         var bufferData = {
             container: container,
             header: header,
             body: body,
-            topSpacer: topSpacer,
-            bottomSpacer: bottomSpacer,
-            previousScrollTop: container.scrollTop,
-            isUserScrolling: false
+            topSticky: topSticky,
+            bottomSticky: bottomSticky,
+            isClicking: false
         };
         
         this.buffers.set(container, bufferData);
         
-        // Detect user scrolling (wheel, touch, scrollbar)
-        container.addEventListener('wheel', function() {
-            bufferData.isUserScrolling = true;
-            setTimeout(function() {
-                bufferData.isUserScrolling = false;
-            }, 100);
+        // Watch scroll to continuously update max-height as sticky elements shrink
+        container.addEventListener('scroll', function() {
+            // Only update if not currently clicking (to avoid conflicts)
+            if (!bufferData.isClicking) {
+                var topHeight = topSticky.offsetHeight;
+                var bottomHeight = bottomSticky.offsetHeight;
+                
+                // Top sticky: reduce max-height as it shrinks (prevents gaps at top)
+                if (topHeight < parseFloat(topSticky.style.maxHeight) || !topSticky.style.maxHeight) {
+                    topSticky.style.maxHeight = topHeight + 'px';
+                }
+                
+                // Bottom sticky: reduce max-height as it shrinks, but allow expansion if content grows
+                // Only reduce if sticky is actually shrinking (not if content is expanding)
+                var currentBottomMax = parseFloat(bottomSticky.style.maxHeight);
+                if (!currentBottomMax || bottomHeight < currentBottomMax) {
+                    // Sticky is shrinking - reduce max-height to match
+                    bottomSticky.style.maxHeight = bottomHeight + 'px';
+                }
+                // If bottomHeight > currentBottomMax, content is expanding - don't constrain it
+            }
         }, { passive: true });
         
-        container.addEventListener('touchstart', function() {
-            bufferData.isUserScrolling = true;
-        }, { passive: true });
-        
-        container.addEventListener('touchend', function() {
-            setTimeout(function() {
-                bufferData.isUserScrolling = false;
-            }, 100);
-        }, { passive: true });
-        
-        // Watch for scroll events - only clamp when user actively scrolls
-        container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
-    },
-    
-    /**
-     * Handle scroll events - only clamp when scrolling, never when clicking
-     */
-    handleScroll: function(container) {
-        var bufferData = this.buffers.get(container);
-        if (!bufferData) return;
-        
-        // Branch 1: User scrolling? → Clamp at edges
-        if (!bufferData.isUserScrolling) {
-            bufferData.previousScrollTop = container.scrollTop;
-            return;
+        // Detect accordion/drawer clicks - remove max-height constraint when clicking
+        if (body) {
+            body.addEventListener('click', function(e) {
+                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .filter-categoryfilter-accordion-option, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
+                if (accordionHeader) {
+                    // Set clicking flag
+                    bufferData.isClicking = true;
+                    
+                    // Remove max-height constraint (allow free expansion)
+                    topSticky.style.maxHeight = 'none';
+                    bottomSticky.style.maxHeight = 'none';
+                    
+                    // After animation completes, set max-height to current height and clear flag
+                    setTimeout(function() {
+                        var topHeight = topSticky.offsetHeight;
+                        var bottomHeight = bottomSticky.offsetHeight;
+                        topSticky.style.maxHeight = topHeight + 'px';
+                        bottomSticky.style.maxHeight = bottomHeight + 'px';
+                        bufferData.isClicking = false;
+                    }, 500);
+                }
+            }, true);
         }
-        
-        var scrollTop = container.scrollTop;
-        var clientHeight = container.clientHeight;
-        var scrollHeight = container.scrollHeight;
-        var headerHeight = bufferData.header.offsetHeight;
-        
-        // Clamp header to top of content (10px gap)
-        if (scrollTop < (headerHeight + 10)) {
-            container.scrollTop = headerHeight + 10;
-        }
-        // Clamp footer to bottom of content (10px gap)
-        else if ((scrollTop + clientHeight) > (scrollHeight - 10)) {
-            container.scrollTop = scrollHeight - clientHeight - 10;
-        }
-        
-        bufferData.previousScrollTop = container.scrollTop;
     },
     
     /**
@@ -714,12 +705,12 @@ var ScrollBufferModule = {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
         
-        // Remove spacer elements
-        if (bufferData.topSpacer && bufferData.topSpacer.parentNode) {
-            bufferData.topSpacer.parentNode.removeChild(bufferData.topSpacer);
+        // Remove sticky elements
+        if (bufferData.topSticky && bufferData.topSticky.parentNode) {
+            bufferData.topSticky.parentNode.removeChild(bufferData.topSticky);
         }
-        if (bufferData.bottomSpacer && bufferData.bottomSpacer.parentNode) {
-            bufferData.bottomSpacer.parentNode.removeChild(bufferData.bottomSpacer);
+        if (bufferData.bottomSticky && bufferData.bottomSticky.parentNode) {
+            bufferData.bottomSticky.parentNode.removeChild(bufferData.bottomSticky);
         }
         
         this.buffers.delete(container);
