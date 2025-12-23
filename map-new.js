@@ -131,6 +131,7 @@ const MapModule = (function() {
     await loadSettings();
 
     // Create map (pass DOM element directly, not ID)
+    // Performance optimizations: renderWorldCopies=false reduces initial load, preserveDrawingBuffer only if needed
     map = new mapboxgl.Map({
       container: container,
       style: 'mapbox://styles/mapbox/standard',
@@ -139,7 +140,9 @@ const MapModule = (function() {
       zoom: startZoom,
       pitch: startPitch,
       bearing: startBearing,
-      attributionControl: true
+      attributionControl: true,
+      renderWorldCopies: false, // Reduce initial rendering load
+      antialias: false // Disable antialiasing for better performance (can enable if quality needed)
     });
 
     // Handle map load
@@ -153,37 +156,41 @@ const MapModule = (function() {
 
   /**
    * Called when map finishes loading
+   * Optimized: Defer non-critical operations to reduce requestAnimationFrame violations
    */
   function onMapLoad() {
     // Map loaded
     
-    // Show the map (fade in)
+    // Show the map (fade in) - immediate
     const mapEl = document.querySelector('.map-container');
     if (mapEl) {
       mapEl.style.opacity = '1';
     }
     
-    // Initialize controls
-    initControls();
-    
-    // Initialize clusters
-    initClusters();
-    
-    // Bind map events
-    bindMapEvents();
-    
-    // Update zoom indicator
-    map.on('zoom', updateZoomIndicator);
-    map.on('pitch', updateZoomIndicator);
-    updateZoomIndicator();
-    
-    // Start spin if enabled
-    if (spinEnabled) {
-      startSpin();
-    }
-    
-    // Emit ready event
+    // Emit ready event immediately (other modules may depend on this)
     App.emit('map:ready', { map });
+    
+    // Defer non-critical operations to next frame to avoid blocking render loop
+    requestAnimationFrame(function() {
+      // Initialize controls (deferred)
+      initControls();
+      
+      // Initialize clusters (deferred)
+      initClusters();
+      
+      // Bind map events (deferred)
+      bindMapEvents();
+      
+      // Update zoom indicator (deferred)
+      map.on('zoom', updateZoomIndicator);
+      map.on('pitch', updateZoomIndicator);
+      updateZoomIndicator();
+      
+      // Start spin if enabled (deferred)
+      if (spinEnabled) {
+        startSpin();
+      }
+    });
   }
 
   /**
