@@ -473,6 +473,12 @@
     color: #fff;
 }
 
+.fieldset-select option:checked,
+.fieldset-select option:focus {
+    background: #3b82f6;
+    color: #fff;
+}
+
 /* Appearance - Radio */
 .fieldset-radio-group {
     display: flex;
