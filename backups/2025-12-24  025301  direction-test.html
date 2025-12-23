@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Rectangle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a1a;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #rectangle {
+            width: 36px;
+            height: 400px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            position: absolute;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5);
+            transition: box-shadow 0.2s;
+        }
+        
+        #rectangle:hover {
+            box-shadow: 0 6px 30px rgba(59, 130, 246, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div id="rectangle"></div>
+    
+    <script>
+        const rectangle = document.getElementById('rectangle');
+        let x = 100;
+        let y = 100;
+        let vx = 3;
+        let vy = 2;
+        let isBouncing = false;
+        
+        function updatePosition() {
+            const rect = rectangle.getBoundingClientRect();
+            const maxX = window.innerWidth - 36;
+            const maxY = window.innerHeight - 400;
+            
+            if (isBouncing) {
+                // Diagonal bouncing mode
+                x += vx;
+                y += vy;
+                
+                // Bounce off walls
+                if (x <= 0 || x >= maxX) {
+                    vx = -vx;
+                    x = Math.max(0, Math.min(x, maxX));
+                }
+                if (y <= 0 || y >= maxY) {
+                    vy = -vy;
+                    y = Math.max(0, Math.min(y, maxY));
+                }
+            } else {
+                // Initial movement across screen
+                x += vx;
+                if (x > maxX) {
+                    x = -36;
+                }
+            }
+            
+            rectangle.style.left = x + 'px';
+            rectangle.style.top = y + 'px';
+            
+            requestAnimationFrame(updatePosition);
+        }
+        
+        rectangle.addEventListener('click', function() {
+            if (!isBouncing) {
+                isBouncing = true;
+                // Set diagonal velocity
+                vx = 5;
+                vy = 4;
+            }
+        });
+        
+        // Start animation
+        updatePosition();
+    </script>
+</body>
+</html>
