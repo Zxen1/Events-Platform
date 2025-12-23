@@ -603,3 +603,143 @@ const App = (function() {
 
 // Expose App globally so modules can check window.App
 window.App = App;
+
+/* ============================================================================
+   SCROLL BUFFER SYSTEM
+   Prevents content from jumping when accordions open/close
+   Only clamps when scrolling, never when clicking
+   ============================================================================ */
+
+var ScrollBufferModule = {
+    buffers: new Map(), // Map of container -> buffer data
+    
+    /**
+     * Initialize scroll buffer for a container
+     * @param {HTMLElement} container - Scrollable container element
+     */
+    init: function(container) {
+        if (!container) return;
+        
+        // Find header and body elements
+        var header = container.querySelector('.panel-header, .filter-panel-header, .admin-panel-header, .member-panel-header');
+        var body = container.querySelector('.panel-body, .filter-panel-body, .admin-panel-body, .member-panel-body');
+        
+        // Store buffer data
+        var bufferData = {
+            container: container,
+            header: header,
+            body: body,
+            previousScrollTop: container.scrollTop,
+            isUserScrolling: false,
+            clampDisabled: false
+        };
+        
+        this.buffers.set(container, bufferData);
+        
+        // Detect user scrolling (wheel, touch, scrollbar)
+        container.addEventListener('wheel', function() {
+            bufferData.isUserScrolling = true;
+            setTimeout(function() {
+                bufferData.isUserScrolling = false;
+            }, 100);
+        }, { passive: true });
+        
+        container.addEventListener('touchstart', function() {
+            bufferData.isUserScrolling = true;
+        }, { passive: true });
+        
+        container.addEventListener('touchend', function() {
+            setTimeout(function() {
+                bufferData.isUserScrolling = false;
+            }, 100);
+        }, { passive: true });
+        
+        // Detect accordion clicks - disable clamping (Branch 1: clicking)
+        if (body) {
+            body.addEventListener('click', function(e) {
+                var accordionHeader = e.target.closest('.formbuilder-accordion-header, .formbuilder-accordion-option-header, .filter-categoryfilter-accordion-header, .admin-messages-accordion-header, .admin-settings-imagemanager-accordion-header');
+                if (accordionHeader) {
+                    bufferData.clampDisabled = true;
+                    setTimeout(function() {
+                        bufferData.clampDisabled = false;
+                    }, 300);
+                }
+            }, true);
+        }
+        
+        // Watch for scroll events - only clamp when user actively scrolls
+        container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
+    },
+    
+    /**
+     * Handle scroll events - only clamp when scrolling, never when clicking
+     */
+    handleScroll: function(container) {
+        var bufferData = this.buffers.get(container);
+        if (!bufferData) return;
+        
+        // Branch 1: User clicking accordion? → No clamping (free movement)
+        if (bufferData.clampDisabled) {
+            bufferData.previousScrollTop = container.scrollTop;
+            return;
+        }
+        
+        // Branch 2: User scrolling? → Clamp at edges
+        if (!bufferData.isUserScrolling) {
+            bufferData.previousScrollTop = container.scrollTop;
+            return;
+        }
+        
+        var scrollTop = container.scrollTop;
+        var clientHeight = container.clientHeight;
+        var scrollHeight = container.scrollHeight;
+        var previousScrollTop = bufferData.previousScrollTop;
+        
+        // Calculate header height (where content starts)
+        var headerHeight = 0;
+        if (bufferData.header) {
+            headerHeight = bufferData.header.offsetHeight;
+        }
+        
+        // Check for gap at top (content below header)
+        var gapAtTop = scrollTop < headerHeight;
+        var gapAtBottom = (scrollTop + clientHeight) > scrollHeight;
+        
+        // Determine scroll direction
+        var scrollingUp = scrollTop < previousScrollTop;
+        var scrollingDown = scrollTop > previousScrollTop;
+        
+        // Clamp header to top of content (10px gap)
+        if (scrollTop < (headerHeight + 10)) {
+            container.scrollTop = headerHeight + 10;
+        }
+        // Clamp footer to bottom of content (10px gap)
+        else if ((scrollTop + clientHeight) > (scrollHeight - 10)) {
+            container.scrollTop = scrollHeight - clientHeight - 10;
+        }
+        // Prevent scrolling that increases on-screen gap
+        else if (gapAtTop && scrollingDown) {
+            // Gap visible at top while scrolling down → prevent downward scroll
+            container.scrollTop = previousScrollTop;
+        }
+        else if (gapAtBottom && scrollingUp) {
+            // Gap visible at bottom while scrolling up → prevent upward scroll
+            container.scrollTop = previousScrollTop;
+        }
+        
+        bufferData.previousScrollTop = container.scrollTop;
+    },
+    
+    /**
+     * Remove scroll buffer from container
+     */
+    remove: function(container) {
+        var bufferData = this.buffers.get(container);
+        if (!bufferData) return;
+        
+        this.buffers.delete(container);
+    }
+};
+
+// Expose globally
+window.ScrollBufferModule = ScrollBufferModule;
