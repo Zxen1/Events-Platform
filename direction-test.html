@@ -29,7 +29,6 @@
             border-radius: 10px;
             overflow-y: auto;
             overflow-x: hidden;
-            position: relative;
         }
         
         .test-header {
@@ -40,9 +39,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
         }
         
         .test-header-top {
@@ -50,8 +46,6 @@
         }
         
         .test-header-bottom {
-            position: sticky;
-            bottom: 0;
             border-radius: 0 0 10px 10px;
         }
         
@@ -84,14 +78,6 @@
             height: 200px;
             background: #1a1a1a;
         }
-        
-        .scroll-lock {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            pointer-events: none;
-            opacity: 0;
-        }
     </style>
 </head>
 <body>
@@ -122,46 +108,28 @@
         
         function toggleContent(clickedHeader) {
             if (isOpen) {
-                // Closing - scroll down to keep button in place
+                // Get content height before closing
                 var contentHeight = content.offsetHeight;
-                var currentScroll = container.scrollTop;
+                
+                // Get clicked button position
                 var clickedRect = clickedHeader.getBoundingClientRect();
                 var containerRect = container.getBoundingClientRect();
-                var clickedPositionInContainer = currentScroll + (clickedRect.top - containerRect.top);
+                var clickedTop = clickedRect.top - containerRect.top;
                 
-                // Close the content
+                // Get content position
+                var contentRect = content.getBoundingClientRect();
+                var contentTop = contentRect.top - containerRect.top;
+                
+                // If content is above clicked button, scroll down by content height
+                var needsScrollCompensation = contentTop < clickedTop;
+                
+                // Close content
                 content.classList.remove('open');
                 
-                // METHOD 1: Immediate scroll compensation
-                container.scrollTop = currentScroll + contentHeight;
-                
-                // METHOD 2: Lock scroll with invisible spacer
-                var lockSpacer = document.createElement('div');
-                lockSpacer.className = 'scroll-lock';
-                lockSpacer.style.height = contentHeight + 'px';
-                lockSpacer.style.position = 'absolute';
-                lockSpacer.style.top = (clickedPositionInContainer - contentHeight) + 'px';
-                container.appendChild(lockSpacer);
-                
-                // METHOD 3: Expand container height to lock position
-                var originalHeight = container.style.height;
-                container.style.height = (container.scrollHeight + contentHeight) + 'px';
-                
-                // After animation, remove locks and restore
-                setTimeout(function() {
-                    lockSpacer.remove();
-                    container.style.height = originalHeight || '';
-                    
-                    // Final scroll adjustment to ensure button position
-                    var finalScroll = clickedPositionInContainer;
-                    container.scrollTop = finalScroll;
-                    
-                    // Lock with min-height to prevent bounce
-                    container.style.minHeight = container.scrollHeight + 'px';
-                    setTimeout(function() {
-                        container.style.minHeight = '';
-                    }, 100);
-                }, 350);
+                // Scroll compensation: if drawer was above button, scroll down
+                if (needsScrollCompensation) {
+                    container.scrollTop = container.scrollTop + contentHeight;
+                }
                 
             } else {
                 // Opening

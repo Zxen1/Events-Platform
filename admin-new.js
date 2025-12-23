@@ -415,11 +415,6 @@ const AdminModule = (function() {
     function openPanel() {
         if (!panel || !panelContent) return;
         
-        // Initialize scroll buffer (prevents content jumping when accordions open/close)
-        if (window.ScrollBufferModule) {
-            ScrollBufferModule.init(panelContent);
-        }
-        
         panel.classList.add('admin-panel--show');
         panel.setAttribute('aria-hidden', 'false');
         panelContent.classList.remove('admin-panel-content--hidden');

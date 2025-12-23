@@ -118,25 +118,16 @@
 
 /* Edit Panel */
 .formbuilder-accordion-editpanel {
-  max-height: 0;
-  overflow: hidden;
-  padding: 0 10px;
+  display: none;
+  padding: 10px;
   background: #0c4070;
   border: 1px solid #3b82f5;
   border-top: none;
   border-radius: 0 0 5px 5px;
-  transition: max-height 0.3s ease, padding-top 0.3s ease, padding-bottom 0.3s ease, transform 0.3s ease;
-  transform: translateY(0);
 }
 
 .formbuilder-accordion--editing > .formbuilder-accordion-editpanel {
-  max-height: 5000px;
-  padding: 10px;
-  transform: translateY(0);
-}
-
-.formbuilder-accordion-editpanel.formbuilder-editpanel-closing-downward {
-  transform: translateY(100%);
+  display: block;
 }
 
 .formbuilder-accordion-editpanel-row {
@@ -376,25 +367,16 @@
 }
 
 .formbuilder-accordion-option-editpanel {
-  max-height: 0;
-  overflow: hidden;
-  padding: 0 10px;
+  display: none;
+  padding: 10px;
   border: 1px solid #3b82f5;
   border-top: none;
   border-radius: 0 0 5px 5px;
   background: #000;
-  transition: max-height 0.3s ease, padding-top 0.3s ease, padding-bottom 0.3s ease, transform 0.3s ease;
-  transform: translateY(0);
 }
 
 .formbuilder-accordion-option--editing > .formbuilder-accordion-option-editpanel {
-  max-height: 5000px;
-  padding: 10px;
-  transform: translateY(0);
-}
-
-.formbuilder-accordion-option-editpanel.formbuilder-editpanel-closing-downward {
-  transform: translateY(100%);
+  display: block;
 }
 
 .formbuilder-accordion-option-body {
@@ -799,25 +781,16 @@
 
 /* Field Edit Panel */
 .formbuilder-field-editpanel {
-  max-height: 0;
-  overflow: hidden;
-  padding: 0 10px;
+  display: none;
+  padding: 10px;
   background: #111;
   border: 1px solid #3b82f5;
   border-top: none;
   border-radius: 0 0 5px 5px;
-  transition: max-height 0.3s ease, padding-top 0.3s ease, padding-bottom 0.3s ease, transform 0.3s ease;
-  transform: translateY(0);
 }
 
 .formbuilder-field-wrapper--editing > .formbuilder-field-editpanel {
-  max-height: 5000px;
-  padding: 10px;
-  transform: translateY(0);
-}
-
-.formbuilder-field-editpanel.formbuilder-editpanel-closing-downward {
-  transform: translateY(100%);
+  display: block;
 }
 
 .formbuilder-field-editpanel-row {
