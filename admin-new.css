@@ -43,6 +43,8 @@
   flex-direction: column;
   overflow: hidden;
   overflow-y: auto;
+  /* Prevent browser scroll anchoring from fighting our button-anchor logic */
+  overflow-anchor: none;
   pointer-events: auto;
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
@@ -240,6 +242,8 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Prevent browser scroll anchoring from fighting our button-anchor logic */
+  overflow-anchor: none;
   padding: 0 10px;
   overscroll-behavior: contain;
   display: flex;
