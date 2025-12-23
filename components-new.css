@@ -406,7 +406,7 @@
     border: 1px solid #3b82f5;
     border-top: none;
     border-radius: 0 0 5px 5px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
     scrollbar-width: thin;
@@ -1312,7 +1312,7 @@
     height: 36px;
     display: flex;
     align-items: center;
-    padding: 0 8px;
+    padding: 0 10px;
     background: #222;
     border: 1px solid #333;
     border-radius: 5px;
@@ -1358,7 +1358,7 @@
     background: #222;
     border: 1px solid #3b82f5;
     border-radius: 5px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
     scrollbar-width: thin;
@@ -1418,7 +1418,7 @@
     height: 36px;
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 10px;
     background: rgba(0,0,0,0.35);
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
@@ -1483,7 +1483,7 @@
     border: 1px solid #3b82f5;
     border-top: none;
     border-radius: 0 0 5px 5px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
     scrollbar-width: thin;
@@ -1505,7 +1505,7 @@
     height: 40px;
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 10px;
     cursor: pointer;
     color: #fff;
     font-size: 14px;
@@ -1586,7 +1586,7 @@
     gap: 6px;
     width: 100px;
     height: 36px;
-    padding: 0 8px;
+    padding: 0 10px;
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
     background: rgba(0,0,0,0.35);
@@ -1625,7 +1625,7 @@
     top: 100%;
     left: 0;
     width: 280px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     background: #222;
     border: 1px solid rgba(255,255,255,0.2);
@@ -1643,7 +1643,7 @@
     align-items: center;
     gap: 8px;
     width: 100%;
-    padding: 10px 12px;
+    padding: 10px 10px;
     border: none;
     background: transparent;
     color: #fff;
@@ -1721,7 +1721,7 @@
     height: 36px;
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 10px;
     background: rgba(0,0,0,0.35);
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
@@ -1769,7 +1769,7 @@
     border: 1px solid #3b82f5;
     border-top: none;
     border-radius: 0 0 5px 5px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
@@ -1790,7 +1790,7 @@
     height: 40px;
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 10px;
     cursor: pointer;
     background: none;
     border: none;
@@ -1869,7 +1869,7 @@
     height: 36px;
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 10px;
     background: rgba(0,0,0,0.35);
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 5px;
@@ -1917,7 +1917,7 @@
     border: 1px solid #3b82f5;
     border-top: none;
     border-radius: 0 0 5px 5px;
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
@@ -1938,7 +1938,7 @@
     height: 40px;
     display: flex;
     align-items: center;
-    padding: 0 12px;
+    padding: 0 10px;
     cursor: pointer;
     background: none;
     border: none;
@@ -1994,6 +1994,143 @@
 }
 
 .component-systemimagepicker-option:hover {
+    background: #3b82f5;
+}
+
+
+/* ============================================================================
+   AMENITIES PICKER COMPONENT
+   ============================================================================ */
+
+.component-amenitiespicker {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-amenitiespicker-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font: inherit;
+}
+
+.component-amenitiespicker-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.component-amenitiespicker-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+}
+
+.component-amenitiespicker-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.component-amenitiespicker-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.component-amenitiespicker-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.component-amenitiespicker-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+}
+
+.component-amenitiespicker-option-checkbox {
+    margin-right: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.component-amenitiespicker-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-amenitiespicker-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.component-amenitiespicker-error {
+    padding: 20px 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #888;
+    line-height: 1.6;
+}
+
+/* States */
+.component-amenitiespicker-button:hover {
+    border-color: #555;
+}
+
+.component-amenitiespicker.open .component-amenitiespicker-button {
+    border-color: #3b82f5;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.component-amenitiespicker.open .component-amenitiespicker-button-arrow {
+    transform: rotate(180deg);
+}
+
+.component-amenitiespicker.open .component-amenitiespicker-options {
+    display: block;
+}
+
+.component-amenitiespicker-option:hover {
     background: #3b82f5;
 }
 
@@ -2059,7 +2196,7 @@
 }
 
 .filter-mapcontrol-geocoder-dropdown-item {
-    padding: 8px 12px;
+    padding: 8px 10px;
     cursor: pointer;
 }
 
@@ -2190,7 +2327,7 @@
 }
 
 .map-mapcontrol-geocoder-dropdown-item {
-    padding: 8px 12px;
+    padding: 8px 10px;
     cursor: pointer;
 }
 
@@ -2322,7 +2459,7 @@
 }
 
 .welcome-mapcontrol-geocoder-dropdown-item {
-    padding: 8px 12px;
+    padding: 8px 10px;
     cursor: pointer;
 }
 

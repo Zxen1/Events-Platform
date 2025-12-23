@@ -4124,46 +4124,38 @@ const AmenitiesMenuComponent = (function(){
             });
     }
     
-    // Build amenities menu with checkboxes
+    // Build amenities menu with checkboxes - EXACT copy of SystemImagePickerComponent structure
     // options: { onSelect, selectedAmenities }
     // onSelect: function(selectedAmenities) - called when selection changes
     // selectedAmenities: array of amenity values that are currently selected
     function buildMenu(options) {
-        if (!options) {
-            options = {};
-        }
-        var onSelect = options.onSelect;
-        if (!onSelect) {
-            onSelect = function() {};
-        }
-        var selectedAmenities = options.selectedAmenities;
-        if (!selectedAmenities) {
-            selectedAmenities = [];
-        }
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var selectedAmenities = options.selectedAmenities || [];
         
         var menu = document.createElement('div');
-        menu.className = 'component-amenitiesmenu';
+        menu.className = 'component-amenitiespicker';
         
-        // Button
+        // Button - EXACT same structure as SystemImagePickerComponent
         var button = document.createElement('button');
         button.type = 'button';
-        button.className = 'component-amenitiesmenu-button';
+        button.className = 'component-amenitiespicker-button';
         
         var buttonText = document.createElement('span');
-        buttonText.className = 'component-amenitiesmenu-button-text';
+        buttonText.className = 'component-amenitiespicker-button-text';
         buttonText.textContent = 'Select amenities...';
         
         var buttonArrow = document.createElement('span');
-        buttonArrow.className = 'component-amenitiesmenu-button-arrow';
+        buttonArrow.className = 'component-amenitiespicker-button-arrow';
         buttonArrow.textContent = '▼';
         
         button.appendChild(buttonText);
         button.appendChild(buttonArrow);
         menu.appendChild(button);
         
-        // Options dropdown
+        // Options dropdown - EXACT same structure
         var optionsDiv = document.createElement('div');
-        optionsDiv.className = 'component-amenitiesmenu-options';
+        optionsDiv.className = 'component-amenitiespicker-options';
         menu.appendChild(optionsDiv);
         
         // Register with MenuManager
@@ -4181,59 +4173,54 @@ const AmenitiesMenuComponent = (function(){
             }
         }
         
-        // Render amenity options
+        // Render amenity options - EXACT same structure as SystemImagePickerComponent, just add checkbox
         function renderAmenityOptions(amenities) {
             optionsDiv.innerHTML = '';
             
             if (!amenities || amenities.length === 0) {
                 var msg = document.createElement('div');
-                msg.className = 'component-amenitiesmenu-error';
-                msg.textContent = 'No amenities found.';
+                msg.className = 'component-amenitiespicker-error';
+                msg.innerHTML = 'No amenities found.<br>Please set amenities folder in Admin Settings.';
                 optionsDiv.appendChild(msg);
                 return;
             }
             
             amenities.forEach(function(amenity) {
-                var option = document.createElement('div');
-                option.className = 'component-amenitiesmenu-option';
+                var option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'component-amenitiespicker-option';
+                option.setAttribute('data-amenity-value', amenity.value || '');
                 
-                // Checkbox
+                // Checkbox - added to match amenities requirement
                 var checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.className = 'component-amenitiesmenu-option-checkbox';
-                checkbox.value = amenity.value || '';
+                checkbox.className = 'component-amenitiespicker-option-checkbox';
                 checkbox.checked = selectedAmenities.indexOf(amenity.value) !== -1;
                 
-                // Icon (if filename exists)
-                var iconContainer = document.createElement('div');
-                iconContainer.className = 'component-amenitiesmenu-option-icon';
-                if (amenity.filename) {
-                    var iconUrl = window.App ? window.App.getImageUrl('amenities', amenity.filename) : '';
-                    if (iconUrl) {
-                        var iconImg = document.createElement('img');
-                        iconImg.src = iconUrl;
-                        iconImg.alt = amenity.label || '';
-                        iconContainer.appendChild(iconImg);
-                    }
+                // Icon - EXACT same structure as SystemImagePickerComponent
+                var optImg = document.createElement('img');
+                optImg.className = 'component-amenitiespicker-option-image';
+                if (amenity.filename && window.App) {
+                    var iconUrl = window.App.getImageUrl('amenities', amenity.filename);
+                    optImg.src = iconUrl;
                 }
+                optImg.alt = '';
                 
-                // Label text
-                var label = document.createElement('label');
-                label.className = 'component-amenitiesmenu-option-label';
-                label.textContent = amenity.label || amenity.value || '';
+                // Text - EXACT same structure as SystemImagePickerComponent
+                var optText = document.createElement('span');
+                optText.className = 'component-amenitiespicker-option-text';
+                optText.textContent = amenity.value || amenity.label || '';
                 
-                // Wrap checkbox and label together
-                var checkboxLabel = document.createElement('label');
-                checkboxLabel.className = 'component-amenitiesmenu-option-row';
-                checkboxLabel.appendChild(checkbox);
-                checkboxLabel.appendChild(iconContainer);
-                checkboxLabel.appendChild(label);
+                option.appendChild(checkbox);
+                option.appendChild(optImg);
+                option.appendChild(optText);
                 
-                // Handle checkbox change
-                checkboxLabel.onclick = function(ev) {
+                option.onclick = function(ev) {
                     ev.stopPropagation();
-                    // Toggle checkbox (browser handles it, but we track state)
+                    // Toggle checkbox
+                    checkbox.checked = !checkbox.checked;
                     var isChecked = checkbox.checked;
+                    
                     if (isChecked) {
                         // Add to selected
                         if (selectedAmenities.indexOf(amenity.value) === -1) {
@@ -4250,7 +4237,6 @@ const AmenitiesMenuComponent = (function(){
                     onSelect(selectedAmenities.slice()); // Pass copy of array
                 };
                 
-                option.appendChild(checkboxLabel);
                 optionsDiv.appendChild(option);
             });
         }
@@ -4258,7 +4244,7 @@ const AmenitiesMenuComponent = (function(){
         // Initialize button text
         updateButtonText();
         
-        // Toggle menu
+        // Toggle menu - EXACT same structure as SystemImagePickerComponent
         button.onclick = function(e) {
             e.stopPropagation();
             var isOpen = menu.classList.contains('open');
@@ -4283,11 +4269,7 @@ const AmenitiesMenuComponent = (function(){
                 return selectedAmenities.slice(); // Return copy
             },
             setSelected: function(amenities) {
-                if (!amenities) {
-                    selectedAmenities = [];
-                } else {
-                    selectedAmenities = amenities;
-                }
+                selectedAmenities = amenities || [];
                 updateButtonText();
                 // Re-render if menu is open
                 if (menu.classList.contains('open')) {
