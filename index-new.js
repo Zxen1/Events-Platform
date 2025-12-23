@@ -606,54 +606,57 @@ window.App = App;
 
 /* ============================================================================
    SCROLL BUFFER SYSTEM
-   Simple system: Add buffer space at top, stop scrolling at header
+   Prevents content from jumping when height changes, stops at header when scrolling up
    ============================================================================ */
 
 var ScrollBufferModule = {
     buffers: new Map(), // Map of container -> buffer data
-    BUFFER_SIZE: 10000, // Large invisible buffer space (off-screen)
     
     /**
      * Initialize scroll buffer for a container
      * @param {HTMLElement} container - Scrollable container element
-     * @param {Object} options - Configuration options
      */
-    init: function(container, options) {
+    init: function(container) {
         if (!container) return;
-        
-        options = options || {};
-        var bufferSize = options.bufferSize || this.BUFFER_SIZE;
         
         // Store buffer data
         var bufferData = {
             container: container,
-            bufferSize: bufferSize,
+            previousHeight: container.scrollHeight,
             previousScrollTop: container.scrollTop
         };
         
         this.buffers.set(container, bufferData);
         
-        // Add buffer padding
-        container.style.setProperty('--scroll-buffer-size', bufferSize + 'px');
-        container.style.paddingTop = 'var(--scroll-buffer-size, ' + bufferSize + 'px)';
-        
-        // Set initial scroll position after content loads
-        // Use double requestAnimationFrame to ensure padding is applied and content is measured
-        requestAnimationFrame(function() {
-            requestAnimationFrame(function() {
-                var currentScrollHeight = container.scrollHeight;
-                // Only scroll to buffer if there's content beyond the buffer
-                if (currentScrollHeight > bufferSize) {
-                    container.scrollTop = bufferSize;
-                    bufferData.previousScrollTop = bufferSize;
-                } else {
-                    bufferData.previousScrollTop = container.scrollTop;
-                }
-            });
+        // Monitor height changes
+        var self = this;
+        var resizeObserver = new ResizeObserver(function() {
+            self.compensateScroll(container);
         });
+        resizeObserver.observe(container);
+        bufferData.resizeObserver = resizeObserver;
         
         // Watch for scroll events - stop at header when scrolling up
         container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
+    },
+    
+    /**
+     * Compensate scroll position when content height decreases
+     */
+    compensateScroll: function(container) {
+        var bufferData = this.buffers.get(container);
+        if (!bufferData) return;
+        
+        var currentHeight = container.scrollHeight;
+        var heightDiff = currentHeight - bufferData.previousHeight;
+        
+        // If height decreased (content closed), scroll down to keep visible area stable
+        if (heightDiff < 0) {
+            container.scrollTop = container.scrollTop + Math.abs(heightDiff);
+        }
+        
+        bufferData.previousHeight = currentHeight;
+        bufferData.previousScrollTop = container.scrollTop;
     },
     
     /**
@@ -665,10 +668,9 @@ var ScrollBufferModule = {
         
         var scrollTop = container.scrollTop;
         
-        // If user scrolls up past the buffer (where content starts), stop at header
-        // Only prevent scrolling UP past bufferSize, don't force on initial load
-        if (scrollTop < bufferData.bufferSize && scrollTop < bufferData.previousScrollTop) {
-            container.scrollTop = bufferData.bufferSize;
+        // Stop at header (scrollTop = 0) when scrolling up
+        if (scrollTop < 0) {
+            container.scrollTop = 0;
         }
         
         bufferData.previousScrollTop = scrollTop;
@@ -681,11 +683,10 @@ var ScrollBufferModule = {
         var bufferData = this.buffers.get(container);
         if (!bufferData) return;
         
-        // Remove padding
-        container.style.paddingTop = '';
-        container.style.removeProperty('--scroll-buffer-size');
+        if (bufferData.resizeObserver) {
+            bufferData.resizeObserver.disconnect();
+        }
         
-        // Remove from map
         this.buffers.delete(container);
     }
 };
