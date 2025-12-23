@@ -1669,9 +1669,15 @@
             fieldEdit.className = 'formbuilder-field-edit';
             fieldEdit.innerHTML = getIcon('editPen');
             
+            // Create Modified label span (will be shown/hidden via CSS)
+            var modifiedLabel = document.createElement('span');
+            modifiedLabel.className = 'formbuilder-field-modified-label';
+            modifiedLabel.textContent = 'Modified';
+            
             fieldText.appendChild(fieldNameSpan);
             fieldText.appendChild(fieldRequired);
             fieldText.appendChild(fieldIndicators);
+            fieldText.appendChild(modifiedLabel);
             field.appendChild(fieldText);
             field.appendChild(fieldDrag);
             field.appendChild(fieldEdit);
@@ -1826,9 +1832,13 @@
             
             // Track modification state (must be defined before it's called)
             function checkModifiedState() {
-                var hasNameOverride = nameInput && nameInput.value !== '' && nameInput.value !== defaultName;
-                var hasPlaceholderOverride = placeholderInput && placeholderInput.value !== '' && placeholderInput.value !== defaultPlaceholder;
-                var hasTooltipOverride = tooltipInput && tooltipInput.value !== '' && tooltipInput.value !== defaultTooltip;
+                var nameValue = nameInput ? nameInput.value.trim() : '';
+                var placeholderValue = placeholderInput ? placeholderInput.value.trim() : '';
+                var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
+                
+                var hasNameOverride = nameValue !== '' && nameValue !== defaultName;
+                var hasPlaceholderOverride = placeholderValue !== '' && placeholderValue !== defaultPlaceholder;
+                var hasTooltipOverride = tooltipValue !== '' && tooltipValue !== defaultTooltip;
                 
                 // Check if options differ from defaults (default is empty array)
                 var hasOptions = false;
@@ -1854,13 +1864,26 @@
                     }
                 }
                 
+                // Show/hide Modified label
+                var modifiedLabel = fieldWrapper.querySelector('.formbuilder-field-modified-label');
+                if (modifiedLabel) {
+                    if (isModified) {
+                        modifiedLabel.style.display = 'inline';
+                    } else {
+                        modifiedLabel.style.display = 'none';
+                    }
+                }
+                
                 // Update Field Tracker
                 if (window.AdminModule && typeof window.AdminModule.updateField === 'function' && typeof subKey !== 'undefined') {
                     var fieldId = 'formbuilder.' + subKey + '.' + fieldsetKey;
+                    var nameValue = nameInput ? nameInput.value.trim() : '';
+                    var placeholderValue = placeholderInput ? placeholderInput.value.trim() : '';
+                    var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
                     var currentState = {
-                        name: nameInput ? nameInput.value : '',
-                        placeholder: placeholderInput ? placeholderInput.value : '',
-                        tooltip: tooltipInput ? tooltipInput.value : '',
+                        name: hasNameOverride ? nameValue : '',
+                        placeholder: hasPlaceholderOverride ? placeholderValue : '',
+                        tooltip: hasTooltipOverride ? tooltipValue : '',
                         options: hasOptions && optionsContainer ? Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).map(function(inp) { return inp.value.trim(); }).filter(function(v) { return v !== ''; }) : [],
                         selectedAmenities: hasAmenities ? selectedAmenities : []
                     };
@@ -1989,15 +2012,20 @@
             nameInput.type = 'text';
             nameInput.className = 'formbuilder-field-input';
             nameInput.placeholder = defaultName || 'Field name';
-            nameInput.value = fieldData.name || '';
-            // Show placeholder style when empty (grey text)
-            if (!nameInput.value) {
+            // Only set value if it's different from default (meaning it was modified)
+            var customName = fieldData.name || '';
+            if (customName && customName !== defaultName) {
+                nameInput.value = customName;
+                nameInput.style.color = '#fff';
+            } else {
+                nameInput.value = '';
                 nameInput.style.color = '#888';
             }
             nameInput.addEventListener('input', function() {
-                if (nameInput.value) {
+                if (nameInput.value && nameInput.value !== defaultName) {
                     nameInput.style.color = '#fff';
                 } else {
+                    nameInput.value = '';
                     nameInput.style.color = '#888';
                 }
                 fieldNameSpan.textContent = nameInput.value || defaultName || 'Unnamed';
@@ -2010,19 +2038,24 @@
             var placeholderLabel = document.createElement('label');
             placeholderLabel.className = 'formbuilder-field-label';
             placeholderLabel.textContent = 'Placeholder';
-            placeholderInput = document.createElement('input');
-            placeholderInput.type = 'text';
-            placeholderInput.className = 'formbuilder-field-input';
+            placeholderInput = document.createElement('textarea');
+            placeholderInput.className = 'formbuilder-field-textarea';
             placeholderInput.placeholder = defaultPlaceholder || 'Placeholder text';
-            placeholderInput.value = fieldData.placeholder || '';
-            // Show placeholder style when empty (grey text)
-            if (!placeholderInput.value) {
+            placeholderInput.rows = 3;
+            // Only set value if it's different from default (meaning it was modified)
+            var customPlaceholder = fieldData.placeholder || '';
+            if (customPlaceholder && customPlaceholder !== defaultPlaceholder) {
+                placeholderInput.value = customPlaceholder;
+                placeholderInput.style.color = '#fff';
+            } else {
+                placeholderInput.value = '';
                 placeholderInput.style.color = '#888';
             }
             placeholderInput.addEventListener('input', function() {
-                if (placeholderInput.value) {
+                if (placeholderInput.value && placeholderInput.value !== defaultPlaceholder) {
                     placeholderInput.style.color = '#fff';
                 } else {
+                    placeholderInput.value = '';
                     placeholderInput.style.color = '#888';
                 }
                 checkModifiedState();
@@ -2034,19 +2067,24 @@
             var tooltipLabel = document.createElement('label');
             tooltipLabel.className = 'formbuilder-field-label';
             tooltipLabel.textContent = 'Tooltip';
-            tooltipInput = document.createElement('input');
-            tooltipInput.type = 'text';
-            tooltipInput.className = 'formbuilder-field-input';
+            tooltipInput = document.createElement('textarea');
+            tooltipInput.className = 'formbuilder-field-textarea';
             tooltipInput.placeholder = defaultTooltip || 'Tooltip text';
-            tooltipInput.value = fieldData.tooltip || fieldData.fieldset_tooltip || '';
-            // Show placeholder style when empty (grey text)
-            if (!tooltipInput.value) {
+            tooltipInput.rows = 3;
+            // Only set value if it's different from default (meaning it was modified)
+            var customTooltip = fieldData.tooltip || fieldData.fieldset_tooltip || '';
+            if (customTooltip && customTooltip !== defaultTooltip) {
+                tooltipInput.value = customTooltip;
+                tooltipInput.style.color = '#fff';
+            } else {
+                tooltipInput.value = '';
                 tooltipInput.style.color = '#888';
             }
             tooltipInput.addEventListener('input', function() {
-                if (tooltipInput.value) {
+                if (tooltipInput.value && tooltipInput.value !== defaultTooltip) {
                     tooltipInput.style.color = '#fff';
                 } else {
+                    tooltipInput.value = '';
                     tooltipInput.style.color = '#888';
                 }
                 checkModifiedState();

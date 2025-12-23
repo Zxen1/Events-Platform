@@ -910,6 +910,30 @@
   color: #666;
 }
 
+.formbuilder-field-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  background: #222;
+  border: 1px solid #222222;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.formbuilder-field-textarea:hover,
+.formbuilder-field-textarea:focus {
+  outline: none;
+  border-color: #3b82f5;
+}
+
+.formbuilder-field-textarea::placeholder {
+  color: #666;
+}
+
 .formbuilder-field-label {
   display: block;
   color: #888;
@@ -1042,7 +1066,6 @@
 .formbuilder-field-modify-container {
   margin-top: 10px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .formbuilder-field-modify-button {
@@ -1084,29 +1107,42 @@
   background: rgba(255, 140, 0, 0.2);
 }
 
-/* Modified label on fieldset */
-.formbuilder-field-wrapper--modified .formbuilder-field-name::after {
-  content: ' Modified';
+/* Modified label on fieldset - appears after indicators */
+.formbuilder-field-modified-label {
+  display: none;
   color: #FF8C00;
   font-size: 11px;
   font-weight: normal;
   margin-left: 6px;
 }
 
-/* Ensure Modified label doesn't interfere with indicators or required asterisk */
-.formbuilder-field-wrapper--modified .formbuilder-field-text {
+.formbuilder-field-wrapper--modified .formbuilder-field-modified-label {
+  display: inline;
+}
+
+/* Ensure proper spacing and order */
+.formbuilder-field-text {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
 }
 
-.formbuilder-field-wrapper--modified .formbuilder-field-name {
+.formbuilder-field-name {
   flex-shrink: 0;
 }
 
-.formbuilder-field-wrapper--modified .formbuilder-field-required {
+.formbuilder-field-required {
   flex-shrink: 0;
   margin-left: 0;
+}
+
+.formbuilder-field-indicators {
+  flex-shrink: 0;
+  margin-left: 10px;
+}
+
+.formbuilder-field-modified-label {
+  margin-left: 10px;
 }
 
 /* Default text color for inputs */
