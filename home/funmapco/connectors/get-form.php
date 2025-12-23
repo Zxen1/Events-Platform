@@ -1117,6 +1117,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 $customCheckoutOptions = null;
                 $customPlaceholder = null;
                 $customTooltip = null;
+                $selectedAmenities = null;
                 
                 // Load customizations for editable fields
                 if ($isEditable && $fieldEdit && is_array($fieldEdit)) {
@@ -1132,6 +1133,10 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     }
                     if (isset($fieldEdit['tooltip']) && is_string($fieldEdit['tooltip']) && trim($fieldEdit['tooltip']) !== '') {
                         $customTooltip = trim($fieldEdit['tooltip']);
+                    }
+                    // Load selectedAmenities for amenities fieldsets
+                    if (isset($fieldEdit['selectedAmenities']) && is_array($fieldEdit['selectedAmenities'])) {
+                        $selectedAmenities = $fieldEdit['selectedAmenities'];
                     }
                 } elseif ($isEditable && !$fieldEdit) {
                     // No subcategory_edits entry yet - use defaults from fieldsets table
@@ -1191,6 +1196,11 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 // Add checkout options if available
                 if ($customCheckoutOptions !== null && is_array($customCheckoutOptions)) {
                     $builtField['checkoutOptions'] = $customCheckoutOptions;
+                }
+                
+                // Add selectedAmenities for amenities fieldsets
+                if ($selectedAmenities !== null && is_array($selectedAmenities)) {
+                    $builtField['selectedAmenities'] = $selectedAmenities;
                 }
                 
                 $builtFields[] = $builtField;
