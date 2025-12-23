@@ -281,6 +281,7 @@
   overflow-x: hidden;
   padding: 0 10px;
   overscroll-behavior: contain;
+  overflow-anchor: none;
   display: flex;
   flex-direction: column;
   align-items: stretch;
