@@ -603,3 +603,81 @@ const App = (function() {
 
 // Expose App globally so modules can check window.App
 window.App = App;
+
+/* ============================================================================
+   SCROLL BUFFER SYSTEM
+   Simple system: Add buffer space at top, stop scrolling at header
+   ============================================================================ */
+
+var ScrollBufferModule = {
+    buffers: new Map(), // Map of container -> buffer data
+    BUFFER_SIZE: 10000, // Large invisible buffer space (off-screen)
+    
+    /**
+     * Initialize scroll buffer for a container
+     * @param {HTMLElement} container - Scrollable container element
+     * @param {Object} options - Configuration options
+     */
+    init: function(container, options) {
+        if (!container) return;
+        
+        options = options || {};
+        var bufferSize = options.bufferSize || this.BUFFER_SIZE;
+        
+        // Store buffer data
+        var bufferData = {
+            container: container,
+            bufferSize: bufferSize,
+            previousScrollTop: container.scrollTop
+        };
+        
+        this.buffers.set(container, bufferData);
+        
+        // Add buffer padding
+        container.style.setProperty('--scroll-buffer-size', bufferSize + 'px');
+        container.style.paddingTop = 'var(--scroll-buffer-size, ' + bufferSize + 'px)';
+        
+        // Set initial scroll position to buffer start (so content is visible)
+        container.scrollTop = bufferSize;
+        bufferData.previousScrollTop = bufferSize;
+        
+        // Watch for scroll events - stop at header when scrolling up
+        container.addEventListener('scroll', this.handleScroll.bind(this, container), { passive: true });
+    },
+    
+    /**
+     * Handle scroll events - stop at header when scrolling up
+     */
+    handleScroll: function(container) {
+        var bufferData = this.buffers.get(container);
+        if (!bufferData) return;
+        
+        var scrollTop = container.scrollTop;
+        
+        // If user scrolls up past the buffer (where content starts), stop at header
+        // Only prevent scrolling UP past bufferSize, don't force on initial load
+        if (scrollTop < bufferData.bufferSize && scrollTop < bufferData.previousScrollTop) {
+            container.scrollTop = bufferData.bufferSize;
+        }
+        
+        bufferData.previousScrollTop = scrollTop;
+    },
+    
+    /**
+     * Remove scroll buffer from container
+     */
+    remove: function(container) {
+        var bufferData = this.buffers.get(container);
+        if (!bufferData) return;
+        
+        // Remove padding
+        container.style.paddingTop = '';
+        container.style.removeProperty('--scroll-buffer-size');
+        
+        // Remove from map
+        this.buffers.delete(container);
+    }
+};
+
+// Expose globally
+window.ScrollBufferModule = ScrollBufferModule;

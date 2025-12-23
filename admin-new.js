@@ -420,6 +420,11 @@ const AdminModule = (function() {
         panelContent.classList.remove('admin-panel-content--hidden');
         panelContent.classList.add('admin-panel-content--visible');
         
+        // Initialize scroll buffer for admin panel
+        if (window.ScrollBufferModule) {
+            ScrollBufferModule.init(panelContent);
+        }
+        
         // Bring panel to front of stack
         App.bringToTop(panel);
         

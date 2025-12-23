@@ -631,6 +631,14 @@
     }
     
     function renderForm(formData) {
+        // Initialize scroll buffer for formbuilder container
+        if (container && window.ScrollBufferModule) {
+            // Find the scrollable parent (admin panel content)
+            var scrollableParent = container.closest('.admin-panel-content');
+            if (scrollableParent) {
+                ScrollBufferModule.init(scrollableParent);
+            }
+        }
         if (!container) return;
         container.innerHTML = '';
         

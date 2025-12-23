@@ -369,6 +369,11 @@ const MemberModule = (function() {
     function openPanel() {
         if (!panel || !panelContent) return;
         
+        // Initialize scroll buffer for member panel
+        if (window.ScrollBufferModule) {
+            ScrollBufferModule.init(panelContent);
+        }
+        
         panel.classList.add('member-panel--show');
         panel.setAttribute('aria-hidden', 'false');
         panelContent.classList.remove('member-panel-content--hidden');
