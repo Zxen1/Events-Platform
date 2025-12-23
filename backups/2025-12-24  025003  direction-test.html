@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Direction Test - Brief Lock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #333;
+            color: #fff;
+            font-family: system-ui, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .menu-container {
+            width: 400px;
+            position: relative;
+        }
+        
+        .menu {
+            width: 100%;
+        }
+        
+        .menu-button {
+            width: 100%;
+            height: 36px;
+            background: #3b82f6;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .menu-button:hover {
+            background: #2563eb;
+        }
+        
+        .menu-content-wrapper {
+            width: 100%;
+            height: 0;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+        
+        .menu.open .menu-content-wrapper {
+            height: auto;
+        }
+        
+        .menu-options {
+            width: 100%;
+            background: #000;
+            transform: scaleY(0);
+            transform-origin: top center;
+            transition: transform 0.3s ease;
+        }
+        
+        .menu.open .menu-options {
+            transform: scaleY(1);
+        }
+        
+        .menu-option {
+            width: 100%;
+            height: 36px;
+            background: #000;
+            border: none;
+            border-top: 1px solid #222;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .menu-option:first-child {
+            border-top: none;
+        }
+        
+        .menu-option:hover {
+            background: #111;
+        }
+        
+        .spacer {
+            width: 100%;
+            height: 500px;
+        }
+        
+        .magnet-button {
+            width: 400px;
+            height: 36px;
+            background: #3b82f6;
+            border: none;
+            cursor: pointer;
+            color: #fff;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        .magnet-button:hover {
+            background: #2563eb;
+        }
+        
+        .magnet-button--locked {
+            position: fixed;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <!-- First Menu - 3 options -->
+        <div class="menu" id="menu1">
+            <button class="menu-button" type="button">Menu 1 (3 options)</button>
+            <div class="menu-content-wrapper">
+                <div class="menu-options">
+                    <button class="menu-option" type="button">Option 1</button>
+                    <button class="menu-option" type="button">Option 2</button>
+                    <button class="menu-option" type="button">Option 3</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Second Menu - 5 options -->
+        <div class="menu" id="menu2">
+            <button class="menu-button" type="button">Menu 2 (5 options)</button>
+            <div class="menu-content-wrapper">
+                <div class="menu-options">
+                    <button class="menu-option" type="button">Option 1</button>
+                    <button class="menu-option" type="button">Option 2</button>
+                    <button class="menu-option" type="button">Option 3</button>
+                    <button class="menu-option" type="button">Option 4</button>
+                    <button class="menu-option" type="button">Option 5</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Third Menu - 7 options -->
+        <div class="menu" id="menu3">
+            <button class="menu-button" type="button">Menu 3 (7 options)</button>
+            <div class="menu-content-wrapper">
+                <div class="menu-options">
+                    <button class="menu-option" type="button">Option 1</button>
+                    <button class="menu-option" type="button">Option 2</button>
+                    <button class="menu-option" type="button">Option 3</button>
+                    <button class="menu-option" type="button">Option 4</button>
+                    <button class="menu-option" type="button">Option 5</button>
+                    <button class="menu-option" type="button">Option 6</button>
+                    <button class="menu-option" type="button">Option 7</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="spacer"></div>
+        <button class="magnet-button" id="magnetButton" type="button">Magnet Button</button>
+    </div>
+    
+    <script>
+        var menu1 = document.getElementById('menu1');
+        var menu2 = document.getElementById('menu2');
+        var menu3 = document.getElementById('menu3');
+        var menu1Button = menu1.querySelector('.menu-button');
+        var menu2Button = menu2.querySelector('.menu-button');
+        var menu3Button = menu3.querySelector('.menu-button');
+        var openMenu = null;
+        var lockedButtons = [];
+        
+        function lockButtonsBelow(clickedMenu) {
+            var allMenus = [menu1, menu2, menu3];
+            var clickedIndex = allMenus.indexOf(clickedMenu);
+            
+            // Lock all buttons below the clicked menu
+            for (var i = clickedIndex + 1; i < allMenus.length; i++) {
+                var button = allMenus[i].querySelector('.menu-button');
+                var rect = button.getBoundingClientRect();
+                
+                button.style.position = 'fixed';
+                button.style.top = rect.top + 'px';
+                button.style.left = rect.left + 'px';
+                button.style.width = rect.width + 'px';
+                
+                lockedButtons.push(button);
+            }
+        }
+        
+        function unlockButtons() {
+            lockedButtons.forEach(function(button) {
+                button.style.position = '';
+                button.style.top = '';
+                button.style.left = '';
+                button.style.width = '';
+            });
+            lockedButtons = [];
+        }
+        
+        function closeAllMenusAbove(targetMenu) {
+            var allMenus = [menu1, menu2, menu3];
+            var targetIndex = allMenus.indexOf(targetMenu);
+            
+            // Close all menus above the target
+            for (var i = 0; i < targetIndex; i++) {
+                if (allMenus[i].classList.contains('open')) {
+                    var wrapper = allMenus[i].querySelector('.menu-content-wrapper');
+                    var options = allMenus[i].querySelector('.menu-options');
+                    var currentHeight = wrapper.scrollHeight;
+                    
+                    // Set explicit height before closing
+                    wrapper.style.height = currentHeight + 'px';
+                    
+                    // Remove open class to trigger collapse
+                    allMenus[i].classList.remove('open');
+                    
+                    // Animate height to 0 and scale to 0
+                    requestAnimationFrame(function() {
+                        wrapper.style.height = '0';
+                        options.style.transform = 'scaleY(0)';
+                        
+                        // Clean up after animation
+                        setTimeout(function() {
+                            wrapper.style.height = '';
+                            options.style.transform = '';
+                        }, 300);
+                    });
+                }
+            }
+        }
+        
+        function toggleMenu(menu) {
+            var isCurrentlyOpen = menu.classList.contains('open');
+            
+            // Lock buttons below for just a moment to prevent initial jump
+            if (!isCurrentlyOpen) {
+                lockButtonsBelow(menu);
+            }
+            
+            // Close all menus above this one
+            closeAllMenusAbove(menu);
+            
+            // Close any other open menu
+            if (openMenu && openMenu !== menu) {
+                openMenu.classList.remove('open');
+            }
+            
+            // Toggle this menu
+            if (!isCurrentlyOpen) {
+                var wrapper = menu.querySelector('.menu-content-wrapper');
+                var options = menu.querySelector('.menu-options');
+                
+                menu.classList.add('open');
+                openMenu = menu;
+                
+                // Set height explicitly and scale
+                var targetHeight = options.scrollHeight;
+                wrapper.style.height = targetHeight + 'px';
+                options.style.transform = 'scaleY(1)';
+                
+                // Clean up after animation
+                setTimeout(function() {
+                    wrapper.style.height = '';
+                    options.style.transform = '';
+                }, 300);
+                
+                // Unlock immediately (1ms) - just enough to prevent the jump
+                setTimeout(function() {
+                    unlockButtons();
+                }, 1);
+            } else {
+                var wrapper = menu.querySelector('.menu-content-wrapper');
+                var options = menu.querySelector('.menu-options');
+                var currentHeight = wrapper.scrollHeight;
+                
+                wrapper.style.height = currentHeight + 'px';
+                menu.classList.remove('open');
+                
+                requestAnimationFrame(function() {
+                    wrapper.style.height = '0';
+                    options.style.transform = 'scaleY(0)';
+                    
+                    setTimeout(function() {
+                        wrapper.style.height = '';
+                        options.style.transform = '';
+                    }, 300);
+                });
+                
+                openMenu = null;
+                unlockButtons();
+            }
+        }
+        
+        menu1Button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMenu(menu1);
+        });
+        
+        menu2Button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMenu(menu2);
+        });
+        
+        menu3Button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMenu(menu3);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.menu') && e.target.id !== 'magnetButton') {
+                if (openMenu) {
+                    openMenu.classList.remove('open');
+                    openMenu = null;
+                }
+                unlockButtons();
+            }
+        });
+        
+        // Magnet button - collapses all menus above downward
+        var magnetButton = document.getElementById('magnetButton');
+        magnetButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            // Lock the magnet button in place
+            var rect = magnetButton.getBoundingClientRect();
+            magnetButton.style.position = 'fixed';
+            magnetButton.style.top = rect.top + 'px';
+            magnetButton.style.left = rect.left + 'px';
+            magnetButton.style.width = rect.width + 'px';
+            magnetButton.classList.add('magnet-button--locked');
+            
+            // Close all menus above (all three menus)
+            var allMenus = [menu1, menu2, menu3];
+            allMenus.forEach(function(menu) {
+                if (menu.classList.contains('open')) {
+                    var wrapper = menu.querySelector('.menu-content-wrapper');
+                    var options = menu.querySelector('.menu-options');
+                    var currentHeight = wrapper.scrollHeight;
+                    
+                    // Set explicit height before closing
+                    wrapper.style.height = currentHeight + 'px';
+                    
+                    // Remove open class
+                    menu.classList.remove('open');
+                    
+                    // Animate height to 0 and scale to 0 (downward collapse)
+                    requestAnimationFrame(function() {
+                        wrapper.style.height = '0';
+                        options.style.transform = 'scaleY(0)';
+                        
+                        // Clean up after animation
+                        setTimeout(function() {
+                            wrapper.style.height = '';
+                            options.style.transform = '';
+                        }, 300);
+                    });
+                }
+            });
+            
+            openMenu = null;
+            
+            // Unlock magnet button after animation
+            setTimeout(function() {
+                magnetButton.style.position = '';
+                magnetButton.style.top = '';
+                magnetButton.style.left = '';
+                magnetButton.style.width = '';
+                magnetButton.classList.remove('magnet-button--locked');
+            }, 300);
+        });
+    </script>
+</body>
+</html>
