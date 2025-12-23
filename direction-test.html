@@ -50,14 +50,24 @@
         }
         
         .test-content {
-            max-height: 0;
+            height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease, padding-top 0.3s ease, padding-bottom 0.3s ease, transform 0.3s ease;
-            transform: translateY(0);
+            transition: height 0.3s ease, transform 0.3s ease;
+            transform: scaleY(0);
+            transform-origin: top;
         }
         
         .test-content.open {
-            max-height: 460px; /* 10 items * 36px each + 9 gaps * 10px = 360px + 100px buffer */
+            height: 460px; /* 10 items * 36px each + 9 gaps * 10px = 360px + 100px buffer */
+            transform: scaleY(1);
+        }
+        
+        .test-content.expanding-from-bottom {
+            transform-origin: bottom;
+        }
+        
+        .test-content.expanding-from-top {
+            transform-origin: top;
         }
         
         .test-item {
@@ -118,19 +128,17 @@
         
         function toggleContent(clickedHeader) {
             if (isOpen) {
-                // Closing
-                var clickedRect = clickedHeader.getBoundingClientRect();
-                var topRect = topHeader.getBoundingClientRect();
-                var bottomRect = bottomHeader.getBoundingClientRect();
-                
+                // Closing - clicked header stays stationary
                 if (clickedHeader === bottomHeader) {
-                    // Close downward (towards bottom)
+                    // Close downward: content collapses down, top header moves down
                     content.classList.add('closing-downward');
                     topHeader.classList.add('closing-downward');
+                    bottomHeader.classList.remove('closing-downward', 'closing-upward'); // Keep bottom stationary
                 } else if (clickedHeader === topHeader) {
-                    // Close upward (towards top)
+                    // Close upward: content collapses up, bottom header moves up
                     content.classList.add('closing-upward');
                     bottomHeader.classList.add('closing-upward');
+                    topHeader.classList.remove('closing-downward', 'closing-upward'); // Keep top stationary
                 }
                 
                 content.classList.remove('open');
@@ -142,8 +150,16 @@
                     bottomHeader.classList.remove('closing-downward', 'closing-upward');
                 }, 300);
             } else {
-                // Opening
-                content.classList.add('open');
+                // Opening - expand from clicked header
+                if (clickedHeader === bottomHeader) {
+                    // Open upward from bottom header
+                    content.classList.add('expanding-from-bottom');
+                    content.classList.add('open');
+                } else if (clickedHeader === topHeader) {
+                    // Open downward from top header
+                    content.classList.add('expanding-from-top');
+                    content.classList.add('open');
+                }
             }
             
             isOpen = !isOpen;
