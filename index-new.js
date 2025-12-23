@@ -627,18 +627,31 @@ var ScrollBufferModule = {
         
         if (!header || !body) return;
         
-        // Body: add infinite padding for scroll in both directions
-        body.style.paddingTop = '50000px';
-        body.style.paddingBottom = '50000px';
+        // Top buffer container (5000px) - allows scrolling above header
+        var topBuffer = document.createElement('div');
+        topBuffer.className = 'scroll-buffer-top';
+        topBuffer.style.cssText = 'height: 5000px; width: 100%; flex-shrink: 0;';
+        body.insertBefore(topBuffer, body.firstChild);
+        
+        // Bottom buffer container (5000px) - allows scrolling below content
+        var bottomBuffer = document.createElement('div');
+        bottomBuffer.className = 'scroll-buffer-bottom';
+        bottomBuffer.style.cssText = 'height: 5000px; width: 100%; flex-shrink: 0;';
+        body.appendChild(bottomBuffer);
+        
+        // Body: allow expansion
         body.style.height = 'auto';
         body.style.minHeight = 'none';
         body.style.maxHeight = 'none';
+        
+        // Disable header sticky positioning to allow scrolling above it
+        header.style.position = 'relative';
         
         // Set initial scroll position: top of body content starts at header
         var headerHeight = header.offsetHeight;
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
-                container.scrollTop = 50000 + headerHeight + 10;
+                container.scrollTop = 5000 + headerHeight + 10;
             });
         });
         
