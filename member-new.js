@@ -95,6 +95,8 @@ const MemberModule = (function() {
     var profileEditNameInput = null;
     var profileEditPasswordInput = null;
     var profileEditConfirmInput = null;
+    // Legacy inline save button (removed from HTML). Keep var to avoid strict-mode ReferenceError.
+    var profileSaveBtn = null;
     var profileOriginalName = '';
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
