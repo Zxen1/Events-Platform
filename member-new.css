@@ -280,7 +280,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   /* Total interior spacing should add up to 10px (not 20px). */
-  padding: 0 10px 10px;
+  padding: 0 10px;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -1198,7 +1198,8 @@
   display: flex;
   gap: 10px;
   margin-top: auto;
-  padding: 10px 0 0 0;
+  /* Match Admin panel pattern: body has 0 10px padding; the bottom row provides its own vertical padding */
+  padding: 10px 0;
   background: #222222;
 }
 

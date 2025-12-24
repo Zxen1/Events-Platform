@@ -1229,15 +1229,25 @@ const MemberModule = (function() {
 
         // Validation warnings using existing component (Toast)
         if ((pw || confirm) && (!pw || !confirm)) {
-            if (window.ToastComponent && ToastComponent.showError) {
-                ToastComponent.showError('Please enter and confirm your new password.');
-            }
+            getMessage('msg_auth_register_empty', {}, false).then(function(message) {
+                var text = message || 'Please enter and confirm your new password.';
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    ToastComponent.showError(text);
+                } else {
+                    showStatus(text, { error: true });
+                }
+            });
             return;
         }
         if (pw && confirm && pw !== confirm) {
-            if (window.ToastComponent && ToastComponent.showError) {
-                ToastComponent.showError('Passwords do not match.');
-            }
+            getMessage('msg_auth_register_password_mismatch', {}, false).then(function(message) {
+                var text = message || 'Passwords do not match.';
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    ToastComponent.showError(text);
+                } else {
+                    showStatus(text, { error: true });
+                }
+            });
             return;
         }
         
