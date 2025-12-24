@@ -1037,6 +1037,20 @@ const AdminModule = (function() {
             .then(function(response) { return response.json(); })
             .then(function(data) {
                 if (data.success) {
+                    // Cache settings + system_images so Messages tab can build pickers without opening Settings tab
+                    if (data.settings) {
+                        // Shallow-merge settings keys (do not overwrite the object ref elsewhere)
+                        for (var k in data.settings) {
+                            settingsData[k] = data.settings[k];
+                        }
+                    }
+                    if (data.system_images) {
+                        if (!settingsData.system_images) settingsData.system_images = {};
+                        for (var ik in data.system_images) {
+                            settingsData.system_images[ik] = data.system_images[ik];
+                        }
+                    }
+                    
                     MESSAGE_CATEGORIES.forEach(function(cat) {
                         var imageKey = 'msg_category_' + cat.key + '_icon';
                         // Get filename from system_images, convert to full URL
@@ -1129,7 +1143,49 @@ const AdminModule = (function() {
             nameRow.appendChild(nameInput);
             editPanel.appendChild(nameRow);
             
-            // TODO: Icon picker will go here (like formbuilder)
+            // Icon picker (System Images) - saves to admin_settings via system_images.* payload
+            (function() {
+                if (!window.SystemImagePickerComponent) return;
+                
+                var imageKey = 'msg_category_' + cat.key + '_icon';
+                var initialValue = '';
+                if (settingsData.system_images && settingsData.system_images[imageKey]) {
+                    initialValue = settingsData.system_images[imageKey];
+                }
+                
+                var iconRow = document.createElement('div');
+                iconRow.className = 'admin-messages-accordion-editpanel-row';
+                
+                var picker = SystemImagePickerComponent.buildPicker({
+                    databaseValue: initialValue,
+                    onSelect: function(imagePath) {
+                        // Extract filename from full path
+                        var filename = imagePath;
+                        if (imagePath && imagePath.indexOf('/') !== -1) {
+                            filename = imagePath.split('/').pop();
+                        }
+                        
+                        // Update header preview immediately
+                        cat.icon = imagePath || '';
+                        if (cat.icon) {
+                            headerImg.src = cat.icon;
+                            headerImg.alt = '';
+                        } else {
+                            headerImg.removeAttribute('src');
+                        }
+                        
+                        updateField('system_images.' + imageKey, filename || '');
+                        notifyMessagesChange();
+                    }
+                });
+                
+                picker.element.dataset.settingKey = imageKey;
+                picker.element.dataset.isSystemImage = 'true';
+                iconRow.appendChild(picker.element);
+                editPanel.appendChild(iconRow);
+                
+                registerField('system_images.' + imageKey, initialValue);
+            })();
             
             // Content area (for messages list)
             var content = document.createElement('div');

@@ -116,6 +116,36 @@ const HeaderModule = (function() {
             return;
         }
         
+        function rememberFallbackSrc(imgEl) {
+            if (!imgEl) return;
+            if (!imgEl.dataset) return;
+            if (!imgEl.dataset.fallbackSrc) {
+                // Preserve whatever was in the HTML initially (eg. inline SVG data URI)
+                imgEl.dataset.fallbackSrc = imgEl.getAttribute('src') || '';
+            }
+        }
+        
+        function setImgSrcIfLoads(imgEl, nextSrc) {
+            if (!imgEl || !nextSrc) return;
+            rememberFallbackSrc(imgEl);
+            
+            // If it's already set, skip churn
+            if (imgEl.getAttribute('src') === nextSrc) return;
+            
+            // Preload first; only swap if it loads successfully
+            var testImg = new Image();
+            testImg.onload = function() {
+                imgEl.src = nextSrc;
+            };
+            testImg.onerror = function() {
+                // Keep fallback instead of replacing with a broken image
+                if (imgEl.dataset && imgEl.dataset.fallbackSrc) {
+                    imgEl.src = imgEl.dataset.fallbackSrc;
+                }
+            };
+            testImg.src = nextSrc;
+        }
+        
         // Filter icon - use mask-image like admin buttons
         var filterIcon = document.querySelector('.header-filter-button-icon');
         if (filterIcon && systemImages.icon_filter) {
@@ -134,17 +164,17 @@ const HeaderModule = (function() {
         // Mode switch icons
         var recentsIcon = document.querySelector('.header-modeswitch-button[data-mode="recents"] .header-modeswitch-button-icon');
         if (recentsIcon && systemImages.icon_recents) {
-            recentsIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_recents);
+            setImgSrcIfLoads(recentsIcon, window.App.getImageUrl('systemImages', systemImages.icon_recents));
         }
         
         var postsIcon = document.querySelector('.header-modeswitch-button[data-mode="posts"] .header-modeswitch-button-icon');
         if (postsIcon && systemImages.icon_posts) {
-            postsIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_posts);
+            setImgSrcIfLoads(postsIcon, window.App.getImageUrl('systemImages', systemImages.icon_posts));
         }
         
         var mapIcon = document.querySelector('.header-modeswitch-button[data-mode="map"] .header-modeswitch-button-icon');
         if (mapIcon && systemImages.icon_map) {
-            mapIcon.src = window.App.getImageUrl('systemImages', systemImages.icon_map);
+            setImgSrcIfLoads(mapIcon, window.App.getImageUrl('systemImages', systemImages.icon_map));
         }
     }
     
