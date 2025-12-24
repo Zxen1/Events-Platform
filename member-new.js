@@ -772,8 +772,34 @@ const MemberModule = (function() {
         var scale = cover * (cropState.zoom || 1);
         var drawW = iw * scale;
         var drawH = ih * scale;
-        var x = (cw - drawW) / 2 + (cropState.offsetX || 0);
-        var y = (ch - drawH) / 2 + (cropState.offsetY || 0);
+        // Clamp offsets so the image always fully covers the crop square (no blank areas)
+        // Allowed x range is [cw - drawW, 0], same for y.
+        var baseX = (cw - drawW) / 2;
+        var baseY = (ch - drawH) / 2;
+        var offX = cropState.offsetX || 0;
+        var offY = cropState.offsetY || 0;
+        if (drawW <= cw) {
+            offX = 0;
+        } else {
+            var minOffX = baseX;   // cw-drawW - baseX
+            var maxOffX = -baseX;  // 0 - baseX
+            if (offX < minOffX) offX = minOffX;
+            if (offX > maxOffX) offX = maxOffX;
+        }
+        if (drawH <= ch) {
+            offY = 0;
+        } else {
+            var minOffY = baseY;
+            var maxOffY = -baseY;
+            if (offY < minOffY) offY = minOffY;
+            if (offY > maxOffY) offY = maxOffY;
+        }
+        // Persist clamped values so dragging can't "escape" and stay escaped.
+        cropState.offsetX = offX;
+        cropState.offsetY = offY;
+
+        var x = baseX + offX;
+        var y = baseY + offY;
         ctx.drawImage(cropImg, x, y, drawW, drawH);
     }
 
