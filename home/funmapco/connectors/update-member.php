@@ -59,7 +59,7 @@ if (isset($input['display_name'])) {
   $vals[] = $display;
 }
 
-// Avatar URL (optional)
+// Avatar filename (stored in avatar_url column by convention)
 if (isset($input['avatar_url'])) {
   $avatar = trim((string)$input['avatar_url']);
   // Allow empty string to clear avatar

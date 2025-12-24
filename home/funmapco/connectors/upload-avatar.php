@@ -54,7 +54,12 @@ while($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Generate temporary filename (will be renamed to {memberId}-avatar.{ext} after member creation)
+// Require final naming (no temp uploads)
+$userId = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+if ($userId <= 0) {
+  fail(400, 'Missing user_id');
+}
+
 $originalName = $_FILES['file']['name'];
 $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
 $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -62,7 +67,9 @@ if(!in_array($ext, $allowedExts)) {
   fail(400, 'Invalid file type. Allowed: JPG, PNG, GIF, WebP');
 }
 
-$tempFilename = 'temp-' . uniqid() . '-' . time() . '.' . $ext;
+// Stable filename (overwrite on update)
+// Naming convention (rules file): {memberId}-avatar.{extension}
+$finalFilename = $userId . '-avatar.' . $ext;
 
 // Basic size guard (10MB)
 $maxBytes = 10 * 1024 * 1024;
@@ -76,7 +83,7 @@ $cdnPath = rtrim($cdnPath, '/');
 
 // Upload to Bunny Storage (BUNNY ONLY — no local fallbacks)
 if($storageApiKey && $storageZoneName) {
-  $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $cdnPath . '/' . $tempFilename;
+  $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $cdnPath . '/' . $finalFilename;
   
   $fileContent = file_get_contents($_FILES['file']['tmp_name']);
   
@@ -106,8 +113,8 @@ if($storageApiKey && $storageZoneName) {
   fail(500, 'Avatar storage not configured. Bunny Storage credentials missing (storage_api_key / storage_zone_name).');
 }
 
-$avatarUrl = $avatarFolder . $tempFilename;
+$avatarUrl = $avatarFolder . $finalFilename;
 
-ok(['url'=>$avatarUrl,'temp_filename'=>$tempFilename]);
+ok(['url'=>$avatarUrl,'filename'=>$finalFilename]);
 ?>
 

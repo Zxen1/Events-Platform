@@ -101,6 +101,8 @@ const MemberModule = (function() {
     var profileOriginalName = '';
     var profileOriginalAvatarUrl = '';
     var pendingAvatarUrl = '';
+    var pendingRegisterAvatarBlob = null;
+    var pendingProfileAvatarBlob = null;
 
     // Avatar (register + profile)
     var registerAvatarHiddenInput = null;
@@ -596,21 +598,47 @@ const MemberModule = (function() {
         if (activeAvatarTarget === 'register') {
             if (registerAvatarHiddenInput) registerAvatarHiddenInput.value = url;
             if (registerAvatarPreview) {
-                registerAvatarPreview.src = url || '';
+                registerAvatarPreview.src = resolveAvatarSrc(url) || '';
                 registerAvatarPreview.alt = url ? 'Selected avatar' : '';
             }
+            pendingRegisterAvatarBlob = null;
         } else if (activeAvatarTarget === 'profile') {
             pendingAvatarUrl = url;
             if (profileAvatarPreview) {
-                profileAvatarPreview.src = url || '';
+                profileAvatarPreview.src = resolveAvatarSrc(url) || '';
                 profileAvatarPreview.alt = url ? 'Selected avatar' : '';
             }
-            // Also update the main avatar immediately for feedback
+            // Also update the main avatar + header immediately for feedback (even before saving)
             if (profileAvatar) {
-                profileAvatar.src = url || getAvatarSource(currentUser);
+                profileAvatar.src = resolveAvatarSrc(url) || getAvatarSource(currentUser);
             }
+            if (currentUser) {
+                currentUser.avatar = url; // filename (or URL) staged; persists only after save
+                updateHeaderAvatar(currentUser);
+            }
+            pendingProfileAvatarBlob = null;
             updateHeaderSaveDiscardState();
         }
+    }
+
+    // Avatar values are stored as filenames (preferred) or occasionally absolute URLs (legacy).
+    // Resolve to a usable src based on folder settings:
+    // - user uploads: {id}-avatar.ext -> folder_avatars
+    // - library picks: any other filename -> folder_site_avatars
+    function resolveAvatarSrc(value) {
+        var v = (value || '').trim();
+        if (!v) return '';
+        if (v.indexOf('data:') === 0) return v;
+        if (v.indexOf('http://') === 0 || v.indexOf('https://') === 0) return v;
+        if (v.indexOf('/') === 0) return v;
+        // Filename-only
+        if (window.App && typeof App.getImageUrl === 'function') {
+            if (/^\d+-avatar\./.test(v)) {
+                return App.getImageUrl('avatars', v);
+            }
+            return App.getImageUrl('siteAvatars', v);
+        }
+        return v;
     }
 
     function toggleAvatarLibrary() {
@@ -631,11 +659,11 @@ const MemberModule = (function() {
         avatarLibraryLoaded = true;
         if (!avatarLibrary) return;
 
-        // Get folder_avatars from settings, then list files.
+        // Get folder_site_avatars from settings (premade library avatars), then list files.
         fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                var folder = (res && res.settings && res.settings.folder_avatars) ? String(res.settings.folder_avatars) : 'https://cdn.funmap.com/avatars/';
+                var folder = (res && res.settings && res.settings.folder_site_avatars) ? String(res.settings.folder_site_avatars) : 'https://cdn.funmap.com/site-avatars/';
                 if (folder && !folder.endsWith('/')) folder += '/';
                 return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folder))
                     .then(function(r) { return r.json(); })
@@ -655,12 +683,14 @@ const MemberModule = (function() {
                     return;
                 }
                 urls.slice(0, 240).forEach(function(url) {
+                    // url is full URL; keep filename so we can store filename-only
+                    var filename = url.split('/').pop() || '';
                     var btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = 'member-avatar-library-item';
                     btn.innerHTML = '<img src="' + url + '" alt="">';
                     btn.addEventListener('click', function() {
-                        setAvatarForTarget(url);
+                        setAvatarForTarget(filename);
                         avatarLibrary.hidden = true;
                     });
                     avatarLibrary.appendChild(btn);
@@ -782,12 +812,50 @@ const MemberModule = (function() {
                     }
                     return;
                 }
-                uploadAvatarBlob(blob).finally(function() {
-                    if (cropperSaveBtn) {
-                        cropperSaveBtn.disabled = false;
-                        cropperSaveBtn.classList.remove('member-button-auth--disabled');
+                
+                // Do NOT upload immediately. Store blob and only upload on registration submit / header save.
+                if (activeAvatarTarget === 'register') {
+                    pendingRegisterAvatarBlob = blob;
+                    if (registerAvatarHiddenInput) registerAvatarHiddenInput.value = '';
+                    if (registerAvatarPreview) {
+                        try {
+                            registerAvatarPreview.src = URL.createObjectURL(blob);
+                        } catch (e) {
+                            // ignore
+                        }
+                        registerAvatarPreview.alt = 'Selected avatar';
                     }
-                });
+                    closeCropper();
+                    if (window.ToastComponent && ToastComponent.showSuccess) {
+                        ToastComponent.showSuccess('Avatar selected');
+                    } else {
+                        showStatus('Avatar selected');
+                    }
+                } else if (activeAvatarTarget === 'profile') {
+                    pendingProfileAvatarBlob = blob;
+                    // Show preview immediately
+                    if (profileAvatarPreview) {
+                        try {
+                            profileAvatarPreview.src = URL.createObjectURL(blob);
+                        } catch (e) {
+                            // ignore
+                        }
+                        profileAvatarPreview.alt = 'Selected avatar';
+                    }
+                    // Mark dirty so header Save lights up
+                    updateHeaderSaveDiscardState();
+                    closeCropper();
+                    if (window.ToastComponent && ToastComponent.showSuccess) {
+                        ToastComponent.showSuccess('Avatar ready to save');
+                    } else {
+                        showStatus('Avatar ready to save');
+                    }
+                }
+                
+                if (cropperSaveBtn) {
+                    cropperSaveBtn.disabled = false;
+                    cropperSaveBtn.classList.remove('member-button-auth--disabled');
+                }
             }, 'image/png', 0.92);
         } catch (e) {
             console.error('[Member] saveCroppedAvatar error', e);
@@ -807,6 +875,10 @@ const MemberModule = (function() {
     function uploadAvatarBlob(blob) {
         var fd = new FormData();
         fd.append('file', blob, 'avatar.png');
+        // Require final naming on server (rules file): {memberId}-avatar.{ext}
+        if (currentUser && currentUser.id) {
+            fd.append('user_id', String(currentUser.id));
+        }
         return fetch('/gateway.php?action=upload-avatar', {
             method: 'POST',
             body: fd
@@ -826,7 +898,9 @@ const MemberModule = (function() {
             if (!res || res.success !== true || !res.url) {
                 throw new Error((res && (res.message || res.error)) || 'Upload failed');
             }
-            setAvatarForTarget(String(res.url));
+            // Prefer filename-only storage (rules file)
+            var avatarValue = (res && res.filename) ? String(res.filename) : String(res.url);
+            setAvatarForTarget(avatarValue);
             closeCropper();
             if (window.ToastComponent && ToastComponent.showSuccess) {
                 ToastComponent.showSuccess('Avatar uploaded');
@@ -925,12 +999,12 @@ const MemberModule = (function() {
         var payload = { id: currentUser.id, email: currentUser.email };
         if (name && name !== profileOriginalName) payload.display_name = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
-        if ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '')) {
-            payload.avatar_url = pendingAvatarUrl || '';
-        }
+        // avatar_url (actually filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
+
+        var wantsAvatarChange = !!pendingProfileAvatarBlob || ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || ''));
         
         // Nothing to do
-        if (!payload.display_name && !payload.password) {
+        if (!payload.display_name && !payload.password && !wantsAvatarChange) {
             if (typeof onSuccessNext === 'function') onSuccessNext();
             return;
         }
@@ -964,6 +1038,7 @@ const MemberModule = (function() {
                       currentUser.avatar = payload.avatar_url;
                       profileOriginalAvatarUrl = payload.avatar_url;
                       pendingAvatarUrl = payload.avatar_url;
+                      pendingProfileAvatarBlob = null;
                   }
                   
                   updateProfileSaveState();
@@ -986,6 +1061,22 @@ const MemberModule = (function() {
               });
         }
         
+        function proceedAfterAvatarPrepared() {
+            if ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '')) {
+                payload.avatar_url = pendingAvatarUrl || '';
+            }
+            doSave();
+        }
+
+        // If a new avatar blob is staged, upload it FIRST (final filename), then save profile.
+        if (pendingProfileAvatarBlob) {
+            uploadAvatarBlob(pendingProfileAvatarBlob).then(function() {
+                // uploadAvatarBlob calls setAvatarForTarget(url), which sets pendingAvatarUrl
+                proceedAfterAvatarPrepared();
+            });
+            return;
+        }
+
         // Confirm password changes using existing component dialog
         if (payload.password && window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
             ConfirmDialogComponent.show({
@@ -999,12 +1090,12 @@ const MemberModule = (function() {
                     updateHeaderSaveDiscardState();
                     return;
                 }
-                doSave();
+                proceedAfterAvatarPrepared();
             });
             return;
         }
 
-        doSave();
+        proceedAfterAvatarPrepared();
     }
 
     function handleHeaderSave() {
@@ -1026,7 +1117,7 @@ const MemberModule = (function() {
         var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
         var nameChanged = name !== '' && name !== (profileOriginalName || '');
         var pwChanged = pw !== '' || confirm !== '';
-        var avatarChanged = (pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '');
+        var avatarChanged = (pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '') || !!pendingProfileAvatarBlob;
         return nameChanged || pwChanged || avatarChanged;
     }
 
@@ -1035,6 +1126,7 @@ const MemberModule = (function() {
         if (profileEditPasswordInput) profileEditPasswordInput.value = '';
         if (profileEditConfirmInput) profileEditConfirmInput.value = '';
         pendingAvatarUrl = profileOriginalAvatarUrl || '';
+        pendingProfileAvatarBlob = null;
         if (profileAvatarPreview) profileAvatarPreview.src = pendingAvatarUrl || '';
         if (profileAvatar) profileAvatar.src = pendingAvatarUrl || getAvatarSource(currentUser);
         updateProfileSaveState();
@@ -2354,7 +2446,16 @@ const MemberModule = (function() {
         formData.set('email', email);
         formData.set('password', password);
         formData.set('confirm', confirm);
-        formData.set('avatar_url', avatar);
+        // Avatar:
+        // - If chosen from library: avatar_url is a URL and we store it directly.
+        // - If uploaded/cropped: we attach avatar_file and upload to Bunny only after member is created.
+        if (avatar) {
+            formData.set('avatar_url', avatar);
+        }
+        if (pendingRegisterAvatarBlob) {
+            formData.delete('avatar_url');
+            formData.append('avatar_file', pendingRegisterAvatarBlob, 'avatar.png');
+        }
         
         fetch('/gateway.php?action=add-member', {
             method: 'POST',
@@ -2390,7 +2491,7 @@ const MemberModule = (function() {
                 email: email,
                 emailNormalized: email.toLowerCase(),
                 username: email,
-                avatar: avatar,
+                avatar: payload.avatar_url || avatar,
                 type: 'member',
                 isAdmin: false
             };
