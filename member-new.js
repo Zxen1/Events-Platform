@@ -729,35 +729,64 @@ const MemberModule = (function() {
 
     function saveCroppedAvatar() {
         if (!cropperCanvas) return;
+        if (cropperSaveBtn) {
+            cropperSaveBtn.disabled = true;
+            cropperSaveBtn.classList.add('member-button-auth--disabled');
+        }
         cropperCanvas.toBlob(function(blob) {
-            if (!blob) return;
-            uploadAvatarBlob(blob);
+            if (!blob) {
+                if (cropperSaveBtn) {
+                    cropperSaveBtn.disabled = false;
+                    cropperSaveBtn.classList.remove('member-button-auth--disabled');
+                }
+                if (window.ToastComponent && ToastComponent.showError) {
+                    ToastComponent.showError('Could not create avatar image.');
+                }
+                return;
+            }
+            uploadAvatarBlob(blob).finally(function() {
+                if (cropperSaveBtn) {
+                    cropperSaveBtn.disabled = false;
+                    cropperSaveBtn.classList.remove('member-button-auth--disabled');
+                }
+            });
         }, 'image/png', 0.92);
     }
 
     function uploadAvatarBlob(blob) {
         var fd = new FormData();
         fd.append('file', blob, 'avatar.png');
-        fetch('/gateway.php?action=upload-avatar', {
+        return fetch('/gateway.php?action=upload-avatar', {
             method: 'POST',
             body: fd
-        }).then(function(r) { return r.json(); })
-          .then(function(res) {
-              if (!res || res.success !== true || !res.url) {
-                  throw new Error((res && (res.message || res.error)) || 'Upload failed');
-              }
-              setAvatarForTarget(String(res.url));
-              closeCropper();
-              if (window.ToastComponent && ToastComponent.showSuccess) {
-                  ToastComponent.showSuccess('Avatar uploaded');
-              }
-          })
-          .catch(function(err) {
-              console.error('[Member] Avatar upload failed', err);
-              if (window.ToastComponent && ToastComponent.showError) {
-                  ToastComponent.showError('Avatar upload failed');
-              }
-          });
+        }).then(function(r) {
+            // Try JSON first; fall back to text so we can display server errors
+            return r.text().then(function(text) {
+                var json = null;
+                try { json = JSON.parse(text); } catch (e) {}
+                return { ok: r.ok, status: r.status, text: text, json: json };
+            });
+        }).then(function(result) {
+            var res = result.json;
+            if (!result.ok) {
+                var msg = (res && (res.message || res.error)) ? (res.message || res.error) : ('Upload failed (HTTP ' + result.status + ')');
+                throw new Error(msg);
+            }
+            if (!res || res.success !== true || !res.url) {
+                throw new Error((res && (res.message || res.error)) || 'Upload failed');
+            }
+            setAvatarForTarget(String(res.url));
+            closeCropper();
+            if (window.ToastComponent && ToastComponent.showSuccess) {
+                ToastComponent.showSuccess('Avatar uploaded');
+            }
+        }).catch(function(err) {
+            console.error('[Member] Avatar upload failed', err);
+            var msg = (err && err.message) ? err.message : 'Avatar upload failed';
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError(msg);
+            }
+        });
     }
 
     function updateProfileSaveState() {
