@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 24, 2025 at 05:14 PM
+-- Generation Time: Dec 24, 2025 at 09:13 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -49,7 +49,8 @@ CREATE TABLE `admins` (
   `id` int(11) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `display_name` varchar(255) DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
+  `username_key` varchar(255) DEFAULT NULL,
   `avatar_file` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `settings_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`settings_json`)),
@@ -60,8 +61,8 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `email`, `password_hash`, `display_name`, `avatar_file`, `created_at`, `settings_json`, `updated_at`) VALUES
-(2, 'admin@funmap.com', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', 'Administrator', '', '2025-10-22 01:00:41', NULL, '2025-12-24 15:30:41');
+INSERT INTO `admins` (`id`, `email`, `password_hash`, `username`, `username_key`, `avatar_file`, `created_at`, `settings_json`, `updated_at`) VALUES
+(2, 'admin@funmap.com', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', 'Administrator', NULL, '2-avatar.png', '2025-10-22 01:00:41', NULL, '2025-12-24 18:16:18');
 
 -- --------------------------------------------------------
 
@@ -171,7 +172,9 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (77, 'Hide Category Label', 'msg_label_hide_category', 'label', 'admin', 'msg_admin', 'Hide Category', 'Label for hide category toggle', 0, NULL, 1, 1, 0, NULL, '2025-11-15 07:25:02', '2025-11-15 07:25:02'),
 (78, 'Hide Subcategory Label', 'msg_label_hide_subcategory', 'label', 'admin', 'msg_admin', 'Hide Subcategory', 'Label for hide subcategory toggle', 0, NULL, 1, 1, 0, NULL, '2025-11-15 07:25:02', '2025-11-15 07:25:02'),
 (80, 'Delete Checkout Option Message', 'msg_confirm_delete_checkout_option', '', 'confirm', 'settings', 'Are you sure you want to delete this checkout option?', 'Message for checkout option delete confirmation dialog', 0, NULL, 1, 1, 0, NULL, '2025-12-02 06:25:33', '2025-12-02 06:25:33'),
-(81, 'Admin Submit Without Payment Button', 'msg_admin_submit_without_payment', 'label', 'admin', 'msg_admin', 'Admin: Submit without Payment', 'Button text for admin to submit post without payment', 0, NULL, 1, 1, 0, 0, '2025-12-04 04:08:15', '2025-12-04 04:08:15');
+(81, 'Admin Submit Without Payment Button', 'msg_admin_submit_without_payment', 'label', 'admin', 'msg_admin', 'Admin: Submit without Payment', 'Button text for admin to submit post without payment', 0, NULL, 1, 1, 0, 0, '2025-12-04 04:08:15', '2025-12-04 04:08:15'),
+(10001, 'Registration Invalid Email', 'msg_auth_register_email_invalid', 'error', 'auth', 'msg_member', 'Please enter a valid email address.', 'Register: invalid email format', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56'),
+(10002, 'Registration Email Taken', 'msg_auth_register_email_taken', 'error', 'auth', 'msg_member', 'That email is already registered.', 'Register: duplicate email', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56');
 
 -- --------------------------------------------------------
 
@@ -1103,12 +1106,11 @@ CREATE TABLE `media` (
 
 CREATE TABLE `members` (
   `id` int(11) NOT NULL,
-  `username` varchar(255) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `display_name` varchar(255) DEFAULT NULL,
+  `username` varchar(255) DEFAULT NULL,
   `avatar_file` varchar(255) DEFAULT NULL,
-  `member_key` varchar(255) DEFAULT NULL,
+  `username_key` varchar(255) DEFAULT NULL,
   `theme` varchar(20) DEFAULT NULL,
   `language` varchar(10) DEFAULT NULL,
   `currency` varchar(10) DEFAULT NULL,
@@ -1124,10 +1126,10 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `username`, `email`, `password_hash`, `display_name`, `avatar_file`, `member_key`, `theme`, `language`, `currency`, `country_code`, `map_lighting`, `map_style`, `created_at`, `backup_json`, `updated_at`) VALUES
-(1, NULL, 'test@funmap.com', '$2y$10$7ABTYshHSH4SsxEH2uXwkuv.FLxVlqwkOrtkxFioJFtrK6drCs.Lm', 'TestUser', NULL, 'testuser', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-22 01:27:04', NULL, '2025-10-30 05:10:15'),
-(2, NULL, 'wikidata@funmap.com', '$2a$12$/TY3Fr3AjdRMunhyA1TLzuu6DubnXkLaWc7CpdvxGdkWFEeQwNi4G', 'Wikidata / Wikipedia (CC BY-SA 4.0)', 'assets/avatars/wikipedia.png', 'wikidata-/-wikipedia-(cc-by-sa-4.0)', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-25 19:00:27', NULL, '2025-11-06 13:07:35'),
-(4, NULL, 'shs@funmap.com', '$2y$10$zUWx4bFAUhgzwk81yWDLzuW9gLmyh5zQGVioX/mpFMHhyISNZo1ra', 'hello', '', NULL, NULL, NULL, NULL, NULL, 'day', 'standard', '2025-11-05 21:43:35', NULL, '2025-11-05 21:43:35');
+INSERT INTO `members` (`id`, `email`, `password_hash`, `username`, `avatar_file`, `username_key`, `theme`, `language`, `currency`, `country_code`, `map_lighting`, `map_style`, `created_at`, `backup_json`, `updated_at`) VALUES
+(1, 'test@funmap.com', '$2y$10$7ABTYshHSH4SsxEH2uXwkuv.FLxVlqwkOrtkxFioJFtrK6drCs.Lm', 'TestUser', NULL, 'testuser', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-22 01:27:04', NULL, '2025-10-30 05:10:15'),
+(2, 'wikidata@funmap.com', '$2a$12$/TY3Fr3AjdRMunhyA1TLzuu6DubnXkLaWc7CpdvxGdkWFEeQwNi4G', 'Wikidata / Wikipedia (CC BY-SA 4.0)', 'assets/avatars/wikipedia.png', 'wikidata-/-wikipedia-(cc-by-sa-4.0)', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-25 19:00:27', NULL, '2025-11-06 13:07:35'),
+(4, 'shs@funmap.com', '$2y$10$zUWx4bFAUhgzwk81yWDLzuW9gLmyh5zQGVioX/mpFMHhyISNZo1ra', 'hello', '', NULL, NULL, NULL, NULL, NULL, 'day', 'standard', '2025-11-05 21:43:35', NULL, '2025-11-05 21:43:35');
 
 -- --------------------------------------------------------
 
@@ -1998,7 +2000,7 @@ ALTER TABLE `admins`
 -- AUTO_INCREMENT for table `admin_messages`
 --
 ALTER TABLE `admin_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=83;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10003;
 
 --
 -- AUTO_INCREMENT for table `admin_settings`

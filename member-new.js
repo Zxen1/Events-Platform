@@ -1306,7 +1306,11 @@ const MemberModule = (function() {
                 body: JSON.stringify(payload)
             }).then(function(r) { return r.json(); })
               .then(function(res) {
-                  if (!res || res.success !== true) throw new Error((res && res.message) || 'Save failed');
+                  if (!res || res.success !== true) {
+                      var err = new Error((res && res.message) ? String(res.message) : 'Save failed');
+                      if (res && res.message_key) err.message_key = String(res.message_key);
+                      throw err;
+                  }
                   
                   if (payload.display_name) {
                       currentUser.name = payload.display_name;
@@ -1338,9 +1342,25 @@ const MemberModule = (function() {
                   console.error('[Member] Profile save failed', err);
                   updateProfileSaveState();
                   updateHeaderSaveDiscardState();
-                  if (window.ToastComponent && ToastComponent.showError) {
-                      ToastComponent.showError('Save failed');
+                  if (err && err.message_key) {
+                      getMessage(String(err.message_key), {}, false).then(function(message) {
+                          var text = message || ('Missing message: ' + String(err.message_key));
+                          if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                              ToastComponent.showError(text);
+                          } else {
+                              showStatus(text, { error: true });
+                          }
+                      });
+                      return;
                   }
+                  getMessage('msg_admin_save_error_response', {}, false).then(function(message) {
+                      var text = message || 'Save failed';
+                      if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                          ToastComponent.showError(text);
+                      } else {
+                          showStatus(text, { error: true });
+                      }
+                  });
               });
         }
         
@@ -2723,16 +2743,36 @@ const MemberModule = (function() {
         // - pendingRegisterAvatarBlob: cropped/uploaded (preferred)
         // - pendingRegisterSiteUrl: chosen site avatar (we copy it into user's avatar file on submit)
         
-        // Validation
-        if (!name || !email || !password) {
-            getMessage('msg_auth_register_empty', {}, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showError(message);
+        function showFieldError(messageKey, placeholders, focusEl) {
+            getMessage(messageKey, placeholders || {}, false).then(function(message) {
+                var text = message || ('Missing message: ' + messageKey);
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    ToastComponent.showError(text);
+                } else {
+                    showStatus(text, { error: true });
                 }
             });
-            if (!name && nameInput) { nameInput.focus(); return; }
-            if (!email && emailInput) { emailInput.focus(); return; }
-            if (!password && passwordInput) { passwordInput.focus(); return; }
+            if (focusEl && typeof focusEl.focus === 'function') {
+                focusEl.focus();
+                if (typeof focusEl.select === 'function') focusEl.select();
+            }
+        }
+
+        // Validation (field-specific using existing DB key with {field} placeholder)
+        if (!name) { showFieldError('msg_post_validation_required', { field: 'Username' }, nameInput); return; }
+        if (!email) { showFieldError('msg_post_validation_required', { field: 'Email' }, emailInput); return; }
+        if (!password) { showFieldError('msg_post_validation_required', { field: 'Password' }, passwordInput); return; }
+        if (!confirm) { showFieldError('msg_post_validation_required', { field: 'Confirm Password' }, confirmInput); return; }
+
+        // Avatar is REQUIRED to register
+        if (!pendingRegisterAvatarBlob && !pendingRegisterSiteUrl) {
+            showFieldError('msg_post_validation_required', { field: 'Avatar' }, null);
+            return;
+        }
+
+        // Basic email format check (server still validates too)
+        if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+            showFieldError('msg_auth_register_email_invalid', {}, emailInput);
             return;
         }
         
@@ -2799,17 +2839,29 @@ const MemberModule = (function() {
                 payload = null;
             }
             
-            if (!payload || payload.error) {
-                var errorMsg = payload && payload.message ? payload.message : '';
-                if (errorMsg) {
-                    ToastComponent.showError(errorMsg);
-                } else {
-                    getMessage('msg_auth_register_failed', {}, false).then(function(message) {
-                        if (message) {
-                            ToastComponent.showError(message);
+            if (!payload || payload.success === false || payload.error) {
+                var key = payload && payload.message_key ? String(payload.message_key) : '';
+                if (key) {
+                    getMessage(key, {}, false).then(function(message) {
+                        var text = message || ('Missing message: ' + key);
+                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                            ToastComponent.showError(text);
+                        } else {
+                            showStatus(text, { error: true });
                         }
                     });
+                    return;
                 }
+
+                // Fallback only for unexpected server responses (should not happen once DB messages exist)
+                getMessage('msg_auth_register_failed', {}, false).then(function(message) {
+                    var text = message || 'Missing message: msg_auth_register_failed';
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(text);
+                    } else {
+                        showStatus(text, { error: true });
+                    }
+                });
                 return;
             }
             

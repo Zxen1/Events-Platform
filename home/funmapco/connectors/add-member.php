@@ -27,12 +27,27 @@ if ($configPath === null) {
 require_once $configPath;
 
 
-function fail($code, $msg){http_response_code($code);echo json_encode(['success'=>false,'error'=>$msg]);exit;}
+function fail($code, $msg){
+  http_response_code($code);
+  echo json_encode(['success'=>false,'message'=>$msg,'error'=>$msg], JSON_UNESCAPED_SLASHES);
+  exit;
+}
+function fail_key($code, $messageKey){
+  http_response_code($code);
+  echo json_encode(['success'=>false,'message_key'=>$messageKey], JSON_UNESCAPED_SLASHES);
+  exit;
+}
+function fail_key_ph($code, $messageKey, $placeholders){
+  http_response_code($code);
+  echo json_encode(['success'=>false,'message_key'=>$messageKey,'placeholders'=>$placeholders], JSON_UNESCAPED_SLASHES);
+  exit;
+}
 function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exit;}
 
 if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');
 
 $display = trim($_POST['display_name'] ?? '');
+$username = $display; // site uses "Username" as display_name for login
 $email = trim($_POST['email'] ?? '');
 $pass = $_POST['password'] ?? '';
 $conf = $_POST['confirm'] ?? '';
@@ -40,24 +55,79 @@ $avatar = trim($_POST['avatar_file'] ?? '');
 // Optional uploaded avatar file (cropped client-side); only upload after member is created
 $hasAvatarFile = isset($_FILES['avatar_file']) && isset($_FILES['avatar_file']['tmp_name']) && is_uploaded_file($_FILES['avatar_file']['tmp_name']);
 
-if($display===''||$email===''||$pass==='') fail(400,'Missing required fields');
-if(!filter_var($email,FILTER_VALIDATE_EMAIL)) fail(400,'Invalid email address');
-if($pass!==$conf) fail(400,'Passwords do not match');
+// Required fields: reuse existing required-field message with {field}
+if($display==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Username']);
+if($email==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Email']);
+if($pass==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Password']);
+if($conf==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Confirm Password']);
+// Avatar is required for registration (either a file upload, or a selected value)
+if(!$hasAvatarFile && $avatar==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Avatar']);
+if(!filter_var($email,FILTER_VALIDATE_EMAIL)) fail_key(400,'msg_auth_register_email_invalid');
+if($pass!==$conf) fail_key(400,'msg_auth_register_password_mismatch');
 
 $hash = password_hash($pass, PASSWORD_BCRYPT);
 if(!$hash) fail(500,'Hash failed');
 
-$stmt = $mysqli->prepare('SELECT id FROM members WHERE email=? LIMIT 1');
+// Prevent duplicates (email only) across BOTH members and admins.
+$emailLower = strtolower($email);
+
+// Email duplicate?
+$stmt = $mysqli->prepare('SELECT id FROM members WHERE LOWER(email)=? LIMIT 1');
 if(!$stmt) fail(500,'Prepare failed (check query)');
-$stmt->bind_param('s',$email);
+$stmt->bind_param('s',$emailLower);
 $stmt->execute();
 $stmt->store_result();
-if($stmt->num_rows>0){$stmt->close();fail(409,'Email already registered');}
+if($stmt->num_rows>0){$stmt->close();fail_key(409,'msg_auth_register_email_taken');}
 $stmt->close();
 
-$insert = $mysqli->prepare('INSERT INTO members (email,password_hash,display_name,avatar_file,created_at) VALUES (?,?,?,?,NOW())');
+$stmt = $mysqli->prepare('SELECT id FROM admins WHERE LOWER(email)=? LIMIT 1');
+if(!$stmt) fail(500,'Prepare failed (check query)');
+$stmt->bind_param('s',$emailLower);
+$stmt->execute();
+$stmt->store_result();
+if($stmt->num_rows>0){$stmt->close();fail_key(409,'msg_auth_register_email_taken');}
+$stmt->close();
+
+// Username duplicates are allowed by design (username_key will be unique).
+
+// Generate username_key (stored in members.member_key for now)
+function slugify($s){
+  $s = strtolower(trim((string)$s));
+  $s = preg_replace('/[^\p{L}\p{N}]+/u', '-', $s);
+  $s = preg_replace('/-+/', '-', $s);
+  $s = trim($s, '-');
+  return $s !== '' ? $s : 'user';
+}
+$baseKey = slugify($display);
+$candidateKey = $baseKey;
+$suffix = 2;
+while (true) {
+  $stmt = $mysqli->prepare('SELECT id FROM members WHERE member_key=? LIMIT 1');
+  if(!$stmt) fail(500,'Prepare failed (check query)');
+  $stmt->bind_param('s',$candidateKey);
+  $stmt->execute();
+  $stmt->store_result();
+  $existsMembers = $stmt->num_rows > 0;
+  $stmt->close();
+
+  $stmt = $mysqli->prepare('SELECT id FROM admins WHERE display_name=? LIMIT 1');
+  if(!$stmt) fail(500,'Prepare failed (check query)');
+  // Note: admins do not have username_key yet; using display_name collision check is a temporary guard.
+  $stmt->bind_param('s',$candidateKey);
+  $stmt->execute();
+  $stmt->store_result();
+  $existsAdmins = $stmt->num_rows > 0;
+  $stmt->close();
+
+  if (!$existsMembers && !$existsAdmins) break;
+  $candidateKey = $baseKey . '-' . $suffix;
+  $suffix++;
+}
+
+// Store display_name as the public username, and store member_key as the username_key
+$insert = $mysqli->prepare('INSERT INTO members (email,password_hash,display_name,avatar_file,member_key,created_at) VALUES (?,?,?,?,?,NOW())');
 if(!$insert) fail(500,'Insert prepare failed');
-$insert->bind_param('ssss',$email,$hash,$display,$avatar);
+$insert->bind_param('sssss',$email,$hash,$display,$avatar,$candidateKey);
 if(!$insert->execute()){ $insert->close(); fail(500,'Database insert failed'); }
 $id = $insert->insert_id;
 $insert->close();

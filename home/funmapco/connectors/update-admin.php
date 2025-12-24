@@ -25,6 +25,7 @@ require_once $configPath;
 
 function fail($code, $msg){ http_response_code($code); echo json_encode(['success'=>false,'message'=>$msg]); exit; }
 function ok($data=[]){ echo json_encode(array_merge(['success'=>true], $data)); exit; }
+function fail_key($code, $messageKey){ http_response_code($code); echo json_encode(['success'=>false,'message_key'=>$messageKey]); exit; }
 
 if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');
 
@@ -54,6 +55,8 @@ $vals = [];
 if (isset($input['display_name'])) {
   $display = trim((string)$input['display_name']);
   if ($display === '') fail(400,'Display name cannot be empty');
+
+  // Username duplicates are allowed by design (username_key is the unique identifier)
   $updates[] = 'display_name=?';
   $types .= 's';
   $vals[] = $display;
