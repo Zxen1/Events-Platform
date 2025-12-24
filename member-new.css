@@ -408,6 +408,8 @@
   justify-content: center;
   gap: 0;
   box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14px;
 }
 
 .member-lighting-button + .member-lighting-button,
@@ -436,10 +438,10 @@
 }
 
 .member-lighting-button-text {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   white-space: nowrap;
-  text-transform: lowercase;
+  text-transform: none;
 }
 
 .member-style-button-text {

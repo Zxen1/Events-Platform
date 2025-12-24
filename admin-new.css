@@ -908,6 +908,8 @@
   justify-content: center;
   gap: 0;
   box-sizing: border-box;
+  font-family: inherit;
+  font-size: 14px;
 }
 
 .admin-lighting-button + .admin-lighting-button,
@@ -936,10 +938,10 @@
 }
 
 .admin-lighting-button-text {
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   white-space: nowrap;
-  text-transform: lowercase;
+  text-transform: none;
 }
 
 .admin-style-button-text {
