@@ -711,15 +711,19 @@ const MemberModule = (function() {
             return;
         }
 
-        // Ensure we have 3 site choices (but don't block rendering)
-        var choices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, 3) : [];
+        // Site choices:
+        // - Register: 3 random site avatars
+        // - Profile: if user already has an avatar, only show 2 random site avatars (plus an extra Upload tile)
+        var hasExistingProfileAvatar = (target === 'profile' && currentUser && currentUser.avatar);
+        var siteCount = hasExistingProfileAvatar ? 2 : 3;
+        var choices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, siteCount) : [];
 
         // Default selection
         if (!avatarSelection[target]) avatarSelection[target] = 'self';
 
         container.innerHTML = '';
 
-        // Tile 0: self/upload
+        // Tile 0: self (current avatar if exists, otherwise Add)
         (function() {
             var btn = document.createElement('button');
             btn.type = 'button';
@@ -738,8 +742,20 @@ const MemberModule = (function() {
             container.appendChild(btn);
         })();
 
-        // Tiles 1-3: site avatars
-        for (var i = 0; i < 3; i++) {
+        // Profile-only tile 1: Upload (only when user already has an avatar)
+        if (hasExistingProfileAvatar) {
+            var up = document.createElement('button');
+            up.type = 'button';
+            up.className = 'member-avatar-choice';
+            up.dataset.choiceKey = 'upload';
+            up.setAttribute('aria-pressed', avatarSelection[target] === 'upload' ? 'true' : 'false');
+            if (avatarSelection[target] === 'upload') up.classList.add('member-avatar-choice--selected');
+            up.innerHTML = '<div class="member-avatar-choice-add">' + cameraSvgMarkup() + '<div class="member-avatar-choice-add-text">Add</div></div>';
+            container.appendChild(up);
+        }
+
+        // Remaining tiles: site avatars
+        for (var i = 0; i < siteCount; i++) {
             var c = choices[i] || null;
             var key = 'site-' + i;
             var b = document.createElement('button');
@@ -790,6 +806,12 @@ const MemberModule = (function() {
                 pendingRegisterSiteUrl = '';
             }
         } else if (target === 'profile') {
+            if (key === 'upload') {
+                // Upload tile (always overwrites user's avatar when saved)
+                pendingProfileSiteUrl = '';
+                pendingProfileAvatarBlob = null;
+                pendingProfileAvatarPreviewUrl = '';
+            } else
             if (key.indexOf('site-') === 0) {
                 var pIdx = parseInt(key.split('-')[1] || '0', 10);
                 var pC = siteAvatarChoices[pIdx];
@@ -809,6 +831,12 @@ const MemberModule = (function() {
 
     function openCropperForAvatarChoice(target, key) {
         activeAvatarTarget = target;
+
+        if (target === 'profile' && key === 'upload') {
+            // Second-click on Upload tile opens file picker -> crop modal
+            openAvatarFilePicker();
+            return;
+        }
 
         if (key === 'self') {
             // If we already have a staged blob, reopen cropper with it

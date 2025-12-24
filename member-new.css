@@ -982,6 +982,8 @@
 
 .member-auth-submit {
   align-self: flex-start;
+  /* Match Admin pattern: bottom action rows include their own vertical spacing */
+  margin-bottom: 10px;
 }
 
 .member-profile-edit {
