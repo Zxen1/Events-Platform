@@ -404,8 +404,13 @@ const MemberModule = (function() {
                 var dy = e.clientY - cropState.lastY;
                 cropState.lastX = e.clientX;
                 cropState.lastY = e.clientY;
-                cropState.offsetX += dx;
-                cropState.offsetY += dy;
+                
+                // Scale mouse delta to canvas pixel coords (canvas may be displayed smaller than its internal size)
+                var rect = cropperCanvas.getBoundingClientRect();
+                var scaleX = rect.width ? (cropperCanvas.width / rect.width) : 1;
+                var scaleY = rect.height ? (cropperCanvas.height / rect.height) : 1;
+                cropState.offsetX += dx * scaleX;
+                cropState.offsetY += dy * scaleY;
                 drawCropper();
             });
             window.addEventListener('mouseup', function() {
