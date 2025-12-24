@@ -32,7 +32,7 @@ if (!verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
 $id = intval($_GET['id'] ?? 0);
 if ($id <= 0) exit(json_encode(['error'=>'Invalid ID']));
 
-$result = $mysqli->query("SELECT id, email, display_name, avatar_file, theme, language, currency, created_at FROM members WHERE id=$id");
+$result = $mysqli->query("SELECT id, email, username, username_key, avatar_file, theme, language, currency, created_at FROM members WHERE id=$id");
 echo json_encode($result->fetch_assoc() ?: []);
 
 file_get_contents('https://funmap.com/connectors/add-log.php', false,

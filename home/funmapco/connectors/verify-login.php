@@ -39,24 +39,24 @@ try {
     json_fail('Missing credentials');
   }
 
-  // Attempt login against a table; allow email OR display_name match
+  // Attempt login against a table; allow email OR username match
   $attempt = function(mysqli $db, string $table, string $user, string $pass){
     // avatar_file is preferred (filename-only). Some installs may still be on avatar_url.
     // Try avatar_file first, then avatar_url, then no-avatar.
     $stmt = null;
     $avatarCol = null;
 
-    $sqlWithAvatarFile = "SELECT id, email, display_name, avatar_file, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
+    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
       $avatarCol = 'avatar_file';
     } else {
-      $sqlWithAvatarUrl = "SELECT id, email, display_name, avatar_url, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
+      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
       $stmt = $db->prepare($sqlWithAvatarUrl);
       if ($stmt) {
         $avatarCol = 'avatar_url';
       } else {
-        $sqlNoAvatar = "SELECT id, email, display_name, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
+        $sqlNoAvatar = "SELECT id, email, username, username_key, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $db->prepare($sqlNoAvatar);
         if (!$stmt) return null;
       }
@@ -74,7 +74,8 @@ try {
       'user'    => [
         'id'    => (int)$row['id'],
         'email' => (string)$row['email'],
-        'name'  => (string)$row['display_name'],
+        'username'  => (string)$row['username'],
+        'username_key' => isset($row['username_key']) ? (string)$row['username_key'] : '',
         'avatar' => ($avatarCol && isset($row[$avatarCol])) ? (string)$row[$avatarCol] : ''
       ]
     ];

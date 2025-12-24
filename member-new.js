@@ -1280,14 +1280,14 @@ const MemberModule = (function() {
         }
         
         var payload = { id: currentUser.id, email: currentUser.email };
-        if (name && name !== profileOriginalName) payload.display_name = name;
+        if (name && name !== profileOriginalName) payload.username = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
         // avatar_file (filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
 
         var wantsAvatarChange = !!pendingProfileAvatarBlob || ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || ''));
         
         // Nothing to do
-        if (!payload.display_name && !payload.password && !wantsAvatarChange) {
+        if (!payload.username && !payload.password && !wantsAvatarChange) {
             if (typeof onSuccessNext === 'function') onSuccessNext();
             return;
         }
@@ -1312,9 +1312,9 @@ const MemberModule = (function() {
                       throw err;
                   }
                   
-                  if (payload.display_name) {
-                      currentUser.name = payload.display_name;
-                      profileOriginalName = payload.display_name;
+                  if (payload.username) {
+                      currentUser.name = payload.username;
+                      profileOriginalName = payload.username;
                       if (profileName) profileName.textContent = currentUser.name || 'Member';
                   }
                   
@@ -2817,7 +2817,7 @@ const MemberModule = (function() {
         prepareRegisterAvatarBlob().then(function(avatarBlob) {
             // Send registration request
             var formData = new FormData();
-            formData.set('display_name', name);
+            formData.set('username', name);
             formData.set('email', email);
             formData.set('password', password);
             formData.set('confirm', confirm);
@@ -2973,11 +2973,12 @@ const MemberModule = (function() {
         
         return {
             id: payload.id || payload.user_id || null,
-            name: payload.name || payload.display_name || '',
+            name: payload.username || payload.name || '',
             email: email,
             emailNormalized: normalized,
             username: username,
             avatar: payload.avatar || payload.avatar_file || '',
+            username_key: payload.username_key || '',
             type: isAdmin ? 'admin' : (payload.type || 'member'),
             isAdmin: isAdmin
         };

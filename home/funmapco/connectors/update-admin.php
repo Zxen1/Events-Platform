@@ -38,7 +38,7 @@ $email = isset($input['email']) ? trim((string)$input['email']) : '';
 if ($id <= 0 || $email === '') fail(400,'Missing id/email');
 
 // Load admin by id+email (basic guard)
-$stmt = $mysqli->prepare('SELECT id, email, display_name, password_hash FROM admins WHERE id=? AND email=? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT id, email, username, password_hash FROM admins WHERE id=? AND email=? LIMIT 1');
 if (!$stmt) fail(500,'Prepare failed');
 $stmt->bind_param('is', $id, $email);
 if(!$stmt->execute()){ $stmt->close(); fail(500,'Query failed'); }
@@ -51,15 +51,13 @@ $updates = [];
 $types = '';
 $vals = [];
 
-// Display name
-if (isset($input['display_name'])) {
-  $display = trim((string)$input['display_name']);
-  if ($display === '') fail(400,'Display name cannot be empty');
-
-  // Username duplicates are allowed by design (username_key is the unique identifier)
-  $updates[] = 'display_name=?';
+// Username
+if (isset($input['username'])) {
+  $u = trim((string)$input['username']);
+  if ($u === '') fail(400,'Username cannot be empty');
+  $updates[] = 'username=?';
   $types .= 's';
-  $vals[] = $display;
+  $vals[] = $u;
 }
 
 // Avatar filename
