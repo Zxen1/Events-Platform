@@ -679,8 +679,16 @@
                 <input type="password" id="member-register-password" class="member-auth-panel-input" name="registerPassword" autocomplete="new-password">
                 <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
                 <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
-                <label class="member-auth-panel-label" for="member-register-avatar">Avatar URL</label>
-                <input type="url" id="member-register-avatar" class="member-auth-panel-input" name="registerAvatar" placeholder="https://example.com/avatar.jpg">
+                <label class="member-auth-panel-label">Avatar</label>
+                <div class="member-avatar-row">
+                  <img id="member-register-avatar-preview" class="member-avatar-preview" src="" alt="">
+                  <div class="member-avatar-buttons">
+                    <button type="button" class="member-button-auth" id="member-register-avatar-choose-btn">Choose</button>
+                    <button type="button" class="member-button-auth" id="member-register-avatar-upload-btn">Upload</button>
+                  </div>
+                </div>
+                <input type="hidden" id="member-register-avatar" name="registerAvatar">
+                <div id="member-avatar-library" class="member-avatar-library" hidden></div>
                 <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
               </section>
             </form>
@@ -692,6 +700,13 @@
                 <div class="member-profile-details">
                   <p id="member-profile-name" class="member-profile-name"></p>
                   <p id="member-profile-email" class="member-profile-email"></p>
+                </div>
+              </div>
+              <div class="member-avatar-row member-avatar-row--profile">
+                <img id="member-profile-avatar-preview" class="member-avatar-preview" src="" alt="">
+                <div class="member-avatar-buttons">
+                  <button type="button" class="member-button-auth" id="member-profile-avatar-choose-btn">Choose</button>
+                  <button type="button" class="member-button-auth" id="member-profile-avatar-upload-btn">Upload</button>
                 </div>
               </div>
               <div class="member-profile-edit">
@@ -743,6 +758,22 @@
         <button type="button" class="member-button-auth" data-action="discard">Discard</button>
         <button type="button" class="member-button-auth" data-action="save">Save</button>
       </div>
+
+  <!-- Avatar Upload (shared within member panel) -->
+  <input type="file" id="member-avatar-file-input" accept="image/*" hidden>
+  <div id="member-avatar-cropper" class="member-avatar-cropper" hidden aria-hidden="true">
+    <div class="member-avatar-cropper-dialog" role="dialog" aria-modal="true" aria-label="Crop avatar">
+      <div class="member-avatar-cropper-preview-wrap">
+        <canvas id="member-avatar-cropper-canvas" class="member-avatar-cropper-canvas" width="256" height="256"></canvas>
+      </div>
+      <label class="member-auth-panel-label" for="member-avatar-cropper-zoom">Zoom</label>
+      <input id="member-avatar-cropper-zoom" type="range" min="1" max="3" step="0.01" value="1">
+      <div class="member-avatar-cropper-actions">
+        <button type="button" class="member-button-auth" id="member-avatar-cropper-cancel">Cancel</button>
+        <button type="button" class="member-button-auth" id="member-avatar-cropper-save">Use Avatar</button>
+      </div>
+    </div>
+  </div>
     </div>
   </div>
 

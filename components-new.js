@@ -2586,7 +2586,7 @@ const CurrencyComponent = (function(){
             op.onclick = function(e) {
                 e.stopPropagation();
                 if (flagUrl) {
-                    btnImg.src = flagUrl;
+                btnImg.src = flagUrl;
                     btnImg.style.display = 'block';
                 } else {
                     btnImg.src = '';

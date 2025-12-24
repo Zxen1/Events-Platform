@@ -41,7 +41,8 @@ try {
 
   // Attempt login against a table; allow email OR display_name match
   $attempt = function(mysqli $db, string $table, string $user, string $pass){
-    $sql = "SELECT id, email, display_name, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
+    // avatar_url is optional; if admins table doesn't have it, query may fail (handled by prepare returning null).
+    $sql = "SELECT id, email, display_name, avatar_url, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
     if (!($stmt = $db->prepare($sql))) return null;
     $stmt->bind_param('ss', $user, $user);
     if(!$stmt->execute()){ $stmt->close(); return null; }
@@ -56,7 +57,8 @@ try {
       'user'    => [
         'id'    => (int)$row['id'],
         'email' => (string)$row['email'],
-        'name'  => (string)$row['display_name']
+        'name'  => (string)$row['display_name'],
+        'avatar' => isset($row['avatar_url']) ? (string)$row['avatar_url'] : ''
       ]
     ];
   };

@@ -98,6 +98,30 @@ const MemberModule = (function() {
     // Legacy inline save button (removed from HTML). Keep var to avoid strict-mode ReferenceError.
     var profileSaveBtn = null;
     var profileOriginalName = '';
+    var profileOriginalAvatarUrl = '';
+    var pendingAvatarUrl = '';
+
+    // Avatar (register + profile)
+    var registerAvatarHiddenInput = null;
+    var registerAvatarPreview = null;
+    var registerAvatarChooseBtn = null;
+    var registerAvatarUploadBtn = null;
+    var profileAvatarPreview = null;
+    var profileAvatarChooseBtn = null;
+    var profileAvatarUploadBtn = null;
+    var avatarLibrary = null;
+    var avatarLibraryLoaded = false;
+    var activeAvatarTarget = null; // 'register' | 'profile'
+
+    // Avatar upload + crop
+    var avatarFileInput = null;
+    var cropperOverlay = null;
+    var cropperCanvas = null;
+    var cropperZoom = null;
+    var cropperCancelBtn = null;
+    var cropperSaveBtn = null;
+    var cropImg = null;
+    var cropState = { zoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
@@ -202,6 +226,22 @@ const MemberModule = (function() {
         profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
 
+        // Avatar UI
+        registerAvatarHiddenInput = document.getElementById('member-register-avatar');
+        registerAvatarPreview = document.getElementById('member-register-avatar-preview');
+        registerAvatarChooseBtn = document.getElementById('member-register-avatar-choose-btn');
+        registerAvatarUploadBtn = document.getElementById('member-register-avatar-upload-btn');
+        profileAvatarPreview = document.getElementById('member-profile-avatar-preview');
+        profileAvatarChooseBtn = document.getElementById('member-profile-avatar-choose-btn');
+        profileAvatarUploadBtn = document.getElementById('member-profile-avatar-upload-btn');
+        avatarLibrary = document.getElementById('member-avatar-library');
+        avatarFileInput = document.getElementById('member-avatar-file-input');
+        cropperOverlay = document.getElementById('member-avatar-cropper');
+        cropperCanvas = document.getElementById('member-avatar-cropper-canvas');
+        cropperZoom = document.getElementById('member-avatar-cropper-zoom');
+        cropperCancelBtn = document.getElementById('member-avatar-cropper-cancel');
+        cropperSaveBtn = document.getElementById('member-avatar-cropper-save');
+
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
     }
 
@@ -299,6 +339,79 @@ const MemberModule = (function() {
         if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
         if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
         if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+
+        // Avatar choose/upload
+        if (registerAvatarChooseBtn) {
+            registerAvatarChooseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                activeAvatarTarget = 'register';
+                toggleAvatarLibrary();
+            });
+        }
+        if (registerAvatarUploadBtn) {
+            registerAvatarUploadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                activeAvatarTarget = 'register';
+                openAvatarFilePicker();
+            });
+        }
+        if (profileAvatarChooseBtn) {
+            profileAvatarChooseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                activeAvatarTarget = 'profile';
+                toggleAvatarLibrary();
+            });
+        }
+        if (profileAvatarUploadBtn) {
+            profileAvatarUploadBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                activeAvatarTarget = 'profile';
+                openAvatarFilePicker();
+            });
+        }
+        if (avatarFileInput) {
+            avatarFileInput.addEventListener('change', function() {
+                var file = avatarFileInput.files && avatarFileInput.files[0];
+                if (!file) return;
+                openCropperForFile(file);
+            });
+        }
+        if (cropperCancelBtn) {
+            cropperCancelBtn.addEventListener('click', function() {
+                closeCropper();
+            });
+        }
+        if (cropperSaveBtn) {
+            cropperSaveBtn.addEventListener('click', function() {
+                saveCroppedAvatar();
+            });
+        }
+        if (cropperZoom) {
+            cropperZoom.addEventListener('input', function() {
+                cropState.zoom = parseFloat(cropperZoom.value || '1') || 1;
+                drawCropper();
+            });
+        }
+        if (cropperCanvas) {
+            cropperCanvas.addEventListener('mousedown', function(e) {
+                cropState.dragging = true;
+                cropState.lastX = e.clientX;
+                cropState.lastY = e.clientY;
+            });
+            window.addEventListener('mousemove', function(e) {
+                if (!cropState.dragging) return;
+                var dx = e.clientX - cropState.lastX;
+                var dy = e.clientY - cropState.lastY;
+                cropState.lastX = e.clientX;
+                cropState.lastY = e.clientY;
+                cropState.offsetX += dx;
+                cropState.offsetY += dy;
+                drawCropper();
+            });
+            window.addEventListener('mouseup', function() {
+                cropState.dragging = false;
+            });
+        }
 
         // Note: unsaved changes dialogs are controlled from components.
         
@@ -465,6 +578,183 @@ const MemberModule = (function() {
         });
     }
 
+    function setAvatarForTarget(url) {
+        url = url || '';
+        if (activeAvatarTarget === 'register') {
+            if (registerAvatarHiddenInput) registerAvatarHiddenInput.value = url;
+            if (registerAvatarPreview) {
+                registerAvatarPreview.src = url || '';
+                registerAvatarPreview.alt = url ? 'Selected avatar' : '';
+            }
+        } else if (activeAvatarTarget === 'profile') {
+            pendingAvatarUrl = url;
+            if (profileAvatarPreview) {
+                profileAvatarPreview.src = url || '';
+                profileAvatarPreview.alt = url ? 'Selected avatar' : '';
+            }
+            // Also update the main avatar immediately for feedback
+            if (profileAvatar) {
+                profileAvatar.src = url || getAvatarSource(currentUser);
+            }
+            updateHeaderSaveDiscardState();
+        }
+    }
+
+    function toggleAvatarLibrary() {
+        if (!avatarLibrary) return;
+        var showing = !avatarLibrary.hidden;
+        if (showing) {
+            avatarLibrary.hidden = true;
+            return;
+        }
+        avatarLibrary.hidden = false;
+        if (!avatarLibraryLoaded) {
+            loadAvatarLibrary();
+        }
+    }
+
+    function loadAvatarLibrary() {
+        if (avatarLibraryLoaded) return;
+        avatarLibraryLoaded = true;
+        if (!avatarLibrary) return;
+
+        // Get folder_avatars from settings, then list files.
+        fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                var folder = (res && res.settings && res.settings.folder_avatars) ? String(res.settings.folder_avatars) : 'https://cdn.funmap.com/avatars/';
+                if (folder && !folder.endsWith('/')) folder += '/';
+                return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folder))
+                    .then(function(r) { return r.json(); })
+                    .then(function(list) {
+                        if (!list || list.success !== true || !Array.isArray(list.icons)) return [];
+                        return list.icons.map(function(fn) { return folder + fn; });
+                    });
+            })
+            .then(function(urls) {
+                avatarLibrary.innerHTML = '';
+                if (!urls || urls.length === 0) {
+                    var empty = document.createElement('div');
+                    empty.style.color = 'rgba(255,255,255,0.75)';
+                    empty.style.fontSize = '14px';
+                    empty.textContent = 'No avatars found in your avatars folder yet.';
+                    avatarLibrary.appendChild(empty);
+                    return;
+                }
+                urls.slice(0, 240).forEach(function(url) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'member-avatar-library-item';
+                    btn.innerHTML = '<img src="' + url + '" alt="">';
+                    btn.addEventListener('click', function() {
+                        setAvatarForTarget(url);
+                        avatarLibrary.hidden = true;
+                    });
+                    avatarLibrary.appendChild(btn);
+                });
+            })
+            .catch(function(err) {
+                console.warn('[Member] Failed to load avatar library', err);
+            });
+    }
+
+    function openAvatarFilePicker() {
+        if (!avatarFileInput) return;
+        avatarFileInput.value = '';
+        avatarFileInput.click();
+    }
+
+    function openCropperForFile(file) {
+        if (!cropperOverlay || !cropperCanvas) return;
+        if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError('Please select an image file.');
+            }
+            return;
+        }
+
+        var url = URL.createObjectURL(file);
+        cropImg = new Image();
+        cropImg.onload = function() {
+            // Reset crop state
+            cropState.zoom = 1;
+            cropState.offsetX = 0;
+            cropState.offsetY = 0;
+            if (cropperZoom) cropperZoom.value = '1';
+            drawCropper();
+            cropperOverlay.hidden = false;
+            cropperOverlay.setAttribute('aria-hidden', 'false');
+        };
+        cropImg.src = url;
+        cropImg.dataset.objectUrl = url;
+    }
+
+    function closeCropper() {
+        if (!cropperOverlay) return;
+        cropperOverlay.hidden = true;
+        cropperOverlay.setAttribute('aria-hidden', 'true');
+        if (cropImg && cropImg.dataset && cropImg.dataset.objectUrl) {
+            try { URL.revokeObjectURL(cropImg.dataset.objectUrl); } catch(e) {}
+        }
+        cropImg = null;
+    }
+
+    function drawCropper() {
+        if (!cropImg || !cropperCanvas) return;
+        var ctx = cropperCanvas.getContext('2d');
+        if (!ctx) return;
+
+        var cw = cropperCanvas.width;
+        var ch = cropperCanvas.height;
+        ctx.clearRect(0, 0, cw, ch);
+
+        // Fit image to cover canvas, then apply zoom/offset
+        var iw = cropImg.naturalWidth || cropImg.width;
+        var ih = cropImg.naturalHeight || cropImg.height;
+        if (!iw || !ih) return;
+
+        var cover = Math.max(cw / iw, ch / ih);
+        var scale = cover * (cropState.zoom || 1);
+        var drawW = iw * scale;
+        var drawH = ih * scale;
+        var x = (cw - drawW) / 2 + (cropState.offsetX || 0);
+        var y = (ch - drawH) / 2 + (cropState.offsetY || 0);
+        ctx.drawImage(cropImg, x, y, drawW, drawH);
+    }
+
+    function saveCroppedAvatar() {
+        if (!cropperCanvas) return;
+        cropperCanvas.toBlob(function(blob) {
+            if (!blob) return;
+            uploadAvatarBlob(blob);
+        }, 'image/png', 0.92);
+    }
+
+    function uploadAvatarBlob(blob) {
+        var fd = new FormData();
+        fd.append('file', blob, 'avatar.png');
+        fetch('/gateway.php?action=upload-avatar', {
+            method: 'POST',
+            body: fd
+        }).then(function(r) { return r.json(); })
+          .then(function(res) {
+              if (!res || res.success !== true || !res.url) {
+                  throw new Error((res && (res.message || res.error)) || 'Upload failed');
+              }
+              setAvatarForTarget(String(res.url));
+              closeCropper();
+              if (window.ToastComponent && ToastComponent.showSuccess) {
+                  ToastComponent.showSuccess('Avatar uploaded');
+              }
+          })
+          .catch(function(err) {
+              console.error('[Member] Avatar upload failed', err);
+              if (window.ToastComponent && ToastComponent.showError) {
+                  ToastComponent.showError('Avatar upload failed');
+              }
+          });
+    }
+
     function updateProfileSaveState() {
         if (!currentUser) {
             if (profileSaveBtn) {
@@ -546,6 +836,9 @@ const MemberModule = (function() {
         var payload = { id: currentUser.id, email: currentUser.email };
         if (name && name !== profileOriginalName) payload.display_name = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
+        if ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '')) {
+            payload.avatar_url = pendingAvatarUrl || '';
+        }
         
         // Nothing to do
         if (!payload.display_name && !payload.password) {
@@ -577,6 +870,12 @@ const MemberModule = (function() {
                   
                   if (profileEditPasswordInput) profileEditPasswordInput.value = '';
                   if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+
+                  if (payload.avatar_url !== undefined) {
+                      currentUser.avatar = payload.avatar_url;
+                      profileOriginalAvatarUrl = payload.avatar_url;
+                      pendingAvatarUrl = payload.avatar_url;
+                  }
                   
                   updateProfileSaveState();
                   updateHeaderSaveDiscardState();
@@ -638,13 +937,17 @@ const MemberModule = (function() {
         var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
         var nameChanged = name !== '' && name !== (profileOriginalName || '');
         var pwChanged = pw !== '' || confirm !== '';
-        return nameChanged || pwChanged;
+        var avatarChanged = (pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '');
+        return nameChanged || pwChanged || avatarChanged;
     }
 
     function discardProfileEdits() {
         if (profileEditNameInput) profileEditNameInput.value = profileOriginalName || '';
         if (profileEditPasswordInput) profileEditPasswordInput.value = '';
         if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+        pendingAvatarUrl = profileOriginalAvatarUrl || '';
+        if (profileAvatarPreview) profileAvatarPreview.src = pendingAvatarUrl || '';
+        if (profileAvatar) profileAvatar.src = pendingAvatarUrl || getAvatarSource(currentUser);
         updateProfileSaveState();
     }
 
@@ -2231,6 +2534,12 @@ const MemberModule = (function() {
             if (profileEditNameInput) profileEditNameInput.value = profileOriginalName;
             if (profileEditPasswordInput) profileEditPasswordInput.value = '';
             if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+            profileOriginalAvatarUrl = currentUser.avatar ? String(currentUser.avatar) : '';
+            pendingAvatarUrl = profileOriginalAvatarUrl;
+            if (profileAvatarPreview) {
+                profileAvatarPreview.src = pendingAvatarUrl || '';
+                profileAvatarPreview.alt = pendingAvatarUrl ? 'Selected avatar' : '';
+            }
             updateProfileSaveState();
             
             // Hide auth tabs when logged in
@@ -2275,6 +2584,12 @@ const MemberModule = (function() {
             if (profileEditNameInput) profileEditNameInput.value = '';
             if (profileEditPasswordInput) profileEditPasswordInput.value = '';
             if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+            profileOriginalAvatarUrl = '';
+            pendingAvatarUrl = '';
+            if (profileAvatarPreview) {
+                profileAvatarPreview.src = '';
+                profileAvatarPreview.alt = '';
+            }
             updateProfileSaveState();
             
             // Show auth tabs

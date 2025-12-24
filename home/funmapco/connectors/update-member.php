@@ -59,6 +59,15 @@ if (isset($input['display_name'])) {
   $vals[] = $display;
 }
 
+// Avatar URL (optional)
+if (isset($input['avatar_url'])) {
+  $avatar = trim((string)$input['avatar_url']);
+  // Allow empty string to clear avatar
+  $updates[] = 'avatar_url=?';
+  $types .= 's';
+  $vals[] = $avatar;
+}
+
 // Map preferences (optional; columns must exist in DB)
 if (isset($input['map_lighting'])) {
   $updates[] = 'map_lighting=?';
