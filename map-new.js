@@ -383,6 +383,11 @@ const MapModule = (function() {
   
   // Store control instances
   let mapControls = null;
+  let mapControlsEl = null;
+  let mapControlsHomeParent = null;
+  let mapControlsHomeNextSibling = null;
+  let mapControlsResizeTimer = null;
+  const HEADER_CONTROLS_BREAKPOINT_PX = 900;
   
   /**
    * Initialize map controls (Google Places geocoder + Mapbox geolocate/compass)
@@ -403,6 +408,12 @@ const MapModule = (function() {
     // Map area controls (Google Places + Mapbox geolocate/compass)
     const mapControlsContainer = document.querySelector('.map-controls');
     if (mapControlsContainer) {
+      // Cache home position so we can restore on narrow screens
+      if (!mapControlsEl) {
+        mapControlsEl = mapControlsContainer;
+        mapControlsHomeParent = mapControlsEl.parentElement || null;
+        mapControlsHomeNextSibling = mapControlsEl.nextSibling || null;
+      }
       mapControls = MapControlRowComponent.create(mapControlsContainer, {
         variant: 'map',
         placeholder: 'Search venues or places',
@@ -419,6 +430,47 @@ const MapModule = (function() {
     initAdminStartingGeocoder();
 
     // Map controls initialized
+    syncMapControlsPlacement();
+    bindMapControlsResize();
+  }
+
+  function isWideEnoughForHeaderControls() {
+    return window.innerWidth >= HEADER_CONTROLS_BREAKPOINT_PX;
+  }
+
+  function bindMapControlsResize() {
+    if (bindMapControlsResize._bound) return;
+    bindMapControlsResize._bound = true;
+    window.addEventListener('resize', function() {
+      if (mapControlsResizeTimer) clearTimeout(mapControlsResizeTimer);
+      mapControlsResizeTimer = setTimeout(syncMapControlsPlacement, 50);
+    });
+  }
+
+  function syncMapControlsPlacement() {
+    if (!mapControlsEl) mapControlsEl = document.querySelector('.map-controls');
+    if (!mapControlsEl) return;
+
+    const headerSlot = document.getElementById('header-map-controls');
+    const shouldBeInHeader = !!headerSlot && isWideEnoughForHeaderControls();
+
+    if (shouldBeInHeader) {
+      if (mapControlsEl.parentElement !== headerSlot) {
+        headerSlot.appendChild(mapControlsEl);
+      }
+      mapControlsEl.classList.add('map-controls--in-header');
+      return;
+    }
+
+    // Restore to map area
+    mapControlsEl.classList.remove('map-controls--in-header');
+    if (mapControlsHomeParent && mapControlsEl.parentElement !== mapControlsHomeParent) {
+      if (mapControlsHomeNextSibling && mapControlsHomeNextSibling.parentElement === mapControlsHomeParent) {
+        mapControlsHomeParent.insertBefore(mapControlsEl, mapControlsHomeNextSibling);
+      } else {
+        mapControlsHomeParent.insertBefore(mapControlsEl, mapControlsHomeParent.firstChild);
+      }
+    }
   }
 
   /**

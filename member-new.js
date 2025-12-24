@@ -677,7 +677,11 @@ const MemberModule = (function() {
     }
 
     function cameraSvgMarkup() {
-        // Simple inline camera icon
+        // Shared component (components-new.js). Fallback keeps older sessions safe.
+        if (window.ImageAddTileComponent && typeof window.ImageAddTileComponent.cameraSvgMarkup === 'function') {
+            return window.ImageAddTileComponent.cameraSvgMarkup();
+        }
+        // Fallback (shouldn't happen once components-new.js loads)
         return (
             '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
             '<path fill="currentColor" d="M9 4.5h6l1.2 2H20c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-10c0-1.1.9-2 2-2h3.8L9 4.5zm3 5.2a4.3 4.3 0 1 0 0 8.6a4.3 4.3 0 0 0 0-8.6zm0 1.8a2.5 2.5 0 1 1 0 5a2.5 2.5 0 0 1 0-5z"/>' +

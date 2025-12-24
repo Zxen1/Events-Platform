@@ -121,6 +121,7 @@
   left: 50%;
   top: calc(var(--header-h) + 10px);
   transform: translateX(-50%);
+  display: flex;
   width: auto;
   max-width: calc(100% - 20px);
   min-width: 0;
@@ -131,10 +132,13 @@
 }
 
 .map-controls--in-header {
-  top: calc(var(--safe-top) + var(--header-h) / 2);
-  transform: translate(-50%, -50%);
-  width: auto;
-  max-width: none;
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  width: 100%;
+  max-width: 520px;
+  z-index: auto;
 }
 
 .map-controls-geocoder {

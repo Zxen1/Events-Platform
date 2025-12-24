@@ -38,8 +38,42 @@ const Icons = {
     
     search: '<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M14.5 14.5L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     
-    chevronDown: '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
+    chevronDown: '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+    
+    camera: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 4.5h6l1.2 2H20c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-10c0-1.1.9-2 2-2h3.8L9 4.5zm3 5.2a4.3 4.3 0 1 0 0 8.6a4.3 4.3 0 0 0 0-8.6zm0 1.8a2.5 2.5 0 1 1 0 5a2.5 2.5 0 0 1 0-5z"/></svg>'
 };
+
+
+/* ============================================================================
+   IMAGE ADD TILE (Camera + "Add")
+   Shared markup for "Add image" tiles (eg. member avatar add, fieldset images add).
+   ============================================================================ */
+
+const ImageAddTileComponent = (function(){
+    
+    function cameraSvgMarkup() {
+        return Icons.camera;
+    }
+    
+    // Returns HTML string (so callers can drop into innerHTML safely)
+    // options: { iconClass, textClass, label }
+    function buildMarkup(options) {
+        options = options || {};
+        var iconClass = options.iconClass || '';
+        var textClass = options.textClass || '';
+        var label = options.label || 'Add';
+        
+        return (
+            '<div class="' + iconClass + '">' + cameraSvgMarkup() + '</div>' +
+            '<div class="' + textClass + '">' + label + '</div>'
+        );
+    }
+    
+    return {
+        cameraSvgMarkup: cameraSvgMarkup,
+        buildMarkup: buildMarkup
+    };
+})();
 
 
 /* ============================================================================
@@ -859,7 +893,11 @@ const FieldsetComponent = (function(){
                     if (imageFiles.length < maxImages) {
                         var uploadBox = document.createElement('div');
                         uploadBox.className = 'fieldset-images';
-                        uploadBox.innerHTML = '<div class="fieldset-images-icon">📷</div><div class="fieldset-images-text">Add</div>';
+                        uploadBox.innerHTML = ImageAddTileComponent.buildMarkup({
+                            iconClass: 'fieldset-images-icon',
+                            textClass: 'fieldset-images-text',
+                            label: 'Add'
+                        });
                         uploadBox.addEventListener('click', function() {
                             fileInput.click();
                         });
@@ -5189,4 +5227,5 @@ window.MapControlRowComponent = MapControlRowComponent;
 window.CheckoutOptionsComponent = CheckoutOptionsComponent;
 window.ConfirmDialogComponent = ConfirmDialogComponent;
 window.WelcomeModalComponent = WelcomeModalComponent;
+window.ImageAddTileComponent = ImageAddTileComponent;
 

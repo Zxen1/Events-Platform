@@ -127,6 +127,28 @@
   }
 }
 
+/* Map controls in header (wide screens only) */
+.header-map-controls {
+  display: none;
+  min-width: 0;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+  .header-modeswitch {
+    /* Free space for header map controls */
+    margin-right: 0;
+  }
+
+  .header-map-controls {
+    display: flex;
+    flex: 1 1 auto;
+  }
+}
+
 /* Mode switch buttons */
 .header-modeswitch-button {
   width: 40px;
