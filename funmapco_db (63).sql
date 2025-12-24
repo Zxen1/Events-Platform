@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 23, 2025 at 06:45 PM
+-- Generation Time: Dec 24, 2025 at 03:35 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -50,6 +50,7 @@ CREATE TABLE `admins` (
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
   `display_name` varchar(255) DEFAULT NULL,
+  `avatar_url` varchar(2048) NOT NULL DEFAULT '',
   `created_at` datetime DEFAULT current_timestamp(),
   `settings_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`settings_json`)),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -59,8 +60,8 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `email`, `password_hash`, `display_name`, `created_at`, `settings_json`, `updated_at`) VALUES
-(2, 'admin@funmap.com', '$2a$12$EED5zmTO8Eyhj0N/6F1W5.dyHyMlYbOABsWf6oTk0.j/Tv8rhOIU.', 'Administrator', '2025-10-22 01:00:41', NULL, '2025-12-01 04:17:56');
+INSERT INTO `admins` (`id`, `email`, `password_hash`, `display_name`, `avatar_url`, `created_at`, `settings_json`, `updated_at`) VALUES
+(2, 'admin@funmap.com', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', 'Administrator', '', '2025-10-22 01:00:41', NULL, '2025-12-24 15:30:41');
 
 -- --------------------------------------------------------
 
@@ -1715,7 +1716,11 @@ INSERT INTO `system_images` (`id`, `option_filename`, `option_value`, `option_la
 (36, 'member-messages.svg', 'member-messages.svg', '', 0, 1),
 (37, 'multi-post-icon-50.webp', 'multi-post-icon-50.webp', '', 0, 1),
 (38, 'red-balloon-40.png', 'red-balloon-40.png', '', 0, 1),
-(39, 'user-messages.svg', 'user-messages.svg', '', 0, 1);
+(39, 'user-messages.svg', 'user-messages.svg', '', 0, 1),
+(41, 'map-preset-dawn.svg', 'map-preset-dawn.svg', '', 0, 1),
+(42, 'map-preset-day.svg', 'map-preset-day.svg', '', 0, 1),
+(43, 'map-preset-dusk.svg', 'map-preset-dusk.svg', '', 0, 1),
+(44, 'map-preset-night.svg', 'map-preset-night.svg', '', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -2143,7 +2148,7 @@ ALTER TABLE `subcategories`
 -- AUTO_INCREMENT for table `system_images`
 --
 ALTER TABLE `system_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT for table `transactions`
