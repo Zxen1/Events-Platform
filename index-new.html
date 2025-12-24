@@ -688,7 +688,6 @@
                   </div>
                 </div>
                 <input type="hidden" id="member-register-avatar" name="registerAvatar">
-                <div id="member-avatar-library" class="member-avatar-library" hidden></div>
                 <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
               </section>
             </form>
@@ -722,6 +721,24 @@
               </div>
             </section>
             
+            <!-- Avatar tools (shared for Register + Profile) -->
+            <div class="member-avatar-tools">
+              <div id="member-avatar-library" class="member-avatar-library" hidden></div>
+              <div id="member-avatar-cropper" class="member-avatar-cropper" hidden aria-hidden="true">
+                <div class="member-avatar-cropper-dialog" role="region" aria-label="Crop avatar">
+                  <div class="member-avatar-cropper-preview-wrap">
+                    <canvas id="member-avatar-cropper-canvas" class="member-avatar-cropper-canvas" width="530" height="530"></canvas>
+                  </div>
+                  <label class="member-auth-panel-label" for="member-avatar-cropper-zoom">Zoom</label>
+                  <input id="member-avatar-cropper-zoom" type="range" min="1" max="3" step="0.01" value="1">
+                  <div class="member-avatar-cropper-actions">
+                    <button type="button" class="member-button-auth" id="member-avatar-cropper-cancel">Cancel</button>
+                    <button type="button" class="member-button-auth" id="member-avatar-cropper-save">Use Avatar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
           
         </section>
@@ -763,19 +780,6 @@
 
   <!-- Avatar Upload (shared within member panel) -->
   <input type="file" id="member-avatar-file-input" accept="image/*" hidden>
-  <div id="member-avatar-cropper" class="member-avatar-cropper" hidden aria-hidden="true">
-    <div class="member-avatar-cropper-dialog" role="dialog" aria-modal="true" aria-label="Crop avatar">
-      <div class="member-avatar-cropper-preview-wrap">
-        <canvas id="member-avatar-cropper-canvas" class="member-avatar-cropper-canvas" width="530" height="530"></canvas>
-      </div>
-      <label class="member-auth-panel-label" for="member-avatar-cropper-zoom">Zoom</label>
-      <input id="member-avatar-cropper-zoom" type="range" min="1" max="3" step="0.01" value="1">
-      <div class="member-avatar-cropper-actions">
-        <button type="button" class="member-button-auth" id="member-avatar-cropper-cancel">Cancel</button>
-        <button type="button" class="member-button-auth" id="member-avatar-cropper-save">Use Avatar</button>
-      </div>
-    </div>
-  </div>
 
   <!-- ========================================================================
        SECTION 7: MARQUEE
