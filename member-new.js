@@ -97,6 +97,7 @@ const MemberModule = (function() {
     var profileEditConfirmInput = null;
     // Legacy inline save button (removed from HTML). Keep var to avoid strict-mode ReferenceError.
     var profileSaveBtn = null;
+    var profileEditForm = null;
     var profileOriginalName = '';
     var profileOriginalAvatarUrl = '';
     var pendingAvatarUrl = '';
@@ -224,6 +225,7 @@ const MemberModule = (function() {
         profileEditNameInput = document.getElementById('member-profile-edit-name');
         profileEditPasswordInput = document.getElementById('member-profile-edit-password');
         profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
+        profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
 
         // Avatar UI
@@ -339,6 +341,12 @@ const MemberModule = (function() {
         if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
         if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
         if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditForm) {
+            profileEditForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleHeaderSave();
+            });
+        }
 
         // Avatar choose/upload
         if (registerAvatarChooseBtn) {

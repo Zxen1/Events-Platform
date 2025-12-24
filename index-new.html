@@ -337,8 +337,8 @@
               </div>
               <div class="admin-settings-api-container">
                 <div class="admin-settings-field">
-                  <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password (Read-Only)</label>
-                  <input type="password" class="admin-settings-field-input" id="adminStorageApiKey" data-setting-key="storage_api_key" autocomplete="new-password" data-lpignore="true" data-form-type="other" placeholder="Enter read-only password from Bunny Storage Zone" />
+                  <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password</label>
+                  <input type="password" class="admin-settings-field-input" id="adminStorageApiKey" data-setting-key="storage_api_key" autocomplete="new-password" data-lpignore="true" data-form-type="other" placeholder="Enter Storage Zone password (must allow uploads)" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminStorageZoneName">Bunny Storage Zone Name</label>
@@ -708,14 +708,14 @@
                   <button type="button" class="member-button-auth" id="member-profile-avatar-upload-btn">Upload</button>
                 </div>
               </div>
-              <div class="member-profile-edit">
+              <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
                 <label class="member-auth-panel-label" for="member-profile-edit-name">Username</label>
                 <input type="text" id="member-profile-edit-name" class="member-auth-panel-input" autocomplete="name">
                 <label class="member-auth-panel-label" for="member-profile-edit-password">New Password</label>
                 <input type="password" id="member-profile-edit-password" class="member-auth-panel-input" autocomplete="new-password">
                 <label class="member-auth-panel-label" for="member-profile-edit-confirm">Confirm Password</label>
                 <input type="password" id="member-profile-edit-confirm" class="member-auth-panel-input" autocomplete="new-password">
-              </div>
+              </form>
               <div class="member-profile-actions">
                 <button type="button" class="member-button-auth member-profile-actions-btn" id="member-logout-btn">Log Out</button>
               </div>
