@@ -405,28 +405,33 @@ const MemberModule = (function() {
     function initProfilePickers() {
         if (!languageMenuContainer || !currencyMenuContainer) return;
         if (!window.CurrencyComponent || typeof CurrencyComponent.loadFromDatabase !== 'function') return;
-        if (!window.LanguageMenuComponent || typeof LanguageMenuComponent.buildFullMenu !== 'function') return;
         
         CurrencyComponent.loadFromDatabase().then(function() {
-            // Language (TEMP: uses currency list)
+            // Language (TEMP: this is intentionally the same as Currency menu for now)
             languageMenuContainer.innerHTML = '';
-            languageMenuInstance = LanguageMenuComponent.buildFullMenu({
-                container: languageMenuContainer,
+            languageMenuInstance = CurrencyComponent.buildFullMenu({
+                container: panelContent,
                 initialValue: localStorage.getItem('member_language') || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_language', code);
                 }
             });
+            if (languageMenuInstance && languageMenuInstance.element) {
+                languageMenuContainer.appendChild(languageMenuInstance.element);
+            }
             
             // Currency
             currencyMenuContainer.innerHTML = '';
             currencyMenuInstance = CurrencyComponent.buildFullMenu({
-                container: currencyMenuContainer,
+                container: panelContent,
                 initialValue: localStorage.getItem('member_currency') || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_currency', code);
                 }
             });
+            if (currencyMenuInstance && currencyMenuInstance.element) {
+                currencyMenuContainer.appendChild(currencyMenuInstance.element);
+            }
         }).catch(function(err) {
             console.warn('[Member] Failed to load currency data for pickers', err);
         });

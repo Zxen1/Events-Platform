@@ -515,8 +515,8 @@
    ============================================================================ */
 
 .member-button-auth {
-  background: var(--btn-selected);
-  border: 1px solid var(--btn-selected);
+  background: var(--btn);
+  border: 1px solid var(--btn);
   color: var(--button-text);
   font-family: inherit;
   font-size: 14px;
@@ -534,8 +534,8 @@
 }
 
 .member-button-auth:hover {
-  background: var(--btn-selected-hover);
-  border-color: var(--btn-selected-hover);
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
   color: var(--button-hover-text);
 }
 
@@ -885,8 +885,8 @@
   min-width: 0;
   height: 36px;
   border-radius: 5px;
-  border: 1px solid var(--btn-selected);
-  background: var(--btn-selected);
+  border: 1px solid var(--btn);
+  background: var(--btn);
   color: var(--button-text);
   font-weight: 600;
   cursor: pointer;
@@ -894,8 +894,8 @@
 }
 
 .member-auth-tab:hover {
-  background: var(--btn-selected-hover);
-  border-color: var(--btn-selected-hover);
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
 }
 
 .member-auth-tab:active {
@@ -904,9 +904,9 @@
 
 .member-auth-tab--selected {
   /* Keep Login/Register visually identical even when active */
-  background: var(--btn-selected);
-  border-color: var(--btn-selected);
-  color: var(--button-active-text);
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--button-text);
 }
 
 .member-auth-tab:focus-visible {
