@@ -599,6 +599,18 @@
              ================================================================ -->
         <section id="member-tab-profile" class="member-tab-panel member-tab-panel--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
           
+          <!-- Preferences (always visible) -->
+          <div class="member-map-settings-container member-preferences-container">
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Language</label>
+              <div id="memberLanguageMenu"></div>
+            </div>
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Currency</label>
+              <div id="memberCurrencyMenu"></div>
+            </div>
+          </div>
+
           <!-- Map Settings (always visible) -->
           <div class="member-map-settings-container">
             <div class="member-panel-field">
@@ -675,6 +687,15 @@
                   <p id="member-profile-name" class="member-profile-name"></p>
                   <p id="member-profile-email" class="member-profile-email"></p>
                 </div>
+              </div>
+              <div class="member-profile-edit">
+                <label class="member-auth-panel-label" for="member-profile-edit-name">Display Name</label>
+                <input type="text" id="member-profile-edit-name" class="member-auth-panel-input" autocomplete="name">
+                <label class="member-auth-panel-label" for="member-profile-edit-password">New Password</label>
+                <input type="password" id="member-profile-edit-password" class="member-auth-panel-input" autocomplete="new-password">
+                <label class="member-auth-panel-label" for="member-profile-edit-confirm">Confirm Password</label>
+                <input type="password" id="member-profile-edit-confirm" class="member-auth-panel-input" autocomplete="new-password">
+                <button type="button" class="member-button-auth member-profile-save-btn member-button-auth--disabled" id="member-profile-save-btn" disabled>Save</button>
               </div>
               <div class="member-profile-actions">
                 <button type="button" class="member-button-auth member-profile-actions-btn" id="member-logout-btn">Log Out</button>

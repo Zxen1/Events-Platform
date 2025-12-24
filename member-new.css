@@ -373,6 +373,10 @@
   padding: 10px;
 }
 
+.member-preferences-container {
+  margin-bottom: 10px;
+}
+
 .member-map-settings-container .member-panel-field + .member-panel-field {
   margin-top: 10px;
 }
@@ -511,11 +515,11 @@
    ============================================================================ */
 
 .member-button-auth {
-  background: var(--btn);
-  border: 1px solid var(--btn);
+  background: var(--btn-selected);
+  border: 1px solid var(--btn-selected);
   color: var(--button-text);
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   padding: 0 10px;
   height: var(--control-h);
   min-height: var(--control-h);
@@ -530,14 +534,14 @@
 }
 
 .member-button-auth:hover {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: var(--btn-selected-hover);
+  border-color: var(--btn-selected-hover);
   color: var(--button-hover-text);
 }
 
 .member-button-auth:active {
-  background: var(--btn-active);
-  border-color: var(--btn-active);
+  background: var(--btn-selected-active);
+  border-color: var(--btn-selected-active);
   color: var(--button-active-text);
   transform: scale(0.97);
 }
@@ -881,8 +885,8 @@
   min-width: 0;
   height: 36px;
   border-radius: 5px;
-  border: 1px solid var(--btn);
-  background: var(--btn);
+  border: 1px solid var(--btn-selected);
+  background: var(--btn-selected);
   color: var(--button-text);
   font-weight: 600;
   cursor: pointer;
@@ -890,8 +894,8 @@
 }
 
 .member-auth-tab:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: var(--btn-selected-hover);
+  border-color: var(--btn-selected-hover);
 }
 
 .member-auth-tab:active {
@@ -899,6 +903,7 @@
 }
 
 .member-auth-tab--selected {
+  /* Keep Login/Register visually identical even when active */
   background: var(--btn-selected);
   border-color: var(--btn-selected);
   color: var(--button-active-text);
@@ -954,6 +959,16 @@
 }
 
 .member-auth-submit {
+  align-self: flex-start;
+}
+
+.member-profile-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-profile-save-btn {
   align-self: flex-start;
 }
 
@@ -1020,6 +1035,11 @@
   min-width: 0;
   padding: 0 16px;
   white-space: nowrap;
+}
+
+/* Logout button uses same auth button styling */
+.member-profile-actions-btn.member-button-auth {
+  font-size: 14px;
 }
 
 /* ============================================================================

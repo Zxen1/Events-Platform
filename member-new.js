@@ -79,6 +79,21 @@ const MemberModule = (function() {
     var logoutBtn = null;
     var profileTabBtn = null;
     
+    // Preferences pickers (Profile tab)
+    var languageMenuContainer = null;
+    var currencyMenuContainer = null;
+    var languageMenuInstance = null;
+    var currencyMenuInstance = null;
+    
+    // Profile edit
+    var profileEditNameInput = null;
+    var profileEditPasswordInput = null;
+    var profileEditConfirmInput = null;
+    var profileSaveBtn = null;
+    var profileOriginalName = '';
+
+    // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
+    
     // Create post elements
     var submitBtn = null;
     var adminSubmitBtn = null;
@@ -168,6 +183,16 @@ const MemberModule = (function() {
         profileEmail = document.getElementById('member-profile-email');
         logoutBtn = document.getElementById('member-logout-btn');
         profileTabBtn = document.getElementById('member-tab-profile-btn');
+        
+        languageMenuContainer = document.getElementById('memberLanguageMenu');
+        currencyMenuContainer = document.getElementById('memberCurrencyMenu');
+        
+        profileEditNameInput = document.getElementById('member-profile-edit-name');
+        profileEditPasswordInput = document.getElementById('member-profile-edit-password');
+        profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
+        profileSaveBtn = document.getElementById('member-profile-save-btn');
+
+        // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
     }
 
     function bindEvents() {
@@ -187,7 +212,7 @@ const MemberModule = (function() {
         if (tabButtons) {
             tabButtons.forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    switchTab(btn.dataset.tab);
+                    requestTabSwitch(btn.dataset.tab);
                 });
             });
         }
@@ -242,9 +267,22 @@ const MemberModule = (function() {
         if (logoutBtn) {
             logoutBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                handleLogout();
+                requestLogout();
             });
         }
+        
+        // Profile save
+        if (profileSaveBtn) {
+            profileSaveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleProfileSave();
+            });
+        }
+        if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+
+        // Note: unsaved changes dialogs are controlled from components.
         
         // Map Lighting buttons
         initMapLightingButtons();
@@ -350,6 +388,8 @@ const MemberModule = (function() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                id: currentUser.id,
+                email: currentUser.email,
                 [key]: value
             })
         }).catch(function(err) {
@@ -360,6 +400,179 @@ const MemberModule = (function() {
         if (currentUser) {
             currentUser[key] = value;
         }
+    }
+
+    function initProfilePickers() {
+        if (!languageMenuContainer || !currencyMenuContainer) return;
+        if (!window.CurrencyComponent || typeof CurrencyComponent.loadFromDatabase !== 'function') return;
+        if (!window.LanguageMenuComponent || typeof LanguageMenuComponent.buildFullMenu !== 'function') return;
+        
+        CurrencyComponent.loadFromDatabase().then(function() {
+            // Language (TEMP: uses currency list)
+            languageMenuContainer.innerHTML = '';
+            languageMenuInstance = LanguageMenuComponent.buildFullMenu({
+                container: languageMenuContainer,
+                initialValue: localStorage.getItem('member_language') || null,
+                onSelect: function(code) {
+                    localStorage.setItem('member_language', code);
+                }
+            });
+            
+            // Currency
+            currencyMenuContainer.innerHTML = '';
+            currencyMenuInstance = CurrencyComponent.buildFullMenu({
+                container: currencyMenuContainer,
+                initialValue: localStorage.getItem('member_currency') || null,
+                onSelect: function(code) {
+                    localStorage.setItem('member_currency', code);
+                }
+            });
+        }).catch(function(err) {
+            console.warn('[Member] Failed to load currency data for pickers', err);
+        });
+    }
+
+    function updateProfileSaveState() {
+        if (!profileSaveBtn) return;
+        if (!currentUser) {
+            profileSaveBtn.disabled = true;
+            profileSaveBtn.classList.add('member-button-auth--disabled');
+            return;
+        }
+        
+        var name = profileEditNameInput ? profileEditNameInput.value.trim() : '';
+        var pw = profileEditPasswordInput ? profileEditPasswordInput.value : '';
+        var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
+        
+        var nameChanged = name !== '' && name !== (profileOriginalName || '');
+        var pwChanged = pw !== '' || confirm !== '';
+        var canSave = nameChanged || pwChanged;
+        
+        profileSaveBtn.disabled = !canSave;
+        profileSaveBtn.classList.toggle('member-button-auth--disabled', !canSave);
+    }
+
+    function handleProfileSave(onSuccessNext) {
+        if (!currentUser) return;
+        if (!profileSaveBtn) return;
+        
+        var name = profileEditNameInput ? profileEditNameInput.value.trim() : '';
+        var pw = profileEditPasswordInput ? profileEditPasswordInput.value : '';
+        var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
+        
+        var payload = { id: currentUser.id, email: currentUser.email };
+        if (name && name !== profileOriginalName) payload.display_name = name;
+        if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
+        
+        // Nothing to do
+        if (!payload.display_name && !payload.password) return;
+        
+        profileSaveBtn.disabled = true;
+        profileSaveBtn.classList.add('member-button-auth--disabled');
+        
+        fetch('/gateway.php?action=edit-member', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(function(r) { return r.json(); })
+          .then(function(res) {
+              if (!res || res.success !== true) throw new Error((res && res.message) || 'Save failed');
+              
+              if (payload.display_name) {
+                  currentUser.name = payload.display_name;
+                  profileOriginalName = payload.display_name;
+                  if (profileName) profileName.textContent = currentUser.name || 'Member';
+              }
+              
+              if (profileEditPasswordInput) profileEditPasswordInput.value = '';
+              if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+              
+              updateProfileSaveState();
+              if (window.ToastComponent && ToastComponent.showSuccess) {
+                  ToastComponent.showSuccess('Saved');
+              }
+
+              if (typeof onSuccessNext === 'function') {
+                  onSuccessNext();
+              }
+          })
+          .catch(function(err) {
+              console.error('[Member] Profile save failed', err);
+              updateProfileSaveState();
+              if (window.ToastComponent && ToastComponent.showError) {
+                  ToastComponent.showError('Save failed');
+              }
+          });
+    }
+
+    function isProfileDirty() {
+        if (!currentUser) return false;
+        var name = profileEditNameInput ? profileEditNameInput.value.trim() : '';
+        var pw = profileEditPasswordInput ? profileEditPasswordInput.value : '';
+        var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
+        var nameChanged = name !== '' && name !== (profileOriginalName || '');
+        var pwChanged = pw !== '' || confirm !== '';
+        return nameChanged || pwChanged;
+    }
+
+    function discardProfileEdits() {
+        if (profileEditNameInput) profileEditNameInput.value = profileOriginalName || '';
+        if (profileEditPasswordInput) profileEditPasswordInput.value = '';
+        if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+        updateProfileSaveState();
+    }
+
+    function confirmUnsavedProfileEdits(nextAction) {
+        if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
+            // Fallback: do nothing if dialog component isn't available
+            return;
+        }
+        
+        ThreeButtonDialogComponent.show({
+            titleText: 'Unsaved Changes',
+            messageText: 'You have unsaved changes. What would you like to do?',
+            cancelLabel: 'Cancel',
+            saveLabel: 'Save',
+            discardLabel: 'Discard',
+            focusCancel: true
+        }).then(function(choice) {
+            if (choice === 'discard') {
+                discardProfileEdits();
+                if (typeof nextAction === 'function') nextAction();
+            } else if (choice === 'save') {
+                handleProfileSave(function() {
+                    if (typeof nextAction === 'function') nextAction();
+                });
+            } else {
+                // cancel
+            }
+        });
+    }
+
+    function requestLogout() {
+        if (isProfileDirty()) {
+            confirmUnsavedProfileEdits(function() { handleLogout(); });
+            return;
+        }
+        handleLogout();
+    }
+
+    function requestTabSwitch(tabName) {
+        // Only guard when leaving Profile tab with dirty edits
+        var leavingProfile = false;
+        if (tabButtons) {
+            tabButtons.forEach(function(btn) {
+                if (btn.dataset.tab === 'profile' && btn.getAttribute('aria-selected') === 'true') {
+                    leavingProfile = tabName !== 'profile';
+                }
+            });
+        }
+
+        if (leavingProfile && isProfileDirty()) {
+            confirmUnsavedProfileEdits(function() { switchTab(tabName); });
+            return;
+        }
+        switchTab(tabName);
     }
 
     /* --------------------------------------------------------------------------
@@ -377,6 +590,7 @@ const MemberModule = (function() {
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();
         initMapStyleButtons();
+        initProfilePickers();
         
         // Bring panel to front of stack
         App.bringToTop(panel);
@@ -387,6 +601,11 @@ const MemberModule = (function() {
 
     function closePanel() {
         if (!panel || !panelContent) return;
+
+        if (isProfileDirty()) {
+            confirmUnsavedProfileEdits(function() { closePanel(); });
+            return;
+        }
         
         // Remove focus from close button before hiding (fixes aria-hidden warning)
         if (closeBtn && document.activeElement === closeBtn) {
@@ -1877,6 +2096,13 @@ const MemberModule = (function() {
             if (profileName) profileName.textContent = currentUser.name || 'Member';
             if (profileEmail) profileEmail.textContent = currentUser.email || '';
             
+            // Profile edit defaults
+            profileOriginalName = currentUser.name || '';
+            if (profileEditNameInput) profileEditNameInput.value = profileOriginalName;
+            if (profileEditPasswordInput) profileEditPasswordInput.value = '';
+            if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+            updateProfileSaveState();
+            
             // Hide auth tabs when logged in
             if (authTabs) authTabs.classList.add('member-auth-tabs--logged-in');
             
@@ -1912,6 +2138,12 @@ const MemberModule = (function() {
             }
             if (profileName) profileName.textContent = '';
             if (profileEmail) profileEmail.textContent = '';
+            
+            profileOriginalName = '';
+            if (profileEditNameInput) profileEditNameInput.value = '';
+            if (profileEditPasswordInput) profileEditPasswordInput.value = '';
+            if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+            updateProfileSaveState();
             
             // Show auth tabs
             if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');

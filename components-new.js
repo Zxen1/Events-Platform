@@ -2671,6 +2671,197 @@ const CurrencyComponent = (function(){
     };
 })();
 
+/* ============================================================================
+   LANGUAGE MENU (FULL WIDTH)
+   NOTE: This is intentionally duplicated from CurrencyComponent.buildFullMenu
+   and uses the same database data source for now (currency list).
+   ============================================================================ */
+
+const LanguageMenuComponent = (function(){
+    
+    // Data loaded from database - no hardcoded fallback (TEMP: currency list)
+    var languageData = [];
+    var dataLoaded = false;
+    
+    function getData() {
+        return languageData;
+    }
+    
+    function setData(data) {
+        languageData = data || [];
+        dataLoaded = true;
+    }
+    
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    // Load language data from database via gateway (TEMP: currency list)
+    function loadFromDatabase() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.dropdown_options && res.dropdown_options.currency) {
+                    languageData = res.dropdown_options.currency;
+                    dataLoaded = true;
+                }
+                return languageData;
+            });
+    }
+    
+    // Build a full language menu (wide, shows code + label)
+    // Combobox style - type to filter options
+    // Returns object with element and setValue method
+    function buildFullMenu(options) {
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var containerEl = options.container || null;
+        var initialValue = options.initialValue || null;
+        var selectedCode = initialValue;
+        
+        var menu = document.createElement('div');
+        menu.className = 'admin-language-wrapper';
+        // No default flag - leave empty until user selects
+        var initialFlagUrl = '';
+        menu.innerHTML = '<div class="admin-language-button"><img class="admin-language-button-flag" src="' + initialFlagUrl + '" alt=""><input type="text" class="admin-language-button-input" placeholder="Select currency" autocomplete="off"><span class="admin-language-button-arrow">▼</span></div><div class="admin-language-options"></div>';
+        
+        var btn = menu.querySelector('.admin-language-button');
+        var opts = menu.querySelector('.admin-language-options');
+        var btnImg = menu.querySelector('.admin-language-button-flag');
+        var btnInput = menu.querySelector('.admin-language-button-input');
+
+        // Store all option elements for filtering
+        var allOptions = [];
+
+        // Find and set initial value
+        function setValue(code) {
+            var found = languageData.find(function(item) {
+                return item.value === code;
+            });
+            if (found) {
+                var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                btnImg.src = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
+                btnInput.value = found.value + ' - ' + found.label;
+                selectedCode = code;
+            }
+        }
+
+        // Filter options based on search text
+        function filterOptions(searchText) {
+            var search = searchText.toLowerCase();
+            allOptions.forEach(function(optData) {
+                var matches = optData.searchText.indexOf(search) !== -1;
+                optData.element.style.display = matches ? '' : 'none';
+            });
+        }
+
+        // Build options
+        var languages = languageData;
+        languages.forEach(function(item) {
+            var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
+            var displayText = item.value + ' - ' + item.label;
+            
+            var op = document.createElement('div');
+            op.className = 'admin-language-option';
+            var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
+            op.innerHTML = '<img class="admin-language-option-flag" src="' + flagUrl + '" alt=""><span class="admin-language-option-text">' + displayText + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = flagUrl;
+                btnInput.value = displayText;
+                selectedCode = item.value;
+                menu.classList.remove('open');
+                filterOptions(''); // Reset filter
+                onSelect(item.value, item.label, countryCode);
+            };
+            opts.appendChild(op);
+            
+            // Store for filtering
+            allOptions.push({
+                element: op,
+                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+            });
+        });
+
+        // Set initial value (only if provided)
+        if (initialValue) {
+            setValue(initialValue);
+        }
+
+        // Register with MenuManager
+        MenuManager.register(menu);
+
+        // Input events
+        btnInput.addEventListener('focus', function(e) {
+            e.stopPropagation();
+            MenuManager.closeAll(menu);
+            menu.classList.add('open');
+            // Select all text for easy replacement
+            this.select();
+        });
+
+        btnInput.addEventListener('input', function(e) {
+            filterOptions(this.value);
+            if (!menu.classList.contains('open')) {
+                menu.classList.add('open');
+            }
+        });
+        
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                menu.classList.remove('open');
+                // Restore selected value
+                setValue(selectedCode);
+                filterOptions('');
+            }
+        });
+        
+        // Blur - restore selected value when clicking away
+        btnInput.addEventListener('blur', function() {
+            // Small delay to allow option click to fire first
+            setTimeout(function() {
+                if (!menu.classList.contains('open')) {
+                    setValue(selectedCode);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
+        // Arrow click opens/closes
+        var arrow = menu.querySelector('.admin-language-button-arrow');
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('open')) {
+                menu.classList.remove('open');
+            } else {
+                MenuManager.closeAll(menu);
+                menu.classList.add('open');
+                btnInput.focus();
+                btnInput.select();
+            }
+        });
+
+        // Mount into container if provided
+        if (containerEl) {
+            containerEl.appendChild(menu);
+        }
+
+        // Return object with element and setValue method
+        return {
+            element: menu,
+            setValue: setValue
+        };
+    }
+    
+    return {
+        getData: getData,
+        setData: setData,
+        isLoaded: isLoaded,
+        loadFromDatabase: loadFromDatabase,
+        buildFullMenu: buildFullMenu
+    };
+})();
+
 
 /* ============================================================================
    PHONE PREFIX
@@ -4965,6 +5156,7 @@ window.SwitchComponent = SwitchComponent;
 window.FieldsetComponent = FieldsetComponent;
 window.CalendarComponent = CalendarComponent;
 window.CurrencyComponent = CurrencyComponent;
+window.LanguageMenuComponent = LanguageMenuComponent;
 window.PhonePrefixComponent = PhonePrefixComponent;
 window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;

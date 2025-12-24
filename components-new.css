@@ -1419,7 +1419,25 @@
     position: relative;
 }
 
+.admin-language-wrapper {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
 .admin-currency-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.admin-language-button {
     width: 100%;
     height: 36px;
     display: flex;
@@ -1439,7 +1457,26 @@
     flex-shrink: 0;
 }
 
+.admin-language-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
 .admin-currency-button-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-language-button-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
@@ -1463,11 +1500,40 @@
     min-width: 0;
 }
 
+.admin-language-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+}
+
 .admin-currency-button-input::placeholder {
     color: #888;
 }
 
+.admin-language-button-input::placeholder {
+    color: #888;
+}
+
 .admin-currency-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.admin-language-button-arrow {
     width: 16px;
     height: 36px;
     display: flex;
@@ -1496,7 +1562,29 @@
     scrollbar-color: #888 transparent;
 }
 
+.admin-language-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
 .admin-currency-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.admin-language-options::-webkit-scrollbar {
     width: 8px;
     background: transparent;
 }
@@ -1506,7 +1594,23 @@
     border-radius: 5px;
 }
 
+.admin-language-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
 .admin-currency-option {
+    width: 100%;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 14px;
+}
+
+.admin-language-option {
     width: 100%;
     height: 40px;
     display: flex;
@@ -1525,7 +1629,22 @@
     flex-shrink: 0;
 }
 
+.admin-language-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
 .admin-currency-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 14px;
+}
+
+.admin-language-option-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
@@ -1538,32 +1657,38 @@
    ---------------------------------------------------------------------------- */
 
 .fieldset-currency-button:hover,
-.admin-currency-button:hover {
+.admin-currency-button:hover,
+.admin-language-button:hover {
     border-color: #555;
 }
 
 .fieldset-currency-wrapper.open .fieldset-currency-button,
-.admin-currency-wrapper.open .admin-currency-button {
+.admin-currency-wrapper.open .admin-currency-button,
+.admin-language-wrapper.open .admin-language-button {
     border-color: #3b82f5;
 }
 
-.admin-currency-wrapper.open .admin-currency-button {
+.admin-currency-wrapper.open .admin-currency-button,
+.admin-language-wrapper.open .admin-language-button {
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
 .fieldset-currency-wrapper.open .fieldset-currency-button-arrow,
-.admin-currency-wrapper.open .admin-currency-button-arrow {
+.admin-currency-wrapper.open .admin-currency-button-arrow,
+.admin-language-wrapper.open .admin-language-button-arrow {
     transform: rotate(180deg);
 }
 
 .fieldset-currency-wrapper.open .fieldset-currency-options,
-.admin-currency-wrapper.open .admin-currency-options {
+.admin-currency-wrapper.open .admin-currency-options,
+.admin-language-wrapper.open .admin-language-options {
     display: block;
 }
 
 .fieldset-currency-option:hover,
-.admin-currency-option:hover {
+.admin-currency-option:hover,
+.admin-language-option:hover {
     background: #3b82f5;
 }
 
