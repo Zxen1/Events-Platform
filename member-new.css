@@ -279,7 +279,8 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 10px;
+  /* Total interior spacing should add up to 10px (not 20px). */
+  padding: 0 10px 10px;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -1091,7 +1092,7 @@
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(0,0,0,0.25);
   cursor: pointer;
-  padding: 0;
+  padding: 2px;
 }
 
 .member-avatar-library-item img {
@@ -1099,6 +1100,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 6px;
 }
 
 .member-avatar-cropper {

@@ -1574,6 +1574,11 @@ The settings system uses a fallback pattern that is acceptable and intentional:
 - Consistency across all forms and panels
 - If a different size is needed, it must be explicitly requested
 
+### Rule 20a: UI PADDING IS MANDATORY
+**CRITICAL:** Do not place ANY new UI on this website that has no padding.
+- Every new UI block/control must have padding (default: **10px**)
+- Do not create new UI elements with `padding: 0` unless the user explicitly requests it
+
 ### Rule 21: VERIFY CODE BEFORE COMPLETING
 **CRITICAL:** Before marking any task complete, check the code for:
 - **Problems:** Syntax errors, logic errors, missing dependencies
