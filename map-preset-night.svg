@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <!-- Crescent moon -->
+  <path d="M15.8 5.1a6.9 6.9 0 1 0 3.1 12.9 6.2 6.2 0 1 1-3.1-12.9Z" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/>
+  <!-- Stars -->
+  <path d="M6.5 7.5l.6 1.3 1.4.2-1 .9.25 1.35-1.25-.7-1.25.7.25-1.35-1-.9 1.4-.2.6-1.3Z" fill="currentColor"/>
+  <path d="M7.75 15.1l.35.75.82.12-.6.53.15.8-.72-.4-.72.4.15-.8-.6-.53.82-.12.35-.75Z" fill="currentColor"/>
+  <path d="M19 9.75l.3.65.72.1-.52.46.12.7-.62-.35-.62.35.12-.7-.52-.46.72-.1.3-.65Z" fill="currentColor"/>
+</svg>
+
+
