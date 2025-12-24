@@ -59,6 +59,18 @@ if (isset($input['display_name'])) {
   $vals[] = $display;
 }
 
+// Map preferences (optional; columns must exist in DB)
+if (isset($input['map_lighting'])) {
+  $updates[] = 'map_lighting=?';
+  $types .= 's';
+  $vals[] = (string)$input['map_lighting'];
+}
+if (isset($input['map_style'])) {
+  $updates[] = 'map_style=?';
+  $types .= 's';
+  $vals[] = (string)$input['map_style'];
+}
+
 // Password change
 $newPass = isset($input['password']) ? (string)$input['password'] : '';
 $confirm = isset($input['confirm']) ? (string)$input['confirm'] : '';

@@ -95,7 +95,6 @@ const MemberModule = (function() {
     var profileEditNameInput = null;
     var profileEditPasswordInput = null;
     var profileEditConfirmInput = null;
-    var profileSaveBtn = null;
     var profileOriginalName = '';
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
@@ -199,7 +198,7 @@ const MemberModule = (function() {
         profileEditNameInput = document.getElementById('member-profile-edit-name');
         profileEditPasswordInput = document.getElementById('member-profile-edit-password');
         profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
-        profileSaveBtn = document.getElementById('member-profile-save-btn');
+        profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
 
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
     }
@@ -294,13 +293,7 @@ const MemberModule = (function() {
             });
         }
         
-        // Profile save
-        if (profileSaveBtn) {
-            profileSaveBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                handleProfileSave();
-            });
-        }
+        // Inline save removed; profile save is via header buttons
         if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
         if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
         if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
@@ -428,13 +421,23 @@ const MemberModule = (function() {
     function initProfilePickers() {
         if (!languageMenuContainer || !currencyMenuContainer) return;
         if (!window.CurrencyComponent || typeof CurrencyComponent.loadFromDatabase !== 'function') return;
+
+        function getSettingsDefaultCurrency() {
+            try {
+                if (!window.App || typeof App.getState !== 'function') return null;
+                var settings = App.getState('settings') || {};
+                return settings.website_currency || settings.site_currency || settings.siteCurrency || null;
+            } catch (e) {
+                return null;
+            }
+        }
         
         CurrencyComponent.loadFromDatabase().then(function() {
             // Language (TEMP: this is intentionally the same as Currency menu for now)
             languageMenuContainer.innerHTML = '';
             languageMenuInstance = CurrencyComponent.buildFullMenu({
                 container: panelContent,
-                initialValue: localStorage.getItem('member_language') || null,
+                initialValue: localStorage.getItem('member_language') || getSettingsDefaultCurrency() || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_language', code);
                 }
@@ -447,7 +450,7 @@ const MemberModule = (function() {
             currencyMenuContainer.innerHTML = '';
             currencyMenuInstance = CurrencyComponent.buildFullMenu({
                 container: panelContent,
-                initialValue: localStorage.getItem('member_currency') || null,
+                initialValue: localStorage.getItem('member_currency') || getSettingsDefaultCurrency() || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_currency', code);
                 }
@@ -461,10 +464,12 @@ const MemberModule = (function() {
     }
 
     function updateProfileSaveState() {
-        if (!profileSaveBtn) return;
         if (!currentUser) {
-            profileSaveBtn.disabled = true;
-            profileSaveBtn.classList.add('member-button-auth--disabled');
+            if (profileSaveBtn) {
+                profileSaveBtn.disabled = true;
+                profileSaveBtn.classList.add('member-button-auth--disabled');
+            }
+            updateHeaderSaveDiscardState();
             return;
         }
         
@@ -476,8 +481,10 @@ const MemberModule = (function() {
         var pwChanged = pw !== '' || confirm !== '';
         var canSave = nameChanged || pwChanged;
         
-        profileSaveBtn.disabled = !canSave;
-        profileSaveBtn.classList.toggle('member-button-auth--disabled', !canSave);
+        if (profileSaveBtn) {
+            profileSaveBtn.disabled = !canSave;
+            profileSaveBtn.classList.toggle('member-button-auth--disabled', !canSave);
+        }
         updateHeaderSaveDiscardState();
     }
 
@@ -515,11 +522,24 @@ const MemberModule = (function() {
 
     function handleProfileSave(onSuccessNext) {
         if (!currentUser) return;
-        if (!profileSaveBtn) return;
         
         var name = profileEditNameInput ? profileEditNameInput.value.trim() : '';
         var pw = profileEditPasswordInput ? profileEditPasswordInput.value : '';
         var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
+
+        // Validation warnings using existing component (Toast)
+        if ((pw || confirm) && (!pw || !confirm)) {
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError('Please enter and confirm your new password.');
+            }
+            return;
+        }
+        if (pw && confirm && pw !== confirm) {
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError('Passwords do not match.');
+            }
+            return;
+        }
         
         var payload = { id: currentUser.id, email: currentUser.email };
         if (name && name !== profileOriginalName) payload.display_name = name;
@@ -531,44 +551,70 @@ const MemberModule = (function() {
             return;
         }
         
-        profileSaveBtn.disabled = true;
-        profileSaveBtn.classList.add('member-button-auth--disabled');
-        
-        fetch('/gateway.php?action=' + getEditUserAction(), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        }).then(function(r) { return r.json(); })
-          .then(function(res) {
-              if (!res || res.success !== true) throw new Error((res && res.message) || 'Save failed');
-              
-              if (payload.display_name) {
-                  currentUser.name = payload.display_name;
-                  profileOriginalName = payload.display_name;
-                  if (profileName) profileName.textContent = currentUser.name || 'Member';
-              }
-              
-              if (profileEditPasswordInput) profileEditPasswordInput.value = '';
-              if (profileEditConfirmInput) profileEditConfirmInput.value = '';
-              
-              updateProfileSaveState();
-              updateHeaderSaveDiscardState();
-              if (window.ToastComponent && ToastComponent.showSuccess) {
-                  ToastComponent.showSuccess('Saved');
-              }
+        // Disable header buttons while saving
+        setHeaderButtonsEnabled(false);
+        if (profileSaveBtn) {
+            profileSaveBtn.disabled = true;
+            profileSaveBtn.classList.add('member-button-auth--disabled');
+        }
 
-              if (typeof onSuccessNext === 'function') {
-                  onSuccessNext();
-              }
-          })
-          .catch(function(err) {
-              console.error('[Member] Profile save failed', err);
-              updateProfileSaveState();
-              updateHeaderSaveDiscardState();
-              if (window.ToastComponent && ToastComponent.showError) {
-                  ToastComponent.showError('Save failed');
-              }
-          });
+        function doSave() {
+            fetch('/gateway.php?action=' + getEditUserAction(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function(r) { return r.json(); })
+              .then(function(res) {
+                  if (!res || res.success !== true) throw new Error((res && res.message) || 'Save failed');
+                  
+                  if (payload.display_name) {
+                      currentUser.name = payload.display_name;
+                      profileOriginalName = payload.display_name;
+                      if (profileName) profileName.textContent = currentUser.name || 'Member';
+                  }
+                  
+                  if (profileEditPasswordInput) profileEditPasswordInput.value = '';
+                  if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+                  
+                  updateProfileSaveState();
+                  updateHeaderSaveDiscardState();
+                  if (window.ToastComponent && ToastComponent.showSuccess) {
+                      ToastComponent.showSuccess('Saved');
+                  }
+
+                  if (typeof onSuccessNext === 'function') {
+                      onSuccessNext();
+                  }
+              })
+              .catch(function(err) {
+                  console.error('[Member] Profile save failed', err);
+                  updateProfileSaveState();
+                  updateHeaderSaveDiscardState();
+                  if (window.ToastComponent && ToastComponent.showError) {
+                      ToastComponent.showError('Save failed');
+                  }
+              });
+        }
+        
+        // Confirm password changes using existing component dialog
+        if (payload.password && window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+            ConfirmDialogComponent.show({
+                titleText: 'Change Password',
+                messageText: 'Are you sure you want to change your password?',
+                confirmLabel: 'Save',
+                cancelLabel: 'Cancel',
+                focusCancel: true
+            }).then(function(confirmed) {
+                if (!confirmed) {
+                    updateHeaderSaveDiscardState();
+                    return;
+                }
+                doSave();
+            });
+            return;
+        }
+
+        doSave();
     }
 
     function handleHeaderSave() {
