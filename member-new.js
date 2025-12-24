@@ -728,29 +728,72 @@ const MemberModule = (function() {
     }
 
     function saveCroppedAvatar() {
-        if (!cropperCanvas) return;
-        if (cropperSaveBtn) {
-            cropperSaveBtn.disabled = true;
-            cropperSaveBtn.classList.add('member-button-auth--disabled');
-        }
-        cropperCanvas.toBlob(function(blob) {
-            if (!blob) {
-                if (cropperSaveBtn) {
-                    cropperSaveBtn.disabled = false;
-                    cropperSaveBtn.classList.remove('member-button-auth--disabled');
-                }
-                if (window.ToastComponent && ToastComponent.showError) {
-                    ToastComponent.showError('Could not create avatar image.');
-                }
-                return;
+        try {
+            if (!cropperCanvas) return;
+            
+            // Always show some feedback (toast if available, otherwise member status)
+            if (window.ToastComponent && ToastComponent.show) {
+                ToastComponent.show('Uploading avatar...');
+            } else {
+                showStatus('Uploading avatar...');
             }
-            uploadAvatarBlob(blob).finally(function() {
-                if (cropperSaveBtn) {
-                    cropperSaveBtn.disabled = false;
-                    cropperSaveBtn.classList.remove('member-button-auth--disabled');
+            
+            if (cropperSaveBtn) {
+                cropperSaveBtn.disabled = true;
+                cropperSaveBtn.classList.add('member-button-auth--disabled');
+            }
+            
+            var toBlobFn = cropperCanvas.toBlob;
+            if (typeof toBlobFn !== 'function') {
+                // Fallback: convert dataURL to Blob
+                var dataUrl = cropperCanvas.toDataURL('image/png', 0.92);
+                var parts = dataUrl.split(',');
+                var byteString = atob(parts[1] || '');
+                var ab = new ArrayBuffer(byteString.length);
+                var ia = new Uint8Array(ab);
+                for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                var blob = new Blob([ab], { type: 'image/png' });
+                return uploadAvatarBlob(blob).finally(function() {
+                    if (cropperSaveBtn) {
+                        cropperSaveBtn.disabled = false;
+                        cropperSaveBtn.classList.remove('member-button-auth--disabled');
+                    }
+                });
+            }
+            
+            cropperCanvas.toBlob(function(blob) {
+                if (!blob) {
+                    if (cropperSaveBtn) {
+                        cropperSaveBtn.disabled = false;
+                        cropperSaveBtn.classList.remove('member-button-auth--disabled');
+                    }
+                    if (window.ToastComponent && ToastComponent.showError) {
+                        ToastComponent.showError('Could not create avatar image.');
+                    } else {
+                        showStatus('Could not create avatar image.', { error: true });
+                    }
+                    return;
                 }
-            });
-        }, 'image/png', 0.92);
+                uploadAvatarBlob(blob).finally(function() {
+                    if (cropperSaveBtn) {
+                        cropperSaveBtn.disabled = false;
+                        cropperSaveBtn.classList.remove('member-button-auth--disabled');
+                    }
+                });
+            }, 'image/png', 0.92);
+        } catch (e) {
+            console.error('[Member] saveCroppedAvatar error', e);
+            if (cropperSaveBtn) {
+                cropperSaveBtn.disabled = false;
+                cropperSaveBtn.classList.remove('member-button-auth--disabled');
+            }
+            var msg = (e && e.message) ? e.message : 'Avatar upload failed';
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError(msg);
+            } else {
+                showStatus(msg, { error: true });
+            }
+        }
     }
 
     function uploadAvatarBlob(blob) {
@@ -779,12 +822,16 @@ const MemberModule = (function() {
             closeCropper();
             if (window.ToastComponent && ToastComponent.showSuccess) {
                 ToastComponent.showSuccess('Avatar uploaded');
+            } else {
+                showStatus('Avatar uploaded');
             }
         }).catch(function(err) {
             console.error('[Member] Avatar upload failed', err);
             var msg = (err && err.message) ? err.message : 'Avatar upload failed';
             if (window.ToastComponent && ToastComponent.showError) {
                 ToastComponent.showError(msg);
+            } else {
+                showStatus(msg, { error: true });
             }
         });
     }
