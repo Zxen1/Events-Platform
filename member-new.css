@@ -1139,35 +1139,7 @@
   flex-wrap: wrap;
 }
 
-.member-avatar-library {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  padding: 10px;
-  border-radius: 5px;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.member-avatar-library-item {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(0,0,0,0.25);
-  cursor: pointer;
-  padding: 2px;
-}
-
-.member-avatar-library-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  border-radius: 6px;
-}
+/* Note: old standalone avatar library grid removed (avatar choices now use .member-avatar-grid) */
 
 .member-avatar-cropper {
   position: fixed;
