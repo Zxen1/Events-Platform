@@ -801,39 +801,21 @@ const FilterModule = (function() {
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        
-                        function doToggle() {
-                            headerToggle.classList.toggle('on');
-                            if (headerToggle.classList.contains('on')) {
-                                accordion.classList.remove('filter-categoryfilter-accordion--disabled');
-                            } else {
-                                accordion.classList.add('filter-categoryfilter-accordion--disabled');
-                                accordion.classList.remove('filter-categoryfilter-accordion--open');
-                            }
-                            applyFilters();
-                            updateResetCategoriesButton();
-                        }
-                        
-                        if (window.ScrollAnchor && typeof window.ScrollAnchor.run === 'function') {
-                            window.ScrollAnchor.run(headerToggleArea, doToggle);
+                        headerToggle.classList.toggle('on');
+                        if (headerToggle.classList.contains('on')) {
+                            accordion.classList.remove('filter-categoryfilter-accordion--disabled');
                         } else {
-                            doToggle();
+                            accordion.classList.add('filter-categoryfilter-accordion--disabled');
+                            accordion.classList.remove('filter-categoryfilter-accordion--open');
                         }
+                        applyFilters();
+                        updateResetCategoriesButton();
                     });
                     
                     // Click anywhere except toggle area expands/collapses
                     header.addEventListener('click', function(e) {
                         if (e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
-                        
-                        function doToggle() {
-                            accordion.classList.toggle('filter-categoryfilter-accordion--open');
-                        }
-                        
-                        if (window.ScrollAnchor && typeof window.ScrollAnchor.run === 'function') {
-                            window.ScrollAnchor.run(header, doToggle);
-                        } else {
-                            doToggle();
-                        }
+                        accordion.classList.toggle('filter-categoryfilter-accordion--open');
                     });
                     
                     container.appendChild(accordion);

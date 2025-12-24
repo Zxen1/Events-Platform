@@ -1199,20 +1199,11 @@ const AdminModule = (function() {
             header.addEventListener('click', function(e) {
                 if (e.target.closest('.admin-messages-accordion-header-editarea')) return;
                 if (e.target.closest('.admin-messages-accordion-header-drag')) return;
-                
-                function doToggle() {
-                    if (!accordion.classList.contains('admin-messages-accordion--editing')) {
-                        closeAllMessagesEditPanels();
-                    }
-                    accordion.classList.toggle('admin-messages-accordion--open');
-                    content.classList.toggle('admin-messages-accordion-content--hidden');
+                if (!accordion.classList.contains('admin-messages-accordion--editing')) {
+                    closeAllMessagesEditPanels();
                 }
-                
-                if (window.ScrollAnchor && typeof window.ScrollAnchor.run === 'function') {
-                    window.ScrollAnchor.run(header, doToggle);
-                } else {
-                    doToggle();
-                }
+                accordion.classList.toggle('admin-messages-accordion--open');
+                content.classList.toggle('admin-messages-accordion-content--hidden');
             });
         });
         
@@ -2579,15 +2570,7 @@ const AdminModule = (function() {
             var header = imageManagerAccordion.querySelector('.admin-settings-imagemanager-accordion-header');
             if (header) {
                 header.addEventListener('click', function() {
-                    function doToggle() {
-                        imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
-                    }
-                    
-                    if (window.ScrollAnchor && typeof window.ScrollAnchor.run === 'function') {
-                        window.ScrollAnchor.run(header, doToggle);
-                    } else {
-                        doToggle();
-                    }
+                    imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
                 });
             }
         }
@@ -2954,22 +2937,14 @@ const AdminModule = (function() {
 
             // Header click - toggle edit panel
             header.addEventListener('click', function(e) {
-                function doToggle() {
-                    var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
-                    closeAllCheckoutEditPanels(accordion);
-                    if (!isEditing) {
-                        accordion.classList.add('admin-checkout-accordion--editing');
-                        editPanel.style.display = 'block';
-                    } else {
-                        accordion.classList.remove('admin-checkout-accordion--editing');
-                        editPanel.style.display = 'none';
-                    }
-                }
-                
-                if (window.ScrollAnchor && typeof window.ScrollAnchor.run === 'function') {
-                    window.ScrollAnchor.run(header, doToggle);
+                var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
+                closeAllCheckoutEditPanels(accordion);
+                if (!isEditing) {
+                    accordion.classList.add('admin-checkout-accordion--editing');
+                    editPanel.style.display = 'block';
                 } else {
-                    doToggle();
+                    accordion.classList.remove('admin-checkout-accordion--editing');
+                    editPanel.style.display = 'none';
                 }
             });
 
