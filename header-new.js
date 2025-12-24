@@ -146,6 +146,14 @@ const HeaderModule = (function() {
             testImg.src = nextSrc;
         }
         
+        function setHeaderCssVar(name, url) {
+            try {
+                document.documentElement.style.setProperty(name, url ? ('url("' + url + '")') : '');
+            } catch (e) {
+                // ignore
+            }
+        }
+        
         // Filter icon - use mask-image like admin buttons
         var filterIcon = document.querySelector('.header-filter-button-icon');
         if (filterIcon && systemImages.icon_filter) {
@@ -159,6 +167,20 @@ const HeaderModule = (function() {
             filterIcon.style.webkitMaskPosition = 'center';
             filterIcon.style.maskPosition = 'center';
             filterIcon.style.backgroundColor = '#ffffff';
+        }
+        
+        // Header access button icons (Member / Admin / Fullscreen)
+        if (systemImages.icon_member) {
+            setHeaderCssVar('--header-icon-member', window.App.getImageUrl('systemImages', systemImages.icon_member));
+        }
+        if (systemImages.icon_admin) {
+            setHeaderCssVar('--header-icon-admin', window.App.getImageUrl('systemImages', systemImages.icon_admin));
+        }
+        if (systemImages.icon_fullscreen) {
+            setHeaderCssVar('--header-icon-fullscreen', window.App.getImageUrl('systemImages', systemImages.icon_fullscreen));
+        }
+        if (systemImages.icon_fullscreen_exit) {
+            setHeaderCssVar('--header-icon-fullscreen-exit', window.App.getImageUrl('systemImages', systemImages.icon_fullscreen_exit));
         }
         
         // Mode switch icons

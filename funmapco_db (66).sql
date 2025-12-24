@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 24, 2025 at 09:13 PM
+-- Generation Time: Dec 25, 2025 at 10:27 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -262,7 +262,11 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (123, 'folder_currencies', 'https://cdn.funmap.com/currencies', 'string', NULL, '2025-12-21 18:54:32', '2025-12-21 18:54:32'),
 (124, 'folder_phone_prefixes', 'https://cdn.funmap.com/phone-prefixes', 'string', NULL, '2025-12-21 18:54:32', '2025-12-21 18:54:32'),
 (142, 'map_lighting', 'night', 'string', 'Mapbox lighting preset: dawn, day, dusk, or night', '2025-12-23 02:44:08', '2025-12-23 03:01:58'),
-(143, 'map_style', 'standard', 'string', 'Mapbox style: standard or standard-satellite', '2025-12-23 02:44:08', '2025-12-23 03:02:01');
+(143, 'map_style', 'standard', 'string', 'Mapbox style: standard or standard-satellite', '2025-12-23 02:44:08', '2025-12-23 03:02:01'),
+(152, 'icon_member', 'icon-member.svg', 'string', 'Header member button icon filename', '2025-12-24 23:26:45', '2025-12-24 23:26:45'),
+(153, 'icon_admin', 'icon-admin.svg', 'string', 'Header admin button icon filename', '2025-12-24 23:26:45', '2025-12-24 23:26:45'),
+(154, 'icon_fullscreen', 'icon-fullscreen.svg', 'string', 'Header fullscreen button icon filename', '2025-12-24 23:26:45', '2025-12-24 23:26:45'),
+(155, 'icon_fullscreen_exit', 'icon-fullscreen-exit.svg', 'string', 'Header fullscreen-exit icon filename', '2025-12-24 23:26:45', '2025-12-24 23:26:45');
 
 -- --------------------------------------------------------
 
@@ -2006,7 +2010,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=152;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=156;
 
 --
 -- AUTO_INCREMENT for table `amenities`

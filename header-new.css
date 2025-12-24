@@ -250,24 +250,24 @@
 }
 
 .header-access-button-icon--member {
-  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-member.svg');
-  mask-image: url('https://cdn.funmap.com/system-images/icon-member.svg');
+  -webkit-mask-image: var(--header-icon-member);
+  mask-image: var(--header-icon-member);
 }
 
 .header-access-button-icon--admin {
-  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-admin.svg');
-  mask-image: url('https://cdn.funmap.com/system-images/icon-admin.svg');
+  -webkit-mask-image: var(--header-icon-admin);
+  mask-image: var(--header-icon-admin);
 }
 
 .header-access-button-icon--fullscreen {
-  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen.svg');
-  mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen.svg');
+  -webkit-mask-image: var(--header-icon-fullscreen);
+  mask-image: var(--header-icon-fullscreen);
 }
 
 .header-access-button.fullscreen-btn.is-fullscreen .header-access-button-icon {
   background-color: #3b82f6;
-  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen-exit.svg');
-  mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen-exit.svg');
+  -webkit-mask-image: var(--header-icon-fullscreen-exit);
+  mask-image: var(--header-icon-fullscreen-exit);
 }
 
 .header-access-button.fullscreen-btn.is-fullscreen:hover .header-access-button-icon {

@@ -149,7 +149,8 @@ try {
         'small_map_card_pill', 'big_map_card_pill', 'multi_post_icon', 'hover_map_card_pill',
         'msg_category_user_icon', 'msg_category_member_icon', 'msg_category_admin_icon', 'msg_category_email_icon',
         'marker_cluster_icon', 'msg_category_fieldset-tooltips_icon', 'big_logo', 'small_logo',
-        'favicon', 'icon_filter', 'icon_recents', 'icon_posts', 'icon_map'
+        'favicon', 'icon_filter', 'icon_recents', 'icon_posts', 'icon_map',
+        'icon_member', 'icon_admin', 'icon_fullscreen', 'icon_fullscreen_exit'
     ];
     
     $systemImages = [];

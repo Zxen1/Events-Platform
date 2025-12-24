@@ -2674,6 +2674,14 @@ const AdminModule = (function() {
         initImagePicker('adminBigLogoPicker', 'big_logo');
         initImagePicker('adminSmallLogoPicker', 'small_logo');
         initImagePicker('adminFaviconPicker', 'favicon');
+        initImagePicker('adminIconFilterPicker', 'icon_filter');
+        initImagePicker('adminIconRecentsPicker', 'icon_recents');
+        initImagePicker('adminIconPostsPicker', 'icon_posts');
+        initImagePicker('adminIconMapPicker', 'icon_map');
+        initImagePicker('adminIconMemberPicker', 'icon_member');
+        initImagePicker('adminIconAdminPicker', 'icon_admin');
+        initImagePicker('adminIconFullscreenPicker', 'icon_fullscreen');
+        initImagePicker('adminIconFullscreenExitPicker', 'icon_fullscreen_exit');
         
         // Initialize currency picker (using CurrencyComponent from components file)
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');
