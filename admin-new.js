@@ -2682,6 +2682,8 @@ const AdminModule = (function() {
         initImagePicker('adminIconAdminPicker', 'icon_admin');
         initImagePicker('adminIconFullscreenPicker', 'icon_fullscreen');
         initImagePicker('adminIconFullscreenExitPicker', 'icon_fullscreen_exit');
+        initImagePicker('adminIconGeolocatePicker', 'icon_geolocate');
+        initImagePicker('adminIconCompassPicker', 'icon_compass');
         
         // Initialize currency picker (using CurrencyComponent from components file)
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');

@@ -2396,6 +2396,13 @@
     display: block;
     width: 30px;
     height: 30px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 .filter-mapcontrol-compass {
@@ -2418,6 +2425,13 @@
     width: 20px;
     height: 20px;
     transition: transform 0.1s ease-out;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 
@@ -2527,6 +2541,13 @@
     display: block;
     width: 30px;
     height: 30px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 .map-mapcontrol-compass {
@@ -2549,6 +2570,13 @@
     width: 20px;
     height: 20px;
     transition: transform 0.1s ease-out;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 
@@ -2659,6 +2687,13 @@
     display: block;
     width: 16px;
     height: 16px;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 .welcome-mapcontrol-compass {
@@ -2681,6 +2716,13 @@
     width: 16px;
     height: 16px;
     transition: transform 0.1s ease-out;
+    background-color: currentColor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 

@@ -358,6 +358,7 @@ const App = (function() {
     user: null,           // Current logged-in user (or null)
     isAdmin: false,       // Admin status
     settings: {},         // Site settings from database
+    system_images: {},    // System image slot assignments from database
     mapBounds: null,      // Current map viewport (for filtering)
     activePanel: null     // Which panel is open (filter/member/admin)
   };
@@ -500,6 +501,7 @@ const App = (function() {
         
         // Store settings in state FIRST so getImageUrl can access them
         state.settings = settings;
+        state.system_images = data.system_images || {};
         
         // Apply favicon from system_images
         if (data.system_images && data.system_images.favicon) {

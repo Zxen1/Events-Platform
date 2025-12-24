@@ -3593,7 +3593,7 @@ const MapControlRowComponent = (function(){
         var geolocateBtn = document.createElement('button');
         geolocateBtn.type = 'button';
         geolocateBtn.className = prefix + '-geolocate';
-        geolocateBtn.innerHTML = '<svg class="' + prefix + '-geolocate-icon" viewBox="0 0 20 20" width="20" height="20"><path d="M10 4C9 4 9 5 9 5L9 5.1A5 5 0 0 0 5.1 9L5 9C5 9 4 9 4 10 4 11 5 11 5 11L5.1 11A5 5 0 0 0 9 14.9L9 15C9 15 9 16 10 16 11 16 11 15 11 15L11 14.9A5 5 0 0 0 14.9 11L15 11C15 11 16 11 16 10 16 9 15 9 15 9L14.9 9A5 5 0 0 0 11 5.1L11 5C11 5 11 4 10 4zM10 6.5A3.5 3.5 0 0 1 13.5 10 3.5 3.5 0 0 1 10 13.5 3.5 3.5 0 0 1 6.5 10 3.5 3.5 0 0 1 10 6.5zM10 8.3A1.8 1.8 0 0 0 8.3 10 1.8 1.8 0 0 0 10 11.8 1.8 1.8 0 0 0 11.8 10 1.8 1.8 0 0 0 10 8.3z" fill="currentColor"/></svg>';
+        geolocateBtn.innerHTML = '<span class="' + prefix + '-geolocate-icon" aria-hidden="true"></span>';
         geolocateBtn.title = 'Find my location';
         row.appendChild(geolocateBtn);
         
@@ -3601,7 +3601,7 @@ const MapControlRowComponent = (function(){
         var compassBtn = document.createElement('button');
         compassBtn.type = 'button';
         compassBtn.className = prefix + '-compass';
-        compassBtn.innerHTML = '<svg class="' + prefix + '-compass-icon" viewBox="0 0 20 20" width="20" height="20"><polygon fill="#3b82f6" points="6,9 10,1 14,9"/><polygon fill="#333333" points="6,11 10,19 14,11"/></svg>';
+        compassBtn.innerHTML = '<span class="' + prefix + '-compass-icon" aria-hidden="true"></span>';
         compassBtn.title = 'Reset north';
         row.appendChild(compassBtn);
         
@@ -3780,7 +3780,7 @@ const MapControlRowComponent = (function(){
         
         // Sync compass rotation with map bearing and pitch
         if (map) {
-            var compassIcon = compassBtn.querySelector('svg');
+            var compassIcon = compassBtn.querySelector('.' + prefix + '-compass-icon');
             function updateCompass() {
                 if (compassIcon) {
                     var bearing = map.getBearing();
@@ -3800,6 +3800,32 @@ const MapControlRowComponent = (function(){
         }
         
         instances.push(instance);
+
+        // Apply system image masks if configured
+        try {
+            var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
+            if (window.App && typeof App.getImageUrl === 'function' && sys) {
+                var geoFilename = sys.icon_geolocate || '';
+                var compassFilename = sys.icon_compass || '';
+                
+                var geoEl = geolocateBtn.querySelector('.' + prefix + '-geolocate-icon');
+                var compassEl = compassBtn.querySelector('.' + prefix + '-compass-icon');
+                
+                if (geoEl && geoFilename) {
+                    var geoUrl = App.getImageUrl('systemImages', geoFilename);
+                    geoEl.style.webkitMaskImage = 'url(' + geoUrl + ')';
+                    geoEl.style.maskImage = 'url(' + geoUrl + ')';
+                }
+                if (compassEl && compassFilename) {
+                    var compassUrl = App.getImageUrl('systemImages', compassFilename);
+                    compassEl.style.webkitMaskImage = 'url(' + compassUrl + ')';
+                    compassEl.style.maskImage = 'url(' + compassUrl + ')';
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+        
         return instance;
     }
     
