@@ -40,6 +40,7 @@ $map = [
   // Backwards-compat routes for rename
   'edit-post' => $connectorDir . '/edit-post.php',
   'edit-member' => $connectorDir . '/edit-member.php',
+  'edit-admin' => $connectorDir . '/edit-admin.php',
   'get-admin-settings' => $connectorDir . '/get-admin-settings.php',
   'save-admin-settings' => $connectorDir . '/save-admin-settings.php',
   'list-files' => $connectorDir . '/list-files.php',

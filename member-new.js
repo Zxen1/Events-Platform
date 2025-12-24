@@ -78,6 +78,12 @@ const MemberModule = (function() {
     var profileEmail = null;
     var logoutBtn = null;
     var profileTabBtn = null;
+    var headerSaveBtn = null;
+    var headerDiscardBtn = null;
+
+    // Cache auth forms to hide them when logged in (removes large gap)
+    var loginFormEl = null;
+    var registerFormEl = null;
     
     // Preferences pickers (Profile tab)
     var languageMenuContainer = null;
@@ -162,8 +168,8 @@ const MemberModule = (function() {
         
         // Auth elements
         authForm = panel.querySelector('.member-auth');
-        var loginForm = document.getElementById('memberAuthFormLogin');
-        var registerForm = document.getElementById('memberAuthFormRegister');
+        loginFormEl = document.getElementById('memberAuthFormLogin');
+        registerFormEl = document.getElementById('memberAuthFormRegister');
         authTabs = panel.querySelector('.member-auth-tabs');
         loginTab = panel.querySelector('.member-auth-tab[data-target="login"]');
         registerTab = panel.querySelector('.member-auth-tab[data-target="register"]');
@@ -183,6 +189,9 @@ const MemberModule = (function() {
         profileEmail = document.getElementById('member-profile-email');
         logoutBtn = document.getElementById('member-logout-btn');
         profileTabBtn = document.getElementById('member-tab-profile-btn');
+
+        headerSaveBtn = panel.querySelector('#member-panel-save-btn');
+        headerDiscardBtn = panel.querySelector('#member-panel-discard-btn');
         
         languageMenuContainer = document.getElementById('memberLanguageMenu');
         currencyMenuContainer = document.getElementById('memberCurrencyMenu');
@@ -206,6 +215,20 @@ const MemberModule = (function() {
         // Panel open/close
         if (closeBtn) {
             closeBtn.addEventListener('click', closePanel);
+        }
+
+        // Header save/discard (like admin)
+        if (headerSaveBtn) {
+            headerSaveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleHeaderSave();
+            });
+        }
+        if (headerDiscardBtn) {
+            headerDiscardBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleHeaderDiscard();
+            });
         }
         
         // Main tab switching (Profile / Create Post / My Posts)
@@ -384,7 +407,7 @@ const MemberModule = (function() {
         if (!currentUser) return;
         
         // Save to database via API
-        fetch('/gateway.php?action=edit-member', {
+        fetch('/gateway.php?action=' + getEditUserAction(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -455,6 +478,39 @@ const MemberModule = (function() {
         
         profileSaveBtn.disabled = !canSave;
         profileSaveBtn.classList.toggle('member-button-auth--disabled', !canSave);
+        updateHeaderSaveDiscardState();
+    }
+
+    function setHeaderButtonsEnabled(enabled) {
+        if (!headerSaveBtn || !headerDiscardBtn) return;
+
+        headerSaveBtn.disabled = !enabled;
+        headerDiscardBtn.disabled = !enabled;
+        headerSaveBtn.classList.toggle('member-panel-actions-icon-btn--disabled', !enabled);
+        headerDiscardBtn.classList.toggle('member-panel-actions-icon-btn--disabled', !enabled);
+
+        var saveIcon = headerSaveBtn.querySelector('.member-panel-actions-icon-btn-icon--save');
+        var discardIcon = headerDiscardBtn.querySelector('.member-panel-actions-icon-btn-icon--discard');
+
+        if (saveIcon) {
+            saveIcon.classList.toggle('member-panel-actions-icon-btn-icon--disabled', !enabled);
+            saveIcon.classList.toggle('member-panel-actions-icon-btn-icon--save-enabled', enabled);
+        }
+        if (discardIcon) {
+            discardIcon.classList.toggle('member-panel-actions-icon-btn-icon--disabled', !enabled);
+            discardIcon.classList.toggle('member-panel-actions-icon-btn-icon--discard-enabled', enabled);
+        }
+    }
+
+    function updateHeaderSaveDiscardState() {
+        // For now: header buttons mirror profile edit dirty state
+        // (we can expand later to include other profile preferences)
+        var enabled = isProfileDirty();
+        setHeaderButtonsEnabled(enabled);
+    }
+
+    function getEditUserAction() {
+        return (currentUser && currentUser.isAdmin === true) ? 'edit-admin' : 'edit-member';
     }
 
     function handleProfileSave(onSuccessNext) {
@@ -470,12 +526,15 @@ const MemberModule = (function() {
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
         
         // Nothing to do
-        if (!payload.display_name && !payload.password) return;
+        if (!payload.display_name && !payload.password) {
+            if (typeof onSuccessNext === 'function') onSuccessNext();
+            return;
+        }
         
         profileSaveBtn.disabled = true;
         profileSaveBtn.classList.add('member-button-auth--disabled');
         
-        fetch('/gateway.php?action=edit-member', {
+        fetch('/gateway.php?action=' + getEditUserAction(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -493,6 +552,7 @@ const MemberModule = (function() {
               if (profileEditConfirmInput) profileEditConfirmInput.value = '';
               
               updateProfileSaveState();
+              updateHeaderSaveDiscardState();
               if (window.ToastComponent && ToastComponent.showSuccess) {
                   ToastComponent.showSuccess('Saved');
               }
@@ -504,10 +564,23 @@ const MemberModule = (function() {
           .catch(function(err) {
               console.error('[Member] Profile save failed', err);
               updateProfileSaveState();
+              updateHeaderSaveDiscardState();
               if (window.ToastComponent && ToastComponent.showError) {
                   ToastComponent.showError('Save failed');
               }
           });
+    }
+
+    function handleHeaderSave() {
+        // Header save should save profile edits if any
+        handleProfileSave(function() {
+            updateHeaderSaveDiscardState();
+        });
+    }
+
+    function handleHeaderDiscard() {
+        discardProfileEdits();
+        updateHeaderSaveDiscardState();
     }
 
     function isProfileDirty() {
@@ -2074,6 +2147,10 @@ const MemberModule = (function() {
             // Hide login/register panels
             setAuthPanelState(loginPanel, false, loginInputs);
             setAuthPanelState(registerPanel, false, registerInputs);
+
+            // Hide the forms themselves to remove the large blank gap
+            if (loginFormEl) loginFormEl.hidden = true;
+            if (registerFormEl) registerFormEl.hidden = true;
             
             // Clear inputs
             clearInputs(loginInputs);
@@ -2118,6 +2195,8 @@ const MemberModule = (function() {
             if (profileTabBtn) {
                 profileTabBtn.textContent = 'Profile';
             }
+
+            updateHeaderSaveDiscardState();
             
         } else {
             // Logged out state
@@ -2152,6 +2231,9 @@ const MemberModule = (function() {
             
             // Show auth tabs
             if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');
+
+            if (loginFormEl) loginFormEl.hidden = false;
+            if (registerFormEl) registerFormEl.hidden = false;
             
             // Show appropriate auth panel
             var active = authForm.dataset.active === 'register' ? 'register' : 'login';
@@ -2159,6 +2241,8 @@ const MemberModule = (function() {
             
             // Update header (no avatar)
             updateHeaderAvatar(null);
+
+            updateHeaderSaveDiscardState();
         }
         
         // Update App state
