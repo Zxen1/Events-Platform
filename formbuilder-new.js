@@ -88,8 +88,11 @@
     function ensureScrollGapBottom() {
         if (!container) return null;
         if (scrollGapBottomEl && scrollGapBottomEl.isConnected) {
-            // Keep it at the bottom
-            container.appendChild(scrollGapBottomEl);
+            // Keep it at the bottom, but avoid re-appending on every call (can trigger
+            // expensive MutationObserver work / console errors in external scripts).
+            if (container.lastChild !== scrollGapBottomEl) {
+                container.appendChild(scrollGapBottomEl);
+            }
             return scrollGapBottomEl;
         }
 
@@ -99,8 +102,10 @@
             scrollGapBottomEl.className = 'formbuilder-scroll-gap-bottom';
             scrollGapBottomEl.setAttribute('aria-hidden', 'true');
         }
-        // Always ensure it's last
-        container.appendChild(scrollGapBottomEl);
+        // Ensure it's last (once)
+        if (container.lastChild !== scrollGapBottomEl) {
+            container.appendChild(scrollGapBottomEl);
+        }
         return scrollGapBottomEl;
     }
     
@@ -136,8 +141,10 @@
         var sc = findScrollContainer();
         if (!sc) return;
         
-        var gap = getGapHeight();
-        var bottomGap = getBottomGapHeight();
+        // IMPORTANT: do not call ensure/append helpers here; scroll handlers must avoid
+        // DOM mutations. External scripts may observe mutations and throw.
+        var gap = (scrollGapEl && scrollGapEl.isConnected) ? (scrollGapEl.offsetHeight || 0) : 0;
+        var bottomGap = (scrollGapBottomEl && scrollGapBottomEl.isConnected) ? (scrollGapBottomEl.offsetHeight || 0) : 0;
         if (!gap && !bottomGap) return;
         
         // If the user scrolls up into the gap, remove the gap so they never see blank space.
