@@ -64,6 +64,12 @@ if(!in_array($ext, $allowedExts)) {
 
 $tempFilename = 'temp-' . uniqid() . '-' . time() . '.' . $ext;
 
+// Basic size guard (10MB)
+$maxBytes = 10 * 1024 * 1024;
+if (isset($_FILES['file']['size']) && (int)$_FILES['file']['size'] > $maxBytes) {
+  fail(400, 'File too large. Max 10MB');
+}
+
 // Extract folder path from CDN URL (e.g., https://cdn.funmap.com/avatars -> avatars)
 $cdnPath = preg_replace('#^https?://[^/]+/#', '', $avatarFolder);
 $cdnPath = rtrim($cdnPath, '/');
@@ -94,6 +100,25 @@ if($storageApiKey && $storageZoneName) {
   if($httpCode !== 201 && $httpCode !== 200) {
     fail(500, 'Bunny Storage returned error code: ' . $httpCode);
   }
+} else {
+  // Fallback: store locally (useful for dev or when Bunny creds aren't configured)
+  // Store under /uploads/avatars/ in the web root.
+  $webRoot = dirname(__DIR__, 4);
+  $localDir = $webRoot . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'avatars';
+  if (!is_dir($localDir)) {
+    @mkdir($localDir, 0755, true);
+  }
+  if (!is_dir($localDir) || !is_writable($localDir)) {
+    fail(500, 'Avatar storage not configured (no Bunny credentials and local uploads folder not writable).');
+  }
+
+  $destPath = $localDir . DIRECTORY_SEPARATOR . $tempFilename;
+  if (!@move_uploaded_file($_FILES['file']['tmp_name'], $destPath)) {
+    fail(500, 'Failed to save uploaded file locally.');
+  }
+
+  // Return local URL
+  $avatarFolder = '/uploads/avatars/';
 }
 
 $avatarUrl = $avatarFolder . $tempFilename;
