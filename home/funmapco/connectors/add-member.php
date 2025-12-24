@@ -36,7 +36,7 @@ $display = trim($_POST['display_name'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $pass = $_POST['password'] ?? '';
 $conf = $_POST['confirm'] ?? '';
-$avatar = trim($_POST['avatar_url'] ?? '');
+$avatar = trim($_POST['avatar_file'] ?? '');
 // Optional uploaded avatar file (cropped client-side); only upload after member is created
 $hasAvatarFile = isset($_FILES['avatar_file']) && isset($_FILES['avatar_file']['tmp_name']) && is_uploaded_file($_FILES['avatar_file']['tmp_name']);
 
@@ -55,7 +55,7 @@ $stmt->store_result();
 if($stmt->num_rows>0){$stmt->close();fail(409,'Email already registered');}
 $stmt->close();
 
-$insert = $mysqli->prepare('INSERT INTO members (email,password_hash,display_name,avatar_url,created_at) VALUES (?,?,?,?,NOW())');
+$insert = $mysqli->prepare('INSERT INTO members (email,password_hash,display_name,avatar_file,created_at) VALUES (?,?,?,?,NOW())');
 if(!$insert) fail(500,'Insert prepare failed');
 $insert->bind_param('ssss',$email,$hash,$display,$avatar);
 if(!$insert->execute()){ $insert->close(); fail(500,'Database insert failed'); }
@@ -130,16 +130,16 @@ if ($hasAvatarFile) {
   }
 
   // Store filename only (rules convention)
-  $avatarUrl = $finalFilename;
-  $up = $mysqli->prepare('UPDATE members SET avatar_url=? WHERE id=? LIMIT 1');
+  $avatarFile = $finalFilename;
+  $up = $mysqli->prepare('UPDATE members SET avatar_file=? WHERE id=? LIMIT 1');
   if ($up) {
-    $up->bind_param('si', $avatarUrl, $id);
+    $up->bind_param('si', $avatarFile, $id);
     $up->execute();
     $up->close();
   }
 
-  ok(['id'=>$id,'display_name'=>$display,'email'=>$email,'avatar_url'=>$avatarUrl]);
+  ok(['id'=>$id,'display_name'=>$display,'email'=>$email,'avatar_file'=>$avatarFile]);
 }
 
-ok(['id'=>$id,'display_name'=>$display,'email'=>$email,'avatar_url'=>$avatar]);
+ok(['id'=>$id,'display_name'=>$display,'email'=>$email,'avatar_file'=>$avatar]);
 ?>

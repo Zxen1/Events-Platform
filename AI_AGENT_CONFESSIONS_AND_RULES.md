@@ -1491,8 +1491,11 @@ Mapbox layers in rendering order (bottom to top):
 - User will paste the SQL into their database management tool (phpMyAdmin, etc.)
 - Include all necessary ALTER TABLE, RENAME, UPDATE statements
 - Make SQL clear, complete, and ready to execute
-- **IGNORE DUMP FILES:** When checking database structure, look for the latest numbered database file (e.g., `funmapco_db (93).sql`), not dump files or older versions
-- Always check which database files exist and use the most recent one
+- **DB SCHEMA SOURCE OF TRUTH (WHEN PROVIDED):** The user almost always exports the latest database back into the workspace so the agent can see the real schema.
+  - When you need to confirm table/column names or structure, **check the latest numbered SQL export in the PROJECT ROOT** (example: `funmapco_db (64).sql`).
+  - Do NOT guess column names if a recent SQL export exists.
+  - Use the **most recent** `funmapco_db (NN).sql` in the root as the schema reference.
+  - Older copies in backup/control folders are useful context but are **not** the latest schema unless explicitly stated by the user.
 
 ### Rule 14: TERMINAL ACCESS - EXTREME CIRCUMSTANCES ONLY
 **CRITICAL:** AI will never be given terminal access except under extreme circumstances.

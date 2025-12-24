@@ -999,7 +999,7 @@ const MemberModule = (function() {
         var payload = { id: currentUser.id, email: currentUser.email };
         if (name && name !== profileOriginalName) payload.display_name = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
-        // avatar_url (actually filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
+        // avatar_file (filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
 
         var wantsAvatarChange = !!pendingProfileAvatarBlob || ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || ''));
         
@@ -1034,10 +1034,10 @@ const MemberModule = (function() {
                   if (profileEditPasswordInput) profileEditPasswordInput.value = '';
                   if (profileEditConfirmInput) profileEditConfirmInput.value = '';
 
-                  if (payload.avatar_url !== undefined) {
-                      currentUser.avatar = payload.avatar_url;
-                      profileOriginalAvatarUrl = payload.avatar_url;
-                      pendingAvatarUrl = payload.avatar_url;
+                  if (payload.avatar_file !== undefined) {
+                      currentUser.avatar = payload.avatar_file;
+                      profileOriginalAvatarUrl = payload.avatar_file;
+                      pendingAvatarUrl = payload.avatar_file;
                       pendingProfileAvatarBlob = null;
                   }
                   
@@ -1063,7 +1063,7 @@ const MemberModule = (function() {
         
         function proceedAfterAvatarPrepared() {
             if ((pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '')) {
-                payload.avatar_url = pendingAvatarUrl || '';
+                payload.avatar_file = pendingAvatarUrl || '';
             }
             doSave();
         }
@@ -2447,13 +2447,14 @@ const MemberModule = (function() {
         formData.set('password', password);
         formData.set('confirm', confirm);
         // Avatar:
-        // - If chosen from library: avatar_url is a URL and we store it directly.
-        // - If uploaded/cropped: we attach avatar_file and upload to Bunny only after member is created.
+        // - If chosen from library: avatar_file is a filename and we store it.
+        // - If uploaded/cropped: we attach avatar_file (blob) and upload to Bunny only after member is created.
         if (avatar) {
-            formData.set('avatar_url', avatar);
+            // IMPORTANT: only set this when NOT uploading a file under the same key.
+            formData.set('avatar_file', avatar);
         }
         if (pendingRegisterAvatarBlob) {
-            formData.delete('avatar_url');
+            formData.delete('avatar_file');
             formData.append('avatar_file', pendingRegisterAvatarBlob, 'avatar.png');
         }
         
@@ -2491,7 +2492,7 @@ const MemberModule = (function() {
                 email: email,
                 emailNormalized: email.toLowerCase(),
                 username: email,
-                avatar: payload.avatar_url || avatar,
+                avatar: payload.avatar_file || avatar,
                 type: 'member',
                 isAdmin: false
             };
@@ -2596,7 +2597,7 @@ const MemberModule = (function() {
             email: email,
             emailNormalized: normalized,
             username: username,
-            avatar: payload.avatar || payload.avatar_url || '',
+            avatar: payload.avatar || payload.avatar_file || '',
             type: isAdmin ? 'admin' : (payload.type || 'member'),
             isAdmin: isAdmin
         };

@@ -59,11 +59,11 @@ if (isset($input['display_name'])) {
   $vals[] = $display;
 }
 
-// Avatar filename (stored in avatar_url column by convention)
-if (isset($input['avatar_url'])) {
-  $avatar = trim((string)$input['avatar_url']);
+// Avatar filename
+if (isset($input['avatar_file'])) {
+  $avatar = trim((string)$input['avatar_file']);
   // Allow empty string to clear avatar
-  $updates[] = 'avatar_url=?';
+  $updates[] = 'avatar_file=?';
   $types .= 's';
   $vals[] = $avatar;
 }

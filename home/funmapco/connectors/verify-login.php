@@ -41,16 +41,25 @@ try {
 
   // Attempt login against a table; allow email OR display_name match
   $attempt = function(mysqli $db, string $table, string $user, string $pass){
-    // avatar_url is optional; not all tables/installs may have it.
-    // Try with avatar_url first, then fall back to query without it.
-    $sqlWithAvatar = "SELECT id, email, display_name, avatar_url, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
-    $stmt = $db->prepare($sqlWithAvatar);
-    $avatarSupported = true;
-    if (!$stmt) {
-      $avatarSupported = false;
-      $sqlNoAvatar = "SELECT id, email, display_name, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
-      $stmt = $db->prepare($sqlNoAvatar);
-      if (!$stmt) return null;
+    // avatar_file is preferred (filename-only). Some installs may still be on avatar_url.
+    // Try avatar_file first, then avatar_url, then no-avatar.
+    $stmt = null;
+    $avatarCol = null;
+
+    $sqlWithAvatarFile = "SELECT id, email, display_name, avatar_file, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
+    $stmt = $db->prepare($sqlWithAvatarFile);
+    if ($stmt) {
+      $avatarCol = 'avatar_file';
+    } else {
+      $sqlWithAvatarUrl = "SELECT id, email, display_name, avatar_url, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
+      $stmt = $db->prepare($sqlWithAvatarUrl);
+      if ($stmt) {
+        $avatarCol = 'avatar_url';
+      } else {
+        $sqlNoAvatar = "SELECT id, email, display_name, password_hash FROM {$table} WHERE email = ? OR display_name = ? LIMIT 1";
+        $stmt = $db->prepare($sqlNoAvatar);
+        if (!$stmt) return null;
+      }
     }
     $stmt->bind_param('ss', $user, $user);
     if(!$stmt->execute()){ $stmt->close(); return null; }
@@ -66,7 +75,7 @@ try {
         'id'    => (int)$row['id'],
         'email' => (string)$row['email'],
         'name'  => (string)$row['display_name'],
-        'avatar' => ($avatarSupported && isset($row['avatar_url'])) ? (string)$row['avatar_url'] : ''
+        'avatar' => ($avatarCol && isset($row[$avatarCol])) ? (string)$row[$avatarCol] : ''
       ]
     ];
   };
