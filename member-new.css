@@ -873,6 +873,27 @@
   gap: 10px;
 }
 
+/* Make Profile tab stretch so we can pin Logout to the bottom */
+#member-tab-profile {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+/* When logged in, the auth container should fill available height */
+#member-tab-profile .member-auth {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Profile panel should behave like a column so actions can sit at bottom */
+.member-auth-profile {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .member-auth-tabs {
   display: flex;
   align-items: center;
@@ -1028,6 +1049,7 @@
   z-index: 2;
   display: flex;
   gap: 10px;
+  margin-top: auto;
   padding: 10px 0 0 0;
   background: #222222;
 }
