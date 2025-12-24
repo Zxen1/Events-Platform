@@ -89,6 +89,208 @@ const MenuManager = (function(){
 
 window.MenuManager = MenuManager;
 
+/* ============================================================================
+   SCROLL ANCHOR
+   Keeps a clicked header/button visually stationary while content above/below
+   expands/collapses by temporarily adding top/bottom slack inside the scroller.
+   ============================================================================ */
+
+const ScrollAnchor = (function() {
+    'use strict';
+
+    var states = new WeakMap(); // scroller -> { gapTop, gapBottom, adjusting, onScroll }
+
+    function getState(scroller) {
+        var st = states.get(scroller);
+        if (!st) {
+            st = {
+                gapTop: null,
+                gapBottom: null,
+                adjusting: false,
+                onScroll: null
+            };
+            states.set(scroller, st);
+        }
+        return st;
+    }
+
+    function isScrollable(el) {
+        if (!el || !(el instanceof Element)) return false;
+        var style = window.getComputedStyle(el);
+        var oy = style.overflowY;
+        if (oy !== 'auto' && oy !== 'scroll' && oy !== 'overlay') return false;
+        return el.scrollHeight > el.clientHeight + 1;
+    }
+
+    function findScroller(fromEl) {
+        var el = fromEl;
+        while (el && el instanceof Element) {
+            if (isScrollable(el)) return el;
+            el = el.parentElement;
+        }
+        return document.scrollingElement || document.documentElement;
+    }
+
+    function getHeight(el) {
+        return el ? (el.offsetHeight || 0) : 0;
+    }
+
+    function setHeight(el, px) {
+        if (!el) return;
+        var next = Math.max(0, Math.round(px || 0));
+        el.style.height = next ? (next + 'px') : '0px';
+    }
+
+    function ensureGaps(scroller) {
+        var st = getState(scroller);
+        if (!(scroller instanceof Element)) return st;
+
+        // Top gap
+        if (!st.gapTop || !st.gapTop.isConnected) {
+            st.gapTop = scroller.querySelector(':scope > .scroll-anchor-gap-top');
+            if (!st.gapTop) {
+                st.gapTop = document.createElement('div');
+                st.gapTop.className = 'scroll-anchor-gap-top';
+                st.gapTop.setAttribute('aria-hidden', 'true');
+            }
+        }
+        if (scroller.firstChild !== st.gapTop) {
+            scroller.insertBefore(st.gapTop, scroller.firstChild);
+        }
+
+        // Bottom gap
+        if (!st.gapBottom || !st.gapBottom.isConnected) {
+            st.gapBottom = scroller.querySelector(':scope > .scroll-anchor-gap-bottom');
+            if (!st.gapBottom) {
+                st.gapBottom = document.createElement('div');
+                st.gapBottom.className = 'scroll-anchor-gap-bottom';
+                st.gapBottom.setAttribute('aria-hidden', 'true');
+            }
+        }
+        scroller.appendChild(st.gapBottom);
+
+        // One scroll listener per scroller to "consume" slack as user scrolls into it
+        if (!st.onScroll) {
+            st.onScroll = function() {
+                consumeOnScroll(scroller);
+            };
+            scroller.addEventListener('scroll', st.onScroll, { passive: true });
+        }
+
+        return st;
+    }
+
+    function consumeOnScroll(scroller) {
+        var st = states.get(scroller);
+        if (!st || st.adjusting) return;
+
+        var gap = getHeight(st.gapTop);
+        var bottomGap = getHeight(st.gapBottom);
+        if (!gap && !bottomGap) return;
+
+        // If the user scrolls up into the top gap, remove it so they never see blank space.
+        if (gap && scroller.scrollTop < gap) {
+            var reduceBy = gap - scroller.scrollTop;
+            st.adjusting = true;
+            setHeight(st.gapTop, gap - reduceBy);
+            scroller.scrollTop = 0;
+            st.adjusting = false;
+        }
+
+        // If the user scrolls down into the bottom gap, remove it so they never see blank space.
+        if (bottomGap) {
+            var maxScrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+            var distanceToBottom = maxScrollTop - scroller.scrollTop;
+            if (distanceToBottom < bottomGap) {
+                var reduceBottomBy = bottomGap - distanceToBottom;
+                st.adjusting = true;
+                setHeight(st.gapBottom, bottomGap - reduceBottomBy);
+                scroller.scrollTop = Math.max(0, scroller.scrollTop - reduceBottomBy);
+                st.adjusting = false;
+            }
+        }
+    }
+
+    function run(anchorEl, fn, opts) {
+        if (typeof fn !== 'function') return;
+        if (!anchorEl || typeof anchorEl.getBoundingClientRect !== 'function') {
+            fn();
+            return;
+        }
+
+        var scroller = (opts && opts.scroller) ? opts.scroller : findScroller(anchorEl);
+        if (!scroller || typeof scroller.scrollTop !== 'number' || typeof scroller.getBoundingClientRect !== 'function') {
+            fn();
+            return;
+        }
+
+        var st = ensureGaps(scroller);
+        var scRect = scroller.getBoundingClientRect();
+        var oldTop = anchorEl.getBoundingClientRect().top - scRect.top;
+        var oldScrollTop = scroller.scrollTop;
+
+        fn();
+
+        requestAnimationFrame(function() {
+            if (!anchorEl.isConnected) return;
+
+            // Re-find scroller in case DOM changed (panel switch, etc.)
+            var scNow = (opts && opts.scroller) ? opts.scroller : findScroller(anchorEl);
+            if (!scNow || typeof scNow.scrollTop !== 'number' || typeof scNow.getBoundingClientRect !== 'function') return;
+
+            var stNow = ensureGaps(scNow);
+
+            // If content collapse shrank scrollHeight, the browser may clamp scrollTop down.
+            // Add bottom slack so the original scrollTop stays valid, then restore it.
+            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (oldScrollTop > maxAfter && stNow.gapBottom) {
+                setHeight(stNow.gapBottom, getHeight(stNow.gapBottom) + (oldScrollTop - maxAfter));
+                // Force layout so new maxScrollTop applies before we restore
+                void scNow.scrollHeight;
+            }
+
+            stNow.adjusting = true;
+            scNow.scrollTop = oldScrollTop;
+            stNow.adjusting = false;
+
+            var scNowRect = scNow.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+
+            var target = scNow.scrollTop + delta;
+
+            // If we'd need to scroll above 0 to keep the anchor stationary, create top slack instead.
+            if (target < 0 && stNow.gapTop) {
+                var topSlack = -target;
+                setHeight(stNow.gapTop, getHeight(stNow.gapTop) + topSlack);
+                target = 0;
+                void scNow.scrollHeight;
+            }
+
+            // If we'd need to scroll past maxScrollTop, create bottom slack instead.
+            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (target > maxNow && stNow.gapBottom) {
+                var bottomSlack = target - maxNow;
+                setHeight(stNow.gapBottom, getHeight(stNow.gapBottom) + bottomSlack);
+                void scNow.scrollHeight;
+                maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            }
+
+            stNow.adjusting = true;
+            scNow.scrollTop = Math.max(0, Math.min(target, maxNow));
+            stNow.adjusting = false;
+        });
+    }
+
+    return {
+        run: run,
+        findScroller: findScroller
+    };
+})();
+
+window.ScrollAnchor = ScrollAnchor;
+
 
 /* ============================================================================
    CLEAR BUTTON
