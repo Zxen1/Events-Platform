@@ -124,7 +124,8 @@ const MemberModule = (function() {
     var cropperCancelBtn = null;
     var cropperSaveBtn = null;
     var cropImg = null;
-    var cropState = { zoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
+    // Cropper zoom is "cover-only": zoom=1 is the minimum (image always fills the square; no blank areas).
+    var cropState = { zoom: 1, minZoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
@@ -398,7 +399,11 @@ const MemberModule = (function() {
         }
         if (cropperZoom) {
             cropperZoom.addEventListener('input', function() {
-                cropState.zoom = parseFloat(cropperZoom.value || '1') || 1;
+                var z = parseFloat(cropperZoom.value || '1');
+                if (!isFinite(z) || z <= 0) z = 1;
+                var minZ = (cropState && cropState.minZoom) ? cropState.minZoom : 1;
+                if (z < minZ) z = minZ;
+                cropState.zoom = z;
                 drawCropper();
             });
         }
@@ -723,7 +728,14 @@ const MemberModule = (function() {
             cropState.zoom = 1;
             cropState.offsetX = 0;
             cropState.offsetY = 0;
-            if (cropperZoom) cropperZoom.value = '1';
+
+            // Cover-only zoom (no blank areas)
+            cropState.minZoom = 1;
+            if (cropperZoom) {
+                cropperZoom.min = '1';
+                cropperZoom.value = '1';
+            }
+
             drawCropper();
             cropperOverlay.hidden = false;
             cropperOverlay.setAttribute('aria-hidden', 'false');
