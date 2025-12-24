@@ -1023,15 +1023,20 @@
 }
 
 .member-profile-actions {
+  position: sticky;
+  bottom: 10px;
+  z-index: 2;
   display: flex;
   gap: 10px;
+  padding: 10px 0 0 0;
+  background: #222222;
 }
 
 .member-profile-actions-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: auto;
+  width: 100%;
   min-width: 0;
   padding: 0 16px;
   white-space: nowrap;
