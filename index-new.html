@@ -680,14 +680,7 @@
                 <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
                 <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
                 <label class="member-auth-panel-label">Avatar</label>
-                <div class="member-avatar-row">
-                  <img id="member-register-avatar-preview" class="member-avatar-preview" src="" alt="">
-                  <div class="member-avatar-buttons">
-                    <button type="button" class="member-button-auth" id="member-register-avatar-choose-btn">Choose</button>
-                    <button type="button" class="member-button-auth" id="member-register-avatar-upload-btn">Upload</button>
-                  </div>
-                </div>
-                <input type="hidden" id="member-register-avatar" name="registerAvatar">
+                <div id="member-avatar-grid-register" class="member-avatar-grid" aria-label="Avatar choices"></div>
                 <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
               </section>
             </form>
@@ -701,13 +694,8 @@
                   <p id="member-profile-email" class="member-profile-email"></p>
                 </div>
               </div>
-              <div class="member-avatar-row member-avatar-row--profile">
-                <img id="member-profile-avatar-preview" class="member-avatar-preview" src="" alt="">
-                <div class="member-avatar-buttons">
-                  <button type="button" class="member-button-auth" id="member-profile-avatar-choose-btn">Choose</button>
-                  <button type="button" class="member-button-auth" id="member-profile-avatar-upload-btn">Upload</button>
-                </div>
-              </div>
+              <label class="member-auth-panel-label">Avatar</label>
+              <div id="member-avatar-grid-profile" class="member-avatar-grid" aria-label="Avatar choices"></div>
               <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
                 <label class="member-auth-panel-label" for="member-profile-edit-name">Username</label>
                 <input type="text" id="member-profile-edit-name" class="member-auth-panel-input" autocomplete="name">

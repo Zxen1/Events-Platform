@@ -104,17 +104,19 @@ const MemberModule = (function() {
     var pendingRegisterAvatarBlob = null;
     var pendingProfileAvatarBlob = null;
 
-    // Avatar (register + profile)
-    var registerAvatarHiddenInput = null;
-    var registerAvatarPreview = null;
-    var registerAvatarChooseBtn = null;
-    var registerAvatarUploadBtn = null;
-    var profileAvatarPreview = null;
-    var profileAvatarChooseBtn = null;
-    var profileAvatarUploadBtn = null;
-    var avatarLibrary = null;
-    var avatarLibraryLoaded = false;
-    var activeAvatarTarget = null; // 'register' | 'profile'
+    // Avatar (register + profile) - 4-tile picker (self/upload + 3 random site avatars)
+    var avatarGridRegister = null;
+    var avatarGridProfile = null;
+    var activeAvatarTarget = null; // 'register' | 'profile' (used by cropper/file picker)
+    var avatarSelection = { register: 'self', profile: 'self' };
+    var pendingRegisterSiteUrl = '';
+    var pendingProfileSiteUrl = '';
+    var pendingRegisterAvatarPreviewUrl = ''; // objectURL for showing staged crop in grid
+    var pendingProfileAvatarPreviewUrl = '';  // objectURL for showing staged crop in grid
+    var siteAvatarFilesPromise = null;
+    var siteAvatarFolder = '';
+    var siteAvatarFilenames = [];  // all filenames in site avatars folder
+    var siteAvatarChoices = [];    // 3 picked: [{ filename, url }]
 
     // Avatar upload + crop
     var avatarFileInput = null;
@@ -232,14 +234,8 @@ const MemberModule = (function() {
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
 
         // Avatar UI
-        registerAvatarHiddenInput = document.getElementById('member-register-avatar');
-        registerAvatarPreview = document.getElementById('member-register-avatar-preview');
-        registerAvatarChooseBtn = document.getElementById('member-register-avatar-choose-btn');
-        registerAvatarUploadBtn = document.getElementById('member-register-avatar-upload-btn');
-        profileAvatarPreview = document.getElementById('member-profile-avatar-preview');
-        profileAvatarChooseBtn = document.getElementById('member-profile-avatar-choose-btn');
-        profileAvatarUploadBtn = document.getElementById('member-profile-avatar-upload-btn');
-        avatarLibrary = document.getElementById('member-avatar-library');
+        avatarGridRegister = document.getElementById('member-avatar-grid-register');
+        avatarGridProfile = document.getElementById('member-avatar-grid-profile');
         avatarFileInput = document.getElementById('member-avatar-file-input');
         cropperOverlay = document.getElementById('member-avatar-cropper');
         cropperCanvas = document.getElementById('member-avatar-cropper-canvas');
@@ -351,33 +347,15 @@ const MemberModule = (function() {
             });
         }
 
-        // Avatar choose/upload
-        if (registerAvatarChooseBtn) {
-            registerAvatarChooseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                activeAvatarTarget = 'register';
-                toggleAvatarLibrary();
+        // Avatar grid interactions (Register + Profile)
+        if (avatarGridRegister) {
+            avatarGridRegister.addEventListener('click', function(e) {
+                onAvatarGridClick('register', e);
             });
         }
-        if (registerAvatarUploadBtn) {
-            registerAvatarUploadBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                activeAvatarTarget = 'register';
-                openAvatarFilePicker();
-            });
-        }
-        if (profileAvatarChooseBtn) {
-            profileAvatarChooseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                activeAvatarTarget = 'profile';
-                toggleAvatarLibrary();
-            });
-        }
-        if (profileAvatarUploadBtn) {
-            profileAvatarUploadBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                activeAvatarTarget = 'profile';
-                openAvatarFilePicker();
+        if (avatarGridProfile) {
+            avatarGridProfile.addEventListener('click', function(e) {
+                onAvatarGridClick('profile', e);
             });
         }
         if (avatarFileInput) {
@@ -601,18 +579,15 @@ const MemberModule = (function() {
     function setAvatarForTarget(url) {
         url = url || '';
         if (activeAvatarTarget === 'register') {
-            if (registerAvatarHiddenInput) registerAvatarHiddenInput.value = url;
-            if (registerAvatarPreview) {
-                registerAvatarPreview.src = resolveAvatarSrc(url) || '';
-                registerAvatarPreview.alt = url ? 'Selected avatar' : '';
-            }
+            // Registration stores avatar via final upload on submit (no immediate upload here)
+            // Keep compatibility: treat this as "select self tile with a preview url" if needed.
+            pendingRegisterSiteUrl = '';
+            avatarSelection.register = 'self';
+            pendingRegisterAvatarPreviewUrl = resolveAvatarSrc(url) || '';
             pendingRegisterAvatarBlob = null;
+            renderAvatarGrids();
         } else if (activeAvatarTarget === 'profile') {
             pendingAvatarUrl = url;
-            if (profileAvatarPreview) {
-                profileAvatarPreview.src = resolveAvatarSrc(url) || '';
-                profileAvatarPreview.alt = url ? 'Selected avatar' : '';
-            }
             // Also update the main avatar + header immediately for feedback (even before saving)
             if (profileAvatar) {
                 profileAvatar.src = resolveAvatarSrc(url) || getAvatarSource(currentUser);
@@ -622,6 +597,10 @@ const MemberModule = (function() {
                 updateHeaderAvatar(currentUser);
             }
             pendingProfileAvatarBlob = null;
+            pendingProfileSiteUrl = '';
+            pendingProfileAvatarPreviewUrl = '';
+            avatarSelection.profile = 'self';
+            renderAvatarGrids();
             updateHeaderSaveDiscardState();
         }
     }
@@ -646,64 +625,291 @@ const MemberModule = (function() {
         return v;
     }
 
-    function toggleAvatarLibrary() {
-        if (!avatarLibrary) return;
-        var showing = !avatarLibrary.hidden;
-        if (showing) {
-            avatarLibrary.hidden = true;
-            return;
-        }
-        avatarLibrary.hidden = false;
-        if (!avatarLibraryLoaded) {
-            loadAvatarLibrary();
-        }
-    }
-
-    function loadAvatarLibrary() {
-        if (avatarLibraryLoaded) return;
-        avatarLibraryLoaded = true;
-        if (!avatarLibrary) return;
-
-        // Get folder_site_avatars from settings (premade library avatars), then list files.
-        fetch('/gateway.php?action=get-admin-settings')
+    function ensureSiteAvatarFilenames() {
+        if (siteAvatarFilesPromise) return siteAvatarFilesPromise;
+        siteAvatarFilesPromise = fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 var folder = (res && res.settings && res.settings.folder_site_avatars) ? String(res.settings.folder_site_avatars) : 'https://cdn.funmap.com/site-avatars/';
                 if (folder && !folder.endsWith('/')) folder += '/';
+                siteAvatarFolder = folder;
                 return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folder))
                     .then(function(r) { return r.json(); })
                     .then(function(list) {
+                        // list-files returns `icons` array for historical reasons
                         if (!list || list.success !== true || !Array.isArray(list.icons)) return [];
-                        return list.icons.map(function(fn) { return folder + fn; });
+                        return list.icons.filter(function(fn) { return typeof fn === 'string' && fn.trim() !== ''; });
                     });
             })
-            .then(function(urls) {
-                avatarLibrary.innerHTML = '';
-                if (!urls || urls.length === 0) {
-                    var empty = document.createElement('div');
-                    empty.style.color = 'rgba(255,255,255,0.75)';
-                    empty.style.fontSize = '14px';
-                    empty.textContent = 'No avatars found in your avatars folder yet.';
-                    avatarLibrary.appendChild(empty);
-                    return;
-                }
-                urls.slice(0, 240).forEach(function(url) {
-                    // url is full URL; keep filename so we can store filename-only
-                    var filename = url.split('/').pop() || '';
-                    var btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'member-avatar-library-item';
-                    btn.innerHTML = '<img src="' + url + '" alt="">';
-                    btn.addEventListener('click', function() {
-                        setAvatarForTarget(filename);
-                        avatarLibrary.hidden = true;
-                    });
-                    avatarLibrary.appendChild(btn);
-                });
+            .then(function(filenames) {
+                siteAvatarFilenames = Array.isArray(filenames) ? filenames.slice() : [];
+                return siteAvatarFilenames;
             })
             .catch(function(err) {
-                console.warn('[Member] Failed to load avatar library', err);
+                console.warn('[Member] Failed to load site avatar filenames', err);
+                siteAvatarFilenames = [];
+                return [];
             });
+        return siteAvatarFilesPromise;
+    }
+
+    function pickRandomSiteAvatarChoices(count) {
+        count = count || 3;
+        var arr = Array.isArray(siteAvatarFilenames) ? siteAvatarFilenames.slice() : [];
+        // Fisher-Yates shuffle (partial)
+        for (var i = arr.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var tmp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = tmp;
+        }
+        var picked = arr.slice(0, Math.min(count, arr.length));
+        siteAvatarChoices = picked.map(function(fn) {
+            return { filename: fn, url: (siteAvatarFolder || '') + fn };
+        });
+    }
+
+    function ensureAvatarChoicesReady() {
+        return ensureSiteAvatarFilenames().then(function() {
+            pickRandomSiteAvatarChoices(3);
+            renderAvatarGrids();
+        });
+    }
+
+    function cameraSvgMarkup() {
+        // Simple inline camera icon
+        return (
+            '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+            '<path fill="currentColor" d="M9 4.5h6l1.2 2H20c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-10c0-1.1.9-2 2-2h3.8L9 4.5zm3 5.2a4.3 4.3 0 1 0 0 8.6a4.3 4.3 0 0 0 0-8.6zm0 1.8a2.5 2.5 0 1 1 0 5a2.5 2.5 0 0 1 0-5z"/>' +
+            '</svg>'
+        );
+    }
+
+    function getSelfTileSrc(target) {
+        if (target === 'register') {
+            return pendingRegisterAvatarPreviewUrl || '';
+        }
+        // profile
+        if (pendingProfileAvatarPreviewUrl) return pendingProfileAvatarPreviewUrl;
+        if (currentUser && currentUser.avatar) {
+            return resolveAvatarSrc(String(currentUser.avatar));
+        }
+        return '';
+    }
+
+    function renderAvatarGrids() {
+        renderAvatarGrid('register', avatarGridRegister);
+        renderAvatarGrid('profile', avatarGridProfile);
+    }
+
+    function renderAvatarGrid(target, container) {
+        if (!container) return;
+
+        // If profile grid is present but user is logged out, keep it empty
+        if (target === 'profile' && !currentUser) {
+            container.innerHTML = '';
+            return;
+        }
+
+        // Ensure we have 3 site choices (but don't block rendering)
+        var choices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, 3) : [];
+
+        // Default selection
+        if (!avatarSelection[target]) avatarSelection[target] = 'self';
+
+        container.innerHTML = '';
+
+        // Tile 0: self/upload
+        (function() {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'member-avatar-choice';
+            btn.dataset.choiceKey = 'self';
+            btn.setAttribute('aria-pressed', avatarSelection[target] === 'self' ? 'true' : 'false');
+            if (avatarSelection[target] === 'self') btn.classList.add('member-avatar-choice--selected');
+
+            var src = getSelfTileSrc(target);
+            if (src) {
+                btn.innerHTML = '<img src="' + src + '" alt="">';
+            } else {
+                btn.innerHTML = '<div class="member-avatar-choice-add">' + cameraSvgMarkup() + '<div class="member-avatar-choice-add-text">Add</div></div>';
+            }
+
+            container.appendChild(btn);
+        })();
+
+        // Tiles 1-3: site avatars
+        for (var i = 0; i < 3; i++) {
+            var c = choices[i] || null;
+            var key = 'site-' + i;
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'member-avatar-choice';
+            b.dataset.choiceKey = key;
+            b.dataset.siteIndex = String(i);
+            b.setAttribute('aria-pressed', avatarSelection[target] === key ? 'true' : 'false');
+            if (avatarSelection[target] === key) b.classList.add('member-avatar-choice--selected');
+            if (c && c.url) {
+                b.innerHTML = '<img src="' + c.url + '" alt="">';
+            } else {
+                b.innerHTML = '<div class="member-avatar-choice-add"><div class="member-avatar-choice-add-text">...</div></div>';
+            }
+            container.appendChild(b);
+        }
+    }
+
+    function onAvatarGridClick(target, e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.member-avatar-choice') : null;
+        if (!btn) return;
+        var key = btn.dataset.choiceKey || '';
+        if (!key) return;
+
+        // Second click on the selected tile opens crop editor
+        if (avatarSelection[target] === key) {
+            openCropperForAvatarChoice(target, key);
+            return;
+        }
+
+        // Otherwise just select it
+        selectAvatarChoice(target, key);
+    }
+
+    function selectAvatarChoice(target, key) {
+        avatarSelection[target] = key;
+
+        if (target === 'register') {
+            if (key.indexOf('site-') === 0) {
+                var idx = parseInt(key.split('-')[1] || '0', 10);
+                var c = siteAvatarChoices[idx];
+                pendingRegisterSiteUrl = c && c.url ? String(c.url) : '';
+                // Selecting site avatar overwrites any staged upload/crop
+                pendingRegisterAvatarBlob = null;
+                pendingRegisterAvatarPreviewUrl = '';
+            } else {
+                // self/upload tile
+                pendingRegisterSiteUrl = '';
+            }
+        } else if (target === 'profile') {
+            if (key.indexOf('site-') === 0) {
+                var pIdx = parseInt(key.split('-')[1] || '0', 10);
+                var pC = siteAvatarChoices[pIdx];
+                pendingProfileSiteUrl = pC && pC.url ? String(pC.url) : '';
+                // Selecting site avatar overwrites any staged upload/crop
+                pendingProfileAvatarBlob = null;
+                pendingProfileAvatarPreviewUrl = '';
+            } else {
+                // self/upload tile (keep current avatar as-is unless user crops/uploads)
+                pendingProfileSiteUrl = '';
+            }
+            updateHeaderSaveDiscardState();
+        }
+
+        renderAvatarGrids();
+    }
+
+    function openCropperForAvatarChoice(target, key) {
+        activeAvatarTarget = target;
+
+        if (key === 'self') {
+            // If we already have a staged blob, reopen cropper with it
+            if (target === 'register' && pendingRegisterAvatarBlob) {
+                openCropperForBlob(pendingRegisterAvatarBlob, 'avatar.png');
+                return;
+            }
+            if (target === 'profile' && pendingProfileAvatarBlob) {
+                openCropperForBlob(pendingProfileAvatarBlob, 'avatar.png');
+                return;
+            }
+
+            // If profile has an existing avatar, open cropper on it; otherwise open file picker
+            if (target === 'profile' && currentUser && currentUser.avatar) {
+                var src = resolveAvatarSrc(String(currentUser.avatar));
+                if (src) {
+                    openCropperForUrl(src, 'avatar.png');
+                    return;
+                }
+            }
+
+            // No avatar yet -> pick a file
+            openAvatarFilePicker();
+            return;
+        }
+
+        if (key.indexOf('site-') === 0) {
+            var idx = parseInt(key.split('-')[1] || '0', 10);
+            var c = siteAvatarChoices[idx];
+            if (c && c.url) {
+                openCropperForUrl(c.url, 'avatar.png');
+            }
+        }
+    }
+
+    function openCropperForBlob(blob, filename) {
+        if (!blob) return;
+        filename = filename || 'avatar.png';
+        var file = null;
+        try {
+            file = new File([blob], filename, { type: blob.type || 'image/png' });
+        } catch (e) {
+            // IE/older fallback
+            file = blob;
+            file.name = filename;
+            file.type = blob.type || 'image/png';
+        }
+        openCropperForFile(file);
+    }
+
+    function openCropperForUrl(url, filename) {
+        filename = filename || (url ? (String(url).split('/').pop() || 'avatar.png') : 'avatar.png');
+        // Fetch as blob first to avoid tainted canvas
+        fetch(url)
+            .then(function(r) { return r.blob(); })
+            .then(function(blob) {
+                openCropperForBlob(blob, filename);
+            })
+            .catch(function(err) {
+                console.warn('[Member] Failed to load avatar for cropping', err);
+                if (window.ToastComponent && ToastComponent.showError) {
+                    ToastComponent.showError('Could not load that avatar image.');
+                }
+            });
+    }
+
+    function squarePngFromImageBlob(blob, cb) {
+        try {
+            var url = URL.createObjectURL(blob);
+            var img = new Image();
+            img.onload = function() {
+                try { URL.revokeObjectURL(url); } catch (e) {}
+                var canvas = document.createElement('canvas');
+                canvas.width = 530;
+                canvas.height = 530;
+                var ctx = canvas.getContext('2d');
+                if (!ctx) return cb(null);
+
+                var cw = canvas.width, ch = canvas.height;
+                var iw = img.naturalWidth || img.width;
+                var ih = img.naturalHeight || img.height;
+                if (!iw || !ih) return cb(null);
+                var cover = Math.max(cw / iw, ch / ih);
+                var drawW = iw * cover;
+                var drawH = ih * cover;
+                var x = (cw - drawW) / 2;
+                var y = (ch - drawH) / 2;
+                ctx.clearRect(0, 0, cw, ch);
+                ctx.drawImage(img, x, y, drawW, drawH);
+                canvas.toBlob(function(out) {
+                    cb(out || null);
+                }, 'image/png', 0.92);
+            };
+            img.onerror = function() {
+                try { URL.revokeObjectURL(url); } catch (e) {}
+                cb(null);
+            };
+            img.src = url;
+        } catch (e) {
+            cb(null);
+        }
     }
 
     function openAvatarFilePicker() {
@@ -854,15 +1060,14 @@ const MemberModule = (function() {
                 // Do NOT upload immediately. Store blob and only upload on registration submit / header save.
                 if (activeAvatarTarget === 'register') {
                     pendingRegisterAvatarBlob = blob;
-                    if (registerAvatarHiddenInput) registerAvatarHiddenInput.value = '';
-                    if (registerAvatarPreview) {
-                        try {
-                            registerAvatarPreview.src = URL.createObjectURL(blob);
-                        } catch (e) {
-                            // ignore
-                        }
-                        registerAvatarPreview.alt = 'Selected avatar';
+                    pendingRegisterSiteUrl = '';
+                    avatarSelection.register = 'self';
+                    try {
+                        pendingRegisterAvatarPreviewUrl = URL.createObjectURL(blob);
+                    } catch (e) {
+                        pendingRegisterAvatarPreviewUrl = '';
                     }
+                    renderAvatarGrids();
                     closeCropper();
                     if (window.ToastComponent && ToastComponent.showSuccess) {
                         ToastComponent.showSuccess('Avatar selected');
@@ -871,15 +1076,17 @@ const MemberModule = (function() {
                     }
                 } else if (activeAvatarTarget === 'profile') {
                     pendingProfileAvatarBlob = blob;
-                    // Show preview immediately
-                    if (profileAvatarPreview) {
-                        try {
-                            profileAvatarPreview.src = URL.createObjectURL(blob);
-                        } catch (e) {
-                            // ignore
-                        }
-                        profileAvatarPreview.alt = 'Selected avatar';
+                    pendingProfileSiteUrl = '';
+                    avatarSelection.profile = 'self';
+                    try {
+                        pendingProfileAvatarPreviewUrl = URL.createObjectURL(blob);
+                    } catch (e) {
+                        pendingProfileAvatarPreviewUrl = '';
                     }
+                    if (profileAvatar && pendingProfileAvatarPreviewUrl) {
+                        profileAvatar.src = pendingProfileAvatarPreviewUrl;
+                    }
+                    renderAvatarGrids();
                     // Mark dirty so header Save lights up
                     updateHeaderSaveDiscardState();
                     closeCropper();
@@ -1137,6 +1344,36 @@ const MemberModule = (function() {
     }
 
     function handleHeaderSave() {
+        // If a site avatar is selected, copy it into the user's avatar file (as a square PNG)
+        // so it follows the same naming/overwrite rules as uploads.
+        if (pendingProfileSiteUrl && !pendingProfileAvatarBlob) {
+            var url = String(pendingProfileSiteUrl);
+            fetch(url)
+                .then(function(r) { return r.blob(); })
+                .then(function(blob) {
+                    return new Promise(function(resolve) {
+                        squarePngFromImageBlob(blob, function(out) { resolve(out); });
+                    });
+                })
+                .then(function(squareBlob) {
+                    if (!squareBlob) throw new Error('Could not prepare avatar image');
+                    pendingProfileAvatarBlob = squareBlob;
+                    pendingProfileSiteUrl = '';
+                    avatarSelection.profile = 'self';
+                    try { pendingProfileAvatarPreviewUrl = URL.createObjectURL(squareBlob); } catch (e) { pendingProfileAvatarPreviewUrl = ''; }
+                    if (profileAvatar && pendingProfileAvatarPreviewUrl) profileAvatar.src = pendingProfileAvatarPreviewUrl;
+                    renderAvatarGrids();
+                    handleProfileSave(function() { updateHeaderSaveDiscardState(); });
+                })
+                .catch(function(err) {
+                    console.warn('[Member] Failed to prepare site avatar', err);
+                    if (window.ToastComponent && ToastComponent.showError) {
+                        ToastComponent.showError('Could not use that avatar.');
+                    }
+                });
+            return;
+        }
+
         // Header save should save profile edits if any
         handleProfileSave(function() {
             updateHeaderSaveDiscardState();
@@ -1155,7 +1392,7 @@ const MemberModule = (function() {
         var confirm = profileEditConfirmInput ? profileEditConfirmInput.value : '';
         var nameChanged = name !== '' && name !== (profileOriginalName || '');
         var pwChanged = pw !== '' || confirm !== '';
-        var avatarChanged = (pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '') || !!pendingProfileAvatarBlob;
+        var avatarChanged = (pendingAvatarUrl || '') !== (profileOriginalAvatarUrl || '') || !!pendingProfileAvatarBlob || !!pendingProfileSiteUrl;
         return nameChanged || pwChanged || avatarChanged;
     }
 
@@ -1165,8 +1402,11 @@ const MemberModule = (function() {
         if (profileEditConfirmInput) profileEditConfirmInput.value = '';
         pendingAvatarUrl = profileOriginalAvatarUrl || '';
         pendingProfileAvatarBlob = null;
-        if (profileAvatarPreview) profileAvatarPreview.src = pendingAvatarUrl || '';
-        if (profileAvatar) profileAvatar.src = pendingAvatarUrl || getAvatarSource(currentUser);
+        pendingProfileSiteUrl = '';
+        pendingProfileAvatarPreviewUrl = '';
+        avatarSelection.profile = 'self';
+        if (profileAvatar) profileAvatar.src = getAvatarSource(currentUser);
+        renderAvatarGrids();
         updateProfileSaveState();
     }
 
@@ -1239,6 +1479,8 @@ const MemberModule = (function() {
         initMapLightingButtons();
         initMapStyleButtons();
         initProfilePickers();
+        // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
+        ensureAvatarChoicesReady();
         
         // Bring panel to front of stack
         App.bringToTop(panel);
@@ -2434,13 +2676,14 @@ const MemberModule = (function() {
         var emailInput = document.getElementById('member-register-email');
         var passwordInput = document.getElementById('member-register-password');
         var confirmInput = document.getElementById('member-register-confirm');
-        var avatarInput = document.getElementById('member-register-avatar');
         
         var name = nameInput ? nameInput.value.trim() : '';
         var email = emailInput ? emailInput.value.trim() : '';
         var password = passwordInput ? passwordInput.value : '';
         var confirm = confirmInput ? confirmInput.value : '';
-        var avatar = avatarInput ? avatarInput.value.trim() : '';
+        // Avatar is selected via 4-tile grid:
+        // - pendingRegisterAvatarBlob: cropped/uploaded (preferred)
+        // - pendingRegisterSiteUrl: chosen site avatar (we copy it into user's avatar file on submit)
         
         // Validation
         if (!name || !email || !password) {
@@ -2478,29 +2721,38 @@ const MemberModule = (function() {
             return;
         }
         
-        // Send registration request
-        var formData = new FormData();
-        formData.set('display_name', name);
-        formData.set('email', email);
-        formData.set('password', password);
-        formData.set('confirm', confirm);
-        // Avatar:
-        // - If chosen from library: avatar_file is a filename and we store it.
-        // - If uploaded/cropped: we attach avatar_file (blob) and upload to Bunny only after member is created.
-        if (avatar) {
-            // IMPORTANT: only set this when NOT uploading a file under the same key.
-            formData.set('avatar_file', avatar);
+        function prepareRegisterAvatarBlob() {
+            if (pendingRegisterAvatarBlob) return Promise.resolve(pendingRegisterAvatarBlob);
+            if (pendingRegisterSiteUrl) {
+                var url = String(pendingRegisterSiteUrl);
+                return fetch(url)
+                    .then(function(r) { return r.blob(); })
+                    .then(function(blob) {
+                        return new Promise(function(resolve) {
+                            squarePngFromImageBlob(blob, function(out) { resolve(out); });
+                        });
+                    });
+            }
+            return Promise.resolve(null);
         }
-        if (pendingRegisterAvatarBlob) {
-            formData.delete('avatar_file');
-            formData.append('avatar_file', pendingRegisterAvatarBlob, 'avatar.png');
-        }
-        
-        fetch('/gateway.php?action=add-member', {
-            method: 'POST',
-            body: formData
-        }).then(function(response) {
-            return response.text();
+
+        prepareRegisterAvatarBlob().then(function(avatarBlob) {
+            // Send registration request
+            var formData = new FormData();
+            formData.set('display_name', name);
+            formData.set('email', email);
+            formData.set('password', password);
+            formData.set('confirm', confirm);
+            if (avatarBlob) {
+                formData.append('avatar_file', avatarBlob, 'avatar.png');
+            }
+
+            return fetch('/gateway.php?action=add-member', {
+                method: 'POST',
+                body: formData
+            }).then(function(response) {
+                return response.text();
+            });
         }).then(function(text) {
             var payload = null;
             try {
@@ -2530,7 +2782,7 @@ const MemberModule = (function() {
                 email: email,
                 emailNormalized: email.toLowerCase(),
                 username: email,
-                avatar: payload.avatar_file || avatar,
+                avatar: payload.avatar_file || '',
                 type: 'member',
                 isAdmin: false
             };
@@ -2700,7 +2952,7 @@ const MemberModule = (function() {
     function getAvatarSource(user) {
         if (!user) return createPlaceholder('');
         var raw = user.avatar ? String(user.avatar).trim() : '';
-        if (raw) return raw;
+        if (raw) return resolveAvatarSrc(raw) || raw;
         return createPlaceholder(user.name || user.email || 'U');
     }
 
@@ -2765,11 +3017,12 @@ const MemberModule = (function() {
             if (profileEditConfirmInput) profileEditConfirmInput.value = '';
             profileOriginalAvatarUrl = currentUser.avatar ? String(currentUser.avatar) : '';
             pendingAvatarUrl = profileOriginalAvatarUrl;
-            if (profileAvatarPreview) {
-                profileAvatarPreview.src = pendingAvatarUrl || '';
-                profileAvatarPreview.alt = pendingAvatarUrl ? 'Selected avatar' : '';
-            }
+            pendingProfileSiteUrl = '';
+            pendingProfileAvatarPreviewUrl = '';
+            pendingProfileAvatarBlob = null;
+            avatarSelection.profile = 'self';
             updateProfileSaveState();
+            renderAvatarGrids();
             
             // Hide auth tabs when logged in
             if (authTabs) authTabs.classList.add('member-auth-tabs--logged-in');
@@ -2815,11 +3068,16 @@ const MemberModule = (function() {
             if (profileEditConfirmInput) profileEditConfirmInput.value = '';
             profileOriginalAvatarUrl = '';
             pendingAvatarUrl = '';
-            if (profileAvatarPreview) {
-                profileAvatarPreview.src = '';
-                profileAvatarPreview.alt = '';
-            }
+            pendingProfileSiteUrl = '';
+            pendingProfileAvatarPreviewUrl = '';
+            pendingProfileAvatarBlob = null;
+            pendingRegisterSiteUrl = '';
+            pendingRegisterAvatarPreviewUrl = '';
+            pendingRegisterAvatarBlob = null;
+            avatarSelection.register = 'self';
+            avatarSelection.profile = 'self';
             updateProfileSaveState();
+            renderAvatarGrids();
             
             // Show auth tabs
             if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');
