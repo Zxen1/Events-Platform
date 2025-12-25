@@ -1604,10 +1604,13 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 12px;
+  /* No hard-coded SVGs: draw the chevron using CSS gradients */
+  background-image:
+      linear-gradient(45deg, transparent 50%, #fff 50%),
+      linear-gradient(-45deg, transparent 50%, #fff 50%);
+  background-repeat: no-repeat, no-repeat;
+  background-position: calc(100% - 18px) 50%, calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
 }
 
 .admin-checkout-option-field-select:focus {

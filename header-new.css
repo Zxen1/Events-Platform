@@ -183,6 +183,29 @@
 .header-modeswitch-button-icon {
   width: 20px;
   height: 20px;
+  display: block;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.header-modeswitch-button-icon--recents {
+  -webkit-mask-image: var(--header-icon-recents);
+  mask-image: var(--header-icon-recents);
+}
+
+.header-modeswitch-button-icon--posts {
+  -webkit-mask-image: var(--header-icon-posts);
+  mask-image: var(--header-icon-posts);
+}
+
+.header-modeswitch-button-icon--map {
+  -webkit-mask-image: var(--header-icon-map);
+  mask-image: var(--header-icon-map);
 }
 
 .header-modeswitch-button-text {

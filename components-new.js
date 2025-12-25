@@ -52,7 +52,8 @@ const Icons = {
 const ImageAddTileComponent = (function(){
     
     function cameraSvgMarkup() {
-        return Icons.camera;
+        // No hard-coded SVG fallbacks allowed (icons must come from system images).
+        return '';
     }
     
     // Returns HTML string (so callers can drop into innerHTML safely)
@@ -62,9 +63,9 @@ const ImageAddTileComponent = (function(){
         var iconClass = options.iconClass || '';
         var textClass = options.textClass || '';
         var label = options.label || 'Add';
-        
+
         return (
-            '<div class="' + iconClass + '">' + cameraSvgMarkup() + '</div>' +
+            '<div class="' + iconClass + '"></div>' +
             '<div class="' + textClass + '">' + label + '</div>'
         );
     }
@@ -3598,10 +3599,12 @@ const MapControlRowComponent = (function(){
         row.appendChild(geolocateBtn);
         
         // Compass button
+        // NOTE: Compass needs to support multi-color artwork (eg red/blue needle), so it uses <img>,
+        // not a CSS mask (masks flatten to a single color).
         var compassBtn = document.createElement('button');
         compassBtn.type = 'button';
         compassBtn.className = prefix + '-compass';
-        compassBtn.innerHTML = '<span class="' + prefix + '-compass-icon" aria-hidden="true"></span>';
+        compassBtn.innerHTML = '<img class="' + prefix + '-compass-img" alt="" style="display:none;">';
         compassBtn.title = 'Reset north';
         row.appendChild(compassBtn);
         
@@ -3780,7 +3783,7 @@ const MapControlRowComponent = (function(){
         
         // Sync compass rotation with map bearing and pitch
         if (map) {
-            var compassIcon = compassBtn.querySelector('.' + prefix + '-compass-icon');
+            var compassIcon = compassBtn.querySelector('.' + prefix + '-compass-icon, .' + prefix + '-compass-img');
             function updateCompass() {
                 if (compassIcon) {
                     var bearing = map.getBearing();
@@ -3801,7 +3804,7 @@ const MapControlRowComponent = (function(){
         
         instances.push(instance);
 
-        // Apply system image masks if configured
+        // Apply system images if configured
         try {
             var sys = (window.App && typeof App.getState === 'function') ? (App.getState('system_images') || {}) : {};
             if (window.App && typeof App.getImageUrl === 'function' && sys) {
@@ -3809,17 +3812,29 @@ const MapControlRowComponent = (function(){
                 var compassFilename = sys.icon_compass || '';
                 
                 var geoEl = geolocateBtn.querySelector('.' + prefix + '-geolocate-icon');
-                var compassEl = compassBtn.querySelector('.' + prefix + '-compass-icon');
+                var compassImg = compassBtn.querySelector('.' + prefix + '-compass-img');
                 
                 if (geoEl && geoFilename) {
                     var geoUrl = App.getImageUrl('systemImages', geoFilename);
                     geoEl.style.webkitMaskImage = 'url(' + geoUrl + ')';
                     geoEl.style.maskImage = 'url(' + geoUrl + ')';
                 }
-                if (compassEl && compassFilename) {
+                
+                // Compass uses <img> so multi-color icons are preserved.
+                // Also avoid broken-image icons by only setting src after a successful load.
+                if (compassImg && compassFilename) {
                     var compassUrl = App.getImageUrl('systemImages', compassFilename);
-                    compassEl.style.webkitMaskImage = 'url(' + compassUrl + ')';
-                    compassEl.style.maskImage = 'url(' + compassUrl + ')';
+                    var testImg = new Image();
+                    testImg.onload = function() {
+                        compassImg.src = compassUrl;
+                        compassImg.style.display = 'block';
+                    };
+                    testImg.onerror = function() {
+                        // Leave hidden on error
+                        compassImg.removeAttribute('src');
+                        compassImg.style.display = 'none';
+                    };
+                    testImg.src = compassUrl;
                 }
             }
         } catch (e) {

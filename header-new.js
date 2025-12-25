@@ -116,36 +116,6 @@ const HeaderModule = (function() {
             return;
         }
         
-        function rememberFallbackSrc(imgEl) {
-            if (!imgEl) return;
-            if (!imgEl.dataset) return;
-            if (!imgEl.dataset.fallbackSrc) {
-                // Preserve whatever was in the HTML initially (eg. inline SVG data URI)
-                imgEl.dataset.fallbackSrc = imgEl.getAttribute('src') || '';
-            }
-        }
-        
-        function setImgSrcIfLoads(imgEl, nextSrc) {
-            if (!imgEl || !nextSrc) return;
-            rememberFallbackSrc(imgEl);
-            
-            // If it's already set, skip churn
-            if (imgEl.getAttribute('src') === nextSrc) return;
-            
-            // Preload first; only swap if it loads successfully
-            var testImg = new Image();
-            testImg.onload = function() {
-                imgEl.src = nextSrc;
-            };
-            testImg.onerror = function() {
-                // Keep fallback instead of replacing with a broken image
-                if (imgEl.dataset && imgEl.dataset.fallbackSrc) {
-                    imgEl.src = imgEl.dataset.fallbackSrc;
-                }
-            };
-            testImg.src = nextSrc;
-        }
-        
         function setHeaderCssVar(name, url) {
             try {
                 document.documentElement.style.setProperty(name, url ? ('url("' + url + '")') : '');
@@ -183,20 +153,15 @@ const HeaderModule = (function() {
             setHeaderCssVar('--header-icon-fullscreen-exit', window.App.getImageUrl('systemImages', systemImages.icon_fullscreen_exit));
         }
         
-        // Mode switch icons
-        var recentsIcon = document.querySelector('.header-modeswitch-button[data-mode="recents"] .header-modeswitch-button-icon');
-        if (recentsIcon && systemImages.icon_recents) {
-            setImgSrcIfLoads(recentsIcon, window.App.getImageUrl('systemImages', systemImages.icon_recents));
+        // Mode switch icons (NO FALLBACKS)
+        if (systemImages.icon_recents) {
+            setHeaderCssVar('--header-icon-recents', window.App.getImageUrl('systemImages', systemImages.icon_recents));
         }
-        
-        var postsIcon = document.querySelector('.header-modeswitch-button[data-mode="posts"] .header-modeswitch-button-icon');
-        if (postsIcon && systemImages.icon_posts) {
-            setImgSrcIfLoads(postsIcon, window.App.getImageUrl('systemImages', systemImages.icon_posts));
+        if (systemImages.icon_posts) {
+            setHeaderCssVar('--header-icon-posts', window.App.getImageUrl('systemImages', systemImages.icon_posts));
         }
-        
-        var mapIcon = document.querySelector('.header-modeswitch-button[data-mode="map"] .header-modeswitch-button-icon');
-        if (mapIcon && systemImages.icon_map) {
-            setImgSrcIfLoads(mapIcon, window.App.getImageUrl('systemImages', systemImages.icon_map));
+        if (systemImages.icon_map) {
+            setHeaderCssVar('--header-icon-map', window.App.getImageUrl('systemImages', systemImages.icon_map));
         }
     }
     

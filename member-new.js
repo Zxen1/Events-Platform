@@ -611,7 +611,7 @@ const MemberModule = (function() {
             pendingAvatarUrl = url;
             // Also update the main avatar + header immediately for feedback (even before saving)
             if (profileAvatar) {
-                profileAvatar.src = resolveAvatarSrc(url) || getAvatarSource(currentUser);
+                setImgOrHide(profileAvatar, resolveAvatarSrc(url) || getAvatarSource(currentUser));
             }
             if (currentUser) {
                 currentUser.avatar = url; // filename (or URL) staged; persists only after save
@@ -1488,7 +1488,7 @@ const MemberModule = (function() {
         pendingProfileSiteUrl = '';
         pendingProfileAvatarPreviewUrl = '';
         avatarSelection.profile = 'self';
-        if (profileAvatar) profileAvatar.src = getAvatarSource(currentUser);
+        if (profileAvatar) setImgOrHide(profileAvatar, getAvatarSource(currentUser));
         renderAvatarGrids();
         updateProfileSaveState();
     }
@@ -3048,28 +3048,26 @@ const MemberModule = (function() {
        AVATAR HELPERS
        -------------------------------------------------------------------------- */
     
-    function svgPlaceholder(letter) {
-        var palette = ['#2e3a72', '#0ea5e9', '#f97316', '#14b8a6', '#a855f7'];
-        var color = palette[letter.charCodeAt(0) % palette.length];
-        var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="' + color + '"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="36" font-family="system-ui, sans-serif" fill="#ffffff">' + letter + '</text></svg>';
-        try {
-            return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
-        } catch (e) {
-            return 'data:image/svg+xml;base64,' + btoa(svg);
-        }
-    }
-
-    function createPlaceholder(name) {
-        var trimmed = (name || '').trim();
-        var initial = trimmed ? trimmed[0].toUpperCase() : 'U';
-        return svgPlaceholder(initial);
-    }
-
+    // NOTE: No hard-coded SVG fallbacks allowed.
+    // If user has no avatar_file, we hide avatar UI and show the normal member icon in the header.
     function getAvatarSource(user) {
-        if (!user) return createPlaceholder('');
+        if (!user) return '';
         var raw = user.avatar ? String(user.avatar).trim() : '';
-        if (raw) return resolveAvatarSrc(raw) || raw;
-        return createPlaceholder(user.name || user.email || 'U');
+        if (!raw) return '';
+        return resolveAvatarSrc(raw) || raw;
+    }
+
+    function setImgOrHide(imgEl, src) {
+        if (!imgEl) return;
+        if (src) {
+            imgEl.hidden = false;
+            imgEl.style.display = '';
+            imgEl.src = src;
+        } else {
+            imgEl.hidden = true;
+            imgEl.style.display = 'none';
+            imgEl.removeAttribute('src');
+        }
     }
 
     /* --------------------------------------------------------------------------
@@ -3114,13 +3112,8 @@ const MemberModule = (function() {
             // Update profile display
             if (profileAvatar) {
                 var descriptor = currentUser.name || currentUser.email || 'Member';
-                profileAvatar.dataset.fallbackApplied = '';
-                profileAvatar.onerror = function() {
-                    if (profileAvatar.dataset.fallbackApplied === '1') return;
-                    profileAvatar.dataset.fallbackApplied = '1';
-                    profileAvatar.src = createPlaceholder(descriptor);
-                };
-                profileAvatar.src = getAvatarSource(currentUser);
+                profileAvatar.onerror = null;
+                setImgOrHide(profileAvatar, getAvatarSource(currentUser));
                 profileAvatar.alt = descriptor + "'s avatar";
             }
             if (profileName) profileName.textContent = currentUser.name || 'Member';
@@ -3234,15 +3227,28 @@ const MemberModule = (function() {
         var iconSpan = memberBtn.querySelector('.header-access-button-icon--member');
         
         if (user) {
-            // Show avatar, hide icon
-            if (avatarImg) {
-                avatarImg.src = getAvatarSource(user);
-                avatarImg.classList.remove('header-access-button-avatar--hidden');
+            var src = getAvatarSource(user);
+            if (src) {
+                // Show avatar, hide icon
+                if (avatarImg) {
+                    avatarImg.src = src;
+                    avatarImg.classList.remove('header-access-button-avatar--hidden');
+                }
+                if (iconSpan) {
+                    iconSpan.classList.add('header-access-button-icon--hidden');
+                }
+                memberBtn.classList.add('has-avatar');
+            } else {
+                // No avatar_file: hide avatar, show icon (no generated placeholders)
+                if (avatarImg) {
+                    avatarImg.removeAttribute('src');
+                    avatarImg.classList.add('header-access-button-avatar--hidden');
+                }
+                if (iconSpan) {
+                    iconSpan.classList.remove('header-access-button-icon--hidden');
+                }
+                memberBtn.classList.remove('has-avatar');
             }
-            if (iconSpan) {
-                iconSpan.classList.add('header-access-button-icon--hidden');
-            }
-            memberBtn.classList.add('has-avatar');
         } else {
             // Hide avatar, show icon
             if (avatarImg) {
