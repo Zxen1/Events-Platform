@@ -47,6 +47,7 @@
     var scrollGapEl = null;
     var scrollGapBottomEl = null;
     var isAdjustingScroll = false;
+    var suppressGapConsumeUntil = 0;
     
     // Reference data (not for change tracking - just data needed to build the UI)
     var loadedFieldsets = [];
@@ -137,6 +138,7 @@
     
     function maybeConsumeGapOnScroll() {
         if (isAdjustingScroll) return;
+        if (suppressGapConsumeUntil && Date.now() < suppressGapConsumeUntil) return;
         
         var sc = findScrollContainer();
         if (!sc) return;
@@ -184,6 +186,10 @@
             fn();
             return;
         }
+
+        // Prevent our scroll-gap cleanup handler from immediately consuming the slack we add
+        // while anchoring (scroll events can fire async after scrollTop changes).
+        suppressGapConsumeUntil = Date.now() + 250;
         
         ensureScrollGap();
         ensureScrollGapBottom();
