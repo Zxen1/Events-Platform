@@ -2598,27 +2598,28 @@ const AdminModule = (function() {
         }
 
         function ensureSettingsScrollGaps() {
-            if (!settingsContainer) return;
+            var sc = getAdminPanelScrollContainer();
+            if (!sc) return;
 
             if (!settingsScrollGapTopEl || !settingsScrollGapTopEl.isConnected) {
-                settingsScrollGapTopEl = settingsContainer.querySelector('.admin-settings-scroll-gap');
+                settingsScrollGapTopEl = sc.querySelector('.admin-panel-scroll-gap');
                 if (!settingsScrollGapTopEl) {
                     settingsScrollGapTopEl = document.createElement('div');
-                    settingsScrollGapTopEl.className = 'admin-settings-scroll-gap';
+                    settingsScrollGapTopEl.className = 'admin-panel-scroll-gap';
                     settingsScrollGapTopEl.setAttribute('aria-hidden', 'true');
-                    settingsContainer.insertBefore(settingsScrollGapTopEl, settingsContainer.firstChild);
+                    sc.insertBefore(settingsScrollGapTopEl, sc.firstChild);
                 }
             }
 
             if (!settingsScrollGapBottomEl || !settingsScrollGapBottomEl.isConnected) {
-                settingsScrollGapBottomEl = settingsContainer.querySelector('.admin-settings-scroll-gap-bottom');
+                settingsScrollGapBottomEl = sc.querySelector('.admin-panel-scroll-gap-bottom');
                 if (!settingsScrollGapBottomEl) {
                     settingsScrollGapBottomEl = document.createElement('div');
-                    settingsScrollGapBottomEl.className = 'admin-settings-scroll-gap-bottom';
+                    settingsScrollGapBottomEl.className = 'admin-panel-scroll-gap-bottom';
                     settingsScrollGapBottomEl.setAttribute('aria-hidden', 'true');
-                    settingsContainer.appendChild(settingsScrollGapBottomEl);
-                } else if (settingsScrollGapBottomEl !== settingsContainer.lastChild) {
-                    settingsContainer.appendChild(settingsScrollGapBottomEl);
+                    sc.appendChild(settingsScrollGapBottomEl);
+                } else if (settingsScrollGapBottomEl !== sc.lastChild) {
+                    sc.appendChild(settingsScrollGapBottomEl);
                 }
             }
         }
@@ -2736,8 +2737,8 @@ const AdminModule = (function() {
         // Bind lightweight gap-consume handler once (keeps gaps from lingering visibly)
         ensureSettingsScrollGaps();
         var settingsScrollEl = getAdminPanelScrollContainer();
-        if (settingsScrollEl && !settingsScrollEl._settingsGapConsumeBound) {
-            settingsScrollEl._settingsGapConsumeBound = true;
+        if (settingsScrollEl && !settingsScrollEl._adminPanelGapConsumeBound) {
+            settingsScrollEl._adminPanelGapConsumeBound = true;
             settingsScrollEl.addEventListener('scroll', maybeConsumeSettingsGapsOnScroll, { passive: true });
         }
 

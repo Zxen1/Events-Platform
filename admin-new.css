@@ -271,6 +271,14 @@
   background: transparent;
 }
 
+/* Scroll gap spacers (used by Admin Settings accordions to keep clicked headers stationary) */
+.admin-panel-scroll-gap,
+.admin-panel-scroll-gap-bottom {
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+
 .admin-panel-body-item {
   width: 100%;
   max-width: 420px;
