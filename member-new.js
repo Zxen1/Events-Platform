@@ -1858,6 +1858,11 @@ const MemberModule = (function() {
                     
                     subcategoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text">Select a subcategory</span><span class="member-formpicker-menu-button-arrow">▼</span>';
                     subcategoryWrapper.hidden = false;
+
+                    // Auto-open subcategory menu as soon as a category is chosen.
+                    // Keep it open until a subcategory is selected.
+                    categoryMenu.classList.remove('open');
+                    subcategoryMenu.classList.add('open');
                 } else {
                     subcategoryWrapper.hidden = true;
                 }
@@ -1885,7 +1890,12 @@ const MemberModule = (function() {
         // Close menus on outside click
         document.addEventListener('click', function(e) {
             if (!categoryMenu.contains(e.target)) categoryMenu.classList.remove('open');
-            if (!subcategoryMenu.contains(e.target)) subcategoryMenu.classList.remove('open');
+            if (!subcategoryMenu.contains(e.target)) {
+                // Keep subcategory menu open until user has picked a subcategory.
+                if (!(selectedCategory && !selectedSubcategory)) {
+                    subcategoryMenu.classList.remove('open');
+                }
+            }
         });
         
         categoryMenu.appendChild(categoryBtn);
@@ -1897,12 +1907,9 @@ const MemberModule = (function() {
         dropdownsContainer.appendChild(subcategoryWrapper);
         container.appendChild(dropdownsContainer);
 
-        // Auto-open the correct menu when nothing is selected yet
-        if (!selectedCategory) {
-            categoryMenu.classList.add('open');
-        } else if (selectedCategory && !selectedSubcategory && !subcategoryWrapper.hidden) {
-            subcategoryMenu.classList.add('open');
-        }
+        // Auto-open category menu when nothing is selected yet.
+        // Subcategory auto-open is handled when a category is picked.
+        if (!selectedCategory) categoryMenu.classList.add('open');
     }
     
     function renderConfiguredFields() {
