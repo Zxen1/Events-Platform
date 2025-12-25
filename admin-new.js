@@ -2588,8 +2588,94 @@ const AdminModule = (function() {
     function attachSettingsHandlers() {
         if (!settingsContainer) return;
 
+        // Scroll anchoring for Settings tab accordions (keeps clicked headers stationary)
+        var settingsScrollGapTopEl = null;
+        var settingsScrollGapBottomEl = null;
+        var settingsIsAdjustingScroll = false;
+
         function getAdminPanelScrollContainer() {
             return (settingsContainer.closest('.admin-panel-body') || settingsContainer.closest('.admin-panel-content') || document.scrollingElement || document.documentElement);
+        }
+
+        function ensureSettingsScrollGaps() {
+            if (!settingsContainer) return;
+
+            if (!settingsScrollGapTopEl || !settingsScrollGapTopEl.isConnected) {
+                settingsScrollGapTopEl = settingsContainer.querySelector('.admin-settings-scroll-gap');
+                if (!settingsScrollGapTopEl) {
+                    settingsScrollGapTopEl = document.createElement('div');
+                    settingsScrollGapTopEl.className = 'admin-settings-scroll-gap';
+                    settingsScrollGapTopEl.setAttribute('aria-hidden', 'true');
+                    settingsContainer.insertBefore(settingsScrollGapTopEl, settingsContainer.firstChild);
+                }
+            }
+
+            if (!settingsScrollGapBottomEl || !settingsScrollGapBottomEl.isConnected) {
+                settingsScrollGapBottomEl = settingsContainer.querySelector('.admin-settings-scroll-gap-bottom');
+                if (!settingsScrollGapBottomEl) {
+                    settingsScrollGapBottomEl = document.createElement('div');
+                    settingsScrollGapBottomEl.className = 'admin-settings-scroll-gap-bottom';
+                    settingsScrollGapBottomEl.setAttribute('aria-hidden', 'true');
+                    settingsContainer.appendChild(settingsScrollGapBottomEl);
+                } else if (settingsScrollGapBottomEl !== settingsContainer.lastChild) {
+                    settingsContainer.appendChild(settingsScrollGapBottomEl);
+                }
+            }
+        }
+
+        function getSettingsGapHeight() {
+            ensureSettingsScrollGaps();
+            return (settingsScrollGapTopEl && settingsScrollGapTopEl.isConnected) ? (settingsScrollGapTopEl.offsetHeight || 0) : 0;
+        }
+
+        function setSettingsGapHeight(px) {
+            ensureSettingsScrollGaps();
+            if (!settingsScrollGapTopEl) return;
+            var next = Math.max(0, Math.round(px || 0));
+            settingsScrollGapTopEl.style.height = next ? (next + 'px') : '0px';
+        }
+
+        function getSettingsBottomGapHeight() {
+            ensureSettingsScrollGaps();
+            return (settingsScrollGapBottomEl && settingsScrollGapBottomEl.isConnected) ? (settingsScrollGapBottomEl.offsetHeight || 0) : 0;
+        }
+
+        function setSettingsBottomGapHeight(px) {
+            ensureSettingsScrollGaps();
+            if (!settingsScrollGapBottomEl) return;
+            var next = Math.max(0, Math.round(px || 0));
+            settingsScrollGapBottomEl.style.height = next ? (next + 'px') : '0px';
+        }
+
+        function maybeConsumeSettingsGapsOnScroll() {
+            if (settingsIsAdjustingScroll) return;
+            var sc = getAdminPanelScrollContainer();
+            if (!sc) return;
+
+            var gap = getSettingsGapHeight();
+            var bottomGap = getSettingsBottomGapHeight();
+
+            // If user scrolls up into top gap, reduce it so they never see blank space
+            if (gap && sc.scrollTop < gap) {
+                var reduceBy = gap - sc.scrollTop;
+                settingsIsAdjustingScroll = true;
+                setSettingsGapHeight(gap - reduceBy);
+                sc.scrollTop = 0;
+                settingsIsAdjustingScroll = false;
+            }
+
+            // If user scrolls down into bottom gap, reduce it so they never see blank space
+            if (bottomGap) {
+                var maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
+                var distanceToBottom = maxScrollTop - sc.scrollTop;
+                if (distanceToBottom < bottomGap) {
+                    var reduceBottomBy = bottomGap - distanceToBottom;
+                    settingsIsAdjustingScroll = true;
+                    setSettingsBottomGapHeight(bottomGap - reduceBottomBy);
+                    sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
+                    settingsIsAdjustingScroll = false;
+                }
+            }
         }
 
         function withScrollAnchor(anchorEl, fn) {
@@ -2598,6 +2684,7 @@ const AdminModule = (function() {
                 if (typeof fn === 'function') fn();
                 return;
             }
+            ensureSettingsScrollGaps();
             var scRect = sc.getBoundingClientRect();
             var anchorRect = anchorEl.getBoundingClientRect();
             var oldTop = anchorRect.top - scRect.top;
@@ -2607,14 +2694,53 @@ const AdminModule = (function() {
                 if (!anchorEl.isConnected) return;
                 var scNow = getAdminPanelScrollContainer();
                 if (!scNow) return;
+                // If collapse reduced scrollHeight, restore old scrollTop by adding bottom slack first
+                var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+                if (oldScrollTop > maxAfter) {
+                    var clampSlack = oldScrollTop - maxAfter;
+                    setSettingsBottomGapHeight(getSettingsBottomGapHeight() + clampSlack);
+                    void scNow.scrollHeight;
+                }
+
+                settingsIsAdjustingScroll = true;
                 scNow.scrollTop = oldScrollTop;
+                settingsIsAdjustingScroll = false;
                 var scNowRect = scNow.getBoundingClientRect();
                 var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
                 var delta = newTop - oldTop;
-                if (delta) scNow.scrollTop = scNow.scrollTop + delta;
+                if (!delta) return;
+
+                var currentScrollTop = scNow.scrollTop;
+
+                // If we'd need to scroll above 0 to keep anchor stationary, create top slack
+                if (currentScrollTop + delta < 0) {
+                    var topSlack = -(currentScrollTop + delta);
+                    setSettingsGapHeight(getSettingsGapHeight() + topSlack);
+                    delta = delta + topSlack;
+                }
+
+                // If we'd need to scroll past maxScrollTop, create bottom slack
+                var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+                if (currentScrollTop + delta > maxNow) {
+                    var bottomSlack = (currentScrollTop + delta) - maxNow;
+                    setSettingsBottomGapHeight(getSettingsBottomGapHeight() + bottomSlack);
+                    void scNow.scrollHeight;
+                }
+
+                settingsIsAdjustingScroll = true;
+                scNow.scrollTop = currentScrollTop + delta;
+                settingsIsAdjustingScroll = false;
             });
         }
         
+        // Bind lightweight gap-consume handler once (keeps gaps from lingering visibly)
+        ensureSettingsScrollGaps();
+        var settingsScrollEl = getAdminPanelScrollContainer();
+        if (settingsScrollEl && !settingsScrollEl._settingsGapConsumeBound) {
+            settingsScrollEl._settingsGapConsumeBound = true;
+            settingsScrollEl.addEventListener('scroll', maybeConsumeSettingsGapsOnScroll, { passive: true });
+        }
+
         // Attach accordion toggles (Image Manager + Image Files)
         settingsContainer.querySelectorAll('.admin-settings-imagemanager-accordion').forEach(function(acc) {
             var header = acc.querySelector('.admin-settings-imagemanager-accordion-header');
