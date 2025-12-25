@@ -17,12 +17,13 @@
 
 START TRANSACTION;
 
--- 1) Create target databases (schemas)
-CREATE DATABASE IF NOT EXISTS `funmapco_system`
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-
-CREATE DATABASE IF NOT EXISTS `funmapco_content`
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+-- 1) Target databases must be created in cPanel first (shared hosting users often
+--    cannot CREATE DATABASE from SQL; they'll get #1044 access denied).
+--
+-- Create these in cPanel → MySQL® Databases:
+--   - funmapco_system
+--   - funmapco_content
+-- Then add your MySQL user to BOTH databases with ALL PRIVILEGES.
 
 -- 2) Move SYSTEM tables (site-wide configuration)
 RENAME TABLE
