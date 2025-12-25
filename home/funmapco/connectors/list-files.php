@@ -351,10 +351,13 @@ try {
                 $storageZoneName = $zoneRow && isset($zoneRow['setting_value']) ? trim($zoneRow['setting_value']) : '';
 
                 if ($storageApiKey === '' || $storageZoneName === '') {
-                    http_response_code(500);
+                    // Don't throw a hard 500 here; this endpoint is used for background sync.
+                    // Return a clean JSON response so the frontend can skip sync without noisy console 500s.
+                    http_response_code(200);
                     echo json_encode([
                         'success' => false,
                         'message' => 'Bunny Storage API credentials not configured',
+                        'icons' => [],
                     ]);
                     return;
                 }

@@ -448,6 +448,13 @@ const AdminModule = (function() {
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (!res.settings) return;
+
+                // If Bunny Storage isn't configured, don't attempt background sync (avoids noisy 500s).
+                // Note: storage_api_key is intentionally not exposed to frontend, so we can only check zone name here.
+                if (!res.settings.storage_zone_name) {
+                    localStorage.setItem(syncKey, 'true');
+                    return;
+                }
                 
                 // Sync ALL data types from their Bunny CDN folders
                 // Each folder syncs to its corresponding table (category_icons, system_images, amenities, currencies, phone_prefixes)
