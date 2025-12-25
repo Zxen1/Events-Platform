@@ -18,6 +18,16 @@
 (function(){
   'use strict';
   
+  // This script is included on every page load.
+  // Only activate filtering when the admin setting has enabled it (cached in localStorage).
+  try {
+    var enabled = (localStorage.getItem('enableConsoleFilter') === 'true');
+    if (!enabled) return;
+  } catch (e) {
+    // If localStorage is blocked/unavailable, default to OFF.
+    return;
+  }
+
   const originalWarn = console.warn;
   
   // ========================================
