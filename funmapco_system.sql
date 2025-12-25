@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 25, 2025 at 09:15 PM
+-- Generation Time: Dec 25, 2025 at 11:02 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `funmapco_db`
+-- Database: `funmapco_system`
 --
 
 -- --------------------------------------------------------
@@ -528,26 +528,6 @@ INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkou
 (2, 'standard', 'Standard', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2025-12-25 12:10:39'),
 (3, 'featured', 'Featured', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2025-12-25 12:10:39'),
 (4, 'premium', 'Premium', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2025-12-25 12:10:39');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `commissions`
---
-
-CREATE TABLE `commissions` (
-  `id` int(11) NOT NULL,
-  `transaction_id` int(11) DEFAULT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `member_id` int(11) DEFAULT NULL,
-  `member_name` varchar(255) DEFAULT NULL,
-  `gross_amount` decimal(10,2) DEFAULT NULL,
-  `site_commission` decimal(10,2) DEFAULT NULL,
-  `member_payout` decimal(10,2) DEFAULT NULL,
-  `payout_status` enum('pending','paid') DEFAULT 'pending',
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
 
@@ -1082,74 +1062,6 @@ INSERT INTO `layout_tabs` (`id`, `tab_key`, `panel_key`, `tab_name`, `sort_order
 -- --------------------------------------------------------
 
 --
--- Table structure for table `logs`
---
-
-CREATE TABLE `logs` (
-  `id` int(11) NOT NULL,
-  `actor_type` enum('admin','member','codex','system') DEFAULT 'codex',
-  `actor_id` int(11) DEFAULT NULL,
-  `action` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `ip_address` varchar(45) DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `media`
---
-
-CREATE TABLE `media` (
-  `id` int(11) NOT NULL,
-  `member_id` int(11) DEFAULT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `file_name` varchar(255) DEFAULT NULL,
-  `file_url` varchar(500) DEFAULT NULL,
-  `file_size` int(11) DEFAULT NULL,
-  `uploaded_at` datetime DEFAULT current_timestamp(),
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `members`
---
-
-CREATE TABLE `members` (
-  `id` int(11) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `username` varchar(255) DEFAULT NULL,
-  `avatar_file` varchar(255) DEFAULT NULL,
-  `username_key` varchar(255) DEFAULT NULL,
-  `theme` varchar(20) DEFAULT NULL,
-  `language` varchar(10) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT NULL,
-  `country_code` varchar(2) DEFAULT NULL,
-  `map_lighting` varchar(20) DEFAULT 'day',
-  `map_style` varchar(20) DEFAULT 'standard',
-  `created_at` datetime DEFAULT current_timestamp(),
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `members`
---
-
-INSERT INTO `members` (`id`, `email`, `password_hash`, `username`, `avatar_file`, `username_key`, `theme`, `language`, `currency`, `country_code`, `map_lighting`, `map_style`, `created_at`, `backup_json`, `updated_at`) VALUES
-(1, 'test@funmap.com', '$2y$10$7ABTYshHSH4SsxEH2uXwkuv.FLxVlqwkOrtkxFioJFtrK6drCs.Lm', 'TestUser', NULL, 'testuser', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-22 01:27:04', NULL, '2025-10-30 05:10:15'),
-(2, 'wikidata@funmap.com', '$2a$12$/TY3Fr3AjdRMunhyA1TLzuu6DubnXkLaWc7CpdvxGdkWFEeQwNi4G', 'Wikidata / Wikipedia (CC BY-SA 4.0)', 'assets/avatars/wikipedia.png', 'wikidata-/-wikipedia-(cc-by-sa-4.0)', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-25 19:00:27', NULL, '2025-11-06 13:07:35'),
-(4, 'shs@funmap.com', '$2y$10$zUWx4bFAUhgzwk81yWDLzuW9gLmyh5zQGVioX/mpFMHhyISNZo1ra', 'hello', '', NULL, NULL, NULL, NULL, NULL, 'day', 'standard', '2025-11-05 21:43:35', NULL, '2025-11-05 21:43:35');
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `member_settings`
 --
 
@@ -1186,24 +1098,6 @@ INSERT INTO `member_settings` (`member_setting_key`, `member_setting_value`, `me
 ('remember_me_duration', '43200', 'int', 'Remember me duration in minutes (43200 = 30 days)', '2025-12-18 22:54:25', '2025-12-18 22:54:25'),
 ('require_terms_agreement', '1', 'bool', 'Require terms and conditions agreement during registration', '2025-12-18 22:54:25', '2025-12-18 22:54:25'),
 ('session_timeout', '1440', 'int', 'Session timeout in minutes (1440 = 24 hours)', '2025-12-18 22:54:25', '2025-12-18 22:54:25');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `moderation_log`
---
-
-CREATE TABLE `moderation_log` (
-  `id` int(11) NOT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `post_title` varchar(255) DEFAULT NULL,
-  `moderator_id` int(11) DEFAULT NULL,
-  `moderator_name` varchar(255) DEFAULT NULL,
-  `action` varchar(50) DEFAULT NULL,
-  `reason` text DEFAULT NULL,
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- --------------------------------------------------------
 
@@ -1500,102 +1394,6 @@ INSERT INTO `phone_prefixes` (`id`, `option_filename`, `option_value`, `option_l
 -- --------------------------------------------------------
 
 --
--- Table structure for table `posts`
---
-
-CREATE TABLE `posts` (
-  `id` int(11) NOT NULL,
-  `post_key` varchar(255) DEFAULT NULL,
-  `member_id` int(11) NOT NULL,
-  `member_name` varchar(255) DEFAULT NULL,
-  `subcategory_key` varchar(255) NOT NULL,
-  `loc_qty` int(10) UNSIGNED NOT NULL DEFAULT 1,
-  `visibility` enum('paused','active','expired') DEFAULT 'paused',
-  `moderation_status` enum('pending','clean','blurred','hidden') DEFAULT 'pending',
-  `flag_reason` text DEFAULT NULL,
-  `checkout_title` varchar(255) DEFAULT NULL,
-  `payment_status` enum('pending','paid','failed','refunded') DEFAULT 'pending',
-  `expires_at` datetime DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `post_children`
---
-
-CREATE TABLE `post_children` (
-  `id` int(11) NOT NULL,
-  `map_card_id` int(11) NOT NULL,
-  `session_date` date DEFAULT NULL,
-  `session_time` time DEFAULT NULL,
-  `seating_area` varchar(100) DEFAULT NULL,
-  `pricing_tier` varchar(100) DEFAULT NULL,
-  `variant_name` varchar(100) DEFAULT NULL,
-  `price` decimal(10,2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `post_map_cards`
---
-
-CREATE TABLE `post_map_cards` (
-  `id` int(11) NOT NULL,
-  `post_id` int(11) NOT NULL,
-  `subcategory_key` varchar(255) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
-  `custom_text` varchar(500) DEFAULT NULL,
-  `custom_textarea` text DEFAULT NULL,
-  `custom_dropdown` varchar(255) DEFAULT NULL,
-  `custom_radio` varchar(255) DEFAULT NULL,
-  `email` varchar(255) DEFAULT NULL,
-  `phone` varchar(50) DEFAULT NULL,
-  `venue_name` varchar(255) DEFAULT NULL,
-  `address_line` varchar(500) DEFAULT NULL,
-  `latitude` decimal(10,7) NOT NULL,
-  `longitude` decimal(10,7) NOT NULL,
-  `country_code` varchar(2) DEFAULT NULL,
-  `website_url` varchar(500) DEFAULT NULL,
-  `tickets_url` varchar(500) DEFAULT NULL,
-  `coupon_code` varchar(100) DEFAULT NULL,
-  `checkout_title` varchar(255) DEFAULT NULL,
-  `session_summary` varchar(255) DEFAULT NULL,
-  `price_summary` varchar(255) DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `post_revisions`
---
-
-CREATE TABLE `post_revisions` (
-  `id` int(11) NOT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `post_title` varchar(255) DEFAULT NULL,
-  `editor_id` int(11) DEFAULT NULL,
-  `editor_name` varchar(255) DEFAULT NULL,
-  `edited_at` datetime DEFAULT current_timestamp(),
-  `change_type` varchar(50) DEFAULT NULL,
-  `change_summary` varchar(255) DEFAULT NULL,
-  `data_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`data_json`)),
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `subcategories`
 --
 
@@ -1750,30 +1548,6 @@ INSERT INTO `system_images` (`id`, `option_filename`, `option_value`, `option_la
 (58, 'icon-map-lighting-night.svg', 'icon-map-lighting-night.svg', '', 0, 1),
 (59, 'icon-favourites.svg', 'icon-favourites.svg', '', 0, 1);
 
--- --------------------------------------------------------
-
---
--- Table structure for table `transactions`
---
-
-CREATE TABLE `transactions` (
-  `id` int(11) NOT NULL,
-  `member_id` int(11) DEFAULT NULL,
-  `member_name` varchar(255) DEFAULT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `post_title` varchar(255) DEFAULT NULL,
-  `addon_id` int(11) DEFAULT NULL,
-  `coupon_code` varchar(50) DEFAULT NULL,
-  `discount_amount` decimal(10,2) DEFAULT 0.00,
-  `payment_id` varchar(255) DEFAULT NULL,
-  `payment_gateway` varchar(50) DEFAULT NULL,
-  `amount` decimal(10,2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT NULL,
-  `status` enum('paid','pending','refunded') DEFAULT 'pending',
-  `created_at` datetime DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
 --
 -- Indexes for dumped tables
 --
@@ -1845,15 +1619,6 @@ ALTER TABLE `checkout_options`
   ADD UNIQUE KEY `checkout_key` (`checkout_key`);
 
 --
--- Indexes for table `commissions`
---
-ALTER TABLE `commissions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `transaction_id` (`transaction_id`),
-  ADD KEY `post_id` (`post_id`),
-  ADD KEY `member_id` (`member_id`);
-
---
 -- Indexes for table `coupons`
 --
 ALTER TABLE `coupons`
@@ -1907,38 +1672,10 @@ ALTER TABLE `layout_tabs`
   ADD KEY `idx_sort_order` (`sort_order`);
 
 --
--- Indexes for table `logs`
---
-ALTER TABLE `logs`
-  ADD PRIMARY KEY (`id`);
-
---
--- Indexes for table `media`
---
-ALTER TABLE `media`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `member_id` (`member_id`),
-  ADD KEY `post_id` (`post_id`);
-
---
--- Indexes for table `members`
---
-ALTER TABLE `members`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Indexes for table `member_settings`
 --
 ALTER TABLE `member_settings`
   ADD PRIMARY KEY (`member_setting_key`);
-
---
--- Indexes for table `moderation_log`
---
-ALTER TABLE `moderation_log`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `post_id` (`post_id`),
-  ADD KEY `moderator_id` (`moderator_id`);
 
 --
 -- Indexes for table `phone_prefixes`
@@ -1947,41 +1684,6 @@ ALTER TABLE `phone_prefixes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_filename` (`option_filename`),
   ADD KEY `idx_active` (`is_active`);
-
---
--- Indexes for table `posts`
---
-ALTER TABLE `posts`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_member_id` (`member_id`),
-  ADD KEY `idx_subcategory_key` (`subcategory_key`),
-  ADD KEY `idx_status` (`visibility`,`moderation_status`);
-
---
--- Indexes for table `post_children`
---
-ALTER TABLE `post_children`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_map_card_id` (`map_card_id`),
-  ADD KEY `session_date` (`session_date`),
-  ADD KEY `price` (`price`);
-
---
--- Indexes for table `post_map_cards`
---
-ALTER TABLE `post_map_cards`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_post_id` (`post_id`),
-  ADD KEY `idx_subcategory_key` (`subcategory_key`),
-  ADD KEY `idx_lat_lng` (`latitude`,`longitude`);
-
---
--- Indexes for table `post_revisions`
---
-ALTER TABLE `post_revisions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `post_id` (`post_id`),
-  ADD KEY `editor_id` (`editor_id`);
 
 --
 -- Indexes for table `subcategories`
@@ -1997,14 +1699,6 @@ ALTER TABLE `system_images`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_filename` (`option_filename`),
   ADD KEY `idx_active` (`is_active`);
-
---
--- Indexes for table `transactions`
---
-ALTER TABLE `transactions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `member_id` (`member_id`),
-  ADD KEY `post_id` (`post_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -2065,12 +1759,6 @@ ALTER TABLE `checkout_options`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
--- AUTO_INCREMENT for table `commissions`
---
-ALTER TABLE `commissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `coupons`
 --
 ALTER TABLE `coupons`
@@ -2113,58 +1801,10 @@ ALTER TABLE `layout_tabs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
--- AUTO_INCREMENT for table `logs`
---
-ALTER TABLE `logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `media`
---
-ALTER TABLE `media`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `members`
---
-ALTER TABLE `members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT for table `moderation_log`
---
-ALTER TABLE `moderation_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `phone_prefixes`
 --
 ALTER TABLE `phone_prefixes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=272;
-
---
--- AUTO_INCREMENT for table `posts`
---
-ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `post_children`
---
-ALTER TABLE `post_children`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `post_map_cards`
---
-ALTER TABLE `post_map_cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `post_revisions`
---
-ALTER TABLE `post_revisions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `subcategories`
@@ -2177,12 +1817,6 @@ ALTER TABLE `subcategories`
 --
 ALTER TABLE `system_images`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
-
---
--- AUTO_INCREMENT for table `transactions`
---
-ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
