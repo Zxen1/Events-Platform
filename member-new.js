@@ -42,12 +42,13 @@ const MemberModule = (function() {
     var CURRENT_KEY = 'member-auth-current';
     
     /* --------------------------------------------------------------------------
-       SVG ICONS
+       ICONS
+       No hard-coded SVG icons allowed in new site.
        -------------------------------------------------------------------------- */
     
     var icons = {
-        plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-        minus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+        plus: '+',
+        minus: '−'
     };
 
     /* --------------------------------------------------------------------------
@@ -149,17 +150,11 @@ const MemberModule = (function() {
             console.warn('[Member] Member panel not found');
             return;
         }
-
-        // If any sub-step throws, don't let it prevent the panel from opening.
-        // The header button relies on this module not crashing during first-open.
-        try {
-            bindEvents();
-            initHeaderDrag();
-            loadStoredSession();
-            render();
-        } catch (err) {
-            console.error('[Member] init error:', err);
-        }
+        
+        bindEvents();
+        initHeaderDrag();
+        loadStoredSession();
+        render();
     }
     
     function initHeaderDrag() {
@@ -704,16 +699,8 @@ const MemberModule = (function() {
     }
 
     function cameraSvgMarkup() {
-        // Shared component (components-new.js). Fallback keeps older sessions safe.
-        if (window.ImageAddTileComponent && typeof window.ImageAddTileComponent.cameraSvgMarkup === 'function') {
-            return window.ImageAddTileComponent.cameraSvgMarkup();
-        }
-        // Fallback (shouldn't happen once components-new.js loads)
-        return (
-            '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-            '<path fill="currentColor" d="M9 4.5h6l1.2 2H20c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-10c0-1.1.9-2 2-2h3.8L9 4.5zm3 5.2a4.3 4.3 0 1 0 0 8.6a4.3 4.3 0 0 0 0-8.6zm0 1.8a2.5 2.5 0 1 1 0 5a2.5 2.5 0 0 1 0-5z"/>' +
-            '</svg>'
-        );
+        // No SVG markup allowed here; ImageAddTileComponent returns iconless markup in new site.
+        return ImageAddTileComponent.cameraSvgMarkup();
     }
 
     function getSelfTileSrc(target) {
@@ -1922,7 +1909,7 @@ const MemberModule = (function() {
         // before we build fieldsets. This is intentionally NOT done at site startup for performance.
         if (window.FieldsetComponent && typeof FieldsetComponent.loadFromDatabase === 'function') {
             if (!renderConfiguredFields._fieldsetLoadPromise) {
-                renderConfiguredFields._fieldsetLoadPromise = FieldsetComponent.loadFromDatabase().catch(function() { return null; });
+                renderConfiguredFields._fieldsetLoadPromise = FieldsetComponent.loadFromDatabase();
             }
             renderConfiguredFields._fieldsetLoadPromise.then(function() {
                 renderConfiguredFields._renderBody();

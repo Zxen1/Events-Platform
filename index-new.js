@@ -107,66 +107,6 @@
    
    ============================================================================ */
 
-// ---------------------------------------------------------------------------
-// External library guardrails
-// ---------------------------------------------------------------------------
-// Mapbox GL Geocoder (and some of its bundled chunks) can occasionally throw
-// "Cannot read properties of null (reading 'dataset')" during DOM-heavy UI
-// transitions (panel open/close, dynamic form rebuilds). This is external to
-// our app code, but it can break user flows if it bubbles as an unhandled
-// rejection. We defensively suppress ONLY this specific external error signature.
-//
-// IMPORTANT: Do NOT blanket-catch all errors; we still want real app errors visible.
-(function installExternalErrorGuards() {
-  if (window.__funmap_external_error_guard_installed) return;
-  window.__funmap_external_error_guard_installed = true;
-
-  var suppressedOnce = false;
-
-  function isDatasetNullErrorMessage(msg) {
-    return typeof msg === 'string' && msg.indexOf("Cannot read properties of null (reading 'dataset')") !== -1;
-  }
-
-  function looksLikeExternalChunk(sourceOrStack) {
-    if (typeof sourceOrStack !== 'string') return false;
-    // Mapbox geocoder plugin + its generated chunk names often appear as /5.js, /6.js.
-    return /mapbox-gl-geocoder/i.test(sourceOrStack) || /\/[56]\.js\b/i.test(sourceOrStack);
-  }
-
-  function warnOnce(context) {
-    if (suppressedOnce) return;
-    suppressedOnce = true;
-    console.warn('[App] Suppressed external dataset-null error from Mapbox Geocoder chunks.', context || '');
-  }
-
-  window.addEventListener('error', function(event) {
-    try {
-      var msg = event && event.message;
-      var src = event && event.filename;
-      if (isDatasetNullErrorMessage(msg) && looksLikeExternalChunk(src)) {
-        warnOnce(src);
-        event.preventDefault();
-      }
-    } catch (e) {
-      // ignore
-    }
-  });
-
-  window.addEventListener('unhandledrejection', function(event) {
-    try {
-      var reason = event && event.reason;
-      var msg = reason && (reason.message || reason.toString && reason.toString());
-      var stack = reason && reason.stack;
-      if (isDatasetNullErrorMessage(msg) && looksLikeExternalChunk(stack || msg)) {
-        warnOnce(stack || msg);
-        event.preventDefault();
-      }
-    } catch (e) {
-      // ignore
-    }
-  });
-})();
-
 const App = (function() {
   'use strict';
 
@@ -214,7 +154,7 @@ const App = (function() {
         callback(data);
       } catch (err) {
         console.error(`[App] Event handler error for "${event}":`, err);
-        // Do not rethrow: one bad listener must not block other modules (e.g. panels opening).
+        throw err;
       }
     });
   }

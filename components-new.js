@@ -5,7 +5,7 @@
    Shared components used across multiple sections.
    
    STRUCTURE:
-   - ICONS               - SVG icon library (JS only, no CSS needed)
+   - ICONS               - (removed) no hard-coded SVG icons allowed in new site
    - MENU MANAGER        - Global manager for closing menus
    - CLEAR BUTTON        - Reusable X/clear button
    - SWITCH              - Toggle switch (has size variants)
@@ -22,26 +22,6 @@
    ============================================================================ */
 
 // Components loaded
-
-
-/* ============================================================================
-   ICONS
-   SVG icon library for consistent icons across the site
-   ============================================================================ */
-
-const Icons = {
-    clear: '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-    
-    geolocate: '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/></svg>',
-    
-    compass: '<svg viewBox="0 0 24 24" width="20" height="20"><polygon points="12,2 15,10 12,8 9,10" fill="#e74c3c"/><polygon points="12,22 9,14 12,16 15,14" fill="currentColor"/></svg>',
-    
-    search: '<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="2" fill="none"/><path d="M14.5 14.5L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-    
-    chevronDown: '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
-    
-    camera: '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M9 4.5h6l1.2 2H20c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2v-10c0-1.1.9-2 2-2h3.8L9 4.5zm3 5.2a4.3 4.3 0 1 0 0 8.6a4.3 4.3 0 0 0 0-8.6zm0 1.8a2.5 2.5 0 1 1 0 5a2.5 2.5 0 0 1 0-5z"/></svg>'
-};
 
 
 /* ============================================================================

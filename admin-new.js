@@ -50,12 +50,14 @@ const AdminModule = (function() {
        - Add new admin UI icons here, not in individual module files
        -------------------------------------------------------------------------- */
     
+    // No hard-coded SVG icons allowed in new site.
+    // Use simple text glyphs for admin-only UI affordances.
     var icons = {
-        editPen: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5L13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175l-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>',
-        dragHandle: '<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 2L4 6h8L8 2zM8 14l4-4H4l4 4z"/></svg>',
-        moreDots: '<svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="2.5" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13.5" r="1.5"/></svg>',
-        plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-        minus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+        editPen: '✎',
+        dragHandle: '↕',
+        moreDots: '⋮',
+        plus: '+',
+        minus: '−'
     };
 
     /* --------------------------------------------------------------------------
@@ -2535,9 +2537,6 @@ const AdminModule = (function() {
         settingsContainer = document.getElementById('admin-tab-settings');
         if (!settingsContainer) return;
         
-        // Initialize console filter system first (before attaching handlers)
-        initConsoleFilter();
-        
         // Load settings from database then attach to existing HTML
         loadSettingsFromDatabase().then(function() {
             attachSettingsHandlers();
@@ -2561,8 +2560,6 @@ const AdminModule = (function() {
                     if (data.settings.console_filter !== undefined) {
                         window._consoleFilterEnabled = data.settings.console_filter;
                         localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
-                        // Enable filter immediately if it was enabled in database
-                        enableConsoleFilterIfNeeded();
                     }
 
                     // Use database setting for system images folder
@@ -2586,58 +2583,6 @@ const AdminModule = (function() {
             .catch(function(err) {
                 console.error('[Admin] Failed to load settings:', err);
             });
-    }
-    
-    // Console filter system - loads only when admin panel opens (lazy loading)
-    function initConsoleFilter() {
-        var consoleFilterCheckbox = document.getElementById('adminEnableConsoleFilter');
-        if (!consoleFilterCheckbox) return;
-        
-        // Store original console.warn to restore when disabling
-        var originalConsoleWarn = console.warn;
-        var consoleFilterActive = false;
-        
-        // Suppression patterns (same as console-filter.js)
-        var suppressedWarnings = [
-            /featureNamespace.*selector/i,
-            /cutoff.*disabled.*terrain/i,
-            /Image "marker-label-composite.*could not be loaded/i
-        ];
-        
-        // Function to enable console filter
-        function enableConsoleFilter() {
-            if (consoleFilterActive) return;
-            
-            console.warn = function(...args) {
-                var message = args.join(' ');
-                if (!suppressedWarnings.some(function(pattern) { return pattern.test(message); })) {
-                    originalConsoleWarn.apply(console, args);
-                }
-            };
-            
-            consoleFilterActive = true;
-            console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;', 
-                'Suppressing', suppressedWarnings.length, 'warning patterns.');
-        }
-        
-        // Function to disable console filter
-        function disableConsoleFilter() {
-            if (!consoleFilterActive) return;
-            console.warn = originalConsoleWarn;
-            consoleFilterActive = false;
-            console.log('%c[Console Filter Disabled]', 'color: #ff9900; font-weight: bold;');
-        }
-        
-        // Expose functions globally so checkbox handler can use them
-        window.enableConsoleFilter = enableConsoleFilter;
-        window.disableConsoleFilter = disableConsoleFilter;
-    }
-    
-    // Enable console filter after settings load (called from loadSettingsFromDatabase)
-    function enableConsoleFilterIfNeeded() {
-        if (window._consoleFilterEnabled === true && window.enableConsoleFilter) {
-            window.enableConsoleFilter();
-        }
     }
     
     function attachSettingsHandlers() {
@@ -2676,17 +2621,10 @@ const AdminModule = (function() {
             checkbox.addEventListener('change', function() {
                 updateField('settings.' + key, checkbox.checked);
                 
-                // Special handling for console_filter: enable/disable immediately and sync localStorage for next page load
+                // Special handling for console_filter: sync localStorage for next page load
                 if (key === 'console_filter') {
                     window._consoleFilterEnabled = checkbox.checked;
                     localStorage.setItem('enableConsoleFilter', checkbox.checked ? 'true' : 'false');
-                    
-                    // Enable/disable filter immediately
-                    if (checkbox.checked) {
-                        enableConsoleFilter();
-                    } else {
-                        disableConsoleFilter();
-                    }
                 }
             });
         });

@@ -407,22 +407,12 @@ const HeaderModule = (function() {
         if (!isFull) {
             var req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
             if (req) {
-                try {
-                    var result = req.call(docEl);
-                    if (result && typeof result.catch === 'function') result.catch(function() {});
-                } catch (err) {
-                    updateFullscreenState();
-                }
+                req.call(docEl);
             }
         } else {
             var exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
             if (exit) {
-                try {
-                    var result = exit.call(document);
-                    if (result && typeof result.catch === 'function') result.catch(function() {});
-                } catch (err) {
-                    updateFullscreenState();
-                }
+                exit.call(document);
             }
         }
     }
