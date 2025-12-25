@@ -2643,16 +2643,14 @@ const AdminModule = (function() {
     function attachSettingsHandlers() {
         if (!settingsContainer) return;
         
-        // Attach Image Manager accordion toggle
-        var imageManagerAccordion = settingsContainer.querySelector('.admin-settings-imagemanager-accordion');
-        if (imageManagerAccordion) {
-            var header = imageManagerAccordion.querySelector('.admin-settings-imagemanager-accordion-header');
-            if (header) {
-                header.addEventListener('click', function() {
-                    imageManagerAccordion.classList.toggle('admin-settings-imagemanager-accordion--open');
-                });
-            }
-        }
+        // Attach accordion toggles (Image Manager + Image Files)
+        settingsContainer.querySelectorAll('.admin-settings-imagemanager-accordion').forEach(function(acc) {
+            var header = acc.querySelector('.admin-settings-imagemanager-accordion-header');
+            if (!header) return;
+            header.addEventListener('click', function() {
+                acc.classList.toggle('admin-settings-imagemanager-accordion--open');
+            });
+        });
         
         // Attach to text inputs
         settingsContainer.querySelectorAll('.admin-settings-field-input[data-setting-key]').forEach(function(input) {
