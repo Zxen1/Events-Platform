@@ -1896,6 +1896,13 @@ const MemberModule = (function() {
         dropdownsContainer.appendChild(categoryWrapper);
         dropdownsContainer.appendChild(subcategoryWrapper);
         container.appendChild(dropdownsContainer);
+
+        // Auto-open the correct menu when nothing is selected yet
+        if (!selectedCategory) {
+            categoryMenu.classList.add('open');
+        } else if (selectedCategory && !selectedSubcategory && !subcategoryWrapper.hidden) {
+            subcategoryMenu.classList.add('open');
+        }
     }
     
     function renderConfiguredFields() {
