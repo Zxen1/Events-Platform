@@ -454,6 +454,7 @@
   line-height: 1;
   white-space: nowrap;
   text-transform: none;
+  display: none;
 }
 
 .member-style-button-text {
