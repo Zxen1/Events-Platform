@@ -299,16 +299,14 @@ const MapModule = (function() {
    */
   async function loadSettings() {
     try {
-      // Use GET request (same as admin panel) - POST is blocked by server
-      const response = await fetch('/gateway.php?action=get-admin-settings');
-      const result = await response.json();
-      if (result && result.success && result.settings) {
-        adminSettings = result.settings;
-        // Store system_images separately
-        if (result.system_images) {
-          adminSettings.system_images = result.system_images;
-        }
-        applySettings(result.settings);
+      // Use shared startup settings (single request). No extra fetch here.
+      if (window.App && typeof App.whenStartupSettingsReady === 'function') {
+        await App.whenStartupSettingsReady();
+      }
+      if (window.App && typeof App.getState === 'function') {
+        adminSettings = App.getState('settings') || {};
+        adminSettings.system_images = App.getState('system_images') || {};
+        applySettings(adminSettings);
       }
     } catch (err) {
       console.warn('[Map] Failed to load settings:', err);

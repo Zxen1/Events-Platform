@@ -271,7 +271,7 @@ const FieldsetComponent = (function(){
     var dataLoaded = false;
     var loadPromise = null;
     
-    // Load data from various tables (currencies, phone_prefixes, amenities, etc.) and fieldset definitions from database
+    // Load data from various tables (currencies, phone_prefixes, amenities, etc.) from database
     function loadFromDatabase() {
         if (loadPromise) return loadPromise;
         loadPromise = fetch('/gateway.php?action=get-admin-settings')
@@ -280,14 +280,6 @@ const FieldsetComponent = (function(){
                 if (res.dropdown_options) {
                     // Set dropdown options data and propagate to CurrencyComponent and PhonePrefixComponent
                     setPicklist(res.dropdown_options);
-                }
-                // Also fetch fieldset definitions for tooltip matching
-                return fetch('/gateway.php?action=get-form');
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.success && res.formData && res.formData.fieldsets) {
-                    fieldsets = res.formData.fieldsets;
                 }
                 dataLoaded = true;
                 return { dropdown_options: dropdownOptions, fieldsets: fieldsets };
@@ -2082,8 +2074,8 @@ const FieldsetComponent = (function(){
         return fieldset;
     }
     
-    // Auto-load picklist data when component initializes
-    loadFromDatabase();
+    // NOTE: No auto-load at script startup (performance). Callers should call
+    // FieldsetComponent.loadFromDatabase() before building fieldsets that need picklists.
     
     return {
         initGooglePlaces: initGooglePlaces,

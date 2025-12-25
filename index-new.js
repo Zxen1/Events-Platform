@@ -482,8 +482,12 @@ const App = (function() {
      STARTUP SETTINGS
      Load settings needed at startup: favicon, big_logo, welcome_enabled
      -------------------------------------------------------------------------- */
+  let startupSettingsPromise = null;
+
   function loadStartupSettings() {
-    fetch('/gateway.php?action=get-admin-settings')
+    if (startupSettingsPromise) return startupSettingsPromise;
+
+    startupSettingsPromise = fetch('/gateway.php?action=get-admin-settings&lite=1')
       .then(function(response) { return response.json(); })
       .then(function(data) {
         if (!data.success || !data.settings) return;
@@ -542,6 +546,8 @@ const App = (function() {
       .catch(function(err) {
         console.error('[App] Failed to load startup settings:', err);
       });
+
+    return startupSettingsPromise;
   }
 
 
@@ -648,6 +654,10 @@ const App = (function() {
     // Module registry
     registerModule,
     getModule,
+    // Startup settings (shared admin_settings call)
+    whenStartupSettingsReady: function() {
+      return loadStartupSettings();
+    },
     
     // Event bus
     on,

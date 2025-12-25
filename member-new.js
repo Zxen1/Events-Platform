@@ -1911,6 +1911,24 @@ const MemberModule = (function() {
             if (formFields) formFields.innerHTML = '';
             return;
         }
+
+        // Ensure FieldsetComponent has its picklists (currencies, phone prefixes, amenities) loaded
+        // before we build fieldsets. This is intentionally NOT done at site startup for performance.
+        if (window.FieldsetComponent && typeof FieldsetComponent.loadFromDatabase === 'function') {
+            if (!renderConfiguredFields._fieldsetLoadPromise) {
+                renderConfiguredFields._fieldsetLoadPromise = FieldsetComponent.loadFromDatabase().catch(function() { return null; });
+            }
+            renderConfiguredFields._fieldsetLoadPromise.then(function() {
+                renderConfiguredFields._renderBody();
+            });
+            return;
+        }
+
+        renderConfiguredFields._renderBody();
+    }
+
+    // Extracted body so we can wait for FieldsetComponent.loadFromDatabase() when needed
+    renderConfiguredFields._renderBody = function() {
         
         // Get fields for this category/subcategory
         var fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
@@ -1924,7 +1942,6 @@ const MemberModule = (function() {
         var mustRepeatFieldsets = [];
         var autofillRepeatFieldsets = [];
 
-        // FieldsetComponent auto-loads its own picklist data
         if (fields.length === 0) {
             var placeholder = document.createElement('p');
             placeholder.className = 'member-create-intro';
@@ -2312,6 +2329,7 @@ const MemberModule = (function() {
                 }
             });
         }
+    };
     }
     
     function renderCheckoutOptionsSection() {

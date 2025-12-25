@@ -163,6 +163,13 @@ try {
         }
     }
     $response['system_images'] = $systemImages;
+
+    // Lite mode: return only settings + system_images (skip baskets + dropdown_options for faster startup)
+    $lite = isset($_GET['lite']) && ($_GET['lite'] === '1' || $_GET['lite'] === 'true' || $_GET['lite'] === 'yes');
+    if ($lite) {
+        echo json_encode($response);
+        return;
+    }
     
     // Fetch system-images from system_images table (basket of available filenames)
     try {

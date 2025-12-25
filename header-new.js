@@ -71,43 +71,33 @@ const HeaderModule = (function() {
     }
     
     function loadLogoFromSettings() {
-        // Ensure App.getImageUrl is available before making request
-        if (typeof window.App === 'undefined' || typeof window.App.getImageUrl !== 'function') {
-            // Retry after a short delay if App not ready
+        if (typeof window.App === 'undefined') {
             setTimeout(loadLogoFromSettings, 50);
             return;
         }
-        
-        fetch('/gateway.php?action=get-admin-settings')
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    // CRITICAL: Store settings in App state BEFORE calling getImageUrl
-                    // This ensures getImageUrl has the folder paths it needs
-                    if (data.settings && window.App && typeof window.App.setState === 'function') {
-                        // Merge settings into App state (don't overwrite, in case other modules set things)
-                        var currentSettings = window.App.getState('settings') || {};
-                        var mergedSettings = Object.assign({}, currentSettings, data.settings);
-                        window.App.setState('settings', mergedSettings);
-                    }
-                    
-                    // Load logo from system_images
-                    if (data.system_images && data.system_images.small_logo) {
-                        var logoFilename = data.system_images.small_logo;
-                        if (typeof window.App !== 'undefined' && typeof window.App.getImageUrl === 'function') {
-                            var logoUrl = window.App.getImageUrl('systemImages', logoFilename);
-                            setLogo(logoUrl);
-                        }
-                    }
-                    // Load header icons from system_images
-                    if (data.system_images) {
-                        loadHeaderIcons(data.system_images);
-                    }
+
+        var waitFn = (typeof window.App.whenStartupSettingsReady === 'function')
+            ? window.App.whenStartupSettingsReady
+            : null;
+
+        // Ensure startup settings have been loaded (shared single request)
+        if (waitFn) {
+            waitFn().then(function() {
+                var sys = window.App.getState('system_images') || {};
+                if (sys.small_logo && typeof window.App.getImageUrl === 'function') {
+                    setLogo(window.App.getImageUrl('systemImages', sys.small_logo));
                 }
-            })
-            .catch(function(err) {
-                console.error('[Header] Failed to load settings:', err);
+                loadHeaderIcons(sys);
             });
+            return;
+        }
+
+        // Fallback: if App doesn't expose the promise (shouldn't happen), try once from state
+        var sys = window.App.getState('system_images') || {};
+        if (sys.small_logo && typeof window.App.getImageUrl === 'function') {
+            setLogo(window.App.getImageUrl('systemImages', sys.small_logo));
+        }
+        loadHeaderIcons(sys);
     }
     
     function loadHeaderIcons(systemImages) {

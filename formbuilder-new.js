@@ -809,6 +809,15 @@
                 if (!res.success) {
                     throw new Error('Failed to load admin settings');
                 }
+                // Preload picklists for FieldsetComponent (amenities, currencies, phone prefixes)
+                // so building fieldsets later does not force its own extra fetch.
+                try {
+                    if (res.dropdown_options && window.FieldsetComponent && typeof FieldsetComponent.setPicklist === 'function') {
+                        FieldsetComponent.setPicklist(res.dropdown_options);
+                    }
+                } catch (e) {
+                    // ignore
+                }
                 checkoutOptions = res.checkout_options;
                 siteCurrency = res.settings && res.settings.website_currency;
                 // Get icon folder from database setting
