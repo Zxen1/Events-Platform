@@ -2335,7 +2335,6 @@ const MemberModule = (function() {
                 }
             });
         }
-    };
     }
     
     function renderCheckoutOptionsSection() {
