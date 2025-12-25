@@ -746,14 +746,26 @@
             if (!container) return;
             // Don't close if clicking on save/discard buttons or calculator
             if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
-            if (!e.target.closest('.formbuilder-accordion-editpanel') && 
-                !e.target.closest('.formbuilder-accordion-option-editpanel') &&
-                !e.target.closest('.formbuilder-accordion-header-editarea') &&
-                !e.target.closest('.formbuilder-accordion-option-editarea') &&
-                !e.target.closest('.formbuilder-accordion-header') &&
-                !e.target.closest('.formbuilder-accordion-option-header')) {
-                closeAllEditPanels();
+
+            // Rule: an edit panel can remain open while the user clicks within its own drawer (its children).
+            // But if the click is outside that drawer (e.g., into the next category), it should slam shut.
+            var openCategoryDrawer = container.querySelector('.formbuilder-accordion.formbuilder-accordion--editing');
+            if (openCategoryDrawer && openCategoryDrawer.contains(e.target)) {
+                return;
             }
+
+            // Keep the clicked thing stationary while drawers slam shut.
+            var anchor = e.target.closest(
+                '.formbuilder-accordion-option-header,' +
+                '.formbuilder-accordion-header,' +
+                '.formbuilder-accordion-option-editarea,' +
+                '.formbuilder-accordion-header-editarea,' +
+                'button'
+            ) || e.target;
+
+            runWithScrollAnchor(anchor, function() {
+                closeAllEditPanels();
+            });
         });
         
         // Close 3-dot menus when clicking outside
