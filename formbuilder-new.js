@@ -676,6 +676,24 @@
             el.classList.remove('open');
         });
     }
+
+    // Close ONLY subcategory edit panels (do not collapse category edit panels).
+    // This prevents subcategory clicks from yanking the list upward when the category edit panel is open.
+    function closeAllSubcategoryEditPanels() {
+        if (!container) return;
+        container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
+            el.classList.remove('formbuilder-accordion-option--editing');
+        });
+        container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+        container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+        container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+    }
     
     function closeAllFieldEditPanels() {
         if (!container) return;
@@ -2584,7 +2602,7 @@
             e.stopPropagation();
             runWithScrollAnchor(optHeader, function() {
             var isOpen = option.classList.contains('formbuilder-accordion-option--editing');
-            closeAllEditPanels();
+            closeAllSubcategoryEditPanels();
             if (!isOpen) {
                 option.classList.add('formbuilder-accordion-option--editing');
             }
@@ -2604,7 +2622,7 @@
             if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
             runWithScrollAnchor(optHeader, function() {
             if (!option.classList.contains('formbuilder-accordion-option--editing')) {
-                closeAllEditPanels();
+                closeAllSubcategoryEditPanels();
             }
             option.classList.toggle('formbuilder-accordion-option--open');
             });
