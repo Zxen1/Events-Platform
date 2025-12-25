@@ -240,6 +240,8 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Disable browser native scroll anchoring (it can fight our custom "keep clicked button stationary" logic). */
+  overflow-anchor: none;
   padding: 0 10px;
   overscroll-behavior: contain;
   display: flex;

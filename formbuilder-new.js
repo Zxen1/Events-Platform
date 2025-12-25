@@ -220,6 +220,22 @@
                 setBottomGapHeight(getBottomGapHeight() + bottomSlack);
                 void scNow.scrollHeight;
             }
+
+            // Optional diagnostics: set window.__FORMBUILDER_ANCHOR_DEBUG__ = true in console.
+            try {
+                if (window.__FORMBUILDER_ANCHOR_DEBUG__) {
+                    console.log('[Formbuilder Anchor]', {
+                        oldTop: oldTop,
+                        newTop: newTop,
+                        delta: delta,
+                        oldScrollTop: oldScrollTop,
+                        currentScrollTop: currentScrollTop,
+                        gapTop: getGapHeight(),
+                        gapBottom: getBottomGapHeight(),
+                        maxNow: Math.max(0, scNow.scrollHeight - scNow.clientHeight)
+                    });
+                }
+            } catch (e) {}
             
             isAdjustingScroll = true;
             scNow.scrollTop = currentScrollTop + delta;
