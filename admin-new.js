@@ -2587,13 +2587,42 @@ const AdminModule = (function() {
     
     function attachSettingsHandlers() {
         if (!settingsContainer) return;
+
+        function getAdminPanelScrollContainer() {
+            return (settingsContainer.closest('.admin-panel-body') || settingsContainer.closest('.admin-panel-content') || document.scrollingElement || document.documentElement);
+        }
+
+        function withScrollAnchor(anchorEl, fn) {
+            var sc = getAdminPanelScrollContainer();
+            if (!sc || !anchorEl || typeof fn !== 'function' || !sc.contains(anchorEl)) {
+                if (typeof fn === 'function') fn();
+                return;
+            }
+            var scRect = sc.getBoundingClientRect();
+            var anchorRect = anchorEl.getBoundingClientRect();
+            var oldTop = anchorRect.top - scRect.top;
+            var oldScrollTop = sc.scrollTop;
+            fn();
+            requestAnimationFrame(function() {
+                if (!anchorEl.isConnected) return;
+                var scNow = getAdminPanelScrollContainer();
+                if (!scNow) return;
+                scNow.scrollTop = oldScrollTop;
+                var scNowRect = scNow.getBoundingClientRect();
+                var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+                var delta = newTop - oldTop;
+                if (delta) scNow.scrollTop = scNow.scrollTop + delta;
+            });
+        }
         
         // Attach accordion toggles (Image Manager + Image Files)
         settingsContainer.querySelectorAll('.admin-settings-imagemanager-accordion').forEach(function(acc) {
             var header = acc.querySelector('.admin-settings-imagemanager-accordion-header');
             if (!header) return;
             header.addEventListener('click', function() {
-                acc.classList.toggle('admin-settings-imagemanager-accordion--open');
+                withScrollAnchor(header, function() {
+                    acc.classList.toggle('admin-settings-imagemanager-accordion--open');
+                });
             });
         });
         
