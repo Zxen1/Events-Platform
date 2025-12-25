@@ -176,6 +176,14 @@
             if (typeof fn === 'function') fn();
             return;
         }
+
+        // Anchoring only works when the anchor element is inside the scroll container.
+        // If someone clicks a control outside the scroll area (e.g., panel header buttons),
+        // skip anchoring rather than mis-adjusting scroll.
+        if (!sc.contains(anchorEl)) {
+            fn();
+            return;
+        }
         
         ensureScrollGap();
         ensureScrollGapBottom();
