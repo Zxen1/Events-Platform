@@ -240,8 +240,6 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  /* Disable browser native scroll anchoring (it can fight our custom "keep clicked button stationary" logic). */
-  overflow-anchor: none;
   padding: 0 10px;
   overscroll-behavior: contain;
   display: flex;
@@ -271,16 +269,6 @@
 
 .admin-panel-body::-webkit-scrollbar-corner {
   background: transparent;
-}
-
-/* Scroll gap spacers (used by Admin Settings accordions to keep clicked headers stationary) */
-.admin-settings-scroll-gap,
-.admin-settings-scroll-gap-bottom {
-  width: 100%;
-  height: 0;
-  pointer-events: none;
-  margin: 0;
-  padding: 0;
 }
 
 .admin-panel-body-item {

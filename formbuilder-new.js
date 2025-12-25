@@ -47,6 +47,7 @@
     var scrollGapEl = null;
     var scrollGapBottomEl = null;
     var isAdjustingScroll = false;
+    var suppressGapConsumeUntil = 0;
     
     // Reference data (not for change tracking - just data needed to build the UI)
     var loadedFieldsets = [];
@@ -88,8 +89,11 @@
     function ensureScrollGapBottom() {
         if (!container) return null;
         if (scrollGapBottomEl && scrollGapBottomEl.isConnected) {
-            // Keep it at the bottom
-            container.appendChild(scrollGapBottomEl);
+            // Keep it at the bottom, but avoid re-appending on every call (can trigger
+            // expensive MutationObserver work / console errors in external scripts).
+            if (container.lastChild !== scrollGapBottomEl) {
+                container.appendChild(scrollGapBottomEl);
+            }
             return scrollGapBottomEl;
         }
 
@@ -99,8 +103,10 @@
             scrollGapBottomEl.className = 'formbuilder-scroll-gap-bottom';
             scrollGapBottomEl.setAttribute('aria-hidden', 'true');
         }
-        // Always ensure it's last
-        container.appendChild(scrollGapBottomEl);
+        // Ensure it's last (once)
+        if (container.lastChild !== scrollGapBottomEl) {
+            container.appendChild(scrollGapBottomEl);
+        }
         return scrollGapBottomEl;
     }
     
@@ -132,12 +138,15 @@
     
     function maybeConsumeGapOnScroll() {
         if (isAdjustingScroll) return;
+        if (suppressGapConsumeUntil && Date.now() < suppressGapConsumeUntil) return;
         
         var sc = findScrollContainer();
         if (!sc) return;
         
-        var gap = getGapHeight();
-        var bottomGap = getBottomGapHeight();
+        // IMPORTANT: do not call ensure/append helpers here; scroll handlers must avoid
+        // DOM mutations. External scripts may observe mutations and throw.
+        var gap = (scrollGapEl && scrollGapEl.isConnected) ? (scrollGapEl.offsetHeight || 0) : 0;
+        var bottomGap = (scrollGapBottomEl && scrollGapBottomEl.isConnected) ? (scrollGapBottomEl.offsetHeight || 0) : 0;
         if (!gap && !bottomGap) return;
         
         // If the user scrolls up into the gap, remove the gap so they never see blank space.
@@ -169,6 +178,18 @@
             if (typeof fn === 'function') fn();
             return;
         }
+
+        // Anchoring only works when the anchor element is inside the scroll container.
+        // If someone clicks a control outside the scroll area (e.g., panel header buttons),
+        // skip anchoring rather than mis-adjusting scroll.
+        if (!sc.contains(anchorEl)) {
+            fn();
+            return;
+        }
+
+        // Prevent our scroll-gap cleanup handler from immediately consuming the slack we add
+        // while anchoring (scroll events can fire async after scrollTop changes).
+        suppressGapConsumeUntil = Date.now() + 250;
         
         ensureScrollGap();
         ensureScrollGapBottom();
@@ -220,22 +241,6 @@
                 setBottomGapHeight(getBottomGapHeight() + bottomSlack);
                 void scNow.scrollHeight;
             }
-
-            // Optional diagnostics: set window.__FORMBUILDER_ANCHOR_DEBUG__ = true in console.
-            try {
-                if (window.__FORMBUILDER_ANCHOR_DEBUG__) {
-                    console.log('[Formbuilder Anchor]', {
-                        oldTop: oldTop,
-                        newTop: newTop,
-                        delta: delta,
-                        oldScrollTop: oldScrollTop,
-                        currentScrollTop: currentScrollTop,
-                        gapTop: getGapHeight(),
-                        gapBottom: getBottomGapHeight(),
-                        maxNow: Math.max(0, scNow.scrollHeight - scNow.clientHeight)
-                    });
-                }
-            } catch (e) {}
             
             isAdjustingScroll = true;
             scNow.scrollTop = currentScrollTop + delta;
@@ -668,6 +673,24 @@
             el.classList.remove('formbuilder-accordion-option--editing');
         });
         container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+    }
+
+    // Close ONLY subcategory edit panels (do not collapse category edit panels).
+    // This prevents subcategory clicks from yanking the list upward when the category edit panel is open.
+    function closeAllSubcategoryEditPanels() {
+        if (!container) return;
+        container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
+            el.classList.remove('formbuilder-accordion-option--editing');
+        });
+        container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+        container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
+            el.classList.remove('open');
+        });
+        container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
             el.classList.remove('open');
         });
     }
@@ -2579,7 +2602,7 @@
             e.stopPropagation();
             runWithScrollAnchor(optHeader, function() {
             var isOpen = option.classList.contains('formbuilder-accordion-option--editing');
-            closeAllEditPanels();
+            closeAllSubcategoryEditPanels();
             if (!isOpen) {
                 option.classList.add('formbuilder-accordion-option--editing');
             }
@@ -2599,7 +2622,7 @@
             if (e.target.closest('.formbuilder-accordion-option-editarea')) return;
             runWithScrollAnchor(optHeader, function() {
             if (!option.classList.contains('formbuilder-accordion-option--editing')) {
-                closeAllEditPanels();
+                closeAllSubcategoryEditPanels();
             }
             option.classList.toggle('formbuilder-accordion-option--open');
             });
