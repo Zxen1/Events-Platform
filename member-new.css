@@ -1112,7 +1112,20 @@
   text-align: center;
 }
 
-.member-avatar-choice-add svg {
+.member-avatar-choice-add::before {
+  content: '';
+  width: 28px;
+  height: 28px;
+  display: block;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-add-image);
+  mask-image: var(--ui-icon-add-image);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   width: 28px;
   height: 28px;
   opacity: 0.9;

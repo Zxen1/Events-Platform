@@ -2651,6 +2651,7 @@ const AdminModule = (function() {
         initImagePicker('adminIconDiscardPicker', 'icon_discard');
         initImagePicker('adminIconClosePicker', 'icon_close');
         initImagePicker('adminIconClearPicker', 'icon_clear');
+        initImagePicker('adminIconAddImagePicker', 'icon_add_image');
         initImagePicker('adminIconFavouritesPicker', 'icon_favourites');
         
         // Initialize currency picker (using CurrencyComponent from components file)

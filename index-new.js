@@ -460,6 +460,7 @@ const App = (function() {
           setCssVarUrl('--ui-icon-close', sys.icon_close);
           setCssVarUrl('--ui-icon-clear', sys.icon_clear);
           setCssVarUrl('--ui-icon-favourites', sys.icon_favourites);
+          setCssVarUrl('--ui-icon-add-image', sys.icon_add_image);
         } catch (e) {
           // ignore
         }
