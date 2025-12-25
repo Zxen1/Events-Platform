@@ -1,4 +1,10 @@
 <?php
+if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code(403);
+  echo json_encode(['success' => false, 'message' => 'Forbidden']);
+  exit;
+}
 $configCandidates = [
   __DIR__ . '/../config/config-db.php',
   dirname(__DIR__) . '/config/config-db.php',

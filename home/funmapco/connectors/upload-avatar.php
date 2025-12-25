@@ -1,4 +1,10 @@
 <?php
+if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code(403);
+  echo json_encode(['success' => false, 'message' => 'Forbidden']);
+  exit;
+}
 // connectors/upload-avatar.php — upload avatar file for member registration
 header('Content-Type: application/json; charset=utf-8');
 error_reporting(0);

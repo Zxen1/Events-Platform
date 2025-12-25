@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
+    header('Content-Type: application/json; charset=utf-8');
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Forbidden']);
+    exit;
+}
+
 header('Content-Type: application/json');
 
 try {
