@@ -194,13 +194,20 @@
   border-color: rgba(255,255,255,0.3);
 }
 
-.filter-favourites-btn svg {
+.filter-favourites-icon {
   width: 18px;
   height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.5;
   flex-shrink: 0;
+  display: block;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-favourites);
+  mask-image: var(--ui-icon-favourites);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .filter-favourites-btn[aria-pressed="true"] {
@@ -208,9 +215,8 @@
   border-color: #3b82f6;
 }
 
-.filter-favourites-btn[aria-pressed="true"] svg {
-  fill: #fbbf24;
-  stroke: #fbbf24;
+.filter-favourites-btn[aria-pressed="true"] .filter-favourites-icon {
+  background-color: #fbbf24;
 }
 
 /* Sort menu */

@@ -2709,6 +2709,11 @@ const AdminModule = (function() {
         initImagePicker('adminIconLightingDayPicker', 'icon_lighting_day');
         initImagePicker('adminIconLightingDuskPicker', 'icon_lighting_dusk');
         initImagePicker('adminIconLightingNightPicker', 'icon_lighting_night');
+        initImagePicker('adminIconSavePicker', 'icon_save');
+        initImagePicker('adminIconDiscardPicker', 'icon_discard');
+        initImagePicker('adminIconClosePicker', 'icon_close');
+        initImagePicker('adminIconClearPicker', 'icon_clear');
+        initImagePicker('adminIconFavouritesPicker', 'icon_favourites');
         
         // Initialize currency picker (using CurrencyComponent from components file)
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');

@@ -153,7 +153,7 @@ const ClearButtonComponent = (function(){
         if (options.ariaLabel) {
             btn.setAttribute('aria-label', options.ariaLabel);
         }
-        btn.innerHTML = Icons.clear;
+        btn.innerHTML = '<span class="clear-button-icon" aria-hidden="true"></span>';
         
         if (typeof options.onClick === 'function') {
             btn.addEventListener('click', options.onClick);
@@ -169,9 +169,9 @@ const ClearButtonComponent = (function(){
     function upgradeAll(selector) {
         var buttons = document.querySelectorAll(selector);
         buttons.forEach(function(btn) {
-            // Add SVG if button doesn't already have one
-            if (!btn.querySelector('svg')) {
-                btn.innerHTML = Icons.clear;
+            // Add icon span if button doesn't already have one
+            if (!btn.querySelector('.clear-button-icon')) {
+                btn.innerHTML = '<span class="clear-button-icon" aria-hidden="true"></span>';
             }
         });
     }

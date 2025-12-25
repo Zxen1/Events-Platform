@@ -502,6 +502,23 @@ const App = (function() {
         // Store settings in state FIRST so getImageUrl can access them
         state.settings = settings;
         state.system_images = data.system_images || {};
+
+        // Store a few system icon URLs as CSS variables (used by mask-based UI icons)
+        try {
+          var sys = state.system_images || {};
+          function setCssVarUrl(varName, filename) {
+            if (!filename) return;
+            var url = App.getImageUrl('systemImages', filename);
+            document.documentElement.style.setProperty(varName, 'url("' + url + '")');
+          }
+          setCssVarUrl('--ui-icon-save', sys.icon_save);
+          setCssVarUrl('--ui-icon-discard', sys.icon_discard);
+          setCssVarUrl('--ui-icon-close', sys.icon_close);
+          setCssVarUrl('--ui-icon-clear', sys.icon_clear);
+          setCssVarUrl('--ui-icon-favourites', sys.icon_favourites);
+        } catch (e) {
+          // ignore
+        }
         
         // Apply favicon from system_images
         if (data.system_images && data.system_images.favicon) {

@@ -44,6 +44,17 @@
 
 .clear-button-icon {
     display: block;
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    -webkit-mask-image: var(--ui-icon-clear);
+    mask-image: var(--ui-icon-clear);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 /* States */
