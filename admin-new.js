@@ -2597,29 +2597,35 @@ const AdminModule = (function() {
             return (settingsContainer.closest('.admin-panel-body') || settingsContainer.closest('.admin-panel-content') || document.scrollingElement || document.documentElement);
         }
 
+        function getSettingsSlackRoot() {
+            // Keep slack gaps INSIDE the Settings tab so they can't affect other tabs (e.g., Formbuilder).
+            // Use the Settings section itself as the root (it's always within the scrolling admin panel body).
+            return settingsContainer;
+        }
+
         function ensureSettingsScrollGaps() {
-            var sc = getAdminPanelScrollContainer();
-            if (!sc) return;
+            var root = getSettingsSlackRoot();
+            if (!root) return;
 
             if (!settingsScrollGapTopEl || !settingsScrollGapTopEl.isConnected) {
-                settingsScrollGapTopEl = sc.querySelector('.admin-panel-scroll-gap');
+                settingsScrollGapTopEl = root.querySelector('.admin-settings-scroll-gap');
                 if (!settingsScrollGapTopEl) {
                     settingsScrollGapTopEl = document.createElement('div');
-                    settingsScrollGapTopEl.className = 'admin-panel-scroll-gap';
+                    settingsScrollGapTopEl.className = 'admin-settings-scroll-gap';
                     settingsScrollGapTopEl.setAttribute('aria-hidden', 'true');
-                    sc.insertBefore(settingsScrollGapTopEl, sc.firstChild);
+                    root.insertBefore(settingsScrollGapTopEl, root.firstChild);
                 }
             }
 
             if (!settingsScrollGapBottomEl || !settingsScrollGapBottomEl.isConnected) {
-                settingsScrollGapBottomEl = sc.querySelector('.admin-panel-scroll-gap-bottom');
+                settingsScrollGapBottomEl = root.querySelector('.admin-settings-scroll-gap-bottom');
                 if (!settingsScrollGapBottomEl) {
                     settingsScrollGapBottomEl = document.createElement('div');
-                    settingsScrollGapBottomEl.className = 'admin-panel-scroll-gap-bottom';
+                    settingsScrollGapBottomEl.className = 'admin-settings-scroll-gap-bottom';
                     settingsScrollGapBottomEl.setAttribute('aria-hidden', 'true');
-                    sc.appendChild(settingsScrollGapBottomEl);
-                } else if (settingsScrollGapBottomEl !== sc.lastChild) {
-                    sc.appendChild(settingsScrollGapBottomEl);
+                    root.appendChild(settingsScrollGapBottomEl);
+                } else if (settingsScrollGapBottomEl !== root.lastChild) {
+                    root.appendChild(settingsScrollGapBottomEl);
                 }
             }
         }
@@ -2737,8 +2743,8 @@ const AdminModule = (function() {
         // Bind lightweight gap-consume handler once (keeps gaps from lingering visibly)
         ensureSettingsScrollGaps();
         var settingsScrollEl = getAdminPanelScrollContainer();
-        if (settingsScrollEl && !settingsScrollEl._adminPanelGapConsumeBound) {
-            settingsScrollEl._adminPanelGapConsumeBound = true;
+        if (settingsScrollEl && !settingsScrollEl._settingsGapConsumeBound) {
+            settingsScrollEl._settingsGapConsumeBound = true;
             settingsScrollEl.addEventListener('scroll', maybeConsumeSettingsGapsOnScroll, { passive: true });
         }
 
