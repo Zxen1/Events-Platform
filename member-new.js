@@ -149,11 +149,17 @@ const MemberModule = (function() {
             console.warn('[Member] Member panel not found');
             return;
         }
-        
-        bindEvents();
-        initHeaderDrag();
-        loadStoredSession();
-        render();
+
+        // If any sub-step throws, don't let it prevent the panel from opening.
+        // The header button relies on this module not crashing during first-open.
+        try {
+            bindEvents();
+            initHeaderDrag();
+            loadStoredSession();
+            render();
+        } catch (err) {
+            console.error('[Member] init error:', err);
+        }
     }
     
     function initHeaderDrag() {
