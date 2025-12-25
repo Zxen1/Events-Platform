@@ -436,10 +436,17 @@
 }
 
 .member-lighting-button-icon {
+  display: block;
   width: 24px;
   height: 24px;
-  object-fit: contain;
   flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .member-lighting-button-text {

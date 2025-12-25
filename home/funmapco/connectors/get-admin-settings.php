@@ -151,7 +151,8 @@ try {
         'marker_cluster_icon', 'msg_category_fieldset-tooltips_icon', 'big_logo', 'small_logo',
         'favicon', 'icon_filter', 'icon_recents', 'icon_posts', 'icon_map',
         'icon_member', 'icon_admin', 'icon_fullscreen', 'icon_fullscreen_exit',
-        'icon_geolocate', 'icon_compass'
+        'icon_geolocate', 'icon_compass',
+        'icon_lighting_dawn', 'icon_lighting_day', 'icon_lighting_dusk', 'icon_lighting_night'
     ];
     
     $systemImages = [];

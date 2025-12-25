@@ -1807,6 +1807,29 @@ const AdminModule = (function() {
         // Map Lighting buttons
         var lightingButtons = mapTabContainer.querySelectorAll('.admin-lighting-button');
         if (lightingButtons.length) {
+            // Apply lighting icons from system_images (admin_settings keys)
+            (function applyLightingIcons() {
+                try {
+                    if (!window.App || typeof App.getImageUrl !== 'function') return;
+                    var sys = mapTabData && mapTabData.system_images ? mapTabData.system_images : null;
+                    if (!sys) return;
+                    
+                    lightingButtons.forEach(function(btn) {
+                        var preset = btn.dataset.lighting || '';
+                        var key = preset ? ('icon_lighting_' + preset) : '';
+                        var filename = key && sys[key] ? sys[key] : '';
+                        var iconEl = btn.querySelector('.admin-lighting-button-icon');
+                        if (iconEl && filename) {
+                            var url = App.getImageUrl('systemImages', filename);
+                            iconEl.style.webkitMaskImage = 'url(' + url + ')';
+                            iconEl.style.maskImage = 'url(' + url + ')';
+                        }
+                    });
+                } catch (e) {
+                    // ignore
+                }
+            })();
+            
             var initialLighting = mapTabData.map_lighting || 'day';
             lightingButtons.forEach(function(btn) {
                 var lighting = btn.dataset.lighting;
@@ -2684,6 +2707,10 @@ const AdminModule = (function() {
         initImagePicker('adminIconFullscreenExitPicker', 'icon_fullscreen_exit');
         initImagePicker('adminIconGeolocatePicker', 'icon_geolocate');
         initImagePicker('adminIconCompassPicker', 'icon_compass');
+        initImagePicker('adminIconLightingDawnPicker', 'icon_lighting_dawn');
+        initImagePicker('adminIconLightingDayPicker', 'icon_lighting_day');
+        initImagePicker('adminIconLightingDuskPicker', 'icon_lighting_dusk');
+        initImagePicker('adminIconLightingNightPicker', 'icon_lighting_night');
         
         // Initialize currency picker (using CurrencyComponent from components file)
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');
