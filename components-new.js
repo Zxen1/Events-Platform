@@ -582,6 +582,99 @@ const FieldsetComponent = (function(){
             this.value = this.value.replace(/[^0-9]/g, '');
         });
     }
+
+    // Money input behavior (prices): digits + one dot, max 2 decimals; format to 2 decimals on blur.
+    // Uses text input with inputMode=decimal to avoid browser 'number' quirks (e/E, locale issues).
+    function attachMoneyInputBehavior(input) {
+        if (!input) return;
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.autocomplete = 'off';
+
+        function sanitize(raw) {
+            var val = (raw || '').toString();
+            val = val.trim();
+
+            // Support comma decimal when no dot is present (e.g. "14,5" -> "14.5")
+            if (val.indexOf(',') !== -1 && val.indexOf('.') === -1) {
+                val = val.replace(/,/g, '.');
+            } else {
+                val = val.replace(/,/g, '');
+            }
+
+            // Keep only digits and dot
+            val = val.replace(/[^0-9.]/g, '');
+
+            // Only one dot
+            var firstDot = val.indexOf('.');
+            if (firstDot !== -1) {
+                var before = val.slice(0, firstDot + 1);
+                var after = val.slice(firstDot + 1).replace(/\./g, '');
+                // Max 2 decimals
+                after = after.slice(0, 2);
+                val = before + after;
+            }
+
+            return val;
+        }
+
+        input.addEventListener('keydown', function(e) {
+            if (!e) return;
+            var k = e.key;
+            // Allow navigation/control keys
+            if (
+                k === 'Backspace' || k === 'Delete' || k === 'Tab' || k === 'Enter' ||
+                k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown' ||
+                k === 'Home' || k === 'End' || k === 'Escape'
+            ) {
+                return;
+            }
+            // Allow Ctrl/Cmd shortcuts
+            if (e.ctrlKey || e.metaKey) return;
+            if (typeof k !== 'string' || k.length !== 1) return;
+
+            // Block anything not digit/dot
+            if (!(/[0-9.]/.test(k))) {
+                e.preventDefault();
+                return;
+            }
+            // Block second dot
+            if (k === '.' && this.value.indexOf('.') !== -1) {
+                e.preventDefault();
+                return;
+            }
+        });
+
+        input.addEventListener('input', function() {
+            var next = sanitize(this.value);
+            if (this.value !== next) {
+                this.value = next;
+            }
+            if (typeof this.setCustomValidity === 'function') {
+                this.setCustomValidity('');
+            }
+        });
+
+        input.addEventListener('blur', function() {
+            var cleaned = sanitize(this.value);
+            if (cleaned === '') {
+                this.value = '';
+                if (typeof this.setCustomValidity === 'function') {
+                    this.setCustomValidity('');
+                }
+                return;
+            }
+            var num = parseFloat(cleaned);
+            if (!isFinite(num)) {
+                if (typeof this.setCustomValidity === 'function') {
+                    this.setCustomValidity('Please enter a valid price.');
+                    if (typeof this.reportValidity === 'function') this.reportValidity();
+                }
+                return;
+            }
+            this.value = num.toFixed(2);
+        });
+    }
     
     // URL auto-prepend https://
     function autoUrlProtocol(input) {
@@ -1725,15 +1818,9 @@ const FieldsetComponent = (function(){
                     priceSub.className = 'fieldset-sublabel';
                     priceSub.textContent = 'Price';
                     var priceInput = document.createElement('input');
-                    priceInput.type = 'text';
-                    priceInput.inputMode = 'decimal';
                     priceInput.className = 'fieldset-input';
                     priceInput.placeholder = '0.00';
-                    priceInput.addEventListener('blur', function() {
-                        if (this.value !== '') {
-                            this.value = parseFloat(this.value).toFixed(2);
-                        }
-                    });
+                    attachMoneyInputBehavior(priceInput);
                     priceCol.appendChild(priceSub);
                     priceCol.appendChild(priceInput);
                     priceRow.appendChild(priceCol);
@@ -1899,15 +1986,9 @@ const FieldsetComponent = (function(){
                     priceSub.className = 'fieldset-sublabel';
                     priceSub.textContent = 'Price';
                     var priceInput = document.createElement('input');
-                    priceInput.type = 'text';
-                    priceInput.inputMode = 'decimal';
                     priceInput.className = 'fieldset-input';
                     priceInput.placeholder = '0.00';
-                    priceInput.addEventListener('blur', function() {
-                        if (this.value !== '') {
-                            this.value = parseFloat(this.value).toFixed(2);
-                        }
-                    });
+                    attachMoneyInputBehavior(priceInput);
                     priceCol.appendChild(priceSub);
                     priceCol.appendChild(priceInput);
                     priceRow.appendChild(priceCol);
