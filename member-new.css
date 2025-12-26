@@ -80,7 +80,6 @@
   box-sizing: border-box;
   background: #222222;
   color: #fff;
-  font-family: system-ui, sans-serif;
   overscroll-behavior: contain;
 }
 
@@ -413,7 +412,6 @@
   justify-content: center;
   gap: 0;
   box-sizing: border-box;
-  font-family: inherit;
   font-size: 14px;
 }
 
@@ -476,7 +474,6 @@
   border-radius: 5px;
   padding: 8px 12px;
   color: var(--input-text, #fff);
-  font-family: inherit;
   font-size: 14px;
 }
 
@@ -487,7 +484,6 @@
   border-radius: 5px;
   padding: 8px 12px;
   color: var(--input-text, #fff);
-  font-family: inherit;
   font-size: 14px;
 }
 
@@ -527,7 +523,6 @@
   background: var(--btn);
   border: 1px solid var(--btn);
   color: var(--button-text);
-  font-family: inherit;
   font-size: 14px;
   padding: 0 10px;
   height: var(--control-h);
@@ -583,7 +578,6 @@
 
 .member-input-text::placeholder {
   color: var(--placeholder-text);
-  font-family: inherit;
   font-size: inherit;
 }
 
@@ -756,7 +750,6 @@
   background: var(--website-color, #3b82f6);
   border: none;
   color: #ffffff;
-  font-family: inherit;
   font-size: 13px;
   font-weight: 500;
   height: 36px;
@@ -780,7 +773,6 @@
   background: #22c55e;
   border: 1px solid #22c55e;
   color: #ffffff;
-  font-family: inherit;
   font-size: 13px;
   font-weight: 500;
   line-height: 1;

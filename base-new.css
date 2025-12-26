@@ -126,6 +126,10 @@
   --date-range-bg: rgba(74,74,74,0.9);
   --date-range-text: rgba(255,255,255,1);
 
+  /* Post mode */
+  --post-mode-bg-color: 0,0,0;
+  --post-mode-bg-opacity: 0;
+
   /* Scrollbar */
   --scrollbar-track: rgba(0,0,0,0);
   --scrollbar-thumb: rgba(255,255,255,0.4);
@@ -134,8 +138,14 @@
 }
 
 /* ============================================================================
-   GLOBAL SCROLLBAR STYLES
+   GLOBAL RULES (ONLY TWO IN THE ENTIRE WEBSITE)
+   1) SCROLLBARS
+   2) GLOBAL FONT (system-ui, sans-serif)
    ============================================================================ */
+
+body {
+  font-family: system-ui, sans-serif;
+}
 
 * {
   scrollbar-width: thin;
@@ -159,18 +169,6 @@
 
 *::-webkit-scrollbar-track {
   background: transparent;
-
-  /* Typography */
-  --panel-label-font: system-ui, sans-serif;
-  --panel-label-size: 14px;
-  --panel-label-color: #ffffff;
-  --panel-title-font: system-ui, sans-serif;
-  --panel-title-size: 16px;
-  --panel-title-color: #ffffff;
-
-  /* Post mode */
-  --post-mode-bg-color: 0,0,0;
-  --post-mode-bg-opacity: 0;
 }
 
 /* ============================================================================
@@ -191,7 +189,7 @@ html, body {
 
 body {
   margin: 0;
-  font: 13px system-ui, sans-serif;
+  font-size: 13px;
   background: var(--background);
   color: var(--text);
   overflow: hidden;
@@ -467,7 +465,6 @@ body {
   background: var(--website-color, #3b82f6);
   border: none;
   color: #ffffff;
-  font-family: inherit;
   font-size: 14px;
   font-weight: 500;
   padding: 10px 24px;

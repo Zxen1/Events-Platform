@@ -740,7 +740,6 @@ const MapModule = (function() {
       filter: ['has', 'point_count'],
       layout: {
         'text-field': '{point_count_abbreviated}',
-        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
         'text-size': 12
       },
       paint: {

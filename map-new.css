@@ -61,17 +61,14 @@
 
 /* Mapbox geocoder font - !important allowed for Mapbox */
 .mapboxgl-ctrl-geocoder {
-  font-family: inherit;
 }
 
 .mapboxgl-ctrl-geocoder--input {
-  font-family: inherit;
   font-size: 14px;
   font-weight: 400;
 }
 
 .mapboxgl-ctrl-geocoder--input::placeholder {
-  font-family: inherit;
   font-size: 14px;
   font-weight: 400;
 }

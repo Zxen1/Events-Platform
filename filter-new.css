@@ -41,7 +41,6 @@
   box-sizing: border-box;
   background: #222222;
   color: #fff;
-  font-family: system-ui, sans-serif;
   overflow-y: auto;
   padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
@@ -377,7 +376,6 @@
 .filter-price-input::placeholder,
 .filter-daterange-input::placeholder {
   color: #666;
-  font-family: inherit;
   font-size: inherit;
 }
 
