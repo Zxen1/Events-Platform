@@ -1285,6 +1285,42 @@ const FieldsetComponent = (function(){
                             }
                         }
 
+                        function setThumbDragImage(ev) {
+                            try {
+                                if (!ev || !ev.dataTransfer) return;
+                                var r = thumb.getBoundingClientRect();
+                                var size = Math.max(1, Math.round(Math.min(r.width || 1, r.height || 1)));
+
+                                // Use an offscreen square ghost so the browser drag preview can't distort/squash.
+                                var ghost = document.createElement('div');
+                                ghost.style.width = size + 'px';
+                                ghost.style.height = size + 'px';
+                                ghost.style.borderRadius = '5px';
+                                ghost.style.overflow = 'hidden';
+                                ghost.style.background = '#222';
+                                ghost.style.position = 'fixed';
+                                ghost.style.left = '-99999px';
+                                ghost.style.top = '-99999px';
+                                ghost.style.pointerEvents = 'none';
+
+                                var gimg = document.createElement('img');
+                                gimg.src = (entry && entry.previewUrl) ? entry.previewUrl : (entry ? entry.fileUrl : '');
+                                gimg.style.width = '100%';
+                                gimg.style.height = '100%';
+                                gimg.style.objectFit = 'cover';
+                                gimg.draggable = false;
+                                ghost.appendChild(gimg);
+
+                                document.body.appendChild(ghost);
+                                ev.dataTransfer.setDragImage(ghost, Math.floor(size / 2), Math.floor(size / 2));
+                                setTimeout(function() {
+                                    try { ghost.remove(); } catch (e) {}
+                                }, 0);
+                            } catch (e) {
+                                // If setDragImage fails (browser quirks), allow default behavior.
+                            }
+                        }
+
                         thumb.addEventListener('mousedown', function(e) {
                             if (e && typeof e.button === 'number' && e.button !== 0) return;
                             armDrag(e);
@@ -1303,6 +1339,7 @@ const FieldsetComponent = (function(){
                                 return;
                             }
                             didDrag = true;
+                            setThumbDragImage(e);
                             var siblings = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
                             dragStartIndex = siblings.indexOf(thumb);
                             if (e && e.dataTransfer) {
@@ -1392,7 +1429,7 @@ const FieldsetComponent = (function(){
                         if (first) {
                             var fr = first.getBoundingClientRect();
                             // If cursor is above/left of the first thumb (with some leniency), insert before first.
-                            if (py < (fr.top + fr.height * 0.6) && px < (fr.left + fr.width * 0.6)) {
+                            if (py < (fr.top + fr.height * 0.5) && px < (fr.left + fr.width * 0.5)) {
                                 imagesContainer.insertBefore(dragging, first);
                                 return;
                             }
@@ -1400,7 +1437,7 @@ const FieldsetComponent = (function(){
                         if (last) {
                             var lr = last.getBoundingClientRect();
                             // If cursor is below/right of the last thumb (with some leniency), insert after last.
-                            if (py > (lr.top + lr.height * 0.4) && px > (lr.left + lr.width * 0.4)) {
+                            if (py > (lr.top + lr.height * 0.5) && px > (lr.left + lr.width * 0.5)) {
                                 imagesContainer.insertBefore(dragging, last.nextSibling);
                                 return;
                             }
@@ -1411,8 +1448,8 @@ const FieldsetComponent = (function(){
 
                     var rect = overThumb.getBoundingClientRect();
                     var midX = rect.left + rect.width / 2;
-                    var midY = rect.top + rect.height / 2;
-                    var after = (py > midY) || (Math.abs(py - midY) < rect.height * 0.25 && px > midX);
+                    // Flip before/after at 50% of the thumb width (no need to drag "90% across").
+                    var after = (px >= midX);
                     if (after) {
                         imagesContainer.insertBefore(dragging, overThumb.nextSibling);
                     } else {
