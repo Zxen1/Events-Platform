@@ -4847,7 +4847,7 @@ const CheckoutOptionsComponent = (function(){
                 if (optionIndex === 0) radio30.checked = true;
                 var text30 = document.createElement('span');
                 text30.className = 'member-checkout-duration-text';
-                text30.textContent = '30 days — ' + (price30 > 0 ? currency + ' ' + price30.toFixed(2) : 'Free');
+                text30.textContent = buildLocationSummary(30, locationCount) + ' — ' + (price30 > 0 ? currency + ' ' + price30.toFixed(2) : 'Free');
                 label30.appendChild(radio30);
                 label30.appendChild(text30);
                 
@@ -4865,7 +4865,7 @@ const CheckoutOptionsComponent = (function(){
                 radio365.required = true;
                 var text365 = document.createElement('span');
                 text365.className = 'member-checkout-duration-text';
-                text365.textContent = '365 days — ' + (price365 > 0 ? currency + ' ' + price365.toFixed(2) : 'Free');
+                text365.textContent = buildLocationSummary(365, locationCount) + ' — ' + (price365 > 0 ? currency + ' ' + price365.toFixed(2) : 'Free');
                 label365.appendChild(radio365);
                 label365.appendChild(text365);
                 
@@ -4957,9 +4957,9 @@ const CheckoutOptionsComponent = (function(){
                         var res30 = computeGeneralTotal(flagfall, basicRate, discountRate, 30, locationCount, surchargePercent);
                         var res365 = computeGeneralTotal(flagfall, basicRate, discountRate, 365, locationCount, surchargePercent);
                         if (r30) r30.dataset.price = res30.total.toFixed(2);
-                        if (t30) t30.textContent = '30 days — ' + (res30.total > 0 ? curr + ' ' + res30.total.toFixed(2) : 'Free');
+                        if (t30) t30.textContent = buildLocationSummary(30, locationCount) + ' — ' + (res30.total > 0 ? curr + ' ' + res30.total.toFixed(2) : 'Free');
                         if (r365) r365.dataset.price = res365.total.toFixed(2);
-                        if (t365) t365.textContent = '365 days — ' + (res365.total > 0 ? curr + ' ' + res365.total.toFixed(2) : 'Free');
+                        if (t365) t365.textContent = buildLocationSummary(365, locationCount) + ' — ' + (res365.total > 0 ? curr + ' ' + res365.total.toFixed(2) : 'Free');
                     });
                 }
             },
