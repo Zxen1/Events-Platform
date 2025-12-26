@@ -447,6 +447,20 @@ const App = (function() {
         state.settings = settings;
         state.system_images = data.system_images || {};
 
+        // Apply Devtools Console Filter (database source of truth; no localStorage dependency)
+        try {
+          window._consoleFilterEnabled = settings.console_filter === true || settings.console_filter === 'true' || settings.console_filter === '1';
+          if (window.ConsoleFilter && typeof window.ConsoleFilter.enable === 'function' && typeof window.ConsoleFilter.disable === 'function') {
+            if (window._consoleFilterEnabled) {
+              window.ConsoleFilter.enable();
+            } else {
+              window.ConsoleFilter.disable();
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+
         // Store a few system icon URLs as CSS variables (used by mask-based UI icons)
         try {
           var sys = state.system_images || {};

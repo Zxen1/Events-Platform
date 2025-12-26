@@ -2556,10 +2556,16 @@ const AdminModule = (function() {
                         settingsData.system_images = data.system_images;
                     }
                     
-                    // Store console_filter setting from database and sync to localStorage for next page load
+                    // Store console_filter setting from database (source of truth)
                     if (data.settings.console_filter !== undefined) {
                         window._consoleFilterEnabled = data.settings.console_filter;
-                        localStorage.setItem('enableConsoleFilter', data.settings.console_filter ? 'true' : 'false');
+                        // Apply immediately if the ConsoleFilter module is available
+                        try {
+                            if (window.ConsoleFilter && typeof window.ConsoleFilter.enable === 'function' && typeof window.ConsoleFilter.disable === 'function') {
+                                if (data.settings.console_filter) window.ConsoleFilter.enable();
+                                else window.ConsoleFilter.disable();
+                            }
+                        } catch (e) {}
                     }
 
                     // Use database setting for system images folder
@@ -2621,10 +2627,15 @@ const AdminModule = (function() {
             checkbox.addEventListener('change', function() {
                 updateField('settings.' + key, checkbox.checked);
                 
-                // Special handling for console_filter: sync localStorage for next page load
+                // Special handling for console_filter: apply immediately (no localStorage dependency)
                 if (key === 'console_filter') {
                     window._consoleFilterEnabled = checkbox.checked;
-                    localStorage.setItem('enableConsoleFilter', checkbox.checked ? 'true' : 'false');
+                    try {
+                        if (window.ConsoleFilter && typeof window.ConsoleFilter.enable === 'function' && typeof window.ConsoleFilter.disable === 'function') {
+                            if (checkbox.checked) window.ConsoleFilter.enable();
+                            else window.ConsoleFilter.disable();
+                        }
+                    } catch (e) {}
                 }
             });
         });
