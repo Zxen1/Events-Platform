@@ -831,29 +831,387 @@ const FieldsetComponent = (function(){
                 var imagesContainer = document.createElement('div');
                 imagesContainer.className = 'fieldset-images-container';
                 
-                var imageFiles = [];
+                // Each entry: { file, fileUrl, cropState?, cropRect?, previewUrl? }
+                // cropRect: { x1, y1, x2, y2 } in original image pixels (for Bunny Dynamic Image API crop=...)
+                var imageEntries = [];
                 var maxImages = 10;
+
+                // Hidden JSON payload so the outside form serializer can pick up crop info later.
+                // NOTE: This fieldset currently manages files in-memory; upload/saving is implemented elsewhere.
+                var imagesMetaInput = document.createElement('input');
+                imagesMetaInput.type = 'hidden';
+                imagesMetaInput.className = 'fieldset-images-meta';
+                imagesMetaInput.value = '[]';
+                fieldset.appendChild(imagesMetaInput);
+
+                function updateImagesMeta() {
+                    try {
+                        var payload = imageEntries.map(function(entry) {
+                            return {
+                                file_name: entry && entry.file ? (entry.file.name || '') : '',
+                                file_type: entry && entry.file ? (entry.file.type || '') : '',
+                                file_size: entry && entry.file ? (entry.file.size || 0) : 0,
+                                crop: entry && entry.cropRect ? {
+                                    x1: entry.cropRect.x1,
+                                    y1: entry.cropRect.y1,
+                                    x2: entry.cropRect.x2,
+                                    y2: entry.cropRect.y2
+                                } : null
+                            };
+                        });
+                        imagesMetaInput.value = JSON.stringify(payload);
+                    } catch (e) {
+                        // If JSON fails, we want the error visible (no silent fallback)
+                        throw e;
+                    }
+                }
+
+                function revokeEntryUrls(entry) {
+                    if (!entry) return;
+                    if (entry.previewUrl && typeof entry.previewUrl === 'string' && entry.previewUrl.indexOf('blob:') === 0) {
+                        try { URL.revokeObjectURL(entry.previewUrl); } catch (e) {}
+                    }
+                    if (entry.fileUrl && typeof entry.fileUrl === 'string' && entry.fileUrl.indexOf('blob:') === 0) {
+                        try { URL.revokeObjectURL(entry.fileUrl); } catch (e) {}
+                    }
+                    entry.previewUrl = '';
+                    entry.fileUrl = '';
+                }
+
+                // ------------------------------------------------------------------
+                // Cropper (avatar-style UI), non-destructive for post images.
+                // Uses Bunny Dynamic Image API crop params later (server-side + cached).
+                // ------------------------------------------------------------------
+
+                var cropper = {
+                    overlay: null,
+                    dialog: null,
+                    canvas: null,
+                    zoomInput: null,
+                    cancelBtn: null,
+                    saveBtn: null,
+                    img: null,
+                    activeEntry: null,
+                    state: { zoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 }
+                };
+
+                function ensureCropper() {
+                    if (cropper.overlay) return;
+
+                    var overlay = document.createElement('div');
+                    overlay.className = 'member-avatar-cropper';
+                    overlay.hidden = true;
+                    overlay.setAttribute('aria-hidden', 'true');
+
+                    var dialog = document.createElement('div');
+                    dialog.className = 'member-avatar-cropper-dialog';
+                    dialog.setAttribute('role', 'dialog');
+                    dialog.setAttribute('aria-modal', 'true');
+                    dialog.setAttribute('aria-label', 'Crop image');
+
+                    var previewWrap = document.createElement('div');
+                    previewWrap.className = 'member-avatar-cropper-preview-wrap';
+                    var canvas = document.createElement('canvas');
+                    canvas.className = 'member-avatar-cropper-canvas';
+                    canvas.width = 530;
+                    canvas.height = 530;
+                    previewWrap.appendChild(canvas);
+
+                    var zoomLabel = document.createElement('label');
+                    zoomLabel.className = 'member-auth-panel-label';
+                    zoomLabel.textContent = 'Zoom';
+
+                    var zoomInput = document.createElement('input');
+                    zoomInput.type = 'range';
+                    zoomInput.min = '1';
+                    zoomInput.max = '3';
+                    zoomInput.step = '0.01';
+                    zoomInput.value = '1';
+
+                    var actions = document.createElement('div');
+                    actions.className = 'member-avatar-cropper-actions';
+                    var cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.className = 'member-button-auth';
+                    cancelBtn.textContent = 'Cancel';
+                    var saveBtn = document.createElement('button');
+                    saveBtn.type = 'button';
+                    saveBtn.className = 'member-button-auth';
+                    saveBtn.textContent = 'Use Crop';
+                    actions.appendChild(cancelBtn);
+                    actions.appendChild(saveBtn);
+
+                    dialog.appendChild(previewWrap);
+                    dialog.appendChild(zoomLabel);
+                    dialog.appendChild(zoomInput);
+                    dialog.appendChild(actions);
+                    overlay.appendChild(dialog);
+                    document.body.appendChild(overlay);
+
+                    cropper.overlay = overlay;
+                    cropper.dialog = dialog;
+                    cropper.canvas = canvas;
+                    cropper.zoomInput = zoomInput;
+                    cropper.cancelBtn = cancelBtn;
+                    cropper.saveBtn = saveBtn;
+
+                    // Events
+                    overlay.addEventListener('click', function(e) {
+                        if (e.target === overlay) {
+                            closeCropper(false);
+                        }
+                    });
+
+                    cancelBtn.addEventListener('click', function() {
+                        closeCropper(false);
+                    });
+
+                    saveBtn.addEventListener('click', function() {
+                        saveCropForActiveEntry();
+                    });
+
+                    zoomInput.addEventListener('input', function() {
+                        var z = parseFloat(zoomInput.value || '1');
+                        if (!isFinite(z) || z <= 0) z = 1;
+                        if (z < 1) z = 1;
+                        cropper.state.zoom = z;
+                        drawCropper();
+                    });
+
+                    // Drag to reposition
+                    canvas.addEventListener('mousedown', function(e) {
+                        cropper.state.dragging = true;
+                        cropper.state.lastX = e.clientX;
+                        cropper.state.lastY = e.clientY;
+                    });
+                    window.addEventListener('mousemove', function(e) {
+                        if (!cropper.state.dragging) return;
+                        var dx = e.clientX - cropper.state.lastX;
+                        var dy = e.clientY - cropper.state.lastY;
+                        cropper.state.lastX = e.clientX;
+                        cropper.state.lastY = e.clientY;
+
+                        var rect = canvas.getBoundingClientRect();
+                        var scaleX = rect.width ? (canvas.width / rect.width) : 1;
+                        var scaleY = rect.height ? (canvas.height / rect.height) : 1;
+                        cropper.state.offsetX += dx * scaleX;
+                        cropper.state.offsetY += dy * scaleY;
+                        drawCropper();
+                    });
+                    window.addEventListener('mouseup', function() {
+                        cropper.state.dragging = false;
+                    });
+                }
+
+                function openCropperForEntry(entry) {
+                    if (!entry || !entry.fileUrl) return;
+                    ensureCropper();
+
+                    cropper.activeEntry = entry;
+                    cropper.state.zoom = (entry.cropState && typeof entry.cropState.zoom === 'number') ? entry.cropState.zoom : 1;
+                    cropper.state.offsetX = (entry.cropState && typeof entry.cropState.offsetX === 'number') ? entry.cropState.offsetX : 0;
+                    cropper.state.offsetY = (entry.cropState && typeof entry.cropState.offsetY === 'number') ? entry.cropState.offsetY : 0;
+                    cropper.zoomInput.value = String(cropper.state.zoom);
+
+                    cropper.img = new Image();
+                    cropper.img.onload = function() {
+                        drawCropper();
+                        cropper.overlay.hidden = false;
+                        cropper.overlay.setAttribute('aria-hidden', 'false');
+                    };
+                    cropper.img.onerror = function() {
+                        cropper.img = null;
+                        throw new Error('Images fieldset cropper: failed to load image for cropping.');
+                    };
+                    cropper.img.src = entry.fileUrl;
+                }
+
+                function closeCropper(save) {
+                    if (!cropper.overlay) return;
+                    cropper.overlay.hidden = true;
+                    cropper.overlay.setAttribute('aria-hidden', 'true');
+                    cropper.activeEntry = null;
+                    cropper.img = null;
+                }
+
+                function drawCropper() {
+                    if (!cropper.canvas || !cropper.img) return;
+                    var ctx = cropper.canvas.getContext('2d');
+                    if (!ctx) throw new Error('Images fieldset cropper: canvas 2D context unavailable.');
+
+                    var cw = cropper.canvas.width;
+                    var ch = cropper.canvas.height;
+                    ctx.clearRect(0, 0, cw, ch);
+
+                    var iw = cropper.img.naturalWidth || cropper.img.width;
+                    var ih = cropper.img.naturalHeight || cropper.img.height;
+                    if (!iw || !ih) return;
+
+                    // Cover-only zoom (no blank areas)
+                    var cover = Math.max(cw / iw, ch / ih);
+                    var scale = cover * (cropper.state.zoom || 1);
+                    var drawW = iw * scale;
+                    var drawH = ih * scale;
+
+                    var baseX = (cw - drawW) / 2;
+                    var baseY = (ch - drawH) / 2;
+
+                    var offX = cropper.state.offsetX || 0;
+                    var offY = cropper.state.offsetY || 0;
+
+                    // Clamp offsets so the image always fully covers the crop square (no blank areas).
+                    if (drawW <= cw) {
+                        offX = 0;
+                    } else {
+                        var minOffX = baseX;
+                        var maxOffX = -baseX;
+                        if (offX < minOffX) offX = minOffX;
+                        if (offX > maxOffX) offX = maxOffX;
+                    }
+                    if (drawH <= ch) {
+                        offY = 0;
+                    } else {
+                        var minOffY = baseY;
+                        var maxOffY = -baseY;
+                        if (offY < minOffY) offY = minOffY;
+                        if (offY > maxOffY) offY = maxOffY;
+                    }
+
+                    cropper.state.offsetX = offX;
+                    cropper.state.offsetY = offY;
+
+                    var x = baseX + offX;
+                    var y = baseY + offY;
+                    ctx.drawImage(cropper.img, x, y, drawW, drawH);
+                }
+
+                function computeCropRectFromState(img, canvas, state) {
+                    var iw = img.naturalWidth || img.width;
+                    var ih = img.naturalHeight || img.height;
+                    var cw = canvas.width;
+                    var ch = canvas.height;
+                    if (!iw || !ih || !cw || !ch) return null;
+
+                    var cover = Math.max(cw / iw, ch / ih);
+                    var scale = cover * (state.zoom || 1);
+                    var drawW = iw * scale;
+                    var drawH = ih * scale;
+                    var baseX = (cw - drawW) / 2;
+                    var baseY = (ch - drawH) / 2;
+                    var x = baseX + (state.offsetX || 0);
+                    var y = baseY + (state.offsetY || 0);
+
+                    // Map full canvas to image coords
+                    var x1 = (0 - x) / scale;
+                    var y1 = (0 - y) / scale;
+                    var x2 = (cw - x) / scale;
+                    var y2 = (ch - y) / scale;
+
+                    // Clamp to image bounds
+                    x1 = Math.max(0, Math.min(iw, x1));
+                    y1 = Math.max(0, Math.min(ih, y1));
+                    x2 = Math.max(0, Math.min(iw, x2));
+                    y2 = Math.max(0, Math.min(ih, y2));
+
+                    // Ensure integer pixel crop
+                    return {
+                        x1: Math.round(x1),
+                        y1: Math.round(y1),
+                        x2: Math.round(x2),
+                        y2: Math.round(y2)
+                    };
+                }
+
+                function renderEntryPreviewFromCrop(entry) {
+                    if (!entry || !entry.fileUrl || !entry.cropRect) return;
+
+                    // Create a small local preview so users see exactly what the square crop will look like.
+                    var url = entry.fileUrl;
+                    var img = new Image();
+                    img.onload = function() {
+                        var iw = img.naturalWidth || img.width;
+                        var ih = img.naturalHeight || img.height;
+                        if (!iw || !ih) return;
+
+                        var rect = entry.cropRect;
+                        var sx = Math.max(0, Math.min(iw, rect.x1));
+                        var sy = Math.max(0, Math.min(ih, rect.y1));
+                        var sw = Math.max(1, Math.min(iw - sx, rect.x2 - rect.x1));
+                        var sh = Math.max(1, Math.min(ih - sy, rect.y2 - rect.y1));
+
+                        var canvas = document.createElement('canvas');
+                        canvas.width = 200;
+                        canvas.height = 200;
+                        var ctx = canvas.getContext('2d');
+                        if (!ctx) throw new Error('Images fieldset crop preview: canvas 2D context unavailable.');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+                        canvas.toBlob(function(blob) {
+                            if (!blob) throw new Error('Images fieldset crop preview: failed to generate preview blob.');
+
+                            if (entry.previewUrl && entry.previewUrl.indexOf('blob:') === 0) {
+                                try { URL.revokeObjectURL(entry.previewUrl); } catch (e) {}
+                            }
+                            entry.previewUrl = URL.createObjectURL(blob);
+                            renderImages();
+                        }, 'image/jpeg', 0.92);
+                    };
+                    img.onerror = function() {
+                        throw new Error('Images fieldset crop preview: failed to load image for preview.');
+                    };
+                    img.src = url;
+                }
+
+                function saveCropForActiveEntry() {
+                    if (!cropper.activeEntry || !cropper.img || !cropper.canvas) return;
+
+                    var entry = cropper.activeEntry;
+                    entry.cropState = {
+                        zoom: cropper.state.zoom,
+                        offsetX: cropper.state.offsetX,
+                        offsetY: cropper.state.offsetY
+                    };
+
+                    var rect = computeCropRectFromState(cropper.img, cropper.canvas, cropper.state);
+                    entry.cropRect = rect;
+
+                    updateImagesMeta();
+                    closeCropper(true);
+                    renderEntryPreviewFromCrop(entry);
+                }
                 
                 function renderImages() {
                     imagesContainer.innerHTML = '';
                     
                     // Show existing images
-                    imageFiles.forEach(function(file, idx) {
+                    imageEntries.forEach(function(entry, idx) {
                         var thumb = document.createElement('div');
                         thumb.className = 'fieldset-image-thumb';
                         
                         var img = document.createElement('img');
                         img.className = 'fieldset-image-thumb-img';
-                        img.src = URL.createObjectURL(file);
+                        img.src = (entry && entry.previewUrl) ? entry.previewUrl : (entry ? entry.fileUrl : '');
                         thumb.appendChild(img);
+
+                        // Click thumb to crop (avatar-style)
+                        thumb.addEventListener('click', function() {
+                            if (entry) openCropperForEntry(entry);
+                        });
                         
                         var removeBtn = document.createElement('button');
                         removeBtn.type = 'button';
                         removeBtn.className = 'fieldset-image-thumb-remove';
                         removeBtn.textContent = '×';
                         (function(idx) {
-                            removeBtn.addEventListener('click', function() {
-                                imageFiles.splice(idx, 1);
+                            removeBtn.addEventListener('click', function(e) {
+                                // Prevent thumb click from opening cropper
+                                if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                                if (imageEntries[idx]) {
+                                    revokeEntryUrls(imageEntries[idx]);
+                                }
+                                imageEntries.splice(idx, 1);
+                                updateImagesMeta();
                                 renderImages();
                             });
                         })(idx);
@@ -863,7 +1221,7 @@ const FieldsetComponent = (function(){
                     });
                     
                     // Show upload button if under max
-                    if (imageFiles.length < maxImages) {
+                    if (imageEntries.length < maxImages) {
                         var uploadBox = document.createElement('div');
                         uploadBox.className = 'fieldset-images';
                         uploadBox.innerHTML = ImageAddTileComponent.buildMarkup({
@@ -886,10 +1244,18 @@ const FieldsetComponent = (function(){
                 fileInput.addEventListener('change', function() {
                     var files = Array.from(this.files);
                     files.forEach(function(file) {
-                        if (imageFiles.length < maxImages && file.type.startsWith('image/')) {
-                            imageFiles.push(file);
+                        if (imageEntries.length < maxImages && file.type.startsWith('image/')) {
+                            var fileUrl = URL.createObjectURL(file);
+                            imageEntries.push({
+                                file: file,
+                                fileUrl: fileUrl,
+                                previewUrl: '',
+                                cropState: null,
+                                cropRect: null
+                            });
                         }
                     });
+                    updateImagesMeta();
                     renderImages();
                     this.value = '';
                 });

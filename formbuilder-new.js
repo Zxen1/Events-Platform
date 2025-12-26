@@ -54,7 +54,7 @@
     var loadedCurrencies = [];
     var loadedCategoryIconPaths = {};
     var loadedSubcategoryIconPaths = {};
-
+    
     function applySafeIconImage(imgEl, src) {
         if (!imgEl) return;
         imgEl.alt = '';
@@ -691,7 +691,7 @@
             });
             return;
         }
-
+        
         if (confirm('Delete "' + name + '" and all its subcategories?')) {
             categoryAccordion.remove();
             notifyChange();
@@ -722,7 +722,7 @@
             });
             return;
         }
-
+        
         if (confirm('Delete "' + name + '"?')) {
             subcategoryOption.remove();
             notifyChange();

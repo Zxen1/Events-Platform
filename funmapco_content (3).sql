@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 26, 2025 at 08:46 PM
+-- Generation Time: Dec 26, 2025 at 11:28 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -182,6 +182,7 @@ CREATE TABLE `post_map_cards` (
   `subcategory_key` varchar(255) NOT NULL,
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
+  `media_ids` text DEFAULT NULL,
   `custom_text` varchar(500) DEFAULT NULL,
   `custom_textarea` text DEFAULT NULL,
   `custom_dropdown` varchar(255) DEFAULT NULL,

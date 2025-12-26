@@ -213,7 +213,7 @@ if ($hasPaymentStatus) {
   if (!bind_statement_params($stmt, 'iss', $memberId, $memberName, $subcategoryKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
-  }
+}
 }
 
 if (!$stmt->execute()) {
