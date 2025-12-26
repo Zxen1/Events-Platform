@@ -558,6 +558,21 @@
     overflow: hidden;
     background: #222;
     border: 1px solid #333;
+    cursor: pointer;
+}
+
+.fieldset-image-thumb.dragging {
+    opacity: 0.65;
+}
+
+.fieldset-image-thumb.fieldset-image-thumb--dragready {
+    outline: 2px solid rgba(59, 130, 246, 0.85);
+    outline-offset: -2px;
+    cursor: grab;
+}
+
+.fieldset-image-thumb.fieldset-image-thumb--dragready:active {
+    cursor: grabbing;
 }
 
 .fieldset-image-thumb-img {

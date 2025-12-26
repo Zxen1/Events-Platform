@@ -834,6 +834,7 @@ const FieldsetComponent = (function(){
                 // Each entry: { file, fileUrl, cropState?, cropRect?, previewUrl? }
                 // cropRect: { x1, y1, x2, y2 } in original image pixels (for Bunny Dynamic Image API crop=...)
                 var imageEntries = [];
+                var nextImageEntryId = 1;
                 var maxImages = 10;
 
                 // Hidden JSON payload so the outside form serializer can pick up crop info later.
@@ -1188,6 +1189,13 @@ const FieldsetComponent = (function(){
                     imageEntries.forEach(function(entry, idx) {
                         var thumb = document.createElement('div');
                         thumb.className = 'fieldset-image-thumb';
+                        // Native drag is disabled until a press-and-hold (no visible drag handle here).
+                        thumb.draggable = false;
+                        // Stable ID so we can rebuild imageEntries order from DOM order after drag.
+                        if (entry && !entry._imageEntryId) {
+                            entry._imageEntryId = String(nextImageEntryId++);
+                        }
+                        thumb.dataset.imageEntryId = entry ? entry._imageEntryId : '';
                         
                         var img = document.createElement('img');
                         img.className = 'fieldset-image-thumb-img';
@@ -1195,7 +1203,13 @@ const FieldsetComponent = (function(){
                         thumb.appendChild(img);
 
                         // Click thumb to crop (avatar-style)
+                        var didDrag = false;
                         thumb.addEventListener('click', function() {
+                            // If this click is the tail-end of a drag, ignore it.
+                            if (didDrag) {
+                                didDrag = false;
+                                return;
+                            }
                             if (entry) openCropperForEntry(entry);
                         });
                         
@@ -1217,6 +1231,122 @@ const FieldsetComponent = (function(){
                         })(idx);
                         thumb.appendChild(removeBtn);
                         
+                        // ------------------------------------------------------------------
+                        // Drag-to-reorder (same drag pattern used in Formbuilder)
+                        // - No drag handle: enable drag only after press-and-hold on thumb
+                        // - Prevents conflicts with tap-to-crop and remove button
+                        // ------------------------------------------------------------------
+                        var holdTimer = null;
+                        var holdStartedAt = 0;
+                        var holdMoveStartX = 0;
+                        var holdMoveStartY = 0;
+                        var holdActivated = false;
+                        var dragStartIndex = -1;
+
+                        function clearHold() {
+                            if (holdTimer) {
+                                try { clearTimeout(holdTimer); } catch (e) {}
+                            }
+                            holdTimer = null;
+                            holdActivated = false;
+                            thumb.classList.remove('fieldset-image-thumb--dragready');
+                        }
+
+                        function startHold(e) {
+                            // Don't start long-press drag from the remove button.
+                            if (e && e.target && (e.target === removeBtn || (e.target.closest && e.target.closest('.fieldset-image-thumb-remove')))) {
+                                return;
+                            }
+                            clearHold();
+                            holdStartedAt = Date.now();
+                            holdActivated = false;
+                            holdMoveStartX = (e && e.clientX) ? e.clientX : 0;
+                            holdMoveStartY = (e && e.clientY) ? e.clientY : 0;
+                            holdTimer = setTimeout(function() {
+                                // Enable dragging after a short hold; user then drags normally.
+                                holdActivated = true;
+                                thumb.draggable = true;
+                                thumb.classList.add('fieldset-image-thumb--dragready');
+                            }, 200);
+                        }
+
+                        function cancelHold() {
+                            // Cancel hold; also disable dragging unless we are actively dragging.
+                            clearHold();
+                            thumb.draggable = false;
+                        }
+
+                        // Desktop + touch: pointer events preferred; mouse fallback if needed
+                        thumb.addEventListener('pointerdown', function(e) {
+                            // Only left button / primary pointer
+                            if (e && typeof e.button === 'number' && e.button !== 0) return;
+                            startHold(e);
+                        });
+                        thumb.addEventListener('pointerup', function() {
+                            // If the hold never activated, this remains a normal tap/click.
+                            cancelHold();
+                        });
+                        thumb.addEventListener('pointercancel', function() {
+                            cancelHold();
+                        });
+                        thumb.addEventListener('pointermove', function(e) {
+                            if (!holdTimer) return;
+                            // If user starts moving before hold activates, treat it as scroll/normal gesture.
+                            var dx = Math.abs((e && e.clientX) ? (e.clientX - holdMoveStartX) : 0);
+                            var dy = Math.abs((e && e.clientY) ? (e.clientY - holdMoveStartY) : 0);
+                            if (dx > 6 || dy > 6) {
+                                cancelHold();
+                            }
+                        });
+
+                        thumb.addEventListener('dragstart', function(e) {
+                            if (!thumb.draggable || !holdActivated) {
+                                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                                return;
+                            }
+                            didDrag = true;
+                            var siblings = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            dragStartIndex = siblings.indexOf(thumb);
+                            if (e && e.dataTransfer) {
+                                e.dataTransfer.effectAllowed = 'move';
+                                try { e.dataTransfer.setData('text/plain', thumb.dataset.imageEntryId || ''); } catch (err) {}
+                            }
+                            thumb.classList.add('dragging');
+                        });
+                        thumb.addEventListener('dragend', function() {
+                            thumb.classList.remove('dragging');
+                            thumb.classList.remove('fieldset-image-thumb--dragready');
+                            thumb.draggable = false;
+                            clearHold();
+
+                            // Rebuild imageEntries in the new DOM order (exclude the upload tile).
+                            var orderedThumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            var idToEntry = {};
+                            imageEntries.forEach(function(en) {
+                                if (en && en._imageEntryId) idToEntry[String(en._imageEntryId)] = en;
+                            });
+                            var nextEntries = [];
+                            orderedThumbs.forEach(function(el) {
+                                var id = el && el.dataset ? el.dataset.imageEntryId : '';
+                                if (id && idToEntry[id]) nextEntries.push(idToEntry[id]);
+                            });
+                            // Only apply if we still have the same number of entries
+                            if (nextEntries.length === imageEntries.length) {
+                                imageEntries = nextEntries;
+                                updateImagesMeta();
+                            }
+
+                            // Only notify meta/UI if position actually changed
+                            var siblingsNow = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            var currentIndex = siblingsNow.indexOf(thumb);
+                            if (dragStartIndex !== -1 && currentIndex !== -1 && currentIndex !== dragStartIndex) {
+                                // Re-render to ensure remove buttons map to correct indices
+                                renderImages();
+                            }
+                            dragStartIndex = -1;
+                        });
+                        // Dragover on each thumb is handled at container level for grid-friendly ordering
+
                         imagesContainer.appendChild(thumb);
                     });
                     
@@ -1235,6 +1365,45 @@ const FieldsetComponent = (function(){
                         imagesContainer.appendChild(uploadBox);
                     }
                 }
+
+                // Grid-friendly dragover handler (insertBefore/after like Formbuilder, but computed by closest thumb)
+                imagesContainer.addEventListener('dragover', function(e) {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    var dragging = imagesContainer.querySelector('.fieldset-image-thumb.dragging');
+                    if (!dragging) return;
+
+                    var candidates = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb:not(.dragging)'));
+                    if (!candidates.length) return;
+
+                    var px = (e && typeof e.clientX === 'number') ? e.clientX : 0;
+                    var py = (e && typeof e.clientY === 'number') ? e.clientY : 0;
+
+                    var closest = null;
+                    var closestDist = Infinity;
+                    candidates.forEach(function(el) {
+                        var r = el.getBoundingClientRect();
+                        var cx = r.left + r.width / 2;
+                        var cy = r.top + r.height / 2;
+                        var dx = px - cx;
+                        var dy = py - cy;
+                        var d2 = dx * dx + dy * dy;
+                        if (d2 < closestDist) {
+                            closestDist = d2;
+                            closest = el;
+                        }
+                    });
+                    if (!closest || closest === dragging) return;
+
+                    var rect = closest.getBoundingClientRect();
+                    var midX = rect.left + rect.width / 2;
+                    var midY = rect.top + rect.height / 2;
+                    var after = (py > midY) || (Math.abs(py - midY) < rect.height * 0.25 && px > midX);
+                    if (after) {
+                        imagesContainer.insertBefore(dragging, closest.nextSibling);
+                    } else {
+                        imagesContainer.insertBefore(dragging, closest);
+                    }
+                });
                 
                 var fileInput = document.createElement('input');
                 fileInput.type = 'file';
@@ -1247,6 +1416,7 @@ const FieldsetComponent = (function(){
                         if (imageEntries.length < maxImages && file.type.startsWith('image/')) {
                             var fileUrl = URL.createObjectURL(file);
                             imageEntries.push({
+                                _imageEntryId: String(nextImageEntryId++),
                                 file: file,
                                 fileUrl: fileUrl,
                                 previewUrl: '',
