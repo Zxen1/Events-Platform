@@ -27,6 +27,8 @@ if ($configPath === null) {
 }
 
 require_once $configPath;
+require_once __DIR__ . '/_compat-db-guard.php';
+funmap_assert_db_compat();
 
 $authCandidates = [
   __DIR__ . '/../config/config-auth.php',

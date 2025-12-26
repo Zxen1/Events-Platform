@@ -28,6 +28,8 @@ if ($configPath === null) {
   exit;
 }
 require_once $configPath;
+require_once __DIR__ . '/_compat-db-guard.php';
+funmap_assert_db_compat();
 
 function fail($code, $msg){ http_response_code($code); echo json_encode(['success'=>false,'message'=>$msg]); exit; }
 function ok($data=[]){ echo json_encode(array_merge(['success'=>true], $data)); exit; }

@@ -437,7 +437,10 @@ const AdminModule = (function() {
     // Sync all picklist types from Bunny CDN (background, once per session)
     function syncAllPicklists() {
         var syncKey = 'picklists_synced';
-        var alreadySynced = localStorage.getItem(syncKey) === 'true';
+        // IMPORTANT:
+        // This is intended to run once per *browser session* (not forever).
+        // sessionStorage resets when the browser/tab session ends.
+        var alreadySynced = sessionStorage.getItem(syncKey) === 'true';
         
         if (alreadySynced) {
             return; // Already synced this session
@@ -452,7 +455,7 @@ const AdminModule = (function() {
                 // If Bunny Storage isn't configured, don't attempt background sync (avoids noisy 500s).
                 // Note: storage_api_key is intentionally not exposed to frontend, so we can only check zone name here.
                 if (!res.settings.storage_zone_name) {
-                    localStorage.setItem(syncKey, 'true');
+                    sessionStorage.setItem(syncKey, 'true');
                     return;
                 }
                 
@@ -475,7 +478,7 @@ const AdminModule = (function() {
                     
                     // Check if this specific folder has been synced
                     var folderSyncKey = 'picklist_synced_' + item.option_group + '_' + item.folder;
-                    var folderSynced = localStorage.getItem(folderSyncKey) === 'true';
+                    var folderSynced = sessionStorage.getItem(folderSyncKey) === 'true';
                     
                     if (!folderSynced) {
                         // Fetch file list from Bunny CDN
@@ -497,7 +500,7 @@ const AdminModule = (function() {
                                     .then(function(r) { return r.json(); })
                                     .then(function(syncRes) {
                                         if (syncRes.success) {
-                                            localStorage.setItem(folderSyncKey, 'true');
+                                            sessionStorage.setItem(folderSyncKey, 'true');
                                             if (syncRes.inserted_count > 0 || syncRes.deleted_count > 0) {
                                                 // Synced option group
                                             }
@@ -525,7 +528,7 @@ const AdminModule = (function() {
                 
                 // Mark as synced when all complete
                 Promise.all(syncPromises).then(function() {
-                    localStorage.setItem(syncKey, 'true');
+                    sessionStorage.setItem(syncKey, 'true');
                 });
             })
             .catch(function(err) {

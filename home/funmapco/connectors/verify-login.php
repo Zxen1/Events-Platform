@@ -28,6 +28,8 @@ if ($configPath === null) {
 }
 
 require_once $configPath;
+require_once __DIR__ . '/_compat-db-guard.php';
+funmap_assert_db_compat();
 
 
 function json_fail($msg){

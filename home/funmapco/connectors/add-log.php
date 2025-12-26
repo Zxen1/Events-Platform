@@ -27,6 +27,8 @@ if ($configPath === null) {
 }
 
 require_once $configPath;
+require_once __DIR__ . '/_compat-db-guard.php';
+funmap_assert_db_compat();
 require '../config/config-auth.php';
 require '../config/config-paths.php';
 header('Content-Type: application/json');

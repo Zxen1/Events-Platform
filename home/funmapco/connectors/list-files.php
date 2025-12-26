@@ -106,6 +106,8 @@ try {
             return;
         }
         require_once $configPath;
+        require_once __DIR__ . '/_compat-db-guard.php';
+        funmap_assert_db_compat();
 
         $pdo = null;
         if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {
@@ -292,6 +294,8 @@ try {
         return;
     }
     require_once $configPath;
+    require_once __DIR__ . '/_compat-db-guard.php';
+    funmap_assert_db_compat();
 
     $pdo = null;
     if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {

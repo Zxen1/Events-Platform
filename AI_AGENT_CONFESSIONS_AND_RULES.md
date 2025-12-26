@@ -1497,6 +1497,22 @@ Mapbox layers in rendering order (bottom to top):
   - Use the **most recent** `funmapco_db (NN).sql` in the root as the schema reference.
   - Older copies in backup/control folders are useful context but are **not** the latest schema unless explicitly stated by the user.
 
+### Rule 13a: SINGLE DATABASE NAME FOREVER (DB SPLIT SAFETY RULE)
+**CRITICAL:** This project uses split storage schemas, but **ALL application code must connect to ONE database name only: `funmapco_db`.**
+
+**What this means:**
+- **The ONLY database name allowed in code/config is:** `funmapco_db`
+- `funmapco_db` is the **compatibility layer** (views) into the storage schemas below.
+- The storage schemas exist ONLY for backup/organization purposes:
+  - `funmapco_system` (platform configuration + UI/system tables)
+  - `funmapco_content` (user-generated content like members, posts, media)
+
+**ABSOLUTE RULES (no exceptions):**
+1. **DO NOT** change `DB_NAME` / `DB_DSN` to point to `funmapco_system` or `funmapco_content`.
+2. **DO NOT** add code paths that “choose” between databases.
+3. **DO NOT** write SQL in code that explicitly references `funmapco_system.` or `funmapco_content.`.
+4. If you think you “need” to use the storage schemas directly, **STOP**. The user must explicitly instruct any change to this rule.
+
 ### Rule 14: TERMINAL ACCESS - EXTREME CIRCUMSTANCES ONLY
 **CRITICAL:** AI will never be given terminal access except under extreme circumstances.
 - Do NOT ask for terminal access
