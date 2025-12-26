@@ -3009,7 +3009,8 @@
 }
 
 .member-checkout-price-display {
-    color: #fff;
+    /* Events price text: keep muted until the option is active (matches General duration button behavior) */
+    color: #888;
     font-weight: 500;
     font-size: 14px;
 }
@@ -3056,7 +3057,16 @@
 
 .member-checkout-option:has(input:checked) {
     border-color: #3b82f5;
-    background: rgba(59, 130, 245, 0.1);
+    /* Match selected duration button intensity */
+    background: rgba(59, 130, 245, 0.15);
+}
+
+.member-checkout-option:hover .member-checkout-price-display {
+    color: #fff;
+}
+
+.member-checkout-option:has(input:checked) .member-checkout-price-display {
+    color: #fff;
 }
 
 /* States - Disabled (no dates for events) */
