@@ -52,6 +52,10 @@ const MemberModule = (function() {
     // CurrencyComponent.buildFullMenu creates a searchable input which may trigger extension attach errors.
     var ENABLE_PROFILE_PICKERS = false;
     
+    // TEMP TEST SWITCH (per Paul): disable member map controls (lighting/style UI) completely.
+    // These are not inputs, but they do touch MapModule and trigger DOM work on member open.
+    var ENABLE_MEMBER_MAP_CONTROLS = false;
+    
     /* --------------------------------------------------------------------------
        ICONS
        No hard-coded SVG icons allowed in new site.
@@ -668,11 +672,11 @@ const MemberModule = (function() {
 
         // Note: unsaved changes dialogs are controlled from components.
         
-        // Map Lighting buttons
-        initMapLightingButtons();
-        
-        // Map Style buttons
-        initMapStyleButtons();
+        // Map Lighting/Style buttons (test switch)
+        if (ENABLE_MEMBER_MAP_CONTROLS) {
+            initMapLightingButtons();
+            initMapStyleButtons();
+        }
         
         // Panel toggle is handled by lazy init wrapper outside module
     }
@@ -1817,8 +1821,10 @@ const MemberModule = (function() {
         panelContent.classList.add('member-panel-content--visible');
         
         // Refresh map settings buttons (in case member logged in/out)
-        initMapLightingButtons();
-        initMapStyleButtons();
+        if (ENABLE_MEMBER_MAP_CONTROLS) {
+            initMapLightingButtons();
+            initMapStyleButtons();
+        }
         if (ENABLE_PROFILE_PICKERS) {
             initProfilePickers();
         }
