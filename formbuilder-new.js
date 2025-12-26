@@ -1273,9 +1273,12 @@
         subEditPanel.appendChild(subNameRow);
         subEditPanel.appendChild(subIconPicker);
         
-        // Get surcharge from subFees if available
+        // Get fee data from subFees if available
+        // New subcategories may not have a subFees entry yet → create an empty one so UI doesn't crash.
+        if (!cat.subFees) cat.subFees = {};
+        if (!cat.subFees[subName]) cat.subFees[subName] = {};
         var subFees = cat.subFees;
-        var subFeeData = subFees && subFees[subName] ? subFees[subName] : null;
+        var subFeeData = cat.subFees[subName];
         
         // Subcategory Type row
         var typeRow = document.createElement('div');
@@ -1802,7 +1805,7 @@
         surchargeInput.className = 'formbuilder-fee-input';
         surchargeInput.placeholder = 'N/A';
         
-        if (subFeeData.checkout_surcharge !== null && subFeeData.checkout_surcharge !== undefined) {
+        if (subFeeData && subFeeData.checkout_surcharge !== null && subFeeData.checkout_surcharge !== undefined) {
             surchargeInput.value = parseFloat(subFeeData.checkout_surcharge).toFixed(2);
         }
         
