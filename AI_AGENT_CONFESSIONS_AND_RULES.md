@@ -1696,9 +1696,52 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 **Key Discovery:** The problem disappears in **Edge InPrivate** and when **extensions are disabled**, and reappears when **Keeper Password Manager** is enabled. This is **not Bunny, not Mapbox, not database**—it is extension-injected script behavior.
 
-**Site-Side Mitigation (New Site):**
-- `index-new.js` adds a **very narrow** `unhandledrejection` guard that suppresses only **extension-origin** (`chrome-extension://` / `edge-extension://`) `null.dataset` promise rejections so the console remains usable.
-- This does **not** suppress normal site errors.
+**Additional Evidence (Critical):**
+- The same `dataset` error was reproduced on a third-party website (MDN) and the stack trace explicitly showed it originating from a `chrome-extension://.../javascript/6.js` URL (Keeper). This confirms it is a Keeper-side bug, not a site-side coding error.
+- Clean pages (example: Google Advanced Search, GitHub homepage) did not show this Keeper error during quick testing, while an MDN embedded “runner” page did.
+
+**Repro URL (MDN runner page where Keeper threw the same error):**
+- `https://73e50d693633ae24240dc3ddabc4083f723c94b6.mdnplay.dev/en-US/docs/Learn_web_development/Extensions/Forms/Your_first_form/runner.html`
+
+**Clean control URLs used (no Keeper dataset error observed in quick test):**
+- `https://www.google.com/advanced_search`
+- `https://github.com/`
+
+---
+
+## Immunity System: Known-Bad Extension Fault Tolerance (REQUIRED)
+
+**Goal:** Keep the website usable and stable even when browser extensions inject broken scripts.
+
+**Important:** This is NOT a “hide our bugs” system. It must only ignore errors that are:
+1. Clearly **extension-origin** (stack contains `chrome-extension://` or `edge-extension://`)
+2. Match a **known-bad signature** (example: Keeper’s `dataset` crash)
+
+### Keeper MUST be on the immunity list
+
+**Known-bad signature (Keeper):**
+- Error text contains `reading 'dataset'` (or `null.dataset` / `undefined.dataset`)
+- Stack trace references `javascript/5.js` or `javascript/6.js`
+- Often triggered after UI changes / panel opens (async timing ~2 seconds is common)
+
+**Keeper extension ID observed:** `mpfckamfocjknfipmpjdkkebpnieooca` (Chrome).
+
+### Implementation rules (non-negotiable)
+- The immunity system must be **narrow**:
+  - Ignore only the known-bad extension signatures listed above
+  - Never ignore errors whose stack includes site files (e.g., `index-new.js`, `member-new.js`, etc.)
+- The immunity system must be **observable**:
+  - Track and count ignored events (for debugging)
+  - Provide a quick “disable immunity” switch for troubleshooting
+- Do NOT add broad try/catch wrappers everywhere.
+- Do NOT add “global protections” that mutate fields across the whole site.
+
+### Where this immunity system belongs
+- Implement as a small, centralized guard in `index-new.js` for:
+  - `window.addEventListener('error', ...)`
+  - `window.addEventListener('unhandledrejection', ...)`
+
+This is the correct place because it is the app backbone and is loaded before other modules.
 
 ### History of Failed Website Starts
 
