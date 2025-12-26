@@ -110,6 +110,50 @@
 const App = (function() {
   'use strict';
 
+  // ---------------------------------------------------------------------------
+  // EXTENSION ERROR GUARD (Keeper compatibility)
+  // ---------------------------------------------------------------------------
+  // Some browser extensions (confirmed: Keeper Password Manager) can inject scripts
+  // that throw unhandled promise rejections like:
+  //   "Cannot read properties of null (reading 'dataset')"
+  // This can spam the console and even make DevTools unstable, without being a
+  // bug in the site code. We suppress ONLY extension-origin rejections matching
+  // this signature; all site errors remain visible.
+  (function attachExtensionRejectionGuard() {
+    var warned = false;
+    window.addEventListener('unhandledrejection', function(event) {
+      try {
+        var reason = event && event.reason;
+        var msg = '';
+        var stack = '';
+        if (reason && typeof reason === 'object') {
+          msg = reason.message ? String(reason.message) : String(reason);
+          stack = reason.stack ? String(reason.stack) : '';
+        } else {
+          msg = String(reason || '');
+        }
+
+        var combined = msg + '\n' + stack;
+        var isExtension =
+          combined.indexOf('chrome-extension://') !== -1 ||
+          combined.indexOf('edge-extension://') !== -1;
+        var isNullDataset =
+          msg.indexOf("Cannot read properties of null (reading 'dataset')") !== -1 ||
+          msg.indexOf("reading 'dataset'") !== -1;
+
+        if (isExtension && isNullDataset) {
+          event.preventDefault();
+          if (!warned) {
+            warned = true;
+            console.warn('[Extension] Suppressed extension error (null.dataset) to keep console usable.');
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    });
+  })();
+
   /* --------------------------------------------------------------------------
      MODULE REGISTRY
      Sections register themselves, others can find them

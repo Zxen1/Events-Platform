@@ -1688,6 +1688,18 @@ The user has spent weeks on this project with thousands of failures caused by:
 
 **Lesson for future work:** This is the pattern to use for all future “accordion-like” UX (including Posts with thousands of items). Anchor the clicked header/row, then adjust scroll after DOM changes, using temporary invisible top/bottom slack when necessary.
 
+### 2025-12-26: Keeper Password Manager Extension Caused Fake “Site Errors”
+
+**Symptom:** Console spam and DevTools instability with errors like:
+- `Uncaught (in promise) TypeError: Cannot read properties of null (reading 'dataset')`
+- Stack mentions `5.js` / `6.js` and functions like `setAttachedInput` / `setDisabled`
+
+**Key Discovery:** The problem disappears in **Edge InPrivate** and when **extensions are disabled**, and reappears when **Keeper Password Manager** is enabled. This is **not Bunny, not Mapbox, not database**—it is extension-injected script behavior.
+
+**Site-Side Mitigation (New Site):**
+- `index-new.js` adds a **very narrow** `unhandledrejection` guard that suppresses only **extension-origin** (`chrome-extension://` / `edge-extension://`) `null.dataset` promise rejections so the console remains usable.
+- This does **not** suppress normal site errors.
+
 ### History of Failed Website Starts
 
 **FIRST TEST: Check website load speed on phone using 5G (not WiFi).** If the site loads fast on phone 5G, the issue is the router/local network. Reset the router.
