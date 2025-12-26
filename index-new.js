@@ -121,6 +121,15 @@ const App = (function() {
   // this signature; all site errors remain visible.
   (function attachExtensionRejectionGuard() {
     var warned = false;
+    function isExtensionOrigin(text) {
+      return text.indexOf('chrome-extension://') !== -1 || text.indexOf('edge-extension://') !== -1;
+    }
+    function isNullDatasetMessage(text) {
+      return (
+        text.indexOf("Cannot read properties of null (reading 'dataset')") !== -1 ||
+        text.indexOf("reading 'dataset'") !== -1
+      );
+    }
     window.addEventListener('unhandledrejection', function(event) {
       try {
         var reason = event && event.reason;
@@ -134,12 +143,8 @@ const App = (function() {
         }
 
         var combined = msg + '\n' + stack;
-        var isExtension =
-          combined.indexOf('chrome-extension://') !== -1 ||
-          combined.indexOf('edge-extension://') !== -1;
-        var isNullDataset =
-          msg.indexOf("Cannot read properties of null (reading 'dataset')") !== -1 ||
-          msg.indexOf("reading 'dataset'") !== -1;
+        var isExtension = isExtensionOrigin(combined);
+        var isNullDataset = isNullDatasetMessage(msg);
 
         if (isExtension && isNullDataset) {
           event.preventDefault();
@@ -152,6 +157,25 @@ const App = (function() {
         // ignore
       }
     });
+
+    // Also suppress extension-origin synchronous errors with the same signature.
+    window.addEventListener('error', function(event) {
+      try {
+        var msg = event && event.message ? String(event.message) : '';
+        var file = event && event.filename ? String(event.filename) : '';
+        // Some browsers omit filename; fall back to message text.
+        var combined = file + '\n' + msg;
+        if ((isExtensionOrigin(file) || isExtensionOrigin(combined)) && isNullDatasetMessage(msg)) {
+          event.preventDefault();
+          if (!warned) {
+            warned = true;
+            console.warn('[Extension] Suppressed extension error (null.dataset) to keep console usable.');
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }, true);
   })();
 
   /* --------------------------------------------------------------------------

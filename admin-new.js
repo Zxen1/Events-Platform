@@ -37,6 +37,40 @@ const AdminModule = (function() {
     var autosaveCheckbox = null;
     var tabButtons = null;
     var tabPanels = null;
+    
+    // Treat tabs like pages: track active tab and detach global handlers on switch
+    var activeTabName = 'settings';
+    
+    // Document-level handlers (must be detachable to avoid cross-tab bleed-over)
+    var messagesDocClickHandler = null;
+    var mapDocClickHandlers = []; // [{ handler, capture }]
+    var checkoutDocClickHandler = null;
+    
+    function detachAllAdminDocumentHandlers() {
+        // Messages
+        if (messagesDocClickHandler) {
+            document.removeEventListener('click', messagesDocClickHandler, true);
+            messagesDocClickHandler = null;
+        }
+        
+        // Map (may have multiple handlers)
+        if (mapDocClickHandlers && mapDocClickHandlers.length) {
+            mapDocClickHandlers.forEach(function(entry) {
+                try {
+                    document.removeEventListener('click', entry.handler, !!entry.capture);
+                } catch (e) {
+                    // ignore
+                }
+            });
+            mapDocClickHandlers = [];
+        }
+        
+        // Checkout
+        if (checkoutDocClickHandler) {
+            document.removeEventListener('click', checkoutDocClickHandler, true);
+            checkoutDocClickHandler = null;
+        }
+    }
 
     /* --------------------------------------------------------------------------
        SVG ICONS REGISTRY
@@ -539,6 +573,9 @@ const AdminModule = (function() {
     function closePanel() {
         if (!panel || !panelContent) return;
         
+        // Tabs behave like pages: do not leave document-level handlers attached.
+        detachAllAdminDocumentHandlers();
+        
         panelContent.classList.remove('admin-panel-content--visible');
         panelContent.classList.add('admin-panel-content--hidden');
         
@@ -562,6 +599,25 @@ const AdminModule = (function() {
     
     function switchTab(tabName) {
         if (!tabButtons || !tabPanels) return;
+        
+        // Deactivate previous tab "page" (detach global listeners from other tabs)
+        if (activeTabName && activeTabName !== tabName) {
+            if (activeTabName === 'messages' && messagesDocClickHandler) {
+                document.removeEventListener('click', messagesDocClickHandler, true);
+                messagesDocClickHandler = null;
+            }
+            if (activeTabName === 'map' && mapDocClickHandlers && mapDocClickHandlers.length) {
+                mapDocClickHandlers.forEach(function(entry) {
+                    try { document.removeEventListener('click', entry.handler, !!entry.capture); } catch (e) {}
+                });
+                mapDocClickHandlers = [];
+            }
+            if (activeTabName === 'checkout' && checkoutDocClickHandler) {
+                document.removeEventListener('click', checkoutDocClickHandler, true);
+                checkoutDocClickHandler = null;
+            }
+        }
+        activeTabName = tabName;
 
         // Update tab buttons
         tabButtons.forEach(function(btn) {
@@ -1213,9 +1269,10 @@ const AdminModule = (function() {
             var dragStartIndex = -1;
             headerDrag.addEventListener('mousedown', function() {
                 accordion.draggable = true;
-            });
-            document.addEventListener('mouseup', function() {
-                accordion.draggable = false;
+                // One-time cleanup: do not accumulate document handlers per accordion
+                document.addEventListener('mouseup', function() {
+                    accordion.draggable = false;
+                }, { once: true });
             });
             accordion.addEventListener('dragstart', function(e) {
                 if (!accordion.draggable) {
@@ -1288,14 +1345,19 @@ const AdminModule = (function() {
     
     function bindMessagesDocumentListeners() {
         // Close edit panels when clicking outside (like formbuilder)
-        document.addEventListener('click', function(e) {
+        if (messagesDocClickHandler) return;
+        messagesDocClickHandler = function(e) {
             if (!messagesContainer) return;
-            if (!e.target.closest('.admin-messages-accordion-editpanel') &&
-                !e.target.closest('.admin-messages-accordion-header-editarea') &&
-                !e.target.closest('.admin-messages-accordion-header')) {
+            var t = e && e.target;
+            if (!t || typeof t !== 'object') return;
+            if (!t.closest('.admin-messages-accordion-editpanel') &&
+                !t.closest('.admin-messages-accordion-header-editarea') &&
+                !t.closest('.admin-messages-accordion-header')) {
                 closeAllMessagesEditPanels();
             }
-        });
+        };
+        // Capture so we run before other handlers that may remove DOM
+        document.addEventListener('click', messagesDocClickHandler, true);
     }
     
     function loadMessagesFromDatabase() {
@@ -2297,11 +2359,15 @@ const AdminModule = (function() {
             });
             
             // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            var mapOutsideClickHandler = function(e) {
+                var t = e && e.target;
+                if (!t || typeof t !== 'object') return;
+                if (!input.contains(t) && !dropdown.contains(t)) {
                     dropdown.style.display = 'none';
                 }
-            });
+            };
+            document.addEventListener('click', mapOutsideClickHandler, true);
+            mapDocClickHandlers.push({ handler: mapOutsideClickHandler, capture: true });
             
             // Save on blur if user types custom text
             input.addEventListener('blur', function() {
@@ -3140,14 +3206,19 @@ const AdminModule = (function() {
 
         });
 
-        // Close more menus when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.admin-checkout-accordion-editpanel-more')) {
-                document.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
-                    el.classList.remove('open');
-                });
-            }
-        });
+        // Close more menus when clicking outside (attach once; detach on tab switch / panel close)
+        if (!checkoutDocClickHandler) {
+            checkoutDocClickHandler = function(e) {
+                var t = e && e.target;
+                if (!t || typeof t !== 'object') return;
+                if (!t.closest('.admin-checkout-accordion-editpanel-more')) {
+                    document.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
+                        el.classList.remove('open');
+                    });
+                }
+            };
+            document.addEventListener('click', checkoutDocClickHandler, true);
+        }
 
         // Add tier button handler
         var addBtn = document.querySelector('.admin-checkout-options-add');

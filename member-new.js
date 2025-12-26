@@ -129,6 +129,61 @@ const MemberModule = (function() {
     var cropImg = null;
     // Cropper zoom is "cover-only": zoom=1 is the minimum (image always fills the square; no blank areas).
     var cropState = { zoom: 1, minZoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
+    
+    // Treat member tabs like pages: keep track of active tab so we can deactivate tab-specific globals.
+    var activeMemberTabName = 'profile';
+    
+    // Detachable global handlers (avoid cross-contamination)
+    var headerDragMoveHandler = null;
+    var headerDragUpHandler = null;
+    function detachHeaderDragHandlers() {
+        if (headerDragMoveHandler) {
+            document.removeEventListener('mousemove', headerDragMoveHandler);
+            headerDragMoveHandler = null;
+        }
+        if (headerDragUpHandler) {
+            document.removeEventListener('mouseup', headerDragUpHandler);
+            headerDragUpHandler = null;
+        }
+    }
+    
+    var cropperWindowMoveHandler = null;
+    var cropperWindowUpHandler = null;
+    var cropperDragHandlersAttached = false;
+    function attachCropperDragHandlers() {
+        if (cropperDragHandlersAttached) return;
+        cropperWindowMoveHandler = function(e) {
+            if (!cropperCanvas) return;
+            if (!cropState.dragging) return;
+            var dx = e.clientX - cropState.lastX;
+            var dy = e.clientY - cropState.lastY;
+            cropState.lastX = e.clientX;
+            cropState.lastY = e.clientY;
+            
+            // Scale mouse delta to canvas pixel coords (canvas may be displayed smaller than its internal size)
+            var rect = cropperCanvas.getBoundingClientRect();
+            var scaleX = rect.width ? (cropperCanvas.width / rect.width) : 1;
+            var scaleY = rect.height ? (cropperCanvas.height / rect.height) : 1;
+            cropState.offsetX += dx * scaleX;
+            cropState.offsetY += dy * scaleY;
+            drawCropper();
+        };
+        cropperWindowUpHandler = function() {
+            cropState.dragging = false;
+        };
+        window.addEventListener('mousemove', cropperWindowMoveHandler);
+        window.addEventListener('mouseup', cropperWindowUpHandler);
+        cropperDragHandlersAttached = true;
+    }
+    function detachCropperDragHandlers() {
+        if (!cropperDragHandlersAttached) return;
+        if (cropperWindowMoveHandler) window.removeEventListener('mousemove', cropperWindowMoveHandler);
+        if (cropperWindowUpHandler) window.removeEventListener('mouseup', cropperWindowUpHandler);
+        cropperWindowMoveHandler = null;
+        cropperWindowUpHandler = null;
+        cropperDragHandlersAttached = false;
+        cropState.dragging = false;
+    }
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
@@ -165,11 +220,14 @@ const MemberModule = (function() {
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
             
+            // Clean up any previous in-flight drag handlers
+            detachHeaderDragHandlers();
+            
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
             var startLeft = rect.left;
             
-            function onMove(ev) {
+            headerDragMoveHandler = function(ev) {
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
                 var maxLeft = window.innerWidth - rect.width;
@@ -177,15 +235,14 @@ const MemberModule = (function() {
                 if (newLeft > maxLeft) newLeft = maxLeft;
                 panelContent.style.left = newLeft + 'px';
                 panelContent.style.right = 'auto';
-            }
+            };
             
-            function onUp() {
-                document.removeEventListener('mousemove', onMove);
-                document.removeEventListener('mouseup', onUp);
-            }
+            headerDragUpHandler = function() {
+                detachHeaderDragHandlers();
+            };
             
-            document.addEventListener('mousemove', onMove);
-            document.addEventListener('mouseup', onUp);
+            document.addEventListener('mousemove', headerDragMoveHandler);
+            document.addEventListener('mouseup', headerDragUpHandler);
         });
     }
 
@@ -391,24 +448,6 @@ const MemberModule = (function() {
                 cropState.dragging = true;
                 cropState.lastX = e.clientX;
                 cropState.lastY = e.clientY;
-            });
-            window.addEventListener('mousemove', function(e) {
-                if (!cropState.dragging) return;
-                var dx = e.clientX - cropState.lastX;
-                var dy = e.clientY - cropState.lastY;
-                cropState.lastX = e.clientX;
-                cropState.lastY = e.clientY;
-                
-                // Scale mouse delta to canvas pixel coords (canvas may be displayed smaller than its internal size)
-                var rect = cropperCanvas.getBoundingClientRect();
-                var scaleX = rect.width ? (cropperCanvas.width / rect.width) : 1;
-                var scaleY = rect.height ? (cropperCanvas.height / rect.height) : 1;
-                cropState.offsetX += dx * scaleX;
-                cropState.offsetY += dy * scaleY;
-                drawCropper();
-            });
-            window.addEventListener('mouseup', function() {
-                cropState.dragging = false;
             });
         }
 
@@ -991,6 +1030,8 @@ const MemberModule = (function() {
             drawCropper();
             cropperOverlay.hidden = false;
             cropperOverlay.setAttribute('aria-hidden', 'false');
+            // Attach drag handlers only while cropper is in use (tabs behave like pages).
+            attachCropperDragHandlers();
         };
         cropImg.src = url;
         cropImg.dataset.objectUrl = url;
@@ -998,6 +1039,7 @@ const MemberModule = (function() {
 
     function closeCropper() {
         if (!cropperOverlay) return;
+        detachCropperDragHandlers();
         cropperOverlay.hidden = true;
         cropperOverlay.setAttribute('aria-hidden', 'true');
         if (cropImg && cropImg.dataset && cropImg.dataset.objectUrl) {
@@ -1579,6 +1621,11 @@ const MemberModule = (function() {
             return;
         }
         
+        // Ensure we don't leave long-lived document handlers attached.
+        detachFormpickerOutsideClick();
+        detachHeaderDragHandlers();
+        detachCropperDragHandlers();
+        
         // Remove focus from close button before hiding (fixes aria-hidden warning)
         if (closeBtn && document.activeElement === closeBtn) {
             closeBtn.blur();
@@ -1612,6 +1659,12 @@ const MemberModule = (function() {
         if (window.MapModule && typeof window.MapModule.stopSpin === 'function') {
             window.MapModule.stopSpin();
         }
+        
+        // Tabs behave like pages: deactivate previous tab-specific globals.
+        if (activeMemberTabName === 'create' && tabName !== 'create') {
+            detachFormpickerOutsideClick();
+        }
+        activeMemberTabName = tabName;
         
         // Update tab buttons
         tabButtons.forEach(function(btn) {
@@ -1649,6 +1702,19 @@ const MemberModule = (function() {
     var checkoutOptions = [];
     var siteCurrency = null;
     var checkoutInstance = null;
+    
+    // Formpicker document click handler (attach only while menus are open)
+    var formpickerDocClickHandler = null;
+    var formpickerCategoryMenuEl = null;
+    var formpickerSubcategoryMenuEl = null;
+    function detachFormpickerOutsideClick() {
+        if (formpickerDocClickHandler) {
+            document.removeEventListener('click', formpickerDocClickHandler, true);
+            formpickerDocClickHandler = null;
+        }
+        formpickerCategoryMenuEl = null;
+        formpickerSubcategoryMenuEl = null;
+    }
     
     function loadFormpicker() {
         if (formpickerLoaded) return;
@@ -1861,6 +1927,7 @@ const MemberModule = (function() {
                             
                             subcategoryMenu.classList.remove('open');
                             selectedSubcategory = subName;
+                            updateFormpickerOutsideClick();
                             renderConfiguredFields();
                         });
                         
@@ -1878,6 +1945,7 @@ const MemberModule = (function() {
                     subcategoryWrapper.hidden = true;
                 }
                 
+                updateFormpickerOutsideClick();
                 renderConfiguredFields();
             });
             
@@ -1889,6 +1957,7 @@ const MemberModule = (function() {
             e.stopPropagation();
             subcategoryMenu.classList.remove('open');
             categoryMenu.classList.toggle('open');
+            updateFormpickerOutsideClick();
         });
         
         // Toggle subcategory menu
@@ -1896,18 +1965,55 @@ const MemberModule = (function() {
             e.stopPropagation();
             categoryMenu.classList.remove('open');
             subcategoryMenu.classList.toggle('open');
+            updateFormpickerOutsideClick();
         });
         
         // Close menus on outside click
-        document.addEventListener('click', function(e) {
-            if (!categoryMenu.contains(e.target)) categoryMenu.classList.remove('open');
-            if (!subcategoryMenu.contains(e.target)) {
-                // Keep subcategory menu open until user has picked a subcategory.
-                if (!(selectedCategory && !selectedSubcategory)) {
-                    subcategoryMenu.classList.remove('open');
-                }
+        formpickerCategoryMenuEl = categoryMenu;
+        formpickerSubcategoryMenuEl = subcategoryMenu;
+        function updateFormpickerOutsideClick() {
+            var catOpen = !!(formpickerCategoryMenuEl && formpickerCategoryMenuEl.classList.contains('open'));
+            var subOpen = !!(formpickerSubcategoryMenuEl && formpickerSubcategoryMenuEl.classList.contains('open'));
+            var shouldAttach = catOpen || subOpen;
+            
+            if (!shouldAttach) {
+                detachFormpickerOutsideClick();
+                // Re-stash refs so future toggles can reattach without re-rendering.
+                formpickerCategoryMenuEl = categoryMenu;
+                formpickerSubcategoryMenuEl = subcategoryMenu;
+                return;
             }
-        });
+            
+            if (formpickerDocClickHandler) return;
+            formpickerDocClickHandler = function(e) {
+                // Guard: some environments/extensions can produce events with odd targets.
+                var t = e && e.target;
+                if (!t || typeof t !== 'object' || typeof t.nodeType !== 'number') return;
+                if (!formpickerCategoryMenuEl || !formpickerSubcategoryMenuEl) return;
+                
+                if (formpickerCategoryMenuEl.classList.contains('open') && !formpickerCategoryMenuEl.contains(t)) {
+                    formpickerCategoryMenuEl.classList.remove('open');
+                }
+                if (formpickerSubcategoryMenuEl.classList.contains('open') && !formpickerSubcategoryMenuEl.contains(t)) {
+                    // Keep subcategory menu open until user has picked a subcategory.
+                    if (!(selectedCategory && !selectedSubcategory)) {
+                        formpickerSubcategoryMenuEl.classList.remove('open');
+                    }
+                }
+                
+                // Detach once both are closed to avoid doing work on every click.
+                var catStillOpen = formpickerCategoryMenuEl.classList.contains('open');
+                var subStillOpen = formpickerSubcategoryMenuEl.classList.contains('open');
+                if (!catStillOpen && !subStillOpen) {
+                    detachFormpickerOutsideClick();
+                    // Re-stash refs so future toggles can reattach without re-rendering.
+                    formpickerCategoryMenuEl = categoryMenu;
+                    formpickerSubcategoryMenuEl = subcategoryMenu;
+                }
+            };
+            
+            document.addEventListener('click', formpickerDocClickHandler, true);
+        }
         
         categoryMenu.appendChild(categoryBtn);
         categoryMenu.appendChild(categoryOpts);
@@ -1921,6 +2027,7 @@ const MemberModule = (function() {
         // Auto-open category menu when nothing is selected yet.
         // Subcategory auto-open is handled when a category is picked.
         if (!selectedCategory) categoryMenu.classList.add('open');
+        updateFormpickerOutsideClick();
     }
     
     function renderConfiguredFields() {
