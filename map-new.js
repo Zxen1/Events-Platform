@@ -99,6 +99,10 @@ const MapModule = (function() {
   // Settings cache
   let adminSettings = {};
 
+  // Track current applied style/lighting to avoid redundant Mapbox reloads
+  let currentStyleUrl = null;
+  let currentLightingPreset = null;
+
 
   /* ==========================================================================
      SECTION 2: MAPBOX - Map Initialization
@@ -144,6 +148,7 @@ const MapModule = (function() {
     var styleUrl = initialStyle === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
+    currentStyleUrl = styleUrl;
 
     // Create map (pass DOM element directly, not ID)
     // Performance optimizations: renderWorldCopies=false reduces initial load, preserveDrawingBuffer only if needed
@@ -1130,6 +1135,10 @@ const MapModule = (function() {
     var styleUrl = style === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
+    if (currentStyleUrl === styleUrl) {
+      return;
+    }
+    currentStyleUrl = styleUrl;
     console.log('[Map] Setting style to:', styleUrl);
     
     // Store current lighting to re-apply after style loads
@@ -1159,6 +1168,12 @@ const MapModule = (function() {
       console.warn('[Map] setMapLighting: Map not initialized');
       return;
     }
+
+    // Avoid re-applying the same preset repeatedly (can spam logs and trigger extra work)
+    if (currentLightingPreset === preset && map.isStyleLoaded && map.isStyleLoaded()) {
+      return;
+    }
+    currentLightingPreset = preset;
     
     console.log('[Map] Setting lighting to:', preset);
     

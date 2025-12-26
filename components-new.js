@@ -76,6 +76,9 @@ const MenuManager = (function(){
     
     // Register a menu element
     function register(menuElement) {
+        if (!menuElement || !menuElement.classList) {
+            throw new Error('[MenuManager] register: menuElement is required');
+        }
         if (openMenus.indexOf(menuElement) === -1) {
             openMenus.push(menuElement);
         }
