@@ -2837,6 +2837,7 @@ const CalendarComponent = (function(){
         var monthsFuture = typeof options.monthsFuture === 'number' ? options.monthsFuture : 24;
         var allowPast = options.allowPast || false;
         var onSelect = options.onSelect || null;
+        var onChange = options.onChange || null;
         var showActions = options.showActions || false;
         
         var today = new Date();
@@ -2919,6 +2920,7 @@ const CalendarComponent = (function(){
                                 selectedStart = clickedDate;
                                 selectedEnd = null;
                                 updateSelection(calendar);
+                                if (onChange) onChange(selectedStart, selectedEnd);
                             } else {
                                 // Complete selection
                                 if (clickedDate < selectedStart) {
@@ -2928,6 +2930,7 @@ const CalendarComponent = (function(){
                                     selectedEnd = clickedDate;
                                 }
                                 updateSelection(calendar);
+                                if (onChange) onChange(selectedStart, selectedEnd);
                                 
                                 if (!showActions && onSelect) {
                                     onSelect(selectedStart, selectedEnd);
@@ -2975,6 +2978,7 @@ const CalendarComponent = (function(){
                 selectedStart = null;
                 selectedEnd = null;
                 updateSelection(calendar);
+                if (onChange) onChange(selectedStart, selectedEnd);
                 if (onSelect) onSelect(null, null);
             });
             

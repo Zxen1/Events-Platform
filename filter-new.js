@@ -38,6 +38,7 @@ const FilterModule = (function() {
     var calendarInstance = null;
     var dateStart = null;
     var dateEnd = null;
+    var dateRangeDraftOpen = false;
     var outsideCloseBound = false;
 
 
@@ -523,6 +524,8 @@ const FilterModule = (function() {
                 var expiredRow = container.querySelector('.filter-expired-row');
                 var isExpiredRow = expiredRow && expiredRow.contains(e.target);
                 if (!calendarContainer.contains(e.target) && e.target !== daterangeInput && !isExpiredRow) {
+                    // Revert draft display back to committed value
+                    setDaterangeInputValue(dateStart, dateEnd);
                     // Clear any incomplete selection and close
                     if (calendarInstance && calendarInstance.clearSelection) {
                         calendarInstance.clearSelection();
@@ -613,8 +616,25 @@ const FilterModule = (function() {
             monthsFuture: 24,
             allowPast: showExpired,
             showActions: true,
+            // While user is selecting dates, show the draft range in the input
+            onChange: function(start, end) {
+                if (!calendarContainer || !calendarContainer.classList.contains('open')) return;
+                dateRangeDraftOpen = true;
+                setDaterangeInputValue(start, end);
+            },
             onSelect: function(start, end) {
+                // Cancel: revert to committed value (whether blank or already set)
+                if (!start && !end) {
+                    setDaterangeInputValue(dateStart, dateEnd);
+                    dateRangeDraftOpen = false;
+                    closeCalendar();
+                    updateClearButtons();
+                    return;
+                }
+                
+                // OK: commit
                 setDateRange(start, end);
+                dateRangeDraftOpen = false;
                 closeCalendar();
                 applyFilters();
                 updateClearButtons();
@@ -639,6 +659,12 @@ const FilterModule = (function() {
         var isOpen = calendarContainer.classList.contains('open');
         
         if (isOpen) {
+            // Treat closing as cancel: revert display and clear draft selection
+            setDaterangeInputValue(dateStart, dateEnd);
+            dateRangeDraftOpen = false;
+            if (calendarInstance && calendarInstance.clearSelection) {
+                calendarInstance.clearSelection();
+            }
             closeCalendar();
         } else {
             openCalendar();
@@ -664,19 +690,22 @@ const FilterModule = (function() {
         }
     }
     
+    function setDaterangeInputValue(start, end) {
+        if (!daterangeInput) return;
+        if (start && end) {
+            daterangeInput.value = formatDateShort(start) + ' - ' + formatDateShort(end);
+        } else if (start) {
+            daterangeInput.value = formatDateShort(start);
+        } else {
+            daterangeInput.value = '';
+        }
+    }
+
     function setDateRange(start, end) {
         dateStart = start;
         dateEnd = end;
         
-        if (daterangeInput) {
-            if (start && end) {
-                daterangeInput.value = formatDateShort(start) + ' - ' + formatDateShort(end);
-            } else if (start) {
-                daterangeInput.value = formatDateShort(start);
-            } else {
-                daterangeInput.value = '';
-            }
-        }
+        setDaterangeInputValue(start, end);
         
         updateClearButtons();
     }
