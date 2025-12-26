@@ -667,7 +667,22 @@
         
         var catName = categoryAccordion.querySelector('.formbuilder-accordion-header-text');
         var name = catName ? catName.textContent.trim() : 'this category';
-        
+
+        if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+            ConfirmDialogComponent.show({
+                titleText: 'Delete Category',
+                messageText: 'Delete "' + name + '" and all its subcategories?',
+                confirmLabel: 'Delete',
+                focusCancel: true
+            }).then(function(confirmed) {
+                if (confirmed) {
+                    categoryAccordion.remove();
+                    notifyChange();
+                }
+            });
+            return;
+        }
+
         if (confirm('Delete "' + name + '" and all its subcategories?')) {
             categoryAccordion.remove();
             notifyChange();
@@ -683,7 +698,22 @@
         
         var subName = subcategoryOption.querySelector('.formbuilder-accordion-option-text');
         var name = subName ? subName.textContent.trim() : 'this subcategory';
-        
+
+        if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+            ConfirmDialogComponent.show({
+                titleText: 'Delete Subcategory',
+                messageText: 'Delete "' + name + '"?',
+                confirmLabel: 'Delete',
+                focusCancel: true
+            }).then(function(confirmed) {
+                if (confirmed) {
+                    subcategoryOption.remove();
+                    notifyChange();
+                }
+            });
+            return;
+        }
+
         if (confirm('Delete "' + name + '"?')) {
             subcategoryOption.remove();
             notifyChange();
@@ -1074,6 +1104,7 @@
         var deleteCatBtn = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-delete');
         deleteCatBtn.addEventListener('click', function(e) {
             e.stopPropagation();
+            moreBtn.classList.remove('open');
             deleteCategory(accordion);
         });
         
@@ -1281,6 +1312,7 @@
         var deleteSubBtn = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-delete');
         deleteSubBtn.addEventListener('click', function(e) {
             e.stopPropagation();
+            subMoreBtn.classList.remove('open');
             deleteSubcategory(option);
         });
         
