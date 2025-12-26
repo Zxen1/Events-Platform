@@ -1545,6 +1545,12 @@ const MemberModule = (function() {
     
     function openPanel() {
         if (!panel || !panelContent) return;
+
+        // If the user is interacting with UI, stop any background globe spin to avoid
+        // Mapbox animation loops running while panels are opening.
+        if (window.MapModule && typeof window.MapModule.stopSpin === 'function') {
+            window.MapModule.stopSpin();
+        }
         
         panel.classList.add('member-panel--show');
         panel.setAttribute('aria-hidden', 'false');
@@ -1601,6 +1607,11 @@ const MemberModule = (function() {
     
     function switchTab(tabName) {
         if (!tabButtons || !tabPanels) return;
+
+        // Switching member tabs is active interaction; ensure background spin is stopped.
+        if (window.MapModule && typeof window.MapModule.stopSpin === 'function') {
+            window.MapModule.stopSpin();
+        }
         
         // Update tab buttons
         tabButtons.forEach(function(btn) {
