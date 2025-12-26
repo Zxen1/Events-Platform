@@ -66,6 +66,10 @@
   border-radius: 5px;
 }
 
+.formbuilder-icon--empty {
+  visibility: hidden;
+}
+
 .formbuilder-accordion-header-text {
   flex: 1;
   padding-left: 10px;

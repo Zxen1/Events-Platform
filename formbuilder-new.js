@@ -54,6 +54,23 @@
     var loadedCurrencies = [];
     var loadedCategoryIconPaths = {};
     var loadedSubcategoryIconPaths = {};
+
+    function applySafeIconImage(imgEl, src) {
+        if (!imgEl) return;
+        imgEl.alt = '';
+        // Hide broken icons but keep spacing (visibility hidden).
+        imgEl.onerror = function() {
+            imgEl.classList.add('formbuilder-icon--empty');
+            imgEl.removeAttribute('src');
+        };
+        if (src && typeof src === 'string' && src.trim() !== '') {
+            imgEl.classList.remove('formbuilder-icon--empty');
+            imgEl.src = src;
+        } else {
+            imgEl.classList.add('formbuilder-icon--empty');
+            imgEl.removeAttribute('src');
+        }
+    }
     
     function findScrollContainer() {
         if (!container) return null;
@@ -296,7 +313,9 @@
             var catKey = catName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
             var catId = accordion.dataset.categoryId ? parseInt(accordion.dataset.categoryId, 10) : null;
             var catHidden = hideSwitch ? hideSwitch.classList.contains('on') : false;
-            var catIconPath = headerImg && headerImg.src ? headerImg.src.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
+            // Use src attribute (not resolved .src) to avoid capturing current page URL when src is empty/removed.
+            var catIconAttr = headerImg ? headerImg.getAttribute('src') : '';
+            var catIconPath = catIconAttr ? catIconAttr.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
             
             // Store icon path
             if (catIconPath) {
@@ -332,7 +351,8 @@
                 var subKey = subName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
                 var subId = option.dataset.subcategoryId ? parseInt(option.dataset.subcategoryId, 10) : null;
                 var subHidden = subHideSwitch ? subHideSwitch.classList.contains('on') : false;
-                var subIconPath = subHeaderImg && subHeaderImg.src ? subHeaderImg.src.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
+                var subIconAttr = subHeaderImg ? subHeaderImg.getAttribute('src') : '';
+                var subIconPath = subIconAttr ? subIconAttr.replace(window.location.origin + '/', '').replace(/^\//, '') : '';
                 
                 // Store subcategory icon path
                 if (subIconPath) {
@@ -944,7 +964,7 @@
         
         var headerImg = document.createElement('img');
         headerImg.className = 'formbuilder-accordion-header-image';
-        headerImg.src = catIconSrc;
+        applySafeIconImage(headerImg, catIconSrc);
         
         var headerText = document.createElement('span');
         headerText.className = 'formbuilder-accordion-header-text';
@@ -1061,7 +1081,7 @@
         nameRow.appendChild(moreBtn);
         
         var iconPicker = buildIconPicker(catIconSrc, function(newIcon) {
-            headerImg.src = newIcon;
+            applySafeIconImage(headerImg, newIcon);
             notifyChange();
         });
         
@@ -1148,7 +1168,7 @@
         
         var optImg = document.createElement('img');
         optImg.className = 'formbuilder-accordion-option-image';
-        optImg.src = subIconSrc;
+        applySafeIconImage(optImg, subIconSrc);
         
         var optText = document.createElement('span');
         optText.className = 'formbuilder-accordion-option-text';
@@ -1268,7 +1288,7 @@
         subNameRow.appendChild(subMoreBtn);
         
         var subIconPicker = buildIconPicker(subIconSrc, function(newIcon) {
-            optImg.src = newIcon;
+            applySafeIconImage(optImg, newIcon);
             notifyChange();
         });
         
@@ -1458,18 +1478,25 @@
         
         function manageLocationTypeFieldsets(selectedType) {
             if (!selectedType) {
-                // No location type selected - hide Add Field button
+                // No location type selected:
+                // - Keep button visible but force admin to pick a location type first
+                // - Do NOT allow fieldset menu to open yet
                 if (fieldsetMenu) {
-                    fieldsetMenu.style.display = 'none';
+                    fieldsetMenu.style.display = '';
+                    fieldsetMenu.classList.remove('open');
                 }
-                // Update gray-out state for all location fieldsets
-                updateLocationTypeFieldsets(null);
+                if (fieldsetBtn) {
+                    fieldsetBtn.textContent = 'Select Location Type';
+                }
                 return;
             }
             
             // Show Add Field button
             if (fieldsetMenu) {
                 fieldsetMenu.style.display = '';
+            }
+            if (fieldsetBtn) {
+                fieldsetBtn.textContent = '+ Add Fieldset';
             }
             
             // Update gray-out state based on selected type
@@ -1646,6 +1673,7 @@
                 cat.subFees[subName].location_type = 'Venue';
                 updateLocationTypeFieldsets('Venue');
                 manageLocationTypeFieldsets('Venue');
+                if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
                 notifyChange();
             }
         });
@@ -1658,6 +1686,7 @@
                 cat.subFees[subName].location_type = 'City';
                 updateLocationTypeFieldsets('City');
                 manageLocationTypeFieldsets('City');
+                if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
                 notifyChange();
             }
         });
@@ -1670,6 +1699,7 @@
                 cat.subFees[subName].location_type = 'Address';
                 updateLocationTypeFieldsets('Address');
                 manageLocationTypeFieldsets('Address');
+                if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
                 notifyChange();
             }
         });
@@ -2521,32 +2551,17 @@
             var isCity = fieldsetKeyLower === 'city';
             var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
             var isSessions = fieldsetKeyLower === 'sessions';
+
+            // Do not show location fieldsets in the menu at all.
+            // Location fieldset is dictated by Location Type and auto-added/maintained by the system.
+            if (isVenue || isCity || isAddress) {
+                return;
+            }
             
             var opt = document.createElement('div');
             opt.className = 'formbuilder-fieldset-menu-option';
             opt.textContent = fs.name || fs.key || 'Unnamed';
             opt.setAttribute('data-fieldset-id', fsId);
-            
-            // Apply initial gray-out state for location fieldsets
-            if (isVenue || isCity || isAddress) {
-                var selectedTypeLower = selectedLocationType ? String(selectedLocationType).toLowerCase() : '';
-                if (!selectedTypeLower || selectedTypeLower === 'null' || selectedTypeLower === '') {
-                    // No location type selected - all location fieldsets are grayed out
-                    opt.classList.add('disabled-location-type');
-                } else if (selectedTypeLower === 'venue') {
-                    if (isCity || isAddress) {
-                        opt.classList.add('disabled-location-type');
-                    }
-                } else if (selectedTypeLower === 'city') {
-                    if (isVenue || isAddress) {
-                        opt.classList.add('disabled-location-type');
-                    }
-                } else if (selectedTypeLower === 'address') {
-                    if (isVenue || isCity) {
-                        opt.classList.add('disabled-location-type');
-                    }
-                }
-            }
             
             // Apply initial gray-out state for sessions (only available for Events)
             if (isSessions && currentSubcategoryType !== 'Events') {
@@ -2572,10 +2587,7 @@
         if (initialLocationType) {
             updateLocationTypeFieldsets(initialLocationType);
         } else {
-            // No location type selected - hide Add Field button and gray out all location fieldsets
-            if (fieldsetMenu) {
-                fieldsetMenu.style.display = 'none';
-            }
+            // No location type selected - keep button visible but force location type selection first
             updateLocationTypeFieldsets(null);
         }
         
@@ -2613,6 +2625,20 @@
         
         fieldsetBtn.onclick = function(e) {
             e.stopPropagation();
+            // If location type isn't set yet, clicking this button should open the subcategory edit panel
+            // so the admin can pick a location type (Venue/City/Address).
+            var currentLocationType = (cat.subFees && cat.subFees[subName]) ? cat.subFees[subName].location_type : null;
+            if (!currentLocationType) {
+                if (fieldsetMenu) fieldsetMenu.classList.remove('open');
+                if (fieldsetBtn) fieldsetBtn.textContent = 'Select Location Type';
+                runWithScrollAnchor(fieldsetBtn, function() {
+                    option.classList.add('formbuilder-accordion-option--editing');
+                });
+                return;
+            }
+
+            // Normal behavior: open fieldset menu
+            if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
             var wasOpen = fieldsetMenu.classList.contains('open');
             closeAllMenus();
             if (!wasOpen) {
