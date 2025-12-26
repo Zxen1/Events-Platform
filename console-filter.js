@@ -26,6 +26,7 @@
 
   const originalWarn = console.warn;
   const originalLog = console.log;
+  const originalError = console.error;
 
   let isEnabled = false;
   let errorHandler = null;
@@ -166,6 +167,27 @@
       }
     };
 
+    // Narrow error suppression: ONLY the known Keeper extension dataset crash spam.
+    // This is intentionally not a long list. Everything else remains visible.
+    console.error = function(...args) {
+      try {
+        var combined = '';
+        for (var i = 0; i < args.length; i++) {
+          var a = args[i];
+          if (a instanceof Error) {
+            combined += (a.message || '') + ' ' + (a.stack || '') + ' ';
+          } else {
+            combined += String(a) + ' ';
+          }
+        }
+        if (stackMentionsExtension(combined) && isKeeperDatasetSignature(combined, combined)) {
+          noteIgnored('keeper-dataset');
+          return;
+        }
+      } catch (_) {}
+      originalError.apply(console, args);
+    };
+
     attachKeeperImmunity();
 
     console.log('%c[Console Filter Active]', 'color: #00ff00; font-weight: bold;',
@@ -177,6 +199,7 @@
     isEnabled = false;
 
     console.warn = originalWarn;
+    console.error = originalError;
     detachKeeperImmunity();
     originalLog.call(console, '%c[Console Filter Disabled]', 'color: #ff9900; font-weight: bold;');
   }
