@@ -40,6 +40,13 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var CURRENT_KEY = 'member-auth-current';
+
+    // TEMP TEST SWITCH (per Paul): disable registration completely to isolate extension issues.
+    // When false:
+    // - Register subtab is disabled/ignored
+    // - No register DOM is built
+    // - No register submit handlers run
+    var ENABLE_REGISTRATION = false;
     
     /* --------------------------------------------------------------------------
        ICONS
@@ -265,6 +272,26 @@ const MemberModule = (function() {
         loginPanel = document.getElementById('member-auth-login');
         registerPanel = document.getElementById('member-auth-register');
         profilePanel = document.getElementById('member-auth-profile');
+
+        // Disable register UI for test runs
+        if (!ENABLE_REGISTRATION) {
+            if (registerTab) {
+                registerTab.hidden = true;
+                registerTab.setAttribute('aria-hidden', 'true');
+                registerTab.setAttribute('inert', '');
+            }
+            if (registerFormEl) {
+                registerFormEl.hidden = true;
+                registerFormEl.setAttribute('aria-hidden', 'true');
+                registerFormEl.setAttribute('inert', '');
+            }
+            if (registerPanel) {
+                registerPanel.innerHTML = '';
+                registerPanel.hidden = true;
+                registerPanel.setAttribute('aria-hidden', 'true');
+                registerPanel.setAttribute('inert', '');
+            }
+        }
         
         if (loginPanel) {
             loginInputs = Array.from(loginPanel.querySelectorAll('input'));
@@ -421,6 +448,7 @@ const MemberModule = (function() {
     }
 
     function ensureRegisterPanelDom() {
+        if (!ENABLE_REGISTRATION) return;
         if (!registerPanel) return;
         // If already built, keep it.
         if (document.getElementById('member-register-email')) return;
@@ -489,8 +517,10 @@ const MemberModule = (function() {
             onAvatarGridClick('register', e);
         });
 
-        // Populate the grid if choices are ready
-        renderAvatarGrid('register', avatarGridRegister);
+        // Populate the grid when choices are ready (lazy; avoids DOM churn during panel open)
+        ensureAvatarChoicesReady().then(function() {
+            renderAvatarGrid('register', avatarGridRegister);
+        });
     }
 
     function bindEvents() {
@@ -535,7 +565,7 @@ const MemberModule = (function() {
                 setAuthPanel('login');
             });
         }
-        if (registerTab) {
+        if (registerTab && ENABLE_REGISTRATION) {
             registerTab.addEventListener('click', function() {
                 setAuthPanel('register');
             });
@@ -550,7 +580,7 @@ const MemberModule = (function() {
                 handleLogin();
             });
         }
-        if (registerForm) {
+        if (registerForm && ENABLE_REGISTRATION) {
             registerForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleRegister();
@@ -568,7 +598,7 @@ const MemberModule = (function() {
         
         // Register button click
         var registerBtn = panel.querySelector('.member-auth-submit[data-action="register"]');
-        if (registerBtn) {
+        if (registerBtn && ENABLE_REGISTRATION) {
             registerBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 handleRegister();
@@ -596,6 +626,7 @@ const MemberModule = (function() {
                 onAvatarGridClick('profile', e);
             });
         }
+        // Avatar upload + cropper
         if (avatarFileInput) {
             avatarFileInput.addEventListener('change', function() {
                 var file = avatarFileInput.files && avatarFileInput.files[0];
@@ -911,9 +942,11 @@ const MemberModule = (function() {
     }
 
     function ensureAvatarChoicesReady() {
+        // NOTE: Do NOT render grids here.
+        // Rendering causes DOM churn which can trigger buggy password-manager attach logic
+        // right as the member panel opens. We only render grids when the relevant UI is active.
         return ensureSiteAvatarFilenames().then(function() {
             pickRandomSiteAvatarChoices(3);
-            renderAvatarGrids();
         });
     }
 
@@ -1783,11 +1816,7 @@ const MemberModule = (function() {
         initMapLightingButtons();
         initMapStyleButtons();
         initProfilePickers();
-        // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
-        ensureAvatarChoicesReady();
-
-        // Unload non-active member tabs so extensions can only see the active tab’s DOM.
-        unloadCreateTabDom();
+        // Do NOT render avatar grids on open; only do it when needed (register active or logged in).
         
         // Bring panel to front of stack
         App.bringToTop(panel);
@@ -2945,6 +2974,11 @@ const MemberModule = (function() {
     
     function setAuthPanel(target) {
         if (!authForm || authForm.dataset.state === 'logged-in') return;
+
+        // Registration is disabled for testing
+        if (!ENABLE_REGISTRATION && target === 'register') {
+            target = 'login';
+        }
         
         var isLogin = target === 'login';
 
@@ -3445,6 +3479,11 @@ const MemberModule = (function() {
 
             // Build profile edit inputs only when logged in
             ensureProfileEditDom();
+
+            // Now that we're logged in, it's safe to load avatar choices and render the grids.
+            ensureAvatarChoicesReady().then(function() {
+                renderAvatarGrids();
+            });
             
             // Update profile display
             if (profileAvatar) {
@@ -3468,7 +3507,6 @@ const MemberModule = (function() {
             pendingProfileAvatarBlob = null;
             avatarSelection.profile = 'self';
             updateProfileSaveState();
-            renderAvatarGrids();
             
             // Hide auth tabs when logged in
             if (authTabs) authTabs.classList.add('member-auth-tabs--logged-in');
@@ -3523,7 +3561,6 @@ const MemberModule = (function() {
             avatarSelection.register = 'self';
             avatarSelection.profile = 'self';
             updateProfileSaveState();
-            renderAvatarGrids();
             
             // Show auth tabs
             if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');
@@ -3532,7 +3569,7 @@ const MemberModule = (function() {
             if (registerFormEl) registerFormEl.hidden = false;
             
             // Show appropriate auth panel
-            var active = authForm.dataset.active === 'register' ? 'register' : 'login';
+            var active = (ENABLE_REGISTRATION && authForm.dataset.active === 'register') ? 'register' : 'login';
             setAuthPanel(active);
             
             // Update header (no avatar)
