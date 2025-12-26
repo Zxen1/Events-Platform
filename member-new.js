@@ -346,13 +346,16 @@ const MemberModule = (function() {
         addInput('text', 'member-register-name', 'registerName', 'off');
 
         addLabel('member-register-email', 'Email');
-        addInput('email', 'member-register-email', 'registerEmail', 'off');
+        // Intentionally type="text" to avoid password managers recognizing an email credential field.
+        addInput('text', 'member-register-email', 'registerEmail', 'off');
 
         addLabel('member-register-password', 'Password');
-        addInput('password', 'member-register-password', 'registerPassword', 'off');
+        // Intentionally type="text" to avoid password managers recognizing a password field.
+        addInput('text', 'member-register-password', 'registerPassword', 'off');
 
         addLabel('member-register-confirm', 'Confirm Password');
-        addInput('password', 'member-register-confirm', 'registerConfirm', 'off');
+        // Intentionally type="text" to avoid password managers recognizing a password field.
+        addInput('text', 'member-register-confirm', 'registerConfirm', 'off');
 
         // Avatar grid (register)
         var avatarLabel = document.createElement('label');
