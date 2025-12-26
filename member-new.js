@@ -47,6 +47,10 @@ const MemberModule = (function() {
     // - No register DOM is built
     // - No register submit handlers run
     var ENABLE_REGISTRATION = false;
+
+    // TEMP TEST SWITCH (per Paul): disable profile pickers (language/currency menus) completely.
+    // CurrencyComponent.buildFullMenu creates a searchable input which may trigger extension attach errors.
+    var ENABLE_PROFILE_PICKERS = false;
     
     /* --------------------------------------------------------------------------
        ICONS
@@ -1815,7 +1819,9 @@ const MemberModule = (function() {
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();
         initMapStyleButtons();
-        initProfilePickers();
+        if (ENABLE_PROFILE_PICKERS) {
+            initProfilePickers();
+        }
         // Do NOT render avatar grids on open; only do it when needed (register active or logged in).
         
         // Bring panel to front of stack
