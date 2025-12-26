@@ -37,40 +37,6 @@ const AdminModule = (function() {
     var autosaveCheckbox = null;
     var tabButtons = null;
     var tabPanels = null;
-    
-    // Treat tabs like pages: track active tab and detach global handlers on switch
-    var activeTabName = 'settings';
-    
-    // Document-level handlers (must be detachable to avoid cross-tab bleed-over)
-    var messagesDocClickHandler = null;
-    var mapDocClickHandlers = []; // [{ handler, capture }]
-    var checkoutDocClickHandler = null;
-    
-    function detachAllAdminDocumentHandlers() {
-        // Messages
-        if (messagesDocClickHandler) {
-            document.removeEventListener('click', messagesDocClickHandler, true);
-            messagesDocClickHandler = null;
-        }
-        
-        // Map (may have multiple handlers)
-        if (mapDocClickHandlers && mapDocClickHandlers.length) {
-            mapDocClickHandlers.forEach(function(entry) {
-                try {
-                    document.removeEventListener('click', entry.handler, !!entry.capture);
-                } catch (e) {
-                    // ignore
-                }
-            });
-            mapDocClickHandlers = [];
-        }
-        
-        // Checkout
-        if (checkoutDocClickHandler) {
-            document.removeEventListener('click', checkoutDocClickHandler, true);
-            checkoutDocClickHandler = null;
-        }
-    }
 
     /* --------------------------------------------------------------------------
        SVG ICONS REGISTRY
@@ -471,10 +437,7 @@ const AdminModule = (function() {
     // Sync all picklist types from Bunny CDN (background, once per session)
     function syncAllPicklists() {
         var syncKey = 'picklists_synced';
-        // IMPORTANT:
-        // This is intended to run once per *browser session* (not forever).
-        // sessionStorage resets when the browser/tab session ends.
-        var alreadySynced = sessionStorage.getItem(syncKey) === 'true';
+        var alreadySynced = localStorage.getItem(syncKey) === 'true';
         
         if (alreadySynced) {
             return; // Already synced this session
@@ -485,13 +448,6 @@ const AdminModule = (function() {
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (!res.settings) return;
-
-                // If Bunny Storage isn't configured, don't attempt background sync (avoids noisy 500s).
-                // Note: storage_api_key is intentionally not exposed to frontend, so we can only check zone name here.
-                if (!res.settings.storage_zone_name) {
-                    sessionStorage.setItem(syncKey, 'true');
-                    return;
-                }
                 
                 // Sync ALL data types from their Bunny CDN folders
                 // Each folder syncs to its corresponding table (category_icons, system_images, amenities, currencies, phone_prefixes)
@@ -512,7 +468,7 @@ const AdminModule = (function() {
                     
                     // Check if this specific folder has been synced
                     var folderSyncKey = 'picklist_synced_' + item.option_group + '_' + item.folder;
-                    var folderSynced = sessionStorage.getItem(folderSyncKey) === 'true';
+                    var folderSynced = localStorage.getItem(folderSyncKey) === 'true';
                     
                     if (!folderSynced) {
                         // Fetch file list from Bunny CDN
@@ -534,7 +490,7 @@ const AdminModule = (function() {
                                     .then(function(r) { return r.json(); })
                                     .then(function(syncRes) {
                                         if (syncRes.success) {
-                                            sessionStorage.setItem(folderSyncKey, 'true');
+                                            localStorage.setItem(folderSyncKey, 'true');
                                             if (syncRes.inserted_count > 0 || syncRes.deleted_count > 0) {
                                                 // Synced option group
                                             }
@@ -562,7 +518,7 @@ const AdminModule = (function() {
                 
                 // Mark as synced when all complete
                 Promise.all(syncPromises).then(function() {
-                    sessionStorage.setItem(syncKey, 'true');
+                    localStorage.setItem(syncKey, 'true');
                 });
             })
             .catch(function(err) {
@@ -572,9 +528,6 @@ const AdminModule = (function() {
 
     function closePanel() {
         if (!panel || !panelContent) return;
-        
-        // Tabs behave like pages: do not leave document-level handlers attached.
-        detachAllAdminDocumentHandlers();
         
         panelContent.classList.remove('admin-panel-content--visible');
         panelContent.classList.add('admin-panel-content--hidden');
@@ -599,26 +552,6 @@ const AdminModule = (function() {
     
     function switchTab(tabName) {
         if (!tabButtons || !tabPanels) return;
-        var prevTabName = activeTabName;
-        
-        // Deactivate previous tab "page" (detach global listeners from other tabs)
-        if (activeTabName && activeTabName !== tabName) {
-            if (activeTabName === 'messages' && messagesDocClickHandler) {
-                document.removeEventListener('click', messagesDocClickHandler, true);
-                messagesDocClickHandler = null;
-            }
-            if (activeTabName === 'map' && mapDocClickHandlers && mapDocClickHandlers.length) {
-                mapDocClickHandlers.forEach(function(entry) {
-                    try { document.removeEventListener('click', entry.handler, !!entry.capture); } catch (e) {}
-                });
-                mapDocClickHandlers = [];
-            }
-            if (activeTabName === 'checkout' && checkoutDocClickHandler) {
-                document.removeEventListener('click', checkoutDocClickHandler, true);
-                checkoutDocClickHandler = null;
-            }
-        }
-        activeTabName = tabName;
 
         // Update tab buttons
         tabButtons.forEach(function(btn) {
@@ -632,11 +565,6 @@ const AdminModule = (function() {
             var isActive = panel.id === 'admin-tab-' + tabName;
             panel.classList.toggle('admin-tab-panel--active', isActive);
         });
-
-        // Notify other modules so they can attach/detach per-tab listeners.
-        if (window.App && typeof App.emit === 'function') {
-            App.emit('admin:tab-switched', { tabName: tabName, prevTabName: prevTabName });
-        }
         
         // Initialize tab content on first view
         if (tabName === 'settings') {
@@ -1275,10 +1203,9 @@ const AdminModule = (function() {
             var dragStartIndex = -1;
             headerDrag.addEventListener('mousedown', function() {
                 accordion.draggable = true;
-                // One-time cleanup: do not accumulate document handlers per accordion
-                document.addEventListener('mouseup', function() {
-                    accordion.draggable = false;
-                }, { once: true });
+            });
+            document.addEventListener('mouseup', function() {
+                accordion.draggable = false;
             });
             accordion.addEventListener('dragstart', function(e) {
                 if (!accordion.draggable) {
@@ -1351,19 +1278,14 @@ const AdminModule = (function() {
     
     function bindMessagesDocumentListeners() {
         // Close edit panels when clicking outside (like formbuilder)
-        if (messagesDocClickHandler) return;
-        messagesDocClickHandler = function(e) {
+        document.addEventListener('click', function(e) {
             if (!messagesContainer) return;
-            var t = e && e.target;
-            if (!t || typeof t !== 'object') return;
-            if (!t.closest('.admin-messages-accordion-editpanel') &&
-                !t.closest('.admin-messages-accordion-header-editarea') &&
-                !t.closest('.admin-messages-accordion-header')) {
+            if (!e.target.closest('.admin-messages-accordion-editpanel') &&
+                !e.target.closest('.admin-messages-accordion-header-editarea') &&
+                !e.target.closest('.admin-messages-accordion-header')) {
                 closeAllMessagesEditPanels();
             }
-        };
-        // Capture so we run before other handlers that may remove DOM
-        document.addEventListener('click', messagesDocClickHandler, true);
+        });
     }
     
     function loadMessagesFromDatabase() {
@@ -2365,15 +2287,11 @@ const AdminModule = (function() {
             });
             
             // Close dropdown when clicking outside
-            var mapOutsideClickHandler = function(e) {
-                var t = e && e.target;
-                if (!t || typeof t !== 'object') return;
-                if (!input.contains(t) && !dropdown.contains(t)) {
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }
-            };
-            document.addEventListener('click', mapOutsideClickHandler, true);
-            mapDocClickHandlers.push({ handler: mapOutsideClickHandler, capture: true });
+            });
             
             // Save on blur if user types custom text
             input.addEventListener('blur', function() {
@@ -3212,19 +3130,14 @@ const AdminModule = (function() {
 
         });
 
-        // Close more menus when clicking outside (attach once; detach on tab switch / panel close)
-        if (!checkoutDocClickHandler) {
-            checkoutDocClickHandler = function(e) {
-                var t = e && e.target;
-                if (!t || typeof t !== 'object') return;
-                if (!t.closest('.admin-checkout-accordion-editpanel-more')) {
-                    document.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
-                        el.classList.remove('open');
-                    });
-                }
-            };
-            document.addEventListener('click', checkoutDocClickHandler, true);
-        }
+        // Close more menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.admin-checkout-accordion-editpanel-more')) {
+                document.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
+                    el.classList.remove('open');
+                });
+            }
+        });
 
         // Add tier button handler
         var addBtn = document.querySelector('.admin-checkout-options-add');

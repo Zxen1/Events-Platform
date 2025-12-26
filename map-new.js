@@ -31,11 +31,6 @@
 const MapModule = (function() {
   'use strict';
 
-  // TEMP TEST SWITCH (per Paul): disable automatic lighting application.
-  // We are isolating the source of a 6.js/5.js extension error that triggers
-  // around map load + lighting preset application.
-  var ENABLE_AUTO_LIGHTING_PRESET = false;
-
   /* ==========================================================================
      SECTION 1: CONSTANTS & STATE
      ========================================================================== */
@@ -104,10 +99,6 @@ const MapModule = (function() {
   // Settings cache
   let adminSettings = {};
 
-  // Track current applied style/lighting to avoid redundant Mapbox reloads
-  let currentStyleUrl = null;
-  let currentLightingPreset = null;
-
 
   /* ==========================================================================
      SECTION 2: MAPBOX - Map Initialization
@@ -153,7 +144,6 @@ const MapModule = (function() {
     var styleUrl = initialStyle === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
-    currentStyleUrl = styleUrl;
 
     // Create map (pass DOM element directly, not ID)
     // Performance optimizations: renderWorldCopies=false reduces initial load, preserveDrawingBuffer only if needed
@@ -168,7 +158,6 @@ const MapModule = (function() {
       pitch: startPitch,
       bearing: startBearing,
       attributionControl: false, // Disabled to fix null dataset errors
-      boxZoom: false, // Disable box-zoom handler (can throw null dataset errors in some Mapbox builds)
       renderWorldCopies: false, // Reduce initial rendering load
       antialias: false // Disable antialiasing for better performance (can enable if quality needed)
     });
@@ -220,21 +209,19 @@ const MapModule = (function() {
       }
       
       // Apply lighting preset (deferred, after map is fully loaded)
-      if (ENABLE_AUTO_LIGHTING_PRESET) {
-        // Priority: member settings > admin settings > localStorage > default
-        var lighting = 'day';
-        if (window.MemberModule && window.MemberModule.getCurrentUser) {
-          var member = window.MemberModule.getCurrentUser();
-          if (member && member.map_lighting) {
-            lighting = member.map_lighting;
-          }
+      // Priority: member settings > admin settings > localStorage > default
+      var lighting = 'day';
+      if (window.MemberModule && window.MemberModule.getCurrentUser) {
+        var member = window.MemberModule.getCurrentUser();
+        if (member && member.map_lighting) {
+          lighting = member.map_lighting;
         }
-        if (lighting === 'day') {
-          lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
-        }
-        if (lighting && setMapLighting) {
-          setMapLighting(lighting);
-        }
+      }
+      if (lighting === 'day') {
+        lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
+      }
+      if (lighting && setMapLighting) {
+        setMapLighting(lighting);
       }
     });
   }
@@ -1014,8 +1001,7 @@ const MapModule = (function() {
       bounds: bounds,
       fitBoundsOptions: { padding: 50, maxZoom: 15 },
       interactive: true,
-      attributionControl: false,
-      boxZoom: false
+      attributionControl: false
     });
 
     // Add markers for each location
@@ -1144,10 +1130,6 @@ const MapModule = (function() {
     var styleUrl = style === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
-    if (currentStyleUrl === styleUrl) {
-      return;
-    }
-    currentStyleUrl = styleUrl;
     console.log('[Map] Setting style to:', styleUrl);
     
     // Store current lighting to re-apply after style loads
@@ -1162,7 +1144,7 @@ const MapModule = (function() {
     map.setStyle(styleUrl);
     
     // Re-apply lighting after style loads (only for Standard style, not Satellite)
-    if (style === 'standard' && ENABLE_AUTO_LIGHTING_PRESET) {
+    if (style === 'standard') {
       map.once('style.load', function() {
         setMapLighting(currentLighting);
       });
@@ -1177,12 +1159,6 @@ const MapModule = (function() {
       console.warn('[Map] setMapLighting: Map not initialized');
       return;
     }
-
-    // Avoid re-applying the same preset repeatedly (can spam logs and trigger extra work)
-    if (currentLightingPreset === preset && map.isStyleLoaded && map.isStyleLoaded()) {
-      return;
-    }
-    currentLightingPreset = preset;
     
     console.log('[Map] Setting lighting to:', preset);
     

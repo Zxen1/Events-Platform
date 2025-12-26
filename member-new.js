@@ -40,29 +40,6 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var CURRENT_KEY = 'member-auth-current';
-
-    // TEMP TEST SWITCH (per Paul): disable registration completely to isolate extension issues.
-    // When false:
-    // - Register subtab is disabled/ignored
-    // - No register DOM is built
-    // - No register submit handlers run
-    var ENABLE_REGISTRATION = false;
-
-    // TEMP TEST SWITCH (per Paul): disable profile pickers (language/currency menus) completely.
-    // CurrencyComponent.buildFullMenu creates a searchable input which may trigger extension attach errors.
-    var ENABLE_PROFILE_PICKERS = false;
-    
-    // TEMP TEST SWITCH (per Paul): disable member map controls (lighting/style UI) completely.
-    // These are not inputs, but they do touch MapModule and trigger DOM work on member open.
-    var ENABLE_MEMBER_MAP_CONTROLS = false;
-
-    // TEMP TEST SWITCH (per Paul): for isolation testing, turn off Create Post + My Posts tabs completely.
-    // When false:
-    // - Their tab buttons are hidden/disabled
-    // - Their panels are hidden/inert
-    // - Switching to them is blocked
-    var ENABLE_MEMBER_CREATE_TAB = false;
-    var ENABLE_MEMBER_MYPOSTS_TAB = false;
     
     /* --------------------------------------------------------------------------
        ICONS
@@ -152,61 +129,6 @@ const MemberModule = (function() {
     var cropImg = null;
     // Cropper zoom is "cover-only": zoom=1 is the minimum (image always fills the square; no blank areas).
     var cropState = { zoom: 1, minZoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
-    
-    // Treat member tabs like pages: keep track of active tab so we can deactivate tab-specific globals.
-    var activeMemberTabName = 'profile';
-    
-    // Detachable global handlers (avoid cross-contamination)
-    var headerDragMoveHandler = null;
-    var headerDragUpHandler = null;
-    function detachHeaderDragHandlers() {
-        if (headerDragMoveHandler) {
-            document.removeEventListener('mousemove', headerDragMoveHandler);
-            headerDragMoveHandler = null;
-        }
-        if (headerDragUpHandler) {
-            document.removeEventListener('mouseup', headerDragUpHandler);
-            headerDragUpHandler = null;
-        }
-    }
-    
-    var cropperWindowMoveHandler = null;
-    var cropperWindowUpHandler = null;
-    var cropperDragHandlersAttached = false;
-    function attachCropperDragHandlers() {
-        if (cropperDragHandlersAttached) return;
-        cropperWindowMoveHandler = function(e) {
-            if (!cropperCanvas) return;
-            if (!cropState.dragging) return;
-            var dx = e.clientX - cropState.lastX;
-            var dy = e.clientY - cropState.lastY;
-            cropState.lastX = e.clientX;
-            cropState.lastY = e.clientY;
-            
-            // Scale mouse delta to canvas pixel coords (canvas may be displayed smaller than its internal size)
-            var rect = cropperCanvas.getBoundingClientRect();
-            var scaleX = rect.width ? (cropperCanvas.width / rect.width) : 1;
-            var scaleY = rect.height ? (cropperCanvas.height / rect.height) : 1;
-            cropState.offsetX += dx * scaleX;
-            cropState.offsetY += dy * scaleY;
-            drawCropper();
-        };
-        cropperWindowUpHandler = function() {
-            cropState.dragging = false;
-        };
-        window.addEventListener('mousemove', cropperWindowMoveHandler);
-        window.addEventListener('mouseup', cropperWindowUpHandler);
-        cropperDragHandlersAttached = true;
-    }
-    function detachCropperDragHandlers() {
-        if (!cropperDragHandlersAttached) return;
-        if (cropperWindowMoveHandler) window.removeEventListener('mousemove', cropperWindowMoveHandler);
-        if (cropperWindowUpHandler) window.removeEventListener('mouseup', cropperWindowUpHandler);
-        cropperWindowMoveHandler = null;
-        cropperWindowUpHandler = null;
-        cropperDragHandlersAttached = false;
-        cropState.dragging = false;
-    }
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
@@ -243,14 +165,11 @@ const MemberModule = (function() {
         headerEl.addEventListener('mousedown', function(e) {
             if (e.target.closest('button')) return;
             
-            // Clean up any previous in-flight drag handlers
-            detachHeaderDragHandlers();
-            
             var rect = panelContent.getBoundingClientRect();
             var startX = e.clientX;
             var startLeft = rect.left;
             
-            headerDragMoveHandler = function(ev) {
+            function onMove(ev) {
                 var dx = ev.clientX - startX;
                 var newLeft = startLeft + dx;
                 var maxLeft = window.innerWidth - rect.width;
@@ -258,14 +177,15 @@ const MemberModule = (function() {
                 if (newLeft > maxLeft) newLeft = maxLeft;
                 panelContent.style.left = newLeft + 'px';
                 panelContent.style.right = 'auto';
-            };
+            }
             
-            headerDragUpHandler = function() {
-                detachHeaderDragHandlers();
-            };
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
             
-            document.addEventListener('mousemove', headerDragMoveHandler);
-            document.addEventListener('mouseup', headerDragUpHandler);
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
         });
     }
 
@@ -288,26 +208,6 @@ const MemberModule = (function() {
         loginPanel = document.getElementById('member-auth-login');
         registerPanel = document.getElementById('member-auth-register');
         profilePanel = document.getElementById('member-auth-profile');
-
-        // Disable register UI for test runs
-        if (!ENABLE_REGISTRATION) {
-            if (registerTab) {
-                registerTab.hidden = true;
-                registerTab.setAttribute('aria-hidden', 'true');
-                registerTab.setAttribute('inert', '');
-            }
-            if (registerFormEl) {
-                registerFormEl.hidden = true;
-                registerFormEl.setAttribute('aria-hidden', 'true');
-                registerFormEl.setAttribute('inert', '');
-            }
-            if (registerPanel) {
-                registerPanel.innerHTML = '';
-                registerPanel.hidden = true;
-                registerPanel.setAttribute('aria-hidden', 'true');
-                registerPanel.setAttribute('inert', '');
-            }
-        }
         
         if (loginPanel) {
             loginInputs = Array.from(loginPanel.querySelectorAll('input'));
@@ -328,10 +228,13 @@ const MemberModule = (function() {
         languageMenuContainer = document.getElementById('memberLanguageMenu');
         currencyMenuContainer = document.getElementById('memberCurrencyMenu');
         
+        profileEditNameInput = document.getElementById('member-profile-edit-name');
+        profileEditPasswordInput = document.getElementById('member-profile-edit-password');
+        profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
 
-        // Avatar UI (register grid is built dynamically when register subtab is active)
+        // Avatar UI
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
         avatarGridProfile = document.getElementById('member-avatar-grid-profile');
         avatarFileInput = document.getElementById('member-avatar-file-input');
@@ -342,226 +245,6 @@ const MemberModule = (function() {
         cropperSaveBtn = document.getElementById('member-avatar-cropper-save');
 
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
-
-        // Isolation test: disable Create Post / My Posts tabs at the DOM level so only Profile/Login is exposed.
-        // This is intentionally "hard off" (hidden + inert) rather than just visually hidden.
-        var createTabBtn = document.getElementById('member-tab-create-btn');
-        var mypostsTabBtn = document.getElementById('member-tab-myposts-btn');
-        var createPanel = document.getElementById('member-tab-create');
-        var mypostsPanel = document.getElementById('member-tab-myposts');
-
-        if (createTabBtn && !ENABLE_MEMBER_CREATE_TAB) {
-            createTabBtn.style.display = 'none';
-            createTabBtn.setAttribute('aria-disabled', 'true');
-        }
-        if (mypostsTabBtn && !ENABLE_MEMBER_MYPOSTS_TAB) {
-            mypostsTabBtn.style.display = 'none';
-            mypostsTabBtn.setAttribute('aria-disabled', 'true');
-        }
-        if (createPanel && !ENABLE_MEMBER_CREATE_TAB) {
-            createPanel.hidden = true;
-            createPanel.setAttribute('inert', '');
-            createPanel.innerHTML = '';
-        }
-        if (mypostsPanel && !ENABLE_MEMBER_MYPOSTS_TAB) {
-            mypostsPanel.hidden = true;
-            mypostsPanel.setAttribute('inert', '');
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // DOM ISOLATION: keep hidden tab DOM out of the document so extensions can’t scan it.
-    // - Profile edit inputs only exist when logged in.
-    // - Create Post tab DOM only exists when Create tab is active.
-    // -------------------------------------------------------------------------
-    function clearProfileEditDom() {
-        if (!profileEditForm) return;
-        profileEditForm.innerHTML = '';
-        profileEditNameInput = null;
-        profileEditPasswordInput = null;
-        profileEditConfirmInput = null;
-    }
-
-    function ensureProfileEditDom() {
-        if (!profileEditForm) return;
-        if (document.getElementById('member-profile-edit-password')) return;
-
-        profileEditForm.innerHTML = '';
-
-        function addLabel(forId, text) {
-            var label = document.createElement('label');
-            label.className = 'member-auth-panel-label';
-            label.setAttribute('for', forId);
-            label.textContent = text;
-            profileEditForm.appendChild(label);
-        }
-
-        function addInput(type, id, autocomplete) {
-            var input = document.createElement('input');
-            input.type = type;
-            input.id = id;
-            input.className = 'member-auth-panel-input';
-            if (autocomplete) input.setAttribute('autocomplete', autocomplete);
-            profileEditForm.appendChild(input);
-            return input;
-        }
-
-        addLabel('member-profile-edit-name', 'Username');
-        profileEditNameInput = addInput('text', 'member-profile-edit-name', 'name');
-
-        addLabel('member-profile-edit-password', 'New Password');
-        profileEditPasswordInput = addInput('password', 'member-profile-edit-password', 'new-password');
-
-        addLabel('member-profile-edit-confirm', 'Confirm Password');
-        profileEditConfirmInput = addInput('password', 'member-profile-edit-confirm', 'new-password');
-
-        // Bind once
-        if (!profileEditForm.dataset.bound) {
-            profileEditForm.dataset.bound = 'true';
-            profileEditForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleHeaderSave();
-            });
-        }
-        if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
-        if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
-        if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
-    }
-
-    function unloadCreateTabDom() {
-        var createPanel = document.getElementById('member-tab-create');
-        if (createPanel) createPanel.innerHTML = '';
-        // Reset Create Post state so it truly unloads
-        formpickerLoaded = false;
-        memberCategories = [];
-        memberCategoryIconPaths = {};
-        memberSubcategoryIconPaths = {};
-        selectedCategory = '';
-        selectedSubcategory = '';
-        formWrapper = null;
-        formFields = null;
-        detachFormpickerOutsideClick();
-    }
-
-    function ensureCreateTabDom() {
-        var createPanel = document.getElementById('member-tab-create');
-        if (!createPanel) return;
-        if (document.getElementById('member-formpicker-cats')) return;
-
-        createPanel.innerHTML = '';
-
-        var pickerContainer = document.createElement('div');
-        pickerContainer.className = 'member-formpicker-container';
-        var cats = document.createElement('div');
-        cats.className = 'member-formpicker-cats';
-        cats.id = 'member-formpicker-cats';
-        cats.setAttribute('aria-label', 'Categories');
-        pickerContainer.appendChild(cats);
-        createPanel.appendChild(pickerContainer);
-
-        var wrapper = document.createElement('div');
-        wrapper.id = 'member-create-form-wrapper';
-        wrapper.className = 'member-form-container';
-        wrapper.hidden = true;
-        var fields = document.createElement('div');
-        fields.id = 'member-create-fields';
-        fields.className = 'member-create-fields';
-        fields.setAttribute('role', 'group');
-        fields.setAttribute('aria-live', 'polite');
-        wrapper.appendChild(fields);
-        createPanel.appendChild(wrapper);
-
-        // Refresh refs
-        formWrapper = wrapper;
-        formFields = fields;
-    }
-
-    // -------------------------------------------------------------------------
-    // AUTH SUBTAB ISOLATION (Login vs Register)
-    // - Login: allow browser autofill (username/current-password)
-    // - Register: do NOT autofill; also keep its inputs out of DOM unless active
-    // -------------------------------------------------------------------------
-    function clearRegisterPanelDom() {
-        if (!registerPanel) return;
-        registerPanel.innerHTML = '';
-        registerInputs = [];
-        avatarGridRegister = null;
-    }
-
-    function ensureRegisterPanelDom() {
-        if (!ENABLE_REGISTRATION) return;
-        if (!registerPanel) return;
-        // If already built, keep it.
-        if (document.getElementById('member-register-email')) return;
-
-        registerPanel.innerHTML = '';
-
-        function addLabel(forId, text) {
-            var label = document.createElement('label');
-            label.className = 'member-auth-panel-label';
-            label.setAttribute('for', forId);
-            label.textContent = text;
-            registerPanel.appendChild(label);
-        }
-
-        function addInput(type, id, name, autocomplete) {
-            var input = document.createElement('input');
-            input.type = type;
-            input.id = id;
-            input.className = 'member-auth-panel-input';
-            if (name) input.name = name;
-            input.setAttribute('autocomplete', autocomplete || 'off');
-            registerPanel.appendChild(input);
-            return input;
-        }
-
-        addLabel('member-register-name', 'Username');
-        addInput('text', 'member-register-name', 'registerName', 'off');
-
-        addLabel('member-register-email', 'Email');
-        // Intentionally type="text" to avoid password managers recognizing an email credential field.
-        addInput('text', 'member-register-email', 'registerEmail', 'off');
-
-        addLabel('member-register-password', 'Password');
-        // Intentionally type="text" to avoid password managers recognizing a password field.
-        addInput('text', 'member-register-password', 'registerPassword', 'off');
-
-        addLabel('member-register-confirm', 'Confirm Password');
-        // Intentionally type="text" to avoid password managers recognizing a password field.
-        addInput('text', 'member-register-confirm', 'registerConfirm', 'off');
-
-        // Avatar grid (register)
-        var avatarLabel = document.createElement('label');
-        avatarLabel.className = 'member-auth-panel-label';
-        avatarLabel.textContent = 'Avatar';
-        registerPanel.appendChild(avatarLabel);
-
-        avatarGridRegister = document.createElement('div');
-        avatarGridRegister.id = 'member-avatar-grid-register';
-        avatarGridRegister.className = 'member-avatar-grid';
-        avatarGridRegister.setAttribute('aria-label', 'Avatar choices');
-        registerPanel.appendChild(avatarGridRegister);
-
-        // Submit button
-        var submit = document.createElement('button');
-        submit.type = 'submit';
-        submit.className = 'member-button-auth member-auth-submit';
-        submit.dataset.action = 'register';
-        submit.textContent = 'Create Account';
-        registerPanel.appendChild(submit);
-
-        // Refresh cached inputs list
-        registerInputs = Array.from(registerPanel.querySelectorAll('input'));
-
-        // Bind avatar click for this new grid
-        avatarGridRegister.addEventListener('click', function(e) {
-            onAvatarGridClick('register', e);
-        });
-
-        // Populate the grid when choices are ready (lazy; avoids DOM churn during panel open)
-        ensureAvatarChoicesReady().then(function() {
-            renderAvatarGrid('register', avatarGridRegister);
-        });
     }
 
     function bindEvents() {
@@ -606,7 +289,7 @@ const MemberModule = (function() {
                 setAuthPanel('login');
             });
         }
-        if (registerTab && ENABLE_REGISTRATION) {
+        if (registerTab) {
             registerTab.addEventListener('click', function() {
                 setAuthPanel('register');
             });
@@ -621,7 +304,7 @@ const MemberModule = (function() {
                 handleLogin();
             });
         }
-        if (registerForm && ENABLE_REGISTRATION) {
+        if (registerForm) {
             registerForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleRegister();
@@ -639,7 +322,7 @@ const MemberModule = (function() {
         
         // Register button click
         var registerBtn = panel.querySelector('.member-auth-submit[data-action="register"]');
-        if (registerBtn && ENABLE_REGISTRATION) {
+        if (registerBtn) {
             registerBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 handleRegister();
@@ -654,7 +337,16 @@ const MemberModule = (function() {
             });
         }
         
-        // Profile edit form is built dynamically when logged in; handlers are attached in ensureProfileEditDom().
+        // Inline save removed; profile save is via header buttons
+        if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditForm) {
+            profileEditForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleHeaderSave();
+            });
+        }
 
         // Avatar grid interactions (Register + Profile)
         if (avatarGridRegister) {
@@ -667,7 +359,6 @@ const MemberModule = (function() {
                 onAvatarGridClick('profile', e);
             });
         }
-        // Avatar upload + cropper
         if (avatarFileInput) {
             avatarFileInput.addEventListener('change', function() {
                 var file = avatarFileInput.files && avatarFileInput.files[0];
@@ -701,15 +392,33 @@ const MemberModule = (function() {
                 cropState.lastX = e.clientX;
                 cropState.lastY = e.clientY;
             });
+            window.addEventListener('mousemove', function(e) {
+                if (!cropState.dragging) return;
+                var dx = e.clientX - cropState.lastX;
+                var dy = e.clientY - cropState.lastY;
+                cropState.lastX = e.clientX;
+                cropState.lastY = e.clientY;
+                
+                // Scale mouse delta to canvas pixel coords (canvas may be displayed smaller than its internal size)
+                var rect = cropperCanvas.getBoundingClientRect();
+                var scaleX = rect.width ? (cropperCanvas.width / rect.width) : 1;
+                var scaleY = rect.height ? (cropperCanvas.height / rect.height) : 1;
+                cropState.offsetX += dx * scaleX;
+                cropState.offsetY += dy * scaleY;
+                drawCropper();
+            });
+            window.addEventListener('mouseup', function() {
+                cropState.dragging = false;
+            });
         }
 
         // Note: unsaved changes dialogs are controlled from components.
         
-        // Map Lighting/Style buttons (test switch)
-        if (ENABLE_MEMBER_MAP_CONTROLS) {
-            initMapLightingButtons();
-            initMapStyleButtons();
-        }
+        // Map Lighting buttons
+        initMapLightingButtons();
+        
+        // Map Style buttons
+        initMapStyleButtons();
         
         // Panel toggle is handled by lazy init wrapper outside module
     }
@@ -983,11 +692,9 @@ const MemberModule = (function() {
     }
 
     function ensureAvatarChoicesReady() {
-        // NOTE: Do NOT render grids here.
-        // Rendering causes DOM churn which can trigger buggy password-manager attach logic
-        // right as the member panel opens. We only render grids when the relevant UI is active.
         return ensureSiteAvatarFilenames().then(function() {
             pickRandomSiteAvatarChoices(3);
+            renderAvatarGrids();
         });
     }
 
@@ -1284,8 +991,6 @@ const MemberModule = (function() {
             drawCropper();
             cropperOverlay.hidden = false;
             cropperOverlay.setAttribute('aria-hidden', 'false');
-            // Attach drag handlers only while cropper is in use (tabs behave like pages).
-            attachCropperDragHandlers();
         };
         cropImg.src = url;
         cropImg.dataset.objectUrl = url;
@@ -1293,7 +998,6 @@ const MemberModule = (function() {
 
     function closeCropper() {
         if (!cropperOverlay) return;
-        detachCropperDragHandlers();
         cropperOverlay.hidden = true;
         cropperOverlay.setAttribute('aria-hidden', 'true');
         if (cropImg && cropImg.dataset && cropImg.dataset.objectUrl) {
@@ -1818,10 +1522,6 @@ const MemberModule = (function() {
     }
 
     function requestTabSwitch(tabName) {
-        // Isolation test: block disabled tabs
-        if (tabName === 'create' && !ENABLE_MEMBER_CREATE_TAB) return;
-        if (tabName === 'myposts' && !ENABLE_MEMBER_MYPOSTS_TAB) return;
-
         // Only guard when leaving Profile tab with dirty edits
         var leavingProfile = false;
         if (tabButtons) {
@@ -1845,12 +1545,6 @@ const MemberModule = (function() {
     
     function openPanel() {
         if (!panel || !panelContent) return;
-
-        // If the user is interacting with UI, stop any background globe spin to avoid
-        // Mapbox animation loops running while panels are opening.
-        if (window.MapModule && typeof window.MapModule.stopSpin === 'function') {
-            window.MapModule.stopSpin();
-        }
         
         panel.classList.add('member-panel--show');
         panel.setAttribute('aria-hidden', 'false');
@@ -1858,14 +1552,11 @@ const MemberModule = (function() {
         panelContent.classList.add('member-panel-content--visible');
         
         // Refresh map settings buttons (in case member logged in/out)
-        if (ENABLE_MEMBER_MAP_CONTROLS) {
-            initMapLightingButtons();
-            initMapStyleButtons();
-        }
-        if (ENABLE_PROFILE_PICKERS) {
-            initProfilePickers();
-        }
-        // Do NOT render avatar grids on open; only do it when needed (register active or logged in).
+        initMapLightingButtons();
+        initMapStyleButtons();
+        initProfilePickers();
+        // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
+        ensureAvatarChoicesReady();
         
         // Bring panel to front of stack
         App.bringToTop(panel);
@@ -1881,11 +1572,6 @@ const MemberModule = (function() {
             confirmUnsavedProfileEdits(function() { closePanel(); });
             return;
         }
-        
-        // Ensure we don't leave long-lived document handlers attached.
-        detachFormpickerOutsideClick();
-        detachHeaderDragHandlers();
-        detachCropperDragHandlers();
         
         // Remove focus from close button before hiding (fixes aria-hidden warning)
         if (closeBtn && document.activeElement === closeBtn) {
@@ -1915,22 +1601,6 @@ const MemberModule = (function() {
     
     function switchTab(tabName) {
         if (!tabButtons || !tabPanels) return;
-
-        // Isolation test: block disabled tabs (defensive; requestTabSwitch already blocks).
-        if (tabName === 'create' && !ENABLE_MEMBER_CREATE_TAB) tabName = 'profile';
-        if (tabName === 'myposts' && !ENABLE_MEMBER_MYPOSTS_TAB) tabName = 'profile';
-
-        // Switching member tabs is active interaction; ensure background spin is stopped.
-        if (window.MapModule && typeof window.MapModule.stopSpin === 'function') {
-            window.MapModule.stopSpin();
-        }
-        
-        // Tabs behave like pages: deactivate previous tab-specific globals and unload DOM.
-        if (activeMemberTabName === 'create' && tabName !== 'create') {
-            detachFormpickerOutsideClick();
-            unloadCreateTabDom();
-        }
-        activeMemberTabName = tabName;
         
         // Update tab buttons
         tabButtons.forEach(function(btn) {
@@ -1946,9 +1616,8 @@ const MemberModule = (function() {
             panel.hidden = !isActive;
         });
         
-        // Lazy load Create Post tab content (and build its DOM only when active)
-        if (tabName === 'create' && ENABLE_MEMBER_CREATE_TAB) {
-            ensureCreateTabDom();
+        // Lazy load Create Post tab content
+        if (tabName === 'create') {
             loadFormpicker();
         }
     }
@@ -1969,19 +1638,6 @@ const MemberModule = (function() {
     var checkoutOptions = [];
     var siteCurrency = null;
     var checkoutInstance = null;
-    
-    // Formpicker document click handler (attach only while menus are open)
-    var formpickerDocClickHandler = null;
-    var formpickerCategoryMenuEl = null;
-    var formpickerSubcategoryMenuEl = null;
-    function detachFormpickerOutsideClick() {
-        if (formpickerDocClickHandler) {
-            document.removeEventListener('click', formpickerDocClickHandler, true);
-            formpickerDocClickHandler = null;
-        }
-        formpickerCategoryMenuEl = null;
-        formpickerSubcategoryMenuEl = null;
-    }
     
     function loadFormpicker() {
         if (formpickerLoaded) return;
@@ -2194,7 +1850,6 @@ const MemberModule = (function() {
                             
                             subcategoryMenu.classList.remove('open');
                             selectedSubcategory = subName;
-                            updateFormpickerOutsideClick();
                             renderConfiguredFields();
                         });
                         
@@ -2212,7 +1867,6 @@ const MemberModule = (function() {
                     subcategoryWrapper.hidden = true;
                 }
                 
-                updateFormpickerOutsideClick();
                 renderConfiguredFields();
             });
             
@@ -2224,7 +1878,6 @@ const MemberModule = (function() {
             e.stopPropagation();
             subcategoryMenu.classList.remove('open');
             categoryMenu.classList.toggle('open');
-            updateFormpickerOutsideClick();
         });
         
         // Toggle subcategory menu
@@ -2232,55 +1885,18 @@ const MemberModule = (function() {
             e.stopPropagation();
             categoryMenu.classList.remove('open');
             subcategoryMenu.classList.toggle('open');
-            updateFormpickerOutsideClick();
         });
         
         // Close menus on outside click
-        formpickerCategoryMenuEl = categoryMenu;
-        formpickerSubcategoryMenuEl = subcategoryMenu;
-        function updateFormpickerOutsideClick() {
-            var catOpen = !!(formpickerCategoryMenuEl && formpickerCategoryMenuEl.classList.contains('open'));
-            var subOpen = !!(formpickerSubcategoryMenuEl && formpickerSubcategoryMenuEl.classList.contains('open'));
-            var shouldAttach = catOpen || subOpen;
-            
-            if (!shouldAttach) {
-                detachFormpickerOutsideClick();
-                // Re-stash refs so future toggles can reattach without re-rendering.
-                formpickerCategoryMenuEl = categoryMenu;
-                formpickerSubcategoryMenuEl = subcategoryMenu;
-                return;
+        document.addEventListener('click', function(e) {
+            if (!categoryMenu.contains(e.target)) categoryMenu.classList.remove('open');
+            if (!subcategoryMenu.contains(e.target)) {
+                // Keep subcategory menu open until user has picked a subcategory.
+                if (!(selectedCategory && !selectedSubcategory)) {
+                    subcategoryMenu.classList.remove('open');
+                }
             }
-            
-            if (formpickerDocClickHandler) return;
-            formpickerDocClickHandler = function(e) {
-                // Guard: some environments/extensions can produce events with odd targets.
-                var t = e && e.target;
-                if (!t || typeof t !== 'object' || typeof t.nodeType !== 'number') return;
-                if (!formpickerCategoryMenuEl || !formpickerSubcategoryMenuEl) return;
-                
-                if (formpickerCategoryMenuEl.classList.contains('open') && !formpickerCategoryMenuEl.contains(t)) {
-                    formpickerCategoryMenuEl.classList.remove('open');
-                }
-                if (formpickerSubcategoryMenuEl.classList.contains('open') && !formpickerSubcategoryMenuEl.contains(t)) {
-                    // Keep subcategory menu open until user has picked a subcategory.
-                    if (!(selectedCategory && !selectedSubcategory)) {
-                        formpickerSubcategoryMenuEl.classList.remove('open');
-                    }
-                }
-                
-                // Detach once both are closed to avoid doing work on every click.
-                var catStillOpen = formpickerCategoryMenuEl.classList.contains('open');
-                var subStillOpen = formpickerSubcategoryMenuEl.classList.contains('open');
-                if (!catStillOpen && !subStillOpen) {
-                    detachFormpickerOutsideClick();
-                    // Re-stash refs so future toggles can reattach without re-rendering.
-                    formpickerCategoryMenuEl = categoryMenu;
-                    formpickerSubcategoryMenuEl = subcategoryMenu;
-                }
-            };
-            
-            document.addEventListener('click', formpickerDocClickHandler, true);
-        }
+        });
         
         categoryMenu.appendChild(categoryBtn);
         categoryMenu.appendChild(categoryOpts);
@@ -2294,7 +1910,6 @@ const MemberModule = (function() {
         // Auto-open category menu when nothing is selected yet.
         // Subcategory auto-open is handled when a category is picked.
         if (!selectedCategory) categoryMenu.classList.add('open');
-        updateFormpickerOutsideClick();
     }
     
     function renderConfiguredFields() {
@@ -2321,13 +1936,11 @@ const MemberModule = (function() {
 
     // Extracted body so we can wait for FieldsetComponent.loadFromDatabase() when needed
     renderConfiguredFields._renderBody = function() {
-        if (!formFields) return;
-        // No caching allowed: rebuild the form fresh each time.
-        formFields.innerHTML = '';
-        var section = formFields;
         
         // Get fields for this category/subcategory
         var fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
+
+        if (formFields) formFields.innerHTML = '';
 
         // Track location quantity and repeat fieldsets
         var locationQuantity = 1;
@@ -2340,7 +1953,7 @@ const MemberModule = (function() {
             var placeholder = document.createElement('p');
             placeholder.className = 'member-create-intro';
             placeholder.textContent = 'No fields configured for this subcategory yet.';
-            section.appendChild(placeholder);
+            if (formFields) formFields.appendChild(placeholder);
         } else {
             // First pass: identify location fieldset and collect repeat fieldsets
             // Also get subcategory data to check for must-repeat and autofill-repeat CSV strings
@@ -2449,7 +2062,7 @@ const MemberModule = (function() {
                 var fieldset = FieldsetComponent.buildFieldset(field, {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
-                    container: section,
+                    container: formFields,
                     defaultCurrency: null
                 });
                 
@@ -2553,32 +2166,32 @@ const MemberModule = (function() {
                     }
                 }
                 
-                section.appendChild(fieldset);
+                formFields.appendChild(fieldset);
             });
             
         }
         
         // Render checkout options at the bottom of the form
-        renderCheckoutOptionsSection(section);
+        renderCheckoutOptionsSection();
         
         // Render additional locations if quantity > 1 (after checkout section is rendered)
         if (locationQuantity > 1 && locationFieldset) {
             setTimeout(function() {
-                renderAdditionalLocations(section, locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
+                renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
             }, 100);
         }
         
         // Render terms agreement and submit buttons after checkout options
-        renderTermsAndSubmitSection(section);
+        renderTermsAndSubmitSection();
         
         if (formWrapper) formWrapper.hidden = false;
     }
     
-    function renderAdditionalLocations(sectionRoot, quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
+    function renderAdditionalLocations(quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
         // renderAdditionalLocations called
-        if (!sectionRoot) return;
-        // No caching/reuse allowed: remove and rebuild additional locations each time.
-        var existingLocations = sectionRoot.querySelectorAll('.member-additional-location');
+        
+        // Remove existing additional locations
+        var existingLocations = formFields.querySelectorAll('.member-additional-location');
         existingLocations.forEach(function(el) {
             el.remove();
         });
@@ -2590,7 +2203,7 @@ const MemberModule = (function() {
         }
         
         // Find insertion point - before checkout options section
-        var checkoutSection = sectionRoot.querySelector('.member-checkout-wrapper');
+        var checkoutSection = formFields.querySelector('.member-checkout-wrapper');
         if (!checkoutSection) {
             console.warn('[Member] Checkout section not found, cannot render additional locations');
             return;
@@ -2608,9 +2221,9 @@ const MemberModule = (function() {
             locationSection.dataset.locationNumber = i;
             
             // Location header
-            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + ' ' + i;
             var locationHeader = document.createElement('h3');
             locationHeader.className = 'member-additional-location-header';
+            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + ' ' + i;
             locationHeader.textContent = locationName;
             locationSection.appendChild(locationHeader);
             
@@ -2635,6 +2248,8 @@ const MemberModule = (function() {
                 container: locationSection,
                 defaultCurrency: null
             });
+            
+            // Built fieldset for location
             locationSection.appendChild(locationFieldsetClone);
             
             // Then, render must-repeat fieldsets
@@ -2661,7 +2276,7 @@ const MemberModule = (function() {
             
             // Insert before checkout options
             // Inserting location section before checkout section
-            sectionRoot.insertBefore(locationSection, checkoutSection);
+            formFields.insertBefore(locationSection, checkoutSection);
         }
         
         // Finished rendering additional locations
@@ -2723,8 +2338,8 @@ const MemberModule = (function() {
         }
     }
     
-    function renderCheckoutOptionsSection(sectionRoot) {
-        if (!sectionRoot || checkoutOptions.length === 0) return;
+    function renderCheckoutOptionsSection() {
+        if (!formFields || checkoutOptions.length === 0) return;
         
         // Get subcategory data for surcharge and type
         var surcharge = 0;
@@ -2778,14 +2393,14 @@ const MemberModule = (function() {
             });
         }
         
-        sectionRoot.appendChild(wrapper);
+        formFields.appendChild(wrapper);
     }
     
     // Form terms agreement row element
     var formTermsCheckbox = null;
     
-    function renderTermsAndSubmitSection(sectionRoot) {
-        if (!sectionRoot) return;
+    function renderTermsAndSubmitSection() {
+        if (!formFields) return;
         
         // Terms agreement row
         var termsWrapper = document.createElement('div');
@@ -2820,7 +2435,7 @@ const MemberModule = (function() {
         checkboxWrapper.appendChild(labelText);
         checkboxWrapper.appendChild(termsLinkInline);
         termsWrapper.appendChild(checkboxWrapper);
-        sectionRoot.appendChild(termsWrapper);
+        formFields.appendChild(termsWrapper);
         
         // Submit buttons container
         var actionsWrapper = document.createElement('div');
@@ -2848,7 +2463,7 @@ const MemberModule = (function() {
         }
         
         actionsWrapper.appendChild(adminSubmitBtn);
-        sectionRoot.appendChild(actionsWrapper);
+        formFields.appendChild(actionsWrapper);
     }
     
     function updateSubmitButtonState() {
@@ -3027,20 +2642,8 @@ const MemberModule = (function() {
     
     function setAuthPanel(target) {
         if (!authForm || authForm.dataset.state === 'logged-in') return;
-
-        // Registration is disabled for testing
-        if (!ENABLE_REGISTRATION && target === 'register') {
-            target = 'login';
-        }
         
         var isLogin = target === 'login';
-
-        // Isolate DOM so password managers can't scan login + register simultaneously.
-        if (isLogin) {
-            clearRegisterPanelDom();
-        } else {
-            ensureRegisterPanelDom();
-        }
         
         // Update subtab buttons
         if (loginTab) loginTab.classList.toggle('member-auth-tab--selected', isLogin);
@@ -3529,14 +3132,6 @@ const MemberModule = (function() {
                 profilePanel.hidden = false;
                 profilePanel.removeAttribute('inert');
             }
-
-            // Build profile edit inputs only when logged in
-            ensureProfileEditDom();
-
-            // Now that we're logged in, it's safe to load avatar choices and render the grids.
-            ensureAvatarChoicesReady().then(function() {
-                renderAvatarGrids();
-            });
             
             // Update profile display
             if (profileAvatar) {
@@ -3560,6 +3155,7 @@ const MemberModule = (function() {
             pendingProfileAvatarBlob = null;
             avatarSelection.profile = 'self';
             updateProfileSaveState();
+            renderAvatarGrids();
             
             // Hide auth tabs when logged in
             if (authTabs) authTabs.classList.add('member-auth-tabs--logged-in');
@@ -3589,9 +3185,6 @@ const MemberModule = (function() {
                 profilePanel.hidden = true;
                 profilePanel.setAttribute('inert', '');
             }
-
-            // Remove profile edit inputs while logged out so extensions can’t scan them.
-            clearProfileEditDom();
             
             // Clear profile display
             if (profileAvatar) {
@@ -3603,6 +3196,9 @@ const MemberModule = (function() {
             if (profileEmail) profileEmail.textContent = '';
             
             profileOriginalName = '';
+            if (profileEditNameInput) profileEditNameInput.value = '';
+            if (profileEditPasswordInput) profileEditPasswordInput.value = '';
+            if (profileEditConfirmInput) profileEditConfirmInput.value = '';
             profileOriginalAvatarUrl = '';
             pendingAvatarUrl = '';
             pendingProfileSiteUrl = '';
@@ -3614,6 +3210,7 @@ const MemberModule = (function() {
             avatarSelection.register = 'self';
             avatarSelection.profile = 'self';
             updateProfileSaveState();
+            renderAvatarGrids();
             
             // Show auth tabs
             if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');
@@ -3622,7 +3219,7 @@ const MemberModule = (function() {
             if (registerFormEl) registerFormEl.hidden = false;
             
             // Show appropriate auth panel
-            var active = (ENABLE_REGISTRATION && authForm.dataset.active === 'register') ? 'register' : 'login';
+            var active = authForm.dataset.active === 'register' ? 'register' : 'login';
             setAuthPanel(active);
             
             // Update header (no avatar)

@@ -761,12 +761,12 @@
             </div>
             
             <!-- Login Panel -->
-            <form id="memberAuthFormLogin" class="member-auth-form" autocomplete="on">
+            <form id="memberAuthFormLogin" class="member-auth-form" autocomplete="off">
               <section id="member-auth-login" class="member-auth-panel" role="tabpanel">
                 <label class="member-auth-panel-label" for="memberLoginEmail">Email</label>
-                <input type="email" id="memberLoginEmail" class="member-auth-panel-input" name="username" autocomplete="username">
+                <input type="email" id="memberLoginEmail" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
                 <label class="member-auth-panel-label" for="memberLoginPassword">Password</label>
-                <input type="password" id="memberLoginPassword" class="member-auth-panel-input" name="password" autocomplete="current-password">
+                <input type="password" id="memberLoginPassword" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
                 <button type="submit" class="member-button-auth member-auth-submit" data-action="login">Log In</button>
               </section>
             </form>
@@ -774,8 +774,17 @@
             <!-- Register Panel -->
             <form id="memberAuthFormRegister" class="member-auth-form" autocomplete="off">
               <section id="member-auth-register" class="member-auth-panel member-auth-panel--hidden" role="tabpanel" hidden>
-                <!-- Intentionally built dynamically when Register subtab is active.
-                     This prevents password managers from scanning Login + Register at once. -->
+                <label class="member-auth-panel-label" for="member-register-name">Username</label>
+                <input type="text" id="member-register-name" class="member-auth-panel-input" name="registerName" autocomplete="name">
+                <label class="member-auth-panel-label" for="member-register-email">Email</label>
+                <input type="email" id="member-register-email" class="member-auth-panel-input" name="registerEmail" autocomplete="email">
+                <label class="member-auth-panel-label" for="member-register-password">Password</label>
+                <input type="password" id="member-register-password" class="member-auth-panel-input" name="registerPassword" autocomplete="new-password">
+                <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
+                <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
+                <label class="member-auth-panel-label">Avatar</label>
+                <div id="member-avatar-grid-register" class="member-avatar-grid" aria-label="Avatar choices"></div>
+                <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
               </section>
             </form>
             
@@ -791,8 +800,12 @@
               <label class="member-auth-panel-label">Avatar</label>
               <div id="member-avatar-grid-profile" class="member-avatar-grid" aria-label="Avatar choices"></div>
               <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
-                <!-- Intentionally built dynamically only when logged in.
-                     Prevents password managers scanning hidden profile password fields while logged out. -->
+                <label class="member-auth-panel-label" for="member-profile-edit-name">Username</label>
+                <input type="text" id="member-profile-edit-name" class="member-auth-panel-input" autocomplete="name">
+                <label class="member-auth-panel-label" for="member-profile-edit-password">New Password</label>
+                <input type="password" id="member-profile-edit-password" class="member-auth-panel-input" autocomplete="new-password">
+                <label class="member-auth-panel-label" for="member-profile-edit-confirm">Confirm Password</label>
+                <input type="password" id="member-profile-edit-confirm" class="member-auth-panel-input" autocomplete="new-password">
               </form>
               <div class="member-profile-actions">
                 <button type="button" class="member-button-auth member-profile-actions-btn" id="member-logout-btn">Log Out</button>
@@ -809,7 +822,12 @@
              CREATE POST TAB
              ================================================================ -->
         <section id="member-tab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-create-btn" hidden>
-          <!-- Intentionally built dynamically only when Create Post tab is active. -->
+          <div class="member-formpicker-container">
+            <div class="member-formpicker-cats" id="member-formpicker-cats" aria-label="Categories"></div>
+          </div>
+          <div id="member-create-form-wrapper" class="member-form-container" hidden>
+            <div id="member-create-fields" class="member-create-fields" role="group" aria-live="polite"></div>
+          </div>
         </section>
         
         <!-- ================================================================

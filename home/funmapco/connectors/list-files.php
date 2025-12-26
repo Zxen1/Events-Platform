@@ -106,8 +106,6 @@ try {
             return;
         }
         require_once $configPath;
-        require_once __DIR__ . '/_compat-db-guard.php';
-        funmap_assert_db_compat();
 
         $pdo = null;
         if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {
@@ -294,8 +292,6 @@ try {
         return;
     }
     require_once $configPath;
-    require_once __DIR__ . '/_compat-db-guard.php';
-    funmap_assert_db_compat();
 
     $pdo = null;
     if (isset($GLOBALS['pdo']) && $GLOBALS['pdo'] instanceof PDO) {
@@ -355,13 +351,10 @@ try {
                 $storageZoneName = $zoneRow && isset($zoneRow['setting_value']) ? trim($zoneRow['setting_value']) : '';
 
                 if ($storageApiKey === '' || $storageZoneName === '') {
-                    // Don't throw a hard 500 here; this endpoint is used for background sync.
-                    // Return a clean JSON response so the frontend can skip sync without noisy console 500s.
-                    http_response_code(200);
+                    http_response_code(500);
                     echo json_encode([
                         'success' => false,
                         'message' => 'Bunny Storage API credentials not configured',
-                        'icons' => [],
                     ]);
                     return;
                 }

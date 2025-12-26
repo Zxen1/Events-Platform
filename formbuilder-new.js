@@ -42,6 +42,13 @@
     var checkoutOptions = []; // Module-local storage
     var siteCurrency = ''; // Module-local storage
     
+    // Scroll anchoring (keeps clicked accordion headers stationary when panels above collapse)
+    var scrollContainer = null;
+    var scrollGapEl = null;
+    var scrollGapBottomEl = null;
+    var isAdjustingScroll = false;
+    var suppressGapConsumeUntil = 0;
+    
     // Reference data (not for change tracking - just data needed to build the UI)
     var loadedFieldsets = [];
     var loadedCurrencies = [];
@@ -50,21 +57,195 @@
     
     function findScrollContainer() {
         if (!container) return null;
+        if (scrollContainer && scrollContainer.isConnected) return scrollContainer;
+        
         // Admin panel body is the intended scroll container in the new site
-        return container.closest('.admin-panel-body') || container.closest('.admin-panel-content') || (document.scrollingElement || document.documentElement);
+        scrollContainer = container.closest('.admin-panel-body') || container.closest('.admin-panel-content');
+        if (!scrollContainer) {
+            scrollContainer = document.scrollingElement || document.documentElement;
+        }
+        return scrollContainer;
+    }
+    
+    function ensureScrollGap() {
+        if (!container) return null;
+        if (scrollGapEl && scrollGapEl.isConnected) return scrollGapEl;
+        
+        scrollGapEl = container.querySelector('.formbuilder-scroll-gap');
+        if (!scrollGapEl) {
+            scrollGapEl = document.createElement('div');
+            scrollGapEl.className = 'formbuilder-scroll-gap';
+            scrollGapEl.setAttribute('aria-hidden', 'true');
+            container.insertBefore(scrollGapEl, container.firstChild);
+        } else {
+            // Keep it at the top
+            if (container.firstChild !== scrollGapEl) {
+                container.insertBefore(scrollGapEl, container.firstChild);
+            }
+        }
+        return scrollGapEl;
     }
 
+    function ensureScrollGapBottom() {
+        if (!container) return null;
+        if (scrollGapBottomEl && scrollGapBottomEl.isConnected) {
+            // Keep it at the bottom, but avoid re-appending on every call (can trigger
+            // expensive MutationObserver work / console errors in external scripts).
+            if (container.lastChild !== scrollGapBottomEl) {
+                container.appendChild(scrollGapBottomEl);
+            }
+            return scrollGapBottomEl;
+        }
+
+        scrollGapBottomEl = container.querySelector('.formbuilder-scroll-gap-bottom');
+        if (!scrollGapBottomEl) {
+            scrollGapBottomEl = document.createElement('div');
+            scrollGapBottomEl.className = 'formbuilder-scroll-gap-bottom';
+            scrollGapBottomEl.setAttribute('aria-hidden', 'true');
+        }
+        // Ensure it's last (once)
+        if (container.lastChild !== scrollGapBottomEl) {
+            container.appendChild(scrollGapBottomEl);
+        }
+        return scrollGapBottomEl;
+    }
+    
+    function getGapHeight() {
+        var el = ensureScrollGap();
+        if (!el) return 0;
+        return el.offsetHeight || 0;
+    }
+    
+    function setGapHeight(px) {
+        var el = ensureScrollGap();
+        if (!el) return;
+        var next = Math.max(0, Math.round(px || 0));
+        el.style.height = next ? (next + 'px') : '0px';
+    }
+
+    function getBottomGapHeight() {
+        var el = ensureScrollGapBottom();
+        if (!el) return 0;
+        return el.offsetHeight || 0;
+    }
+
+    function setBottomGapHeight(px) {
+        var el = ensureScrollGapBottom();
+        if (!el) return;
+        var next = Math.max(0, Math.round(px || 0));
+        el.style.height = next ? (next + 'px') : '0px';
+    }
+    
+    function maybeConsumeGapOnScroll() {
+        if (isAdjustingScroll) return;
+        if (suppressGapConsumeUntil && Date.now() < suppressGapConsumeUntil) return;
+        
+        var sc = findScrollContainer();
+        if (!sc) return;
+        
+        // IMPORTANT: do not call ensure/append helpers here; scroll handlers must avoid
+        // DOM mutations. External scripts may observe mutations and throw.
+        var gap = (scrollGapEl && scrollGapEl.isConnected) ? (scrollGapEl.offsetHeight || 0) : 0;
+        var bottomGap = (scrollGapBottomEl && scrollGapBottomEl.isConnected) ? (scrollGapBottomEl.offsetHeight || 0) : 0;
+        if (!gap && !bottomGap) return;
+        
+        // If the user scrolls up into the gap, remove the gap so they never see blank space.
+        if (sc.scrollTop < gap) {
+            var reduceBy = gap - sc.scrollTop;
+            isAdjustingScroll = true;
+            setGapHeight(gap - reduceBy);
+            sc.scrollTop = 0;
+            isAdjustingScroll = false;
+        }
+
+        // If the user scrolls down into the bottom gap, remove it so they never see blank space.
+        if (bottomGap) {
+            var maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
+            var distanceToBottom = maxScrollTop - sc.scrollTop;
+            if (distanceToBottom < bottomGap) {
+                var reduceBottomBy = bottomGap - distanceToBottom;
+                isAdjustingScroll = true;
+                setBottomGapHeight(bottomGap - reduceBottomBy);
+                sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
+                isAdjustingScroll = false;
+            }
+        }
+    }
+    
     function runWithScrollAnchor(anchorEl, fn) {
-        if (window.App && typeof App.runWithScrollAnchor === 'function') {
-            App.runWithScrollAnchor(anchorEl, fn, {
-                scrollContainer: findScrollContainer(),
-                slackContainer: container,
-                topGapClass: 'formbuilder-scroll-gap',
-                bottomGapClass: 'formbuilder-scroll-gap-bottom'
-            });
+        var sc = findScrollContainer();
+        if (!sc || !anchorEl || typeof fn !== 'function') {
+            if (typeof fn === 'function') fn();
             return;
         }
-        if (typeof fn === 'function') fn();
+
+        // Anchoring only works when the anchor element is inside the scroll container.
+        // If someone clicks a control outside the scroll area (e.g., panel header buttons),
+        // skip anchoring rather than mis-adjusting scroll.
+        if (!sc.contains(anchorEl)) {
+            fn();
+            return;
+        }
+
+        // Prevent our scroll-gap cleanup handler from immediately consuming the slack we add
+        // while anchoring (scroll events can fire async after scrollTop changes).
+        suppressGapConsumeUntil = Date.now() + 250;
+        
+        ensureScrollGap();
+        ensureScrollGapBottom();
+        
+        var scRect = sc.getBoundingClientRect();
+        var anchorRect = anchorEl.getBoundingClientRect();
+        var oldTop = anchorRect.top - scRect.top;
+        var oldScrollTop = sc.scrollTop;
+        
+        fn();
+        
+        requestAnimationFrame(function() {
+            if (!anchorEl.isConnected) return;
+            var scNow = findScrollContainer();
+            if (!scNow) return;
+
+            // If content collapse shrank scrollHeight, the browser may clamp scrollTop down.
+            // Add bottom slack so the original scrollTop stays valid, then restore it.
+            var maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (oldScrollTop > maxAfter) {
+                var clampSlack = oldScrollTop - maxAfter;
+                setBottomGapHeight(getBottomGapHeight() + clampSlack);
+                // Force layout so new maxScrollTop applies before we restore
+                void scNow.scrollHeight;
+            }
+            
+            isAdjustingScroll = true;
+            scNow.scrollTop = oldScrollTop;
+            isAdjustingScroll = false;
+            
+            var scNowRect = scNow.getBoundingClientRect();
+            var newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+            var delta = newTop - oldTop;
+            if (!delta) return;
+            
+            var currentScrollTop = scNow.scrollTop;
+            
+            // If we'd need to scroll above 0 to keep the anchor stationary, create gap slack instead.
+            if (currentScrollTop + delta < 0) {
+                var topSlack = -(currentScrollTop + delta);
+                setGapHeight(getGapHeight() + topSlack);
+                delta = delta + topSlack;
+            }
+
+            // If we'd need to scroll past maxScrollTop, create bottom slack instead.
+            var maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+            if (currentScrollTop + delta > maxNow) {
+                var bottomSlack = (currentScrollTop + delta) - maxNow;
+                setBottomGapHeight(getBottomGapHeight() + bottomSlack);
+                void scNow.scrollHeight;
+            }
+            
+            isAdjustingScroll = true;
+            scNow.scrollTop = currentScrollTop + delta;
+            isAdjustingScroll = false;
+        });
     }
     
     // Use central icon registry from AdminModule
@@ -560,67 +741,81 @@
                    target.closest('.formbuilder-formpreview-modal');
         }
         
-        // All formbuilder click-away behavior is consolidated into ONE detachable handler.
-        // This avoids stacking multiple document handlers and helps with tab isolation.
-        if (bindDocumentListeners._docClickHandler) return;
-        bindDocumentListeners._docClickHandler = function(e) {
+        // Close category/subcategory edit panels when clicking outside
+        document.addEventListener('click', function(e) {
             if (!container) return;
-            var t = e && e.target;
-            if (!t || typeof t !== 'object' || typeof t.nodeType !== 'number') return;
-
-            // Only run when the forms tab is actually active (tabs behave like pages).
-            var formsTab = container.closest('#admin-tab-forms');
-            if (formsTab && !formsTab.classList.contains('admin-tab-panel--active')) return;
-
             // Don't close if clicking on save/discard buttons or calculator
-            if (isSaveOrDiscardButton(t) || isCalculatorButtonOrPopup(t)) return;
-
-            // 1) Close category/subcategory edit panels when clicking outside their drawer
-            var openCategoryDrawer = container.querySelector('.formbuilder-accordion.formbuilder-accordion--editing');
-            if (!(openCategoryDrawer && openCategoryDrawer.contains(t))) {
-                var anchorA = t.closest(
-                    '.formbuilder-accordion-option-header,' +
-                    '.formbuilder-accordion-header,' +
-                    '.formbuilder-accordion-option-editarea,' +
-                    '.formbuilder-accordion-header-editarea,' +
-                    'button'
-                ) || t;
-                runWithScrollAnchor(anchorA, function() {
-                    closeAllEditPanels();
-                });
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
+            if (!e.target.closest('.formbuilder-accordion-editpanel') && 
+                !e.target.closest('.formbuilder-accordion-option-editpanel') &&
+                !e.target.closest('.formbuilder-accordion-header-editarea') &&
+                !e.target.closest('.formbuilder-accordion-option-editarea') &&
+                !e.target.closest('.formbuilder-accordion-header') &&
+                !e.target.closest('.formbuilder-accordion-option-header')) {
+                closeAllEditPanels();
             }
-
-            // 2) Close 3-dot menus when clicking outside
-            if (!t.closest('.formbuilder-accordion-editpanel-more')) {
+        });
+        
+        // Close 3-dot menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
+            if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
                 container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
                     el.classList.remove('open');
                 });
             }
-
-            // 3) Close fieldset menus when clicking outside
-            if (!t.closest('.formbuilder-fieldset-menu')) {
+        });
+        
+        // Close fieldset menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
+            // Check if click is inside any fieldset menu (button or options)
+            var clickedInsideMenu = e.target.closest('.formbuilder-fieldset-menu');
+            if (!clickedInsideMenu) {
+                // Click was outside - close all open fieldset menus
                 container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
                     el.classList.remove('open');
                 });
             }
-
-            // 4) Close icon picker menus when clicking outside
-            if (!t.closest('.formbuilder-menu')) {
+        });
+        
+        // Close icon picker menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
+            if (!e.target.closest('.formbuilder-menu')) {
                 container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
                     el.classList.remove('open');
                 });
             }
-
-            // 5) Close field 3-dot menus when clicking outside
-            if (!t.closest('.formbuilder-field-more')) {
+        });
+        
+        // Close field 3-dot menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
+            if (!e.target.closest('.formbuilder-field-more')) {
                 container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
                     el.classList.remove('open');
                 });
             }
-
-            // 6) Close field edit panels when clicking outside
-            if (!t.closest('.formbuilder-field-wrapper')) {
-                var anchorB = t.closest(
+        });
+        
+        // Close field edit panels when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!container) return;
+            // Don't close if clicking on save/discard buttons or calculator
+            if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
+            if (!e.target.closest('.formbuilder-field-wrapper')) {
+                // Keep the clicked thing stationary while the field edit panel above collapses.
+                // This matches the category/subcategory anchoring behavior.
+                var anchor = e.target.closest(
                     '.formbuilder-fieldset-menu-button,' +
                     '.formbuilder-menu-button,' +
                     '.formbuilder-add-button,' +
@@ -629,16 +824,13 @@
                     '.formbuilder-accordion-option-header,' +
                     '.formbuilder-accordion-header,' +
                     'button'
-                ) || t;
-
-                runWithScrollAnchor(anchorB, function() {
-                    closeAllFieldEditPanels();
+                ) || e.target;
+                
+                runWithScrollAnchor(anchor, function() {
+                closeAllFieldEditPanels();
                 });
             }
-        };
-
-        // Capture so we run before other handlers that may remove DOM
-        document.addEventListener('click', bindDocumentListeners._docClickHandler, true);
+        });
     }
     
     function loadFormData() {
@@ -2440,16 +2632,6 @@
     }
     
     var isInitialized = false;
-    function detachDocumentListeners() {
-        if (bindDocumentListeners._docClickHandler) {
-            try {
-                document.removeEventListener('click', bindDocumentListeners._docClickHandler, true);
-            } catch (e) {
-                // ignore
-            }
-            bindDocumentListeners._docClickHandler = null;
-        }
-    }
     
     function init() {
         if (isInitialized) return;
@@ -2457,35 +2639,25 @@
         container = document.getElementById('admin-formbuilder');
         if (!container) return;
         
+        // Ensure gap exists early and bind scroll handler (kept lightweight; only runs for admin panel scroll events)
+        ensureScrollGap();
+        ensureScrollGapBottom();
+        var sc = findScrollContainer();
+        if (sc) {
+            sc.addEventListener('scroll', maybeConsumeGapOnScroll, { passive: true });
+        }
+        
         bindDocumentListeners();
         loadFormData();
         isInitialized = true;
     }
     
-    // Tabs behave like pages: init/attach only when the forms tab is active.
+    // Listen for admin panel open - only load data when panel actually opens
     if (window.App && App.on) {
         App.on('admin:opened', function() {
-            // If forms tab is already active on open, init immediately.
-            var el = document.getElementById('admin-tab-forms');
-            if (el && el.classList.contains('admin-tab-panel--active') && !isInitialized) {
+            if (!isInitialized) {
                 init();
             }
-        });
-
-        App.on('admin:tab-switched', function(evt) {
-            var name = evt && evt.tabName ? String(evt.tabName) : '';
-            if (name === 'forms') {
-                if (!isInitialized) init();
-                // Ensure click-away handler is attached while this tab is active.
-                bindDocumentListeners();
-            } else {
-                // Detach global listeners when leaving this tab.
-                detachDocumentListeners();
-            }
-        });
-
-        App.on('admin:closed', function() {
-            detachDocumentListeners();
         });
     }
     
