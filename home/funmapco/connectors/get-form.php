@@ -1232,6 +1232,9 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'name' => $customName !== null ? $customName : $fieldsetName,
                     'placeholder' => $matchingFieldset['placeholder'] ?? $matchingFieldset['fieldset_placeholder'] ?? '',
                     'required' => $requiredValue,
+                    'location_repeat' => $locationRepeatValue,
+                    'must_repeat' => $mustRepeatValue,
+                    'autofill_repeat' => $autofillRepeatValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],
                 ];
