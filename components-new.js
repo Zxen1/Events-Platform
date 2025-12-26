@@ -548,7 +548,7 @@ const FieldsetComponent = (function(){
                 } catch (err2) {}
             }
         });
-
+        
         function updateCharCount() {
             if (typeof maxLength !== 'number' || !isFinite(maxLength) || maxLength <= 0) {
                 charCount.style.display = 'none';
@@ -613,15 +613,15 @@ const FieldsetComponent = (function(){
         input.addEventListener('change', function() {
             updateCharCount();
         });
-
+        
         input.addEventListener('blur', function() {
             touched = true;
             updateCharCount();
             validate();
         });
-
+        
         // Initial render
-        updateCharCount();
+            updateCharCount();
         
         return { charCount: charCount };
     }
@@ -1542,7 +1542,7 @@ const FieldsetComponent = (function(){
                             dragStartIndex = -1;
                         });
                         // Dragover on each thumb is handled at container level for grid-friendly ordering
-
+                        
                         imagesContainer.appendChild(thumb);
                     });
                     
@@ -4688,7 +4688,7 @@ const CheckoutOptionsComponent = (function(){
             var total = (flagfall || 0) + (variable * (1 + (surchargePct || 0) / 100));
             return { hasDates: true, total: total, primaryDays: maxDays };
         }
-
+        
         var group = document.createElement('div');
         group.className = 'member-checkout-group';
         group.dataset.isEvent = isEvent ? 'true' : 'false';
@@ -4862,36 +4862,36 @@ const CheckoutOptionsComponent = (function(){
 
                 if (isEvent) {
                     var nowHasDates = Array.isArray(eventVenueDays) && eventVenueDays.length === locationCount && eventVenueDays.every(function(d){ return (parseInt(d, 10) || 0) > 0; });
-                    group.querySelectorAll('.member-checkout-option').forEach(function(card, idx) {
-                        var radio = card.querySelector('input[type="radio"]');
-                        var priceDisplay = card.querySelector('.member-checkout-price-display');
-                        if (nowHasDates) {
-                            card.classList.remove('member-checkout-option--disabled');
-                            if (radio) {
-                                radio.disabled = false;
-                                if (idx === 0 && !group.querySelector('input[type="radio"]:checked')) {
-                                    radio.checked = true;
-                                }
-                            }
-                            if (priceDisplay) {
-                                var flagfall = parseFloat(card.dataset.flagfall) || 0;
-                                var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
-                                var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
-                                var curr = card.dataset.currency || null;
-                                var res = computeEventTotal(flagfall, basicRate, discountRate, eventVenueDays, locationCount, surchargePercent);
-                                priceDisplay.textContent = '(Primary ' + res.primaryDays + ' days, ' + locationCount + ' venues) — ' + (res.total > 0 ? curr + ' ' + res.total.toFixed(2) : 'Free');
-                            }
-                        } else {
-                            card.classList.add('member-checkout-option--disabled');
-                            if (radio) {
-                                radio.disabled = true;
-                                radio.checked = false;
-                            }
-                            if (priceDisplay) {
-                                priceDisplay.textContent = 'Select session dates for all venues for price';
+                group.querySelectorAll('.member-checkout-option').forEach(function(card, idx) {
+                    var radio = card.querySelector('input[type="radio"]');
+                    var priceDisplay = card.querySelector('.member-checkout-price-display');
+                    if (nowHasDates) {
+                        card.classList.remove('member-checkout-option--disabled');
+                        if (radio) {
+                            radio.disabled = false;
+                            if (idx === 0 && !group.querySelector('input[type="radio"]:checked')) {
+                                radio.checked = true;
                             }
                         }
-                    });
+                        if (priceDisplay) {
+                            var flagfall = parseFloat(card.dataset.flagfall) || 0;
+                            var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
+                            var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
+                            var curr = card.dataset.currency || null;
+                                var res = computeEventTotal(flagfall, basicRate, discountRate, eventVenueDays, locationCount, surchargePercent);
+                                priceDisplay.textContent = '(Primary ' + res.primaryDays + ' days, ' + locationCount + ' venues) — ' + (res.total > 0 ? curr + ' ' + res.total.toFixed(2) : 'Free');
+                        }
+                    } else {
+                        card.classList.add('member-checkout-option--disabled');
+                        if (radio) {
+                            radio.disabled = true;
+                            radio.checked = false;
+                        }
+                        if (priceDisplay) {
+                                priceDisplay.textContent = 'Select session dates for all venues for price';
+                        }
+                    }
+                });
                 } else {
                     // General: update 30/365 prices and radio datasets based on locations + surcharge
                     group.querySelectorAll('.member-checkout-option').forEach(function(card) {

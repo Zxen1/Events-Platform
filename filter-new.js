@@ -37,6 +37,7 @@ const FilterModule = (function() {
     var calendarInstance = null;
     var dateStart = null;
     var dateEnd = null;
+    var outsideCloseBound = false;
 
 
     /* --------------------------------------------------------------------------
@@ -71,13 +72,20 @@ const FilterModule = (function() {
     }
     
     function initBackdropClose() {
-        var backdrop = panelEl.querySelector('.filter-panel-backdrop');
-        if (backdrop) {
-            backdrop.addEventListener('click', function() {
-                closePanel();
-                App.emit('filter:closed');
-            });
-        }
+        if (outsideCloseBound) return;
+        outsideCloseBound = true;
+        
+        // "Click outside to close" WITHOUT any click-capture overlay.
+        // This keeps map clicks working and does not block DevTools inspection.
+        document.addEventListener('pointerdown', function(e) {
+            if (!panelEl || !contentEl) return;
+            if (!panelEl.classList.contains('show')) return;
+            if (!e || !e.target) return;
+            if (contentEl.contains(e.target)) return;
+            
+            closePanel();
+            App.emit('filter:closed');
+        }, true);
     }
 
 

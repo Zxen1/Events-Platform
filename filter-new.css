@@ -65,12 +65,12 @@
 /* Panel backdrop - click to close */
 .filter-panel-backdrop {
   position: absolute;
-  top: 0;
+  top: calc(var(--header-h) + var(--safe-top));
   left: 0;
   right: 0;
   bottom: 0;
   background: transparent;
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 /* Panel header */

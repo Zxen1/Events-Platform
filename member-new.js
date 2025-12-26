@@ -2077,7 +2077,7 @@ const MemberModule = (function() {
                     setFieldsetLabelNumber(fs, shouldNumber ? 1 : null);
                 });
             }
-
+            
             // Second pass: render fields with location quantity selector
             fields.forEach(function(fieldData, index) {
                 var field = ensureFieldDefaults(fieldData);
@@ -2518,7 +2518,7 @@ const MemberModule = (function() {
                 });
             }
         }
-
+        
         // Create checkout options using CheckoutOptionsComponent
         if (typeof CheckoutOptionsComponent !== 'undefined') {
             // Location quantity is tracked outside checkout; store globally so updates can read it.
