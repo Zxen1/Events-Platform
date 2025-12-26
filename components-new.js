@@ -721,6 +721,9 @@ const FieldsetComponent = (function(){
         
         var key = fieldData.fieldset_key || fieldData.key;
         var name = fieldData.fieldset_name || fieldData.name;
+        if (typeof key === 'string' && key.trim() !== '') {
+            fieldset.dataset.fieldsetKey = key;
+        }
         
         // Get tooltip: check customTooltip first (editable fieldsets), then tooltip, then fieldset_tooltip
         var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip;
@@ -733,11 +736,19 @@ const FieldsetComponent = (function(){
             }
         }
         
-        var placeholder = fieldData.fieldset_placeholder;
+        var placeholder = fieldData.customPlaceholder || fieldData.fieldset_placeholder;
         var minLength = fieldData.min_length;
         var maxLength = fieldData.max_length;
         var fieldOptions = fieldData.fieldset_options || fieldData.options;
         var fields = fieldData.fieldset_fields;
+
+        function applyPlaceholder(el, value) {
+            if (!el) return;
+            if (typeof value !== 'string') return;
+            var v = value.trim();
+            if (!v) return;
+            el.placeholder = v;
+        }
         
         // Build based on fieldset type
         switch (key) {
@@ -746,7 +757,7 @@ const FieldsetComponent = (function(){
                 var titleInput = document.createElement('input');
                 titleInput.type = 'text';
                 titleInput.className = 'fieldset-input';
-                titleInput.placeholder = placeholder;
+                applyPlaceholder(titleInput, placeholder);
                 var titleValidation = addInputValidation(titleInput, minLength, maxLength, null);
                 fieldset.appendChild(titleInput);
                 fieldset.appendChild(titleValidation.charCount);
@@ -757,7 +768,7 @@ const FieldsetComponent = (function(){
                 var couponInput = document.createElement('input');
                 couponInput.type = 'text';
                 couponInput.className = 'fieldset-input';
-                couponInput.placeholder = placeholder;
+                applyPlaceholder(couponInput, placeholder);
                 var couponValidation = addInputValidation(couponInput, minLength, maxLength, null);
                 fieldset.appendChild(couponInput);
                 fieldset.appendChild(couponValidation.charCount);
@@ -767,7 +778,7 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var descTextarea = document.createElement('textarea');
                 descTextarea.className = 'fieldset-textarea';
-                descTextarea.placeholder = placeholder;
+                applyPlaceholder(descTextarea, placeholder);
                 var descValidation = addInputValidation(descTextarea, minLength, maxLength, null);
                 fieldset.appendChild(descTextarea);
                 fieldset.appendChild(descValidation.charCount);
@@ -778,7 +789,7 @@ const FieldsetComponent = (function(){
                 var textBoxInput = document.createElement('input');
                 textBoxInput.type = 'text';
                 textBoxInput.className = 'fieldset-input';
-                textBoxInput.placeholder = placeholder;
+                applyPlaceholder(textBoxInput, placeholder);
                 var textBoxValidation = addInputValidation(textBoxInput, minLength, maxLength, null);
                 fieldset.appendChild(textBoxInput);
                 fieldset.appendChild(textBoxValidation.charCount);
@@ -788,7 +799,7 @@ const FieldsetComponent = (function(){
                 fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
                 var editableTextarea = document.createElement('textarea');
                 editableTextarea.className = 'fieldset-textarea';
-                editableTextarea.placeholder = placeholder;
+                applyPlaceholder(editableTextarea, placeholder);
                 var textareaValidation = addInputValidation(editableTextarea, minLength, maxLength, null);
                 fieldset.appendChild(editableTextarea);
                 fieldset.appendChild(textareaValidation.charCount);
@@ -830,7 +841,7 @@ const FieldsetComponent = (function(){
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
                 emailInput.className = 'fieldset-input';
-                emailInput.placeholder = placeholder;
+                applyPlaceholder(emailInput, placeholder);
                 var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
                 fieldset.appendChild(emailInput);
                 fieldset.appendChild(emailValidation.charCount);
@@ -844,7 +855,7 @@ const FieldsetComponent = (function(){
                 var phoneInput = document.createElement('input');
                 phoneInput.type = 'tel';
                 phoneInput.className = 'fieldset-input';
-                phoneInput.placeholder = placeholder;
+                applyPlaceholder(phoneInput, placeholder);
                 makePhoneDigitsOnly(phoneInput);
                 var phoneValidation = addInputValidation(phoneInput, minLength, maxLength, null);
                 phoneRow.appendChild(phoneInput);
@@ -858,9 +869,7 @@ const FieldsetComponent = (function(){
                 var addrInputEl = document.createElement('input');
                 addrInputEl.type = 'text';
                 addrInputEl.className = 'fieldset-input';
-                if (placeholder) {
-                    addrInputEl.placeholder = placeholder;
-                }
+                applyPlaceholder(addrInputEl, placeholder);
                 fieldset.appendChild(addrInputEl);
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
@@ -884,9 +893,7 @@ const FieldsetComponent = (function(){
                 var cityInputEl = document.createElement('input');
                 cityInputEl.type = 'text';
                 cityInputEl.className = 'fieldset-input';
-                if (placeholder) {
-                    cityInputEl.placeholder = placeholder;
-                }
+                applyPlaceholder(cityInputEl, placeholder);
                 fieldset.appendChild(cityInputEl);
                 // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
@@ -911,7 +918,7 @@ const FieldsetComponent = (function(){
                 var urlInput = document.createElement('input');
                 urlInput.type = 'text'; // text not url, we handle protocol
                 urlInput.className = 'fieldset-input';
-                urlInput.placeholder = placeholder;
+                applyPlaceholder(urlInput, placeholder);
                 autoUrlProtocol(urlInput);
                 var urlValidation = addInputValidation(urlInput, minLength, maxLength, isValidUrl);
                 fieldset.appendChild(urlInput);

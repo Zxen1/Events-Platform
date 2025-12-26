@@ -2023,7 +2023,11 @@ const MemberModule = (function() {
                 var isMustRepeat = field.must_repeat || field.mustRepeat || mustRepeatIndices.indexOf(index) !== -1;
                 var isAutofillRepeat = field.autofill_repeat || field.autofillRepeat || autofillRepeatIndices.indexOf(index) !== -1;
                 
-                if (isMustRepeat) {
+                // IMPORTANT:
+                // Location fieldset is ALWAYS repeated via its own dedicated location slot.
+                // Do NOT include any location-type fieldset in mustRepeatFieldsets or it can be duplicated.
+                var isLocationKey = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location');
+                if (isMustRepeat && !isLocationKey) {
                     mustRepeatFieldsets.push(field);
                 }
                 if (isAutofillRepeat) {
@@ -2031,6 +2035,43 @@ const MemberModule = (function() {
                 }
             });
             
+            function setFieldsetLabelNumber(fieldsetEl, numberOrNull) {
+                if (!fieldsetEl) return;
+                var labelTextEl = fieldsetEl.querySelector('.fieldset-label-text');
+                if (!labelTextEl) return;
+                if (!fieldsetEl.dataset.baseLabel) {
+                    fieldsetEl.dataset.baseLabel = (labelTextEl.textContent || '').trim();
+                }
+                var base = fieldsetEl.dataset.baseLabel || '';
+                if (!base) return;
+                if (numberOrNull && numberOrNull > 0) {
+                    labelTextEl.textContent = base + ' ' + numberOrNull;
+                } else {
+                    labelTextEl.textContent = base;
+                }
+            }
+
+            function applyMustRepeatNumberingForMainForm() {
+                if (!formFields) return;
+                var shouldNumber = (locationQuantity > 1);
+
+                var mustKeys = {};
+                mustRepeatFieldsets.forEach(function(f) {
+                    var k = (f && (f.fieldsetKey || f.key || f.type)) ? String(f.fieldsetKey || f.key || f.type).toLowerCase() : '';
+                    if (k) mustKeys[k] = true;
+                });
+
+                var all = formFields.querySelectorAll('.fieldset');
+                all.forEach(function(fs) {
+                    if (!fs || (fs.closest && fs.closest('.member-additional-location'))) return;
+                    var k = (fs.dataset && fs.dataset.fieldsetKey) ? String(fs.dataset.fieldsetKey).toLowerCase() : '';
+                    if (!k) return;
+                    if (k === 'venue' || k === 'city' || k === 'address' || k === 'location') return;
+                    if (!mustKeys[k]) return;
+                    setFieldsetLabelNumber(fs, shouldNumber ? 1 : null);
+                });
+            }
+
             // Second pass: render fields with location quantity selector
             fields.forEach(function(fieldData, index) {
                 var field = ensureFieldDefaults(fieldData);
@@ -2117,6 +2158,7 @@ const MemberModule = (function() {
                                 var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
                                 labelTextEl.textContent = baseName + ' 1';
                             }
+                            applyMustRepeatNumberingForMainForm();
                         }
                         
                         // Quantity button handlers
@@ -2135,6 +2177,7 @@ const MemberModule = (function() {
                                         labelTextEl.textContent = baseName + ' 1';
                                     }
                                 }
+                                applyMustRepeatNumberingForMainForm();
                                 
                                 // Re-render additional locations (after checkout section)
                                 // Minus clicked
@@ -2154,6 +2197,7 @@ const MemberModule = (function() {
                                 var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
                                 labelTextEl.textContent = baseName + ' 1';
                             }
+                            applyMustRepeatNumberingForMainForm();
                             
                             // Re-render additional locations (after checkout section)
                             // Plus clicked
@@ -2254,6 +2298,11 @@ const MemberModule = (function() {
             
             // Then, render must-repeat fieldsets
             mustRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
+                // Defensive: location fieldset is rendered separately above; never render it again here.
+                var key = (fieldData && (fieldData.fieldsetKey || fieldData.key || fieldData.type)) ? String(fieldData.fieldsetKey || fieldData.key || fieldData.type).toLowerCase() : '';
+                if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
+                    return;
+                }
                 var fieldset = FieldsetComponent.buildFieldset(fieldData, {
                     idPrefix: 'memberCreate',
                     fieldIndex: fieldIndex,
@@ -2263,6 +2312,18 @@ const MemberModule = (function() {
                 });
                 
                 locationSection.appendChild(fieldset);
+
+                // Number repeated fieldsets by location number (2, 3, 4...)
+                var labelTextEl = fieldset.querySelector('.fieldset-label-text');
+                if (labelTextEl) {
+                    if (!fieldset.dataset.baseLabel) {
+                        fieldset.dataset.baseLabel = (labelTextEl.textContent || '').trim();
+                    }
+                    var base = fieldset.dataset.baseLabel || '';
+                    if (base) {
+                        labelTextEl.textContent = base + ' ' + i;
+                    }
+                }
                 
                 // If autofill-repeat, copy values from first location
                 var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
