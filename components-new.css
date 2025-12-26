@@ -569,6 +569,7 @@
     outline: 2px solid rgba(59, 130, 246, 0.85);
     outline-offset: -2px;
     cursor: grab;
+    user-select: none;
 }
 
 .fieldset-image-thumb.fieldset-image-thumb--dragready:active {

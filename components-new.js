@@ -893,7 +893,16 @@ const FieldsetComponent = (function(){
                     saveBtn: null,
                     img: null,
                     activeEntry: null,
-                    state: { zoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 }
+                    state: {
+                        zoom: 1,
+                        offsetX: 0,
+                        offsetY: 0,
+                        dragging: false,
+                        lastX: 0,
+                        lastY: 0,
+                        didDrag: false,
+                        backdropMouseDown: false
+                    }
                 };
 
                 function ensureCropper() {
@@ -957,10 +966,25 @@ const FieldsetComponent = (function(){
                     cropper.saveBtn = saveBtn;
 
                     // Events
+                    // Backdrop close: only when the user deliberately clicks the backdrop (mouse down + mouse up on backdrop),
+                    // and never as a side-effect of dragging the image around.
+                    overlay.addEventListener('mousedown', function(e) {
+                        cropper.state.backdropMouseDown = (e.target === overlay);
+                    });
+                    dialog.addEventListener('mousedown', function() {
+                        cropper.state.backdropMouseDown = false;
+                    });
                     overlay.addEventListener('click', function(e) {
-                        if (e.target === overlay) {
-                            closeCropper(false);
+                        if (e.target !== overlay) return;
+                        if (!cropper.state.backdropMouseDown) return;
+                        if (cropper.state.dragging) return;
+                        if (cropper.state.didDrag) {
+                            cropper.state.didDrag = false;
+                            cropper.state.backdropMouseDown = false;
+                            return;
                         }
+                        cropper.state.backdropMouseDown = false;
+                        closeCropper(false);
                     });
 
                     cancelBtn.addEventListener('click', function() {
@@ -982,6 +1006,7 @@ const FieldsetComponent = (function(){
                     // Drag to reposition
                     canvas.addEventListener('mousedown', function(e) {
                         cropper.state.dragging = true;
+                        cropper.state.didDrag = false;
                         cropper.state.lastX = e.clientX;
                         cropper.state.lastY = e.clientY;
                     });
@@ -991,6 +1016,9 @@ const FieldsetComponent = (function(){
                         var dy = e.clientY - cropper.state.lastY;
                         cropper.state.lastX = e.clientX;
                         cropper.state.lastY = e.clientY;
+                        if (dx !== 0 || dy !== 0) {
+                            cropper.state.didDrag = true;
+                        }
 
                         var rect = canvas.getBoundingClientRect();
                         var scaleX = rect.width ? (canvas.width / rect.width) : 1;
@@ -1233,74 +1261,44 @@ const FieldsetComponent = (function(){
                         
                         // ------------------------------------------------------------------
                         // Drag-to-reorder (same drag pattern used in Formbuilder)
-                        // - No drag handle: enable drag only after press-and-hold on thumb
-                        // - Prevents conflicts with tap-to-crop and remove button
+                        // - No drag handle: dragging begins immediately when the user grabs + moves a thumb
+                        // - Click without dragging still opens the cropper
                         // ------------------------------------------------------------------
-                        var holdTimer = null;
-                        var holdStartedAt = 0;
-                        var holdMoveStartX = 0;
-                        var holdMoveStartY = 0;
-                        var holdActivated = false;
                         var dragStartIndex = -1;
+                        var dragArmed = false;
 
-                        function clearHold() {
-                            if (holdTimer) {
-                                try { clearTimeout(holdTimer); } catch (e) {}
-                            }
-                            holdTimer = null;
-                            holdActivated = false;
-                            thumb.classList.remove('fieldset-image-thumb--dragready');
-                        }
-
-                        function startHold(e) {
-                            // Don't start long-press drag from the remove button.
+                        function armDrag(e) {
+                            // Don't arm dragging from the remove button.
                             if (e && e.target && (e.target === removeBtn || (e.target.closest && e.target.closest('.fieldset-image-thumb-remove')))) {
                                 return;
                             }
-                            clearHold();
-                            holdStartedAt = Date.now();
-                            holdActivated = false;
-                            holdMoveStartX = (e && e.clientX) ? e.clientX : 0;
-                            holdMoveStartY = (e && e.clientY) ? e.clientY : 0;
-                            holdTimer = setTimeout(function() {
-                                // Enable dragging after a short hold; user then drags normally.
-                                holdActivated = true;
-                                thumb.draggable = true;
-                                thumb.classList.add('fieldset-image-thumb--dragready');
-                            }, 200);
+                            dragArmed = true;
+                            thumb.draggable = true;
+                            thumb.classList.add('fieldset-image-thumb--dragready');
                         }
 
-                        function cancelHold() {
-                            // Cancel hold; also disable dragging unless we are actively dragging.
-                            clearHold();
-                            thumb.draggable = false;
-                        }
-
-                        // Desktop + touch: pointer events preferred; mouse fallback if needed
-                        thumb.addEventListener('pointerdown', function(e) {
-                            // Only left button / primary pointer
-                            if (e && typeof e.button === 'number' && e.button !== 0) return;
-                            startHold(e);
-                        });
-                        thumb.addEventListener('pointerup', function() {
-                            // If the hold never activated, this remains a normal tap/click.
-                            cancelHold();
-                        });
-                        thumb.addEventListener('pointercancel', function() {
-                            cancelHold();
-                        });
-                        thumb.addEventListener('pointermove', function(e) {
-                            if (!holdTimer) return;
-                            // If user starts moving before hold activates, treat it as scroll/normal gesture.
-                            var dx = Math.abs((e && e.clientX) ? (e.clientX - holdMoveStartX) : 0);
-                            var dy = Math.abs((e && e.clientY) ? (e.clientY - holdMoveStartY) : 0);
-                            if (dx > 6 || dy > 6) {
-                                cancelHold();
+                        function disarmDrag() {
+                            dragArmed = false;
+                            if (!thumb.classList.contains('dragging')) {
+                                thumb.draggable = false;
+                                thumb.classList.remove('fieldset-image-thumb--dragready');
                             }
+                        }
+
+                        thumb.addEventListener('mousedown', function(e) {
+                            if (e && typeof e.button === 'number' && e.button !== 0) return;
+                            armDrag(e);
+                        });
+                        thumb.addEventListener('mouseup', function() {
+                            disarmDrag();
+                        });
+                        thumb.addEventListener('mouseleave', function() {
+                            // If the user didn't start an actual drag, disarm when leaving.
+                            disarmDrag();
                         });
 
                         thumb.addEventListener('dragstart', function(e) {
-                            if (!thumb.draggable || !holdActivated) {
+                            if (!thumb.draggable || !dragArmed) {
                                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
                                 return;
                             }
@@ -1317,7 +1315,7 @@ const FieldsetComponent = (function(){
                             thumb.classList.remove('dragging');
                             thumb.classList.remove('fieldset-image-thumb--dragready');
                             thumb.draggable = false;
-                            clearHold();
+                            dragArmed = false;
 
                             // Rebuild imageEntries in the new DOM order (exclude the upload tile).
                             var orderedThumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
@@ -1366,42 +1364,59 @@ const FieldsetComponent = (function(){
                     }
                 }
 
-                // Grid-friendly dragover handler (insertBefore/after like Formbuilder, but computed by closest thumb)
+                // Grid-friendly dragover handler (insertBefore/after like Formbuilder)
                 imagesContainer.addEventListener('dragover', function(e) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                     var dragging = imagesContainer.querySelector('.fieldset-image-thumb.dragging');
                     if (!dragging) return;
 
-                    var candidates = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb:not(.dragging)'));
-                    if (!candidates.length) return;
-
                     var px = (e && typeof e.clientX === 'number') ? e.clientX : 0;
                     var py = (e && typeof e.clientY === 'number') ? e.clientY : 0;
 
-                    var closest = null;
-                    var closestDist = Infinity;
-                    candidates.forEach(function(el) {
-                        var r = el.getBoundingClientRect();
-                        var cx = r.left + r.width / 2;
-                        var cy = r.top + r.height / 2;
-                        var dx = px - cx;
-                        var dy = py - cy;
-                        var d2 = dx * dx + dy * dy;
-                        if (d2 < closestDist) {
-                            closestDist = d2;
-                            closest = el;
-                        }
-                    });
-                    if (!closest || closest === dragging) return;
+                    // Prefer the element under the cursor for intuitive drops.
+                    var target = null;
+                    if (document && typeof document.elementFromPoint === 'function') {
+                        target = document.elementFromPoint(px, py);
+                    }
+                    var overThumb = target && target.closest ? target.closest('.fieldset-image-thumb') : null;
+                    if (overThumb && overThumb === dragging) overThumb = null;
 
-                    var rect = closest.getBoundingClientRect();
+                    var thumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                    if (!thumbs.length) return;
+
+                    // If not directly over a thumb, allow easier "drop to first" / "drop to last" behavior.
+                    if (!overThumb) {
+                        var containerRect = imagesContainer.getBoundingClientRect();
+                        var first = thumbs[0];
+                        var last = thumbs[thumbs.length - 1];
+                        if (first) {
+                            var fr = first.getBoundingClientRect();
+                            // If cursor is above/left of the first thumb (with some leniency), insert before first.
+                            if (py < (fr.top + fr.height * 0.6) && px < (fr.left + fr.width * 0.6)) {
+                                imagesContainer.insertBefore(dragging, first);
+                                return;
+                            }
+                        }
+                        if (last) {
+                            var lr = last.getBoundingClientRect();
+                            // If cursor is below/right of the last thumb (with some leniency), insert after last.
+                            if (py > (lr.top + lr.height * 0.4) && px > (lr.left + lr.width * 0.4)) {
+                                imagesContainer.insertBefore(dragging, last.nextSibling);
+                                return;
+                            }
+                        }
+                        // Otherwise do nothing (avoids jumpiness when dragging between grid gaps).
+                        return;
+                    }
+
+                    var rect = overThumb.getBoundingClientRect();
                     var midX = rect.left + rect.width / 2;
                     var midY = rect.top + rect.height / 2;
                     var after = (py > midY) || (Math.abs(py - midY) < rect.height * 0.25 && px > midX);
                     if (after) {
-                        imagesContainer.insertBefore(dragging, closest.nextSibling);
+                        imagesContainer.insertBefore(dragging, overThumb.nextSibling);
                     } else {
-                        imagesContainer.insertBefore(dragging, closest);
+                        imagesContainer.insertBefore(dragging, overThumb);
                     }
                 });
                 
