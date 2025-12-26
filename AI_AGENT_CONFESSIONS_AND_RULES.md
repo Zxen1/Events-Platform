@@ -2143,7 +2143,7 @@ Section-first naming for plugin-ready, fully independent components:
 
 | Position | Purpose | Examples | Can have subs? |
 |----------|---------|----------|----------------|
-| **section** | Which CSS file / plugin | admin, forms, filter, header, post, map, member, advert | No |
+| **section** | Which CSS file / plugin | admin, formbuilder, filter, header, post, map, member, advert | No |
 | **name** | What component (single word) | systemimagepicker, iconpicker, sessionpicker, access, filter | No |
 | **type** | Structural type | menu, button, calendar, panel, input, field | No |
 | **part** | Sub-element (DOM nesting) | option, image, text, day, grid, header, body | **Yes** |
@@ -2203,14 +2203,14 @@ Reads as: "In admin, the systemimagepicker's menu option's text's image, disable
 .admin-systemimagepicker-menu-grid
 ```
 
-**Forms session picker calendar:**
+**Formbuilder session picker calendar:**
 ```
-.forms-sessionpicker-calendar
-.forms-sessionpicker-calendar-day
-.forms-sessionpicker-calendar-day--past
-.forms-sessionpicker-calendar-day--future
-.forms-sessionpicker-calendar-day--selected
-.forms-sessionpicker-calendar-day--today
+.formbuilder-sessionpicker-calendar
+.formbuilder-sessionpicker-calendar-day
+.formbuilder-sessionpicker-calendar-day--past
+.formbuilder-sessionpicker-calendar-day--future
+.formbuilder-sessionpicker-calendar-day--selected
+.formbuilder-sessionpicker-calendar-day--today
 ```
 
 **Filter panel:**
