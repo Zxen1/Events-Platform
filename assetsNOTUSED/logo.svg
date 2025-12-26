@@ -8,7 +8,7 @@
     </radialGradient>
   </defs>
   <circle cx="40" cy="40" r="35" fill="url(#globe)" />
-  <text x="80" y="52" font-family="Arial, sans-serif" font-size="40" font-weight="700">
+  <text x="80" y="52" font-family="system-ui, sans-serif" font-size="40" font-weight="700">
     <tspan fill="#ff1744">F</tspan>
     <tspan fill="#ffd600">U</tspan>
     <tspan fill="#2979ff">N</tspan>
