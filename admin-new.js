@@ -599,6 +599,7 @@ const AdminModule = (function() {
     
     function switchTab(tabName) {
         if (!tabButtons || !tabPanels) return;
+        var prevTabName = activeTabName;
         
         // Deactivate previous tab "page" (detach global listeners from other tabs)
         if (activeTabName && activeTabName !== tabName) {
@@ -631,6 +632,11 @@ const AdminModule = (function() {
             var isActive = panel.id === 'admin-tab-' + tabName;
             panel.classList.toggle('admin-tab-panel--active', isActive);
         });
+
+        // Notify other modules so they can attach/detach per-tab listeners.
+        if (window.App && typeof App.emit === 'function') {
+            App.emit('admin:tab-switched', { tabName: tabName, prevTabName: prevTabName });
+        }
         
         // Initialize tab content on first view
         if (tabName === 'settings') {

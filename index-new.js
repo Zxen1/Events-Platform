@@ -179,6 +179,216 @@ const App = (function() {
   })();
 
   /* --------------------------------------------------------------------------
+     SCROLL ANCHOR UTILITY
+     Keeps the clicked element visually stationary while DOM above it collapses.
+     Used by multiple modules (admin tabs, formbuilder, etc).
+     -------------------------------------------------------------------------- */
+  const _scrollAnchorState = new WeakMap(); // slackContainer -> state
+
+  function _getScrollAnchorState(scrollContainer, slackContainer, opts) {
+    const key = slackContainer || scrollContainer;
+    if (!(key instanceof Element)) return null;
+
+    let state = _scrollAnchorState.get(key);
+    if (!state) {
+      state = {
+        scrollContainer: null,
+        slackContainer: key,
+        topGapEl: null,
+        bottomGapEl: null,
+        isAdjusting: false,
+        suppressConsumeUntil: 0,
+        scrollHandlerBoundTo: null,
+      };
+      _scrollAnchorState.set(key, state);
+    }
+
+    state.scrollContainer = scrollContainer instanceof Element
+      ? scrollContainer
+      : (document.scrollingElement || document.documentElement);
+
+    state.topGapClass = (opts && opts.topGapClass) ? String(opts.topGapClass) : 'scroll-anchor-gap';
+    state.bottomGapClass = (opts && opts.bottomGapClass) ? String(opts.bottomGapClass) : 'scroll-anchor-gap-bottom';
+    return state;
+  }
+
+  function _ensureGap(state, which) {
+    if (!state || !state.slackContainer || !(state.slackContainer instanceof Element)) return null;
+    const slack = state.slackContainer;
+
+    if (which === 'top') {
+      if (state.topGapEl && state.topGapEl.isConnected) {
+        if (slack.firstChild !== state.topGapEl) {
+          slack.insertBefore(state.topGapEl, slack.firstChild);
+        }
+        return state.topGapEl;
+      }
+      let el = slack.querySelector('.' + state.topGapClass);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = state.topGapClass;
+        el.setAttribute('aria-hidden', 'true');
+      }
+      state.topGapEl = el;
+      if (slack.firstChild !== el) slack.insertBefore(el, slack.firstChild);
+      return el;
+    }
+
+    if (which === 'bottom') {
+      if (state.bottomGapEl && state.bottomGapEl.isConnected) {
+        // Keep it at the bottom, but avoid re-appending on every call
+        if (slack.lastChild !== state.bottomGapEl) {
+          slack.appendChild(state.bottomGapEl);
+        }
+        return state.bottomGapEl;
+      }
+      let el = slack.querySelector('.' + state.bottomGapClass);
+      if (!el) {
+        el = document.createElement('div');
+        el.className = state.bottomGapClass;
+        el.setAttribute('aria-hidden', 'true');
+      }
+      state.bottomGapEl = el;
+      if (slack.lastChild !== el) slack.appendChild(el);
+      return el;
+    }
+
+    return null;
+  }
+
+  function _getGapHeight(el) {
+    if (!el || !el.isConnected) return 0;
+    return el.offsetHeight || 0;
+  }
+
+  function _setGapHeight(el, px) {
+    if (!el || !el.isConnected) return;
+    const next = Math.max(0, Math.round(px || 0));
+    el.style.height = next ? (next + 'px') : '0px';
+  }
+
+  function _bindGapConsumeScrollHandler(state) {
+    if (!state || !state.scrollContainer) return;
+    const sc = state.scrollContainer;
+    if (!(sc instanceof Element)) return;
+    if (state.scrollHandlerBoundTo === sc) return;
+
+    state.scrollHandlerBoundTo = sc;
+    sc.addEventListener('scroll', function onScrollConsumeGaps() {
+      if (state.isAdjusting) return;
+      if (state.suppressConsumeUntil && Date.now() < state.suppressConsumeUntil) return;
+
+      // IMPORTANT: do not create/append elements in scroll handler (avoid mutation churn)
+      const topGap = _getGapHeight(state.topGapEl);
+      const bottomGap = _getGapHeight(state.bottomGapEl);
+      if (!topGap && !bottomGap) return;
+
+      // If the user scrolls up into the top gap, remove it so they never see blank space.
+      if (topGap && sc.scrollTop < topGap) {
+        const reduceBy = topGap - sc.scrollTop;
+        state.isAdjusting = true;
+        _setGapHeight(state.topGapEl, topGap - reduceBy);
+        sc.scrollTop = 0;
+        state.isAdjusting = false;
+      }
+
+      // If the user scrolls down into the bottom gap, remove it so they never see blank space.
+      if (bottomGap) {
+        const maxScrollTop = Math.max(0, sc.scrollHeight - sc.clientHeight);
+        const distanceToBottom = maxScrollTop - sc.scrollTop;
+        if (distanceToBottom < bottomGap) {
+          const reduceBottomBy = bottomGap - distanceToBottom;
+          state.isAdjusting = true;
+          _setGapHeight(state.bottomGapEl, bottomGap - reduceBottomBy);
+          sc.scrollTop = Math.max(0, sc.scrollTop - reduceBottomBy);
+          state.isAdjusting = false;
+        }
+      }
+    }, { passive: true });
+  }
+
+  function runWithScrollAnchor(anchorEl, fn, opts) {
+    const scrollContainer = opts && opts.scrollContainer ? opts.scrollContainer : null;
+    const slackContainer = opts && opts.slackContainer ? opts.slackContainer : scrollContainer;
+    const state = _getScrollAnchorState(scrollContainer, slackContainer, opts);
+    if (!state || !state.scrollContainer || !(state.scrollContainer instanceof Element) || !anchorEl || typeof fn !== 'function') {
+      if (typeof fn === 'function') fn();
+      return;
+    }
+
+    const sc = state.scrollContainer;
+
+    // Anchoring only works when the anchor element is inside the scroll container.
+    if (!sc.contains(anchorEl)) {
+      fn();
+      return;
+    }
+
+    // Prevent our gap cleanup handler from consuming slack while anchoring
+    state.suppressConsumeUntil = Date.now() + 250;
+
+    _ensureGap(state, 'top');
+    _ensureGap(state, 'bottom');
+    _bindGapConsumeScrollHandler(state);
+
+    const scRect = sc.getBoundingClientRect();
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const oldTop = anchorRect.top - scRect.top;
+    const oldScrollTop = sc.scrollTop;
+
+    fn();
+
+    requestAnimationFrame(function() {
+      if (!anchorEl.isConnected) return;
+
+      const scNow = state.scrollContainer;
+      if (!scNow || !(scNow instanceof Element)) return;
+
+      // If collapse shrank scrollHeight, browser may clamp scrollTop down.
+      // Add bottom slack so the original scrollTop stays valid, then restore it.
+      const maxAfter = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+      if (oldScrollTop > maxAfter) {
+        const clampSlack = oldScrollTop - maxAfter;
+        _ensureGap(state, 'bottom');
+        _setGapHeight(state.bottomGapEl, _getGapHeight(state.bottomGapEl) + clampSlack);
+        void scNow.scrollHeight; // force layout
+      }
+
+      state.isAdjusting = true;
+      scNow.scrollTop = oldScrollTop;
+      state.isAdjusting = false;
+
+      const scNowRect = scNow.getBoundingClientRect();
+      let newTop = anchorEl.getBoundingClientRect().top - scNowRect.top;
+      let delta = newTop - oldTop;
+      if (!delta) return;
+
+      const currentScrollTop = scNow.scrollTop;
+
+      // If we'd need to scroll above 0 to keep anchor stationary, create top slack instead.
+      if (currentScrollTop + delta < 0) {
+        const topSlack = -(currentScrollTop + delta);
+        _ensureGap(state, 'top');
+        _setGapHeight(state.topGapEl, _getGapHeight(state.topGapEl) + topSlack);
+        delta = delta + topSlack;
+      }
+
+      // If we'd need to scroll past maxScrollTop, create bottom slack instead.
+      const maxNow = Math.max(0, scNow.scrollHeight - scNow.clientHeight);
+      if (currentScrollTop + delta > maxNow) {
+        const bottomSlack = (currentScrollTop + delta) - maxNow;
+        _ensureGap(state, 'bottom');
+        _setGapHeight(state.bottomGapEl, _getGapHeight(state.bottomGapEl) + bottomSlack);
+        void scNow.scrollHeight; // force layout
+      }
+
+      state.isAdjusting = true;
+      scNow.scrollTop = currentScrollTop + delta;
+      state.isAdjusting = false;
+    });
+  }
+
+  /* --------------------------------------------------------------------------
      MODULE REGISTRY
      Sections register themselves, others can find them
      -------------------------------------------------------------------------- */
@@ -694,7 +904,10 @@ const App = (function() {
     
     // Image URL helpers
     getImageUrl,
-    getImageFolder
+    getImageFolder,
+
+    // Shared utilities
+    runWithScrollAnchor
   };
 
 })();
