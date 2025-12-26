@@ -3010,11 +3010,12 @@
 /* Appearance - Duration Buttons (General posts) */
 .member-checkout-duration-buttons {
     display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
 .member-checkout-duration-option {
-    flex: 1;
+    width: 100%;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -3039,6 +3040,7 @@
 
 .member-checkout-duration-text {
     color: inherit;
+    line-height: 1.25;
 }
 
 /* States - Option Card */

@@ -2518,6 +2518,9 @@ const MemberModule = (function() {
                 });
             }
         }
+
+        // Always point the module-level sessions-change listener at the latest updater.
+        renderCheckoutOptionsSection._updateCheckoutContext = updateCheckoutContext;
         
         // Create checkout options using CheckoutOptionsComponent
         if (typeof CheckoutOptionsComponent !== 'undefined') {
@@ -2538,12 +2541,23 @@ const MemberModule = (function() {
             });
 
             // Live updates for events when session dates change
-            if (!renderCheckoutOptionsSection._listenersAttached) {
-                renderCheckoutOptionsSection._listenersAttached = true;
-                if (formFields) {
-                    formFields.addEventListener('fieldset:sessions-change', function() {
-                        updateCheckoutContext();
-                    });
+            if (formFields) {
+                var needsAttach = (!renderCheckoutOptionsSection._listenersAttached) || (renderCheckoutOptionsSection._listenerTarget !== formFields);
+                if (needsAttach) {
+                    // If we ever re-create the form root, detach from the old one first.
+                    if (renderCheckoutOptionsSection._listenerTarget && renderCheckoutOptionsSection._listenerHandler) {
+                        try {
+                            renderCheckoutOptionsSection._listenerTarget.removeEventListener('fieldset:sessions-change', renderCheckoutOptionsSection._listenerHandler);
+                        } catch (e) {}
+                    }
+                    renderCheckoutOptionsSection._listenerTarget = formFields;
+                    renderCheckoutOptionsSection._listenerHandler = function() {
+                        if (typeof renderCheckoutOptionsSection._updateCheckoutContext === 'function') {
+                            renderCheckoutOptionsSection._updateCheckoutContext();
+                        }
+                    };
+                    formFields.addEventListener('fieldset:sessions-change', renderCheckoutOptionsSection._listenerHandler);
+                    renderCheckoutOptionsSection._listenersAttached = true;
                 }
             }
             // Apply initial context (ensures prices reflect current locations + dates)
