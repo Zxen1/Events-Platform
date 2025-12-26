@@ -4605,8 +4605,8 @@ const CheckoutOptionsComponent = (function(){
      * @param {string} options.currency - Currency code (default: 'USD')
      * @param {number} options.surchargePercent - Subcategory surcharge percentage (default: 0). Can be negative.
      * @param {boolean} options.isEvent - True for events with session dates
-     * @param {number} options.locationCount - Number of locations/venues (default: 1)
-     * @param {Array<number>|null} options.eventVenueDays - For events: array of day counts per venue/location (length must equal locationCount). Null = no dates yet.
+     * @param {number} options.locationCount - Number of locations (default: 1)
+     * @param {Array<number>|null} options.eventVenueDays - For events: array of day counts per location (length must equal locationCount). Null = no dates yet.
      * @param {string} options.baseId - Base ID for form elements
      * @param {string} options.groupName - Radio group name
      * @param {Function} options.onSelect - Callback when option selected (optionId, days, price)
@@ -4626,6 +4626,51 @@ const CheckoutOptionsComponent = (function(){
         var baseId = options.baseId || 'checkout';
         var groupName = options.groupName || baseId + '-option';
         var onSelect = options.onSelect || function() {};
+
+        // For member-facing checkout summary lines:
+        // - Use digits for days (e.g. "31 days")
+        // - Use words for number of locations (e.g. "one location", "three locations")
+        function numberToWords(n) {
+            var num = parseInt(n, 10) || 0;
+            if (num < 0) return 'zero';
+
+            var ones = [
+                'zero','one','two','three','four','five','six','seven','eight','nine',
+                'ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'
+            ];
+            var tens = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+
+            function inner(x) {
+                if (x < 20) return ones[x];
+                if (x < 100) {
+                    var t = Math.floor(x / 10);
+                    var r = x % 10;
+                    return tens[t] + (r ? '-' + ones[r] : '');
+                }
+                if (x < 1000) {
+                    var h = Math.floor(x / 100);
+                    var rem = x % 100;
+                    return ones[h] + ' hundred' + (rem ? ' ' + inner(rem) : '');
+                }
+                if (x < 1000000) {
+                    var th = Math.floor(x / 1000);
+                    var remT = x % 1000;
+                    return inner(th) + ' thousand' + (remT ? ' ' + inner(remT) : '');
+                }
+                return 'many';
+            }
+
+            return inner(num);
+        }
+
+        function buildLocationSummary(days, locCount) {
+            var d = parseInt(days, 10) || 0;
+            var L = parseInt(locCount, 10) || 1;
+            if (L < 1) L = 1;
+            var locWord = numberToWords(L);
+            var locLabel = (L === 1) ? 'location' : 'locations';
+            return d + ' days, ' + locWord + ' ' + locLabel;
+        }
         
         function computeGeneralTotal(flagfall, basicRate, discountRate, days, locCount, surchargePct) {
             var d = parseInt(days, 10) || 0;
@@ -4772,9 +4817,9 @@ const CheckoutOptionsComponent = (function(){
                     var res = computeEventTotal(flagfallPrice, basicDayRate, discountDayRate, eventVenueDays, locationCount, surchargePercent);
                     var primaryDays = res.primaryDays;
                     var price = res.total;
-                    priceText.textContent = '(Primary ' + primaryDays + ' days, ' + locationCount + ' venues) — ' + (price > 0 ? currency + ' ' + price.toFixed(2) : 'Free');
+                    priceText.textContent = buildLocationSummary(primaryDays, locationCount) + ' — ' + (price > 0 ? currency + ' ' + price.toFixed(2) : 'Free');
                 } else {
-                    priceText.textContent = 'Select session dates for all venues for price';
+                    priceText.textContent = 'Select session dates for all locations for price';
                 }
                 priceSection.appendChild(priceText);
             } else {
@@ -4883,7 +4928,7 @@ const CheckoutOptionsComponent = (function(){
                             var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
                             var curr = card.dataset.currency || null;
                                 var res = computeEventTotal(flagfall, basicRate, discountRate, eventVenueDays, locationCount, surchargePercent);
-                                priceDisplay.textContent = '(Primary ' + res.primaryDays + ' days, ' + locationCount + ' venues) — ' + (res.total > 0 ? curr + ' ' + res.total.toFixed(2) : 'Free');
+                                priceDisplay.textContent = buildLocationSummary(res.primaryDays, locationCount) + ' — ' + (res.total > 0 ? curr + ' ' + res.total.toFixed(2) : 'Free');
                         }
                     } else {
                         card.classList.add('member-checkout-option--disabled');
@@ -4892,7 +4937,7 @@ const CheckoutOptionsComponent = (function(){
                             radio.checked = false;
                         }
                         if (priceDisplay) {
-                                priceDisplay.textContent = 'Select session dates for all venues for price';
+                                priceDisplay.textContent = 'Select session dates for all locations for price';
                         }
                     }
                 });

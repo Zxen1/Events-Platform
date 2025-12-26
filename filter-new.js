@@ -620,12 +620,12 @@ const FilterModule = (function() {
             onChange: function(start, end) {
                 if (!calendarContainer || !calendarContainer.classList.contains('open')) return;
                 dateRangeDraftOpen = true;
-                setDaterangeInputValue(start, end);
+                setDaterangeInputValue(start, end, true);
             },
             onSelect: function(start, end) {
                 // Cancel: revert to committed value (whether blank or already set)
                 if (!start && !end) {
-                    setDaterangeInputValue(dateStart, dateEnd);
+                    setDaterangeInputValue(dateStart, dateEnd, false);
                     dateRangeDraftOpen = false;
                     closeCalendar();
                     updateClearButtons();
@@ -660,7 +660,7 @@ const FilterModule = (function() {
         
         if (isOpen) {
             // Treat closing as cancel: revert display and clear draft selection
-            setDaterangeInputValue(dateStart, dateEnd);
+            setDaterangeInputValue(dateStart, dateEnd, false);
             dateRangeDraftOpen = false;
             if (calendarInstance && calendarInstance.clearSelection) {
                 calendarInstance.clearSelection();
@@ -690,12 +690,12 @@ const FilterModule = (function() {
         }
     }
     
-    function setDaterangeInputValue(start, end) {
+    function setDaterangeInputValue(start, end, showPendingRangeHint) {
         if (!daterangeInput) return;
         if (start && end) {
             daterangeInput.value = formatDateShort(start) + ' - ' + formatDateShort(end);
         } else if (start) {
-            daterangeInput.value = formatDateShort(start);
+            daterangeInput.value = showPendingRangeHint ? (formatDateShort(start) + ' -') : formatDateShort(start);
         } else {
             daterangeInput.value = '';
         }
@@ -705,7 +705,7 @@ const FilterModule = (function() {
         dateStart = start;
         dateEnd = end;
         
-        setDaterangeInputValue(start, end);
+        setDaterangeInputValue(start, end, false);
         
         updateClearButtons();
     }
