@@ -483,7 +483,8 @@ const FieldsetComponent = (function(){
         
         if (charLimitText) {
             if (tooltipText) {
-                tooltipText = tooltipText + '\n\n' + charLimitText;
+                // Match live-site style: visually separate tooltip body from char-limit note.
+                tooltipText = tooltipText + '\n──────────\n' + charLimitText;
             } else {
                 tooltipText = charLimitText;
             }
@@ -506,19 +507,33 @@ const FieldsetComponent = (function(){
         charCount.style.display = 'none';
         
         var touched = false;
+        var focused = false;
         
         function updateCharCount() {
-            var remaining = maxLength - input.value.length;
-            if (remaining <= 5 && input.value.length > 0) {
-                charCount.style.display = 'block';
-                charCount.textContent = remaining + ' characters remaining';
-                if (remaining <= 0) {
-                    charCount.className = 'fieldset-char-count fieldset-char-count--danger';
-                } else {
-                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
-                }
-            } else {
+            // Only show counter when a real maxLength exists
+            if (typeof maxLength !== 'number' || !isFinite(maxLength) || maxLength <= 0) {
                 charCount.style.display = 'none';
+                return;
+            }
+
+            var remaining = maxLength - input.value.length;
+            if (!isFinite(remaining)) remaining = 0;
+
+            // Consistent UX: show while focused, or when near limit
+            var shouldShow = focused || (remaining <= 5 && input.value.length > 0);
+            if (!shouldShow) {
+                charCount.style.display = 'none';
+                return;
+            }
+
+            charCount.style.display = 'block';
+            charCount.textContent = remaining + ' characters remaining';
+            if (remaining <= 0) {
+                charCount.className = 'fieldset-char-count fieldset-char-count--danger';
+            } else if (remaining <= 5) {
+                charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+            } else {
+                charCount.className = 'fieldset-char-count';
             }
         }
         
@@ -547,7 +562,9 @@ const FieldsetComponent = (function(){
             }
         }
         
-        input.setAttribute('maxlength', maxLength);
+        if (typeof maxLength === 'number' && isFinite(maxLength) && maxLength > 0) {
+            input.setAttribute('maxlength', String(maxLength));
+        }
         
         input.addEventListener('input', function() {
             updateCharCount();
@@ -555,11 +572,14 @@ const FieldsetComponent = (function(){
         });
         
         input.addEventListener('blur', function() {
+            focused = false;
             touched = true;
+            updateCharCount();
             validate();
         });
         
         input.addEventListener('focus', function() {
+            focused = true;
             updateCharCount();
         });
         

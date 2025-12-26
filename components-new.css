@@ -982,7 +982,8 @@
     color: #fff;
     width: 250px;
     max-width: calc(100vw - 40px);
-    white-space: normal;
+    /* Preserve intentional line breaks (used to separate tooltip body from char-limit note) */
+    white-space: pre-line;
     z-index: var(--layer-menu, 85);
     line-height: 1.4;
 }
