@@ -1325,7 +1325,8 @@
         locationTypeLabel.textContent = 'Location Type';
         
         // Only use existing value from database, NO FALLBACKS
-        var currentLocationType = subFeeData.location_type;
+        // New subcategories may not have a subFees entry yet → keep as null until admin selects it.
+        var currentLocationType = (subFeeData && subFeeData.location_type) ? subFeeData.location_type : null;
         
         var venueLabel = document.createElement('label');
         venueLabel.className = 'formbuilder-type-option';
