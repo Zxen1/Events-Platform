@@ -23,6 +23,7 @@ const FilterModule = (function() {
     var sortButtonEl = null;
     var sortButtonText = null;
     var currentSort = 'az';
+    var closeBtn = null;
     
     // Filter basics
     var keywordInput = null;
@@ -66,6 +67,7 @@ const FilterModule = (function() {
         initCategoryFilter();
         initHeaderDrag();
         initBackdropClose();
+        initCloseButton();
         bindPanelEvents();
         
         // Filter initialized
@@ -90,6 +92,16 @@ const FilterModule = (function() {
             closePanel();
             App.emit('filter:closed');
         }, false);
+    }
+
+    function initCloseButton() {
+        closeBtn = panelEl.querySelector('.filter-panel-actions-icon-btn--close');
+        if (!closeBtn) return;
+        
+        closeBtn.addEventListener('click', function() {
+            closePanel();
+            App.emit('filter:closed');
+        });
     }
 
 
