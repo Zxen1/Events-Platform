@@ -507,33 +507,75 @@ const FieldsetComponent = (function(){
         charCount.style.display = 'none';
         
         var touched = false;
-        var focused = false;
         
+        // ENFORCE maxlength via HTML attribute (prevents most excessive input)
+        if (typeof maxLength === 'number' && isFinite(maxLength) && maxLength > 0) {
+            input.setAttribute('maxlength', String(maxLength));
+        }
+
+        // Handle paste events to truncate oversized content safely (prevents browser freeze from massive paste)
+        input.addEventListener('paste', function(e) {
+            if (typeof maxLength !== 'number' || !isFinite(maxLength) || maxLength <= 0) return;
+            if (!e) return;
+
+            var pastedText = '';
+            try {
+                if (e.clipboardData && typeof e.clipboardData.getData === 'function') {
+                    pastedText = e.clipboardData.getData('text') || '';
+                } else if (window.clipboardData && typeof window.clipboardData.getData === 'function') {
+                    pastedText = window.clipboardData.getData('text') || '';
+                }
+            } catch (err) {
+                pastedText = '';
+            }
+
+            if (!pastedText) return;
+
+            var currentValue = input.value || '';
+            var selStart = (typeof input.selectionStart === 'number') ? input.selectionStart : currentValue.length;
+            var selEnd = (typeof input.selectionEnd === 'number') ? input.selectionEnd : currentValue.length;
+            var before = currentValue.slice(0, selStart);
+            var after = currentValue.slice(selEnd);
+            var nextValue = before + pastedText + after;
+
+            if (nextValue.length > maxLength) {
+                e.preventDefault();
+                var availableSpace = maxLength - before.length - after.length;
+                var truncatedPaste = pastedText.slice(0, Math.max(0, availableSpace));
+                input.value = (before + truncatedPaste + after).slice(0, maxLength);
+                try {
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                } catch (err2) {}
+            }
+        });
+
         function updateCharCount() {
-            // Only show counter when a real maxLength exists
             if (typeof maxLength !== 'number' || !isFinite(maxLength) || maxLength <= 0) {
                 charCount.style.display = 'none';
+                charCount.textContent = '';
+                charCount.className = 'fieldset-char-count';
                 return;
             }
 
-            var remaining = maxLength - input.value.length;
-            if (!isFinite(remaining)) remaining = 0;
+            var len = (input.value || '').length;
+            var remaining = maxLength - len;
 
-            // Consistent UX: show while focused, or once user has started typing (or near limit).
-            // This ensures Title (and all other limited fields) visibly has a character counter.
-            var shouldShow = focused || input.value.length > 0 || (remaining <= 5);
-            if (!shouldShow) {
-                charCount.style.display = 'none';
-                return;
-            }
-
-            charCount.style.display = 'block';
-            charCount.textContent = remaining + ' characters remaining';
-            if (remaining <= 0) {
-                charCount.className = 'fieldset-char-count fieldset-char-count--danger';
-            } else if (remaining <= 5) {
-                charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+            // Live-site behavior: show only when within 10 chars of max (or over).
+            if (remaining <= 10 || remaining < 0) {
+                charCount.style.display = 'block';
+                if (remaining < 0) {
+                    charCount.textContent = Math.abs(remaining) + ' over limit';
+                    charCount.className = 'fieldset-char-count fieldset-char-count--danger';
+                } else if (remaining === 0) {
+                    charCount.textContent = '0 remaining';
+                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+                } else {
+                    charCount.textContent = remaining + ' remaining';
+                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+                }
             } else {
+                charCount.style.display = 'none';
+                charCount.textContent = '';
                 charCount.className = 'fieldset-char-count';
             }
         }
@@ -563,26 +605,23 @@ const FieldsetComponent = (function(){
             }
         }
         
-        if (typeof maxLength === 'number' && isFinite(maxLength) && maxLength > 0) {
-            input.setAttribute('maxlength', String(maxLength));
-        }
-        
         input.addEventListener('input', function() {
             updateCharCount();
             if (touched) validate();
         });
         
+        input.addEventListener('change', function() {
+            updateCharCount();
+        });
+
         input.addEventListener('blur', function() {
-            focused = false;
             touched = true;
             updateCharCount();
             validate();
         });
-        
-        input.addEventListener('focus', function() {
-            focused = true;
-            updateCharCount();
-        });
+
+        // Initial render
+        updateCharCount();
         
         return { charCount: charCount };
     }
@@ -775,7 +814,7 @@ const FieldsetComponent = (function(){
         // Build based on fieldset type
         switch (key) {
             case 'title':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var titleInput = document.createElement('input');
                 titleInput.type = 'text';
                 titleInput.className = 'fieldset-input';
@@ -786,7 +825,7 @@ const FieldsetComponent = (function(){
                 break;
             
             case 'coupon':
-                fieldset.appendChild(buildLabel(name, tooltip));
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var couponInput = document.createElement('input');
                 couponInput.type = 'text';
                 couponInput.className = 'fieldset-input';
@@ -2749,8 +2788,10 @@ const FieldsetComponent = (function(){
                 var input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'fieldset-input';
-                input.placeholder = placeholder;
+                applyPlaceholder(input, placeholder);
+                var validation = addInputValidation(input, minLength, maxLength, null);
                 fieldset.appendChild(input);
+                fieldset.appendChild(validation.charCount);
         }
         
         return fieldset;
