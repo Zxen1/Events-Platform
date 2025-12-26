@@ -147,17 +147,16 @@ function bind_statement_params(mysqli_stmt $stmt, string $types, &...$params): b
 
 $rawInput = file_get_contents('php://input');
 $data = json_decode($rawInput, true);
-if (!$data || empty($data['title'])) {
+if (!$data || !is_array($data)) {
   http_response_code(400);
   exit(json_encode(['success'=>false,'error'=>'Invalid data']));
 }
 
-$subcategoryId = isset($data['subcategory_id']) ? (int)$data['subcategory_id'] : null;
-$subcategoryName = isset($data['subcategory_name']) ? trim((string)$data['subcategory_name']) : '';
+$subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $memberId = isset($data['member_id']) ? (int)$data['member_id'] : null;
 $memberName = isset($data['member_name']) ? trim((string)$data['member_name']) : '';
 $memberType = isset($data['member_type']) ? trim((string)$data['member_type']) : 'member';
-$title = trim((string)$data['title']);
+$title = isset($data['title']) ? trim((string)$data['title']) : '';
 
 // Check if user is admin
 $isAdmin = strtolower($memberType) === 'admin' || 
@@ -168,7 +167,9 @@ $isAdmin = strtolower($memberType) === 'admin' ||
 // Check if admin requested to skip payment
 $skipPayment = $isAdmin && !empty($data['skip_payment']);
 
-if ($subcategoryId <= 0 || $subcategoryName === '' || $memberId <= 0 || $memberName === '' || $title === '') {
+// IMPORTANT: posts are keyed by subcategory_key, NOT numeric subcategory_id.
+// subcategory_id may exist in the system DB for admin organization, but must NOT be required here.
+if ($subcategoryKey === '' || $memberId <= 0 || $memberName === '') {
   http_response_code(400);
   exit(json_encode(['success'=>false,'error'=>'Missing required listing details.']));
 }
@@ -191,11 +192,11 @@ $hasPaymentStatus = in_array('payment_status', $postColumns, true);
 
 if ($hasPaymentStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (subcategory_id, subcategory_name, member_id, member_name, title, status, payment_status) VALUES (?, ?, ?, ?, ?, 'active', ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status) VALUES (?, ?, ?, 1, 'paused', ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (subcategory_id, subcategory_name, member_id, member_name, title, status) VALUES (?, ?, ?, ?, ?, 'active')"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility) VALUES (?, ?, ?, 1, 'paused')"
   );
 }
 
@@ -204,16 +205,15 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus) {
-  if (!bind_statement_params($stmt, 'isiss', $subcategoryId, $subcategoryName, $memberId, $memberName, $title, $paymentStatus)) {
+  if (!bind_statement_params($stmt, 'isss', $memberId, $memberName, $subcategoryKey, $paymentStatus)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  if (!bind_statement_params($stmt, 'isiss', $subcategoryId, $subcategoryName, $memberId, $memberName, $title)) {
+  if (!bind_statement_params($stmt, 'iss', $memberId, $memberName, $subcategoryKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
-}
 }
 
 if (!$stmt->execute()) {
@@ -223,6 +223,16 @@ if (!$stmt->execute()) {
 
 $insertId = $stmt->insert_id;
 $stmt->close();
+
+// For the new content schema, the rest of the old legacy payload handling (field_values, listing_prices, etc.)
+// is not applicable. We create the base post row here and let the newer post-edit pipeline populate map cards.
+if (!$mysqli->commit()) {
+  abort_with_error($mysqli, 500, 'Failed to finalize post.', $transactionActive);
+}
+$transactionActive = false;
+
+echo json_encode(['success'=>true, 'insert_id'=>$insertId]);
+exit;
 
 $fieldsRaw = $data['fields'] ?? [];
 if (is_string($fieldsRaw) && $fieldsRaw !== '') {

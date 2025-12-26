@@ -41,19 +41,4 @@ if ($id <= 0) exit(json_encode(['error'=>'Invalid ID']));
 
 $result = $mysqli->query("SELECT * FROM posts WHERE id=$id");
 echo json_encode($result->fetch_assoc() ?: []);
-
-file_get_contents('https://funmap.com/connectors/add-log.php', false,
-  stream_context_create([
-    'http' => [
-      'method' => 'POST',
-      'header' => "Content-Type: application/json\r\nX-API-Key: $API_KEY\r\n",
-      'content' => json_encode([
-        'actor_type'=>'codex',
-        'action'=>'add-post',
-        'description'=>'Added post ID '.$stmt->insert_id
-      ])
-    ]
-  ])
-);
-
 ?>

@@ -36,6 +36,19 @@ if (!verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
   exit(json_encode(['error'=>'Forbidden']));
 }
 
-$result = $mysqli->query("SELECT id, title, member_name, subcategory_name, status, created_at FROM posts ORDER BY id DESC LIMIT 100");
+$result = $mysqli->query(
+  "SELECT
+     id,
+     NULL AS title,
+     member_name,
+     subcategory_key,
+     NULL AS subcategory_name,
+     visibility AS status,
+     payment_status,
+     created_at
+   FROM posts
+   ORDER BY id DESC
+   LIMIT 100"
+);
 echo json_encode($result->fetch_all(MYSQLI_ASSOC));
 ?>
