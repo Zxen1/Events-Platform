@@ -2831,9 +2831,14 @@
         var subFeeData = subFees[subName] || {};
         var currentSurcharge = parseFloat(subFeeData.checkout_surcharge) || 0;
         
-        // Get active checkout options
+        // Get active checkout options (respect hidden/admin_only from get-admin-settings.php)
         var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
-            return opt.is_active !== false && opt.is_active !== 0;
+            if (!opt) {
+                throw new Error('[Formbuilder] Invalid checkout option entry (null/undefined) in get-admin-settings response.');
+            }
+            if (opt.hidden === true || opt.hidden === 1 || opt.hidden === '1') return false;
+            if (opt.admin_only === true || opt.admin_only === 1 || opt.admin_only === '1') return false;
+            return true;
         });
         
         // Create modal backdrop
@@ -3118,9 +3123,14 @@
         var subFieldsMap = cat.subFields || {};
         var fields = subFieldsMap[subName] || [];
         
-        // Get active checkout options
+        // Get active checkout options (respect hidden/admin_only from get-admin-settings.php)
         var activeCheckoutOptions = checkoutOptions.filter(function(opt) {
-            return opt.is_active !== false && opt.is_active !== 0;
+            if (!opt) {
+                throw new Error('[Formbuilder] Invalid checkout option entry (null/undefined) in get-admin-settings response.');
+            }
+            if (opt.hidden === true || opt.hidden === 1 || opt.hidden === '1') return false;
+            if (opt.admin_only === true || opt.admin_only === 1 || opt.admin_only === '1') return false;
+            return true;
         });
         
         // Create modal backdrop
@@ -3184,9 +3194,10 @@
             CheckoutOptionsComponent.create(checkoutWrapper, {
                 checkoutOptions: activeCheckoutOptions,
                 currency: siteCurrency || 'USD',
-                surcharge: surcharge,
+                surchargePercent: surcharge,
                 isEvent: isEvent,
-                calculatedDays: isEvent ? null : 30,
+                locationCount: 1,
+                eventVenueDays: isEvent ? null : null,
                 baseId: 'formpreview',
                 groupName: 'formpreview-checkout'
             });

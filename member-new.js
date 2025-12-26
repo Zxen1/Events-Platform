@@ -1673,7 +1673,13 @@ const MemberModule = (function() {
             // Get checkout options, currency, and dropdown options from admin settings
             if (settingsResponse && settingsResponse.checkout_options) {
                 checkoutOptions = (settingsResponse.checkout_options || []).filter(function(opt) {
-                    return opt.is_active !== false && opt.is_active !== 0;
+                    if (!opt) {
+                        throw new Error('[Member] Invalid checkout option entry (null/undefined) in get-admin-settings response.');
+                    }
+                    // get-admin-settings.php provides: hidden (bool), admin_only (bool)
+                    if (opt.hidden === true || opt.hidden === 1 || opt.hidden === '1') return false;
+                    if (opt.admin_only === true || opt.admin_only === 1 || opt.admin_only === '1') return false;
+                    return true;
                 });
             }
             if (settingsResponse && settingsResponse.settings && settingsResponse.settings.website_currency) {
