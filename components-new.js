@@ -3232,6 +3232,9 @@ const CurrencyComponent = (function(){
 
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
+            // Only auto-open while the user is actually typing in this input.
+            // Programmatic value copies (e.g. multi-location autofill dispatching input events) must NOT open menus.
+            if (document.activeElement !== this) return;
             if (!menu.classList.contains('open')) {
                 menu.classList.add('open');
             }
@@ -3380,6 +3383,7 @@ const CurrencyComponent = (function(){
 
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
+            if (document.activeElement !== this) return;
             if (!menu.classList.contains('open')) {
                 menu.classList.add('open');
             }
@@ -3580,6 +3584,7 @@ const LanguageMenuComponent = (function(){
 
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
+            if (document.activeElement !== this) return;
             if (!menu.classList.contains('open')) {
                 menu.classList.add('open');
             }
@@ -3793,6 +3798,7 @@ const PhonePrefixComponent = (function(){
 
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
+            if (document.activeElement !== this) return;
             if (!menu.classList.contains('open')) {
                 menu.classList.add('open');
             }

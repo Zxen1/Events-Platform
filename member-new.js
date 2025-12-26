@@ -2110,7 +2110,7 @@ const MemberModule = (function() {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
                     container: formFields,
-                    defaultCurrency: null
+                    defaultCurrency: localStorage.getItem('member_currency') || siteCurrency || null
                 });
                 
                 // Add location quantity selector to location fieldset
@@ -2154,8 +2154,10 @@ const MemberModule = (function() {
                         quantityRow.appendChild(quantityLabel);
                         quantityRow.appendChild(quantityControls);
                         
-                        // Insert after label
-                        labelEl.parentNode.insertBefore(quantityRow, labelEl.nextSibling);
+                        // Place the quantity row ABOVE the location fieldset (not inside it)
+                        if (formFields) {
+                            formFields.appendChild(quantityRow);
+                        }
                         
                         // Update label text if quantity > 1
                         if (locationQuantity > 1) {
@@ -2310,7 +2312,7 @@ const MemberModule = (function() {
                 fieldIndex: 0,
                 locationNumber: i,
                 container: locationSection,
-                defaultCurrency: null
+                defaultCurrency: localStorage.getItem('member_currency') || siteCurrency || null
             });
             
             // Built fieldset for location
@@ -2328,7 +2330,7 @@ const MemberModule = (function() {
                     fieldIndex: fieldIndex,
                     locationNumber: i,
                     container: locationSection,
-                    defaultCurrency: null
+                    defaultCurrency: localStorage.getItem('member_currency') || siteCurrency || null
                 });
                 
                 locationSection.appendChild(fieldset);

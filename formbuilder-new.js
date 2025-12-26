@@ -2303,7 +2303,7 @@
                     var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
                     var currentState = {
                         name: hasNameOverride ? nameValue : '',
-                    placeholder: hasPlaceholderOverride ? placeholderValue : '',
+                        placeholder: hasPlaceholderOverride ? placeholderValue : '',
                         tooltip: hasTooltipOverride ? tooltipValue : '',
                         options: hasOptions && optionsContainer ? Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).map(function(inp) { return inp.value.trim(); }).filter(function(v) { return v !== ''; }) : [],
                         selectedAmenities: hasAmenities ? selectedAmenities : []

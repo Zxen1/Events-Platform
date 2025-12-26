@@ -973,13 +973,13 @@
     bottom: calc(100% + 6px);
     left: 0;
     background: #000;
-    border: 1px solid #3b82f5;
+    border: 1px solid #777;
     border-radius: 5px;
     padding: 8px 12px;
     font-size: 12px;
-    font-style: normal;
+    font-style: italic;
     font-family: sans-serif;
-    color: #fff;
+    color: #777;
     width: 250px;
     max-width: calc(100vw - 40px);
     /* Preserve intentional line breaks (used to separate tooltip body from char-limit note) */

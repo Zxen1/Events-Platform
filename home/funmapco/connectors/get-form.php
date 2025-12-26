@@ -594,7 +594,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         }
     }
     $selectColumns[] = '`fieldset_placeholder`';
-    $selectColumns[] = '`fieldset_tooltip`';
+        $selectColumns[] = '`fieldset_tooltip`';
     if ($hasFieldsetFields) {
         if (in_array('fieldset_fields', $columns, true)) {
             $selectColumns[] = '`fieldset_fields`';
