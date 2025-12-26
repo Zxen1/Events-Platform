@@ -353,6 +353,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $hasIconPath = in_array('icon_path', $columns, true);
     $hasSubcategoryKey = in_array('subcategory_key', $columns, true);
     $hasRequired = in_array('required', $columns, true);
+    $hasLocationRepeat = in_array('location_repeat', $columns, true);
+    $hasMustRepeat = in_array('must_repeat', $columns, true);
+    $hasAutofillRepeat = in_array('autofill_repeat', $columns, true);
 
     $hasFieldsetIds = in_array('fieldset_ids', $columns, true);
     $hasFieldsetName = in_array('fieldset_name', $columns, true);
@@ -374,6 +377,15 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
     if ($hasRequired) {
         $select[] = 's.`required`';
+    }
+    if ($hasLocationRepeat) {
+        $select[] = 's.`location_repeat`';
+    }
+    if ($hasMustRepeat) {
+        $select[] = 's.`must_repeat`';
+    }
+    if ($hasAutofillRepeat) {
+        $select[] = 's.`autofill_repeat`';
     }
 
     if ($hasFieldsetIds) {
@@ -473,6 +485,21 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $required = trim($row['required']);
         }
 
+        $locationRepeat = null;
+        if ($hasLocationRepeat && isset($row['location_repeat']) && is_string($row['location_repeat']) && $row['location_repeat'] !== '') {
+            $locationRepeat = trim($row['location_repeat']);
+        }
+
+        $mustRepeat = null;
+        if ($hasMustRepeat && isset($row['must_repeat']) && is_string($row['must_repeat']) && $row['must_repeat'] !== '') {
+            $mustRepeat = trim($row['must_repeat']);
+        }
+
+        $autofillRepeat = null;
+        if ($hasAutofillRepeat && isset($row['autofill_repeat']) && is_string($row['autofill_repeat']) && $row['autofill_repeat'] !== '') {
+            $autofillRepeat = trim($row['autofill_repeat']);
+        }
+
         $result = [
             'id' => isset($row['id']) ? (int) $row['id'] : null,
             'name' => (string) $row['name'],
@@ -483,6 +510,9 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
                 : null,
             'subcategory_key' => $subcategoryKey,
             'required' => $required,
+            'location_repeat' => $locationRepeat,
+            'must_repeat' => $mustRepeat,
+            'autofill_repeat' => $autofillRepeat,
             'fieldset_ids' => $fieldsetIds,
             'fieldset_names' => $fieldsetNames,
         ];
@@ -971,6 +1001,29 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
             }
         }
 
+        // Parse repeat CSVs (same boolean CSV format as required, aligned with fieldset_ids positions)
+        $locationRepeatFlags = [];
+        if (isset($sub['location_repeat']) && is_string($sub['location_repeat']) && $sub['location_repeat'] !== '') {
+            $repeatParts = preg_split('/\s*,\s*/', trim($sub['location_repeat']));
+            foreach ($repeatParts as $part) {
+                $locationRepeatFlags[] = (trim($part) === '1' || strtolower(trim($part)) === 'true');
+            }
+        }
+        $mustRepeatFlags = [];
+        if (isset($sub['must_repeat']) && is_string($sub['must_repeat']) && $sub['must_repeat'] !== '') {
+            $repeatParts = preg_split('/\s*,\s*/', trim($sub['must_repeat']));
+            foreach ($repeatParts as $part) {
+                $mustRepeatFlags[] = (trim($part) === '1' || strtolower(trim($part)) === 'true');
+            }
+        }
+        $autofillRepeatFlags = [];
+        if (isset($sub['autofill_repeat']) && is_string($sub['autofill_repeat']) && $sub['autofill_repeat'] !== '') {
+            $repeatParts = preg_split('/\s*,\s*/', trim($sub['autofill_repeat']));
+            foreach ($repeatParts as $part) {
+                $autofillRepeatFlags[] = (trim($part) === '1' || strtolower(trim($part)) === 'true');
+            }
+        }
+
         $fieldsetNames = [];
         if (isset($sub['fieldset_names']) && is_array($sub['fieldset_names'])) {
             foreach ($sub['fieldset_names'] as $value) {
@@ -1001,6 +1054,9 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
         foreach ($fieldsetIds as $index => $fieldsetId) {
             // Get required flag for this field (default to false if not set)
             $requiredValue = isset($requiredFlags[$index]) ? $requiredFlags[$index] : false;
+            $locationRepeatValue = isset($locationRepeatFlags[$index]) ? $locationRepeatFlags[$index] : false;
+            $mustRepeatValue = isset($mustRepeatFlags[$index]) ? $mustRepeatFlags[$index] : false;
+            $autofillRepeatValue = isset($autofillRepeatFlags[$index]) ? $autofillRepeatFlags[$index] : false;
             
             // Get customizations for this fieldset if it's editable (keyed by fieldset_key)
             $fieldsetKeyForEdit = null;
@@ -1118,6 +1174,9 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'name' => $customName !== null ? $customName : $fieldsetName,
                     'placeholder' => $matchingFieldset['placeholder'] ?? $matchingFieldset['fieldset_placeholder'] ?? '',
                     'required' => $requiredValue,
+                    'location_repeat' => $locationRepeatValue,
+                    'must_repeat' => $mustRepeatValue,
+                    'autofill_repeat' => $autofillRepeatValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                 ];
                 

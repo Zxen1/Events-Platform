@@ -2573,7 +2573,20 @@ const MemberModule = (function() {
     // Ensure field has safe defaults
     function ensureFieldDefaults(field) {
         if (!field || typeof field !== 'object') {
-            return { name: '', placeholder: '', options: [], fieldsetKey: '', key: '', type: '', min_length: 0, max_length: 500 };
+            return {
+                name: '',
+                placeholder: '',
+                tooltip: '',
+                options: [],
+                fieldsetKey: '',
+                key: '',
+                type: '',
+                min_length: 0,
+                max_length: 500,
+                location_repeat: false,
+                must_repeat: false,
+                autofill_repeat: false
+            };
         }
         var result = {
             name: '',
@@ -2584,7 +2597,10 @@ const MemberModule = (function() {
             key: '',
             type: '',
             min_length: 0,
-            max_length: 500
+            max_length: 500,
+            location_repeat: false,
+            must_repeat: false,
+            autofill_repeat: false
         };
         
         if (field.name && typeof field.name === 'string') {
@@ -2619,6 +2635,31 @@ const MemberModule = (function() {
         }
         if (typeof field.max_length === 'number') {
             result.max_length = field.max_length;
+        }
+
+        // Preserve repeat flags if provided by backend/formbuilder
+        if (typeof field.location_repeat === 'boolean') {
+            result.location_repeat = field.location_repeat;
+        } else if (typeof field.locationRepeat === 'boolean') {
+            result.location_repeat = field.locationRepeat;
+        } else if (field.location_repeat === 1 || field.location_repeat === '1') {
+            result.location_repeat = true;
+        }
+
+        if (typeof field.must_repeat === 'boolean') {
+            result.must_repeat = field.must_repeat;
+        } else if (typeof field.mustRepeat === 'boolean') {
+            result.must_repeat = field.mustRepeat;
+        } else if (field.must_repeat === 1 || field.must_repeat === '1') {
+            result.must_repeat = true;
+        }
+
+        if (typeof field.autofill_repeat === 'boolean') {
+            result.autofill_repeat = field.autofill_repeat;
+        } else if (typeof field.autofillRepeat === 'boolean') {
+            result.autofill_repeat = field.autofillRepeat;
+        } else if (field.autofill_repeat === 1 || field.autofill_repeat === '1') {
+            result.autofill_repeat = true;
         }
         
         return result;

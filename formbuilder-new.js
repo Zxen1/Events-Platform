@@ -378,6 +378,9 @@
                         
                         var fieldName = fieldNameSpan ? fieldNameSpan.textContent.trim() : '';
                         var isRequired = requiredCheckbox ? requiredCheckbox.checked : false;
+                        var isLocationRepeat = wrapper.classList.contains('formbuilder-field-wrapper--location-repeat');
+                        var isMustRepeat = wrapper.classList.contains('formbuilder-field-wrapper--must-repeat');
+                        var isAutofillRepeat = wrapper.classList.contains('formbuilder-field-wrapper--autofill-repeat');
                         
                         // Find matching fieldset from loaded reference data
                         var fieldsetDef = null;
@@ -391,6 +394,9 @@
                             fieldsetKey: fieldsetDef ? fieldsetDef.key : fieldsetId,
                             name: fieldName,
                             required: isRequired,
+                            location_repeat: isLocationRepeat,
+                            must_repeat: isMustRepeat,
+                            autofill_repeat: isAutofillRepeat,
                             input_type: fieldsetDef ? fieldsetDef.key : fieldsetId
                         };
                         
@@ -2087,6 +2093,36 @@
             switchRow.appendChild(mustRepeatLabel);
             switchRow.appendChild(autofillRepeatLabel);
             fieldEditPanel.appendChild(switchRow);
+
+            // Initialize repeat switch states from fieldData (loaded from database)
+            var initialLocationRepeat = !!(fieldData && (fieldData.location_repeat || fieldData.locationRepeat));
+            var initialMustRepeat = !!(fieldData && (fieldData.must_repeat || fieldData.mustRepeat));
+            var initialAutofillRepeat = !!(fieldData && (fieldData.autofill_repeat || fieldData.autofillRepeat));
+
+            if (initialLocationRepeat) {
+                locationRepeatSwitch.classList.add('on');
+                fieldWrapper.classList.add('formbuilder-field-wrapper--location-repeat');
+                mustRepeatLabel.classList.remove('disabled');
+                mustRepeatSwitch.classList.remove('disabled');
+                autofillRepeatLabel.classList.remove('disabled');
+                autofillRepeatSwitch.classList.remove('disabled');
+            } else {
+                mustRepeatLabel.classList.add('disabled');
+                mustRepeatSwitch.classList.add('disabled');
+                autofillRepeatLabel.classList.add('disabled');
+                autofillRepeatSwitch.classList.add('disabled');
+                initialMustRepeat = false;
+                initialAutofillRepeat = false;
+            }
+
+            if (initialMustRepeat) {
+                mustRepeatSwitch.classList.add('on');
+                fieldWrapper.classList.add('formbuilder-field-wrapper--must-repeat');
+            }
+            if (initialAutofillRepeat) {
+                autofillRepeatSwitch.classList.add('on');
+                fieldWrapper.classList.add('formbuilder-field-wrapper--autofill-repeat');
+            }
             
             // Check field type
             var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.fieldset_key || fieldsetDef.key;
