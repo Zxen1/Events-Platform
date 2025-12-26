@@ -2578,6 +2578,7 @@ const MemberModule = (function() {
                 placeholder: '',
                 tooltip: '',
                 options: [],
+                selectedAmenities: null,
                 fieldsetKey: '',
                 key: '',
                 type: '',
@@ -2593,6 +2594,7 @@ const MemberModule = (function() {
             placeholder: '',
             tooltip: '',
             options: [],
+            selectedAmenities: null,
             fieldsetKey: '',
             key: '',
             type: '',
@@ -2616,6 +2618,22 @@ const MemberModule = (function() {
         }
         if (Array.isArray(field.options)) {
             result.options = field.options;
+        }
+
+        // Preserve amenities limiter from subcategories.fieldset_mods (loaded by get-form.php)
+        // Expected shape: field.selectedAmenities = ["Parking", "Wheelchair Access", ...]
+        // Development strictness: if present but invalid, throw (no silent fallback).
+        if (field.selectedAmenities !== undefined && field.selectedAmenities !== null && !Array.isArray(field.selectedAmenities)) {
+            throw new Error('Member form: field.selectedAmenities must be an array when provided.');
+        }
+        if (Array.isArray(field.selectedAmenities)) {
+            var safeAmenities = field.selectedAmenities.filter(function(v) {
+                return typeof v === 'string' && v.trim() !== '';
+            });
+            if (safeAmenities.length !== field.selectedAmenities.length) {
+                throw new Error('Member form: field.selectedAmenities must contain only non-empty strings.');
+            }
+            result.selectedAmenities = safeAmenities;
         }
         if (field.fieldsetKey && typeof field.fieldsetKey === 'string') {
             result.fieldsetKey = field.fieldsetKey;
