@@ -189,7 +189,7 @@ html, body {
 
 body {
   margin: 0;
-  font-size: 13px;
+  font-size: 15px;
   background: var(--background);
   color: var(--text);
   overflow: hidden;
