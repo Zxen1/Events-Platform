@@ -2906,6 +2906,8 @@ const AdminModule = (function() {
                     '<label class="admin-checkout-accordion-editpanel-label">Price Calculator (Sandbox)</label>' +
                     '<div class="admin-checkout-accordion-editpanel-calc">' +
                         '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-option-calc-days" value="" placeholder="Days" />' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-option-calc-locations" value="1" placeholder="Locations" />' +
+                        '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-calc-surcharge" value="0" placeholder="Surcharge %" />' +
                         '<span class="admin-checkout-accordion-editpanel-calc-equals">=</span>' +
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
                     '</div>' +
@@ -3023,6 +3025,8 @@ const AdminModule = (function() {
 
             // Price calculator logic
             var calcDaysInput = accordion.querySelector('.admin-checkout-option-calc-days');
+            var calcLocationsInput = accordion.querySelector('.admin-checkout-option-calc-locations');
+            var calcSurchargeInput = accordion.querySelector('.admin-checkout-option-calc-surcharge');
             var calcTotalSpan = accordion.querySelector('.admin-checkout-option-calc-total');
             var priceInput = accordion.querySelector('.admin-checkout-option-price');
             var basicDayRateInput = accordion.querySelector('.admin-checkout-option-basic-day-rate');
@@ -3058,6 +3062,8 @@ const AdminModule = (function() {
             setupNumericInput(basicDayRateInput, true);
             setupNumericInput(discountDayRateInput, true);
             setupNumericInput(calcDaysInput, false);
+            setupNumericInput(calcLocationsInput, false);
+            setupNumericInput(calcSurchargeInput, true);
 
             function updateCalculator() {
                 if (!calcDaysInput || !calcTotalSpan) return;
@@ -3071,6 +3077,10 @@ const AdminModule = (function() {
                     return;
                 }
 
+                var locations = calcLocationsInput ? (parseInt(calcLocationsInput.value, 10) || 1) : 1;
+                if (locations < 1) locations = 1;
+                var surchargePct = calcSurchargeInput ? (parseFloat(calcSurchargeInput.value) || 0) : 0;
+
                 var flagfall = parseFloat(priceInput.value) || 0;
                 var dayRate = null;
 
@@ -3082,18 +3092,38 @@ const AdminModule = (function() {
                     dayRate = basicRateValue !== '' ? parseFloat(basicRateValue) : null;
                 }
 
-                if (dayRate === null || isNaN(dayRate)) {
-                    calcTotalSpan.textContent = currency + ' ' + flagfall.toFixed(2);
-                    return;
-                }
+                // Extra locations always use discount rate (fallback to selected dayRate if discount is N/A)
+                var discountRate = null;
+                var discountRateValue2 = discountDayRateInput.value.trim();
+                discountRate = discountRateValue2 !== '' ? parseFloat(discountRateValue2) : null;
+                var extraLocRate = (discountRate !== null && !isNaN(discountRate)) ? discountRate : dayRate;
 
-                var total = flagfall + (dayRate * days);
+                var durationCharge = (dayRate !== null && !isNaN(dayRate)) ? (dayRate * days) : 0;
+                var extraLocCharge = (locations > 1 && extraLocRate !== null && !isNaN(extraLocRate)) ? ((locations - 1) * extraLocRate * days) : 0;
+                var variable = durationCharge + extraLocCharge;
+                var total = flagfall + (variable * (1 + (surchargePct / 100)));
                 calcTotalSpan.textContent = currency + ' ' + total.toFixed(2);
             }
 
             if (calcDaysInput) {
                 calcDaysInput.addEventListener('input', updateCalculator);
                 calcDaysInput.addEventListener('change', updateCalculator);
+            }
+            if (calcLocationsInput) {
+                calcLocationsInput.addEventListener('input', updateCalculator);
+                calcLocationsInput.addEventListener('change', updateCalculator);
+                calcLocationsInput.addEventListener('blur', function() {
+                    var v = parseInt(this.value, 10);
+                    if (!isNaN(v)) this.value = String(Math.max(1, v));
+                });
+            }
+            if (calcSurchargeInput) {
+                calcSurchargeInput.addEventListener('input', updateCalculator);
+                calcSurchargeInput.addEventListener('change', updateCalculator);
+                calcSurchargeInput.addEventListener('blur', function() {
+                    var v = parseFloat(this.value);
+                    if (!isNaN(v)) this.value = v.toFixed(2);
+                });
             }
             if (priceInput) {
                 priceInput.addEventListener('input', function() {

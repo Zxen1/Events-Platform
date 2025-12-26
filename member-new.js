@@ -2166,6 +2166,7 @@ const MemberModule = (function() {
                             if (locationQuantity > 1) {
                                 locationQuantity--;
                                 quantityDisplay.textContent = locationQuantity;
+                                window._memberLocationQuantity = locationQuantity;
                                 
                                 // Update label
                                 var labelTextEl = labelEl.querySelector('.fieldset-label-text');
@@ -2183,6 +2184,12 @@ const MemberModule = (function() {
                                 // Minus clicked
                                 setTimeout(function() {
                                     renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
+                                    if (checkoutInstance && typeof checkoutInstance.updateContext === 'function') {
+                                        setTimeout(function() {
+                                            checkoutInstance.updateContext({ locationCount: locationQuantity });
+                                            try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
+                                        }, 50);
+                                    }
                                 }, 100);
                             }
                         });
@@ -2190,6 +2197,7 @@ const MemberModule = (function() {
                         plusBtn.addEventListener('click', function() {
                             locationQuantity++;
                             quantityDisplay.textContent = locationQuantity;
+                            window._memberLocationQuantity = locationQuantity;
                             
                             // Update label
                             var labelTextEl = labelEl.querySelector('.fieldset-label-text');
@@ -2203,6 +2211,12 @@ const MemberModule = (function() {
                             // Plus clicked
                             setTimeout(function() {
                                 renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
+                                if (checkoutInstance && typeof checkoutInstance.updateContext === 'function') {
+                                    setTimeout(function() {
+                                        checkoutInstance.updateContext({ locationCount: locationQuantity });
+                                        try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
+                                    }, 50);
+                                }
                             }, 100);
                         });
                     } else {
@@ -2403,7 +2417,7 @@ const MemberModule = (function() {
         if (!formFields || checkoutOptions.length === 0) return;
         
         // Get subcategory data for surcharge and type
-        var surcharge = 0;
+        var surchargePercent = 0;
         var subcategoryType = 'General';
         if (memberCategories && memberCategories.length > 0) {
             var category = memberCategories.find(function(c) {
@@ -2413,9 +2427,7 @@ const MemberModule = (function() {
                 var subData = category.subFees[selectedSubcategory];
                 if (subData.checkout_surcharge !== null && subData.checkout_surcharge !== undefined) {
                     var parsedSurcharge = parseFloat(subData.checkout_surcharge);
-                    if (!isNaN(parsedSurcharge)) {
-                        surcharge = parsedSurcharge;
-                    }
+                    if (!isNaN(parsedSurcharge)) surchargePercent = parsedSurcharge;
                 }
                 if (subData.subcategory_type) {
                     subcategoryType = subData.subcategory_type;
@@ -2432,26 +2444,102 @@ const MemberModule = (function() {
         // Label
         var label = document.createElement('div');
         label.className = 'fieldset-label';
-        var labelText = surcharge > 0 
-            ? 'Checkout Options (+' + surcharge.toFixed(2) + ' surcharge)' 
+        var labelText = surchargePercent !== 0
+            ? ('Checkout Options (' + (surchargePercent > 0 ? '+' : '') + surchargePercent.toFixed(2) + '% surcharge)')
             : 'Checkout Options';
         label.innerHTML = '<span class="fieldset-label-text">' + labelText + '</span><span class="fieldset-label-required">*</span>';
         wrapper.appendChild(label);
         
+        function getEventVenueDaysFromDom(locationQty) {
+            var qty = parseInt(locationQty, 10) || 1;
+            if (qty < 1) qty = 1;
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            function daysToIso(iso) {
+                if (!iso || typeof iso !== 'string') return null;
+                var d = new Date(iso.trim() + 'T00:00:00');
+                if (!d || isNaN(d.getTime())) return null;
+                d.setHours(0, 0, 0, 0);
+                var diffDays = Math.ceil((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                return diffDays > 0 ? diffDays : 1;
+            }
+
+            function getMaxSelectedIso(fieldsetEl) {
+                if (!fieldsetEl) return null;
+                var days = fieldsetEl.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                var latest = null;
+                days.forEach(function(el) {
+                    var iso = el.dataset.iso;
+                    if (!iso) return;
+                    if (!latest || iso > latest) latest = iso;
+                });
+                return latest;
+            }
+
+            var result = [];
+
+            // Location 1 sessions are in the main form (not inside .member-additional-location)
+            var mainSessions = formFields.querySelector('.fieldset[data-fieldset-key="sessions"]');
+            var mainIso = getMaxSelectedIso(mainSessions);
+            result.push(mainIso ? daysToIso(mainIso) : 0);
+
+            // Locations 2+ are inside .member-additional-location sections
+            for (var i = 2; i <= qty; i++) {
+                var section = formFields.querySelector('.member-additional-location[data-location-number="' + i + '"]');
+                var fs = section ? section.querySelector('.fieldset[data-fieldset-key="sessions"]') : null;
+                var iso = getMaxSelectedIso(fs);
+                result.push(iso ? daysToIso(iso) : 0);
+            }
+
+            return result;
+        }
+
+        function updateCheckoutContext() {
+            if (!checkoutInstance || typeof checkoutInstance.updateContext !== 'function') return;
+            if (isEvent) {
+                checkoutInstance.updateContext({
+                    surchargePercent: surchargePercent,
+                    locationCount: window._memberLocationQuantity || 1,
+                    eventVenueDays: getEventVenueDaysFromDom(window._memberLocationQuantity || 1)
+                });
+            } else {
+                checkoutInstance.updateContext({
+                    surchargePercent: surchargePercent,
+                    locationCount: window._memberLocationQuantity || 1
+                });
+            }
+        }
+
         // Create checkout options using CheckoutOptionsComponent
         if (typeof CheckoutOptionsComponent !== 'undefined') {
+            // Location quantity is tracked outside checkout; store globally so updates can read it.
+            if (!window._memberLocationQuantity) window._memberLocationQuantity = 1;
             checkoutInstance = CheckoutOptionsComponent.create(wrapper, {
                 checkoutOptions: checkoutOptions,
                 currency: siteCurrency,
-                surcharge: surcharge,
+                surchargePercent: surchargePercent,
                 isEvent: isEvent,
-                calculatedDays: isEvent ? null : null, // Events: will update when dates selected
+                locationCount: window._memberLocationQuantity || 1,
+                eventVenueDays: isEvent ? getEventVenueDaysFromDom(window._memberLocationQuantity || 1) : null,
                 baseId: 'member-create',
                 groupName: 'member-create-checkout-option',
                 onSelect: function(optionId, days, price) {
                     // Selection handler - can be used for validation
                 }
             });
+
+            // Live updates for events when session dates change
+            if (!renderCheckoutOptionsSection._listenersAttached) {
+                renderCheckoutOptionsSection._listenersAttached = true;
+                if (formFields) {
+                    formFields.addEventListener('fieldset:sessions-change', function() {
+                        updateCheckoutContext();
+                    });
+                }
+            }
+            // Apply initial context (ensures prices reflect current locations + dates)
+            updateCheckoutContext();
         }
         
         formFields.appendChild(wrapper);
