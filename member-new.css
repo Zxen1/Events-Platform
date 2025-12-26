@@ -600,7 +600,9 @@
 
 .member-tab-bar-button {
   flex: 1;
-  padding: 6px 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  padding: 0 10px 1px;
   border-radius: 5px;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -608,6 +610,10 @@
   color: var(--button-text);
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .member-tab-bar-button:hover {

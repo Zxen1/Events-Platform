@@ -76,16 +76,20 @@ const FilterModule = (function() {
         outsideCloseBound = true;
         
         // "Click outside to close" WITHOUT any click-capture overlay.
-        // This keeps map clicks working and does not block DevTools inspection.
-        document.addEventListener('pointerdown', function(e) {
+        // Uses a normal document click listener (like MenuManager) so:
+        // - It won't block other UI from receiving clicks
+        // - It plays nicely with DevTools inspection
+        // - It won't fight the header filter toggle button
+        document.addEventListener('click', function(e) {
             if (!panelEl || !contentEl) return;
             if (!panelEl.classList.contains('show')) return;
             if (!e || !e.target) return;
+            if (e.target.closest && e.target.closest('.header-filter-button')) return;
             if (contentEl.contains(e.target)) return;
             
             closePanel();
             App.emit('filter:closed');
-        }, true);
+        }, false);
     }
 
 
