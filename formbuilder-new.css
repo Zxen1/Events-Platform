@@ -510,7 +510,7 @@
   border: 1px solid #3b82f5;
   border-top: none;
   border-radius: 0 0 5px 5px;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
   overflow-x: hidden;
   z-index: var(--layer-menu, 85);
@@ -651,7 +651,7 @@
   border: 1px solid #3b82f5;
   border-top: none;
   border-radius: 0 0 5px 5px;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
   z-index: var(--layer-menu, 85);
   scrollbar-width: thin;

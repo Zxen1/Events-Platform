@@ -1379,7 +1379,7 @@
   border: 1px solid #3b82f6;
   border-top: none;
   border-radius: 0 0 5px 5px;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
   z-index: 1000;
 }

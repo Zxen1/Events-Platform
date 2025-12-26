@@ -971,7 +971,7 @@
   gap: var(--gap);
   width: 100%;
   flex: 1 1 auto;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -1091,7 +1091,7 @@
   gap: var(--gap);
   width: 100%;
   flex: 1 1 auto;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
