@@ -617,7 +617,7 @@
         var option = buildSubcategoryOption(cat, newSubName, loadedSubcategoryIconPaths, loadedFieldsets, body);
         
         // Insert before the Add Subcategory button
-        var addSubBtn = body.querySelector('.formbuilder-add-button');
+        var addSubBtn = body.querySelector('.formbuilder-add-subcategory');
         if (addSubBtn) {
             body.insertBefore(option, addSubBtn);
         } else {
@@ -824,7 +824,9 @@
                 var anchor = e.target.closest(
                     '.formbuilder-fieldset-menu-button,' +
                     '.formbuilder-menu-button,' +
-                    '.formbuilder-add-button,' +
+                    '.formbuilder-add-category,' +
+                    '.formbuilder-add-subcategory,' +
+                    '.formbuilder-add-fieldset,' +
                     '.formbuilder-form-preview,' +
                     '.formbuilder-calculator-btn,' +
                     '.formbuilder-accordion-option-header,' +
@@ -900,7 +902,7 @@
         
         // Add Category button
         var addCatBtn = document.createElement('div');
-        addCatBtn.className = 'formbuilder-add-button formbuilder-add-category';
+        addCatBtn.className = 'formbuilder-add-category';
         addCatBtn.textContent = '+ Add Category';
         addCatBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1080,7 +1082,7 @@
         
         // Add Subcategory button
         var addSubBtn = document.createElement('div');
-        addSubBtn.className = 'formbuilder-add-button';
+        addSubBtn.className = 'formbuilder-add-subcategory';
         addSubBtn.textContent = '+ Add Subcategory';
         addSubBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1894,7 +1896,7 @@
         // Fieldset menu
         var fieldsetMenu = document.createElement('div');
         fieldsetMenu.className = 'formbuilder-fieldset-menu';
-        fieldsetMenu.innerHTML = '<div class="formbuilder-fieldset-menu-button">+ Add Fieldset</div><div class="formbuilder-fieldset-menu-options"></div>';
+        fieldsetMenu.innerHTML = '<div class="formbuilder-fieldset-menu-button formbuilder-add-fieldset">+ Add Fieldset</div><div class="formbuilder-fieldset-menu-options"></div>';
         
         var fieldsetBtn = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-button');
         var fieldsetOpts = fieldsetMenu.querySelector('.formbuilder-fieldset-menu-options');
@@ -2625,7 +2627,7 @@
         optBody.appendChild(fieldsetMenu);
         
         var formPreviewBtn = document.createElement('div');
-        formPreviewBtn.className = 'formbuilder-add-button formbuilder-form-preview';
+        formPreviewBtn.className = 'formbuilder-form-preview';
         formPreviewBtn.textContent = 'Form Preview';
         formPreviewBtn.onclick = function(e) {
             e.stopPropagation();

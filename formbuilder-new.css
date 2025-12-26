@@ -566,7 +566,9 @@
 }
 
 /* Add Buttons */
-.formbuilder-add-button {
+.formbuilder-add-category,
+.formbuilder-add-subcategory,
+.formbuilder-form-preview {
   width: 100%;
   height: 36px;
   display: flex;
@@ -581,7 +583,9 @@
   margin-top: 3px;
 }
 
-.formbuilder-add-button:hover {
+.formbuilder-add-category:hover,
+.formbuilder-add-subcategory:hover,
+.formbuilder-form-preview:hover {
   border-color: #3b82f5;
   color: #fff;
 }
