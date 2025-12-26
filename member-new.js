@@ -285,9 +285,6 @@ const MemberModule = (function() {
         languageMenuContainer = document.getElementById('memberLanguageMenu');
         currencyMenuContainer = document.getElementById('memberCurrencyMenu');
         
-        profileEditNameInput = document.getElementById('member-profile-edit-name');
-        profileEditPasswordInput = document.getElementById('member-profile-edit-password');
-        profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
 
@@ -302,6 +299,113 @@ const MemberModule = (function() {
         cropperSaveBtn = document.getElementById('member-avatar-cropper-save');
 
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
+    }
+
+    // -------------------------------------------------------------------------
+    // DOM ISOLATION: keep hidden tab DOM out of the document so extensions can’t scan it.
+    // - Profile edit inputs only exist when logged in.
+    // - Create Post tab DOM only exists when Create tab is active.
+    // -------------------------------------------------------------------------
+    function clearProfileEditDom() {
+        if (!profileEditForm) return;
+        profileEditForm.innerHTML = '';
+        profileEditNameInput = null;
+        profileEditPasswordInput = null;
+        profileEditConfirmInput = null;
+    }
+
+    function ensureProfileEditDom() {
+        if (!profileEditForm) return;
+        if (document.getElementById('member-profile-edit-password')) return;
+
+        profileEditForm.innerHTML = '';
+
+        function addLabel(forId, text) {
+            var label = document.createElement('label');
+            label.className = 'member-auth-panel-label';
+            label.setAttribute('for', forId);
+            label.textContent = text;
+            profileEditForm.appendChild(label);
+        }
+
+        function addInput(type, id, autocomplete) {
+            var input = document.createElement('input');
+            input.type = type;
+            input.id = id;
+            input.className = 'member-auth-panel-input';
+            if (autocomplete) input.setAttribute('autocomplete', autocomplete);
+            profileEditForm.appendChild(input);
+            return input;
+        }
+
+        addLabel('member-profile-edit-name', 'Username');
+        profileEditNameInput = addInput('text', 'member-profile-edit-name', 'name');
+
+        addLabel('member-profile-edit-password', 'New Password');
+        profileEditPasswordInput = addInput('password', 'member-profile-edit-password', 'new-password');
+
+        addLabel('member-profile-edit-confirm', 'Confirm Password');
+        profileEditConfirmInput = addInput('password', 'member-profile-edit-confirm', 'new-password');
+
+        // Bind once
+        if (!profileEditForm.dataset.bound) {
+            profileEditForm.dataset.bound = 'true';
+            profileEditForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleHeaderSave();
+            });
+        }
+        if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
+        if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+    }
+
+    function unloadCreateTabDom() {
+        var createPanel = document.getElementById('member-tab-create');
+        if (createPanel) createPanel.innerHTML = '';
+        // Reset Create Post state so it truly unloads
+        formpickerLoaded = false;
+        memberCategories = [];
+        memberCategoryIconPaths = {};
+        memberSubcategoryIconPaths = {};
+        selectedCategory = '';
+        selectedSubcategory = '';
+        formWrapper = null;
+        formFields = null;
+        detachFormpickerOutsideClick();
+    }
+
+    function ensureCreateTabDom() {
+        var createPanel = document.getElementById('member-tab-create');
+        if (!createPanel) return;
+        if (document.getElementById('member-formpicker-cats')) return;
+
+        createPanel.innerHTML = '';
+
+        var pickerContainer = document.createElement('div');
+        pickerContainer.className = 'member-formpicker-container';
+        var cats = document.createElement('div');
+        cats.className = 'member-formpicker-cats';
+        cats.id = 'member-formpicker-cats';
+        cats.setAttribute('aria-label', 'Categories');
+        pickerContainer.appendChild(cats);
+        createPanel.appendChild(pickerContainer);
+
+        var wrapper = document.createElement('div');
+        wrapper.id = 'member-create-form-wrapper';
+        wrapper.className = 'member-form-container';
+        wrapper.hidden = true;
+        var fields = document.createElement('div');
+        fields.id = 'member-create-fields';
+        fields.className = 'member-create-fields';
+        fields.setAttribute('role', 'group');
+        fields.setAttribute('aria-live', 'polite');
+        wrapper.appendChild(fields);
+        createPanel.appendChild(wrapper);
+
+        // Refresh refs
+        formWrapper = wrapper;
+        formFields = fields;
     }
 
     // -------------------------------------------------------------------------
@@ -479,16 +583,7 @@ const MemberModule = (function() {
             });
         }
         
-        // Inline save removed; profile save is via header buttons
-        if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
-        if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
-        if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
-        if (profileEditForm) {
-            profileEditForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleHeaderSave();
-            });
-        }
+        // Profile edit form is built dynamically when logged in; handlers are attached in ensureProfileEditDom().
 
         // Avatar grid interactions (Register + Profile)
         if (avatarGridRegister) {
@@ -1690,6 +1785,9 @@ const MemberModule = (function() {
         initProfilePickers();
         // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
         ensureAvatarChoicesReady();
+
+        // Unload non-active member tabs so extensions can only see the active tab’s DOM.
+        unloadCreateTabDom();
         
         // Bring panel to front of stack
         App.bringToTop(panel);
@@ -1745,9 +1843,10 @@ const MemberModule = (function() {
             window.MapModule.stopSpin();
         }
         
-        // Tabs behave like pages: deactivate previous tab-specific globals.
+        // Tabs behave like pages: deactivate previous tab-specific globals and unload DOM.
         if (activeMemberTabName === 'create' && tabName !== 'create') {
             detachFormpickerOutsideClick();
+            unloadCreateTabDom();
         }
         activeMemberTabName = tabName;
         
@@ -1765,8 +1864,9 @@ const MemberModule = (function() {
             panel.hidden = !isActive;
         });
         
-        // Lazy load Create Post tab content
+        // Lazy load Create Post tab content (and build its DOM only when active)
         if (tabName === 'create') {
+            ensureCreateTabDom();
             loadFormpicker();
         }
     }
@@ -3342,6 +3442,9 @@ const MemberModule = (function() {
                 profilePanel.hidden = false;
                 profilePanel.removeAttribute('inert');
             }
+
+            // Build profile edit inputs only when logged in
+            ensureProfileEditDom();
             
             // Update profile display
             if (profileAvatar) {
@@ -3395,6 +3498,9 @@ const MemberModule = (function() {
                 profilePanel.hidden = true;
                 profilePanel.setAttribute('inert', '');
             }
+
+            // Remove profile edit inputs while logged out so extensions can’t scan them.
+            clearProfileEditDom();
             
             // Clear profile display
             if (profileAvatar) {
@@ -3406,9 +3512,6 @@ const MemberModule = (function() {
             if (profileEmail) profileEmail.textContent = '';
             
             profileOriginalName = '';
-            if (profileEditNameInput) profileEditNameInput.value = '';
-            if (profileEditPasswordInput) profileEditPasswordInput.value = '';
-            if (profileEditConfirmInput) profileEditConfirmInput.value = '';
             profileOriginalAvatarUrl = '';
             pendingAvatarUrl = '';
             pendingProfileSiteUrl = '';
