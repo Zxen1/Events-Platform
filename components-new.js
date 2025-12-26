@@ -519,8 +519,9 @@ const FieldsetComponent = (function(){
             var remaining = maxLength - input.value.length;
             if (!isFinite(remaining)) remaining = 0;
 
-            // Consistent UX: show while focused, or when near limit
-            var shouldShow = focused || (remaining <= 5 && input.value.length > 0);
+            // Consistent UX: show while focused, or once user has started typing (or near limit).
+            // This ensures Title (and all other limited fields) visibly has a character counter.
+            var shouldShow = focused || input.value.length > 0 || (remaining <= 5);
             if (!shouldShow) {
                 charCount.style.display = 'none';
                 return;
@@ -756,6 +757,7 @@ const FieldsetComponent = (function(){
             }
         }
         
+        // Canonical: fieldset_placeholder (from DB). Editable override: customPlaceholder (from fieldset_mods).
         var placeholder = fieldData.customPlaceholder || fieldData.fieldset_placeholder;
         var minLength = fieldData.min_length;
         var maxLength = fieldData.max_length;

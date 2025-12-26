@@ -2247,8 +2247,8 @@
             
             // Get default values from fieldset definition
             var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name) : '';
-            var defaultPlaceholder = fieldsetDef ? (fieldsetDef.fieldset_placeholder || fieldsetDef.placeholder) : '';
-            var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || fieldsetDef.tooltip) : '';
+            var defaultPlaceholder = fieldsetDef ? (fieldsetDef.fieldset_placeholder || '') : '';
+            var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || '') : '';
             var defaultOptions = fieldsetDef && fieldsetDef.fieldset_fields ? [] : []; // Options are typically empty by default
             
             // Track modification state (must be defined before it's called)
@@ -2303,7 +2303,7 @@
                     var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
                     var currentState = {
                         name: hasNameOverride ? nameValue : '',
-                        placeholder: hasPlaceholderOverride ? placeholderValue : '',
+                    placeholder: hasPlaceholderOverride ? placeholderValue : '',
                         tooltip: hasTooltipOverride ? tooltipValue : '',
                         options: hasOptions && optionsContainer ? Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).map(function(inp) { return inp.value.trim(); }).filter(function(v) { return v !== ''; }) : [],
                         selectedAmenities: hasAmenities ? selectedAmenities : []

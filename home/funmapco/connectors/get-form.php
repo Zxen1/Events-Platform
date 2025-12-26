@@ -563,10 +563,16 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $hasKey = in_array('fieldset_key', $columns, true);
     $hasName = in_array('fieldset_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
-    // Check for new column name, fallback to old column name
-    $hasPlaceholder = in_array('fieldset_placeholder', $columns, true) || in_array('placeholder', $columns, true);
-    $placeholderColumnName = in_array('fieldset_placeholder', $columns, true) ? 'fieldset_placeholder' : 'placeholder';
+    $hasPlaceholder = in_array('fieldset_placeholder', $columns, true);
+    if (!$hasPlaceholder) {
+        http_response_code(500);
+        throw new RuntimeException('Fieldsets table must include `fieldset_placeholder` (new site requires canonical column names).');
+    }
     $hasFieldsetTooltip = in_array('fieldset_tooltip', $columns, true);
+    if (!$hasFieldsetTooltip) {
+        http_response_code(500);
+        throw new RuntimeException('Fieldsets table must include `fieldset_tooltip` (new site requires canonical column names).');
+    }
     // Check for new column name, fallback to old column name
     $hasFieldsetFields = in_array('fieldset_fields', $columns, true);
 
@@ -587,12 +593,8 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
             $selectColumns[] = '`fieldset_name`';
         }
     }
-    if ($hasPlaceholder) {
-        $selectColumns[] = '`' . $placeholderColumnName . '`';
-    }
-    if ($hasFieldsetTooltip) {
-        $selectColumns[] = '`fieldset_tooltip`';
-    }
+    $selectColumns[] = '`fieldset_placeholder`';
+    $selectColumns[] = '`fieldset_tooltip`';
     if ($hasFieldsetFields) {
         if (in_array('fieldset_fields', $columns, true)) {
             $selectColumns[] = '`fieldset_fields`';
@@ -701,11 +703,12 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
         } else {
             $entry['name'] = $rawName;
         }
-        if ($hasPlaceholder && isset($row[$placeholderColumnName]) && is_string($row[$placeholderColumnName])) {
-            $entry['placeholder'] = trim($row[$placeholderColumnName]);
+        if (isset($row['fieldset_placeholder']) && is_string($row['fieldset_placeholder'])) {
+            $entry['fieldset_placeholder'] = trim($row['fieldset_placeholder']);
         }
-        if ($hasFieldsetTooltip && isset($row['fieldset_tooltip']) && is_string($row['fieldset_tooltip'])) {
-            $entry['fieldset_tooltip'] = trim($row['fieldset_tooltip']);
+        // Allow NULL in DB, but column must exist.
+        if (array_key_exists('fieldset_tooltip', $row) && $row['fieldset_tooltip'] !== null) {
+            $entry['fieldset_tooltip'] = is_string($row['fieldset_tooltip']) ? trim($row['fieldset_tooltip']) : (string)$row['fieldset_tooltip'];
         }
         if ($hasSortOrder && isset($row['sort_order'])) {
             $entry['sort_order'] = is_numeric($row['sort_order'])
