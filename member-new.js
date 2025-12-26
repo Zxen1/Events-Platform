@@ -291,7 +291,7 @@ const MemberModule = (function() {
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
 
-        // Avatar UI
+        // Avatar UI (register grid is built dynamically when register subtab is active)
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
         avatarGridProfile = document.getElementById('member-avatar-grid-profile');
         avatarFileInput = document.getElementById('member-avatar-file-input');
@@ -302,6 +302,88 @@ const MemberModule = (function() {
         cropperSaveBtn = document.getElementById('member-avatar-cropper-save');
 
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
+    }
+
+    // -------------------------------------------------------------------------
+    // AUTH SUBTAB ISOLATION (Login vs Register)
+    // - Login: allow browser autofill (username/current-password)
+    // - Register: do NOT autofill; also keep its inputs out of DOM unless active
+    // -------------------------------------------------------------------------
+    function clearRegisterPanelDom() {
+        if (!registerPanel) return;
+        registerPanel.innerHTML = '';
+        registerInputs = [];
+        avatarGridRegister = null;
+    }
+
+    function ensureRegisterPanelDom() {
+        if (!registerPanel) return;
+        // If already built, keep it.
+        if (document.getElementById('member-register-email')) return;
+
+        registerPanel.innerHTML = '';
+
+        function addLabel(forId, text) {
+            var label = document.createElement('label');
+            label.className = 'member-auth-panel-label';
+            label.setAttribute('for', forId);
+            label.textContent = text;
+            registerPanel.appendChild(label);
+        }
+
+        function addInput(type, id, name, autocomplete) {
+            var input = document.createElement('input');
+            input.type = type;
+            input.id = id;
+            input.className = 'member-auth-panel-input';
+            if (name) input.name = name;
+            input.setAttribute('autocomplete', autocomplete || 'off');
+            registerPanel.appendChild(input);
+            return input;
+        }
+
+        addLabel('member-register-name', 'Username');
+        addInput('text', 'member-register-name', 'registerName', 'off');
+
+        addLabel('member-register-email', 'Email');
+        addInput('email', 'member-register-email', 'registerEmail', 'off');
+
+        addLabel('member-register-password', 'Password');
+        addInput('password', 'member-register-password', 'registerPassword', 'off');
+
+        addLabel('member-register-confirm', 'Confirm Password');
+        addInput('password', 'member-register-confirm', 'registerConfirm', 'off');
+
+        // Avatar grid (register)
+        var avatarLabel = document.createElement('label');
+        avatarLabel.className = 'member-auth-panel-label';
+        avatarLabel.textContent = 'Avatar';
+        registerPanel.appendChild(avatarLabel);
+
+        avatarGridRegister = document.createElement('div');
+        avatarGridRegister.id = 'member-avatar-grid-register';
+        avatarGridRegister.className = 'member-avatar-grid';
+        avatarGridRegister.setAttribute('aria-label', 'Avatar choices');
+        registerPanel.appendChild(avatarGridRegister);
+
+        // Submit button
+        var submit = document.createElement('button');
+        submit.type = 'submit';
+        submit.className = 'member-button-auth member-auth-submit';
+        submit.dataset.action = 'register';
+        submit.textContent = 'Create Account';
+        registerPanel.appendChild(submit);
+
+        // Refresh cached inputs list
+        registerInputs = Array.from(registerPanel.querySelectorAll('input'));
+
+        // Bind avatar click for this new grid
+        avatarGridRegister.addEventListener('click', function(e) {
+            onAvatarGridClick('register', e);
+        });
+
+        // Populate the grid if choices are ready
+        renderAvatarGrid('register', avatarGridRegister);
     }
 
     function bindEvents() {
@@ -2054,11 +2136,13 @@ const MemberModule = (function() {
 
     // Extracted body so we can wait for FieldsetComponent.loadFromDatabase() when needed
     renderConfiguredFields._renderBody = function() {
+        if (!formFields) return;
+        // No caching allowed: rebuild the form fresh each time.
+        formFields.innerHTML = '';
+        var section = formFields;
         
         // Get fields for this category/subcategory
         var fields = getFieldsForSelection(selectedCategory, selectedSubcategory);
-
-        if (formFields) formFields.innerHTML = '';
 
         // Track location quantity and repeat fieldsets
         var locationQuantity = 1;
@@ -2071,7 +2155,7 @@ const MemberModule = (function() {
             var placeholder = document.createElement('p');
             placeholder.className = 'member-create-intro';
             placeholder.textContent = 'No fields configured for this subcategory yet.';
-            if (formFields) formFields.appendChild(placeholder);
+            section.appendChild(placeholder);
         } else {
             // First pass: identify location fieldset and collect repeat fieldsets
             // Also get subcategory data to check for must-repeat and autofill-repeat CSV strings
@@ -2180,7 +2264,7 @@ const MemberModule = (function() {
                 var fieldset = FieldsetComponent.buildFieldset(field, {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
-                    container: formFields,
+                    container: section,
                     defaultCurrency: null
                 });
                 
@@ -2284,32 +2368,32 @@ const MemberModule = (function() {
                     }
                 }
                 
-                formFields.appendChild(fieldset);
+                section.appendChild(fieldset);
             });
             
         }
         
         // Render checkout options at the bottom of the form
-        renderCheckoutOptionsSection();
+        renderCheckoutOptionsSection(section);
         
         // Render additional locations if quantity > 1 (after checkout section is rendered)
         if (locationQuantity > 1 && locationFieldset) {
             setTimeout(function() {
-                renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
+                renderAdditionalLocations(section, locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets);
             }, 100);
         }
         
         // Render terms agreement and submit buttons after checkout options
-        renderTermsAndSubmitSection();
+        renderTermsAndSubmitSection(section);
         
         if (formWrapper) formWrapper.hidden = false;
     }
     
-    function renderAdditionalLocations(quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
+    function renderAdditionalLocations(sectionRoot, quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
         // renderAdditionalLocations called
-        
-        // Remove existing additional locations
-        var existingLocations = formFields.querySelectorAll('.member-additional-location');
+        if (!sectionRoot) return;
+        // No caching/reuse allowed: remove and rebuild additional locations each time.
+        var existingLocations = sectionRoot.querySelectorAll('.member-additional-location');
         existingLocations.forEach(function(el) {
             el.remove();
         });
@@ -2321,7 +2405,7 @@ const MemberModule = (function() {
         }
         
         // Find insertion point - before checkout options section
-        var checkoutSection = formFields.querySelector('.member-checkout-wrapper');
+        var checkoutSection = sectionRoot.querySelector('.member-checkout-wrapper');
         if (!checkoutSection) {
             console.warn('[Member] Checkout section not found, cannot render additional locations');
             return;
@@ -2339,9 +2423,9 @@ const MemberModule = (function() {
             locationSection.dataset.locationNumber = i;
             
             // Location header
+            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + ' ' + i;
             var locationHeader = document.createElement('h3');
             locationHeader.className = 'member-additional-location-header';
-            var locationName = locationType.charAt(0).toUpperCase() + locationType.slice(1) + ' ' + i;
             locationHeader.textContent = locationName;
             locationSection.appendChild(locationHeader);
             
@@ -2366,8 +2450,6 @@ const MemberModule = (function() {
                 container: locationSection,
                 defaultCurrency: null
             });
-            
-            // Built fieldset for location
             locationSection.appendChild(locationFieldsetClone);
             
             // Then, render must-repeat fieldsets
@@ -2394,7 +2476,7 @@ const MemberModule = (function() {
             
             // Insert before checkout options
             // Inserting location section before checkout section
-            formFields.insertBefore(locationSection, checkoutSection);
+            sectionRoot.insertBefore(locationSection, checkoutSection);
         }
         
         // Finished rendering additional locations
@@ -2456,8 +2538,8 @@ const MemberModule = (function() {
         }
     }
     
-    function renderCheckoutOptionsSection() {
-        if (!formFields || checkoutOptions.length === 0) return;
+    function renderCheckoutOptionsSection(sectionRoot) {
+        if (!sectionRoot || checkoutOptions.length === 0) return;
         
         // Get subcategory data for surcharge and type
         var surcharge = 0;
@@ -2511,14 +2593,14 @@ const MemberModule = (function() {
             });
         }
         
-        formFields.appendChild(wrapper);
+        sectionRoot.appendChild(wrapper);
     }
     
     // Form terms agreement row element
     var formTermsCheckbox = null;
     
-    function renderTermsAndSubmitSection() {
-        if (!formFields) return;
+    function renderTermsAndSubmitSection(sectionRoot) {
+        if (!sectionRoot) return;
         
         // Terms agreement row
         var termsWrapper = document.createElement('div');
@@ -2553,7 +2635,7 @@ const MemberModule = (function() {
         checkboxWrapper.appendChild(labelText);
         checkboxWrapper.appendChild(termsLinkInline);
         termsWrapper.appendChild(checkboxWrapper);
-        formFields.appendChild(termsWrapper);
+        sectionRoot.appendChild(termsWrapper);
         
         // Submit buttons container
         var actionsWrapper = document.createElement('div');
@@ -2581,7 +2663,7 @@ const MemberModule = (function() {
         }
         
         actionsWrapper.appendChild(adminSubmitBtn);
-        formFields.appendChild(actionsWrapper);
+        sectionRoot.appendChild(actionsWrapper);
     }
     
     function updateSubmitButtonState() {
@@ -2762,6 +2844,13 @@ const MemberModule = (function() {
         if (!authForm || authForm.dataset.state === 'logged-in') return;
         
         var isLogin = target === 'login';
+
+        // Isolate DOM so password managers can't scan login + register simultaneously.
+        if (isLogin) {
+            clearRegisterPanelDom();
+        } else {
+            ensureRegisterPanelDom();
+        }
         
         // Update subtab buttons
         if (loginTab) loginTab.classList.toggle('member-auth-tab--selected', isLogin);

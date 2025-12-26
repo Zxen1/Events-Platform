@@ -595,7 +595,7 @@ const FieldsetComponent = (function(){
             }
         });
     }
-    
+
     // Set dropdown options data and propagate to external components
     function setPicklist(data) {
         dropdownOptions = data;
