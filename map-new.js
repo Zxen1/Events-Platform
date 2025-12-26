@@ -31,6 +31,11 @@
 const MapModule = (function() {
   'use strict';
 
+  // TEMP TEST SWITCH (per Paul): disable automatic lighting application.
+  // We are isolating the source of a 6.js/5.js extension error that triggers
+  // around map load + lighting preset application.
+  var ENABLE_AUTO_LIGHTING_PRESET = false;
+
   /* ==========================================================================
      SECTION 1: CONSTANTS & STATE
      ========================================================================== */
@@ -215,19 +220,21 @@ const MapModule = (function() {
       }
       
       // Apply lighting preset (deferred, after map is fully loaded)
-      // Priority: member settings > admin settings > localStorage > default
-      var lighting = 'day';
-      if (window.MemberModule && window.MemberModule.getCurrentUser) {
-        var member = window.MemberModule.getCurrentUser();
-        if (member && member.map_lighting) {
-          lighting = member.map_lighting;
+      if (ENABLE_AUTO_LIGHTING_PRESET) {
+        // Priority: member settings > admin settings > localStorage > default
+        var lighting = 'day';
+        if (window.MemberModule && window.MemberModule.getCurrentUser) {
+          var member = window.MemberModule.getCurrentUser();
+          if (member && member.map_lighting) {
+            lighting = member.map_lighting;
+          }
         }
-      }
-      if (lighting === 'day') {
-        lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
-      }
-      if (lighting && setMapLighting) {
-        setMapLighting(lighting);
+        if (lighting === 'day') {
+          lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
+        }
+        if (lighting && setMapLighting) {
+          setMapLighting(lighting);
+        }
       }
     });
   }
@@ -1155,7 +1162,7 @@ const MapModule = (function() {
     map.setStyle(styleUrl);
     
     // Re-apply lighting after style loads (only for Standard style, not Satellite)
-    if (style === 'standard') {
+    if (style === 'standard' && ENABLE_AUTO_LIGHTING_PRESET) {
       map.once('style.load', function() {
         setMapLighting(currentLighting);
       });

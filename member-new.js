@@ -55,6 +55,14 @@ const MemberModule = (function() {
     // TEMP TEST SWITCH (per Paul): disable member map controls (lighting/style UI) completely.
     // These are not inputs, but they do touch MapModule and trigger DOM work on member open.
     var ENABLE_MEMBER_MAP_CONTROLS = false;
+
+    // TEMP TEST SWITCH (per Paul): for isolation testing, turn off Create Post + My Posts tabs completely.
+    // When false:
+    // - Their tab buttons are hidden/disabled
+    // - Their panels are hidden/inert
+    // - Switching to them is blocked
+    var ENABLE_MEMBER_CREATE_TAB = false;
+    var ENABLE_MEMBER_MYPOSTS_TAB = false;
     
     /* --------------------------------------------------------------------------
        ICONS
@@ -334,6 +342,31 @@ const MemberModule = (function() {
         cropperSaveBtn = document.getElementById('member-avatar-cropper-save');
 
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
+
+        // Isolation test: disable Create Post / My Posts tabs at the DOM level so only Profile/Login is exposed.
+        // This is intentionally "hard off" (hidden + inert) rather than just visually hidden.
+        var createTabBtn = document.getElementById('member-tab-create-btn');
+        var mypostsTabBtn = document.getElementById('member-tab-myposts-btn');
+        var createPanel = document.getElementById('member-tab-create');
+        var mypostsPanel = document.getElementById('member-tab-myposts');
+
+        if (createTabBtn && !ENABLE_MEMBER_CREATE_TAB) {
+            createTabBtn.style.display = 'none';
+            createTabBtn.setAttribute('aria-disabled', 'true');
+        }
+        if (mypostsTabBtn && !ENABLE_MEMBER_MYPOSTS_TAB) {
+            mypostsTabBtn.style.display = 'none';
+            mypostsTabBtn.setAttribute('aria-disabled', 'true');
+        }
+        if (createPanel && !ENABLE_MEMBER_CREATE_TAB) {
+            createPanel.hidden = true;
+            createPanel.setAttribute('inert', '');
+            createPanel.innerHTML = '';
+        }
+        if (mypostsPanel && !ENABLE_MEMBER_MYPOSTS_TAB) {
+            mypostsPanel.hidden = true;
+            mypostsPanel.setAttribute('inert', '');
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -1785,6 +1818,10 @@ const MemberModule = (function() {
     }
 
     function requestTabSwitch(tabName) {
+        // Isolation test: block disabled tabs
+        if (tabName === 'create' && !ENABLE_MEMBER_CREATE_TAB) return;
+        if (tabName === 'myposts' && !ENABLE_MEMBER_MYPOSTS_TAB) return;
+
         // Only guard when leaving Profile tab with dirty edits
         var leavingProfile = false;
         if (tabButtons) {
@@ -1879,6 +1916,10 @@ const MemberModule = (function() {
     function switchTab(tabName) {
         if (!tabButtons || !tabPanels) return;
 
+        // Isolation test: block disabled tabs (defensive; requestTabSwitch already blocks).
+        if (tabName === 'create' && !ENABLE_MEMBER_CREATE_TAB) tabName = 'profile';
+        if (tabName === 'myposts' && !ENABLE_MEMBER_MYPOSTS_TAB) tabName = 'profile';
+
         // Switching member tabs is active interaction; ensure background spin is stopped.
         if (window.MapModule && typeof window.MapModule.stopSpin === 'function') {
             window.MapModule.stopSpin();
@@ -1906,7 +1947,7 @@ const MemberModule = (function() {
         });
         
         // Lazy load Create Post tab content (and build its DOM only when active)
-        if (tabName === 'create') {
+        if (tabName === 'create' && ENABLE_MEMBER_CREATE_TAB) {
             ensureCreateTabDom();
             loadFormpicker();
         }
