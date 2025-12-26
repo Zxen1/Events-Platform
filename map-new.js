@@ -163,6 +163,7 @@ const MapModule = (function() {
       pitch: startPitch,
       bearing: startBearing,
       attributionControl: false, // Disabled to fix null dataset errors
+      boxZoom: false, // Disable box-zoom handler (can throw null dataset errors in some Mapbox builds)
       renderWorldCopies: false, // Reduce initial rendering load
       antialias: false // Disable antialiasing for better performance (can enable if quality needed)
     });
@@ -1006,7 +1007,8 @@ const MapModule = (function() {
       bounds: bounds,
       fitBoundsOptions: { padding: 50, maxZoom: 15 },
       interactive: true,
-      attributionControl: false
+      attributionControl: false,
+      boxZoom: false
     });
 
     // Add markers for each location
