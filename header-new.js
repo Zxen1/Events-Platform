@@ -229,9 +229,6 @@ const HeaderModule = (function() {
             });
         });
         
-        // Listen for filter state changes to update counter
-        App.on('filter:changed', updateFilterCounter);
-        
         // Listen for filter panel close events
         App.on('filter:closed', function() {
             filterPanelOpen = false;
@@ -240,48 +237,6 @@ const HeaderModule = (function() {
             }
         });
     }
-    
-    function updateFilterCounter(filterState) {
-        if (!filterBtn) return;
-        
-        // Count active filters
-        var count = 0;
-        
-        if (filterState.keywords) count++;
-        if (filterState.priceMin !== null || filterState.priceMax !== null) count++;
-        if (filterState.dateStart || filterState.dateEnd) count++;
-        if (filterState.showExpired) count++;
-        if (filterState.favouritesOnly) count++;
-        
-        // Count disabled categories
-        if (filterState.categories) {
-            Object.keys(filterState.categories).forEach(function(catName) {
-                if (!filterState.categories[catName].enabled) count++;
-                Object.keys(filterState.categories[catName].subs).forEach(function(subName) {
-                    if (!filterState.categories[catName].subs[subName]) count++;
-                });
-            });
-        }
-        
-        // Update or create counter badge
-        var counter = filterBtn.querySelector('.header-filter-button-counter');
-        
-        if (count > 0) {
-            if (!counter) {
-                counter = document.createElement('span');
-                counter.className = 'header-filter-button-counter';
-                filterBtn.appendChild(counter);
-            }
-            counter.textContent = count;
-            filterBtn.classList.add('header-filter-button--active');
-            filterBtn.classList.add('header-filter-button--has-counter');
-        } else {
-            if (counter) counter.remove();
-            filterBtn.classList.remove('header-filter-button--active');
-            filterBtn.classList.remove('header-filter-button--has-counter');
-        }
-    }
-
 
     /* --------------------------------------------------------------------------
        MEMBER BUTTON
@@ -444,7 +399,6 @@ const HeaderModule = (function() {
     
     return {
         init: init,
-        updateFilterCounter: updateFilterCounter,
         setLogo: setLogo
     };
 
