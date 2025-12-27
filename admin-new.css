@@ -1843,7 +1843,7 @@
   z-index: var(--layer-menu, 85);
 }
 
-.admin-checkout-accordion-editpanel-more.open .admin-checkout-accordion-editpanel-more-menu {
+.admin-checkout-accordion-editpanel-more-menu--open {
   display: block;
 }
 

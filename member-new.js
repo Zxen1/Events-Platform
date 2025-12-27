@@ -1755,6 +1755,17 @@ const MemberModule = (function() {
         
         var categoryOpts = document.createElement('div');
         categoryOpts.className = 'member-formpicker-menu-options';
+
+        function setFormpickerMenuOpen(menuEl, isOpen) {
+            if (!menuEl) return;
+            menuEl.classList.toggle('member-formpicker-menu--open', !!isOpen);
+            var btnEl = menuEl.querySelector('.member-formpicker-menu-button');
+            var arrowEl = menuEl.querySelector('.member-formpicker-menu-button-arrow');
+            var optsEl = menuEl.querySelector('.member-formpicker-menu-options');
+            if (btnEl) btnEl.classList.toggle('member-formpicker-menu-button--open', !!isOpen);
+            if (arrowEl) arrowEl.classList.toggle('member-formpicker-menu-button-arrow--open', !!isOpen);
+            if (optsEl) optsEl.classList.toggle('member-formpicker-menu-options--open', !!isOpen);
+        }
         
         // Populate category options
         memberCategories.forEach(function(cat) {
@@ -1803,7 +1814,7 @@ const MemberModule = (function() {
                 btnArrow.textContent = '▼';
                 categoryBtn.appendChild(btnArrow);
                 
-                categoryMenu.classList.remove('open');
+                setFormpickerMenuOpen(categoryMenu, false);
                 selectedCategory = cat.name;
                 selectedSubcategory = '';
                 
@@ -1854,7 +1865,7 @@ const MemberModule = (function() {
                             subBtnArrow.textContent = '▼';
                             subcategoryBtn.appendChild(subBtnArrow);
                             
-                            subcategoryMenu.classList.remove('open');
+                            setFormpickerMenuOpen(subcategoryMenu, false);
                             selectedSubcategory = subName;
                             renderConfiguredFields();
                         });
@@ -1867,8 +1878,8 @@ const MemberModule = (function() {
 
                     // Auto-open subcategory menu as soon as a category is chosen.
                     // Keep it open until a subcategory is selected.
-                    categoryMenu.classList.remove('open');
-                    subcategoryMenu.classList.add('open');
+                    setFormpickerMenuOpen(categoryMenu, false);
+                    setFormpickerMenuOpen(subcategoryMenu, true);
                 } else {
                     subcategoryWrapper.hidden = true;
                 }
@@ -1882,24 +1893,24 @@ const MemberModule = (function() {
         // Toggle category menu
         categoryBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            subcategoryMenu.classList.remove('open');
-            categoryMenu.classList.toggle('open');
+            setFormpickerMenuOpen(subcategoryMenu, false);
+            setFormpickerMenuOpen(categoryMenu, !categoryMenu.classList.contains('member-formpicker-menu--open'));
         });
         
         // Toggle subcategory menu
         subcategoryBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            categoryMenu.classList.remove('open');
-            subcategoryMenu.classList.toggle('open');
+            setFormpickerMenuOpen(categoryMenu, false);
+            setFormpickerMenuOpen(subcategoryMenu, !subcategoryMenu.classList.contains('member-formpicker-menu--open'));
         });
         
         // Close menus on outside click
         document.addEventListener('click', function(e) {
-            if (!categoryMenu.contains(e.target)) categoryMenu.classList.remove('open');
+            if (!categoryMenu.contains(e.target)) setFormpickerMenuOpen(categoryMenu, false);
             if (!subcategoryMenu.contains(e.target)) {
                 // Keep subcategory menu open until user has picked a subcategory.
                 if (!(selectedCategory && !selectedSubcategory)) {
-                    subcategoryMenu.classList.remove('open');
+                    setFormpickerMenuOpen(subcategoryMenu, false);
                 }
             }
         });
@@ -1915,7 +1926,7 @@ const MemberModule = (function() {
 
         // Auto-open category menu when nothing is selected yet.
         // Subcategory auto-open is handled when a category is picked.
-        if (!selectedCategory) categoryMenu.classList.add('open');
+        if (!selectedCategory) setFormpickerMenuOpen(categoryMenu, true);
     }
     
     function renderConfiguredFields() {

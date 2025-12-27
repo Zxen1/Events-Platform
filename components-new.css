@@ -748,7 +748,7 @@
     flex-shrink: 0;
 }
 
-.fieldset-amenity-icon img {
+.fieldset-amenity-icon-image {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -781,7 +781,7 @@
     border-radius: 5px;
 }
 
-.fieldset-amenity-option input {
+.fieldset-amenity-option-input {
     cursor: pointer;
     accent-color: #3b82f5;
 }
@@ -870,17 +870,17 @@
     border-color: #555;
 }
 
-.fieldset-menu.open .fieldset-menu-button {
+.fieldset-menu-button--open {
     border-color: #3b82f5;
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
-.fieldset-menu.open .fieldset-menu-button-arrow {
+.fieldset-menu-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.fieldset-menu.open .fieldset-menu-options {
+.fieldset-menu-options--open {
     display: block;
 }
 
@@ -938,15 +938,15 @@
 }
 
 /* States - Amenities */
-.fieldset-amenity-row.selected-yes .fieldset-amenity-icon img {
+.fieldset-amenity-icon-image--selected-yes {
     filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
 }
 
-.fieldset-amenity-row.selected-no .fieldset-amenity-icon img {
+.fieldset-amenity-icon-image--selected-no {
     filter: brightness(0) invert(0.4);
 }
 
-.fieldset-amenity-row.selected-no .fieldset-amenity-name {
+.fieldset-amenity-name--selected-no {
     color: #666;
 }
 
@@ -1118,31 +1118,22 @@
     flex-shrink: 0;
 }
 
-.fieldset-currency-compact .fieldset-menu-button {
+.fieldset-menu-button--compact {
     width: 120px;
 }
 
-.fieldset-currency-compact .fieldset-menu-button-text {
+.fieldset-menu-button-input--compact {
     padding-left: 6px;
     font-size: 12px;
 }
 
-.fieldset-currency-compact .fieldset-menu-button-input {
-    padding-left: 6px;
-    font-size: 12px;
-}
-
-.fieldset-currency-compact .fieldset-menu-options {
+.fieldset-menu-options--compact {
     width: 250px;
     left: 0;
     right: auto;
     border-top: 1px solid #3b82f5;
     border-radius: 5px;
     z-index: var(--layer-menu, 85);
-}
-
-.fieldset-row > .fieldset-currency-compact {
-    flex: 0 0 120px;
 }
 
 
@@ -1703,27 +1694,27 @@
     border-color: #555;
 }
 
-.fieldset-currency-wrapper.open .fieldset-currency-button,
-.admin-currency-wrapper.open .admin-currency-button,
-.admin-language-wrapper.open .admin-language-button {
+.fieldset-currency-button--open,
+.admin-currency-button--open,
+.admin-language-button--open {
     border-color: #3b82f5;
 }
 
-.admin-currency-wrapper.open .admin-currency-button,
-.admin-language-wrapper.open .admin-language-button {
+.admin-currency-button--open,
+.admin-language-button--open {
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
-.fieldset-currency-wrapper.open .fieldset-currency-button-arrow,
-.admin-currency-wrapper.open .admin-currency-button-arrow,
-.admin-language-wrapper.open .admin-language-button-arrow {
+.fieldset-currency-button-arrow--open,
+.admin-currency-button-arrow--open,
+.admin-language-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.fieldset-currency-wrapper.open .fieldset-currency-options,
-.admin-currency-wrapper.open .admin-currency-options,
-.admin-language-wrapper.open .admin-language-options {
+.fieldset-currency-options--open,
+.admin-currency-options--open,
+.admin-language-options--open {
     display: block;
 }
 
@@ -1997,17 +1988,17 @@
     border-color: #555;
 }
 
-.component-iconpicker.open .component-iconpicker-button {
+.component-iconpicker-button--open {
     border-color: #3b82f5;
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
-.component-iconpicker.open .component-iconpicker-button-arrow {
+.component-iconpicker-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.component-iconpicker.open .component-iconpicker-options {
+.component-iconpicker-options--open {
     display: block;
 }
 
@@ -2145,17 +2136,17 @@
     border-color: #555;
 }
 
-.component-systemimagepicker.open .component-systemimagepicker-button {
+.component-systemimagepicker-button--open {
     border-color: #3b82f5;
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
-.component-systemimagepicker.open .component-systemimagepicker-button-arrow {
+.component-systemimagepicker-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.component-systemimagepicker.open .component-systemimagepicker-options {
+.component-systemimagepicker-options--open {
     display: block;
 }
 
@@ -2270,7 +2261,7 @@
     transition: filter 0.2s;
 }
 
-.component-amenitiespicker-option--selected .component-amenitiespicker-option-image {
+.component-amenitiespicker-option-image--selected {
     filter: brightness(0) saturate(100%) invert(47%) sepia(95%) saturate(1352%) hue-rotate(201deg) brightness(98%) contrast(96%);
 }
 
@@ -2294,17 +2285,17 @@
     border-color: #555;
 }
 
-.component-amenitiespicker.open .component-amenitiespicker-button {
+.component-amenitiespicker-button--open {
     border-color: #3b82f5;
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
-.component-amenitiespicker.open .component-amenitiespicker-button-arrow {
+.component-amenitiespicker-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.component-amenitiespicker.open .component-amenitiespicker-options {
+.component-amenitiespicker-options--open {
     display: block;
 }
 
@@ -2865,15 +2856,15 @@
     background-color: #f2f2f2;
 }
 
-.filter-mapcontrol-geolocate.loading,
-.map-mapcontrol-geolocate.loading,
-.welcome-mapcontrol-geolocate.loading {
+.filter-mapcontrol-geolocate--loading,
+.map-mapcontrol-geolocate--loading,
+.welcome-mapcontrol-geolocate--loading {
     pointer-events: none;
 }
 
-.filter-mapcontrol-geolocate.loading .filter-mapcontrol-geolocate-icon,
-.map-mapcontrol-geolocate.loading .map-mapcontrol-geolocate-icon,
-.welcome-mapcontrol-geolocate.loading .welcome-mapcontrol-geolocate-icon {
+.filter-mapcontrol-geolocate-icon--loading,
+.map-mapcontrol-geolocate-icon--loading,
+.welcome-mapcontrol-geolocate-icon--loading {
     -webkit-animation: mapcontrol-geolocate-spin 2s infinite linear;
     -moz-animation: mapcontrol-geolocate-spin 2s infinite linear;
     -o-animation: mapcontrol-geolocate-spin 2s infinite linear;
@@ -2906,12 +2897,12 @@
     100% { transform: rotate(360deg); }
 }
 
-.filter-mapcontrol-geolocate.loading,
-.map-mapcontrol-geolocate.loading,
-.welcome-mapcontrol-geolocate.loading,
-.filter-mapcontrol-geolocate.active,
-.map-mapcontrol-geolocate.active,
-.welcome-mapcontrol-geolocate.active {
+.filter-mapcontrol-geolocate--loading,
+.map-mapcontrol-geolocate--loading,
+.welcome-mapcontrol-geolocate--loading,
+.filter-mapcontrol-geolocate--active,
+.map-mapcontrol-geolocate--active,
+.welcome-mapcontrol-geolocate--active {
     color: #3b82f6;
 }
 
@@ -3076,7 +3067,7 @@
     background: transparent;
 }
 
-.member-checkout-option--disabled .member-checkout-price-display {
+.member-checkout-price-display--disabled {
     color: #888;
     font-style: italic;
 }

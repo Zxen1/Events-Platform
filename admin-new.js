@@ -2928,18 +2928,17 @@ const AdminModule = (function() {
             container.appendChild(accordion);
 
             // More button click - toggle menu
+            var moreMenuEl = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-menu');
             moreBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                var wasOpen = moreBtn.classList.contains('open');
+                var wasOpen = moreMenuEl && moreMenuEl.classList.contains('admin-checkout-accordion-editpanel-more-menu--open');
                 // Close all other menus
-                container.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
-                    if (el !== moreBtn) el.classList.remove('open');
+                container.querySelectorAll('.admin-checkout-accordion-editpanel-more-menu--open').forEach(function(el) {
+                    if (el !== moreMenuEl) el.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
                 });
-                if (!wasOpen) {
-                    moreBtn.classList.add('open');
-                } else {
-                    moreBtn.classList.remove('open');
-                }
+                if (!moreMenuEl) return;
+                if (!wasOpen) moreMenuEl.classList.add('admin-checkout-accordion-editpanel-more-menu--open');
+                else moreMenuEl.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
             });
 
             // Hide switch click
@@ -2955,7 +2954,7 @@ const AdminModule = (function() {
             var deleteOption = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-delete');
             deleteOption.addEventListener('click', function(e) {
                 e.stopPropagation();
-                moreBtn.classList.remove('open');
+                if (moreMenuEl) moreMenuEl.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
                 var titleText = titleInput.value.trim();
                 if (!titleText) titleText = 'this checkout option';
                 
@@ -3174,8 +3173,8 @@ const AdminModule = (function() {
         // Close more menus when clicking outside
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.admin-checkout-accordion-editpanel-more')) {
-                document.querySelectorAll('.admin-checkout-accordion-editpanel-more.open').forEach(function(el) {
-                    el.classList.remove('open');
+                document.querySelectorAll('.admin-checkout-accordion-editpanel-more-menu--open').forEach(function(el) {
+                    el.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
                 });
             }
         });

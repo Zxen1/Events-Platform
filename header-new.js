@@ -422,7 +422,11 @@ const HeaderModule = (function() {
         
         var isFull = getFullscreenElement();
         fullscreenBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
-        fullscreenBtn.classList.toggle('is-fullscreen', !!isFull);
+        fullscreenBtn.classList.toggle('header-access-button--fullscreen', !!isFull);
+        var icon = fullscreenBtn.querySelector('.header-access-button-icon');
+        if (icon) {
+            icon.classList.toggle('header-access-button-icon--fullscreen-exit', !!isFull);
+        }
     }
 
 

@@ -65,17 +65,34 @@ const ImageAddTileComponent = (function(){
 const MenuManager = (function(){
     var openMenus = [];
     
+    function isMenuOpen(menu) {
+        if (!menu) return false;
+        if (typeof menu.__menuIsOpen !== 'function') {
+            throw new Error('MenuManager: menu is missing __menuIsOpen()');
+        }
+        return menu.__menuIsOpen() === true;
+    }
+    
+    function setMenuOpen(menu, isOpen) {
+        if (!menu) return;
+        if (typeof menu.__menuApplyOpenState !== 'function') {
+            throw new Error('MenuManager: menu is missing __menuApplyOpenState(isOpen)');
+        }
+        menu.__menuApplyOpenState(!!isOpen);
+    }
+    
     // Close all open menus
     function closeAll(except) {
         openMenus.forEach(function(menu) {
-            if (menu !== except && menu.classList.contains('open')) {
-                menu.classList.remove('open');
-            }
+            if (menu !== except && isMenuOpen(menu)) setMenuOpen(menu, false);
         });
     }
     
     // Register a menu element
     function register(menuElement) {
+        if (!menuElement || typeof menuElement.__menuIsOpen !== 'function' || typeof menuElement.__menuApplyOpenState !== 'function') {
+            throw new Error('MenuManager.register: menuElement must define __menuIsOpen() and __menuApplyOpenState(isOpen)');
+        }
         if (openMenus.indexOf(menuElement) === -1) {
             openMenus.push(menuElement);
         }
@@ -91,14 +108,16 @@ const MenuManager = (function(){
         }
         openMenus.forEach(function(menu) {
             if (!menu.contains(e.target)) {
-                menu.classList.remove('open');
+                setMenuOpen(menu, false);
             }
         });
     });
     
     return {
         closeAll: closeAll,
-        register: register
+        register: register,
+        isOpen: isMenuOpen,
+        setOpen: setMenuOpen
     };
 })();
 
@@ -1702,7 +1721,11 @@ const FieldsetComponent = (function(){
                         var cleanFilename = filename.replace(/\.svg$/i, '');
                         amenityUrl = window.App.getImageUrl('amenities', cleanFilename + '.svg');
                     }
-                    iconEl.innerHTML = '<img src="' + amenityUrl + '" alt="' + amenityName + '">';
+                    var iconImg = document.createElement('img');
+                    iconImg.className = 'fieldset-amenity-icon-image';
+                    iconImg.src = amenityUrl;
+                    iconImg.alt = amenityName;
+                    iconEl.appendChild(iconImg);
                     row.appendChild(iconEl);
                     
                     // Name
@@ -1720,26 +1743,45 @@ const FieldsetComponent = (function(){
                     
                     var yesLabel = document.createElement('label');
                     yesLabel.className = 'fieldset-amenity-option';
-                    yesLabel.innerHTML = '<input type="radio" name="' + radioName + '" value="1"> Yes';
+                    var yesRadio = document.createElement('input');
+                    yesRadio.type = 'radio';
+                    yesRadio.name = radioName;
+                    yesRadio.value = '1';
+                    yesRadio.className = 'fieldset-amenity-option-input';
+                    var yesText = document.createElement('span');
+                    yesText.className = 'fieldset-amenity-option-text';
+                    yesText.textContent = 'Yes';
+                    yesLabel.appendChild(yesRadio);
+                    yesLabel.appendChild(yesText);
                     optionsEl.appendChild(yesLabel);
                     
                     var noLabel = document.createElement('label');
                     noLabel.className = 'fieldset-amenity-option';
-                    noLabel.innerHTML = '<input type="radio" name="' + radioName + '" value="0"> No';
+                    var noRadio = document.createElement('input');
+                    noRadio.type = 'radio';
+                    noRadio.name = radioName;
+                    noRadio.value = '0';
+                    noRadio.className = 'fieldset-amenity-option-input';
+                    var noText = document.createElement('span');
+                    noText.className = 'fieldset-amenity-option-text';
+                    noText.textContent = 'No';
+                    noLabel.appendChild(noRadio);
+                    noLabel.appendChild(noText);
                     optionsEl.appendChild(noLabel);
                     
                     // Add change listeners to update row styling
-                    var yesRadio = yesLabel.querySelector('input');
-                    var noRadio = noLabel.querySelector('input');
+                    function setAmenityState(isYes) {
+                        nameEl.classList.toggle('fieldset-amenity-name--selected-no', !isYes);
+                        iconImg.classList.toggle('fieldset-amenity-icon-image--selected-yes', !!isYes);
+                        iconImg.classList.toggle('fieldset-amenity-icon-image--selected-no', !isYes);
+                    }
                     
                     yesRadio.addEventListener('change', function() {
-                        row.classList.remove('selected-no');
-                        row.classList.add('selected-yes');
+                        setAmenityState(true);
                     });
                     
                     noRadio.addEventListener('change', function() {
-                        row.classList.remove('selected-yes');
-                        row.classList.add('selected-no');
+                        setAmenityState(false);
                     });
                     
                     row.appendChild(optionsEl);
@@ -3150,6 +3192,42 @@ const CurrencyComponent = (function(){
         var opts = menu.querySelector('.fieldset-menu-options');
         var btnImg = menu.querySelector('.fieldset-menu-button-image');
         var btnInput = menu.querySelector('.fieldset-menu-button-input');
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+
+        // Compact variant styling (no descendant selectors)
+        btn.classList.add('fieldset-menu-button--compact');
+        btnInput.classList.add('fieldset-menu-button-input--compact');
+        opts.classList.add('fieldset-menu-options--compact');
+
+        // Compact variant styling (no descendant selectors)
+        btn.classList.add('fieldset-menu-button--compact');
+        btnInput.classList.add('fieldset-menu-button-input--compact');
+        opts.classList.add('fieldset-menu-options--compact');
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('fieldset-menu--open', !!isOpen);
+            btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
+            arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
+            opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+        }
+
+        menu.__menuIsOpen = function() {
+            return menu.classList.contains('fieldset-menu--open');
+        };
+        menu.__menuApplyOpenState = applyOpenState;
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('fieldset-menu--open', !!isOpen);
+            btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
+            arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
+            opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+        }
+
+        menu.__menuIsOpen = function() {
+            return menu.classList.contains('fieldset-menu--open');
+        };
+        menu.__menuApplyOpenState = applyOpenState;
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -3202,7 +3280,7 @@ const CurrencyComponent = (function(){
                 }
                 btnInput.value = item.value;
                 selectedCode = item.value;
-                menu.classList.remove('open');
+                applyOpenState(false);
                 filterOptions('');
                 onSelect(item.value, item.label, countryCode);
             };
@@ -3230,7 +3308,7 @@ const CurrencyComponent = (function(){
         btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
             MenuManager.closeAll(menu);
-            menu.classList.add('open');
+            applyOpenState(true);
             this.select();
         });
 
@@ -3239,14 +3317,12 @@ const CurrencyComponent = (function(){
             // Only auto-open while the user is actually typing in this input.
             // Programmatic value copies (e.g. multi-location autofill dispatching input events) must NOT open menus.
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('open')) {
-                menu.classList.add('open');
-            }
+            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
         });
 
         btnInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                menu.classList.remove('open');
+                applyOpenState(false);
                 setValue(selectedCode);
                 filterOptions('');
             }
@@ -3255,7 +3331,7 @@ const CurrencyComponent = (function(){
         // Blur - restore selected value when clicking away
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
-                if (!menu.classList.contains('open')) {
+                if (!menu.classList.contains('fieldset-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -3263,14 +3339,13 @@ const CurrencyComponent = (function(){
         });
 
         // Arrow click opens/closes
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('open')) {
-                menu.classList.remove('open');
+            if (menu.classList.contains('fieldset-menu--open')) {
+                applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
-                menu.classList.add('open');
+                applyOpenState(true);
                 btnInput.focus();
                 btnInput.select();
             }
@@ -3302,6 +3377,19 @@ const CurrencyComponent = (function(){
         var opts = menu.querySelector('.admin-currency-options');
         var btnImg = menu.querySelector('.admin-currency-button-flag');
         var btnInput = menu.querySelector('.admin-currency-button-input');
+        var arrow = menu.querySelector('.admin-currency-button-arrow');
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('admin-currency-wrapper--open', !!isOpen);
+            btn.classList.toggle('admin-currency-button--open', !!isOpen);
+            arrow.classList.toggle('admin-currency-button-arrow--open', !!isOpen);
+            opts.classList.toggle('admin-currency-options--open', !!isOpen);
+        }
+
+        menu.__menuIsOpen = function() {
+            return menu.classList.contains('admin-currency-wrapper--open');
+        };
+        menu.__menuApplyOpenState = applyOpenState;
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -3355,7 +3443,7 @@ const CurrencyComponent = (function(){
                 }
                 btnInput.value = displayText;
                 selectedCode = item.value;
-                menu.classList.remove('open');
+                applyOpenState(false);
                 filterOptions(''); // Reset filter
                 onSelect(item.value, item.label, countryCode);
             };
@@ -3380,7 +3468,7 @@ const CurrencyComponent = (function(){
         btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
             MenuManager.closeAll(menu);
-            menu.classList.add('open');
+            applyOpenState(true);
             // Select all text for easy replacement
             this.select();
         });
@@ -3388,14 +3476,12 @@ const CurrencyComponent = (function(){
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('open')) {
-                menu.classList.add('open');
-            }
+            if (!menu.classList.contains('admin-currency-wrapper--open')) applyOpenState(true);
         });
         
         btnInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                menu.classList.remove('open');
+                applyOpenState(false);
                 // Restore selected value
                 setValue(selectedCode);
                 filterOptions('');
@@ -3406,7 +3492,7 @@ const CurrencyComponent = (function(){
         btnInput.addEventListener('blur', function() {
             // Small delay to allow option click to fire first
             setTimeout(function() {
-                if (!menu.classList.contains('open')) {
+                if (!menu.classList.contains('admin-currency-wrapper--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -3414,14 +3500,13 @@ const CurrencyComponent = (function(){
         });
 
         // Arrow click opens/closes
-        var arrow = menu.querySelector('.admin-currency-button-arrow');
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('open')) {
-                menu.classList.remove('open');
+            if (menu.classList.contains('admin-currency-wrapper--open')) {
+                applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
-                menu.classList.add('open');
+                applyOpenState(true);
                 btnInput.focus();
                 btnInput.select();
             }
@@ -3503,6 +3588,19 @@ const LanguageMenuComponent = (function(){
         var opts = menu.querySelector('.admin-language-options');
         var btnImg = menu.querySelector('.admin-language-button-flag');
         var btnInput = menu.querySelector('.admin-language-button-input');
+        var arrow = menu.querySelector('.admin-language-button-arrow');
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('admin-language-wrapper--open', !!isOpen);
+            btn.classList.toggle('admin-language-button--open', !!isOpen);
+            arrow.classList.toggle('admin-language-button-arrow--open', !!isOpen);
+            opts.classList.toggle('admin-language-options--open', !!isOpen);
+        }
+
+        menu.__menuIsOpen = function() {
+            return menu.classList.contains('admin-language-wrapper--open');
+        };
+        menu.__menuApplyOpenState = applyOpenState;
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -3556,7 +3654,7 @@ const LanguageMenuComponent = (function(){
                 }
                 btnInput.value = displayText;
                 selectedCode = item.value;
-                menu.classList.remove('open');
+                applyOpenState(false);
                 filterOptions(''); // Reset filter
                 onSelect(item.value, item.label, countryCode);
             };
@@ -3581,7 +3679,7 @@ const LanguageMenuComponent = (function(){
         btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
             MenuManager.closeAll(menu);
-            menu.classList.add('open');
+            applyOpenState(true);
             // Select all text for easy replacement
             this.select();
         });
@@ -3589,14 +3687,12 @@ const LanguageMenuComponent = (function(){
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('open')) {
-                menu.classList.add('open');
-            }
+            if (!menu.classList.contains('admin-language-wrapper--open')) applyOpenState(true);
         });
         
         btnInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                menu.classList.remove('open');
+                applyOpenState(false);
                 // Restore selected value
                 setValue(selectedCode);
                 filterOptions('');
@@ -3607,7 +3703,7 @@ const LanguageMenuComponent = (function(){
         btnInput.addEventListener('blur', function() {
             // Small delay to allow option click to fire first
             setTimeout(function() {
-                if (!menu.classList.contains('open')) {
+                if (!menu.classList.contains('admin-language-wrapper--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -3615,14 +3711,13 @@ const LanguageMenuComponent = (function(){
         });
 
         // Arrow click opens/closes
-        var arrow = menu.querySelector('.admin-language-button-arrow');
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('open')) {
-                menu.classList.remove('open');
+            if (menu.classList.contains('admin-language-wrapper--open')) {
+                applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
-                menu.classList.add('open');
+                applyOpenState(true);
                 btnInput.focus();
                 btnInput.select();
             }
@@ -3768,7 +3863,7 @@ const PhonePrefixComponent = (function(){
                 }
                 btnInput.value = item.value;
                 selectedCode = item.value;
-                menu.classList.remove('open');
+                applyOpenState(false);
                 filterOptions('');
                 onSelect(item.value, item.label, countryCode);
             };
@@ -3796,21 +3891,19 @@ const PhonePrefixComponent = (function(){
         btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
             MenuManager.closeAll(menu);
-            menu.classList.add('open');
+            applyOpenState(true);
             this.select();
         });
 
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('open')) {
-                menu.classList.add('open');
-            }
+            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
         });
 
         btnInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                menu.classList.remove('open');
+                applyOpenState(false);
                 setValue(selectedCode);
                 filterOptions('');
             }
@@ -3819,7 +3912,7 @@ const PhonePrefixComponent = (function(){
         // Blur - restore selected value when clicking away
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
-                if (!menu.classList.contains('open')) {
+                if (!menu.classList.contains('fieldset-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -3827,14 +3920,13 @@ const PhonePrefixComponent = (function(){
         });
 
         // Arrow click opens/closes
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('open')) {
-                menu.classList.remove('open');
+            if (menu.classList.contains('fieldset-menu--open')) {
+                applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
-                menu.classList.add('open');
+                applyOpenState(true);
                 btnInput.focus();
                 btnInput.select();
             }
@@ -4039,6 +4131,15 @@ const IconPickerComponent = (function(){
         var optionsDiv = document.createElement('div');
         optionsDiv.className = 'component-iconpicker-options';
         menu.appendChild(optionsDiv);
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('component-iconpicker--open', !!isOpen);
+            button.classList.toggle('component-iconpicker-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-iconpicker-button-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-iconpicker-options--open', !!isOpen);
+        }
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-iconpicker--open'); };
+        menu.__menuApplyOpenState = applyOpenState;
         
         // Register with MenuManager
         MenuManager.register(menu);
@@ -4077,7 +4178,7 @@ const IconPickerComponent = (function(){
                         buttonImage.src = iconPath;
                         buttonImage.style.display = '';
                         buttonText.textContent = getFilename(iconPath);
-                        menu.classList.remove('open');
+                        applyOpenState(false);
                         onSelect(iconPath);
                     };
                     optionsDiv.appendChild(option);
@@ -4090,14 +4191,14 @@ const IconPickerComponent = (function(){
         // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = menu.classList.contains('open');
+            var isOpen = menu.classList.contains('component-iconpicker--open');
             if (isOpen) {
-                menu.classList.remove('open');
+                applyOpenState(false);
             } else {
                 // Close all other menus first
                 MenuManager.closeAll(menu);
                 // Open menu immediately
-                menu.classList.add('open');
+                applyOpenState(true);
                 
                 // Show database icons instantly (menu is now open and interactive)
                 if (!categoryIconsBasket) {
@@ -4176,7 +4277,13 @@ const MapControlRowComponent = (function(){
     function setAllGeolocateLoading() {
         instances.forEach(function(inst) {
             if (inst.geolocateBtn) {
-                inst.geolocateBtn.classList.add('loading');
+                var btnBase = inst.geolocateBtnBaseClass;
+                inst.geolocateBtn.classList.add(btnBase + '--loading');
+                inst.geolocateBtn.classList.remove(btnBase + '--active');
+            }
+            if (inst.geolocateIcon) {
+                var iconBase = inst.geolocateIconBaseClass;
+                inst.geolocateIcon.classList.add(iconBase + '--loading');
             }
         });
     }
@@ -4186,8 +4293,13 @@ const MapControlRowComponent = (function(){
         geolocateActive = true;
         instances.forEach(function(inst) {
             if (inst.geolocateBtn) {
-                inst.geolocateBtn.classList.remove('loading');
-                inst.geolocateBtn.classList.add('active');
+                var btnBase = inst.geolocateBtnBaseClass;
+                inst.geolocateBtn.classList.remove(btnBase + '--loading');
+                inst.geolocateBtn.classList.add(btnBase + '--active');
+            }
+            if (inst.geolocateIcon) {
+                var iconBase = inst.geolocateIconBaseClass;
+                inst.geolocateIcon.classList.remove(iconBase + '--loading');
             }
         });
     }
@@ -4196,7 +4308,12 @@ const MapControlRowComponent = (function(){
     function clearAllGeolocateLoading() {
         instances.forEach(function(inst) {
             if (inst.geolocateBtn) {
-                inst.geolocateBtn.classList.remove('loading');
+                var btnBase = inst.geolocateBtnBaseClass;
+                inst.geolocateBtn.classList.remove(btnBase + '--loading');
+            }
+            if (inst.geolocateIcon) {
+                var iconBase = inst.geolocateIconBaseClass;
+                inst.geolocateIcon.classList.remove(iconBase + '--loading');
             }
         });
     }
@@ -4322,6 +4439,7 @@ const MapControlRowComponent = (function(){
         geolocateBtn.innerHTML = '<span class="' + prefix + '-geolocate-icon" aria-hidden="true"></span>';
         geolocateBtn.title = 'Find my location';
         row.appendChild(geolocateBtn);
+        var geolocateIcon = geolocateBtn.querySelector('.' + prefix + '-geolocate-icon');
         
         // Compass button
         // NOTE: Compass needs to support multi-color artwork (eg red/blue needle), so it uses <img>,
@@ -4341,6 +4459,9 @@ const MapControlRowComponent = (function(){
             clearBtn: clearBtn,
             dropdown: dropdown,
             geolocateBtn: geolocateBtn,
+            geolocateIcon: geolocateIcon,
+            geolocateBtnBaseClass: prefix + '-geolocate',
+            geolocateIconBaseClass: prefix + '-geolocate-icon',
             compassBtn: compassBtn,
             map: map
         };
@@ -4524,7 +4645,7 @@ const MapControlRowComponent = (function(){
         
         // If geolocate was already active, mark this button too
         if (geolocateActive) {
-            geolocateBtn.classList.add('active');
+            geolocateBtn.classList.add(prefix + '-geolocate--active');
         }
         
         instances.push(instance);
@@ -4819,6 +4940,7 @@ const CheckoutOptionsComponent = (function(){
                     var price = res.total;
                     priceText.textContent = buildLocationSummary(primaryDays, locationCount) + ' — ' + (price > 0 ? currency + ' ' + price.toFixed(2) : 'Free');
                 } else {
+                    priceText.classList.add('member-checkout-price-display--disabled');
                     priceText.textContent = 'Select session dates for all locations for price';
                 }
                 priceSection.appendChild(priceText);
@@ -4923,6 +5045,7 @@ const CheckoutOptionsComponent = (function(){
                             }
                         }
                         if (priceDisplay) {
+                            priceDisplay.classList.remove('member-checkout-price-display--disabled');
                             var flagfall = parseFloat(card.dataset.flagfall) || 0;
                             var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
                             var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
@@ -4937,6 +5060,7 @@ const CheckoutOptionsComponent = (function(){
                             radio.checked = false;
                         }
                         if (priceDisplay) {
+                                priceDisplay.classList.add('member-checkout-price-display--disabled');
                                 priceDisplay.textContent = 'Select session dates for all locations for price';
                         }
                     }
@@ -5166,6 +5290,15 @@ const SystemImagePickerComponent = (function(){
         var optionsDiv = document.createElement('div');
         optionsDiv.className = 'component-systemimagepicker-options';
         menu.appendChild(optionsDiv);
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('component-systemimagepicker--open', !!isOpen);
+            button.classList.toggle('component-systemimagepicker-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-systemimagepicker-button-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-systemimagepicker-options--open', !!isOpen);
+        }
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-systemimagepicker--open'); };
+        menu.__menuApplyOpenState = applyOpenState;
         
         // Register with MenuManager
         MenuManager.register(menu);
@@ -5235,7 +5368,7 @@ const SystemImagePickerComponent = (function(){
                         buttonImage.src = imagePath;
                         buttonImage.style.display = '';
                         buttonText.textContent = getFilename(imagePath);
-                        menu.classList.remove('open');
+                        applyOpenState(false);
                         onSelect(imagePath);
                     };
                     optionsDiv.appendChild(option);
@@ -5246,14 +5379,14 @@ const SystemImagePickerComponent = (function(){
         // Toggle menu
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = menu.classList.contains('open');
+            var isOpen = menu.classList.contains('component-systemimagepicker--open');
             if (isOpen) {
-                menu.classList.remove('open');
+                applyOpenState(false);
             } else {
                 // Close all other menus first
                 MenuManager.closeAll(menu);
                 // Open menu immediately
-                menu.classList.add('open');
+                applyOpenState(true);
                 
                 // Show database images instantly (menu is now open and interactive)
                 if (!systemImagesBasket) {
@@ -5361,6 +5494,15 @@ const AmenitiesMenuComponent = (function(){
         var optionsDiv = document.createElement('div');
         optionsDiv.className = 'component-amenitiespicker-options';
         menu.appendChild(optionsDiv);
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('component-amenitiespicker--open', !!isOpen);
+            button.classList.toggle('component-amenitiespicker-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-amenitiespicker-button-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-amenitiespicker-options--open', !!isOpen);
+        }
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-amenitiespicker--open'); };
+        menu.__menuApplyOpenState = applyOpenState;
         
         // Register with MenuManager
         MenuManager.register(menu);
@@ -5424,11 +5566,7 @@ const AmenitiesMenuComponent = (function(){
                 
                 // Update visual state based on checkbox
                 function updateOptionState() {
-                    if (checkbox.checked) {
-                        option.classList.add('component-amenitiespicker-option--selected');
-                    } else {
-                        option.classList.remove('component-amenitiespicker-option--selected');
-                    }
+                    optImg.classList.toggle('component-amenitiespicker-option-image--selected', !!checkbox.checked);
                 }
                 updateOptionState();
                 
@@ -5467,14 +5605,14 @@ const AmenitiesMenuComponent = (function(){
         // Toggle menu - EXACT same structure as SystemImagePickerComponent
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = menu.classList.contains('open');
+            var isOpen = menu.classList.contains('component-amenitiespicker--open');
             if (isOpen) {
-                menu.classList.remove('open');
+                applyOpenState(false);
             } else {
                 // Close all other menus first
                 MenuManager.closeAll(menu);
                 // Open menu immediately
-                menu.classList.add('open');
+                applyOpenState(true);
                 
                 // Load amenities and render
                 loadAmenities().then(function(amenities) {
@@ -5492,7 +5630,7 @@ const AmenitiesMenuComponent = (function(){
                 selectedAmenities = amenities || [];
                 updateButtonText();
                 // Re-render if menu is open
-                if (menu.classList.contains('open')) {
+                if (menu.classList.contains('component-amenitiespicker--open')) {
                     loadAmenities().then(function(amenitiesList) {
                         renderAmenityOptions(amenitiesList);
                     });

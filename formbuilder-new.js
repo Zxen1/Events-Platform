@@ -731,15 +731,49 @@
     
     function closeAllEditPanels() {
         if (!container) return;
+
+        function setFormbuilderMenuOpen(menuEl, isOpen) {
+            if (!menuEl) return;
+            menuEl.classList.toggle('formbuilder-menu--open', !!isOpen);
+            var btnEl = menuEl.querySelector('.formbuilder-menu-button');
+            var arrowEl = menuEl.querySelector('.formbuilder-menu-button-arrow');
+            var optsEl = menuEl.querySelector('.formbuilder-menu-options');
+            if (btnEl) btnEl.classList.toggle('formbuilder-menu-button--open', !!isOpen);
+            if (arrowEl) arrowEl.classList.toggle('formbuilder-menu-button-arrow--open', !!isOpen);
+            if (optsEl) optsEl.classList.toggle('formbuilder-menu-options--open', !!isOpen);
+        }
+
+        function setFormbuilderFieldsetMenuOpen(menuEl, isOpen) {
+            if (!menuEl) return;
+            menuEl.classList.toggle('formbuilder-fieldset-menu--open', !!isOpen);
+            var btnEl = menuEl.querySelector('.formbuilder-fieldset-menu-button');
+            var optsEl = menuEl.querySelector('.formbuilder-fieldset-menu-options');
+            if (btnEl) btnEl.classList.toggle('formbuilder-fieldset-menu-button--open', !!isOpen);
+            if (optsEl) optsEl.classList.toggle('formbuilder-fieldset-menu-options--open', !!isOpen);
+        }
+
+        function setFormbuilderAccordionMoreOpen(moreEl, isOpen) {
+            if (!moreEl) return;
+            var menuEl = moreEl.querySelector('.formbuilder-accordion-editpanel-more-menu');
+            if (menuEl) menuEl.classList.toggle('formbuilder-accordion-editpanel-more-menu--open', !!isOpen);
+        }
+
+        function setFormbuilderFieldMoreOpen(moreEl, isOpen) {
+            if (!moreEl) return;
+            var menuEl = moreEl.querySelector('.formbuilder-field-more-menu');
+            if (menuEl) menuEl.classList.toggle('formbuilder-field-more-menu--open', !!isOpen);
+        }
+
         container.querySelectorAll('.formbuilder-accordion--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion--editing');
         });
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion-option--editing');
         });
-        container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
-            el.classList.remove('open');
-        });
+        container.querySelectorAll('.formbuilder-menu').forEach(function(el) { setFormbuilderMenuOpen(el, false); });
+        container.querySelectorAll('.formbuilder-fieldset-menu').forEach(function(el) { setFormbuilderFieldsetMenuOpen(el, false); });
+        container.querySelectorAll('.formbuilder-accordion-editpanel-more').forEach(function(el) { setFormbuilderAccordionMoreOpen(el, false); });
+        container.querySelectorAll('.formbuilder-field-more').forEach(function(el) { setFormbuilderFieldMoreOpen(el, false); });
     }
 
     // Close ONLY subcategory edit panels (do not collapse category edit panels).
@@ -749,14 +783,19 @@
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion-option--editing');
         });
-        container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
-            el.classList.remove('open');
+        container.querySelectorAll('.formbuilder-menu').forEach(function(el) {
+            el.classList.remove('formbuilder-menu--open');
+            el.querySelectorAll('.formbuilder-menu-button--open').forEach(function(x){ x.classList.remove('formbuilder-menu-button--open'); });
+            el.querySelectorAll('.formbuilder-menu-button-arrow--open').forEach(function(x){ x.classList.remove('formbuilder-menu-button-arrow--open'); });
+            el.querySelectorAll('.formbuilder-menu-options--open').forEach(function(x){ x.classList.remove('formbuilder-menu-options--open'); });
         });
-        container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
-            el.classList.remove('open');
+        container.querySelectorAll('.formbuilder-fieldset-menu').forEach(function(el) {
+            el.classList.remove('formbuilder-fieldset-menu--open');
+            el.querySelectorAll('.formbuilder-fieldset-menu-button--open').forEach(function(x){ x.classList.remove('formbuilder-fieldset-menu-button--open'); });
+            el.querySelectorAll('.formbuilder-fieldset-menu-options--open').forEach(function(x){ x.classList.remove('formbuilder-fieldset-menu-options--open'); });
         });
-        container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
-            el.classList.remove('open');
+        container.querySelectorAll('.formbuilder-field-more-menu--open').forEach(function(el) {
+            el.classList.remove('formbuilder-field-more-menu--open');
         });
     }
     
@@ -769,17 +808,22 @@
     
     function closeAllMenus() {
         if (!container) return;
-        container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
-            el.classList.remove('open');
+        container.querySelectorAll('.formbuilder-menu').forEach(function(el) {
+            el.classList.remove('formbuilder-menu--open');
+            el.querySelectorAll('.formbuilder-menu-button--open').forEach(function(x){ x.classList.remove('formbuilder-menu-button--open'); });
+            el.querySelectorAll('.formbuilder-menu-button-arrow--open').forEach(function(x){ x.classList.remove('formbuilder-menu-button-arrow--open'); });
+            el.querySelectorAll('.formbuilder-menu-options--open').forEach(function(x){ x.classList.remove('formbuilder-menu-options--open'); });
         });
-        container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
-            el.classList.remove('open');
+        container.querySelectorAll('.formbuilder-accordion-editpanel-more-menu--open').forEach(function(el) {
+            el.classList.remove('formbuilder-accordion-editpanel-more-menu--open');
         });
-        container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
-            el.classList.remove('open');
+        container.querySelectorAll('.formbuilder-fieldset-menu').forEach(function(el) {
+            el.classList.remove('formbuilder-fieldset-menu--open');
+            el.querySelectorAll('.formbuilder-fieldset-menu-button--open').forEach(function(x){ x.classList.remove('formbuilder-fieldset-menu-button--open'); });
+            el.querySelectorAll('.formbuilder-fieldset-menu-options--open').forEach(function(x){ x.classList.remove('formbuilder-fieldset-menu-options--open'); });
         });
-        container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
-            el.classList.remove('open');
+        container.querySelectorAll('.formbuilder-field-more-menu--open').forEach(function(el) {
+            el.classList.remove('formbuilder-field-more-menu--open');
         });
     }
     
@@ -827,8 +871,8 @@
             // Don't close if clicking on save/discard buttons or calculator
             if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-accordion-editpanel-more')) {
-                container.querySelectorAll('.formbuilder-accordion-editpanel-more.open').forEach(function(el) {
-                    el.classList.remove('open');
+                container.querySelectorAll('.formbuilder-accordion-editpanel-more-menu--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-accordion-editpanel-more-menu--open');
                 });
             }
         });
@@ -842,8 +886,14 @@
             var clickedInsideMenu = e.target.closest('.formbuilder-fieldset-menu');
             if (!clickedInsideMenu) {
                 // Click was outside - close all open fieldset menus
-                container.querySelectorAll('.formbuilder-fieldset-menu.open').forEach(function(el) {
-                    el.classList.remove('open');
+                container.querySelectorAll('.formbuilder-fieldset-menu-options--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-fieldset-menu-options--open');
+                });
+                container.querySelectorAll('.formbuilder-fieldset-menu-button--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-fieldset-menu-button--open');
+                });
+                container.querySelectorAll('.formbuilder-fieldset-menu--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-fieldset-menu--open');
                 });
             }
         });
@@ -854,8 +904,17 @@
             // Don't close if clicking on save/discard buttons or calculator
             if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-menu')) {
-                container.querySelectorAll('.formbuilder-menu.open').forEach(function(el) {
-                    el.classList.remove('open');
+                container.querySelectorAll('.formbuilder-menu-options--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-menu-options--open');
+                });
+                container.querySelectorAll('.formbuilder-menu-button-arrow--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-menu-button-arrow--open');
+                });
+                container.querySelectorAll('.formbuilder-menu-button--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-menu-button--open');
+                });
+                container.querySelectorAll('.formbuilder-menu--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-menu--open');
                 });
             }
         });
@@ -866,8 +925,8 @@
             // Don't close if clicking on save/discard buttons or calculator
             if (isSaveOrDiscardButton(e.target) || isCalculatorButtonOrPopup(e.target)) return;
             if (!e.target.closest('.formbuilder-field-more')) {
-                container.querySelectorAll('.formbuilder-field-more.open').forEach(function(el) {
-                    el.classList.remove('open');
+                container.querySelectorAll('.formbuilder-field-more-menu--open').forEach(function(el) {
+                    el.classList.remove('formbuilder-field-more-menu--open');
                 });
             }
         });
@@ -1094,12 +1153,13 @@
         var moreBtn = document.createElement('div');
         moreBtn.className = 'formbuilder-accordion-editpanel-more';
         moreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch' + (cat.hidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
+        var moreMenuEl = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-menu');
         
         moreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            var wasOpen = moreBtn.classList.contains('open');
+            var wasOpen = moreMenuEl && moreMenuEl.classList.contains('formbuilder-accordion-editpanel-more-menu--open');
             closeAllMenus();
-            if (!wasOpen) moreBtn.classList.add('open');
+            if (!wasOpen && moreMenuEl) moreMenuEl.classList.add('formbuilder-accordion-editpanel-more-menu--open');
         });
         
         var hideSwitch = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
@@ -1113,7 +1173,7 @@
         var deleteCatBtn = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-delete');
         deleteCatBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            moreBtn.classList.remove('open');
+            if (moreMenuEl) moreMenuEl.classList.remove('formbuilder-accordion-editpanel-more-menu--open');
             deleteCategory(accordion);
         });
         
@@ -1302,12 +1362,13 @@
         var subMoreBtn = document.createElement('div');
         subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
         subMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
+        var subMoreMenuEl = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-menu');
         
         subMoreBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            var wasOpen = subMoreBtn.classList.contains('open');
+            var wasOpen = subMoreMenuEl && subMoreMenuEl.classList.contains('formbuilder-accordion-editpanel-more-menu--open');
             closeAllMenus();
-            if (!wasOpen) subMoreBtn.classList.add('open');
+            if (!wasOpen && subMoreMenuEl) subMoreMenuEl.classList.add('formbuilder-accordion-editpanel-more-menu--open');
         });
         
         var subHideSwitch = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-switch');
@@ -1321,7 +1382,7 @@
         var deleteSubBtn = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-delete');
         deleteSubBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            subMoreBtn.classList.remove('open');
+            if (subMoreMenuEl) subMoreMenuEl.classList.remove('formbuilder-accordion-editpanel-more-menu--open');
             deleteSubcategory(option);
         });
         
@@ -1465,27 +1526,27 @@
                 }
                 
                 // For location fieldsets, apply filtering based on selected type
-                // Use separate class 'disabled-location-type' to avoid breaking "already added" disabled state
+                // Use separate class '--disabled-location-type' to avoid breaking "already added" disabled state
                 if (!selectedType || selectedTypeLower === 'null' || selectedTypeLower === '') {
                     // No selection - enable all location fieldsets
-                    opt.classList.remove('disabled-location-type');
+                    opt.classList.remove('formbuilder-fieldset-menu-option--disabled-location-type');
                 } else if (selectedTypeLower === 'venue') {
                     if (isCity || isAddress) {
-                        opt.classList.add('disabled-location-type');
+                        opt.classList.add('formbuilder-fieldset-menu-option--disabled-location-type');
                     } else if (isVenue) {
-                        opt.classList.remove('disabled-location-type');
+                        opt.classList.remove('formbuilder-fieldset-menu-option--disabled-location-type');
                     }
                 } else if (selectedTypeLower === 'city') {
                     if (isVenue || isAddress) {
-                        opt.classList.add('disabled-location-type');
+                        opt.classList.add('formbuilder-fieldset-menu-option--disabled-location-type');
                     } else if (isCity) {
-                        opt.classList.remove('disabled-location-type');
+                        opt.classList.remove('formbuilder-fieldset-menu-option--disabled-location-type');
                     }
                 } else if (selectedTypeLower === 'address') {
                     if (isVenue || isCity) {
-                        opt.classList.add('disabled-location-type');
+                        opt.classList.add('formbuilder-fieldset-menu-option--disabled-location-type');
                     } else if (isAddress) {
-                        opt.classList.remove('disabled-location-type');
+                        opt.classList.remove('formbuilder-fieldset-menu-option--disabled-location-type');
                     }
                 }
             });
@@ -1509,9 +1570,9 @@
                 
                 if (isSessions) {
                     if (subcategoryType === 'Events') {
-                        opt.classList.remove('disabled-location-type');
+                        opt.classList.remove('formbuilder-fieldset-menu-option--disabled-location-type');
                     } else {
-                        opt.classList.add('disabled-location-type');
+                        opt.classList.add('formbuilder-fieldset-menu-option--disabled-location-type');
                     }
                 }
             });
@@ -1524,7 +1585,9 @@
                 // - Do NOT allow fieldset menu to open yet
                 if (fieldsetMenu) {
                     fieldsetMenu.style.display = '';
-                    fieldsetMenu.classList.remove('open');
+                    fieldsetMenu.classList.remove('formbuilder-fieldset-menu--open');
+                    if (fieldsetBtn) fieldsetBtn.classList.remove('formbuilder-fieldset-menu-button--open');
+                    if (fieldsetOpts) fieldsetOpts.classList.remove('formbuilder-fieldset-menu-options--open');
                 }
                 if (fieldsetBtn) {
                     fieldsetBtn.textContent = 'Select Location Type';
@@ -1593,7 +1656,7 @@
                         addedFieldsets[fsId] = false;
                         var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
                         if (menuOpt) {
-                            menuOpt.classList.remove('disabled');
+                            menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
                         }
                     } else {
                         // This is the matching fieldset
@@ -1631,7 +1694,7 @@
                     addedFieldsets[result.fsId] = true;
                     var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
                     if (menuOpt) {
-                        menuOpt.classList.add('disabled');
+                        menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
                     }
                     notifyChange();
                 }
@@ -1662,7 +1725,7 @@
                         addedFieldsets[fsId] = false;
                         var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
                         if (menuOpt) {
-                            menuOpt.classList.remove('disabled');
+                            menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
                         }
                     }
                 });
@@ -1699,7 +1762,7 @@
                     addedFieldsets[result.fsId] = true;
                     var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
                     if (menuOpt) {
-                        menuOpt.classList.add('disabled');
+                        menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
                     }
                     notifyChange();
                 }
@@ -2080,12 +2143,13 @@
             var fieldMoreBtn = document.createElement('div');
             fieldMoreBtn.className = 'formbuilder-field-more';
             fieldMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
+            var fieldMoreMenuEl = fieldMoreBtn.querySelector('.formbuilder-field-more-menu');
             
             fieldMoreBtn.addEventListener('click', function(ev) {
                 ev.stopPropagation();
-                var wasOpen = fieldMoreBtn.classList.contains('open');
+                var wasOpen = fieldMoreMenuEl && fieldMoreMenuEl.classList.contains('formbuilder-field-more-menu--open');
                 closeAllMenus();
-                if (!wasOpen) fieldMoreBtn.classList.add('open');
+                if (!wasOpen && fieldMoreMenuEl) fieldMoreMenuEl.classList.add('formbuilder-field-more-menu--open');
             });
             
             var fieldDeleteItem = fieldMoreBtn.querySelector('.formbuilder-field-more-delete');
@@ -2095,7 +2159,7 @@
                 addedFieldsets[fsId] = false;
                 var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
                 if (menuOpt) {
-                    menuOpt.classList.remove('disabled');
+                    menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
                     // Re-apply location type filtering after removing "already added" disabled state
                     var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
                     var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
@@ -2640,19 +2704,19 @@
             
             // Apply initial gray-out state for sessions (only available for Events)
             if (isSessions && currentSubcategoryType !== 'Events') {
-                opt.classList.add('disabled-location-type');
+                opt.classList.add('formbuilder-fieldset-menu-option--disabled-location-type');
             }
             
             opt.onclick = function(e) {
                 e.stopPropagation();
                 // Check for both "already added" disabled AND location type/sessions disabled
-                if (opt.classList.contains('disabled') || opt.classList.contains('disabled-location-type')) return;
+                if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled') || opt.classList.contains('formbuilder-fieldset-menu-option--disabled-location-type')) return;
                 
                 var result = createFieldElement(fs, true, fs);
                 fieldsContainer.appendChild(result.wrapper);
                 addedFieldsets[result.fsId] = true;
-                opt.classList.add('disabled');
-                fieldsetMenu.classList.remove('open');
+                opt.classList.add('formbuilder-fieldset-menu-option--disabled');
+                setFieldsetMenuOpen(false);
                 notifyChange();
             };
             fieldsetOpts.appendChild(opt);
@@ -2682,7 +2746,7 @@
             fieldsContainer.appendChild(result.wrapper);
             addedFieldsets[result.fsId] = true;
             var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
-            if (menuOpt) menuOpt.classList.add('disabled');
+            if (menuOpt) menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
         });
         
         // AFTER loading existing fields, manage location type fieldset (will only add if missing)
@@ -2698,13 +2762,20 @@
             manageSessionsFieldset(false);
         }
         
+        function setFieldsetMenuOpen(isOpen) {
+            if (!fieldsetMenu) return;
+            fieldsetMenu.classList.toggle('formbuilder-fieldset-menu--open', !!isOpen);
+            if (fieldsetBtn) fieldsetBtn.classList.toggle('formbuilder-fieldset-menu-button--open', !!isOpen);
+            if (fieldsetOpts) fieldsetOpts.classList.toggle('formbuilder-fieldset-menu-options--open', !!isOpen);
+        }
+        
         fieldsetBtn.onclick = function(e) {
             e.stopPropagation();
             // If location type isn't set yet, clicking this button should open the subcategory edit panel
             // so the admin can pick a location type (Venue/City/Address).
             var currentLocationType = (cat.subFees && cat.subFees[subName]) ? cat.subFees[subName].location_type : null;
             if (!currentLocationType) {
-                if (fieldsetMenu) fieldsetMenu.classList.remove('open');
+                setFieldsetMenuOpen(false);
                 if (fieldsetBtn) fieldsetBtn.textContent = 'Select Location Type';
                 runWithScrollAnchor(fieldsetBtn, function() {
                     option.classList.add('formbuilder-accordion-option--editing');
@@ -2714,14 +2785,10 @@
 
             // Normal behavior: open fieldset menu
             if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
-            var wasOpen = fieldsetMenu.classList.contains('open');
+            var wasOpen = fieldsetMenu.classList.contains('formbuilder-fieldset-menu--open');
             closeAllMenus();
             if (!wasOpen) {
-                fieldsetMenu.classList.add('open');
-                // Register with MenuManager for click-away handling
-                if (typeof MenuManager !== 'undefined' && MenuManager.register) {
-                    MenuManager.register(fieldsetMenu);
-                }
+                setFieldsetMenuOpen(true);
             }
         };
         

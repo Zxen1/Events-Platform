@@ -1330,7 +1330,7 @@
   background: #3b82f6;
 }
 
-.member-formpicker-menu.open .member-formpicker-menu-button {
+.member-formpicker-menu-button--open {
   border-color: #3b82f6;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
@@ -1365,7 +1365,7 @@
   transition: transform 0.2s;
 }
 
-.member-formpicker-menu.open .member-formpicker-menu-button-arrow {
+.member-formpicker-menu-button-arrow--open {
   transform: rotate(180deg);
 }
 
@@ -1384,7 +1384,7 @@
   z-index: 1000;
 }
 
-.member-formpicker-menu.open .member-formpicker-menu-options {
+.member-formpicker-menu-options--open {
   display: block;
 }
 

@@ -211,7 +211,7 @@
   display: none;
 }
 
-.formbuilder-accordion-editpanel-more.open .formbuilder-accordion-editpanel-more-menu {
+.formbuilder-accordion-editpanel-more-menu--open {
   display: block;
 }
 
@@ -461,7 +461,7 @@
   border-color: #3b82f5;
 }
 
-.formbuilder-menu.open .formbuilder-menu-button {
+.formbuilder-menu-button--open {
   border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
@@ -495,7 +495,7 @@
   font-size: 10px;
 }
 
-.formbuilder-menu.open .formbuilder-menu-button-arrow {
+.formbuilder-menu-button-arrow--open {
   transform: rotate(180deg);
 }
 
@@ -532,7 +532,7 @@
   border-radius: 5px;
 }
 
-.formbuilder-menu.open .formbuilder-menu-options {
+.formbuilder-menu-options--open {
   display: block;
 }
 
@@ -634,7 +634,7 @@
   color: #fff;
 }
 
-.formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-button {
+.formbuilder-fieldset-menu-button--open {
   border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
@@ -672,7 +672,7 @@
   border-radius: 5px;
 }
 
-.formbuilder-fieldset-menu.open .formbuilder-fieldset-menu-options {
+.formbuilder-fieldset-menu-options--open {
   display: block;
 }
 
@@ -691,14 +691,14 @@
   background: #3b82f5;
 }
 
-.formbuilder-fieldset-menu-option.disabled,
-.formbuilder-fieldset-menu-option.disabled-location-type {
+.formbuilder-fieldset-menu-option--disabled,
+.formbuilder-fieldset-menu-option--disabled-location-type {
   color: #555;
   cursor: not-allowed;
 }
 
-.formbuilder-fieldset-menu-option.disabled:hover,
-.formbuilder-fieldset-menu-option.disabled-location-type:hover {
+.formbuilder-fieldset-menu-option--disabled:hover,
+.formbuilder-fieldset-menu-option--disabled-location-type:hover {
   background: transparent;
 }
 
@@ -881,7 +881,7 @@
   display: none;
 }
 
-.formbuilder-field-more.open .formbuilder-field-more-menu {
+.formbuilder-field-more-menu--open {
   display: block;
 }
 

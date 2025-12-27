@@ -373,13 +373,22 @@ const FilterModule = (function() {
         
         sortButtonEl = sortMenuEl.querySelector('.filter-sort-menu-button');
         sortButtonText = sortMenuEl.querySelector('.filter-sort-menu-button-text');
+        var sortArrowEl = sortMenuEl.querySelector('.filter-sort-menu-button-arrow');
+        var sortOptionsEl = sortMenuEl.querySelector('.filter-sort-menu-options');
         var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
+
+        function setSortMenuOpen(isOpen) {
+            sortMenuEl.classList.toggle('filter-sort-menu--open', !!isOpen);
+            if (sortButtonEl) sortButtonEl.classList.toggle('filter-sort-menu-button--open', !!isOpen);
+            if (sortArrowEl) sortArrowEl.classList.toggle('filter-sort-menu-button-arrow--open', !!isOpen);
+            if (sortOptionsEl) sortOptionsEl.classList.toggle('filter-sort-menu-options--open', !!isOpen);
+        }
         
         // Toggle menu open/close
         if (sortButtonEl) {
             sortButtonEl.addEventListener('click', function(e) {
                 e.stopPropagation();
-                sortMenuEl.classList.toggle('open');
+                setSortMenuOpen(!sortMenuEl.classList.contains('filter-sort-menu--open'));
             });
         }
         
@@ -389,21 +398,21 @@ const FilterModule = (function() {
                 e.stopPropagation();
                 var sort = option.getAttribute('data-sort');
                 selectSort(sort, option.textContent);
-                sortMenuEl.classList.remove('open');
+                setSortMenuOpen(false);
             });
         });
         
         // Close when clicking outside
         document.addEventListener('click', function(e) {
             if (sortMenuEl && !sortMenuEl.contains(e.target)) {
-                sortMenuEl.classList.remove('open');
+                setSortMenuOpen(false);
             }
         });
         
         // Set initial selected state
         var firstOption = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="az"]');
         if (firstOption) {
-            firstOption.classList.add('selected');
+            firstOption.classList.add('filter-sort-menu-option--selected');
         }
     }
     
@@ -417,7 +426,7 @@ const FilterModule = (function() {
         // Update selected state
         var options = sortMenuEl.querySelectorAll('.filter-sort-menu-option');
         options.forEach(function(opt) {
-            opt.classList.toggle('selected', opt.getAttribute('data-sort') === sortKey);
+            opt.classList.toggle('filter-sort-menu-option--selected', opt.getAttribute('data-sort') === sortKey);
         });
         
         App.emit('filter:sortChanged', { sort: sortKey });
@@ -519,7 +528,7 @@ const FilterModule = (function() {
         
         // Close calendar when clicking outside
         document.addEventListener('click', function(e) {
-            if (calendarContainer && calendarContainer.classList.contains('open')) {
+            if (calendarContainer && calendarContainer.classList.contains('filter-calendar-container--open')) {
                 // Check if click is outside calendar, daterange input, and expired toggle row
                 var expiredRow = container.querySelector('.filter-expired-row');
                 var isExpiredRow = expiredRow && expiredRow.contains(e.target);
@@ -618,7 +627,7 @@ const FilterModule = (function() {
             showActions: true,
             // While user is selecting dates, show the draft range in the input
             onChange: function(start, end) {
-                if (!calendarContainer || !calendarContainer.classList.contains('open')) return;
+                if (!calendarContainer || !calendarContainer.classList.contains('filter-calendar-container--open')) return;
                 dateRangeDraftOpen = true;
                 setDaterangeInputValue(start, end, true);
             },
@@ -656,7 +665,7 @@ const FilterModule = (function() {
     function toggleCalendar() {
         if (!calendarContainer) return;
         
-        var isOpen = calendarContainer.classList.contains('open');
+        var isOpen = calendarContainer.classList.contains('filter-calendar-container--open');
         
         if (isOpen) {
             // Treat closing as cancel: revert display and clear draft selection
@@ -673,7 +682,7 @@ const FilterModule = (function() {
     
     function openCalendar() {
         if (!calendarContainer) return;
-        calendarContainer.classList.add('open');
+        calendarContainer.classList.add('filter-calendar-container--open');
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'true');
         }
@@ -684,7 +693,7 @@ const FilterModule = (function() {
     
     function closeCalendar() {
         if (!calendarContainer) return;
-        calendarContainer.classList.remove('open');
+        calendarContainer.classList.remove('filter-calendar-container--open');
         if (daterangeInput) {
             daterangeInput.setAttribute('aria-expanded', 'false');
         }
@@ -850,16 +859,30 @@ const FilterModule = (function() {
                     
                     accordion.appendChild(header);
                     accordion.appendChild(body);
+
+                    function setAccordionOpen(isOpen) {
+                        accordion.classList.toggle('filter-categoryfilter-accordion--open', !!isOpen);
+                        headerArrow.classList.toggle('filter-categoryfilter-accordion-header-arrow--open', !!isOpen);
+                        body.classList.toggle('filter-categoryfilter-accordion-body--open', !!isOpen);
+                    }
+
+                    function setAccordionDisabled(isDisabled) {
+                        accordion.classList.toggle('filter-categoryfilter-accordion--disabled', !!isDisabled);
+                        header.classList.toggle('filter-categoryfilter-accordion-header--disabled', !!isDisabled);
+                        body.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                            opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', !!isDisabled);
+                        });
+                    }
                     
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
                         e.stopPropagation();
                         headerToggle.classList.toggle('on');
                         if (headerToggle.classList.contains('on')) {
-                            accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+                            setAccordionDisabled(false);
                         } else {
-                            accordion.classList.add('filter-categoryfilter-accordion--disabled');
-                            accordion.classList.remove('filter-categoryfilter-accordion--open');
+                            setAccordionDisabled(true);
+                            setAccordionOpen(false);
                         }
                         applyFilters();
                         updateResetCategoriesButton();
@@ -868,7 +891,7 @@ const FilterModule = (function() {
                     // Click anywhere except toggle area expands/collapses
                     header.addEventListener('click', function(e) {
                         if (e.target === headerToggleArea || headerToggleArea.contains(e.target)) return;
-                        accordion.classList.toggle('filter-categoryfilter-accordion--open');
+                        setAccordionOpen(!accordion.classList.contains('filter-categoryfilter-accordion--open'));
                     });
                     
                     container.appendChild(accordion);

@@ -287,13 +287,13 @@
   mask-image: var(--header-icon-fullscreen);
 }
 
-.header-access-button.fullscreen-btn.is-fullscreen .header-access-button-icon {
+.header-access-button-icon--fullscreen-exit {
   background-color: #3b82f6;
   -webkit-mask-image: var(--header-icon-fullscreen-exit);
   mask-image: var(--header-icon-fullscreen-exit);
 }
 
-.header-access-button.fullscreen-btn.is-fullscreen:hover .header-access-button-icon {
+.header-access-button-icon--fullscreen-exit:hover {
   background-color: #60a5fa;
 }
 
