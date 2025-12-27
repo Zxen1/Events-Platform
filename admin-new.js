@@ -2040,41 +2040,6 @@ const AdminModule = (function() {
             });
         }
         
-        // Map Shadow Opacity slider
-        var shadowOpacitySlider = document.getElementById('adminMapShadowOpacity');
-        var shadowOpacityDisplay = document.getElementById('adminMapShadowOpacityDisplay');
-        if (shadowOpacitySlider && shadowOpacityDisplay) {
-            var initialShadowOpacity = mapTabData.post_mode_bg_opacity !== undefined ? parseFloat(mapTabData.post_mode_bg_opacity) : 0;
-            shadowOpacitySlider.value = initialShadowOpacity;
-            shadowOpacityDisplay.textContent = initialShadowOpacity.toFixed(2);
-            
-            registerField('map.post_mode_bg_opacity', initialShadowOpacity);
-            
-            shadowOpacitySlider.addEventListener('input', function() {
-                shadowOpacityDisplay.textContent = parseFloat(shadowOpacitySlider.value).toFixed(2);
-                updateField('map.post_mode_bg_opacity', parseFloat(shadowOpacitySlider.value));
-            });
-        }
-        
-        // Map Shadow Mode radios
-        var shadowModeRadios = mapTabContainer.querySelectorAll('input[name="adminMapShadowMode"]');
-        if (shadowModeRadios.length) {
-            var initialShadowMode = mapTabData.map_shadow_mode || 'post_mode_only';
-            shadowModeRadios.forEach(function(radio) {
-                radio.checked = (radio.value === initialShadowMode);
-            });
-            
-            registerField('map.map_shadow_mode', initialShadowMode);
-            
-            shadowModeRadios.forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    if (radio.checked) {
-                        updateField('map.map_shadow_mode', radio.value);
-                    }
-                });
-            });
-        }
-        
         // Wait for Map Tiles checkbox
         var waitForMapTilesCheckbox = document.getElementById('adminWaitForMapTiles');
         if (waitForMapTilesCheckbox) {
@@ -2236,8 +2201,7 @@ const AdminModule = (function() {
             { id: 'adminStartingZoom', displayId: 'adminStartingZoomDisplay', fieldId: 'map.starting_zoom', format: 'int' },
             { id: 'adminStartingPitch', displayId: 'adminStartingPitchDisplay', fieldId: 'map.starting_pitch', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
-            { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
-            { id: 'adminMapShadowOpacity', displayId: 'adminMapShadowOpacityDisplay', fieldId: 'map.post_mode_bg_opacity', format: 'decimal2' }
+            { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' }
         ];
         
         sliders.forEach(function(s) {
@@ -2277,7 +2241,6 @@ const AdminModule = (function() {
         // Reset radio groups
         var radioGroups = [
             { name: 'adminSpinType', fieldId: 'map.spin_load_type' },
-            { name: 'adminMapShadowMode', fieldId: 'map.map_shadow_mode' },
             { name: 'adminMapCardDisplay', fieldId: 'map.map_card_display' }
         ];
         

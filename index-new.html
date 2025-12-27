@@ -186,8 +186,6 @@
     <!-- Mapbox map renders here -->
     <div class="map-container"></div>
     
-    <!-- Map shadow overlay (post mode) -->
-    <div class="map-shadow"></div>
     
   </main>
 
@@ -572,49 +570,28 @@
             </div>
           </div>
           
-          <!-- Map Shadow -->
-          <div class="admin-map-shadow-container" id="admin-map-shadow-container">
-            <div class="admin-panel-field">
-              <label class="admin-settings-field-label" for="adminMapShadowOpacity">Map Shadow</label>
-              <div class="admin-spin-control-row">
-                <span id="adminMapShadowOpacityDisplay" class="admin-slider-value">0.00</span>
-                <input type="range" id="adminMapShadowOpacity" min="0" max="1" step="0.01" class="admin-spin-slider" />
-              </div>
-              <div class="admin-panel-field admin-panel-field--spaced-small">
-                <div class="admin-spin-type-toggles admin-spin-type-toggles--no-margin">
-                  <label class="admin-spin-type-option">
-                    <input type="radio" name="adminMapShadowMode" value="post_mode_only" id="adminMapShadowModePostOnly" class="admin-spin-type-option-input" />
-                    <span class="admin-spin-type-option-label">Post Mode Only</span>
-                  </label>
-                  <label class="admin-spin-type-option">
-                    <input type="radio" name="adminMapShadowMode" value="always" id="adminMapShadowModeAlways" class="admin-spin-type-option-input" />
-                    <span class="admin-spin-type-option-label">Always</span>
-                  </label>
-                </div>
-              </div>
+          <!-- Map Card Controls -->
+          <div class="admin-panel-field">
+            <div class="admin-option-label">
+              <span>Wait for Map Tiles</span>
+              <label class="admin-switch">
+                <input type="checkbox" id="adminWaitForMapTiles" class="admin-switch-input" checked />
+                <span class="admin-switch-slider"></span>
+              </label>
             </div>
-            <div class="admin-panel-field">
-              <div class="admin-option-label">
-                <span>Wait for Map Tiles</span>
-                <label class="admin-switch">
-                  <input type="checkbox" id="adminWaitForMapTiles" class="admin-switch-input" checked />
-                  <span class="admin-switch-slider"></span>
+          </div>
+          <div class="admin-panel-field admin-panel-field--separator">
+            <div class="admin-option-label">
+              <span>Map Card Display</span>
+              <div class="admin-spin-type-toggles">
+                <label class="admin-spin-type-option">
+                  <input type="radio" name="adminMapCardDisplay" value="hover_only" class="admin-spin-type-option-input" />
+                  <span class="admin-spin-type-option-label">Hover Only</span>
                 </label>
-              </div>
-            </div>
-            <div class="admin-panel-field admin-panel-field--separator">
-              <div class="admin-option-label">
-                <span>Map Card Display</span>
-                <div class="admin-spin-type-toggles">
-                  <label class="admin-spin-type-option">
-                    <input type="radio" name="adminMapCardDisplay" value="hover_only" class="admin-spin-type-option-input" />
-                    <span class="admin-spin-type-option-label">Hover Only</span>
-                  </label>
-                  <label class="admin-spin-type-option">
-                    <input type="radio" name="adminMapCardDisplay" value="always" class="admin-spin-type-option-input" />
-                    <span class="admin-spin-type-option-label">Always</span>
-                  </label>
-                </div>
+                <label class="admin-spin-type-option">
+                  <input type="radio" name="adminMapCardDisplay" value="always" class="admin-spin-type-option-input" />
+                  <span class="admin-spin-type-option-label">Always</span>
+                </label>
               </div>
             </div>
           </div>
