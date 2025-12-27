@@ -728,7 +728,8 @@ const MapModule = (function() {
   function triggerLogoSpin() {
     if (!spinLogoClick || !map) return;
     spinEnabled = true;
-    startSpin();
+    // Spin from the current view (no reposition) if below zoom threshold.
+    startSpin(true);
   }
 
 
