@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 27, 2025 at 08:54 PM
+-- Generation Time: Dec 27, 2025 at 11:54 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1402,7 +1402,7 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (57, 'Member Tab My Posts', 'msg_member_tab_myposts', 'label', 'member', 'msg_member', 'My Posts', 'Tab label for my posts section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (58, 'Member Tab Profile', 'msg_member_tab_profile', 'label', 'member', 'msg_member', 'Profile', 'Tab label for profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (59, 'Member Auth Login Tab', 'msg_member_auth_login', 'label', 'member', 'msg_member', 'Login', 'Login tab label in member profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
-(60, 'Member Auth Register Tab', 'msg_member_auth_register', 'label', 'member', 'msg_member', 'Register', 'Register tab label in member profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
+(60, 'Member Auth Register Tab', 'msg_member_auth_register', 'label', 'member', 'msg_member', 'Support FunMap', 'Register tab label in member profile section', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-12-27 12:48:54'),
 (61, 'Member Label Email', 'msg_member_label_email', 'label', 'member', 'msg_member', 'Email', 'Email field label in member forms', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (62, 'Member Label Password', 'msg_member_label_password', 'label', 'member', 'msg_member', 'Password', 'Password field label in member forms', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
 (63, 'Member Button Log In', 'msg_member_btn_log_in', 'label', 'member', 'msg_member', 'Log In', 'Log in button text', 0, NULL, 1, 1, 0, 3000, '2025-11-14 16:04:49', '2025-11-14 16:04:49'),
@@ -1424,7 +1424,9 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (80, 'Delete Checkout Option Message', 'msg_confirm_delete_checkout_option', '', 'confirm', 'settings', 'Are you sure you want to delete this checkout option?', 'Message for checkout option delete confirmation dialog', 0, NULL, 1, 1, 0, NULL, '2025-12-02 06:25:33', '2025-12-02 06:25:33'),
 (81, 'Admin Submit Without Payment Button', 'msg_admin_submit_without_payment', 'label', 'admin', 'msg_admin', 'Admin: Submit without Payment', 'Button text for admin to submit post without payment', 0, NULL, 1, 1, 0, 0, '2025-12-04 04:08:15', '2025-12-04 04:08:15'),
 (10001, 'Registration Invalid Email', 'msg_auth_register_email_invalid', 'error', 'auth', 'msg_member', 'Please enter a valid email address.', 'Register: invalid email format', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56'),
-(10002, 'Registration Email Taken', 'msg_auth_register_email_taken', 'error', 'auth', 'msg_member', 'That email is already registered.', 'Register: duplicate email', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56');
+(10002, 'Registration Email Taken', 'msg_auth_register_email_taken', 'error', 'auth', 'msg_member', 'That email is already registered.', 'Register: duplicate email', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56'),
+(10003, 'Support FunMap Explainer (Member Tab)', 'msg_member_supporter_message', 'label', 'member', 'msg_member', 'Thank you for supporting FunMap.\n\nChoose an amount, enter your email, and (optionally) join to save favourites and settings across devices.', 'Shown at top of Support FunMap tab above amount/email', 0, NULL, 1, 1, 0, NULL, '2025-12-27 12:48:54', '2025-12-27 12:48:54'),
+(10004, 'Supporter Payment Required', 'msg_supporter_payment_required', 'error', 'member', 'msg_member', 'Supporter signup is not available until the payment gateway is active.', 'Shown when Support FunMap submit is blocked because payment is not approved', 0, NULL, 1, 1, 0, 3000, '2025-12-27 12:53:58', '2025-12-27 12:53:58');
 
 -- --------------------------------------------------------
 
@@ -2961,7 +2963,7 @@ ALTER TABLE `addons`
 -- AUTO_INCREMENT for table `admin_messages`
 --
 ALTER TABLE `admin_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10003;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10005;
 
 --
 -- AUTO_INCREMENT for table `admin_settings`

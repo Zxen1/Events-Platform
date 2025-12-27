@@ -74,6 +74,12 @@ const MemberModule = (function() {
     var profilePanel = null;
     var loginInputs = [];
     var registerInputs = [];
+    var supporterMessageEl = null;
+    var supporterJoinToggleBtn = null;
+    var supporterJoinFieldsEl = null;
+    var supporterPresetButtons = [];
+    var supporterCustomAmountInput = null;
+    var supporterAmountHiddenInput = null;
     var profileAvatar = null;
     var profileName = null;
     var profileEmail = null;
@@ -105,7 +111,9 @@ const MemberModule = (function() {
     var pendingRegisterAvatarBlob = null;
     var pendingProfileAvatarBlob = null;
 
-    // Avatar (register + profile) - 4-tile picker (self/upload + 3 random site avatars)
+    // Avatar (register + profile) - 4-tile picker
+    // - Register: 4 random site avatars (NO upload option)
+    // - Profile: self + upload + 2 random site avatars (when user has existing avatar)
     var avatarGridRegister = null;
     var avatarGridProfile = null;
     var activeAvatarTarget = null; // 'register' | 'profile' (used by cropper/file picker)
@@ -215,6 +223,14 @@ const MemberModule = (function() {
         if (registerPanel) {
             registerInputs = Array.from(registerPanel.querySelectorAll('input'));
         }
+
+        // Supporter UI (register tab)
+        supporterMessageEl = document.getElementById('member-supporter-message');
+        supporterJoinToggleBtn = document.getElementById('member-supporter-join-toggle');
+        supporterJoinFieldsEl = document.getElementById('member-supporter-join-fields');
+        supporterCustomAmountInput = document.getElementById('member-supporter-payment-custom');
+        supporterAmountHiddenInput = document.getElementById('member-supporter-payment-amount');
+        supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporter-payment-preset'));
         
         profileAvatar = document.getElementById('member-profile-avatar');
         profileName = document.getElementById('member-profile-name');
@@ -292,6 +308,42 @@ const MemberModule = (function() {
         if (registerTab) {
             registerTab.addEventListener('click', function() {
                 setAuthPanel('register');
+            });
+        }
+
+        if (supporterJoinToggleBtn) {
+            supporterJoinToggleBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                setSupporterJoinExpanded(true);
+            });
+        }
+
+        if (supporterPresetButtons && supporterPresetButtons.length) {
+            supporterPresetButtons.forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var amount = btn.getAttribute('data-amount') || '';
+                    setSupporterAmount(amount);
+                });
+            });
+        }
+        if (supporterCustomAmountInput) {
+            supporterCustomAmountInput.addEventListener('input', function() {
+                var raw = String(supporterCustomAmountInput.value || '');
+                // Keep only numbers + decimal point (no formatting/libraries)
+                raw = raw.replace(/[^0-9.]/g, '');
+                // Allow only first decimal point
+                var parts = raw.split('.');
+                if (parts.length > 2) {
+                    raw = parts[0] + '.' + parts.slice(1).join('');
+                }
+                if (raw !== supporterCustomAmountInput.value) supporterCustomAmountInput.value = raw;
+                // Allow under-min values while typing; clamp happens on blur/finalize.
+                setSupporterAmount(raw, { fromCustom: true, allowUnderMin: true });
+            });
+            supporterCustomAmountInput.addEventListener('blur', function() {
+                var raw = String(supporterCustomAmountInput.value || '').trim();
+                setSupporterAmount(raw, { fromCustom: true });
             });
         }
         
@@ -715,7 +767,8 @@ const MemberModule = (function() {
 
     function ensureAvatarChoicesReady() {
         return ensureSiteAvatarFilenames().then(function() {
-            pickRandomSiteAvatarChoices(3);
+            // Register grid uses 4 site avatars
+            pickRandomSiteAvatarChoices(4);
             renderAvatarGrids();
         });
     }
@@ -752,35 +805,40 @@ const MemberModule = (function() {
         }
 
         // Site choices:
-        // - Register: 3 random site avatars
+        // - Register: 4 random site avatars (no upload option)
         // - Profile: if user already has an avatar, only show 2 random site avatars (plus an extra Upload tile)
         var hasExistingProfileAvatar = (target === 'profile' && currentUser && currentUser.avatar);
-        var siteCount = hasExistingProfileAvatar ? 2 : 3;
+        var siteCount = (target === 'register') ? 4 : (hasExistingProfileAvatar ? 2 : 3);
         var choices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, siteCount) : [];
 
         // Default selection
-        if (!avatarSelection[target]) avatarSelection[target] = 'self';
+        if (!avatarSelection[target]) {
+            avatarSelection[target] = (target === 'register') ? 'site-0' : 'self';
+        }
 
         container.innerHTML = '';
 
-        // Tile 0: self (current avatar if exists, otherwise Add)
-        (function() {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'member-avatar-choice';
-            btn.dataset.choiceKey = 'self';
-            btn.setAttribute('aria-pressed', avatarSelection[target] === 'self' ? 'true' : 'false');
-            if (avatarSelection[target] === 'self') btn.classList.add('member-avatar-choice--selected');
+        // Register: no self/upload tile at all (pre-made avatars only)
+        // Profile: tile 0 is self (current avatar if exists, otherwise Add)
+        if (target !== 'register') {
+            (function() {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'member-avatar-choice';
+                btn.dataset.choiceKey = 'self';
+                btn.setAttribute('aria-pressed', avatarSelection[target] === 'self' ? 'true' : 'false');
+                if (avatarSelection[target] === 'self') btn.classList.add('member-avatar-choice--selected');
 
-            var src = getSelfTileSrc(target);
-            if (src) {
-                btn.innerHTML = '<img class="member-avatar-choice-image" src="' + src + '" alt="">';
-            } else {
-                btn.innerHTML = '<div class="member-avatar-choice-add">' + cameraSvgMarkup() + '<div class="member-avatar-choice-add-text">Add</div></div>';
-            }
+                var src = getSelfTileSrc(target);
+                if (src) {
+                    btn.innerHTML = '<img class="member-avatar-choice-image" src="' + src + '" alt="">';
+                } else {
+                    btn.innerHTML = '<div class="member-avatar-choice-add">' + cameraSvgMarkup() + '<div class="member-avatar-choice-add-text">Add</div></div>';
+                }
 
-            container.appendChild(btn);
-        })();
+                container.appendChild(btn);
+            })();
+        }
 
         // Profile-only tile 1: Upload (only when user already has an avatar)
         if (hasExistingProfileAvatar) {
@@ -871,6 +929,11 @@ const MemberModule = (function() {
 
     function openCropperForAvatarChoice(target, key) {
         activeAvatarTarget = target;
+
+        // Register flow: do not allow file uploads/cropping.
+        if (target === 'register') {
+            return;
+        }
 
         if (target === 'profile' && key === 'upload') {
             // Second-click on Upload tile opens file picker -> crop modal
@@ -2921,11 +2984,67 @@ const MemberModule = (function() {
         // Update panels
         setAuthPanelState(loginPanel, isLogin, loginInputs);
         setAuthPanelState(registerPanel, !isLogin, registerInputs);
+
+        if (!isLogin) {
+            // Support tab opened
+            setSupporterJoinExpanded(false);
+            loadSupporterMessage();
+        }
         
         authForm.dataset.active = target;
         
         // Focus first field
         focusFirstField(isLogin ? loginPanel : registerPanel);
+    }
+
+    function setSupporterJoinExpanded(isExpanded) {
+        if (!supporterJoinFieldsEl) return;
+        supporterJoinFieldsEl.hidden = !isExpanded;
+        supporterJoinFieldsEl.classList.toggle('member-supporter-join-fields--open', !!isExpanded);
+    }
+
+    function setSupporterAmount(amount, options) {
+        options = options || {};
+        var value = String(amount || '').trim();
+
+        // Enforce minimum $1 for custom amounts (and any other non-empty value).
+        // Allow under-min values only while the user is typing.
+        if (!options.allowUnderMin && value !== '') {
+            var n = parseFloat(value);
+            if (isFinite(n) && n < 1) {
+                value = '1';
+            }
+        }
+        if (supporterAmountHiddenInput) supporterAmountHiddenInput.value = value;
+
+        if (!options.fromCustom && supporterCustomAmountInput) {
+            supporterCustomAmountInput.value = value ? value : '';
+        }
+
+        if (supporterPresetButtons && supporterPresetButtons.length) {
+            supporterPresetButtons.forEach(function(btn) {
+                var btnAmount = String(btn.getAttribute('data-amount') || '');
+                btn.classList.toggle('member-supporter-payment-preset--selected', value !== '' && btnAmount === value);
+            });
+        }
+    }
+
+    function loadSupporterMessage() {
+        try {
+            if (!supporterMessageEl) return;
+            var key = supporterMessageEl.getAttribute('data-message-key') || '';
+            key = String(key || '').trim();
+            if (!key) return;
+            if (typeof window.getMessage !== 'function') return;
+            window.getMessage(key, {}, false).then(function(message) {
+                if (!message) return;
+                supporterMessageEl.innerHTML = message;
+            }).catch(function() {
+                // no fallback text (rules)
+            });
+        } catch (e) {
+            // ignore
+        }
     }
 
     function setAuthPanelState(panelEl, isActive, inputs) {
@@ -3047,6 +3166,17 @@ const MemberModule = (function() {
     }
 
     function handleRegister() {
+        // If user hasn't opted into joining yet, expand the join fields before validating.
+        if (supporterJoinFieldsEl && supporterJoinFieldsEl.hidden) {
+            setSupporterJoinExpanded(true);
+            var focusEl = document.getElementById('member-register-name');
+            if (focusEl && typeof focusEl.focus === 'function') {
+                focusEl.focus();
+                if (typeof focusEl.select === 'function') focusEl.select();
+            }
+            return;
+        }
+
         var nameInput = document.getElementById('member-register-name');
         var emailInput = document.getElementById('member-register-email');
         var passwordInput = document.getElementById('member-register-password');
@@ -3113,6 +3243,13 @@ const MemberModule = (function() {
                 confirmInput.focus();
                 confirmInput.select();
             }
+            return;
+        }
+
+        // IMPORTANT: Do not store ANY registration data (including avatar uploads) unless payment has gone through.
+        // For now, allow free testing ONLY for admins (payment gateway placeholder).
+        if (!isSupporterPaymentApprovedForTesting()) {
+            showSupporterPaymentRequiredMessage();
             return;
         }
         
@@ -3202,6 +3339,39 @@ const MemberModule = (function() {
                 }
             });
         });
+    }
+
+    function isSupporterPaymentApprovedForTesting() {
+        try {
+            // If payments are enabled, we require a real gateway success signal (not implemented yet).
+            // This prevents uploads/emails/DB rows until payment is actually wired.
+            var settings = (window.App && typeof App.getState === 'function') ? (App.getState('settings') || {}) : {};
+            var paypalEnabled = settings && (settings.paypal_enabled === true || settings.paypal_enabled === 'true');
+            if (paypalEnabled) return false;
+
+            // Free testing mode: admin only
+            return !!(currentUser && currentUser.isAdmin);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function showSupporterPaymentRequiredMessage() {
+        // No hardcoded fallback copy. Use DB message keys where possible.
+        var key = 'msg_supporter_payment_required';
+        if (typeof window.getMessage === 'function') {
+            window.getMessage(key, {}, false).then(function(message) {
+                if (message) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(message);
+                    } else {
+                        showStatus(message, { error: true });
+                    }
+                }
+            }).catch(function() {
+                // Intentionally no fallback text.
+            });
+        }
     }
 
     function handleLogout() {

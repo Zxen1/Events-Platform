@@ -39,6 +39,59 @@
 }
 
 /* ============================================================================
+   SUPPORT FUNMAP (REGISTER TAB)
+   ============================================================================ */
+
+.member-supporter-message {
+  margin: 10px 0;
+  color: #ddd;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.member-supporter-payment {
+  margin: 10px 0;
+}
+
+.member-supporter-payment-presets {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.member-supporter-payment-preset {
+  flex: 1;
+  height: var(--control-h);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.member-supporter-payment-preset--selected {
+  border-color: rgba(59, 130, 245, 1);
+  background: rgba(59, 130, 245, 0.15);
+}
+
+.member-supporter-join-toggle {
+  width: 100%;
+  height: var(--control-h);
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.member-supporter-join-fields {
+  margin-top: 10px;
+}
+
+.member-supporter-join-fields--open {
+  /* state hook for future styling if needed */
+}
+
+/* ============================================================================
    PANEL BASE
    ============================================================================ */
 
