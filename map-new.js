@@ -1194,7 +1194,10 @@ const MapModule = (function() {
     var currentLighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
     if (window.MemberModule && window.MemberModule.getCurrentUser) {
       var member = window.MemberModule.getCurrentUser();
-      if (member && member.map_lighting) {
+      var isAdmin = !!(member && member.isAdmin === true);
+      var memberMode = !!(isAdmin && (member.member_mode === 1 || member.member_mode === '1' || member.member_mode === true));
+      var adminView = !!(isAdmin && !memberMode);
+      if (member && member.map_lighting && !adminView) {
         currentLighting = member.map_lighting;
       }
     }
