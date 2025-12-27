@@ -40,6 +40,10 @@
   width: 40px;
   height: 40px;
   display: block;
+  background-image: var(--header-logo-small);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 .header-logo-button-image--spinning {

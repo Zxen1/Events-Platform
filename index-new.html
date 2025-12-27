@@ -45,7 +45,7 @@
     
     <!-- Logo button (image loaded from admin settings) -->
     <button class="header-logo-button" type="button" aria-label="Home">
-      <img class="header-logo-button-image" src="" alt="">
+      <span class="header-logo-button-image" aria-hidden="true"></span>
     </button>
     
     <!-- Filter button -->
@@ -75,7 +75,7 @@
     <!-- Access buttons (Member / Admin / Fullscreen) -->
     <button class="header-access-button" type="button" data-panel="member" title="Members" aria-label="Member" aria-expanded="false" aria-controls="member-panel">
       <span class="header-access-button-icon header-access-button-icon--member"></span>
-      <img class="header-access-button-avatar header-access-button-avatar--hidden" src="" alt="">
+      <img class="header-access-button-avatar header-access-button-avatar--hidden" alt="">
     </button>
     <button class="header-access-button header-access-button--hidden" type="button" data-panel="admin" title="Admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel" aria-hidden="true">
       <span class="header-access-button-icon header-access-button-icon--admin"></span>
@@ -776,7 +776,7 @@
             <!-- Profile Panel (shown when logged in) -->
             <section id="member-auth-profile" class="member-auth-panel member-auth-profile member-auth-panel--hidden" role="region" aria-live="polite" hidden>
               <div class="member-profile">
-                <img id="member-profile-avatar" class="member-profile-avatar" src="" alt="">
+                <img id="member-profile-avatar" class="member-profile-avatar" alt="">
                 <div class="member-profile-details">
                   <p id="member-profile-name" class="member-profile-name"></p>
                   <p id="member-profile-email" class="member-profile-email"></p>

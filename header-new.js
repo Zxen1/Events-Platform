@@ -160,11 +160,14 @@ const HeaderModule = (function() {
     }
     
     function setLogo(imagePath) {
-        var logoImg = document.querySelector('.header-logo-button-image');
-        if (logoImg && imagePath) {
-            logoImg.onload = function() { logoImg.classList.add('loaded'); };
-            logoImg.src = imagePath;
-            if (logoImg.complete) logoImg.classList.add('loaded');
+        var logoEl = document.querySelector('.header-logo-button-image');
+        if (!logoEl) return;
+        
+        // Use background-image (prevents broken-image placeholders)
+        try {
+            logoEl.style.backgroundImage = imagePath ? ('url("' + imagePath + '")') : '';
+        } catch (e) {
+            // ignore
         }
     }
 

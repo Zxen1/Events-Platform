@@ -3484,15 +3484,29 @@ const MemberModule = (function() {
         if (user) {
             var src = getAvatarSource(user);
             if (src) {
-                // Show avatar, hide icon
-                if (avatarImg) {
-                    avatarImg.src = src;
-                    avatarImg.classList.remove('header-access-button-avatar--hidden');
-                }
-                if (iconSpan) {
-                    iconSpan.classList.add('header-access-button-icon--hidden');
-                }
-                memberBtn.classList.add('has-avatar');
+                // Preload first so we never show a broken-image placeholder in the header.
+                var pre = new Image();
+                pre.onload = function() {
+                    if (avatarImg) {
+                        avatarImg.src = src;
+                        avatarImg.classList.remove('header-access-button-avatar--hidden');
+                    }
+                    if (iconSpan) {
+                        iconSpan.classList.add('header-access-button-icon--hidden');
+                    }
+                    memberBtn.classList.add('has-avatar');
+                };
+                pre.onerror = function() {
+                    if (avatarImg) {
+                        avatarImg.removeAttribute('src');
+                        avatarImg.classList.add('header-access-button-avatar--hidden');
+                    }
+                    if (iconSpan) {
+                        iconSpan.classList.remove('header-access-button-icon--hidden');
+                    }
+                    memberBtn.classList.remove('has-avatar');
+                };
+                pre.src = src;
             } else {
                 // No avatar_file: hide avatar, show icon (no generated placeholders)
                 if (avatarImg) {
