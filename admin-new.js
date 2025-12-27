@@ -1785,29 +1785,36 @@ const AdminModule = (function() {
     var mapTabInitialized = false;
     var mapTabData = {}; // Cached map settings from database
 
-    function getAdminViewMode() {
+    function getAdminMemberMode() {
         try {
-            if (!window.MemberModule || typeof MemberModule.getCurrentUser !== 'function') return 'member';
+            if (!window.MemberModule || typeof MemberModule.getCurrentUser !== 'function') return 1;
             var u = MemberModule.getCurrentUser();
-            if (!u || u.isAdmin !== true) return 'member';
-            return (u.view_mode === 'admin' || u.view_mode === 'member') ? u.view_mode : 'member';
+            if (!u || u.isAdmin !== true) return 1;
+            var v = u.member_mode;
+            if (v === true) return 1;
+            if (v === false) return 0;
+            if (v === 1 || v === '1') return 1;
+            if (v === 0 || v === '0') return 0;
+            return 1;
         } catch (e) {
-            return 'member';
+            return 1;
         }
     }
 
     function isPreviewingAdminDefaults() {
-        return getAdminViewMode() === 'admin';
+        return getAdminMemberMode() !== 1;
     }
 
     function applyPreviewMode(mode) {
         if (!window.MapModule) return;
         if (mode === 'admin') {
-            if (window.MapModule.setMapStyle && mapTabData && mapTabData.map_style) {
-                window.MapModule.setMapStyle(mapTabData.map_style);
+            // Use global defaults from admin_settings (settingsData is loaded by Settings tab)
+            var s = (settingsInitialized && settingsData && Object.keys(settingsData).length > 0) ? settingsData : mapTabData;
+            if (window.MapModule.setMapStyle && s && s.map_style) {
+                window.MapModule.setMapStyle(s.map_style);
             }
-            if (window.MapModule.setMapLighting && mapTabData && mapTabData.map_lighting) {
-                window.MapModule.setMapLighting(mapTabData.map_lighting);
+            if (window.MapModule.setMapLighting && s && s.map_lighting) {
+                window.MapModule.setMapLighting(s.map_lighting);
             }
             return;
         }
@@ -2481,30 +2488,29 @@ const AdminModule = (function() {
     function attachSettingsHandlers() {
         if (!settingsContainer) return;
 
-        // View Mode radios (admin-only preview switch)
-        var viewModeRadios = settingsContainer.querySelectorAll('input[name="adminViewMode"]');
-        if (viewModeRadios.length) {
-            var initialMode = getAdminViewMode();
-            viewModeRadios.forEach(function(r) {
-                r.checked = (r.value === initialMode);
-                r.addEventListener('change', function() {
-                    if (!r.checked) return;
-                    var mode = (r.value === 'admin') ? 'admin' : 'member';
-                    // Persist to admin row (per-user, not global)
-                    if (window.MemberModule && typeof MemberModule.saveSetting === 'function') {
-                        MemberModule.saveSetting('view_mode', mode);
+        // Member Mode toggle (admin-only preview switch)
+        var memberModeToggle = settingsContainer.querySelector('#adminMemberMode');
+        if (memberModeToggle) {
+            var initialMemberMode = getAdminMemberMode(); // 1 or 0
+            memberModeToggle.checked = (initialMemberMode === 1);
+            syncSettingsToggleUi(memberModeToggle);
+            memberModeToggle.addEventListener('change', function() {
+                var memberMode = memberModeToggle.checked ? 1 : 0;
+                // Persist to admin row (per-user, not global)
+                if (window.MemberModule && typeof MemberModule.saveSetting === 'function') {
+                    MemberModule.saveSetting('member_mode', memberMode);
+                }
+                // Update local cached user so subsequent checks work immediately
+                try {
+                    if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+                        var u = MemberModule.getCurrentUser();
+                        if (u) u.member_mode = memberMode;
                     }
-                    // Update local cached user so subsequent checks work immediately
-                    try {
-                        if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
-                            var u = MemberModule.getCurrentUser();
-                            if (u) u.view_mode = mode;
-                        }
-                    } catch (e) {
-                        // ignore
-                    }
-                    applyPreviewMode(mode);
-                });
+                } catch (e) {
+                    // ignore
+                }
+                syncSettingsToggleUi(memberModeToggle);
+                applyPreviewMode(memberModeToggle.checked ? 'member' : 'admin');
             });
         }
         

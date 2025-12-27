@@ -3283,7 +3283,7 @@ const MemberModule = (function() {
             map_lighting: (payload.map_lighting !== undefined) ? payload.map_lighting : null,
             map_style: (payload.map_style !== undefined) ? payload.map_style : null,
             timezone: (payload.timezone !== undefined) ? payload.timezone : null,
-            view_mode: (payload.view_mode !== undefined) ? payload.view_mode : null
+            member_mode: (payload.member_mode !== undefined) ? payload.member_mode : null
         };
     }
 

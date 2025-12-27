@@ -107,12 +107,22 @@ if (isset($input['timezone'])) {
   $types .= 's';
   $vals[] = trim((string)$input['timezone']);
 }
-if (isset($input['view_mode'])) {
-  $mode = trim((string)$input['view_mode']);
-  if ($mode !== 'admin' && $mode !== 'member') fail(400,'Invalid view_mode');
-  $updates[] = 'view_mode=?';
-  $types .= 's';
-  $vals[] = $mode;
+if (isset($input['member_mode'])) {
+  $raw = $input['member_mode'];
+  $v = null;
+  if (is_bool($raw)) {
+    $v = $raw ? 1 : 0;
+  } else if (is_int($raw)) {
+    $v = ($raw === 1) ? 1 : 0;
+  } else if (is_string($raw)) {
+    $t = trim($raw);
+    $v = ($t === '1' || strtolower($t) === 'true') ? 1 : 0;
+  } else {
+    $v = 0;
+  }
+  $updates[] = 'member_mode=?';
+  $types .= 'i';
+  $vals[] = (int)$v;
 }
 
 // Password change

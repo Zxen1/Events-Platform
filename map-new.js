@@ -137,7 +137,8 @@ const MapModule = (function() {
     if (window.MemberModule && window.MemberModule.getCurrentUser) {
       var member = window.MemberModule.getCurrentUser();
       var isAdmin = !!(member && member.isAdmin === true);
-      var adminView = !!(isAdmin && member.view_mode === 'admin');
+      var memberMode = !!(isAdmin && (member.member_mode === 1 || member.member_mode === '1' || member.member_mode === true));
+      var adminView = !!(isAdmin && !memberMode);
       if (member && member.map_style && !adminView) {
         initialStyle = member.map_style;
       }
@@ -220,7 +221,8 @@ const MapModule = (function() {
       if (window.MemberModule && window.MemberModule.getCurrentUser) {
         var member = window.MemberModule.getCurrentUser();
         var isAdmin = !!(member && member.isAdmin === true);
-        var adminView = !!(isAdmin && member.view_mode === 'admin');
+        var memberMode = !!(isAdmin && (member.member_mode === 1 || member.member_mode === '1' || member.member_mode === true));
+        var adminView = !!(isAdmin && !memberMode);
         if (member && member.map_lighting && !adminView) {
           lighting = member.map_lighting;
         }
