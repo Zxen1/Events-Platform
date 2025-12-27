@@ -130,16 +130,11 @@ const MapModule = (function() {
     // Load admin settings for starting position
     await loadSettings();
     
-    // Determine initial style
-    // - Normal members: member setting > admin setting > localStorage > default
-    // - Admin in Admin View Mode: admin setting > localStorage > default (ignore per-user prefs)
+    // Determine initial style (member setting > admin setting > localStorage > default)
     var initialStyle = 'standard';
     if (window.MemberModule && window.MemberModule.getCurrentUser) {
       var member = window.MemberModule.getCurrentUser();
-      var isAdmin = !!(member && member.isAdmin === true);
-      var memberMode = !!(isAdmin && (member.member_mode === 1 || member.member_mode === '1' || member.member_mode === true));
-      var adminView = !!(isAdmin && !memberMode);
-      if (member && member.map_style && !adminView) {
+      if (member && member.map_style) {
         initialStyle = member.map_style;
       }
     }
@@ -214,16 +209,11 @@ const MapModule = (function() {
       }
       
       // Apply lighting preset (deferred, after map is fully loaded)
-      // Priority:
-      // - Normal members: member settings > admin settings > localStorage > default
-      // - Admin in Admin View Mode: admin settings > localStorage > default (ignore per-user prefs)
+      // Priority: member settings > admin settings > localStorage > default
       var lighting = 'day';
       if (window.MemberModule && window.MemberModule.getCurrentUser) {
         var member = window.MemberModule.getCurrentUser();
-        var isAdmin = !!(member && member.isAdmin === true);
-        var memberMode = !!(isAdmin && (member.member_mode === 1 || member.member_mode === '1' || member.member_mode === true));
-        var adminView = !!(isAdmin && !memberMode);
-        if (member && member.map_lighting && !adminView) {
+        if (member && member.map_lighting) {
           lighting = member.map_lighting;
         }
       }
@@ -1194,10 +1184,7 @@ const MapModule = (function() {
     var currentLighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
     if (window.MemberModule && window.MemberModule.getCurrentUser) {
       var member = window.MemberModule.getCurrentUser();
-      var isAdmin = !!(member && member.isAdmin === true);
-      var memberMode = !!(isAdmin && (member.member_mode === 1 || member.member_mode === '1' || member.member_mode === true));
-      var adminView = !!(isAdmin && !memberMode);
-      if (member && member.map_lighting && !adminView) {
+      if (member && member.map_lighting) {
         currentLighting = member.map_lighting;
       }
     }

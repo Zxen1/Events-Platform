@@ -3282,8 +3282,7 @@ const MemberModule = (function() {
             country_code: (payload.country_code !== undefined) ? payload.country_code : null,
             map_lighting: (payload.map_lighting !== undefined) ? payload.map_lighting : null,
             map_style: (payload.map_style !== undefined) ? payload.map_style : null,
-            timezone: (payload.timezone !== undefined) ? payload.timezone : null,
-            member_mode: (payload.member_mode !== undefined) ? payload.member_mode : null
+            timezone: (payload.timezone !== undefined) ? payload.timezone : null
         };
     }
 

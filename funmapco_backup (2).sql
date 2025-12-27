@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 27, 2025 at 08:24 PM
+-- Generation Time: Dec 27, 2025 at 08:54 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -433,7 +433,6 @@ CREATE TABLE `admins` (
 ,`timezone` varchar(64)
 ,`country_code` varchar(2)
 ,`backup_json` longtext
-,`member_mode` tinyint(1)
 ,`created_at` datetime
 ,`updated_at` datetime
 );
@@ -1007,7 +1006,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `admins`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `funmapco_system`.`admins`.`id` AS `id`, `funmapco_system`.`admins`.`username` AS `username`, `funmapco_system`.`admins`.`username_key` AS `username_key`, `funmapco_system`.`admins`.`email` AS `email`, `funmapco_system`.`admins`.`avatar_file` AS `avatar_file`, `funmapco_system`.`admins`.`password_hash` AS `password_hash`, `funmapco_system`.`admins`.`language` AS `language`, `funmapco_system`.`admins`.`currency` AS `currency`, `funmapco_system`.`admins`.`map_lighting` AS `map_lighting`, `funmapco_system`.`admins`.`map_style` AS `map_style`, `funmapco_system`.`admins`.`timezone` AS `timezone`, `funmapco_system`.`admins`.`country_code` AS `country_code`, `funmapco_system`.`admins`.`backup_json` AS `backup_json`, `funmapco_system`.`admins`.`member_mode` AS `member_mode`, `funmapco_system`.`admins`.`created_at` AS `created_at`, `funmapco_system`.`admins`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `funmapco_system`.`admins`.`id` AS `id`, `funmapco_system`.`admins`.`username` AS `username`, `funmapco_system`.`admins`.`username_key` AS `username_key`, `funmapco_system`.`admins`.`email` AS `email`, `funmapco_system`.`admins`.`avatar_file` AS `avatar_file`, `funmapco_system`.`admins`.`password_hash` AS `password_hash`, `funmapco_system`.`admins`.`language` AS `language`, `funmapco_system`.`admins`.`currency` AS `currency`, `funmapco_system`.`admins`.`map_lighting` AS `map_lighting`, `funmapco_system`.`admins`.`map_style` AS `map_style`, `funmapco_system`.`admins`.`timezone` AS `timezone`, `funmapco_system`.`admins`.`country_code` AS `country_code`, `funmapco_system`.`admins`.`backup_json` AS `backup_json`, `funmapco_system`.`admins`.`created_at` AS `created_at`, `funmapco_system`.`admins`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` ;
 
 -- --------------------------------------------------------
 
@@ -1304,7 +1303,6 @@ CREATE TABLE `admins` (
   `timezone` varchar(64) DEFAULT NULL,
   `country_code` varchar(2) DEFAULT NULL,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `member_mode` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -1313,8 +1311,8 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `language`, `currency`, `map_lighting`, `map_style`, `timezone`, `country_code`, `backup_json`, `member_mode`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'USD', 'USD', 'night', 'standard-satellite', NULL, NULL, NULL, 1, '2025-10-22 01:00:41', '2025-12-27 20:07:30');
+INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `language`, `currency`, `map_lighting`, `map_style`, `timezone`, `country_code`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'USD', 'USD', 'night', 'standard', NULL, NULL, NULL, '2025-10-22 01:00:41', '2025-12-27 20:38:31');
 
 -- --------------------------------------------------------
 

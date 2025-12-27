@@ -52,7 +52,7 @@ try {
     $stmt = null;
     $avatarCol = null;
 
-    $extraCols = $table === 'admins' ? ', member_mode' : '';
+    $extraCols = '';
     $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, language, currency, country_code, map_lighting, map_style, timezone{$extraCols}, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
@@ -89,8 +89,7 @@ try {
         'country_code' => isset($row['country_code']) ? (string)$row['country_code'] : null,
         'map_lighting' => isset($row['map_lighting']) ? (string)$row['map_lighting'] : null,
         'map_style' => isset($row['map_style']) ? (string)$row['map_style'] : null,
-        'timezone' => isset($row['timezone']) ? (string)$row['timezone'] : null,
-        'member_mode' => ($table === 'admins' && isset($row['member_mode'])) ? (int)$row['member_mode'] : null
+        'timezone' => isset($row['timezone']) ? (string)$row['timezone'] : null
       ]
     ];
   };
