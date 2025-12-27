@@ -2718,6 +2718,15 @@ const MemberModule = (function() {
         if (!field || typeof field !== 'object') {
             return {
                 name: '',
+                // Canonical DB-driven strings
+                fieldset_placeholder: '',
+                fieldset_tooltip: '',
+                
+                // Editable overrides from fieldset_mods
+                customPlaceholder: '',
+                customTooltip: '',
+                
+                // Legacy/compat (do not rely on these for new-site behavior)
                 placeholder: '',
                 tooltip: '',
                 options: [],
@@ -2734,6 +2743,15 @@ const MemberModule = (function() {
         }
         var result = {
             name: '',
+            // Canonical DB-driven strings
+            fieldset_placeholder: '',
+            fieldset_tooltip: '',
+            
+            // Editable overrides from fieldset_mods
+            customPlaceholder: '',
+            customTooltip: '',
+            
+            // Legacy/compat (do not rely on these for new-site behavior)
             placeholder: '',
             tooltip: '',
             options: [],
@@ -2751,13 +2769,29 @@ const MemberModule = (function() {
         if (field.name && typeof field.name === 'string') {
             result.name = field.name;
         }
+        
+        // Canonical fieldset placeholder/tooltip from DB
+        if (field.fieldset_placeholder && typeof field.fieldset_placeholder === 'string') {
+            result.fieldset_placeholder = field.fieldset_placeholder;
+        }
+        if (field.fieldset_tooltip && typeof field.fieldset_tooltip === 'string') {
+            result.fieldset_tooltip = field.fieldset_tooltip;
+        }
+        
+        // Editable overrides from fieldset_mods JSON
+        if (field.customPlaceholder && typeof field.customPlaceholder === 'string') {
+            result.customPlaceholder = field.customPlaceholder;
+        }
+        if (field.customTooltip && typeof field.customTooltip === 'string') {
+            result.customTooltip = field.customTooltip;
+        }
+        
+        // Legacy/compat (do not rely on these for new-site behavior)
         if (field.placeholder && typeof field.placeholder === 'string') {
             result.placeholder = field.placeholder;
         }
         if (field.tooltip && typeof field.tooltip === 'string') {
             result.tooltip = field.tooltip;
-        } else if (field.fieldset_tooltip && typeof field.fieldset_tooltip === 'string') {
-            result.tooltip = field.fieldset_tooltip;
         }
         if (Array.isArray(field.options)) {
             result.options = field.options;
