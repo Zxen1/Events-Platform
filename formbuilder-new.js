@@ -2694,6 +2694,9 @@
             
             fieldWrapper.appendChild(field);
             fieldWrapper.appendChild(fieldEditPanel);
+            // Important: sync AFTER the button elements have been appended, otherwise
+            // syncFieldWrapperUi() can't find/toggle the indicator elements on initial render.
+            syncFieldWrapperUi(fieldWrapper);
             
             field.addEventListener('click', function(ev) {
                 ev.stopPropagation();

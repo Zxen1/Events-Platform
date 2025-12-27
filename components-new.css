@@ -542,10 +542,6 @@
     flex: 0 0 100px;
 }
 
-.fieldset-row-item--phoneprefix-compact {
-    flex: 0 0 140px;
-}
-
 .fieldset-row-item--input-small {
     flex: 0 0 100px;
 }
@@ -1128,19 +1124,8 @@
     flex-shrink: 0;
 }
 
-.fieldset-phoneprefix-compact {
-    width: 140px;
-    height: 36px;
-    position: relative;
-    flex-shrink: 0;
-}
-
 .fieldset-menu-button--compact {
     width: 120px;
-}
-
-.fieldset-menu-button--phoneprefix-compact {
-    width: 140px;
 }
 
 .fieldset-menu-button-input--compact {
@@ -1762,6 +1747,7 @@
 .phoneprefix-button-wrapper {
     position: relative;
     flex-shrink: 0;
+    flex: 0 0 100px;
 }
 
 .phoneprefix-button {

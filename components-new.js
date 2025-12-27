@@ -808,7 +808,6 @@ const FieldsetComponent = (function(){
                 if (child.classList.contains('fieldset-menu')) child.classList.add('fieldset-row-item--menu');
                 if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
                 if (child.classList.contains('fieldset-currency-compact')) child.classList.add('fieldset-row-item--currency-compact');
-                if (child.classList.contains('fieldset-phoneprefix-compact')) child.classList.add('fieldset-row-item--phoneprefix-compact');
                 if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
                 if (child.classList.contains('fieldset-pricing-add') || child.classList.contains('fieldset-pricing-remove')) {
                     child.classList.add('fieldset-row-item--no-flex');
@@ -3877,7 +3876,6 @@ const PhonePrefixComponent = (function(){
     }
     
     // Build a compact phone prefix menu (100px, prefix only)
-    // Combobox style - type to filter options
     // Returns object with element and setValue method
     function buildCompactMenu(options) {
         options = options || {};
@@ -3885,38 +3883,52 @@ const PhonePrefixComponent = (function(){
         var initialValue = options.initialValue || null;
         var selectedCode = initialValue;
 
+        // Dedicated phone prefix UI (uses existing .phoneprefix-* classes)
         var menu = document.createElement('div');
-        menu.className = 'fieldset-menu fieldset-phoneprefix-compact';
-        // No default flag - leave empty until user selects
-        var initialFlagUrl = '';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.className = 'phoneprefix-button-wrapper';
 
-        var btn = menu.querySelector('.fieldset-menu-button');
-        var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnInput = menu.querySelector('.fieldset-menu-button-input');
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'phoneprefix-button';
+        button.setAttribute('aria-haspopup', 'true');
+        button.setAttribute('aria-expanded', 'false');
+
+        var btnImg = document.createElement('img');
+        btnImg.className = 'phoneprefix-button-flag';
+        btnImg.alt = '';
+        btnImg.style.display = 'none';
+
+        var btnText = document.createElement('span');
+        btnText.className = 'phoneprefix-button-text';
+        btnText.textContent = '';
+
+        var arrow = document.createElement('span');
+        arrow.className = 'phoneprefix-button-arrow';
+        arrow.textContent = '▼';
+
+        button.appendChild(btnImg);
+        button.appendChild(btnText);
+        button.appendChild(arrow);
+
+        var opts = document.createElement('div');
+        opts.className = 'phoneprefix-options';
+        opts.hidden = true;
+
+        menu.appendChild(button);
+        menu.appendChild(opts);
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('fieldset-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+            var open = !!isOpen;
+            opts.hidden = !open;
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+            arrow.classList.toggle('phoneprefix-button-arrow--open', open);
         }
 
         // Required by MenuManager (strict)
         menu.__menuIsOpen = function() {
-            return menu.classList.contains('fieldset-menu--open');
+            return opts.hidden === false;
         };
         menu.__menuApplyOpenState = applyOpenState;
-
-        // Compact variant styling (no descendant selectors)
-        if (btn) btn.classList.add('fieldset-menu-button--phoneprefix-compact');
-        if (btnInput) btnInput.classList.add('fieldset-menu-button-input--compact');
-        if (opts) opts.classList.add('fieldset-menu-options--compact');
-
-        // Store all option elements for filtering
-        var allOptions = [];
 
         // Find and set value
         function setValue(code) {
@@ -3932,18 +3944,9 @@ const PhonePrefixComponent = (function(){
                     btnImg.src = '';
                     btnImg.style.display = 'none';
                 }
-                btnInput.value = found.value;
+                btnText.textContent = found.value;
                 selectedCode = code;
             }
-        }
-
-        // Filter options based on search text
-        function filterOptions(searchText) {
-            var search = searchText.toLowerCase();
-            allOptions.forEach(function(optData) {
-                var matches = optData.searchText.indexOf(search) !== -1;
-                optData.element.style.display = matches ? '' : 'none';
-            });
         }
 
         // Build options - filter out entries without proper data
@@ -3955,11 +3958,12 @@ const PhonePrefixComponent = (function(){
             var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
             var displayText = item.value + ' - ' + item.label;
 
-            var op = document.createElement('div');
-            op.className = 'fieldset-menu-option';
+            var op = document.createElement('button');
+            op.type = 'button';
+            op.className = 'phoneprefix-option';
             var flagUrl = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
-            op.onclick = function(e) {
+            op.innerHTML = '<img class="phoneprefix-option-flag" src="' + flagUrl + '" alt=""><span class="phoneprefix-option-text">' + displayText + '</span>';
+            op.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (countryCode) {
                     btnImg.src = flagUrl;
@@ -3968,19 +3972,12 @@ const PhonePrefixComponent = (function(){
                     btnImg.src = '';
                     btnImg.style.display = 'none';
                 }
-                btnInput.value = item.value;
+                btnText.textContent = item.value;
                 selectedCode = item.value;
                 applyOpenState(false);
-                filterOptions('');
                 onSelect(item.value, item.label, countryCode);
-            };
-            opts.appendChild(op);
-
-            // Store for filtering
-            allOptions.push({
-                element: op,
-                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
             });
+            opts.appendChild(op);
         });
 
         // Set initial value
@@ -3994,48 +3991,14 @@ const PhonePrefixComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
 
-        // Input events
-        btnInput.addEventListener('focus', function(e) {
+        // Clicking anywhere on the button opens/closes
+        button.addEventListener('click', function(e) {
             e.stopPropagation();
-            MenuManager.closeAll(menu);
-            applyOpenState(true);
-            this.select();
-        });
-
-        btnInput.addEventListener('input', function(e) {
-            filterOptions(this.value);
-            if (document.activeElement !== this) return;
-            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
-        });
-
-        btnInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                applyOpenState(false);
-                setValue(selectedCode);
-                filterOptions('');
-            }
-        });
-
-        // Blur - restore selected value when clicking away
-        btnInput.addEventListener('blur', function() {
-            setTimeout(function() {
-                if (!menu.classList.contains('fieldset-menu--open')) {
-                    setValue(selectedCode);
-                    filterOptions('');
-                }
-            }, 150);
-        });
-
-        // Arrow click opens/closes
-        arrow.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (menu.classList.contains('fieldset-menu--open')) {
+            if (menu.__menuIsOpen()) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
                 applyOpenState(true);
-                btnInput.focus();
-                btnInput.select();
             }
         });
 
