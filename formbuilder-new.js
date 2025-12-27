@@ -1483,7 +1483,7 @@
         
         subEditPanel.appendChild(subNameRow);
         subEditPanel.appendChild(subIconPicker);
-
+        
         // Ensure "subcategory edit panel" elements get explicit styling classes (no structural CSS selectors).
         subEditPanel.querySelectorAll('.formbuilder-menu-button').forEach(function(el) {
             el.classList.add('formbuilder-menu-button--subcategory');
@@ -2936,7 +2936,7 @@
             syncSubcategoryOptionUi(option);
             });
         });
-
+        
         syncSubcategoryOptionUi(option);
         return option;
     }

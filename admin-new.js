@@ -2147,7 +2147,7 @@ const AdminModule = (function() {
         registerField('map.starting_lng', startingLng);
         
         var showGeocoderInput = function() {
-            startingGeocoderContainer.classList.remove('admin-map-controls-starting-geocoder--hidden');
+            // Keep Mapbox geocoder visible at all times (display:none breaks sizing and can freeze typing).
             if (startingAddressDisplay) startingAddressDisplay.hidden = true;
             setTimeout(function() {
                 // Mapbox geocoder input (created by map-new.js)
@@ -2159,21 +2159,11 @@ const AdminModule = (function() {
         };
         
         var showAddressDisplay = function() {
-            var addr = startingAddress || '';
-            if (addr.trim() && startingAddressDisplay) {
-                startingAddressDisplay.textContent = addr;
-                startingGeocoderContainer.classList.add('admin-map-controls-starting-geocoder--hidden');
-                startingAddressDisplay.hidden = false;
-            } else {
-                startingGeocoderContainer.classList.remove('admin-map-controls-starting-geocoder--hidden');
-                if (startingAddressDisplay) startingAddressDisplay.hidden = true;
-            }
+            // Do not hide the Mapbox geocoder container. The display toggle caused broken/squeezed layout and typing freezes.
+            if (startingAddressDisplay) startingAddressDisplay.hidden = true;
         };
         
-        // Click on display to edit
-        if (startingAddressDisplay) {
-            startingAddressDisplay.addEventListener('click', showGeocoderInput);
-        }
+        // Address display is disabled; keep input active/visible.
         
         var saveStartingLocation = function(address, lat, lng) {
             startingAddress = address || '';

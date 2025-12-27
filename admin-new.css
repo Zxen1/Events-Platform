@@ -294,7 +294,9 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin: 8px auto;
+  margin: 8px 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .admin-panel-field-label {
@@ -531,8 +533,9 @@
 .admin-tab-panel--active {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 12px;
+  width: 100%;
 }
 
 /* ============================================================================

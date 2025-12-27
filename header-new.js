@@ -29,7 +29,7 @@ const HeaderModule = (function() {
     var adminBtn = null;
     var fullscreenBtn = null;
     var logoBtn = null;
-    
+
     function setAccessButtonActiveVisual(btn, isActive) {
         if (!btn) return;
         btn.classList.toggle('header-access-button--active', !!isActive);

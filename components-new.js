@@ -230,11 +230,11 @@ const SwitchComponent = (function(){
         label.appendChild(input);
         label.appendChild(slider);
         
-        input.addEventListener('change', function() {
+            input.addEventListener('change', function() {
             slider.classList.toggle(prefix + '-slider--on', !!input.checked);
             if (typeof options.onChange === 'function') {
                 options.onChange(input.checked);
-            }
+        }
         });
         
         return {

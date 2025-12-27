@@ -557,23 +557,33 @@ const MapModule = (function() {
       const pinRight = geocoderRoot.querySelector('.mapboxgl-ctrl-geocoder--pin-right');
       if (pinRight) pinRight.classList.add('admin-mapbox-geocoder-pinright--starting');
 
-      // Suggestions are dynamic; keep their classes synced via a small observer.
+      // Suggestions are dynamic; keep their classes synced (debounced to avoid typing freezes).
       const syncSuggestions = () => {
         const suggestions = geocoderRoot.querySelector('.suggestions');
         if (!suggestions) return;
         suggestions.classList.add('admin-mapbox-geocoder-suggestions--starting');
-        suggestions.querySelectorAll('li a').forEach((a) => a.classList.add('admin-mapbox-geocoder-suggestion-link--starting'));
         suggestions.querySelectorAll('li').forEach((li) => {
           const a = li.querySelector('a');
           if (!a) return;
+          a.classList.add('admin-mapbox-geocoder-suggestion-link--starting');
           a.classList.toggle('admin-mapbox-geocoder-suggestion-link--active', li.classList.contains('active'));
         });
       };
 
-      syncSuggestions();
+      let suggestionsSyncScheduled = false;
+      const scheduleSyncSuggestions = () => {
+        if (suggestionsSyncScheduled) return;
+        suggestionsSyncScheduled = true;
+        requestAnimationFrame(() => {
+          suggestionsSyncScheduled = false;
+          syncSuggestions();
+        });
+      };
+
+      scheduleSyncSuggestions();
       try {
-        const observer = new MutationObserver(syncSuggestions);
-        observer.observe(geocoderRoot, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+        const observer = new MutationObserver(scheduleSyncSuggestions);
+        observer.observe(geocoderRoot, { subtree: true, childList: true });
       } catch (e) {
         // ignore
       }

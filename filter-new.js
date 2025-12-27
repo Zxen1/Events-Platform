@@ -101,9 +101,9 @@ const FilterModule = (function() {
         if (!closeBtn) return;
         
         closeBtn.addEventListener('click', function() {
-            closePanel();
-            App.emit('filter:closed');
-        });
+                closePanel();
+                App.emit('filter:closed');
+            });
     }
 
 
@@ -714,14 +714,14 @@ const FilterModule = (function() {
     
     function setDaterangeInputValue(start, end, showPendingRangeHint) {
         if (!daterangeInput) return;
-        if (start && end) {
-            daterangeInput.value = formatDateShort(start) + ' - ' + formatDateShort(end);
-        } else if (start) {
+            if (start && end) {
+                daterangeInput.value = formatDateShort(start) + ' - ' + formatDateShort(end);
+            } else if (start) {
             daterangeInput.value = showPendingRangeHint ? (formatDateShort(start) + ' -') : formatDateShort(start);
-        } else {
-            daterangeInput.value = '';
+            } else {
+                daterangeInput.value = '';
+            }
         }
-    }
 
     function setDateRange(start, end) {
         dateStart = start;
