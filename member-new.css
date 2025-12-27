@@ -43,26 +43,31 @@
    ============================================================================ */
 
 .member-supporter-message {
-  margin: 10px 0;
+  margin: 10px 0 14px 0;
   color: #ddd;
   font-size: 13px;
   line-height: 1.35;
 }
 
 .member-supporter-payment {
-  margin: 10px 0;
+  margin: 14px 0;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .member-supporter-payment-presets {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 10px;
 }
 
 .member-supporter-payment-preset {
   width: 100%;
-  height: var(--control-h);
+  height: 44px;
+  font-weight: 600;
 }
 
 .member-supporter-payment-preset--selected {
@@ -72,14 +77,21 @@
 
 .member-supporter-payment-custom {
   margin: 0;
+  width: 100%;
+  height: 44px;
 }
 
 .member-supporter-join-toggle {
   margin: 10px 0;
+  height: 44px;
+  border-color: rgba(59, 130, 245, 0.6);
 }
 
 .member-supporter-join-fields {
   margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .member-supporter-join-fields--open {

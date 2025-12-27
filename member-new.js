@@ -3028,6 +3028,16 @@ const MemberModule = (function() {
         if (supporterCustomAmountInput) {
             supporterCustomAmountInput.placeholder = 'Custom (' + code + ')';
         }
+        if (supporterPresetButtons && supporterPresetButtons.length) {
+            supporterPresetButtons.forEach(function(btn) {
+                var amt = String(btn.getAttribute('data-amount') || '').trim();
+                if (!amt) return;
+                // Match site-wide formatting used in checkout options: "USD 2.00"
+                var n = parseFloat(amt);
+                var formatted = isFinite(n) ? n.toFixed(2) : amt;
+                btn.textContent = code + ' ' + formatted;
+            });
+        }
     }
 
     function setSupporterAmount(amount, options) {
@@ -3049,8 +3059,11 @@ const MemberModule = (function() {
         }
         if (supporterAmountHiddenInput) supporterAmountHiddenInput.value = value;
 
-        if (!options.fromCustom && supporterCustomAmountInput) {
-            supporterCustomAmountInput.value = value ? value : '';
+        if (supporterCustomAmountInput) {
+            // If the value was clamped/formatted, write it back so the UI matches the hidden value.
+            if (!options.fromCustom || (!options.allowUnderMin)) {
+                supporterCustomAmountInput.value = value ? value : '';
+            }
         }
 
         if (supporterPresetButtons && supporterPresetButtons.length) {
