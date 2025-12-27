@@ -808,6 +808,7 @@ const FieldsetComponent = (function(){
                 if (child.classList.contains('fieldset-menu')) child.classList.add('fieldset-row-item--menu');
                 if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
                 if (child.classList.contains('fieldset-currency-compact')) child.classList.add('fieldset-row-item--currency-compact');
+                if (child.classList.contains('fieldset-phoneprefix-compact')) child.classList.add('fieldset-row-item--phoneprefix-compact');
                 if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
                 if (child.classList.contains('fieldset-pricing-add') || child.classList.contains('fieldset-pricing-remove')) {
                     child.classList.add('fieldset-row-item--no-flex');
@@ -3838,7 +3839,7 @@ const PhonePrefixComponent = (function(){
         var selectedCode = initialValue;
 
         var menu = document.createElement('div');
-        menu.className = 'fieldset-menu fieldset-currency-compact';
+        menu.className = 'fieldset-menu fieldset-phoneprefix-compact';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
@@ -3861,6 +3862,11 @@ const PhonePrefixComponent = (function(){
             return menu.classList.contains('fieldset-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
+
+        // Compact variant styling (no descendant selectors)
+        if (btn) btn.classList.add('fieldset-menu-button--phoneprefix-compact');
+        if (btnInput) btnInput.classList.add('fieldset-menu-button-input--compact');
+        if (opts) opts.classList.add('fieldset-menu-options--compact');
 
         // Store all option elements for filtering
         var allOptions = [];
