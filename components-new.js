@@ -225,15 +225,17 @@ const SwitchComponent = (function(){
         
         var slider = document.createElement('span');
         slider.className = prefix + '-slider';
+        slider.classList.toggle(prefix + '-slider--on', !!input.checked);
         
         label.appendChild(input);
         label.appendChild(slider);
         
-        if (typeof options.onChange === 'function') {
-            input.addEventListener('change', function() {
+        input.addEventListener('change', function() {
+            slider.classList.toggle(prefix + '-slider--on', !!input.checked);
+            if (typeof options.onChange === 'function') {
                 options.onChange(input.checked);
-            });
-        }
+            }
+        });
         
         return {
             element: label,
@@ -243,9 +245,11 @@ const SwitchComponent = (function(){
             },
             setChecked: function(value) {
                 input.checked = !!value;
+                slider.classList.toggle(prefix + '-slider--on', !!input.checked);
             },
             toggle: function() {
                 input.checked = !input.checked;
+                slider.classList.toggle(prefix + '-slider--on', !!input.checked);
                 if (typeof options.onChange === 'function') {
                     options.onChange(input.checked);
                 }
@@ -795,6 +799,22 @@ const FieldsetComponent = (function(){
         var container = options.container;
         var defaultCurrency = options.defaultCurrency;
         
+        function applyFieldsetRowItemClasses(rowEl) {
+            if (!rowEl) return;
+            Array.from(rowEl.children).forEach(function(child) {
+                if (!child || !child.classList) return;
+                child.classList.add('fieldset-row-item');
+                
+                if (child.classList.contains('fieldset-menu')) child.classList.add('fieldset-row-item--menu');
+                if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
+                if (child.classList.contains('fieldset-currency-compact')) child.classList.add('fieldset-row-item--currency-compact');
+                if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
+                if (child.classList.contains('fieldset-pricing-add') || child.classList.contains('fieldset-pricing-remove')) {
+                    child.classList.add('fieldset-row-item--no-flex');
+                }
+            });
+        }
+        
         var fieldset = document.createElement('div');
         fieldset.className = 'fieldset';
         
@@ -939,6 +959,7 @@ const FieldsetComponent = (function(){
                 makePhoneDigitsOnly(phoneInput);
                 var phoneValidation = addInputValidation(phoneInput, minLength, maxLength, null);
                 phoneRow.appendChild(phoneInput);
+                applyFieldsetRowItemClasses(phoneRow);
                 fieldset.appendChild(phoneRow);
                 fieldset.appendChild(phoneValidation.charCount);
                 break;
@@ -1905,6 +1926,7 @@ const FieldsetComponent = (function(){
                         updateItemVariantButtons();
                     });
                     variantRow.appendChild(removeBtn);
+                    applyFieldsetRowItemClasses(variantRow);
                     
                     block.appendChild(variantRow);
                     
@@ -1934,6 +1956,7 @@ const FieldsetComponent = (function(){
                     priceCol.appendChild(priceSub);
                     priceCol.appendChild(priceInput);
                     priceRow.appendChild(priceCol);
+                    applyFieldsetRowItemClasses(priceRow);
                     
                     block.appendChild(priceRow);
                     
@@ -2073,6 +2096,7 @@ const FieldsetComponent = (function(){
                         updateTierButtons(tiersContainer);
                     });
                     tierRow.appendChild(removeBtn);
+                    applyFieldsetRowItemClasses(tierRow);
                     
                     block.appendChild(tierRow);
                     
@@ -2102,6 +2126,7 @@ const FieldsetComponent = (function(){
                     priceCol.appendChild(priceSub);
                     priceCol.appendChild(priceInput);
                     priceRow.appendChild(priceCol);
+                    applyFieldsetRowItemClasses(priceRow);
                     
                     block.appendChild(priceRow);
                     
@@ -2183,6 +2208,7 @@ const FieldsetComponent = (function(){
                         updateSeatingAreaButtons();
                     });
                     seatRow.appendChild(removeBtn);
+                    applyFieldsetRowItemClasses(seatRow);
                     
                     block.appendChild(seatRow);
                     
@@ -2200,8 +2226,8 @@ const FieldsetComponent = (function(){
                     var blocks = seatingAreasContainer.querySelectorAll('.fieldset-seating-block');
                     var atMax = blocks.length >= 10;
                     blocks.forEach(function(block) {
-                        var addBtn = block.querySelector('.fieldset-row > .fieldset-pricing-add');
-                        var removeBtn = block.querySelector('.fieldset-row > .fieldset-pricing-remove');
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
                         // + button: grey out at cap
                         if (atMax) {
                             addBtn.style.opacity = '0.3';
@@ -5001,15 +5027,38 @@ const CheckoutOptionsComponent = (function(){
             group.appendChild(card);
         });
         
+        function syncSelectedStyles() {
+            // Selected option cards
+            group.querySelectorAll('.member-checkout-option').forEach(function(card) {
+                var checked = false;
+                var r = card.querySelector('input[type="radio"]');
+                if (r && r.checked) checked = true;
+                if (!checked) {
+                    // General posts: any checked duration inside the card counts as selected
+                    var anyChecked = card.querySelector('input[type="radio"]:checked');
+                    checked = !!anyChecked;
+                }
+                card.classList.toggle('member-checkout-option--selected', checked);
+            });
+            
+            // Selected duration buttons (general posts)
+            group.querySelectorAll('.member-checkout-duration-option').forEach(function(label) {
+                var r = label.querySelector('input[type="radio"]');
+                label.classList.toggle('member-checkout-duration-option--selected', !!(r && r.checked));
+            });
+        }
+        
         // Selection change handler
         group.addEventListener('change', function(e) {
             if (e.target.type === 'radio') {
+                syncSelectedStyles();
                 var optionId = e.target.dataset.optionId;
                 var days = e.target.dataset.days ? parseInt(e.target.dataset.days, 10) : calculatedDays;
                 var price = e.target.dataset.price ? parseFloat(e.target.dataset.price) : null;
                 onSelect(optionId, days, price);
             }
         });
+        syncSelectedStyles();
         
         containerEl.appendChild(group);
         

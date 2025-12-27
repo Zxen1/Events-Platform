@@ -371,14 +371,13 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .member-preferences-container {
   margin-bottom: 10px;
-}
-
-.member-map-settings-container .member-panel-field + .member-panel-field {
-  margin-top: 10px;
 }
 
 .member-lighting-buttons,
@@ -413,11 +412,7 @@
   gap: 0;
   box-sizing: border-box;
   font-size: 14px;
-}
-
-.member-lighting-button + .member-lighting-button,
-.member-style-button + .member-style-button {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 
 .member-lighting-button:hover,

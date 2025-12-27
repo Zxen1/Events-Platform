@@ -590,6 +590,7 @@
         // Open it for editing
         accordion.classList.add('formbuilder-accordion--open');
         accordion.classList.add('formbuilder-accordion--editing');
+        syncCategoryAccordionUi(accordion);
         
         // Focus the name input
         var nameInput = accordion.querySelector('.formbuilder-accordion-editpanel-input');
@@ -656,6 +657,7 @@
         // Open it for editing
         option.classList.add('formbuilder-accordion-option--open');
         option.classList.add('formbuilder-accordion-option--editing');
+        syncSubcategoryOptionUi(option);
         
         // Focus the name input
         var nameInput = option.querySelector('.formbuilder-accordion-editpanel-input');
@@ -729,6 +731,82 @@
         }
     }
     
+    function syncCategoryAccordionUi(accordion) {
+        if (!accordion) return;
+        var isOpen = accordion.classList.contains('formbuilder-accordion--open');
+        var isEditing = accordion.classList.contains('formbuilder-accordion--editing');
+        
+        var header = accordion.querySelector('.formbuilder-accordion-header');
+        var arrow = accordion.querySelector('.formbuilder-accordion-header-arrow');
+        var editArea = accordion.querySelector('.formbuilder-accordion-header-editarea');
+        var editPanel = accordion.querySelector('.formbuilder-accordion-editpanel');
+        var body = accordion.querySelector('.formbuilder-accordion-body');
+        
+        if (header) {
+            header.classList.toggle('formbuilder-accordion-header--open', !!isOpen);
+            header.classList.toggle('formbuilder-accordion-header--editing', !!isEditing);
+        }
+        if (arrow) arrow.classList.toggle('formbuilder-accordion-header-arrow--open', !!isOpen);
+        if (editArea) editArea.classList.toggle('formbuilder-accordion-header-editarea--editing', !!isEditing);
+        if (editPanel) editPanel.classList.toggle('formbuilder-accordion-editpanel--editing', !!isEditing);
+        if (body) body.classList.toggle('formbuilder-accordion-body--open', !!isOpen);
+    }
+    
+    function syncSubcategoryOptionUi(option) {
+        if (!option) return;
+        var isOpen = option.classList.contains('formbuilder-accordion-option--open');
+        var isEditing = option.classList.contains('formbuilder-accordion-option--editing');
+        
+        var header = option.querySelector('.formbuilder-accordion-option-header');
+        var arrow = option.querySelector('.formbuilder-accordion-option-arrow');
+        var editArea = option.querySelector('.formbuilder-accordion-option-editarea');
+        var editPanel = option.querySelector('.formbuilder-accordion-option-editpanel');
+        var body = option.querySelector('.formbuilder-accordion-option-body');
+        
+        if (header) {
+            header.classList.toggle('formbuilder-accordion-option-header--open', !!isOpen);
+            header.classList.toggle('formbuilder-accordion-option-header--editing', !!isEditing);
+        }
+        if (arrow) arrow.classList.toggle('formbuilder-accordion-option-arrow--open', !!isOpen);
+        if (editArea) editArea.classList.toggle('formbuilder-accordion-option-editarea--editing', !!isEditing);
+        if (editPanel) {
+            editPanel.classList.toggle('formbuilder-accordion-option-editpanel--editing', !!isEditing);
+            editPanel.classList.toggle('formbuilder-accordion-option-editpanel--editing-open', !!(isEditing && isOpen));
+        }
+        if (body) {
+            body.classList.toggle('formbuilder-accordion-option-body--open', !!isOpen);
+            body.classList.toggle('formbuilder-accordion-option-body--editing-open', !!(isEditing && isOpen));
+        }
+    }
+    
+    function syncFieldWrapperUi(fieldWrapper) {
+        if (!fieldWrapper) return;
+        var isEditing = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
+        var isRequired = fieldWrapper.classList.contains('formbuilder-field-wrapper--required');
+        var isModified = fieldWrapper.classList.contains('formbuilder-field-wrapper--modified');
+        var isLocationRepeat = fieldWrapper.classList.contains('formbuilder-field-wrapper--location-repeat');
+        var isMustRepeat = fieldWrapper.classList.contains('formbuilder-field-wrapper--must-repeat');
+        var isAutofillRepeat = fieldWrapper.classList.contains('formbuilder-field-wrapper--autofill-repeat');
+        
+        var fieldEl = fieldWrapper.querySelector('.formbuilder-field');
+        var editBtn = fieldWrapper.querySelector('.formbuilder-field-edit');
+        var editPanel = fieldWrapper.querySelector('.formbuilder-field-editpanel');
+        var requiredEl = fieldWrapper.querySelector('.formbuilder-field-required');
+        var modifiedLabel = fieldWrapper.querySelector('.formbuilder-field-modified-label');
+        var indRepeat = fieldWrapper.querySelector('.formbuilder-field-indicator-repeat');
+        var indMust = fieldWrapper.querySelector('.formbuilder-field-indicator-must');
+        var indAutofill = fieldWrapper.querySelector('.formbuilder-field-indicator-autofill');
+        
+        if (fieldEl) fieldEl.classList.toggle('formbuilder-field--editing', !!isEditing);
+        if (editBtn) editBtn.classList.toggle('formbuilder-field-edit--editing', !!isEditing);
+        if (editPanel) editPanel.classList.toggle('formbuilder-field-editpanel--editing', !!isEditing);
+        if (requiredEl) requiredEl.classList.toggle('formbuilder-field-required--required', !!isRequired);
+        if (modifiedLabel) modifiedLabel.classList.toggle('formbuilder-field-modified-label--modified', !!isModified);
+        if (indRepeat) indRepeat.classList.toggle('formbuilder-field-indicator-repeat--location-repeat', !!isLocationRepeat);
+        if (indMust) indMust.classList.toggle('formbuilder-field-indicator-must--must-repeat', !!isMustRepeat);
+        if (indAutofill) indAutofill.classList.toggle('formbuilder-field-indicator-autofill--autofill-repeat', !!isAutofillRepeat);
+    }
+    
     function closeAllEditPanels() {
         if (!container) return;
 
@@ -766,9 +844,11 @@
 
         container.querySelectorAll('.formbuilder-accordion--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion--editing');
+            syncCategoryAccordionUi(el);
         });
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion-option--editing');
+            syncSubcategoryOptionUi(el);
         });
         container.querySelectorAll('.formbuilder-menu').forEach(function(el) { setFormbuilderMenuOpen(el, false); });
         container.querySelectorAll('.formbuilder-fieldset-menu').forEach(function(el) { setFormbuilderFieldsetMenuOpen(el, false); });
@@ -782,6 +862,7 @@
         if (!container) return;
         container.querySelectorAll('.formbuilder-accordion-option--editing').forEach(function(el) {
             el.classList.remove('formbuilder-accordion-option--editing');
+            syncSubcategoryOptionUi(el);
         });
         container.querySelectorAll('.formbuilder-menu').forEach(function(el) {
             el.classList.remove('formbuilder-menu--open');
@@ -803,6 +884,7 @@
         if (!container) return;
         container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
             el.classList.remove('formbuilder-field-wrapper--editing');
+            syncFieldWrapperUi(el);
         });
     }
     
@@ -1223,6 +1305,7 @@
             if (!isOpen) {
                 accordion.classList.add('formbuilder-accordion--editing');
             }
+            syncCategoryAccordionUi(accordion);
             });
         });
         
@@ -1234,9 +1317,11 @@
                 closeAllEditPanels();
             }
             accordion.classList.toggle('formbuilder-accordion--open');
+            syncCategoryAccordionUi(accordion);
             });
         });
         
+        syncCategoryAccordionUi(accordion);
         return accordion;
     }
     
@@ -1353,6 +1438,7 @@
         var subNameInput = document.createElement('input');
         subNameInput.type = 'text';
         subNameInput.className = 'formbuilder-accordion-editpanel-input';
+        subNameInput.classList.add('formbuilder-accordion-editpanel-input--subcategory');
         subNameInput.value = subName;
         subNameInput.oninput = function() {
             optText.textContent = subNameInput.value;
@@ -1361,6 +1447,7 @@
         
         var subMoreBtn = document.createElement('div');
         subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
+        subMoreBtn.classList.add('formbuilder-accordion-editpanel-more--subcategory');
         subMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
         var subMoreMenuEl = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-menu');
         
@@ -1396,6 +1483,14 @@
         
         subEditPanel.appendChild(subNameRow);
         subEditPanel.appendChild(subIconPicker);
+
+        // Ensure "subcategory edit panel" elements get explicit styling classes (no structural CSS selectors).
+        subEditPanel.querySelectorAll('.formbuilder-menu-button').forEach(function(el) {
+            el.classList.add('formbuilder-menu-button--subcategory');
+        });
+        subEditPanel.querySelectorAll('.formbuilder-menu-options').forEach(function(el) {
+            el.classList.add('formbuilder-menu-options--subcategory');
+        });
         
         // Get fee data from subFees if available
         // New subcategories may not have a subFees entry yet → create an empty one so UI doesn't crash.
@@ -2128,12 +2223,14 @@
             if (isRequired) {
                 fieldWrapper.classList.add('formbuilder-field-wrapper--required');
             }
+            syncFieldWrapperUi(fieldWrapper);
             requiredCheckbox.onchange = function() {
                 if (requiredCheckbox.checked) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--required');
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--required');
                 }
+                syncFieldWrapperUi(fieldWrapper);
                 notifyChange();
             };
             
@@ -2213,6 +2310,7 @@
                 autofillRepeatSwitch.classList.add('disabled');
                 autofillRepeatSwitch.classList.remove('on');
                 fieldWrapper.classList.remove('formbuilder-field-wrapper--autofill-repeat');
+                syncFieldWrapperUi(fieldWrapper);
             }
             
             locationRepeatSwitch.addEventListener('click', function(e) {
@@ -2232,6 +2330,7 @@
                     autofillRepeatLabel.classList.add('disabled');
                     autofillRepeatSwitch.classList.add('disabled');
                 }
+                syncFieldWrapperUi(fieldWrapper);
                 notifyChange();
             });
             
@@ -2245,6 +2344,7 @@
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--must-repeat');
                 }
+                syncFieldWrapperUi(fieldWrapper);
                 notifyChange();
             });
             
@@ -2258,6 +2358,7 @@
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--autofill-repeat');
                 }
+                syncFieldWrapperUi(fieldWrapper);
                 notifyChange();
             });
             
@@ -2298,6 +2399,7 @@
                     fieldWrapper.classList.add('formbuilder-field-wrapper--autofill-repeat');
                 }
             }
+            syncFieldWrapperUi(fieldWrapper);
             
             // Check field type
             var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.fieldset_key || fieldsetDef.key;
@@ -2347,16 +2449,7 @@
                         modifyButton.classList.remove('formbuilder-field-modify-button--modified');
                         fieldWrapper.classList.remove('formbuilder-field-wrapper--modified');
                     }
-                }
-                
-                // Show/hide Modified label
-                var modifiedLabel = fieldWrapper.querySelector('.formbuilder-field-modified-label');
-                if (modifiedLabel) {
-                    if (isModified) {
-                        modifiedLabel.style.display = 'inline';
-                    } else {
-                        modifiedLabel.style.display = 'none';
-                    }
+                    syncFieldWrapperUi(fieldWrapper);
                 }
                 
                 // Update Field Tracker
@@ -2608,6 +2701,7 @@
                 container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
                     if (el !== fieldWrapper) {
                         el.classList.remove('formbuilder-field-wrapper--editing');
+                        syncFieldWrapperUi(el);
                     }
                     });
                 });
@@ -2619,10 +2713,12 @@
                 var isOpen = fieldWrapper.classList.contains('formbuilder-field-wrapper--editing');
                 container.querySelectorAll('.formbuilder-field-wrapper--editing').forEach(function(el) {
                     el.classList.remove('formbuilder-field-wrapper--editing');
+                    syncFieldWrapperUi(el);
                 });
                 if (!isOpen) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--editing');
                 }
+                syncFieldWrapperUi(fieldWrapper);
                 });
             });
             
@@ -2779,6 +2875,7 @@
                 if (fieldsetBtn) fieldsetBtn.textContent = 'Select Location Type';
                 runWithScrollAnchor(fieldsetBtn, function() {
                     option.classList.add('formbuilder-accordion-option--editing');
+                    syncSubcategoryOptionUi(option);
                 });
                 return;
             }
@@ -2816,6 +2913,7 @@
             if (!isOpen) {
                 option.classList.add('formbuilder-accordion-option--editing');
             }
+            syncSubcategoryOptionUi(option);
             });
         });
         
@@ -2835,9 +2933,11 @@
                 closeAllSubcategoryEditPanels();
             }
             option.classList.toggle('formbuilder-accordion-option--open');
+            syncSubcategoryOptionUi(option);
             });
         });
-        
+
+        syncSubcategoryOptionUi(option);
         return option;
     }
     
@@ -3089,8 +3189,8 @@
                 
                 var prices = document.createElement('div');
                 prices.className = 'formbuilder-checkout-prices';
-                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="price-value">' + currency + ' ' + price30.toFixed(2) + '</span></div>' +
-                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="price-value">' + currency + ' ' + price365.toFixed(2) + '</span></div>';
+                prices.innerHTML = '<div class="formbuilder-checkout-price-item"><span>30 days: </span><span class="formbuilder-checkout-price-value">' + currency + ' ' + price30.toFixed(2) + '</span></div>' +
+                    '<div class="formbuilder-checkout-price-item"><span>365 days: </span><span class="formbuilder-checkout-price-value">' + currency + ' ' + price365.toFixed(2) + '</span></div>';
                 
                 var calculator = document.createElement('div');
                 calculator.className = 'formbuilder-checkout-calculator';
@@ -3244,6 +3344,9 @@
                     fieldIndex: index,
                     container: body
                 });
+                if (fieldset && fieldset.classList) {
+                    fieldset.classList.add('fieldset--formbuilder-preview');
+                }
                 body.appendChild(fieldset);
             });
         }

@@ -80,7 +80,7 @@
 }
 
 /* When counter is present, button becomes wider */
-.header-filter-button:has(.header-filter-button-counter) {
+.header-filter-button--has-counter {
   width: auto;
   padding: 0 10px 0 0;
   border-radius: 20px 0 0 20px;
@@ -248,10 +248,8 @@
   background: rgba(255,255,255,0.1);
 }
 
-/* Active access buttons - color the icon, not the button background */
-.header-access-button--active .header-access-button-icon,
-.header-access-button[aria-pressed="true"] .header-access-button-icon,
-.header-access-button[aria-expanded="true"] .header-access-button-icon {
+/* Active access button icon */
+.header-access-button-icon--active {
   background-color: var(--website-color, #3b82f6);
 }
 
@@ -308,15 +306,11 @@
 }
 
 /* Avatar glow when panel is open */
-.header-access-button--active .header-access-button-avatar,
-.header-access-button[aria-pressed="true"] .header-access-button-avatar,
-.header-access-button[aria-expanded="true"] .header-access-button-avatar {
+.header-access-button-avatar--active {
   border-color: #3b82f6;
 }
 
-.header-access-button--active:hover .header-access-button-avatar,
-.header-access-button[aria-pressed="true"]:hover .header-access-button-avatar,
-.header-access-button[aria-expanded="true"]:hover .header-access-button-avatar {
+.header-access-button-avatar--active:hover {
   border-color: #60a5fa;
 }
 

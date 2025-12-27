@@ -849,14 +849,9 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 16px;
-}
-
-.admin-map-spin-container .admin-panel-field {
-  margin: 0 0 16px 0;
-}
-
-.admin-map-spin-container .admin-panel-field:last-child {
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .admin-map-lighting-container {
@@ -867,14 +862,9 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 16px;
-}
-
-.admin-map-lighting-container .admin-panel-field {
-  margin: 0 0 16px 0;
-}
-
-.admin-map-lighting-container .admin-panel-field:last-child {
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .admin-lighting-buttons,
@@ -909,11 +899,7 @@
   gap: 0;
   box-sizing: border-box;
   font-size: 14px;
-}
-
-.admin-lighting-button + .admin-lighting-button,
-.admin-style-button + .admin-style-button {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 
 .admin-lighting-button:hover,
@@ -976,14 +962,9 @@
   background: rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   padding: 16px;
-}
-
-.admin-map-defaults-container .admin-panel-field {
-  margin: 0 0 16px 0;
-}
-
-.admin-map-defaults-container .admin-panel-field:last-child {
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .admin-map-controls-starting {
@@ -997,7 +978,7 @@
 }
 
 /* Mapbox geocoder overrides - these need !important for external library */
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder {
+.mapboxgl-ctrl-geocoder.admin-mapbox-geocoder--starting {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0;
@@ -1009,8 +990,7 @@
   height: auto;
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder input,
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder input.mapboxgl-ctrl-geocoder--input {
+.admin-mapbox-geocoder-input--starting {
   height: 36px;
   min-height: 36px;
   line-height: 36px;
@@ -1024,11 +1004,11 @@
   box-sizing: border-box;
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder input::placeholder {
+.admin-mapbox-geocoder-input--starting::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder .suggestions {
+.suggestions.admin-mapbox-geocoder-suggestions--starting {
   font-size: 14px !important;
   background: #1a1a2e;
   border: 1px solid var(--border);
@@ -1036,30 +1016,30 @@
   margin-top: 4px;
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder .suggestions li,
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder .suggestions li a {
+.admin-mapbox-geocoder-suggestion-link--starting {
   font-size: 14px !important;
   font-weight: 400 !important;
   color: #fff;
+  background: transparent;
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder .suggestions li a:hover,
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder .suggestions .active a {
+.admin-mapbox-geocoder-suggestion-link--starting:hover,
+.admin-mapbox-geocoder-suggestion-link--active {
   background: rgba(46, 58, 114, 0.5);
   color: #fff;
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder--icon,
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder--icon-loading,
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder--icon-search {
+.mapboxgl-ctrl-geocoder--icon.admin-mapbox-geocoder-icon--starting,
+.mapboxgl-ctrl-geocoder--icon-loading.admin-mapbox-geocoder-icon--starting,
+.mapboxgl-ctrl-geocoder--icon-search.admin-mapbox-geocoder-icon--starting {
   display: none;
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder--button {
+.mapboxgl-ctrl-geocoder--button.admin-mapbox-geocoder-button--starting {
   background: transparent;
 }
 
-.admin-map-controls-starting .mapboxgl-ctrl-geocoder .mapboxgl-ctrl-geocoder--pin-right {
+.mapboxgl-ctrl-geocoder--pin-right.admin-mapbox-geocoder-pinright--starting {
   display: none;
 }
 
@@ -1088,12 +1068,12 @@
 }
 
 /* Google Places geocoder wrapper */
-.admin-map-controls-starting .google-places-geocoder {
+.google-places-geocoder.admin-googleplaces-geocoder--starting {
   background: rgba(0, 0, 0, 0.35);
   border-radius: 5px;
 }
 
-.admin-map-controls-starting .google-places-geocoder input {
+.admin-googleplaces-geocoder-input--starting {
   width: 100%;
   height: 36px;
   padding: 0 12px;
@@ -1105,7 +1085,7 @@
   caret-color: #fff;
 }
 
-.admin-map-controls-starting .google-places-geocoder input::placeholder {
+.admin-googleplaces-geocoder-input--starting::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
 
@@ -1715,7 +1695,7 @@
   border: 1px solid transparent;
 }
 
-.admin-checkout-accordion--editing .admin-checkout-accordion-header {
+.admin-checkout-accordion-header--editing {
   border-radius: 5px 5px 0 0;
 }
 
@@ -1762,12 +1742,12 @@
   margin-left: 10px;
 }
 
-.admin-checkout-accordion--editing .admin-checkout-accordion-header-arrow {
+.admin-checkout-accordion-header-arrow--editing {
   transform: rotate(180deg);
 }
 
 /* Hidden state */
-.admin-checkout-accordion--hidden .admin-checkout-accordion-header {
+.admin-checkout-accordion-header--hidden {
   background: #333;
 }
 
@@ -1793,7 +1773,7 @@
   gap: 10px;
 }
 
-.admin-checkout-accordion-editpanel-row--title .admin-checkout-accordion-editpanel-input {
+.admin-checkout-accordion-editpanel-input--title {
   flex: 1;
 }
 
@@ -1963,7 +1943,7 @@
   flex-wrap: wrap;
 }
 
-.admin-checkout-accordion-editpanel-calc .admin-checkout-accordion-editpanel-input {
+.admin-checkout-accordion-editpanel-input--calc {
   width: 100px;
 }
 
@@ -2229,8 +2209,10 @@
   border: 1px solid transparent;
 }
 
-.admin-settings-imagemanager-accordion:not(.admin-settings-imagemanager-accordion--open) .admin-settings-imagemanager-accordion-header {
-  border-radius: 5px;
+/* Header state is applied directly on the header element (no structural selectors) */
+.admin-settings-imagemanager-accordion-header--open {
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
 }
 
 .admin-settings-imagemanager-accordion-header:hover {
@@ -2254,7 +2236,7 @@
   color: #fff;
 }
 
-.admin-settings-imagemanager-accordion--open > .admin-settings-imagemanager-accordion-header .admin-settings-imagemanager-accordion-header-arrow {
+.admin-settings-imagemanager-accordion-header-arrow--open {
   transform: rotate(180deg);
 }
 
@@ -2263,14 +2245,11 @@
   padding: 3px 0 0 0;
 }
 
-.admin-settings-imagemanager-accordion--open > .admin-settings-imagemanager-accordion-body {
+.admin-settings-imagemanager-accordion-body--open {
   display: block;
 }
 
-.admin-settings-imagemanager-accordion-body .admin-settings-folders-container,
-.admin-settings-imagemanager-accordion-body .admin-settings-api-container {
-  margin: 12px auto;
-}
+/* Folders/API containers already have their own margin; no extra structural overrides needed. */
 
 /* Settings Containers */
 .admin-settings-general-container,
@@ -2400,11 +2379,11 @@
   transition: transform 0.2s;
 }
 
-.admin-settings-toggle-input:checked + .admin-settings-toggle-slider {
+.admin-settings-toggle-slider--on {
   background: #3b82f5;
 }
 
-.admin-settings-toggle-input:checked + .admin-settings-toggle-slider::before {
+.admin-settings-toggle-slider--on::before {
   transform: translateX(20px);
 }
 
@@ -2434,21 +2413,21 @@
   padding: 0 10px;
   cursor: pointer;
   background: #0c4070;
-  border-radius: 5px 5px 0 0;
-  border: 1px solid transparent;
-}
-
-.admin-messages-accordion:not(.admin-messages-accordion--open) .admin-messages-accordion-header {
   border-radius: 5px;
+  border: 1px solid transparent;
 }
 
 .admin-messages-accordion-header:hover {
   border-color: #3b82f5;
 }
 
-.admin-messages-accordion--editing .admin-messages-accordion-header {
-  border-color: #3b82f5;
+.admin-messages-accordion-header--open,
+.admin-messages-accordion-header--editing {
   border-radius: 5px 5px 0 0;
+}
+
+.admin-messages-accordion-header--editing {
+  border-color: #3b82f5;
   border-bottom: none;
 }
 
@@ -2475,7 +2454,7 @@
   transition: transform 0.2s;
 }
 
-.admin-messages-accordion--open > .admin-messages-accordion-header .admin-messages-accordion-header-arrow {
+.admin-messages-accordion-header-arrow--open {
   transform: rotate(180deg);
 }
 
@@ -2510,16 +2489,17 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  color: #888;
 }
 
 .admin-messages-accordion-header-edit {
   width: 16px;
   height: 16px;
-  color: #888;
+  color: inherit;
 }
 
-.admin-messages-accordion-header-editarea:hover .admin-messages-accordion-header-edit,
-.admin-messages-accordion--editing .admin-messages-accordion-header-edit {
+.admin-messages-accordion-header-editarea:hover,
+.admin-messages-accordion-header-editarea--editing {
   color: #3b82f5;
 }
 
@@ -2533,7 +2513,7 @@
   border-radius: 0 0 5px 5px;
 }
 
-.admin-messages-accordion--editing > .admin-messages-accordion-editpanel {
+.admin-messages-accordion-editpanel--editing {
   display: block;
 }
 

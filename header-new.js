@@ -29,6 +29,15 @@ const HeaderModule = (function() {
     var adminBtn = null;
     var fullscreenBtn = null;
     var logoBtn = null;
+    
+    function setAccessButtonActiveVisual(btn, isActive) {
+        if (!btn) return;
+        btn.classList.toggle('header-access-button--active', !!isActive);
+        var icon = btn.querySelector('.header-access-button-icon');
+        var avatar = btn.querySelector('.header-access-button-avatar');
+        if (icon) icon.classList.toggle('header-access-button-icon--active', !!isActive);
+        if (avatar) avatar.classList.toggle('header-access-button-avatar--active', !!isActive);
+    }
 
 
     /* --------------------------------------------------------------------------
@@ -270,9 +279,11 @@ const HeaderModule = (function() {
             }
             counter.textContent = count;
             filterBtn.classList.add('header-filter-button--active');
+            filterBtn.classList.add('header-filter-button--has-counter');
         } else {
             if (counter) counter.remove();
             filterBtn.classList.remove('header-filter-button--active');
+            filterBtn.classList.remove('header-filter-button--has-counter');
         }
     }
 
@@ -298,14 +309,14 @@ const HeaderModule = (function() {
         App.on('member:closed', function() {
             if (memberBtn) {
                 memberBtn.setAttribute('aria-expanded', 'false');
-                memberBtn.classList.remove('header-access-button--active');
+                setAccessButtonActiveVisual(memberBtn, false);
             }
         });
         
         App.on('member:opened', function() {
             if (memberBtn) {
                 memberBtn.setAttribute('aria-expanded', 'true');
-                memberBtn.classList.add('header-access-button--active');
+                setAccessButtonActiveVisual(memberBtn, true);
             }
         });
     }
@@ -332,12 +343,14 @@ const HeaderModule = (function() {
         App.on('admin:closed', function() {
             if (adminBtn) {
                 adminBtn.setAttribute('aria-expanded', 'false');
+                setAccessButtonActiveVisual(adminBtn, false);
             }
         });
         
         App.on('admin:opened', function() {
             if (adminBtn) {
                 adminBtn.setAttribute('aria-expanded', 'true');
+                setAccessButtonActiveVisual(adminBtn, true);
             }
         });
         

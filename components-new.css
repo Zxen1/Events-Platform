@@ -109,11 +109,11 @@
 }
 
 /* States */
-.component-switch-input:checked + .component-switch-slider {
+.component-switch-slider--on {
     background: #3b82f6;
 }
 
-.component-switch-input:checked + .component-switch-slider::before {
+.component-switch-slider--on::before {
     transform: translateX(20px);
 }
 
@@ -156,11 +156,11 @@
     transition: transform 0.2s;
 }
 
-.component-small-switch-input:checked + .component-small-switch-slider {
+.component-small-switch-slider--on {
     background: #3b82f6;
 }
 
-.component-small-switch-input:checked + .component-small-switch-slider::before {
+.component-small-switch-slider--on::before {
     transform: translateX(14px);
 }
 
@@ -203,11 +203,11 @@
     transition: transform 0.2s;
 }
 
-.component-large-switch-input:checked + .component-large-switch-slider {
+.component-large-switch-slider--on {
     background: #3b82f6;
 }
 
-.component-large-switch-input:checked + .component-large-switch-slider::before {
+.component-large-switch-slider--on::before {
     transform: translateX(24px);
 }
 
@@ -526,20 +526,28 @@
     align-items: flex-end;
 }
 
-.fieldset-row > * {
+.fieldset-row-item {
     flex: 1;
 }
 
-.fieldset-row > .fieldset-menu {
+.fieldset-row-item--menu {
     flex: 0 0 120px;
 }
 
-.fieldset-row > .fieldset-currency-wrapper {
+.fieldset-row-item--currency-wrapper {
     flex: 0 0 120px;
 }
 
-.fieldset-row > .fieldset-input-small {
+.fieldset-row-item--currency-compact {
     flex: 0 0 100px;
+}
+
+.fieldset-row-item--input-small {
+    flex: 0 0 100px;
+}
+
+.fieldset-row-item--no-flex {
+    flex: 0 0 auto;
 }
 
 /* Appearance - Images Grid */
@@ -953,14 +961,12 @@
 /* States - Google Places */
 .pac-item:hover {
     background: #3b82f5;
-}
-
-.pac-item:hover .pac-matched {
     color: #fff;
 }
 
 .pac-item-selected {
     background: #3b82f5;
+    color: #fff;
 }
 
 /* States - Tooltip */
@@ -1846,7 +1852,7 @@
     border-color: rgba(255,255,255,0.4);
 }
 
-.phoneprefix-button[aria-expanded="true"] .phoneprefix-button-arrow {
+.phoneprefix-button-arrow--open {
     transform: rotate(180deg);
 }
 
@@ -2943,6 +2949,7 @@
     box-sizing: border-box;
     max-width: 100%;
     overflow: hidden;
+    color: #888;
 }
 
 .member-checkout-option-radio {
@@ -2993,7 +3000,7 @@
 
 .member-checkout-price-display {
     /* Events price text: keep muted until the option is active (matches General duration button behavior) */
-    color: #888;
+    color: inherit;
     font-weight: 500;
     font-size: 14px;
 }
@@ -3038,19 +3045,13 @@
 .member-checkout-option:hover {
     border-color: #3b82f5;
     background: rgba(59, 130, 245, 0.05);
-}
-
-.member-checkout-option:has(input:checked) {
-    border-color: #3b82f5;
-    /* Match selected duration button intensity */
-    background: rgba(59, 130, 245, 0.15);
-}
-
-.member-checkout-option:hover .member-checkout-price-display {
     color: #fff;
 }
 
-.member-checkout-option:has(input:checked) .member-checkout-price-display {
+.member-checkout-option--selected {
+    border-color: #3b82f5;
+    /* Match selected duration button intensity */
+    background: rgba(59, 130, 245, 0.15);
     color: #fff;
 }
 
@@ -3078,7 +3079,7 @@
     color: #fff;
 }
 
-.member-checkout-duration-option:has(input:checked) {
+.member-checkout-duration-option--selected {
     border-color: #3b82f5;
     background: rgba(59, 130, 245, 0.15);
     color: #fff;

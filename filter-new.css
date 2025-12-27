@@ -279,7 +279,7 @@
   border-color: #3b82f6;
 }
 
-.filter-favourites-btn[aria-pressed="true"] .filter-favourites-icon {
+.filter-favourites-icon--active {
   /* Solid yellow star when selected (not just outline) */
   background-color: #fbbf24;
   -webkit-mask-image: none;
@@ -534,7 +534,7 @@
   cursor: pointer;
 }
 
-.filter-expired-switch input {
+.filter-expired-input {
   opacity: 0;
   width: 0;
   height: 0;
@@ -565,12 +565,12 @@
   transition: transform 0.2s;
 }
 
-.filter-expired-input:checked + .filter-expired-slider {
+.filter-expired-slider--on {
   background: #3b82f6;
   border-color: #3b82f6;
 }
 
-.filter-expired-input:checked + .filter-expired-slider::before {
+.filter-expired-slider--on::before {
   transform: translateX(24px);
 }
 

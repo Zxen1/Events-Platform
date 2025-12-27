@@ -1251,6 +1251,7 @@ const AdminModule = (function() {
                 if (!isEditing) {
                     accordion.classList.add('admin-messages-accordion--editing');
                 }
+                syncMessagesAccordionUi(accordion);
             });
             
             // Header click (except edit area/drag) - toggle open/close (like formbuilder)
@@ -1262,7 +1263,10 @@ const AdminModule = (function() {
                 }
                 accordion.classList.toggle('admin-messages-accordion--open');
                 content.classList.toggle('admin-messages-accordion-content--hidden');
+                syncMessagesAccordionUi(accordion);
             });
+            
+            syncMessagesAccordionUi(accordion);
         });
         
         // Bind document click to close edit panels (like formbuilder)
@@ -1273,7 +1277,25 @@ const AdminModule = (function() {
         if (!messagesContainer) return;
         messagesContainer.querySelectorAll('.admin-messages-accordion--editing').forEach(function(el) {
             el.classList.remove('admin-messages-accordion--editing');
+            syncMessagesAccordionUi(el);
         });
+    }
+
+    function syncMessagesAccordionUi(accordion) {
+        if (!accordion) return;
+        var isOpen = accordion.classList.contains('admin-messages-accordion--open');
+        var isEditing = accordion.classList.contains('admin-messages-accordion--editing');
+        var header = accordion.querySelector('.admin-messages-accordion-header');
+        var arrow = accordion.querySelector('.admin-messages-accordion-header-arrow');
+        var editArea = accordion.querySelector('.admin-messages-accordion-header-editarea');
+        var editPanel = accordion.querySelector('.admin-messages-accordion-editpanel');
+        if (header) {
+            header.classList.toggle('admin-messages-accordion-header--open', !!isOpen);
+            header.classList.toggle('admin-messages-accordion-header--editing', !!isEditing);
+        }
+        if (arrow) arrow.classList.toggle('admin-messages-accordion-header-arrow--open', !!isOpen);
+        if (editArea) editArea.classList.toggle('admin-messages-accordion-header-editarea--editing', !!isEditing);
+        if (editPanel) editPanel.classList.toggle('admin-messages-accordion-editpanel--editing', !!isEditing);
     }
     
     function bindMessagesDocumentListeners() {
@@ -2600,7 +2622,9 @@ const AdminModule = (function() {
             if (!header) return;
             header.addEventListener('click', function() {
                 acc.classList.toggle('admin-settings-imagemanager-accordion--open');
+                syncSettingsImagemanagerAccordionUi(acc);
             });
+            syncSettingsImagemanagerAccordionUi(acc);
         });
         
         // Attach to text inputs
@@ -2621,11 +2645,13 @@ const AdminModule = (function() {
             var key = checkbox.dataset.settingKey;
             var initialValue = settingsData[key] === true || settingsData[key] === 'true' || settingsData[key] === '1';
             checkbox.checked = initialValue;
+            syncSettingsToggleUi(checkbox);
             
             registerField('settings.' + key, initialValue);
             
             checkbox.addEventListener('change', function() {
                 updateField('settings.' + key, checkbox.checked);
+                syncSettingsToggleUi(checkbox);
                 
                 // Special handling for console_filter: apply immediately (no localStorage dependency)
                 if (key === 'console_filter') {
@@ -2670,6 +2696,26 @@ const AdminModule = (function() {
         
         // Add explanation to API container
         addImageSyncExplanation();
+    }
+
+    function syncSettingsToggleUi(checkbox) {
+        if (!checkbox) return;
+        var wrapper = checkbox.closest('.admin-settings-toggle');
+        if (!wrapper) return;
+        var slider = wrapper.querySelector('.admin-settings-toggle-slider');
+        if (!slider) return;
+        slider.classList.toggle('admin-settings-toggle-slider--on', !!checkbox.checked);
+    }
+
+    function syncSettingsImagemanagerAccordionUi(acc) {
+        if (!acc) return;
+        var isOpen = acc.classList.contains('admin-settings-imagemanager-accordion--open');
+        var header = acc.querySelector('.admin-settings-imagemanager-accordion-header');
+        var arrow = acc.querySelector('.admin-settings-imagemanager-accordion-header-arrow');
+        var body = acc.querySelector('.admin-settings-imagemanager-accordion-body');
+        if (header) header.classList.toggle('admin-settings-imagemanager-accordion-header--open', !!isOpen);
+        if (arrow) arrow.classList.toggle('admin-settings-imagemanager-accordion-header-arrow--open', !!isOpen);
+        if (body) body.classList.toggle('admin-settings-imagemanager-accordion-body--open', !!isOpen);
     }
     
     function addImageSyncExplanation() {
@@ -2796,8 +2842,24 @@ const AdminModule = (function() {
                 el.classList.remove('admin-checkout-accordion--editing');
                 var editPanel = el.querySelector('.admin-checkout-accordion-editpanel');
                 if (editPanel) editPanel.style.display = 'none';
+                syncCheckoutAccordionUi(el);
             }
         });
+    }
+
+    function syncCheckoutAccordionUi(accordion) {
+        if (!accordion) return;
+        var isEditing = accordion.classList.contains('admin-checkout-accordion--editing');
+        var isHidden = accordion.classList.contains('admin-checkout-accordion--hidden');
+        var header = accordion.querySelector('.admin-checkout-accordion-header');
+        var arrow = accordion.querySelector('.admin-checkout-accordion-header-arrow');
+        var editPanel = accordion.querySelector('.admin-checkout-accordion-editpanel');
+        if (header) {
+            header.classList.toggle('admin-checkout-accordion-header--editing', !!isEditing);
+            header.classList.toggle('admin-checkout-accordion-header--hidden', !!isHidden);
+        }
+        if (arrow) arrow.classList.toggle('admin-checkout-accordion-header-arrow--editing', !!isEditing);
+        if (editPanel) editPanel.style.display = isEditing ? 'flex' : 'none';
     }
 
     function renderCheckoutOptions(checkoutOptions, siteCurrency) {
@@ -2860,6 +2922,7 @@ const AdminModule = (function() {
             var titleInput = document.createElement('input');
             titleInput.type = 'text';
             titleInput.className = 'admin-checkout-accordion-editpanel-input admin-checkout-option-title';
+            titleInput.classList.add('admin-checkout-accordion-editpanel-input--title');
             titleInput.value = option.checkout_title || '';
             titleInput.placeholder = 'Title';
 
@@ -2905,9 +2968,9 @@ const AdminModule = (function() {
                 '<div class="admin-checkout-accordion-editpanel-row">' +
                     '<label class="admin-checkout-accordion-editpanel-label">Price Calculator (Sandbox)</label>' +
                     '<div class="admin-checkout-accordion-editpanel-calc">' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-option-calc-days" value="" placeholder="Days" />' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-option-calc-locations" value="1" placeholder="Locations" />' +
-                        '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-calc-surcharge" value="0" placeholder="Surcharge %" />' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-accordion-editpanel-input--calc admin-checkout-option-calc-days" value="" placeholder="Days" />' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-accordion-editpanel-input--calc admin-checkout-option-calc-locations" value="1" placeholder="Locations" />' +
+                        '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-accordion-editpanel-input--calc admin-checkout-option-calc-surcharge" value="0" placeholder="Surcharge %" />' +
                         '<span class="admin-checkout-accordion-editpanel-calc-equals">=</span>' +
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
                     '</div>' +
@@ -2917,6 +2980,8 @@ const AdminModule = (function() {
             while (restOfPanel.firstChild) {
                 editPanel.appendChild(restOfPanel.firstChild);
             }
+            
+            // Calculator inputs have their --calc class baked into the markup above.
 
             // Set hidden class if hidden
             if (isHidden) {
@@ -2926,6 +2991,7 @@ const AdminModule = (function() {
             accordion.appendChild(header);
             accordion.appendChild(editPanel);
             container.appendChild(accordion);
+            syncCheckoutAccordionUi(accordion);
 
             // More button click - toggle menu
             var moreMenuEl = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-menu');
@@ -2947,6 +3013,7 @@ const AdminModule = (function() {
                 e.stopPropagation();
                 hideSwitch.classList.toggle('on');
                 accordion.classList.toggle('admin-checkout-accordion--hidden');
+                syncCheckoutAccordionUi(accordion);
                 markDirty();
             });
 
@@ -2988,11 +3055,10 @@ const AdminModule = (function() {
                 closeAllCheckoutEditPanels(accordion);
                 if (!isEditing) {
                     accordion.classList.add('admin-checkout-accordion--editing');
-                    editPanel.style.display = 'block';
                 } else {
                     accordion.classList.remove('admin-checkout-accordion--editing');
-                    editPanel.style.display = 'none';
                 }
+                syncCheckoutAccordionUi(accordion);
             });
 
             // Description textarea
@@ -3321,6 +3387,7 @@ const AdminModule = (function() {
             var entry = fieldRegistry['settings.' + key];
             if (entry && entry.type === 'simple') {
                 checkbox.checked = entry.original === true || entry.original === 'true';
+                syncSettingsToggleUi(checkbox);
             }
         });
         

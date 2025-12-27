@@ -529,7 +529,7 @@ const MapModule = (function() {
    * Initialize admin starting location geocoder (Mapbox only, not Google)
    */
   function initAdminStartingGeocoder() {
-    const container = document.querySelector('.admin-map-geocoder');
+    const container = document.getElementById('admin-geocoder-starting');
     if (!container || !window.MapboxGeocoder) return;
 
     const geocoder = new MapboxGeocoder({
@@ -540,6 +540,44 @@ const MapModule = (function() {
     });
 
     geocoder.addTo(container);
+
+    // Apply explicit classes for styling (avoid structural CSS selectors)
+    const geocoderRoot = container.querySelector('.mapboxgl-ctrl-geocoder');
+    if (geocoderRoot) {
+      geocoderRoot.classList.add('admin-mapbox-geocoder--starting');
+      const input = geocoderRoot.querySelector('input.mapboxgl-ctrl-geocoder--input');
+      if (input) input.classList.add('admin-mapbox-geocoder-input--starting');
+
+      const icons = geocoderRoot.querySelectorAll('.mapboxgl-ctrl-geocoder--icon, .mapboxgl-ctrl-geocoder--icon-loading, .mapboxgl-ctrl-geocoder--icon-search');
+      icons.forEach((el) => el.classList.add('admin-mapbox-geocoder-icon--starting'));
+
+      const btn = geocoderRoot.querySelector('.mapboxgl-ctrl-geocoder--button');
+      if (btn) btn.classList.add('admin-mapbox-geocoder-button--starting');
+
+      const pinRight = geocoderRoot.querySelector('.mapboxgl-ctrl-geocoder--pin-right');
+      if (pinRight) pinRight.classList.add('admin-mapbox-geocoder-pinright--starting');
+
+      // Suggestions are dynamic; keep their classes synced via a small observer.
+      const syncSuggestions = () => {
+        const suggestions = geocoderRoot.querySelector('.suggestions');
+        if (!suggestions) return;
+        suggestions.classList.add('admin-mapbox-geocoder-suggestions--starting');
+        suggestions.querySelectorAll('li a').forEach((a) => a.classList.add('admin-mapbox-geocoder-suggestion-link--starting'));
+        suggestions.querySelectorAll('li').forEach((li) => {
+          const a = li.querySelector('a');
+          if (!a) return;
+          a.classList.toggle('admin-mapbox-geocoder-suggestion-link--active', li.classList.contains('active'));
+        });
+      };
+
+      syncSuggestions();
+      try {
+        const observer = new MutationObserver(syncSuggestions);
+        observer.observe(geocoderRoot, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] });
+      } catch (e) {
+        // ignore
+      }
+    }
 
     geocoder.on('result', (e) => {
       if (e.result && e.result.center) {

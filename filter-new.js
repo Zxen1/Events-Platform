@@ -34,6 +34,7 @@ const FilterModule = (function() {
     var daterangeInput = null;
     var daterangeClear = null;
     var expiredInput = null;
+    var expiredSlider = null;
     var calendarContainer = null;
     var calendarInstance = null;
     var dateStart = null;
@@ -350,8 +351,10 @@ const FilterModule = (function() {
             favouritesBtn.addEventListener('click', function() {
                 favouritesOn = !favouritesOn;
                 favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
+                syncFavouritesButtonUi();
                 App.emit('filter:favouritesToggle', { enabled: favouritesOn });
             });
+            syncFavouritesButtonUi();
         }
     }
     
@@ -359,7 +362,14 @@ const FilterModule = (function() {
         favouritesOn = !!on;
         if (favouritesBtn) {
             favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
+            syncFavouritesButtonUi();
         }
+    }
+    
+    function syncFavouritesButtonUi() {
+        if (!favouritesBtn) return;
+        var icon = favouritesBtn.querySelector('.filter-favourites-icon');
+        if (icon) icon.classList.toggle('filter-favourites-icon--active', !!favouritesOn);
     }
 
 
@@ -546,15 +556,18 @@ const FilterModule = (function() {
         
         // Expired toggle
         expiredInput = container.querySelector('.filter-expired-input');
+        expiredSlider = container.querySelector('.filter-expired-slider');
         
         if (expiredInput) {
             expiredInput.addEventListener('change', function() {
+                syncExpiredToggleUi();
                 // Rebuild calendar with extended date range when showing expired
                 rebuildCalendar();
                 applyFilters();
                 updateClearButtons();
             });
         }
+        syncExpiredToggleUi();
         
         updateClearButtons();
     }
@@ -746,11 +759,17 @@ const FilterModule = (function() {
         if (priceMinInput) priceMinInput.value = '';
         if (priceMaxInput) priceMaxInput.value = '';
         if (expiredInput) expiredInput.checked = false;
+        syncExpiredToggleUi();
         rebuildCalendar();
         clearDateRange();
         clearGeocoder();
         updateClearButtons();
         applyFilters();
+    }
+    
+    function syncExpiredToggleUi() {
+        if (!expiredInput || !expiredSlider) return;
+        expiredSlider.classList.toggle('filter-expired-slider--on', !!expiredInput.checked);
     }
 
 

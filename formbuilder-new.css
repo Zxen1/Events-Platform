@@ -41,21 +41,21 @@
   padding: 0 10px;
   cursor: pointer;
   background: #0c4070;
-  border-radius: 5px 5px 0 0;
-  border: 1px solid transparent;
-}
-
-.formbuilder-accordion:not(.formbuilder-accordion--open) .formbuilder-accordion-header {
   border-radius: 5px;
+  border: 1px solid transparent;
 }
 
 .formbuilder-accordion-header:hover {
   border-color: #3b82f5;
 }
 
-.formbuilder-accordion--editing .formbuilder-accordion-header {
-  border-color: #3b82f5;
+.formbuilder-accordion-header--open,
+.formbuilder-accordion-header--editing {
   border-radius: 5px 5px 0 0;
+}
+
+.formbuilder-accordion-header--editing {
+  border-color: #3b82f5;
   border-bottom: none;
 }
 
@@ -86,7 +86,7 @@
   transition: transform 0.2s;
 }
 
-.formbuilder-accordion--open > .formbuilder-accordion-header .formbuilder-accordion-header-arrow {
+.formbuilder-accordion-header-arrow--open {
   transform: rotate(180deg);
 }
 
@@ -121,16 +121,17 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  color: #888;
 }
 
 .formbuilder-accordion-header-edit {
   width: 16px;
   height: 16px;
-  color: #888;
+  color: inherit;
 }
 
-.formbuilder-accordion-header-editarea:hover .formbuilder-accordion-header-edit,
-.formbuilder-accordion--editing .formbuilder-accordion-header-edit {
+.formbuilder-accordion-header-editarea:hover,
+.formbuilder-accordion-header-editarea--editing {
   color: #3b82f5;
 }
 
@@ -144,7 +145,7 @@
   border-radius: 0 0 5px 5px;
 }
 
-.formbuilder-accordion--editing > .formbuilder-accordion-editpanel {
+.formbuilder-accordion-editpanel--editing {
   display: block;
 }
 
@@ -276,7 +277,7 @@
   padding: 3px 0 0 0;
 }
 
-.formbuilder-accordion--open > .formbuilder-accordion-body {
+.formbuilder-accordion-body--open {
   display: block;
 }
 
@@ -302,7 +303,7 @@
   border-color: #3b82f5;
 }
 
-.formbuilder-accordion-option--editing .formbuilder-accordion-option-header {
+.formbuilder-accordion-option-header--editing {
   border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
@@ -330,11 +331,11 @@
   transition: transform 0.2s;
 }
 
-.formbuilder-accordion-option--open > .formbuilder-accordion-option-header .formbuilder-accordion-option-arrow {
+.formbuilder-accordion-option-arrow--open {
   transform: rotate(180deg);
 }
 
-.formbuilder-accordion-option--open > .formbuilder-accordion-option-header {
+.formbuilder-accordion-option-header--open {
   border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
@@ -371,16 +372,17 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  color: #888;
 }
 
 .formbuilder-accordion-option-edit {
   width: 16px;
   height: 16px;
-  color: #888;
+  color: inherit;
 }
 
-.formbuilder-accordion-option-editarea:hover .formbuilder-accordion-option-edit,
-.formbuilder-accordion-option--editing .formbuilder-accordion-option-edit {
+.formbuilder-accordion-option-editarea:hover,
+.formbuilder-accordion-option-editarea--editing {
   color: #3b82f5;
 }
 
@@ -393,7 +395,7 @@
   background: #000;
 }
 
-.formbuilder-accordion-option--editing > .formbuilder-accordion-option-editpanel {
+.formbuilder-accordion-option-editpanel--editing {
   display: block;
 }
 
@@ -406,34 +408,34 @@
   background: #000;
 }
 
-.formbuilder-accordion-option--open > .formbuilder-accordion-option-body {
+.formbuilder-accordion-option-body--open {
   display: block;
 }
 
 /* When both editing and open */
-.formbuilder-accordion-option--editing.formbuilder-accordion-option--open > .formbuilder-accordion-option-editpanel {
+.formbuilder-accordion-option-editpanel--editing-open {
   border-radius: 0;
   border-bottom: none;
 }
 
-.formbuilder-accordion-option--editing.formbuilder-accordion-option--open > .formbuilder-accordion-option-body {
+.formbuilder-accordion-option-body--editing-open {
   border-top: none;
 }
 
 /* Subcategory edit panel overrides */
-.formbuilder-accordion-option-editpanel .formbuilder-accordion-editpanel-input {
+.formbuilder-accordion-editpanel-input--subcategory {
   background: #111111;
 }
 
-.formbuilder-accordion-option-editpanel .formbuilder-accordion-editpanel-more {
+.formbuilder-accordion-editpanel-more--subcategory {
   background: #111111;
 }
 
-.formbuilder-accordion-option-editpanel .formbuilder-menu-button {
+.formbuilder-menu-button--subcategory {
   background: #111111;
 }
 
-.formbuilder-accordion-option-editpanel .formbuilder-menu-options {
+.formbuilder-menu-options--subcategory {
   background: #111111;
 }
 
@@ -739,7 +741,7 @@
   display: none;
 }
 
-.formbuilder-field-wrapper--required .formbuilder-field-required {
+.formbuilder-field-required--required {
   display: inline;
 }
 
@@ -790,14 +792,14 @@
   margin-bottom: 3px;
 }
 
-.formbuilder-field-wrapper--editing > .formbuilder-field {
+.formbuilder-field--editing {
   border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
   margin-bottom: 0;
 }
 
-.formbuilder-field-wrapper--editing .formbuilder-field-edit {
+.formbuilder-field-edit--editing {
   color: #3b82f5;
 }
 
@@ -811,7 +813,7 @@
   border-radius: 0 0 5px 5px;
 }
 
-.formbuilder-field-wrapper--editing > .formbuilder-field-editpanel {
+.formbuilder-field-editpanel--editing {
   display: block;
 }
 
@@ -1156,7 +1158,7 @@
   margin-left: 6px;
 }
 
-.formbuilder-field-wrapper--modified .formbuilder-field-modified-label {
+.formbuilder-field-modified-label--modified {
   display: inline;
 }
 
@@ -1205,15 +1207,15 @@
   line-height: 1;
 }
 
-.formbuilder-field-wrapper--location-repeat .formbuilder-field-indicator-repeat {
+.formbuilder-field-indicator-repeat--location-repeat {
   display: inline;
 }
 
-.formbuilder-field-wrapper--must-repeat .formbuilder-field-indicator-must {
+.formbuilder-field-indicator-must--must-repeat {
   display: inline;
 }
 
-.formbuilder-field-wrapper--autofill-repeat .formbuilder-field-indicator-autofill {
+.formbuilder-field-indicator-autofill--autofill-repeat {
   display: inline;
 }
 
@@ -1379,7 +1381,7 @@
   color: #888;
 }
 
-.formbuilder-checkout-price-item .price-value {
+.formbuilder-checkout-price-value {
   color: #fff;
   font-weight: 600;
 }
@@ -1518,11 +1520,11 @@
   border-radius: 5px;
 }
 
-.formbuilder-formpreview-modal-body .fieldset {
+.fieldset--formbuilder-preview {
   margin-bottom: 10px;
 }
 
-.formbuilder-formpreview-modal-body .fieldset:last-child {
+.fieldset--formbuilder-preview:last-child {
   margin-bottom: 0;
 }
 
@@ -1537,3 +1539,4 @@
   padding-top: 10px;
   border-top: 1px solid #333;
 }
+
