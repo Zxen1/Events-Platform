@@ -2150,7 +2150,9 @@ const AdminModule = (function() {
             startingGeocoderContainer.classList.remove('admin-map-controls-starting-geocoder--hidden');
             if (startingAddressDisplay) startingAddressDisplay.hidden = true;
             setTimeout(function() {
-                var input = startingGeocoderContainer.querySelector('.google-places-geocoder input') ||
+                // Mapbox geocoder input (created by map-new.js)
+                var input = startingGeocoderContainer.querySelector('.admin-mapbox-geocoder-input--starting') ||
+                            startingGeocoderContainer.querySelector('input.mapboxgl-ctrl-geocoder--input') ||
                             startingGeocoderContainer.querySelector('input');
                 if (input) input.focus();
             }, 50);
@@ -2188,158 +2190,20 @@ const AdminModule = (function() {
             
             showAddressDisplay();
         };
-        
-        // Check if Google Places is ready
-        var googleReady = typeof google !== 'undefined' && google.maps && google.maps.places;
-        
-        if (googleReady) {
-            // Create Google Places geocoder wrapper
-            var wrapper = document.createElement('div');
-            wrapper.className = 'google-places-geocoder';
-            
-            var input = document.createElement('input');
-            input.type = 'text';
-            input.placeholder = 'Search for a location...';
-            input.setAttribute('autocomplete', 'off');
-            input.value = startingAddress;
-            
-            wrapper.appendChild(input);
-            startingGeocoderContainer.appendChild(wrapper);
-            
-            // Initialize Google Places using new API (AutocompleteSuggestion)
-            if (!google.maps.places.AutocompleteSuggestion) {
-                throw new Error('Google Places AutocompleteSuggestion API not available');
+
+        // Mapbox geocoder is created by `map-new.js` and emits `map:startingLocationChanged`.
+        // We listen and store values in mapTabData fields for saving.
+        if (window.App && typeof App.on === 'function') {
+            if (!startingGeocoderContainer.dataset.startingListenerAdded) {
+                startingGeocoderContainer.dataset.startingListenerAdded = 'true';
+                App.on('map:startingLocationChanged', function(payload) {
+                    if (!payload) return;
+                    saveStartingLocation(payload.address, payload.lat, payload.lng);
+                });
             }
-            
-            // Create dropdown for suggestions
-            var dropdown = document.createElement('div');
-            dropdown.className = 'admin-starting-location-dropdown';
-            dropdown.style.display = 'none';
-            dropdown.style.position = 'absolute';
-            dropdown.style.zIndex = '1000';
-            dropdown.style.backgroundColor = '#fff';
-            dropdown.style.border = '1px solid #ccc';
-            dropdown.style.borderRadius = '4px';
-            dropdown.style.maxHeight = '200px';
-            dropdown.style.overflowY = 'auto';
-            dropdown.style.width = '100%';
-            dropdown.style.marginTop = '2px';
-            dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-            
-            wrapper.style.position = 'relative';
-            wrapper.appendChild(dropdown);
-            
-            // Fetch suggestions using new API
-            var debounceTimer = null;
-            async function fetchSuggestions(query) {
-                if (!query || query.length < 2) {
-                    dropdown.style.display = 'none';
-                    return;
-                }
-                
-                try {
-                    var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-                        input: query
-                    });
-                    
-                    dropdown.innerHTML = '';
-                    
-                    if (!response || !response.suggestions || response.suggestions.length === 0) {
-                        dropdown.style.display = 'none';
-                        return;
-                    }
-                    
-                    response.suggestions.forEach(function(suggestion) {
-                        var prediction = suggestion.placePrediction;
-                        if (!prediction) return;
-                        
-                        var item = document.createElement('div');
-                        item.className = 'admin-starting-location-dropdown-item';
-                        item.style.padding = '8px 12px';
-                        item.style.cursor = 'pointer';
-                        item.style.borderBottom = '1px solid #eee';
-                        
-                        var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
-                        var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
-                        
-                        item.innerHTML = 
-                            '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
-                            (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
-                        
-                        item.addEventListener('mouseenter', function() {
-                            item.style.backgroundColor = '#f5f5f5';
-                        });
-                        item.addEventListener('mouseleave', function() {
-                            item.style.backgroundColor = 'transparent';
-                        });
-                        
-                        item.addEventListener('click', async function() {
-                            try {
-                                var place = prediction.toPlace();
-                                await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress'] });
-                                
-                                if (place && place.location) {
-                                    var placeName = place.formattedAddress || place.displayName || mainText;
-                                    var lat = place.location.lat();
-                                    var lng = place.location.lng();
-                                    input.value = placeName;
-                                    dropdown.style.display = 'none';
-                                    saveStartingLocation(placeName, lat, lng);
-                                }
-                            } catch (err) {
-                                console.error('Place details error:', err);
-                            }
-                        });
-                        
-                        dropdown.appendChild(item);
-                    });
-                    
-                    dropdown.style.display = 'block';
-                } catch (err) {
-                    console.error('Autocomplete error:', err);
-                    dropdown.style.display = 'none';
-                }
-            }
-            
-            // Input event handler with debounce
-            input.addEventListener('input', function() {
-                clearTimeout(debounceTimer);
-                var query = input.value.trim();
-                
-                if (query.length < 2) {
-                    dropdown.style.display = 'none';
-                    return;
-                }
-                
-                debounceTimer = setTimeout(function() {
-                    fetchSuggestions(query);
-                }, 300);
-            });
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.style.display = 'none';
-                }
-            });
-            
-            // Save on blur if user types custom text
-            input.addEventListener('blur', function() {
-                var value = input.value.trim();
-                if (value !== startingAddress) {
-                    // Custom text entered - no coordinates
-                    saveStartingLocation(value, null, null);
-                } else if (startingAddress) {
-                    showAddressDisplay();
-                }
-            });
-            
-            // Show display if we have an address
-            showAddressDisplay();
-        } else {
-            // Google Places not ready - throw error instead of fallback
-            throw new Error('Google Places Autocomplete not available');
         }
+
+        showAddressDisplay();
     }
     
     function initMapImagePicker(containerId, settingKey) {
