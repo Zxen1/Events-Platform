@@ -130,11 +130,15 @@ const MapModule = (function() {
     // Load admin settings for starting position
     await loadSettings();
     
-    // Determine initial style (member setting > admin setting > localStorage > default)
+    // Determine initial style
+    // - Normal members: member setting > admin setting > localStorage > default
+    // - Admin in Admin View Mode: admin setting > localStorage > default (ignore per-user prefs)
     var initialStyle = 'standard';
     if (window.MemberModule && window.MemberModule.getCurrentUser) {
       var member = window.MemberModule.getCurrentUser();
-      if (member && member.map_style) {
+      var isAdmin = !!(member && member.isAdmin === true);
+      var adminView = !!(isAdmin && member.view_mode === 'admin');
+      if (member && member.map_style && !adminView) {
         initialStyle = member.map_style;
       }
     }
@@ -209,11 +213,15 @@ const MapModule = (function() {
       }
       
       // Apply lighting preset (deferred, after map is fully loaded)
-      // Priority: member settings > admin settings > localStorage > default
+      // Priority:
+      // - Normal members: member settings > admin settings > localStorage > default
+      // - Admin in Admin View Mode: admin settings > localStorage > default (ignore per-user prefs)
       var lighting = 'day';
       if (window.MemberModule && window.MemberModule.getCurrentUser) {
         var member = window.MemberModule.getCurrentUser();
-        if (member && member.map_lighting) {
+        var isAdmin = !!(member && member.isAdmin === true);
+        var adminView = !!(isAdmin && member.view_mode === 'admin');
+        if (member && member.map_lighting && !adminView) {
           lighting = member.map_lighting;
         }
       }

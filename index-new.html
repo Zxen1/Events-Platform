@@ -274,6 +274,19 @@
               <label class="admin-settings-field-label">Website Currency</label>
               <div id="adminCurrencyPicker" data-setting-key="website_currency"></div>
             </div>
+            <div class="admin-settings-field">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">View Mode</span>
+              <div class="admin-spin-type-toggles admin-spin-type-toggles--no-margin">
+                <label class="admin-spin-type-option">
+                  <input type="radio" name="adminViewMode" value="admin" class="admin-spin-type-option-input" id="adminViewModeAdmin" />
+                  <span class="admin-spin-type-option-label">Admin</span>
+                </label>
+                <label class="admin-spin-type-option">
+                  <input type="radio" name="adminViewMode" value="member" class="admin-spin-type-option-input" id="adminViewModeMember" />
+                  <span class="admin-spin-type-option-label">Member</span>
+                </label>
+              </div>
+            </div>
             <div class="admin-settings-field admin-settings-field--toggle">
               <span class="admin-settings-field-label admin-settings-field-label--toggle">Maintenance Mode</span>
               <label class="admin-settings-toggle">
@@ -508,13 +521,13 @@
                 </label>
               </div>
               <div id="adminSpinType" class="admin-spin-type-toggles admin-spin-type-toggles--no-margin">
-                <label class="admin-spin-type-option">
-                  <input type="radio" name="adminSpinType" value="everyone" class="admin-spin-type-option-input" />
-                  <span class="admin-spin-type-option-label">Everyone</span>
-                </label>
-                <label class="admin-spin-type-option">
-                  <input type="radio" name="adminSpinType" value="new_users" class="admin-spin-type-option-input" />
-                  <span class="admin-spin-type-option-label">New Users</span>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminSpinType" value="everyone" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Everyone</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminSpinType" value="new_users" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">New Users</span>
                 </label>
               </div>
             </div>
@@ -571,27 +584,27 @@
           </div>
           
           <!-- Map Card Controls -->
-          <div class="admin-panel-field">
-            <div class="admin-option-label">
-              <span>Wait for Map Tiles</span>
-              <label class="admin-switch">
-                <input type="checkbox" id="adminWaitForMapTiles" class="admin-switch-input" checked />
-                <span class="admin-switch-slider"></span>
-              </label>
+            <div class="admin-panel-field">
+              <div class="admin-option-label">
+                <span>Wait for Map Tiles</span>
+                <label class="admin-switch">
+                  <input type="checkbox" id="adminWaitForMapTiles" class="admin-switch-input" checked />
+                  <span class="admin-switch-slider"></span>
+                </label>
+              </div>
             </div>
-          </div>
-          <div class="admin-panel-field admin-panel-field--separator">
-            <div class="admin-option-label">
-              <span>Map Card Display</span>
-              <div class="admin-spin-type-toggles">
-                <label class="admin-spin-type-option">
-                  <input type="radio" name="adminMapCardDisplay" value="hover_only" class="admin-spin-type-option-input" />
-                  <span class="admin-spin-type-option-label">Hover Only</span>
-                </label>
-                <label class="admin-spin-type-option">
-                  <input type="radio" name="adminMapCardDisplay" value="always" class="admin-spin-type-option-input" />
-                  <span class="admin-spin-type-option-label">Always</span>
-                </label>
+            <div class="admin-panel-field admin-panel-field--separator">
+              <div class="admin-option-label">
+                <span>Map Card Display</span>
+                <div class="admin-spin-type-toggles">
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapCardDisplay" value="hover_only" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Hover Only</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapCardDisplay" value="always" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Always</span>
+                  </label>
               </div>
             </div>
           </div>

@@ -575,6 +575,9 @@ const MemberModule = (function() {
                 initialValue: localStorage.getItem('member_language') || getSettingsDefaultCurrency() || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_language', code);
+                    if (currentUser) {
+                        saveMemberSetting('language', code);
+                    }
                 }
             });
             if (languageMenuInstance && languageMenuInstance.element) {
@@ -588,6 +591,9 @@ const MemberModule = (function() {
                 initialValue: localStorage.getItem('member_currency') || getSettingsDefaultCurrency() || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_currency', code);
+                    if (currentUser) {
+                        saveMemberSetting('currency', code);
+                    }
                 }
             });
             if (currencyMenuInstance && currencyMenuInstance.element) {
@@ -3264,7 +3270,15 @@ const MemberModule = (function() {
             avatar: payload.avatar || payload.avatar_file || '',
             username_key: payload.username_key || '',
             type: isAdmin ? 'admin' : (payload.type || 'member'),
-            isAdmin: isAdmin
+            isAdmin: isAdmin,
+            // Preferences (may be null)
+            language: (payload.language !== undefined) ? payload.language : null,
+            currency: (payload.currency !== undefined) ? payload.currency : null,
+            country_code: (payload.country_code !== undefined) ? payload.country_code : null,
+            map_lighting: (payload.map_lighting !== undefined) ? payload.map_lighting : null,
+            map_style: (payload.map_style !== undefined) ? payload.map_style : null,
+            timezone: (payload.timezone !== undefined) ? payload.timezone : null,
+            view_mode: (payload.view_mode !== undefined) ? payload.view_mode : null
         };
     }
 
@@ -3583,6 +3597,7 @@ const MemberModule = (function() {
         getCurrentUser: function() { return currentUser; },
         isLoggedIn: function() { return !!currentUser; },
         isAdmin: function() { return currentUser && currentUser.isAdmin === true; },
+        saveSetting: function(key, value) { return saveMemberSetting(key, value); },
         showStatus: showStatus
     };
 

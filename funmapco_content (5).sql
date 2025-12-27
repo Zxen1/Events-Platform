@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 26, 2025 at 11:28 PM
+-- Generation Time: Dec 27, 2025 at 06:29 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -84,17 +84,17 @@ CREATE TABLE `media` (
 
 CREATE TABLE `members` (
   `id` int(11) NOT NULL,
+  `username` varchar(255) DEFAULT NULL,
+  `username_key` varchar(255) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `username` varchar(255) DEFAULT NULL,
   `avatar_file` varchar(255) DEFAULT NULL,
-  `username_key` varchar(255) DEFAULT NULL,
-  `theme` varchar(20) DEFAULT NULL,
   `language` varchar(10) DEFAULT NULL,
   `currency` varchar(10) DEFAULT NULL,
   `country_code` varchar(2) DEFAULT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
+  `timezone` varchar(64) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -104,10 +104,8 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `email`, `password_hash`, `username`, `avatar_file`, `username_key`, `theme`, `language`, `currency`, `country_code`, `map_lighting`, `map_style`, `created_at`, `backup_json`, `updated_at`) VALUES
-(1, 'test@funmap.com', '$2y$10$7ABTYshHSH4SsxEH2uXwkuv.FLxVlqwkOrtkxFioJFtrK6drCs.Lm', 'TestUser', NULL, 'testuser', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-22 01:27:04', NULL, '2025-10-30 05:10:15'),
-(2, 'wikidata@funmap.com', '$2a$12$/TY3Fr3AjdRMunhyA1TLzuu6DubnXkLaWc7CpdvxGdkWFEeQwNi4G', 'Wikidata / Wikipedia (CC BY-SA 4.0)', 'assets/avatars/wikipedia.png', 'wikidata-/-wikipedia-(cc-by-sa-4.0)', NULL, NULL, NULL, NULL, 'day', 'standard', '2025-10-25 19:00:27', NULL, '2025-11-06 13:07:35'),
-(4, 'shs@funmap.com', '$2y$10$zUWx4bFAUhgzwk81yWDLzuW9gLmyh5zQGVioX/mpFMHhyISNZo1ra', 'hello', '', NULL, NULL, NULL, NULL, NULL, 'day', 'standard', '2025-11-05 21:43:35', NULL, '2025-11-05 21:43:35');
+INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `password_hash`, `avatar_file`, `language`, `currency`, `country_code`, `map_lighting`, `map_style`, `timezone`, `created_at`, `backup_json`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', '2-avatar.png', NULL, NULL, NULL, 'day', 'standard', NULL, '2025-12-27 17:34:01', NULL, '2025-12-27 17:34:01');
 
 -- --------------------------------------------------------
 
@@ -358,7 +356,7 @@ ALTER TABLE `media`
 -- AUTO_INCREMENT for table `members`
 --
 ALTER TABLE `members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `moderation_log`

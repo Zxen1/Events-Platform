@@ -75,6 +75,22 @@ if (isset($input['avatar_file'])) {
   $vals[] = $avatar;
 }
 
+if (isset($input['language'])) {
+  $updates[] = 'language=?';
+  $types .= 's';
+  $vals[] = trim((string)$input['language']);
+}
+if (isset($input['currency'])) {
+  $updates[] = 'currency=?';
+  $types .= 's';
+  $vals[] = trim((string)$input['currency']);
+}
+if (isset($input['country_code'])) {
+  $updates[] = 'country_code=?';
+  $types .= 's';
+  $vals[] = trim((string)$input['country_code']);
+}
+
 // Map preferences (optional; columns must exist in DB)
 if (isset($input['map_lighting'])) {
   $updates[] = 'map_lighting=?';
@@ -85,6 +101,11 @@ if (isset($input['map_style'])) {
   $updates[] = 'map_style=?';
   $types .= 's';
   $vals[] = (string)$input['map_style'];
+}
+if (isset($input['timezone'])) {
+  $updates[] = 'timezone=?';
+  $types .= 's';
+  $vals[] = trim((string)$input['timezone']);
 }
 
 // Password change

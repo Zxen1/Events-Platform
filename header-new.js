@@ -229,7 +229,7 @@ const HeaderModule = (function() {
                     } catch (e) {}
                     
                     if (!filterOpen && !memberOpen && !adminOpen) {
-                        setMode(mode);
+                setMode(mode);
                         return;
                     }
                     

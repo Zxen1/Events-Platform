@@ -108,7 +108,7 @@ const AdminModule = (function() {
        -------------------------------------------------------------------------- */
     
     var fieldRegistry = {};
-
+    
     function requireWebsiteCurrencyFromSettings(settingsObj) {
         var c = settingsObj && settingsObj.website_currency;
         if (!c || typeof c !== 'string' || !c.trim()) {
@@ -1784,6 +1784,46 @@ const AdminModule = (function() {
     var mapTabContainer = null;
     var mapTabInitialized = false;
     var mapTabData = {}; // Cached map settings from database
+
+    function getAdminViewMode() {
+        try {
+            if (!window.MemberModule || typeof MemberModule.getCurrentUser !== 'function') return 'member';
+            var u = MemberModule.getCurrentUser();
+            if (!u || u.isAdmin !== true) return 'member';
+            return (u.view_mode === 'admin' || u.view_mode === 'member') ? u.view_mode : 'member';
+        } catch (e) {
+            return 'member';
+        }
+    }
+
+    function isPreviewingAdminDefaults() {
+        return getAdminViewMode() === 'admin';
+    }
+
+    function applyPreviewMode(mode) {
+        if (!window.MapModule) return;
+        if (mode === 'admin') {
+            if (window.MapModule.setMapStyle && mapTabData && mapTabData.map_style) {
+                window.MapModule.setMapStyle(mapTabData.map_style);
+            }
+            if (window.MapModule.setMapLighting && mapTabData && mapTabData.map_lighting) {
+                window.MapModule.setMapLighting(mapTabData.map_lighting);
+            }
+            return;
+        }
+        // member mode: apply per-user prefs if available
+        try {
+            if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+                var u = MemberModule.getCurrentUser();
+                if (u) {
+                    if (window.MapModule.setMapStyle && u.map_style) window.MapModule.setMapStyle(u.map_style);
+                    if (window.MapModule.setMapLighting && u.map_lighting) window.MapModule.setMapLighting(u.map_lighting);
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
     
     function initMapTab() {
         if (mapTabInitialized) return;
@@ -1882,11 +1922,11 @@ const AdminModule = (function() {
                     btn.classList.add('admin-lighting-button--active');
                     
                     updateField('map.map_lighting', lighting);
-                    if (window.MapModule && window.MapModule.setMapLighting) {
+                    if (isPreviewingAdminDefaults() && window.MapModule && window.MapModule.setMapLighting) {
                         console.log('[Admin] Calling MapModule.setMapLighting');
                         window.MapModule.setMapLighting(lighting);
                     } else {
-                        console.warn('[Admin] MapModule not available or setMapLighting missing');
+                        console.warn('[Admin] Preview mode is Member, or MapModule not available/setMapLighting missing');
                     }
                 });
             });
@@ -1916,11 +1956,11 @@ const AdminModule = (function() {
                     btn.classList.add('admin-style-button--active');
                     
                     updateField('map.map_style', style);
-                    if (window.MapModule && window.MapModule.setMapStyle) {
+                    if (isPreviewingAdminDefaults() && window.MapModule && window.MapModule.setMapStyle) {
                         console.log('[Admin] Calling MapModule.setMapStyle');
                         window.MapModule.setMapStyle(style);
                     } else {
-                        console.warn('[Admin] MapModule not available or setMapStyle missing');
+                        console.warn('[Admin] Preview mode is Member, or MapModule not available/setMapStyle missing');
                     }
                 });
             });
@@ -2125,7 +2165,7 @@ const AdminModule = (function() {
         
         var showAddressDisplay = function() {
             // Do not hide the Mapbox geocoder container. The display toggle caused broken/squeezed layout and typing freezes.
-            if (startingAddressDisplay) startingAddressDisplay.hidden = true;
+                if (startingAddressDisplay) startingAddressDisplay.hidden = true;
         };
         
         // Address display is disabled; keep input active/visible.
@@ -2145,7 +2185,7 @@ const AdminModule = (function() {
             
             showAddressDisplay();
         };
-
+        
         // Mapbox geocoder is created by `map-new.js` and emits `map:startingLocationChanged`.
         // We listen and store values in mapTabData fields for saving.
         if (window.App && typeof App.on === 'function') {
@@ -2158,7 +2198,7 @@ const AdminModule = (function() {
             }
         }
 
-        showAddressDisplay();
+                    showAddressDisplay();
     }
     
     function initMapImagePicker(containerId, settingKey) {
@@ -2440,6 +2480,33 @@ const AdminModule = (function() {
     
     function attachSettingsHandlers() {
         if (!settingsContainer) return;
+
+        // View Mode radios (admin-only preview switch)
+        var viewModeRadios = settingsContainer.querySelectorAll('input[name="adminViewMode"]');
+        if (viewModeRadios.length) {
+            var initialMode = getAdminViewMode();
+            viewModeRadios.forEach(function(r) {
+                r.checked = (r.value === initialMode);
+                r.addEventListener('change', function() {
+                    if (!r.checked) return;
+                    var mode = (r.value === 'admin') ? 'admin' : 'member';
+                    // Persist to admin row (per-user, not global)
+                    if (window.MemberModule && typeof MemberModule.saveSetting === 'function') {
+                        MemberModule.saveSetting('view_mode', mode);
+                    }
+                    // Update local cached user so subsequent checks work immediately
+                    try {
+                        if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+                            var u = MemberModule.getCurrentUser();
+                            if (u) u.view_mode = mode;
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                    applyPreviewMode(mode);
+                });
+            });
+        }
         
         // Attach accordion toggles (Image Manager + Image Files)
         settingsContainer.querySelectorAll('.admin-settings-imagemanager-accordion').forEach(function(acc) {

@@ -52,17 +52,18 @@ try {
     $stmt = null;
     $avatarCol = null;
 
-    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+    $extraCols = $table === 'admins' ? ', view_mode' : '';
+    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, language, currency, country_code, map_lighting, map_style, timezone{$extraCols}, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
       $avatarCol = 'avatar_file';
     } else {
-      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, language, currency, country_code, map_lighting, map_style, timezone{$extraCols}, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
       $stmt = $db->prepare($sqlWithAvatarUrl);
       if ($stmt) {
         $avatarCol = 'avatar_url';
       } else {
-        $sqlNoAvatar = "SELECT id, email, username, username_key, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+        $sqlNoAvatar = "SELECT id, email, username, username_key, language, currency, country_code, map_lighting, map_style, timezone{$extraCols}, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $db->prepare($sqlNoAvatar);
         if (!$stmt) return null;
       }
@@ -82,7 +83,14 @@ try {
         'email' => (string)$row['email'],
         'username'  => (string)$row['username'],
         'username_key' => isset($row['username_key']) ? (string)$row['username_key'] : '',
-        'avatar' => ($avatarCol && isset($row[$avatarCol])) ? (string)$row[$avatarCol] : ''
+        'avatar' => ($avatarCol && isset($row[$avatarCol])) ? (string)$row[$avatarCol] : '',
+        'language' => isset($row['language']) ? (string)$row['language'] : null,
+        'currency' => isset($row['currency']) ? (string)$row['currency'] : null,
+        'country_code' => isset($row['country_code']) ? (string)$row['country_code'] : null,
+        'map_lighting' => isset($row['map_lighting']) ? (string)$row['map_lighting'] : null,
+        'map_style' => isset($row['map_style']) ? (string)$row['map_style'] : null,
+        'timezone' => isset($row['timezone']) ? (string)$row['timezone'] : null,
+        'view_mode' => ($table === 'admins' && isset($row['view_mode'])) ? (string)$row['view_mode'] : null
       ]
     ];
   };
