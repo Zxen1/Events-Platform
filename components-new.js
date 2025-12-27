@@ -3345,6 +3345,22 @@ const CurrencyComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
 
+        // Clicking anywhere on the button opens the menu (if closed)
+        // (Arrow has its own handler; it stops propagation so it won't double-trigger.)
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                if (e) e.stopPropagation();
+                if (!menu.classList.contains('fieldset-menu--open')) {
+                    MenuManager.closeAll(menu);
+                    applyOpenState(true);
+                }
+                if (btnInput) {
+                    btnInput.focus();
+                    btnInput.select();
+                }
+            });
+        }
+
         // Input events
         btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
@@ -3504,6 +3520,21 @@ const CurrencyComponent = (function(){
 
         // Register with MenuManager
         MenuManager.register(menu);
+
+        // Clicking anywhere on the button opens the menu (if closed)
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                if (e) e.stopPropagation();
+                if (!menu.classList.contains('admin-currency-wrapper--open')) {
+                    MenuManager.closeAll(menu);
+                    applyOpenState(true);
+                }
+                if (btnInput) {
+                    btnInput.focus();
+                    btnInput.select();
+                }
+            });
+        }
 
         // Input events
         btnInput.addEventListener('focus', function(e) {
@@ -3715,6 +3746,22 @@ const LanguageMenuComponent = (function(){
 
         // Register with MenuManager
         MenuManager.register(menu);
+
+        // Clicking anywhere on the button opens the menu (if closed)
+        // (Arrow has its own handler; it stops propagation so it won't double-trigger.)
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                if (e) e.stopPropagation();
+                if (!menu.classList.contains('fieldset-menu--open')) {
+                    MenuManager.closeAll(menu);
+                    applyOpenState(true);
+                }
+                if (btnInput) {
+                    btnInput.focus();
+                    btnInput.select();
+                }
+            });
+        }
 
         // Input events
         btnInput.addEventListener('focus', function(e) {
