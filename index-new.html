@@ -762,20 +762,20 @@
                 <div id="member-supporter-message" class="member-supporter-message" data-message-key="msg_member_supporter_message"></div>
 
                 <div class="member-supporter-payment">
+                  <div id="member-supporter-payment-label" class="member-auth-panel-label">Support Amount</div>
                   <div class="member-supporter-payment-presets" aria-label="Support amount presets">
-                    <button type="button" class="member-supporter-payment-preset" data-amount="2">$2</button>
-                    <button type="button" class="member-supporter-payment-preset" data-amount="5">$5</button>
-                    <button type="button" class="member-supporter-payment-preset" data-amount="10">$10</button>
+                    <button type="button" class="member-button-auth member-supporter-payment-preset" data-amount="2">2</button>
+                    <button type="button" class="member-button-auth member-supporter-payment-preset" data-amount="5">5</button>
+                    <button type="button" class="member-button-auth member-supporter-payment-preset" data-amount="10">10</button>
+                    <input type="text" id="member-supporter-payment-custom" class="member-auth-panel-input member-supporter-payment-custom" inputmode="decimal" autocomplete="off" placeholder="Custom">
                   </div>
-                  <label class="member-auth-panel-label" for="member-supporter-payment-custom">Custom</label>
-                  <input type="text" id="member-supporter-payment-custom" class="member-auth-panel-input" inputmode="decimal" autocomplete="off">
                   <input type="hidden" id="member-supporter-payment-amount" name="supportAmount" value="">
                 </div>
 
                 <label class="member-auth-panel-label" for="member-register-email">Email</label>
                 <input type="email" id="member-register-email" class="member-auth-panel-input" name="registerEmail" autocomplete="email">
 
-                <button type="button" id="member-supporter-join-toggle" class="member-supporter-join-toggle">Join (optional)</button>
+                <button type="button" id="member-supporter-join-toggle" class="member-button-auth member-supporter-join-toggle">Join (optional)</button>
 
                 <div id="member-supporter-join-fields" class="member-supporter-join-fields" hidden>
                   <label class="member-auth-panel-label" for="member-register-name">Username</label>

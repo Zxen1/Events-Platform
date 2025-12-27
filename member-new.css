@@ -54,18 +54,15 @@
 }
 
 .member-supporter-payment-presets {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   margin-bottom: 10px;
 }
 
 .member-supporter-payment-preset {
-  flex: 1;
+  width: 100%;
   height: var(--control-h);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
 }
 
 .member-supporter-payment-preset--selected {
@@ -73,14 +70,12 @@
   background: rgba(59, 130, 245, 0.15);
 }
 
+.member-supporter-payment-custom {
+  margin: 0;
+}
+
 .member-supporter-join-toggle {
-  width: 100%;
-  height: var(--control-h);
   margin: 10px 0;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
 }
 
 .member-supporter-join-fields {

@@ -80,6 +80,7 @@ const MemberModule = (function() {
     var supporterPresetButtons = [];
     var supporterCustomAmountInput = null;
     var supporterAmountHiddenInput = null;
+    var supporterPaymentLabelEl = null;
     var profileAvatar = null;
     var profileName = null;
     var profileEmail = null;
@@ -230,6 +231,7 @@ const MemberModule = (function() {
         supporterJoinFieldsEl = document.getElementById('member-supporter-join-fields');
         supporterCustomAmountInput = document.getElementById('member-supporter-payment-custom');
         supporterAmountHiddenInput = document.getElementById('member-supporter-payment-amount');
+        supporterPaymentLabelEl = document.getElementById('member-supporter-payment-label');
         supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporter-payment-preset'));
         
         profileAvatar = document.getElementById('member-profile-avatar');
@@ -314,7 +316,7 @@ const MemberModule = (function() {
         if (supporterJoinToggleBtn) {
             supporterJoinToggleBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                setSupporterJoinExpanded(true);
+                setSupporterJoinExpanded(supporterJoinFieldsEl ? !!supporterJoinFieldsEl.hidden : true);
             });
         }
 
@@ -2989,6 +2991,7 @@ const MemberModule = (function() {
             // Support tab opened
             setSupporterJoinExpanded(false);
             loadSupporterMessage();
+            syncSupporterCurrencyUi();
         }
         
         authForm.dataset.active = target;
@@ -3003,6 +3006,30 @@ const MemberModule = (function() {
         supporterJoinFieldsEl.classList.toggle('member-supporter-join-fields--open', !!isExpanded);
     }
 
+    function getSiteCurrencyCode() {
+        try {
+            if (!window.App || typeof App.getState !== 'function') return null;
+            var settings = App.getState('settings') || {};
+            var code = settings.website_currency || settings.site_currency || settings.siteCurrency || null;
+            if (!code) return null;
+            code = String(code).trim();
+            return code ? code : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function syncSupporterCurrencyUi() {
+        var code = getSiteCurrencyCode();
+        if (!code) return;
+        if (supporterPaymentLabelEl) {
+            supporterPaymentLabelEl.textContent = 'Support Amount (' + code + ')';
+        }
+        if (supporterCustomAmountInput) {
+            supporterCustomAmountInput.placeholder = 'Custom (' + code + ')';
+        }
+    }
+
     function setSupporterAmount(amount, options) {
         options = options || {};
         var value = String(amount || '').trim();
@@ -3013,6 +3040,11 @@ const MemberModule = (function() {
             var n = parseFloat(value);
             if (isFinite(n) && n < 1) {
                 value = '1';
+            }
+            // Format to 2 decimals when it's a valid number (so it reads like money).
+            if (isFinite(n)) {
+                var nn = parseFloat(value);
+                if (isFinite(nn)) value = nn.toFixed(2);
             }
         }
         if (supporterAmountHiddenInput) supporterAmountHiddenInput.value = value;
@@ -3218,7 +3250,7 @@ const MemberModule = (function() {
         }
 
         // Basic email format check (server still validates too)
-        if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
+        if (emailInput && typeof emailInput.checkValidity === 'function' && !emailInput.checkValidity()) {
             showFieldError('msg_auth_register_email_invalid', {}, emailInput);
             return;
         }
