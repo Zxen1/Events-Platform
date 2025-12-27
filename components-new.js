@@ -3847,6 +3847,20 @@ const PhonePrefixComponent = (function(){
         var opts = menu.querySelector('.fieldset-menu-options');
         var btnImg = menu.querySelector('.fieldset-menu-button-image');
         var btnInput = menu.querySelector('.fieldset-menu-button-input');
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('fieldset-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+        }
+
+        // Required by MenuManager (strict)
+        menu.__menuIsOpen = function() {
+            return menu.classList.contains('fieldset-menu--open');
+        };
+        menu.__menuApplyOpenState = applyOpenState;
 
         // Store all option elements for filtering
         var allOptions = [];
