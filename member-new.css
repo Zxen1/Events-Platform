@@ -28,6 +28,11 @@
   color: #fff;
 }
 
+.member-status-message--success {
+  background: #2ea060;
+  color: #fff;
+}
+
 .member-status-message--show {
   opacity: 1;
   transform: translate(-50%, 0);

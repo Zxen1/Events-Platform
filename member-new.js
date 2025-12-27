@@ -1333,8 +1333,13 @@ const MemberModule = (function() {
                   
                   updateProfileSaveState();
                   updateHeaderSaveDiscardState();
-                  if (window.ToastComponent && ToastComponent.showSuccess) {
+                  // Always show GREEN feedback on successful save
+                  if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
                       ToastComponent.showSuccess('Saved');
+                  } else if (window.ToastComponent && typeof ToastComponent.show === 'function') {
+                      ToastComponent.show('Saved', 'success');
+                  } else {
+                      showStatus('Saved', { success: true });
                   }
 
                   if (typeof onSuccessNext === 'function') {
@@ -3569,10 +3574,12 @@ const MemberModule = (function() {
         
         statusMessage.textContent = message || '';
         statusMessage.setAttribute('aria-hidden', 'false');
-        statusMessage.classList.remove('member-status-message--error', 'member-status-message--show');
+        statusMessage.classList.remove('member-status-message--error', 'member-status-message--success', 'member-status-message--show');
         
         if (options.error) {
             statusMessage.classList.add('member-status-message--error');
+        } else if (options.success) {
+            statusMessage.classList.add('member-status-message--success');
         }
         
         if (statusTimer) {
