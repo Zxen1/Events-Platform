@@ -1019,8 +1019,8 @@
 
 .suggestions.admin-mapbox-geocoder-suggestions--starting {
   font-size: 14px !important;
-  background: #1a1a2e;
-  border: 1px solid var(--border);
+  background: #1a1a2e !important;
+  border: 1px solid var(--border) !important;
   border-radius: 5px;
   margin-top: 4px;
 }
@@ -1028,14 +1028,14 @@
 .admin-mapbox-geocoder-suggestion-link--starting {
   font-size: 14px !important;
   font-weight: 400 !important;
-  color: #fff;
-  background: transparent;
+  color: #fff !important;
+  background: transparent !important;
 }
 
 .admin-mapbox-geocoder-suggestion-link--starting:hover,
 .admin-mapbox-geocoder-suggestion-link--active {
-  background: rgba(46, 58, 114, 0.5);
-  color: #fff;
+  background: rgba(46, 58, 114, 0.5) !important;
+  color: #fff !important;
 }
 
 .mapboxgl-ctrl-geocoder--icon.admin-mapbox-geocoder-icon--starting,
@@ -1271,6 +1271,7 @@
 
 .admin-slider-value-input {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .admin-slider-value-input::-webkit-inner-spin-button,
@@ -1561,6 +1562,7 @@
   font-size: 14px;
   caret-color: #fff;
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .admin-checkout-option-field-input-number::-webkit-outer-spin-button,
@@ -1641,6 +1643,7 @@
   width: auto;
   flex: 0 0 100px;
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .admin-checkout-option-calculator-input::-webkit-outer-spin-button,
@@ -2394,11 +2397,6 @@
 
 .admin-settings-toggle-slider--on::before {
   transform: translateX(20px);
-}
-
-/* Image Picker Fields */
-.admin-settings-field--imagepicker {
-  /* Container styling if needed */
 }
 
 /* ============================================================================

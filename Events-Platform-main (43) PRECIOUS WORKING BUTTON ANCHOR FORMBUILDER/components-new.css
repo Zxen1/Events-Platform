@@ -2204,7 +2204,6 @@
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    font-family: Roboto, Arial, sans-serif;
 }
 
 .filter-mapcontrol-geocoder-dropdown-item {
@@ -2335,7 +2334,6 @@
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    font-family: Roboto, Arial, sans-serif;
 }
 
 .map-mapcontrol-geocoder-dropdown-item {
@@ -2467,7 +2465,6 @@
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    font-family: Roboto, Arial, sans-serif;
 }
 
 .welcome-mapcontrol-geocoder-dropdown-item {
