@@ -939,6 +939,7 @@
   line-height: 1;
   white-space: nowrap;
   text-transform: none;
+  display: none;
 }
 
 .admin-style-button-text {
@@ -1003,6 +1004,7 @@
   line-height: 36px;
   padding: 0 12px !important;
   color: #fff !important;
+  caret-color: #fff !important;
   background: transparent !important;
   border: none !important;
   border-radius: 5px;

@@ -545,7 +545,7 @@ const MapModule = (function() {
     const geocoderRoot = container.querySelector('.mapboxgl-ctrl-geocoder');
     if (geocoderRoot) {
       geocoderRoot.classList.add('admin-mapbox-geocoder--starting');
-      const input = geocoderRoot.querySelector('input.mapboxgl-ctrl-geocoder--input');
+      const input = geocoderRoot.querySelector('input.mapboxgl-ctrl-geocoder--input') || geocoderRoot.querySelector('input');
       if (input) input.classList.add('admin-mapbox-geocoder-input--starting');
 
       const icons = geocoderRoot.querySelectorAll('.mapboxgl-ctrl-geocoder--icon, .mapboxgl-ctrl-geocoder--icon-loading, .mapboxgl-ctrl-geocoder--icon-search');
