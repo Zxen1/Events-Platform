@@ -3220,6 +3220,20 @@ const CurrencyComponent = (function(){
         var btnInput = menu.querySelector('.fieldset-menu-button-input');
         var arrow = menu.querySelector('.fieldset-menu-button-arrow');
 
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('fieldset-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+        }
+
+        // Required by MenuManager (strict)
+        menu.__menuIsOpen = function() {
+            return menu.classList.contains('fieldset-menu--open');
+        };
+        menu.__menuApplyOpenState = applyOpenState;
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+
         // Compact variant styling (no descendant selectors)
         btn.classList.add('fieldset-menu-button--compact');
         btnInput.classList.add('fieldset-menu-button-input--compact');
