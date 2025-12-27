@@ -572,7 +572,7 @@ const MemberModule = (function() {
             languageMenuContainer.innerHTML = '';
             languageMenuInstance = CurrencyComponent.buildFullMenu({
                 container: panelContent,
-                initialValue: localStorage.getItem('member_language') || getSettingsDefaultCurrency() || null,
+                initialValue: localStorage.getItem('member_language') || (currentUser && currentUser.language) || getSettingsDefaultCurrency() || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_language', code);
                     if (currentUser) {
@@ -588,7 +588,7 @@ const MemberModule = (function() {
             currencyMenuContainer.innerHTML = '';
             currencyMenuInstance = CurrencyComponent.buildFullMenu({
                 container: panelContent,
-                initialValue: localStorage.getItem('member_currency') || getSettingsDefaultCurrency() || null,
+                initialValue: localStorage.getItem('member_currency') || (currentUser && currentUser.currency) || getSettingsDefaultCurrency() || null,
                 onSelect: function(code) {
                     localStorage.setItem('member_currency', code);
                     if (currentUser) {
@@ -602,6 +602,22 @@ const MemberModule = (function() {
         }).catch(function(err) {
             console.warn('[Member] Failed to load currency data for pickers', err);
         });
+    }
+
+    function syncLocalProfilePrefsFromUser(user) {
+        try {
+            if (!user) return;
+            if (user.language) localStorage.setItem('member_language', String(user.language));
+            if (user.currency) localStorage.setItem('member_currency', String(user.currency));
+            if (user.country_code) localStorage.setItem('member_country_code', String(user.country_code));
+            if (user.timezone) localStorage.setItem('member_timezone', String(user.timezone));
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    function getDefaultCurrencyForForms() {
+        return localStorage.getItem('member_currency') || null;
     }
 
     function setAvatarForTarget(url) {
@@ -2114,7 +2130,7 @@ const MemberModule = (function() {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
                     container: formFields,
-                    defaultCurrency: localStorage.getItem('member_currency') || null
+                    defaultCurrency: getDefaultCurrencyForForms()
                 });
                 
                 // Add location quantity selector to location fieldset
@@ -2316,7 +2332,7 @@ const MemberModule = (function() {
                 fieldIndex: 0,
                 locationNumber: i,
                 container: locationSection,
-                defaultCurrency: localStorage.getItem('member_currency') || null
+                defaultCurrency: getDefaultCurrencyForForms()
             });
             
             // Built fieldset for location
@@ -2334,7 +2350,7 @@ const MemberModule = (function() {
                     fieldIndex: fieldIndex,
                     locationNumber: i,
                     container: locationSection,
-                    defaultCurrency: localStorage.getItem('member_currency') || null
+                    defaultCurrency: getDefaultCurrencyForForms()
                 });
                 
                 locationSection.appendChild(fieldset);
@@ -2996,6 +3012,7 @@ const MemberModule = (function() {
             var payload = result.user || {};
             payload.role = result.role; // Merge role from top level into payload
             currentUser = buildUserObject(payload, username);
+            syncLocalProfilePrefsFromUser(currentUser);
             
             storeCurrent(currentUser);
             render();
