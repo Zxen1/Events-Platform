@@ -4852,15 +4852,17 @@ const CheckoutOptionsComponent = (function(){
             var L = parseInt(locCount, 10) || 1;
             if (L < 1) L = 1;
 
-            var baseRate = null;
-            if (d >= 365) {
-                baseRate = (discountRate !== null && isFinite(discountRate)) ? discountRate : (basicRate !== null && isFinite(basicRate) ? basicRate : null);
-            } else {
-                baseRate = (basicRate !== null && isFinite(basicRate)) ? basicRate : null;
+            if (basicRate === null || !isFinite(basicRate)) {
+                throw new Error('CheckoutOptionsComponent: checkout_basic_day_rate is required');
+            }
+            if (discountRate === null || !isFinite(discountRate)) {
+                throw new Error('CheckoutOptionsComponent: checkout_discount_day_rate is required');
             }
 
-            var durationCharge = baseRate !== null ? (baseRate * d) : 0;
-            var extraLocRate = (discountRate !== null && isFinite(discountRate)) ? discountRate : (basicRate !== null && isFinite(basicRate) ? basicRate : 0);
+            var baseRate = (d >= 365) ? discountRate : basicRate;
+
+            var durationCharge = baseRate * d;
+            var extraLocRate = discountRate;
             var extraLocCharge = (L > 1) ? ((L - 1) * extraLocRate * d) : 0;
 
             var variable = durationCharge + extraLocCharge;
@@ -4891,17 +4893,24 @@ const CheckoutOptionsComponent = (function(){
             }
             if (maxDays <= 0) return { hasDates: false, total: (flagfall || 0), primaryDays: null };
 
-            // Primary venue uses standard selection (B for <365, D for >=365 when available)
+            if (basicRate === null || !isFinite(basicRate)) {
+                throw new Error('CheckoutOptionsComponent: checkout_basic_day_rate is required');
+            }
+            if (discountRate === null || !isFinite(discountRate)) {
+                throw new Error('CheckoutOptionsComponent: checkout_discount_day_rate is required');
+            }
+
+            // Primary venue uses standard selection (B for <365, D for >=365)
             var primaryRate = null;
             if (maxDays >= 365) {
-                primaryRate = (discountRate !== null && isFinite(discountRate)) ? discountRate : (basicRate !== null && isFinite(basicRate) ? basicRate : null);
+                primaryRate = discountRate;
             } else {
-                primaryRate = (basicRate !== null && isFinite(basicRate)) ? basicRate : null;
+                primaryRate = basicRate;
             }
-            var primaryCharge = primaryRate !== null ? (primaryRate * maxDays) : 0;
+            var primaryCharge = primaryRate * maxDays;
 
-            // Other venues always use discount day rate (fallback to basic if discount is unavailable)
-            var otherRate = (discountRate !== null && isFinite(discountRate)) ? discountRate : (basicRate !== null && isFinite(basicRate) ? basicRate : 0);
+            // Other venues always use discount day rate
+            var otherRate = discountRate;
             var othersCharge = 0;
             for (var i = 0; i < venueDays.length; i++) {
                 if (i === primaryIdx) continue;
@@ -4918,28 +4927,40 @@ const CheckoutOptionsComponent = (function(){
         group.dataset.isEvent = isEvent ? 'true' : 'false';
         
         if (!checkoutOptions || checkoutOptions.length === 0) {
-            var placeholder = document.createElement('div');
-            placeholder.className = 'member-checkout-placeholder';
-            placeholder.textContent = 'No checkout options configured.';
-            group.appendChild(placeholder);
-            containerEl.appendChild(group);
-            return { element: group, update: function() {} };
+            throw new Error('CheckoutOptionsComponent.create: checkoutOptions is empty');
         }
         
         var hasDates = isEvent ? (Array.isArray(eventVenueDays) && eventVenueDays.length === locationCount && eventVenueDays.every(function(d){ return (parseInt(d, 10) || 0) > 0; })) : true;
         
         checkoutOptions.forEach(function(option, optionIndex) {
+            if (!option) {
+                throw new Error('CheckoutOptionsComponent.create: checkoutOptions contains null/undefined option');
+            }
+            if (option.id === undefined || option.id === null || String(option.id).trim() === '') {
+                throw new Error('CheckoutOptionsComponent.create: option.id is required');
+            }
+            if (!option.checkout_title || String(option.checkout_title).trim() === '') {
+                throw new Error('CheckoutOptionsComponent.create: option.checkout_title is required for option id ' + String(option.id));
+            }
+
             var flagfallPrice = (parseFloat(option.checkout_flagfall_price) || 0);
             var basicDayRate = option.checkout_basic_day_rate !== undefined && option.checkout_basic_day_rate !== null 
                 ? parseFloat(option.checkout_basic_day_rate) : null;
             var discountDayRate = option.checkout_discount_day_rate !== undefined && option.checkout_discount_day_rate !== null 
                 ? parseFloat(option.checkout_discount_day_rate) : null;
-            var title = option.checkout_title || 'Untitled';
-            var description = option.checkout_description || '';
+            if (basicDayRate === null || !isFinite(basicDayRate)) {
+                throw new Error('CheckoutOptionsComponent.create: checkout_basic_day_rate is required for option id ' + String(option.id));
+            }
+            if (discountDayRate === null || !isFinite(discountDayRate)) {
+                throw new Error('CheckoutOptionsComponent.create: checkout_discount_day_rate is required for option id ' + String(option.id));
+            }
+
+            var title = String(option.checkout_title).trim();
+            var description = option.checkout_description ? String(option.checkout_description) : '';
             
             var card = document.createElement('label');
             card.className = 'member-checkout-option' + (hasDates ? '' : ' member-checkout-option--disabled');
-            card.dataset.optionId = String(option.id || '');
+            card.dataset.optionId = String(option.id);
             card.dataset.flagfall = String(flagfallPrice);
             card.dataset.basicRate = String(basicDayRate !== null ? basicDayRate : '');
             card.dataset.discountRate = String(discountDayRate !== null ? discountDayRate : '');
@@ -4951,9 +4972,9 @@ const CheckoutOptionsComponent = (function(){
                 radio.type = 'radio';
                 radio.className = 'member-checkout-option-radio';
                 radio.name = groupName;
-                radio.value = String(option.id || '');
+                radio.value = String(option.id);
                 radio.id = baseId + '-checkout-' + optionIndex;
-                radio.dataset.optionId = String(option.id || '');
+                radio.dataset.optionId = String(option.id);
                 if (optionIndex === 0 && hasDates) radio.checked = true;
                 radio.required = true;
                 radio.disabled = !hasDates;
@@ -5015,8 +5036,8 @@ const CheckoutOptionsComponent = (function(){
                 radio30.type = 'radio';
                 radio30.className = 'member-checkout-duration-radio';
                 radio30.name = groupName;
-                radio30.value = (option.id || '') + '-30';
-                radio30.dataset.optionId = String(option.id || '');
+                radio30.value = String(option.id) + '-30';
+                radio30.dataset.optionId = String(option.id);
                 radio30.dataset.days = '30';
                 radio30.dataset.price = price30.toFixed(2);
                 radio30.required = true;
@@ -5034,8 +5055,8 @@ const CheckoutOptionsComponent = (function(){
                 radio365.type = 'radio';
                 radio365.className = 'member-checkout-duration-radio';
                 radio365.name = groupName;
-                radio365.value = (option.id || '') + '-365';
-                radio365.dataset.optionId = String(option.id || '');
+                radio365.value = String(option.id) + '-365';
+                radio365.dataset.optionId = String(option.id);
                 radio365.dataset.days = '365';
                 radio365.dataset.price = price365.toFixed(2);
                 radio365.required = true;

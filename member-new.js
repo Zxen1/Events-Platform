@@ -2121,7 +2121,7 @@ const MemberModule = (function() {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
                     container: formFields,
-                    defaultCurrency: localStorage.getItem('member_currency') || siteCurrency || null
+                    defaultCurrency: localStorage.getItem('member_currency') || null
                 });
                 
                 // Add location quantity selector to location fieldset
@@ -2323,7 +2323,7 @@ const MemberModule = (function() {
                 fieldIndex: 0,
                 locationNumber: i,
                 container: locationSection,
-                defaultCurrency: localStorage.getItem('member_currency') || siteCurrency || null
+                defaultCurrency: localStorage.getItem('member_currency') || null
             });
             
             // Built fieldset for location
@@ -2341,7 +2341,7 @@ const MemberModule = (function() {
                     fieldIndex: fieldIndex,
                     locationNumber: i,
                     container: locationSection,
-                    defaultCurrency: localStorage.getItem('member_currency') || siteCurrency || null
+                    defaultCurrency: localStorage.getItem('member_currency') || null
                 });
                 
                 locationSection.appendChild(fieldset);

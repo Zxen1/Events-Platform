@@ -286,7 +286,10 @@ const MarqueeModule = (function() {
     // Title line
     const titleLine = document.createElement('div');
     titleLine.className = 'marquee-slide-info-title';
-    titleLine.textContent = escapeHtml(post.title || 'Untitled');
+    if (!post || !post.title || String(post.title).trim() === '') {
+      throw new Error('[Marquee] Post is missing required title');
+    }
+    titleLine.textContent = escapeHtml(String(post.title).trim());
     info.appendChild(titleLine);
     
     // Category line with icon
@@ -317,7 +320,11 @@ const MarqueeModule = (function() {
     locLine.className = 'marquee-slide-info-loc';
     locLine.innerHTML = '<span class="marquee-badge" title="Location">📍</span>';
     const locText = document.createElement('span');
-    locText.textContent = escapeHtml(post.location || post.venue || 'Location TBA');
+    const loc = post.location || post.venue;
+    if (!loc || String(loc).trim() === '') {
+      throw new Error('[Marquee] Post is missing required location/venue text');
+    }
+    locText.textContent = escapeHtml(String(loc).trim());
     locLine.appendChild(locText);
     info.appendChild(locLine);
     

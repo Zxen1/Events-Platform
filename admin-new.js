@@ -108,6 +108,14 @@ const AdminModule = (function() {
        -------------------------------------------------------------------------- */
     
     var fieldRegistry = {};
+
+    function requireWebsiteCurrencyFromSettings(settingsObj) {
+        var c = settingsObj && settingsObj.website_currency;
+        if (!c || typeof c !== 'string' || !c.trim()) {
+            throw new Error('[Admin] Missing required settings.website_currency');
+        }
+        return c.trim().toUpperCase();
+    }
     
     // Register a simple field (text input, checkbox, dropdown, etc.)
     function registerField(fieldId, originalValue) {
@@ -2602,7 +2610,7 @@ const AdminModule = (function() {
 
                     // Render checkout options and register for tracking
                     if (data.checkout_options && Array.isArray(data.checkout_options)) {
-                        renderCheckoutOptions(data.checkout_options, settingsData.website_currency || 'USD');
+                        renderCheckoutOptions(data.checkout_options, requireWebsiteCurrencyFromSettings(settingsData));
                         // Register as composite field for change tracking
                         registerComposite('checkout_options', getCheckoutOptionsFromUI);
                     }
@@ -2866,16 +2874,29 @@ const AdminModule = (function() {
         var container = document.getElementById('adminCheckoutTiers');
         if (!container) return;
 
+        if (!siteCurrency || typeof siteCurrency !== 'string' || !siteCurrency.trim()) {
+            throw new Error('[Admin] renderCheckoutOptions: siteCurrency is required');
+        }
+
         // Store currency on container for dynamic updates
-        container.dataset.currency = siteCurrency;
+        container.dataset.currency = siteCurrency.trim().toUpperCase();
         container.innerHTML = '';
 
         if (!checkoutOptions || !checkoutOptions.length) {
-            container.innerHTML = '<div class="admin-checkout-option-empty">No checkout options configured.</div>';
-            return;
+            throw new Error('[Admin] No checkout options configured');
         }
 
         checkoutOptions.forEach(function(option, index) {
+            if (!option) {
+                throw new Error('[Admin] renderCheckoutOptions: checkoutOptions contains null/undefined option');
+            }
+            if (option.id === undefined || option.id === null || String(option.id).trim() === '') {
+                throw new Error('[Admin] renderCheckoutOptions: option.id is required');
+            }
+            if (!option.checkout_title || String(option.checkout_title).trim() === '') {
+                throw new Error('[Admin] renderCheckoutOptions: option.checkout_title is required for option id ' + String(option.id));
+            }
+
             var accordion = document.createElement('div');
             accordion.className = 'admin-checkout-accordion';
             accordion.dataset.id = option.id;
@@ -2894,7 +2915,7 @@ const AdminModule = (function() {
             // Header text (title)
             var headerText = document.createElement('span');
             headerText.className = 'admin-checkout-accordion-header-text';
-            headerText.textContent = option.checkout_title || 'Untitled';
+            headerText.textContent = String(option.checkout_title).trim();
 
             // Header badge
             var headerBadge = document.createElement('span');
@@ -2923,7 +2944,7 @@ const AdminModule = (function() {
             titleInput.type = 'text';
             titleInput.className = 'admin-checkout-accordion-editpanel-input admin-checkout-option-title';
             titleInput.classList.add('admin-checkout-accordion-editpanel-input--title');
-            titleInput.value = option.checkout_title || '';
+            titleInput.value = String(option.checkout_title).trim();
             titleInput.placeholder = 'Title';
 
             // More button (3-dot menu) - inside edit panel like formbuilder
@@ -3045,7 +3066,7 @@ const AdminModule = (function() {
 
             // Title input updates header text
             titleInput.addEventListener('input', function() {
-                headerText.textContent = titleInput.value.trim() || 'Untitled';
+                headerText.textContent = titleInput.value.trim();
                 markDirty();
             });
 
@@ -3134,7 +3155,11 @@ const AdminModule = (function() {
                 if (!calcDaysInput || !calcTotalSpan) return;
                 
                 // Get current currency from container (updates when site currency changes)
-                var currency = container.dataset.currency || 'USD';
+                var currency = container.dataset.currency;
+                if (!currency || typeof currency !== 'string' || !currency.trim()) {
+                    throw new Error('[Admin] Checkout calculator missing container.dataset.currency');
+                }
+                currency = currency.trim().toUpperCase();
 
                 var days = parseFloat(calcDaysInput.value) || 0;
                 if (days <= 0) {
@@ -3157,11 +3182,14 @@ const AdminModule = (function() {
                     dayRate = basicRateValue !== '' ? parseFloat(basicRateValue) : null;
                 }
 
-                // Extra locations always use discount rate (fallback to selected dayRate if discount is N/A)
+                // Extra locations always use discount rate (required if locations > 1)
                 var discountRate = null;
                 var discountRateValue2 = discountDayRateInput.value.trim();
                 discountRate = discountRateValue2 !== '' ? parseFloat(discountRateValue2) : null;
-                var extraLocRate = (discountRate !== null && !isNaN(discountRate)) ? discountRate : dayRate;
+                if (locations > 1 && (discountRate === null || isNaN(discountRate))) {
+                    throw new Error('[Admin] Discount day rate is required when locations > 1');
+                }
+                var extraLocRate = discountRate;
 
                 var durationCharge = (dayRate !== null && !isNaN(dayRate)) ? (dayRate * days) : 0;
                 var extraLocCharge = (locations > 1 && extraLocRate !== null && !isNaN(extraLocRate)) ? ((locations - 1) * extraLocRate * days) : 0;
@@ -3251,7 +3279,7 @@ const AdminModule = (function() {
             addBtn.dataset.initialized = 'true';
             addBtn.addEventListener('click', function() {
                 // Get current currency from settings (may have changed since render)
-                var currentCurrency = settingsData.website_currency || 'USD';
+                var currentCurrency = requireWebsiteCurrencyFromSettings(settingsData);
                 var newOption = {
                     id: 'new-' + Date.now(),
                     checkout_key: '',
@@ -3321,7 +3349,7 @@ const AdminModule = (function() {
         var entry = fieldRegistry['checkout_options'];
         if (entry && entry.type === 'composite' && entry.original) {
             var originalOptions = JSON.parse(entry.original);
-            var currency = settingsData.website_currency || 'USD';
+            var currency = requireWebsiteCurrencyFromSettings(settingsData);
             renderCheckoutOptions(originalOptions, currency);
         }
     }
@@ -3396,7 +3424,11 @@ const AdminModule = (function() {
             var key = menu.dataset.settingKey;
             var entry = fieldRegistry['settings.' + key];
             if (entry && entry.type === 'simple') {
-                var code = entry.original || 'USD';
+                var code = entry.original;
+                if (!code || typeof code !== 'string' || !code.trim()) {
+                    throw new Error('[Admin] Missing currency setting value for ' + String(key));
+                }
+                code = code.trim().toUpperCase();
                 // Look up the currency label from data
                 var currencyData = window.CurrencyComponent ? CurrencyComponent.getData() : [];
                 var found = currencyData.find(function(item) {
@@ -3409,8 +3441,7 @@ const AdminModule = (function() {
                     if (btnImg) btnImg.src = window.App.getImageUrl('currencies', countryCode + '.svg');
                     if (btnText) btnText.textContent = code + ' - ' + found.label;
                 } else {
-                    if (btnImg) btnImg.src = window.App.getImageUrl('currencies', 'us.svg');
-                    if (btnText) btnText.textContent = code + ' - US Dollar';
+                    throw new Error('[Admin] Currency code not found in CurrencyComponent data: ' + code);
                 }
             }
         });

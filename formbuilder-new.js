@@ -3150,14 +3150,23 @@
         
         // Render checkout options
         if (activeCheckoutOptions.length === 0) {
-            var emptyMsg = document.createElement('div');
-            emptyMsg.className = 'formbuilder-checkout-empty';
-            emptyMsg.textContent = 'No enabled checkout options available.';
-            checkoutList.appendChild(emptyMsg);
+            throw new Error('[Formbuilder] No enabled checkout options available');
         } else {
-            var currency = siteCurrency;
+            if (!siteCurrency || typeof siteCurrency !== 'string' || !siteCurrency.trim()) {
+                throw new Error('[Formbuilder] Missing required settings.website_currency (siteCurrency)');
+            }
+            var currency = siteCurrency.trim().toUpperCase();
             
             activeCheckoutOptions.forEach(function(opt) {
+                if (!opt) {
+                    throw new Error('[Formbuilder] checkoutOptions contains null/undefined option');
+                }
+                if (opt.id === undefined || opt.id === null || String(opt.id).trim() === '') {
+                    throw new Error('[Formbuilder] checkout option id is required');
+                }
+                if (!opt.checkout_title || String(opt.checkout_title).trim() === '') {
+                    throw new Error('[Formbuilder] checkout_title is required for option id ' + String(opt.id));
+                }
                 var card = document.createElement('div');
                 card.className = 'formbuilder-checkout-card';
                 
@@ -3166,14 +3175,17 @@
                     ? parseFloat(opt.checkout_basic_day_rate) : null;
                 var discountDayRate = opt.checkout_discount_day_rate !== null && opt.checkout_discount_day_rate !== undefined 
                     ? parseFloat(opt.checkout_discount_day_rate) : null;
+                if (basicDayRate === null || !isFinite(basicDayRate)) {
+                    throw new Error('[Formbuilder] checkout_basic_day_rate is required for option id ' + String(opt.id));
+                }
+                if (discountDayRate === null || !isFinite(discountDayRate)) {
+                    throw new Error('[Formbuilder] checkout_discount_day_rate is required for option id ' + String(opt.id));
+                }
                 
                     function calculatePrice(days) {
                         var basePrice = flagfall;
-                        if (days >= 365 && discountDayRate !== null && !isNaN(discountDayRate)) {
-                            basePrice += discountDayRate * days;
-                        } else if (basicDayRate !== null && !isNaN(basicDayRate)) {
-                            basePrice += basicDayRate * days;
-                        }
+                        if (days >= 365) basePrice += discountDayRate * days;
+                        else basePrice += basicDayRate * days;
                         if (currentSurcharge !== 0 && !isNaN(currentSurcharge)) {
                             basePrice = basePrice * (1 + currentSurcharge / 100);
                         }
@@ -3185,7 +3197,7 @@
                 
                 var title = document.createElement('div');
                 title.className = 'formbuilder-checkout-title';
-                title.textContent = opt.checkout_title || 'Untitled';
+                title.textContent = String(opt.checkout_title).trim();
                 
                 var prices = document.createElement('div');
                 prices.className = 'formbuilder-checkout-prices';
@@ -3363,7 +3375,12 @@
             
             CheckoutOptionsComponent.create(checkoutWrapper, {
                 checkoutOptions: activeCheckoutOptions,
-                currency: siteCurrency || 'USD',
+                currency: (function(){
+                    if (!siteCurrency || typeof siteCurrency !== 'string' || !siteCurrency.trim()) {
+                        throw new Error('[Formbuilder] Missing required settings.website_currency (siteCurrency)');
+                    }
+                    return siteCurrency.trim().toUpperCase();
+                })(),
                 surchargePercent: surcharge,
                 isEvent: isEvent,
                 locationCount: 1,
