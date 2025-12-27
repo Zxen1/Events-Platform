@@ -234,6 +234,11 @@
   background-color: var(--website-color, #3b82f6);
 }
 
+/* Lighter blue on hover when active (matches live site feel) */
+.header-access-button--active:hover .header-access-button-icon--active {
+  background-color: #60a5fa;
+}
+
 .header-access-button--hidden {
   display: none;
 }
