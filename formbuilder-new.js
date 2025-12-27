@@ -1513,10 +1513,12 @@
         eventsLabel.className = 'formbuilder-type-option';
         var eventsInput = document.createElement('input');
         eventsInput.type = 'radio';
+        eventsInput.className = 'formbuilder-type-option-input';
         eventsInput.name = 'subType-' + cat.name + '-' + subName;
         eventsInput.value = 'Events';
         eventsInput.checked = currentType === 'Events';
         var eventsText = document.createElement('span');
+        eventsText.className = 'formbuilder-type-option-text';
         eventsText.textContent = 'Events';
         eventsLabel.appendChild(eventsInput);
         eventsLabel.appendChild(eventsText);
@@ -1525,10 +1527,12 @@
         generalLabel.className = 'formbuilder-type-option';
         var generalInput = document.createElement('input');
         generalInput.type = 'radio';
+        generalInput.className = 'formbuilder-type-option-input';
         generalInput.name = 'subType-' + cat.name + '-' + subName;
         generalInput.value = 'General';
         generalInput.checked = currentType === 'General';
         var generalText = document.createElement('span');
+        generalText.className = 'formbuilder-type-option-text';
         generalText.textContent = 'General';
         generalLabel.appendChild(generalInput);
         generalLabel.appendChild(generalText);
@@ -1554,11 +1558,13 @@
         venueLabel.className = 'formbuilder-type-option';
         var venueInput = document.createElement('input');
         venueInput.type = 'radio';
+        venueInput.className = 'formbuilder-type-option-input';
         venueInput.name = 'locationType-' + cat.name + '-' + subName;
         venueInput.value = 'Venue';
         // Only check if explicitly 'Venue', not null/undefined/empty
         venueInput.checked = (currentLocationType === 'Venue');
         var venueText = document.createElement('span');
+        venueText.className = 'formbuilder-type-option-text';
         venueText.textContent = 'Venue';
         venueLabel.appendChild(venueInput);
         venueLabel.appendChild(venueText);
@@ -1567,6 +1573,7 @@
         cityLabel.className = 'formbuilder-type-option';
         var cityInput = document.createElement('input');
         cityInput.type = 'radio';
+        cityInput.className = 'formbuilder-type-option-input';
         cityInput.name = 'locationType-' + cat.name + '-' + subName;
         cityInput.value = 'City';
         // Only check if explicitly 'City', not null/undefined/empty
@@ -1575,6 +1582,7 @@
             cityInput.disabled = true;
         }
         var cityText = document.createElement('span');
+        cityText.className = 'formbuilder-type-option-text';
         cityText.textContent = 'City';
         cityLabel.appendChild(cityInput);
         cityLabel.appendChild(cityText);
@@ -1583,6 +1591,7 @@
         addressLabel.className = 'formbuilder-type-option';
         var addressInput = document.createElement('input');
         addressInput.type = 'radio';
+        addressInput.className = 'formbuilder-type-option-input';
         addressInput.name = 'locationType-' + cat.name + '-' + subName;
         addressInput.value = 'Address';
         // Only check if explicitly 'Address', not null/undefined/empty
@@ -1591,6 +1600,7 @@
             addressInput.disabled = true;
         }
         var addressText = document.createElement('span');
+        addressText.className = 'formbuilder-type-option-text';
         addressText.textContent = 'Address';
         addressLabel.appendChild(addressInput);
         addressLabel.appendChild(addressText);

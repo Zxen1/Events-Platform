@@ -1224,7 +1224,7 @@ const MapModule = (function() {
         map.setConfigProperty('basemap', 'lightPreset', preset);
         console.log('[Map] Lighting preset applied:', preset);
       } else if (typeof map.setConfig === 'function') {
-        // Fallback to setConfig if setConfigProperty not available
+        // Mapbox compatibility: older versions use setConfig()
         map.setConfig({
           basemap: {
             lightPreset: preset
@@ -1232,7 +1232,7 @@ const MapModule = (function() {
         });
         console.log('[Map] Lighting preset applied via setConfig:', preset);
       } else {
-        console.warn('[Map] setConfigProperty/setConfig not available - lighting only works with Standard style, not Satellite');
+        throw new Error('[Map] setMapLighting: Mapbox config API not available (setConfigProperty/setConfig).');
       }
     } catch (e) {
       console.error('[Map] Failed to set lighting preset:', e);

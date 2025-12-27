@@ -105,10 +105,6 @@
   color: #fff;
 }
 
-.formbuilder-accordion-header-drag svg {
-  width: 16px;
-  height: 16px;
-}
 
 .formbuilder-accordion.dragging {
   opacity: 0.5;
@@ -194,10 +190,6 @@
   color: #3b82f5;
 }
 
-.formbuilder-accordion-editpanel-more svg {
-  width: 16px;
-  height: 16px;
-}
 
 .formbuilder-accordion-editpanel-more-menu {
   position: absolute;
@@ -356,10 +348,6 @@
   color: #fff;
 }
 
-.formbuilder-accordion-option-drag svg {
-  width: 16px;
-  height: 16px;
-}
 
 .formbuilder-accordion-option.dragging {
   opacity: 0.5;
@@ -759,10 +747,6 @@
   color: #fff;
 }
 
-.formbuilder-field-drag svg {
-  width: 16px;
-  height: 16px;
-}
 
 .formbuilder-field-edit {
   width: 36px;
@@ -778,10 +762,6 @@
   color: #3b82f5;
 }
 
-.formbuilder-field-edit svg {
-  width: 16px;
-  height: 16px;
-}
 
 .formbuilder-field.dragging,
 .formbuilder-field-wrapper.dragging {
@@ -865,10 +845,6 @@
   color: #3b82f5;
 }
 
-.formbuilder-field-more svg {
-  width: 16px;
-  height: 16px;
-}
 
 .formbuilder-field-more-menu {
   position: absolute;
@@ -969,9 +945,6 @@
 .formbuilder-field-label:first-child {
   margin-top: 0;
 }
-  margin-bottom: 3px;
-  text-transform: uppercase;
-}
 
 /* Field Options */
 .formbuilder-field-options {
@@ -1028,11 +1001,6 @@
   cursor: pointer;
 }
 
-.formbuilder-field-option-remove svg,
-.formbuilder-field-option-add svg {
-  width: 16px;
-  height: 16px;
-}
 
 .formbuilder-field-option-remove:hover,
 .formbuilder-field-option-add:hover {
@@ -1325,12 +1293,12 @@
   cursor: pointer;
 }
 
-.formbuilder-type-option input[type="radio"] {
+.formbuilder-type-option-input {
   cursor: pointer;
   accent-color: #3b82f5;
 }
 
-.formbuilder-type-option span {
+.formbuilder-type-option-text {
   font-size: 13px;
   color: #fff;
   cursor: pointer;

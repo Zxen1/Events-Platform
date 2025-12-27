@@ -376,8 +376,7 @@ const MarqueeModule = (function() {
     if (postModule && typeof postModule.getPostUrl === 'function') {
       return postModule.getPostUrl(post);
     }
-    // Fallback
-    return '#post-' + (post.id || '');
+    throw new Error('[Marquee] Post module is required for getPostUrl()');
   }
   
   /**
@@ -397,11 +396,7 @@ const MarqueeModule = (function() {
       return post.heroImage;
     }
     
-    // Fallback to placeholder
-    const id = post.id || 'placeholder';
-    const isPortrait = hashToBoolean(id);
-    const size = isPortrait ? '800/1200' : '1200/800';
-    return `https://picsum.photos/seed/${encodeURIComponent(id)}-hero/${size}`;
+    throw new Error('[Marquee] Missing hero image for post id ' + String(post && post.id));
   }
   
   /**

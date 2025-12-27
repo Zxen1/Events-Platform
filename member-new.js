@@ -752,7 +752,7 @@ const MemberModule = (function() {
 
             var src = getSelfTileSrc(target);
             if (src) {
-                btn.innerHTML = '<img src="' + src + '" alt="">';
+                btn.innerHTML = '<img class="member-avatar-choice-image" src="' + src + '" alt="">';
             } else {
                 btn.innerHTML = '<div class="member-avatar-choice-add">' + cameraSvgMarkup() + '<div class="member-avatar-choice-add-text">Add</div></div>';
             }
@@ -784,7 +784,7 @@ const MemberModule = (function() {
             b.setAttribute('aria-pressed', avatarSelection[target] === key ? 'true' : 'false');
             if (avatarSelection[target] === key) b.classList.add('member-avatar-choice--selected');
             if (c && c.url) {
-                b.innerHTML = '<img src="' + c.url + '" alt="">';
+                b.innerHTML = '<img class="member-avatar-choice-image" src="' + c.url + '" alt="">';
             } else {
                 b.innerHTML = '<div class="member-avatar-choice-add"><div class="member-avatar-choice-add-text">...</div></div>';
             }
@@ -893,15 +893,7 @@ const MemberModule = (function() {
     function openCropperForBlob(blob, filename) {
         if (!blob) return;
         filename = filename || 'avatar.png';
-        var file = null;
-        try {
-            file = new File([blob], filename, { type: blob.type || 'image/png' });
-        } catch (e) {
-            // IE/older fallback
-            file = blob;
-            file.name = filename;
-            file.type = blob.type || 'image/png';
-        }
+        var file = new File([blob], filename, { type: blob.type || 'image/png' });
         openCropperForFile(file);
     }
 
@@ -1073,20 +1065,7 @@ const MemberModule = (function() {
             
             var toBlobFn = cropperCanvas.toBlob;
             if (typeof toBlobFn !== 'function') {
-                // Fallback: convert dataURL to Blob
-                var dataUrl = cropperCanvas.toDataURL('image/png', 0.92);
-                var parts = dataUrl.split(',');
-                var byteString = atob(parts[1] || '');
-                var ab = new ArrayBuffer(byteString.length);
-                var ia = new Uint8Array(ab);
-                for (var i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
-                var blob = new Blob([ab], { type: 'image/png' });
-                return uploadAvatarBlob(blob).finally(function() {
-                    if (cropperSaveBtn) {
-                        cropperSaveBtn.disabled = false;
-                        cropperSaveBtn.classList.remove('member-button-auth--disabled');
-                    }
-                });
+                throw new Error('[Member] saveCroppedAvatar: HTMLCanvasElement.toBlob is required.');
             }
             
             cropperCanvas.toBlob(function(blob) {
@@ -1488,8 +1467,7 @@ const MemberModule = (function() {
 
     function confirmUnsavedProfileEdits(nextAction) {
         if (!window.ThreeButtonDialogComponent || typeof ThreeButtonDialogComponent.show !== 'function') {
-            // Fallback: do nothing if dialog component isn't available
-            return;
+            throw new Error('[Member] ThreeButtonDialogComponent is required for confirmUnsavedProfileEdits().');
         }
         
         ThreeButtonDialogComponent.show({
@@ -2377,59 +2355,42 @@ const MemberModule = (function() {
     }
     
     function copyFieldsetValues(targetFieldset, fieldData, sourceLocation, targetLocation) {
-        // Find source fieldset (location 1 is the main fieldset, not in additional-location)
-        // We need to find the fieldset with the same fieldset key in the main form
-        var fieldsetKey = (fieldData.key || fieldData.fieldset_key || '').toLowerCase();
-        var sourceFieldset = null;
+        if (!formFields) throw new Error('[Member] copyFieldsetValues: formFields not available.');
+        if (!targetFieldset) throw new Error('[Member] copyFieldsetValues: targetFieldset is required.');
+        if (!fieldData) throw new Error('[Member] copyFieldsetValues: fieldData is required.');
         
-        // Find the first occurrence of this fieldset type in the main form
+        var fieldsetKeyLower = String(fieldData.key || fieldData.fieldset_key || fieldData.fieldsetKey || '').toLowerCase();
+        if (!fieldsetKeyLower) throw new Error('[Member] copyFieldsetValues: fieldset key is required.');
+        
+        // Find the location-1 fieldset by its canonical key (set by FieldsetComponent)
+        var sourceFieldset = null;
         var allFieldsets = formFields.querySelectorAll('.fieldset');
         for (var i = 0; i < allFieldsets.length; i++) {
             var fs = allFieldsets[i];
-            // Check if this fieldset matches by looking at its structure or data attributes
-            // For now, match by fieldset type (venue, city, address have specific structures)
-            if (fieldsetKey === 'venue' && fs.querySelector('.fieldset-sublabel') && fs.querySelector('.fieldset-sublabel').textContent === 'Venue Name') {
-                sourceFieldset = fs;
-                break;
-            } else if (fieldsetKey === 'city' && fs.querySelector('.fieldset-input[placeholder*="city"]')) {
-                sourceFieldset = fs;
-                break;
-            } else if ((fieldsetKey === 'address' || fieldsetKey === 'location') && fs.querySelector('.fieldset-input[placeholder*="address"]')) {
+            if (!fs || !fs.dataset) continue;
+            if (fs.closest('.member-additional-location')) continue;
+            var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
+            if (k === fieldsetKeyLower) {
                 sourceFieldset = fs;
                 break;
             }
         }
         
         if (!sourceFieldset) {
-            // Fallback: use first fieldset of same type by matching input structure
-            var targetInputs = targetFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
-            if (targetInputs.length > 0) {
-                // Find fieldset with similar structure
-                for (var j = 0; j < allFieldsets.length; j++) {
-                    var fs2 = allFieldsets[j];
-                    var fs2Inputs = fs2.querySelectorAll('input:not([type="hidden"]), textarea, select');
-                    if (fs2Inputs.length === targetInputs.length && !fs2.closest('.member-additional-location')) {
-                        sourceFieldset = fs2;
-                        break;
-                    }
-                }
-            }
+            throw new Error('[Member] copyFieldsetValues: could not find source fieldset for key "' + fieldsetKeyLower + '".');
         }
         
-        if (sourceFieldset) {
-            var sourceInputs = sourceFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
-            var targetInputs = targetFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
-            
-            // Match inputs by position and copy values
-            sourceInputs.forEach(function(sourceInput, index) {
-                if (targetInputs[index]) {
-                    targetInputs[index].value = sourceInput.value;
-                    // Trigger change event
-                    var event = new Event('input', { bubbles: true });
-                    targetInputs[index].dispatchEvent(event);
-                }
-            });
+        var sourceInputs = sourceFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
+        var targetInputs = targetFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
+        if (sourceInputs.length !== targetInputs.length) {
+            throw new Error('[Member] copyFieldsetValues: input count mismatch for key "' + fieldsetKeyLower + '" (source ' + sourceInputs.length + ', target ' + targetInputs.length + ').');
         }
+        
+        sourceInputs.forEach(function(sourceInput, index) {
+            targetInputs[index].value = sourceInput.value;
+            var event = new Event('input', { bubbles: true });
+            targetInputs[index].dispatchEvent(event);
+        });
     }
     
     function renderCheckoutOptionsSection() {
@@ -3142,17 +3103,9 @@ const MemberModule = (function() {
                     });
                     return;
                 }
-
-                // Fallback only for unexpected server responses (should not happen once DB messages exist)
-                getMessage('msg_auth_register_failed', {}, false).then(function(message) {
-                    var text = message || 'Missing message: msg_auth_register_failed';
-                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                        ToastComponent.showError(text);
-                    } else {
-                        showStatus(text, { error: true });
-                    }
-                });
-                return;
+                
+                // Treat missing message_key as corrupt response; fail loudly (no silent fallback).
+                throw new Error('[Member] Registration failed but response did not include message_key.');
             }
             
             // Build user object
@@ -3245,9 +3198,12 @@ const MemberModule = (function() {
        USER OBJECT HELPERS
        -------------------------------------------------------------------------- */
     
-    function buildUserObject(payload, fallbackEmail) {
+    function buildUserObject(payload, loginEmail) {
         var emailRaw = typeof payload.email === 'string' ? payload.email.trim() : '';
-        var email = emailRaw || fallbackEmail;
+        var email = emailRaw || loginEmail || '';
+        if (!email) {
+            throw new Error('[Member] buildUserObject: email is required (payload.email or loginEmail).');
+        }
         var normalized = email.toLowerCase();
         var username = payload.username || email;
         

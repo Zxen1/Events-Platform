@@ -454,8 +454,6 @@
   font-size: 14px;
   white-space: nowrap;
 }
-  font-size: var(--panel-label-size);
-}
 
 .member-panel-field-title {
   color: var(--panel-title-color);
@@ -1080,7 +1078,7 @@
   box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
 }
 
-.member-avatar-choice img {
+.member-avatar-choice-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1198,7 +1196,7 @@
   border: 1px solid rgba(255,255,255,0.12);
 }
 
-.member-avatar-cropper input[type="range"] {
+.member-avatar-cropper-zoom-input {
   width: 100%;
 }
 

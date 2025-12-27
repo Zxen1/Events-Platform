@@ -101,12 +101,7 @@ const HeaderModule = (function() {
             return;
         }
 
-        // Fallback: if App doesn't expose the promise (shouldn't happen), try once from state
-        var sys = window.App.getState('system_images') || {};
-        if (sys.small_logo && typeof window.App.getImageUrl === 'function') {
-            setLogo(window.App.getImageUrl('systemImages', sys.small_logo));
-        }
-        loadHeaderIcons(sys);
+        throw new Error('[Header] App.whenStartupSettingsReady() is required.');
     }
     
     function loadHeaderIcons(systemImages) {

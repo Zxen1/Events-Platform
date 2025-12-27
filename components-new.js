@@ -1134,6 +1134,7 @@ const FieldsetComponent = (function(){
 
                     var zoomInput = document.createElement('input');
                     zoomInput.type = 'range';
+                    zoomInput.className = 'member-avatar-cropper-zoom-input';
                     zoomInput.min = '1';
                     zoomInput.max = '3';
                     zoomInput.step = '0.01';
