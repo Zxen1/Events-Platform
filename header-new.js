@@ -188,7 +188,56 @@ const HeaderModule = (function() {
                 var mode = btn.dataset.mode;
                 if (!mode || mode === currentMode) return;
                 
-                setMode(mode);
+                // "Press X remotely" for any open panels. This triggers the normal close behavior,
+                // including unsaved-changes dialogs. Only switch mode if everything actually closes.
+                try {
+                    var filterPanel = document.querySelector('.filter-panel');
+                    if (filterPanel && filterPanel.classList.contains('show')) {
+                        var filterClose = document.querySelector('.filter-panel-actions-icon-btn--close');
+                        if (filterClose) filterClose.click();
+                    }
+                    
+                    var memberPanel = document.querySelector('.member-panel');
+                    if (memberPanel && memberPanel.classList.contains('member-panel--show')) {
+                        var memberClose = document.querySelector('.member-panel-actions-icon-btn--close');
+                        if (memberClose) memberClose.click();
+                    }
+                    
+                    var adminPanel = document.querySelector('.admin-panel');
+                    if (adminPanel && adminPanel.classList.contains('admin-panel--show')) {
+                        var adminClose = document.querySelector('.admin-panel-actions-icon-btn--close');
+                        if (adminClose) adminClose.click();
+                    }
+                } catch (e) {
+                    // ignore
+                }
+                
+                // Wait briefly for panels to close (transitions), then only change mode if none are open.
+                var tries = 0;
+                (function waitForClose() {
+                    tries++;
+                    var filterOpen = false;
+                    var memberOpen = false;
+                    var adminOpen = false;
+                    try {
+                        var fp = document.querySelector('.filter-panel');
+                        filterOpen = !!(fp && fp.classList.contains('show'));
+                        var mp = document.querySelector('.member-panel');
+                        memberOpen = !!(mp && mp.classList.contains('member-panel--show'));
+                        var ap = document.querySelector('.admin-panel');
+                        adminOpen = !!(ap && ap.classList.contains('admin-panel--show'));
+                    } catch (e) {}
+                    
+                    if (!filterOpen && !memberOpen && !adminOpen) {
+                        setMode(mode);
+                        return;
+                    }
+                    
+                    // If a dialog is open (cancel/save/discard), the panel stays open; don't force anything.
+                    if (tries < 12) {
+                        setTimeout(waitForClose, 50);
+                    }
+                })();
             });
         });
         

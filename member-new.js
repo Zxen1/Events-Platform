@@ -1373,6 +1373,10 @@ const MemberModule = (function() {
             uploadAvatarBlob(pendingProfileAvatarBlob).then(function() {
                 // uploadAvatarBlob calls setAvatarForTarget(url), which sets pendingAvatarUrl
                 proceedAfterAvatarPrepared();
+            }).catch(function(err) {
+                console.error('[Member] Avatar upload failed', err);
+                updateProfileSaveState();
+                updateHeaderSaveDiscardState();
             });
             return;
         }
