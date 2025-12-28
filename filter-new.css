@@ -42,8 +42,15 @@
   background: #222222;
   color: #fff;
   overflow-y: auto;
-  /* TEST: extra scroll room at bottom */
-  padding-bottom: calc(310px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+/* TEST: extra scroll room UNDER the content (does not change container padding) */
+.filter-panel-content::after{
+  content: '';
+  display: block;
+  height: 300px;
+  flex: 0 0 auto;
 }
 
 .filter-panel-content[data-side="left"] {

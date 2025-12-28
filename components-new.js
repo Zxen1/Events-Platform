@@ -3356,10 +3356,8 @@ const CurrencyComponent = (function(){
                 if (!menu.classList.contains('fieldset-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
-                }
-                if (btnInput) {
-                    btnInput.focus();
-                    btnInput.select();
+                } else {
+                    applyOpenState(false);
                 }
             });
         }
@@ -3406,8 +3404,6 @@ const CurrencyComponent = (function(){
             } else {
                 MenuManager.closeAll(menu);
                 applyOpenState(true);
-                btnInput.focus();
-                btnInput.select();
             }
         });
 
@@ -3531,10 +3527,8 @@ const CurrencyComponent = (function(){
                 if (!menu.classList.contains('admin-currency-wrapper--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
-                }
-                if (btnInput) {
-                    btnInput.focus();
-                    btnInput.select();
+                } else {
+                    applyOpenState(false);
                 }
             });
         }
@@ -3582,8 +3576,6 @@ const CurrencyComponent = (function(){
             } else {
                 MenuManager.closeAll(menu);
                 applyOpenState(true);
-                btnInput.focus();
-                btnInput.select();
             }
         });
 
@@ -3758,10 +3750,8 @@ const LanguageMenuComponent = (function(){
                 if (!menu.classList.contains('fieldset-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
-                }
-                if (btnInput) {
-                    btnInput.focus();
-                    btnInput.select();
+                } else {
+                    applyOpenState(false);
                 }
             });
         }
@@ -3809,8 +3799,6 @@ const LanguageMenuComponent = (function(){
             } else {
                 MenuManager.closeAll(menu);
                 applyOpenState(true);
-                btnInput.focus();
-                btnInput.select();
             }
         });
 
@@ -4159,10 +4147,8 @@ const CountryComponent = (function(){
                 if (!menu.classList.contains('fieldset-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
-                }
-                if (btnInput) {
-                    btnInput.focus();
-                    btnInput.select();
+                } else {
+                    applyOpenState(false);
                 }
             });
         }
@@ -4204,8 +4190,6 @@ const CountryComponent = (function(){
             } else {
                 MenuManager.closeAll(menu);
                 applyOpenState(true);
-                btnInput.focus();
-                btnInput.select();
             }
         });
         

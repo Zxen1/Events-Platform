@@ -50,8 +50,14 @@
   background: #222222;
   color: #fff;
   overscroll-behavior: contain;
-  /* TEST: extra scroll room at bottom */
-  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
+}
+
+/* TEST: extra scroll room UNDER the content (does not change container padding) */
+.admin-panel-content::after{
+  content: '';
+  display: block;
+  height: 300px;
+  flex: 0 0 auto;
 }
 
 .admin-panel-content--side-left {
