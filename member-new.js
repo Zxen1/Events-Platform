@@ -3134,8 +3134,26 @@ const MemberModule = (function() {
         
         authForm.dataset.active = target;
         
-        // Focus first field
-        focusFirstField(isLogin ? loginPanel : registerPanel);
+        // Focus behavior:
+        // - Login: focus first input
+        // - Support FunMap: focus first payment option (avoid caret in the custom amount input)
+        if (isLogin) {
+            focusFirstField(loginPanel);
+        } else {
+            try {
+                if (supporterPresetButtons && supporterPresetButtons.length && supporterPresetButtons[0]) {
+                    requestAnimationFrame(function() {
+                        try {
+                            supporterPresetButtons[0].focus();
+                        } catch (e) {
+                            // ignore
+                        }
+                    });
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
     }
 
     function getSiteCurrencyCode() {
