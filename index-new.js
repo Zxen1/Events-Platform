@@ -532,16 +532,14 @@ const App = (function() {
     var stopDelayMs = (opts && typeof opts.stopDelayMs === 'number') ? opts.stopDelayMs : 150;
     var unlockTimer = null;
     var locked = false;
-    var fullSlackPx = (opts && typeof opts.fullSlackPx === 'number') ? opts.fullSlackPx : 300;
+    // Expanded slack is only used during the short click-hold window (anchor protection).
+    var expandedSlackPx = (opts && typeof opts.expandedSlackPx === 'number') ? opts.expandedSlackPx : 300;
     // Collapsed slack should be 0px to avoid visible "micro-flicker" between 0px and 1px.
     var collapsedSlackPx = (opts && typeof opts.collapsedSlackPx === 'number') ? opts.collapsedSlackPx : 0;
     var clickHoldMs = (opts && typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
     var clickHoldUntil = 0;
     var currentSlackPx = null;
     var lastScrollTop = scrollEl.scrollTop || 0;
-    // Only show the spacer after the user has actually scrolled this container.
-    // This prevents empty tabs (e.g. My Posts with zero data) from having a scrollbar.
-    var hasScrolled = false;
     var scrollbarFadeMs = (opts && typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
     var scrollbarFadeTimer = null;
 
@@ -571,8 +569,9 @@ const App = (function() {
     }
 
     function applyScrollStateSlackNotScrolling() {
-      // Two triggers only: not scrolling -> full slack
-      applySlackPx(hasScrolled ? fullSlackPx : 0);
+      // Under nearly all circumstances, keep the spacer OFF when not scrolling
+      // (prevents empty tabs like My Posts from showing a scrollbar).
+      applySlackPx(0);
     }
 
     function lock() {
@@ -613,7 +612,6 @@ const App = (function() {
         if (st === lastScrollTop) return;
         lastScrollTop = st;
       } catch (e) {}
-      hasScrolled = true;
       // First real scroll movement in a burst is our "scroll start" trigger
       startScrollBurst();
     }
@@ -642,8 +640,8 @@ const App = (function() {
     // Clicking: keep slack stable until the click is complete.
     function holdClickSlack() {
       clickHoldUntil = Date.now() + clickHoldMs;
-      // Do not force-enable slack on click; slack should only appear after real scrolling.
-      applySlackPx(hasScrolled ? fullSlackPx : 0);
+      // Anchor protection: temporarily expand slack during the click window only.
+      applySlackPx(expandedSlackPx);
     }
     scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
     scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
@@ -657,9 +655,8 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        // Default behavior: 300px footer spacer when not scrolling; collapsed while scrolling.
-        // If you want to stress-test with huge menus, temporarily change fullSlackPx to 4000.
-        setupScrollHeightLock(el, { stopDelayMs: 180, fullSlackPx: 300, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        // TEST VALUE: very tall footer spacer to simulate extremely tall accordion menus.
+        setupScrollHeightLock(el, { stopDelayMs: 180, expandedSlackPx: 4000, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
