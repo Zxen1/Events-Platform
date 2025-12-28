@@ -585,25 +585,13 @@ const MemberModule = (function() {
             }
         })();
         
-        // Load initial value (member > localStorage > admin settings > default)
+        // Load from localStorage (guests) or database (members)
         var currentLighting = 'day';
         if (currentUser) {
             // Load from member data (will be set when member data loads)
             currentLighting = currentUser.map_lighting || 'day';
         } else {
-            var ls = localStorage.getItem('map_lighting');
-            if (ls) {
-                currentLighting = ls;
-            } else {
-                try {
-                    if (window.App && typeof App.getState === 'function') {
-                        var settings = App.getState('settings') || {};
-                        currentLighting = settings.map_lighting || 'day';
-                    }
-                } catch (e) {
-                    // ignore
-                }
-            }
+            currentLighting = localStorage.getItem('map_lighting') || 'day';
         }
         
         lightingButtons.forEach(function(btn) {
@@ -641,24 +629,12 @@ const MemberModule = (function() {
         var styleButtons = panel.querySelectorAll('.member-style-button');
         if (!styleButtons.length) return;
         
-        // Load initial value (member > localStorage > admin settings > default)
+        // Load from localStorage (guests) or database (members)
         var currentStyle = 'standard';
         if (currentUser) {
             currentStyle = currentUser.map_style || 'standard';
         } else {
-            var ls = localStorage.getItem('map_style');
-            if (ls) {
-                currentStyle = ls;
-            } else {
-                try {
-                    if (window.App && typeof App.getState === 'function') {
-                        var settings = App.getState('settings') || {};
-                        currentStyle = settings.map_style || 'standard';
-                    }
-                } catch (e) {
-                    // ignore
-                }
-            }
+            currentStyle = localStorage.getItem('map_style') || 'standard';
         }
         
         styleButtons.forEach(function(btn) {
