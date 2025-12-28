@@ -178,13 +178,33 @@ const MapModule = (function() {
   function onMapLoad() {
     // Map loaded
     
-    // Show the map (fade in) - immediate
-    const mapEl = document.querySelector('.map-container');
-    if (mapEl) {
-      mapEl.style.opacity = '1';
-    }
+    // Apply lighting preset BEFORE showing the map to prevent the default "day" flash.
+    // Priority: member settings > admin settings > localStorage > default
+    (function applyInitialLighting() {
+      try {
+        var lighting = 'day';
+        if (window.MemberModule && window.MemberModule.getCurrentUser) {
+          var member = window.MemberModule.getCurrentUser();
+          if (member && member.map_lighting) {
+            lighting = member.map_lighting;
+          }
+        }
+        if (lighting === 'day') {
+          lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
+        }
+        if (lighting && setMapLighting) {
+          setMapLighting(lighting);
+        }
+      } catch (e) {
+        // ignore (never block map render)
+      }
+    })();
     
-    // Emit ready event immediately (other modules may depend on this)
+    // Show the map (fade in) AFTER lighting is applied
+    const mapEl = document.querySelector('.map-container');
+    if (mapEl) mapEl.style.opacity = '1';
+    
+    // Emit ready event (other modules may depend on this)
     App.emit('map:ready', { map });
     
     // Defer non-critical operations to next frame to avoid blocking render loop
@@ -208,21 +228,7 @@ const MapModule = (function() {
         startSpin();
       }
       
-      // Apply lighting preset (deferred, after map is fully loaded)
-      // Priority: member settings > admin settings > localStorage > default
-      var lighting = 'day';
-      if (window.MemberModule && window.MemberModule.getCurrentUser) {
-        var member = window.MemberModule.getCurrentUser();
-        if (member && member.map_lighting) {
-          lighting = member.map_lighting;
-        }
-      }
-      if (lighting === 'day') {
-        lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
-      }
-      if (lighting && setMapLighting) {
-        setMapLighting(lighting);
-      }
+      // Lighting is applied above (before fade-in) to prevent the "daytime first" flash.
     });
   }
 

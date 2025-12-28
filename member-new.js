@@ -585,13 +585,25 @@ const MemberModule = (function() {
             }
         })();
         
-        // Load from localStorage (guests) or database (members)
+        // Load initial value (member > localStorage > admin settings > default)
         var currentLighting = 'day';
         if (currentUser) {
             // Load from member data (will be set when member data loads)
             currentLighting = currentUser.map_lighting || 'day';
         } else {
-            currentLighting = localStorage.getItem('map_lighting') || 'day';
+            var ls = localStorage.getItem('map_lighting');
+            if (ls) {
+                currentLighting = ls;
+            } else {
+                try {
+                    if (window.App && typeof App.getState === 'function') {
+                        var settings = App.getState('settings') || {};
+                        currentLighting = settings.map_lighting || 'day';
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
         }
         
         lightingButtons.forEach(function(btn) {
@@ -629,12 +641,24 @@ const MemberModule = (function() {
         var styleButtons = panel.querySelectorAll('.member-style-button');
         if (!styleButtons.length) return;
         
-        // Load from localStorage (guests) or database (members)
+        // Load initial value (member > localStorage > admin settings > default)
         var currentStyle = 'standard';
         if (currentUser) {
             currentStyle = currentUser.map_style || 'standard';
         } else {
-            currentStyle = localStorage.getItem('map_style') || 'standard';
+            var ls = localStorage.getItem('map_style');
+            if (ls) {
+                currentStyle = ls;
+            } else {
+                try {
+                    if (window.App && typeof App.getState === 'function') {
+                        var settings = App.getState('settings') || {};
+                        currentStyle = settings.map_style || 'standard';
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
         }
         
         styleButtons.forEach(function(btn) {
