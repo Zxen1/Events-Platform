@@ -1020,7 +1020,7 @@
 #member-tab-profile {
   /* IMPORTANT: Don't force full-height here.
      When this is 100%, it consumes the panel's extra bottom scroll padding,
-     so Profile (logged-in) can't scroll down into the 300px gap like other panels. */
+     so Profile (logged-in) can't scroll down into the bottom slack area like other panels. */
   min-height: 0;
 }
 

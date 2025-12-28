@@ -652,19 +652,10 @@ const App = (function() {
     function onScroll() {
       try {
         var st = scrollEl.scrollTop || 0;
-        // If the bottom slack spacer is on-screen, DO NOT allow downward scrolling.
-        // (Upward scrolling is allowed so the user can leave the bottom.)
-        var delta = st - lastScrollTop;
-        if (delta > 0 && isBottomSlackOnScreen()) {
-          // Snap back to the last allowed position (no computed clamps, no guessing).
-          // This prevents "scrolling into the spacer" without breaking anchor behavior.
-          var maxNow = (scrollEl.scrollHeight || 0) - (scrollEl.clientHeight || 0);
-          if (maxNow < 0) maxNow = 0;
-          if (st > maxNow) st = maxNow;
-          if (lastScrollTop > maxNow) lastScrollTop = maxNow;
-          scrollEl.scrollTop = lastScrollTop;
-          return;
-        }
+        // If the spacer is on-screen and the scrollTop increased anyway (e.g. scrollbar drag),
+        // do NOT "snap back" (forbidden). Just ignore this scroll event and avoid triggering
+        // any slack/lock behaviors. Downward scrolling is blocked proactively in wheel/touch/key handlers.
+        if (st > lastScrollTop && isBottomSlackOnScreen()) return;
 
         // If the scroll position didn't actually change (common at the bottom edge on some devices),
         // do nothing to avoid "shudder" loops.
@@ -686,6 +677,13 @@ const App = (function() {
     scrollEl.addEventListener('wheel', function(e) {
       try {
         var deltaY = Number(e && e.deltaY) || 0;
+        // While the spacer is visible, NO downward scrolling is allowed.
+        // User scrolls down -> nothing happens.
+        if (deltaY > 0 && isBottomSlackOnScreen()) {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+          return;
+        }
         var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
         var st = scrollEl.scrollTop || 0;
         var eps = 0; // STRICT: spacer system must not rely on micro spacer/tolerances
@@ -697,8 +695,54 @@ const App = (function() {
         // If anything goes wrong, fall back to previous behavior.
       }
       startScrollBurst();
+    }, { passive: false });
+
+    // Touch scrolling (mobile): block downward scrolling while spacer is visible.
+    var lastTouchY = null;
+    scrollEl.addEventListener('touchstart', function(e) {
+      try {
+        var t = e && e.touches && e.touches[0];
+        lastTouchY = t ? t.clientY : null;
+      } catch (e0) { lastTouchY = null; }
+      startScrollBurst();
     }, { passive: true });
-    scrollEl.addEventListener('touchstart', startScrollBurst, { passive: true });
+
+    scrollEl.addEventListener('touchmove', function(e) {
+      try {
+        var t = e && e.touches && e.touches[0];
+        if (!t) return;
+        var y = t.clientY;
+        if (lastTouchY === null) lastTouchY = y;
+        var dy = y - lastTouchY;
+        lastTouchY = y;
+        // Finger moving up (dy < 0) attempts to scroll down.
+        if (dy < 0 && isBottomSlackOnScreen()) {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        }
+      } catch (e1) {}
+    }, { passive: false });
+
+    // Keyboard scrolling: block downward keys while spacer is visible.
+    scrollEl.addEventListener('keydown', function(e) {
+      try {
+        if (!isBottomSlackOnScreen()) return;
+        var k = e && (e.key || e.code) ? String(e.key || e.code) : '';
+        // Downward scroll attempts:
+        // ArrowDown, PageDown, End, Space
+        if (
+          k === 'ArrowDown' ||
+          k === 'PageDown' ||
+          k === 'End' ||
+          k === ' ' ||
+          k === 'Spacebar' ||
+          k === 'Space'
+        ) {
+          if (e && typeof e.preventDefault === 'function') e.preventDefault();
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        }
+      } catch (e2) {}
+    }, true);
 
     // Clicking: keep slack stable until the click is complete.
     function holdClickSlack() {
