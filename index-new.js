@@ -538,6 +538,7 @@ const App = (function() {
     var collapsedSlackPx = (opts && typeof opts.collapsedSlackPx === 'number') ? opts.collapsedSlackPx : 0;
     var clickHoldMs = (opts && typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
     var clickHoldUntil = 0;
+    var clickHoldRevertTimer = null;
     var currentSlackPx = null;
     var lastScrollTop = scrollEl.scrollTop || 0;
     var scrollbarFadeMs = (opts && typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
@@ -643,6 +644,16 @@ const App = (function() {
       clickHoldUntil = Date.now() + clickHoldMs;
       // Anchor protection: temporarily expand slack during the click window only.
       applySlackPx(expandedSlackPx);
+      // IMPORTANT: ensure the expanded slack does NOT persist indefinitely.
+      // We only want slack during the short click-hold window.
+      if (clickHoldRevertTimer) clearTimeout(clickHoldRevertTimer);
+      clickHoldRevertTimer = setTimeout(function() {
+        // If we are not locked (not actively scrolling), revert to the not-scrolling state.
+        // If locked, the unlock() path will apply the not-scrolling state.
+        if (!locked && Date.now() >= clickHoldUntil) {
+          applyScrollStateSlackNotScrolling();
+        }
+      }, clickHoldMs + 20);
     }
     scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
     scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
@@ -656,8 +667,7 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        // TEST VALUE: very tall footer spacer to simulate extremely tall accordion menus.
-        setupScrollHeightLock(el, { stopDelayMs: 180, expandedSlackPx: 4000, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        setupScrollHeightLock(el, { stopDelayMs: 180, expandedSlackPx: 300, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
