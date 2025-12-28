@@ -429,6 +429,9 @@ const AdminModule = (function() {
         panel.setAttribute('aria-hidden', 'false');
         panelContent.classList.remove('admin-panel-content--hidden');
         panelContent.classList.add('admin-panel-content--visible');
+
+        // TEST: only add extra bottom scroll space when content actually overflows
+        updatePanelScrollPad();
         
         // Bring panel to front of stack
         App.bringToTop(panel);
@@ -440,6 +443,23 @@ const AdminModule = (function() {
         setTimeout(function() {
             syncAllPicklists();
         }, 1500);
+    }
+
+    function updatePanelScrollPad() {
+        try {
+            if (!panelContent) return;
+            // Delay one frame so layout is up to date (tabs/render can change height)
+            requestAnimationFrame(function() {
+                try {
+                    var hasOverflow = panelContent.scrollHeight > (panelContent.clientHeight + 1);
+                    panelContent.classList.toggle('panel-scrollpad-300', !!hasOverflow);
+                } catch (e) {
+                    // ignore
+                }
+            });
+        } catch (e) {
+            // ignore
+        }
     }
     
     // Sync all picklist types from Bunny CDN (background, once per session)

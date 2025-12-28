@@ -52,12 +52,11 @@
   overscroll-behavior: contain;
 }
 
-/* TEST: extra scroll room UNDER the content (does not change container padding) */
-.admin-panel-content::after{
+/* TEST: extra scroll room UNDER the content (ONLY when panel overflows) */
+.admin-panel-content.panel-scrollpad-300::after{
   content: '';
   display: block;
   height: 300px;
-  flex: 0 0 auto;
 }
 
 .admin-panel-content--side-left {

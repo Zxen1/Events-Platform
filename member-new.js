@@ -1743,6 +1743,9 @@ const MemberModule = (function() {
         panelContent.classList.remove('member-panel-content--hidden');
         panelContent.classList.add('member-panel-content--visible');
         
+        // TEST: only add extra bottom scroll space when content actually overflows
+        updatePanelScrollPad();
+        
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();
         initMapStyleButtons();
@@ -1755,6 +1758,22 @@ const MemberModule = (function() {
         
         // Update header button
         App.emit('member:opened');
+    }
+
+    function updatePanelScrollPad() {
+        try {
+            if (!panelContent) return;
+            requestAnimationFrame(function() {
+                try {
+                    var hasOverflow = panelContent.scrollHeight > (panelContent.clientHeight + 1);
+                    panelContent.classList.toggle('panel-scrollpad-300', !!hasOverflow);
+                } catch (e) {
+                    // ignore
+                }
+            });
+        } catch (e) {
+            // ignore
+        }
     }
 
     function closePanel() {
