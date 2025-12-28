@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 28, 2025 at 02:40 PM
+-- Generation Time: Dec 28, 2025 at 03:57 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -585,6 +585,21 @@ CREATE TABLE `commissions` (
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `countries`
+-- (See below for the actual view)
+--
+CREATE TABLE `countries` (
+`id` int(11)
+,`option_filename` varchar(255)
+,`option_value` varchar(50)
+,`option_label` varchar(100)
+,`sort_order` int(11)
+,`is_active` tinyint(1)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `coupons`
 -- (See below for the actual view)
 --
@@ -1076,6 +1091,15 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP TABLE IF EXISTS `commissions`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `commissions`  AS SELECT `funmapco_content`.`commissions`.`id` AS `id`, `funmapco_content`.`commissions`.`transaction_id` AS `transaction_id`, `funmapco_content`.`commissions`.`post_id` AS `post_id`, `funmapco_content`.`commissions`.`member_id` AS `member_id`, `funmapco_content`.`commissions`.`member_name` AS `member_name`, `funmapco_content`.`commissions`.`gross_amount` AS `gross_amount`, `funmapco_content`.`commissions`.`site_commission` AS `site_commission`, `funmapco_content`.`commissions`.`member_payout` AS `member_payout`, `funmapco_content`.`commissions`.`payout_status` AS `payout_status`, `funmapco_content`.`commissions`.`created_at` AS `created_at`, `funmapco_content`.`commissions`.`updated_at` AS `updated_at` FROM `funmapco_content`.`commissions` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `countries`
+--
+DROP TABLE IF EXISTS `countries`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `countries`  AS SELECT `funmapco_system`.`countries`.`id` AS `id`, `funmapco_system`.`countries`.`option_filename` AS `option_filename`, `funmapco_system`.`countries`.`option_value` AS `option_value`, `funmapco_system`.`countries`.`option_label` AS `option_label`, `funmapco_system`.`countries`.`sort_order` AS `sort_order`, `funmapco_system`.`countries`.`is_active` AS `is_active` FROM `funmapco_system`.`countries` ;
 
 -- --------------------------------------------------------
 
@@ -1773,6 +1797,298 @@ INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkou
 (2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2025-12-27 15:04:47'),
 (3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2025-12-27 15:04:47'),
 (4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2025-12-27 15:04:47');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `countries`
+--
+
+CREATE TABLE `countries` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `countries`
+--
+
+INSERT INTO `countries` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, 'af.svg', 'af', 'Afghanistan', 1, 1),
+(2, 'al.svg', 'al', 'Albania', 2, 1),
+(3, 'dz.svg', 'dz', 'Algeria', 3, 1),
+(4, 'ad.svg', 'ad', 'Andorra', 4, 1),
+(5, 'ao.svg', 'ao', 'Angola', 5, 1),
+(6, 'ag.svg', 'ag', 'Antigua and Barbuda', 6, 1),
+(7, 'ar.svg', 'ar', 'Argentina', 7, 1),
+(8, 'am.svg', 'am', 'Armenia', 8, 1),
+(9, 'au.svg', 'au', 'Australia', 9, 1),
+(10, 'at.svg', 'at', 'Austria', 10, 1),
+(11, 'az.svg', 'az', 'Azerbaijan', 11, 1),
+(12, 'bs.svg', 'bs', 'Bahamas', 12, 1),
+(13, 'bh.svg', 'bh', 'Bahrain', 13, 1),
+(14, 'bd.svg', 'bd', 'Bangladesh', 14, 1),
+(15, 'bb.svg', 'bb', 'Barbados', 15, 1),
+(16, 'by.svg', 'by', 'Belarus', 16, 1),
+(17, 'be.svg', 'be', 'Belgium', 17, 1),
+(18, 'bz.svg', 'bz', 'Belize', 18, 1),
+(19, 'bj.svg', 'bj', 'Benin', 19, 1),
+(20, 'bt.svg', 'bt', 'Bhutan', 20, 1),
+(21, 'bo.svg', 'bo', 'Bolivia', 21, 1),
+(22, 'ba.svg', 'ba', 'Bosnia and Herzegovina', 22, 1),
+(23, 'bw.svg', 'bw', 'Botswana', 23, 1),
+(24, 'br.svg', 'br', 'Brazil', 24, 1),
+(25, 'bn.svg', 'bn', 'Brunei', 25, 1),
+(26, 'bg.svg', 'bg', 'Bulgaria', 26, 1),
+(27, 'bf.svg', 'bf', 'Burkina Faso', 27, 1),
+(28, 'bi.svg', 'bi', 'Burundi', 28, 1),
+(29, 'kh.svg', 'kh', 'Cambodia', 29, 1),
+(30, 'cm.svg', 'cm', 'Cameroon', 30, 1),
+(31, 'ca.svg', 'ca', 'Canada', 31, 1),
+(32, 'cv.svg', 'cv', 'Cape Verde', 32, 1),
+(33, 'cf.svg', 'cf', 'Central African Republic', 33, 1),
+(34, 'td.svg', 'td', 'Chad', 34, 1),
+(35, 'cl.svg', 'cl', 'Chile', 35, 1),
+(36, 'cn.svg', 'cn', 'China', 36, 1),
+(37, 'co.svg', 'co', 'Colombia', 37, 1),
+(38, 'km.svg', 'km', 'Comoros', 38, 1),
+(39, 'cg.svg', 'cg', 'Congo', 39, 1),
+(40, 'cd.svg', 'cd', 'Congo (DRC)', 40, 1),
+(41, 'cr.svg', 'cr', 'Costa Rica', 41, 1),
+(42, 'hr.svg', 'hr', 'Croatia', 42, 1),
+(43, 'cu.svg', 'cu', 'Cuba', 43, 1),
+(44, 'cy.svg', 'cy', 'Cyprus', 44, 1),
+(45, 'cz.svg', 'cz', 'Czech Republic', 45, 1),
+(46, 'dk.svg', 'dk', 'Denmark', 46, 1),
+(47, 'dj.svg', 'dj', 'Djibouti', 47, 1),
+(48, 'dm.svg', 'dm', 'Dominica', 48, 1),
+(49, 'do.svg', 'do', 'Dominican Republic', 49, 1),
+(50, 'ec.svg', 'ec', 'Ecuador', 50, 1),
+(51, 'eg.svg', 'eg', 'Egypt', 51, 1),
+(52, 'sv.svg', 'sv', 'El Salvador', 52, 1),
+(53, 'gq.svg', 'gq', 'Equatorial Guinea', 53, 1),
+(54, 'er.svg', 'er', 'Eritrea', 54, 1),
+(55, 'ee.svg', 'ee', 'Estonia', 55, 1),
+(56, 'sz.svg', 'sz', 'Eswatini', 56, 1),
+(57, 'et.svg', 'et', 'Ethiopia', 57, 1),
+(58, 'fj.svg', 'fj', 'Fiji', 58, 1),
+(59, 'fi.svg', 'fi', 'Finland', 59, 1),
+(60, 'fr.svg', 'fr', 'France', 60, 1),
+(61, 'ga.svg', 'ga', 'Gabon', 61, 1),
+(62, 'gm.svg', 'gm', 'Gambia', 62, 1),
+(63, 'ge.svg', 'ge', 'Georgia', 63, 1),
+(64, 'de.svg', 'de', 'Germany', 64, 1),
+(65, 'gh.svg', 'gh', 'Ghana', 65, 1),
+(66, 'gr.svg', 'gr', 'Greece', 66, 1),
+(67, 'gd.svg', 'gd', 'Grenada', 67, 1),
+(68, 'gt.svg', 'gt', 'Guatemala', 68, 1),
+(69, 'gn.svg', 'gn', 'Guinea', 69, 1),
+(70, 'gw.svg', 'gw', 'Guinea-Bissau', 70, 1),
+(71, 'gy.svg', 'gy', 'Guyana', 71, 1),
+(72, 'ht.svg', 'ht', 'Haiti', 72, 1),
+(73, 'hn.svg', 'hn', 'Honduras', 73, 1),
+(74, 'hk.svg', 'hk', 'Hong Kong', 74, 1),
+(75, 'hu.svg', 'hu', 'Hungary', 75, 1),
+(76, 'is.svg', 'is', 'Iceland', 76, 1),
+(77, 'in.svg', 'in', 'India', 77, 1),
+(78, 'id.svg', 'id', 'Indonesia', 78, 1),
+(79, 'ir.svg', 'ir', 'Iran', 79, 1),
+(80, 'iq.svg', 'iq', 'Iraq', 80, 1),
+(81, 'ie.svg', 'ie', 'Ireland', 81, 1),
+(82, 'il.svg', 'il', 'Israel', 82, 1),
+(83, 'it.svg', 'it', 'Italy', 83, 1),
+(84, 'ci.svg', 'ci', 'Ivory Coast', 84, 1),
+(85, 'jm.svg', 'jm', 'Jamaica', 85, 1),
+(86, 'jp.svg', 'jp', 'Japan', 86, 1),
+(87, 'jo.svg', 'jo', 'Jordan', 87, 1),
+(88, 'kz.svg', 'kz', 'Kazakhstan', 88, 1),
+(89, 'ke.svg', 'ke', 'Kenya', 89, 1),
+(90, 'ki.svg', 'ki', 'Kiribati', 90, 1),
+(91, 'xk.svg', 'xk', 'Kosovo', 91, 1),
+(92, 'kw.svg', 'kw', 'Kuwait', 92, 1),
+(93, 'kg.svg', 'kg', 'Kyrgyzstan', 93, 1),
+(94, 'la.svg', 'la', 'Laos', 94, 1),
+(95, 'lv.svg', 'lv', 'Latvia', 95, 1),
+(96, 'lb.svg', 'lb', 'Lebanon', 96, 1),
+(97, 'ls.svg', 'ls', 'Lesotho', 97, 1),
+(98, 'lr.svg', 'lr', 'Liberia', 98, 1),
+(99, 'ly.svg', 'ly', 'Libya', 99, 1),
+(100, 'li.svg', 'li', 'Liechtenstein', 100, 1),
+(101, 'lt.svg', 'lt', 'Lithuania', 101, 1),
+(102, 'lu.svg', 'lu', 'Luxembourg', 102, 1),
+(103, 'mo.svg', 'mo', 'Macau', 103, 1),
+(104, 'mg.svg', 'mg', 'Madagascar', 104, 1),
+(105, 'mw.svg', 'mw', 'Malawi', 105, 1),
+(106, 'my.svg', 'my', 'Malaysia', 106, 1),
+(107, 'mv.svg', 'mv', 'Maldives', 107, 1),
+(108, 'ml.svg', 'ml', 'Mali', 108, 1),
+(109, 'mt.svg', 'mt', 'Malta', 109, 1),
+(110, 'mh.svg', 'mh', 'Marshall Islands', 110, 1),
+(111, 'mr.svg', 'mr', 'Mauritania', 111, 1),
+(112, 'mu.svg', 'mu', 'Mauritius', 112, 1),
+(113, 'mx.svg', 'mx', 'Mexico', 113, 1),
+(114, 'fm.svg', 'fm', 'Micronesia', 114, 1),
+(115, 'md.svg', 'md', 'Moldova', 115, 1),
+(116, 'mc.svg', 'mc', 'Monaco', 116, 1),
+(117, 'mn.svg', 'mn', 'Mongolia', 117, 1),
+(118, 'me.svg', 'me', 'Montenegro', 118, 1),
+(119, 'ma.svg', 'ma', 'Morocco', 119, 1),
+(120, 'mz.svg', 'mz', 'Mozambique', 120, 1),
+(121, 'mm.svg', 'mm', 'Myanmar', 121, 1),
+(122, 'na.svg', 'na', 'Namibia', 122, 1),
+(123, 'nr.svg', 'nr', 'Nauru', 123, 1),
+(124, 'np.svg', 'np', 'Nepal', 124, 1),
+(125, 'nl.svg', 'nl', 'Netherlands', 125, 1),
+(126, 'nz.svg', 'nz', 'New Zealand', 126, 1),
+(127, 'ni.svg', 'ni', 'Nicaragua', 127, 1),
+(128, 'ne.svg', 'ne', 'Niger', 128, 1),
+(129, 'ng.svg', 'ng', 'Nigeria', 129, 1),
+(130, 'kp.svg', 'kp', 'North Korea', 130, 1),
+(131, 'mk.svg', 'mk', 'North Macedonia', 131, 1),
+(132, 'no.svg', 'no', 'Norway', 132, 1),
+(133, 'om.svg', 'om', 'Oman', 133, 1),
+(134, 'pk.svg', 'pk', 'Pakistan', 134, 1),
+(135, 'pw.svg', 'pw', 'Palau', 135, 1),
+(136, 'ps.svg', 'ps', 'Palestine', 136, 1),
+(137, 'pa.svg', 'pa', 'Panama', 137, 1),
+(138, 'pg.svg', 'pg', 'Papua New Guinea', 138, 1),
+(139, 'py.svg', 'py', 'Paraguay', 139, 1),
+(140, 'pe.svg', 'pe', 'Peru', 140, 1),
+(141, 'ph.svg', 'ph', 'Philippines', 141, 1),
+(142, 'pl.svg', 'pl', 'Poland', 142, 1),
+(143, 'pt.svg', 'pt', 'Portugal', 143, 1),
+(144, 'qa.svg', 'qa', 'Qatar', 144, 1),
+(145, 'ro.svg', 'ro', 'Romania', 145, 1),
+(146, 'ru.svg', 'ru', 'Russia', 146, 1),
+(147, 'rw.svg', 'rw', 'Rwanda', 147, 1),
+(148, 'kn.svg', 'kn', 'Saint Kitts and Nevis', 148, 1),
+(149, 'lc.svg', 'lc', 'Saint Lucia', 149, 1),
+(150, 'vc.svg', 'vc', 'Saint Vincent', 150, 1),
+(151, 'ws.svg', 'ws', 'Samoa', 151, 1),
+(152, 'sm.svg', 'sm', 'San Marino', 152, 1),
+(153, 'st.svg', 'st', 'Sao Tome and Principe', 153, 1),
+(154, 'sa.svg', 'sa', 'Saudi Arabia', 154, 1),
+(155, 'sn.svg', 'sn', 'Senegal', 155, 1),
+(156, 'rs.svg', 'rs', 'Serbia', 156, 1),
+(157, 'sc.svg', 'sc', 'Seychelles', 157, 1),
+(158, 'sl.svg', 'sl', 'Sierra Leone', 158, 1),
+(159, 'sg.svg', 'sg', 'Singapore', 159, 1),
+(160, 'sk.svg', 'sk', 'Slovakia', 160, 1),
+(161, 'si.svg', 'si', 'Slovenia', 161, 1),
+(162, 'sb.svg', 'sb', 'Solomon Islands', 162, 1),
+(163, 'so.svg', 'so', 'Somalia', 163, 1),
+(164, 'za.svg', 'za', 'South Africa', 164, 1),
+(165, 'kr.svg', 'kr', 'South Korea', 165, 1),
+(166, 'ss.svg', 'ss', 'South Sudan', 166, 1),
+(167, 'es.svg', 'es', 'Spain', 167, 1),
+(168, 'lk.svg', 'lk', 'Sri Lanka', 168, 1),
+(169, 'sd.svg', 'sd', 'Sudan', 169, 1),
+(170, 'sr.svg', 'sr', 'Suriname', 170, 1),
+(171, 'se.svg', 'se', 'Sweden', 171, 1),
+(172, 'ch.svg', 'ch', 'Switzerland', 172, 1),
+(173, 'sy.svg', 'sy', 'Syria', 173, 1),
+(174, 'tw.svg', 'tw', 'Taiwan', 174, 1),
+(175, 'tj.svg', 'tj', 'Tajikistan', 175, 1),
+(176, 'tz.svg', 'tz', 'Tanzania', 176, 1),
+(177, 'th.svg', 'th', 'Thailand', 177, 1),
+(178, 'tl.svg', 'tl', 'Timor-Leste', 178, 1),
+(179, 'tg.svg', 'tg', 'Togo', 179, 1),
+(180, 'to.svg', 'to', 'Tonga', 180, 1),
+(181, 'tt.svg', 'tt', 'Trinidad and Tobago', 181, 1),
+(182, 'tn.svg', 'tn', 'Tunisia', 182, 1),
+(183, 'tr.svg', 'tr', 'Turkey', 183, 1),
+(184, 'tm.svg', 'tm', 'Turkmenistan', 184, 1),
+(185, 'tv.svg', 'tv', 'Tuvalu', 185, 1),
+(186, 'ae.svg', 'ae', 'UAE', 186, 1),
+(187, 'ug.svg', 'ug', 'Uganda', 187, 1),
+(188, 'ua.svg', 'ua', 'Ukraine', 188, 1),
+(189, 'gb.svg', 'gb', 'United Kingdom', 189, 1),
+(190, 'us.svg', 'us', 'United States', 190, 1),
+(191, 'uy.svg', 'uy', 'Uruguay', 191, 1),
+(192, 'uz.svg', 'uz', 'Uzbekistan', 192, 1),
+(193, 'vu.svg', 'vu', 'Vanuatu', 193, 1),
+(194, 'va.svg', 'va', 'Vatican City', 194, 1),
+(195, 've.svg', 've', 'Venezuela', 195, 1),
+(196, 'vn.svg', 'vn', 'Vietnam', 196, 1),
+(197, 'ye.svg', 'ye', 'Yemen', 197, 1),
+(198, 'zm.svg', 'zm', 'Zambia', 198, 1),
+(199, 'zw.svg', 'zw', 'Zimbabwe', 199, 1),
+(200, 'ai.svg', 'ai', 'Anguilla', 0, 1),
+(201, 'aq.svg', 'aq', 'Antarctica', 0, 1),
+(202, 'arab.svg', 'arab.svg', '', 0, 1),
+(203, 'as.svg', 'as', 'American Samoa', 0, 1),
+(204, 'asean.svg', 'asean.svg', '', 0, 1),
+(205, 'aw.svg', 'aw', 'Aruba', 0, 1),
+(206, 'ax.svg', 'ax', 'Åland Islands', 0, 1),
+(207, 'bl.svg', 'bl', 'Saint Barthélemy', 0, 1),
+(208, 'bm.svg', 'bm', 'Bermuda', 0, 1),
+(209, 'bq.svg', 'bq', 'Bonaire, Sint Eustatius and Saba', 0, 1),
+(210, 'bv.svg', 'bv', 'Bouvet Island', 0, 1),
+(211, 'cc.svg', 'cc', 'Cocos (Keeling) Islands', 0, 1),
+(212, 'cefta.svg', 'cefta.svg', '', 0, 1),
+(213, 'ck.svg', 'ck', 'Cook Islands', 0, 1),
+(214, 'cp.svg', 'cp.svg', '', 0, 1),
+(215, 'cw.svg', 'cw', 'Curaçao', 0, 1),
+(216, 'cx.svg', 'cx', 'Christmas Island', 0, 1),
+(217, 'dg.svg', 'dg.svg', '', 0, 1),
+(218, 'eac.svg', 'eac.svg', '', 0, 1),
+(219, 'eh.svg', 'eh', 'Western Sahara', 0, 1),
+(220, 'es-ct.svg', 'es', 'Catalonia', 0, 1),
+(221, 'es-ga.svg', 'es', 'Galicia', 0, 1),
+(222, 'es-pv.svg', 'es', 'Basque Country', 0, 1),
+(223, 'eu.svg', 'eu.svg', '', 0, 1),
+(224, 'fk.svg', 'fk', 'Falkland Islands', 0, 1),
+(225, 'fo.svg', 'fo', 'Faroe Islands', 0, 1),
+(226, 'gb-eng.svg', 'gb', 'England', 0, 1),
+(227, 'gb-nir.svg', 'gb', 'Northern Ireland', 0, 1),
+(228, 'gb-sct.svg', 'gb', 'Scotland', 0, 1),
+(229, 'gb-wls.svg', 'gb', 'Wales', 0, 1),
+(230, 'gf.svg', 'gf', 'French Guiana', 0, 1),
+(231, 'gg.svg', 'gg', 'Guernsey', 0, 1),
+(232, 'gi.svg', 'gi', 'Gibraltar', 0, 1),
+(233, 'gl.svg', 'gl', 'Greenland', 0, 1),
+(234, 'gp.svg', 'gp', 'Guadeloupe', 0, 1),
+(235, 'gs.svg', 'gs', 'South Georgia and the South Sandwich Islands', 0, 1),
+(236, 'gu.svg', 'gu', 'Guam', 0, 1),
+(237, 'hm.svg', 'hm', 'Heard Island and McDonald Islands', 0, 1),
+(238, 'ic.svg', 'ic.svg', '', 0, 1),
+(239, 'im.svg', 'im', 'Isle of Man', 0, 1),
+(240, 'io.svg', 'io', 'British Indian Ocean Territory', 0, 1),
+(241, 'je.svg', 'je', 'Jersey', 0, 1),
+(242, 'ky.svg', 'ky', 'Cayman Islands', 0, 1),
+(243, 'mf.svg', 'mf', 'Saint Martin', 0, 1),
+(244, 'mp.svg', 'mp', 'Northern Mariana Islands', 0, 1),
+(245, 'mq.svg', 'mq', 'Martinique', 0, 1),
+(246, 'ms.svg', 'ms', 'Montserrat', 0, 1),
+(247, 'nc.svg', 'nc', 'New Caledonia', 0, 1),
+(248, 'nf.svg', 'nf', 'Norfolk Island', 0, 1),
+(249, 'nu.svg', 'nu', 'Niue', 0, 1),
+(250, 'pc.svg', 'pc.svg', '', 0, 1),
+(251, 'pf.svg', 'pf', 'French Polynesia', 0, 1),
+(252, 'pm.svg', 'pm', 'Saint Pierre and Miquelon', 0, 1),
+(253, 'pn.svg', 'pn', 'Pitcairn Islands', 0, 1),
+(254, 'pr.svg', 'pr', 'Puerto Rico', 0, 1),
+(255, 're.svg', 're', 'Réunion', 0, 1),
+(256, 'sh-ac.svg', 'sh', 'Ascension Island', 0, 1),
+(257, 'sh-hl.svg', 'sh', 'Saint Helena', 0, 1),
+(258, 'sh-ta.svg', 'sh', 'Tristan da Cunha', 0, 1),
+(259, 'sh.svg', 'sh', 'Saint Helena', 0, 1),
+(260, 'sj.svg', 'sj', 'Svalbard and Jan Mayen', 0, 1),
+(261, 'sx.svg', 'sx', 'Sint Maarten', 0, 1),
+(262, 'tc.svg', 'tc', 'Turks and Caicos Islands', 0, 1),
+(263, 'tf.svg', 'tf', 'French Southern Territories', 0, 1),
+(264, 'tk.svg', 'tk', 'Tokelau', 0, 1),
+(265, 'um.svg', 'um', 'U.S. Minor Outlying Islands', 0, 1),
+(266, 'un.svg', 'un.svg', '', 0, 1),
+(267, 'vg.svg', 'vg', 'British Virgin Islands', 0, 1),
+(268, 'vi.svg', 'vi', 'U.S. Virgin Islands', 0, 1),
+(269, 'wf.svg', 'wf', 'Wallis and Futuna', 0, 1),
+(270, 'xx.svg', 'xx.svg', '', 0, 1),
+(271, 'yt.svg', 'yt', 'Mayotte', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -2864,6 +3180,14 @@ ALTER TABLE `checkout_options`
   ADD UNIQUE KEY `checkout_key` (`checkout_key`);
 
 --
+-- Indexes for table `countries`
+--
+ALTER TABLE `countries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
 -- Indexes for table `coupons`
 --
 ALTER TABLE `coupons`
@@ -2996,6 +3320,12 @@ ALTER TABLE `category_icons`
 --
 ALTER TABLE `checkout_options`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `countries`
+--
+ALTER TABLE `countries`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=272;
 
 --
 -- AUTO_INCREMENT for table `coupons`
