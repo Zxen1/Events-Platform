@@ -536,12 +536,16 @@ const App = (function() {
       var h = scrollEl.clientHeight || 0;
       if (h <= 0) return;
       scrollEl.style.maxHeight = h + 'px';
+      // While scrolling, collapse bottom slack so the user isn't "always able" to scroll into it.
+      // Slack returns when scrolling stops (unlock()).
+      scrollEl.style.setProperty('--panel-bottom-slack', '1px');
       locked = true;
     }
 
     function unlock() {
       if (!locked) return;
       scrollEl.style.maxHeight = '';
+      scrollEl.style.removeProperty('--panel-bottom-slack'); // back to default (300px)
       locked = false;
     }
 
