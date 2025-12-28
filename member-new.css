@@ -110,7 +110,7 @@
   color: #fff;
 }
 
-.member-supporter-payment-custom {
+.member-supporterpayment-input {
   margin: 0;
   width: 100%;
   height: 44px;
@@ -122,6 +122,12 @@
   font-weight: 600;
   text-align: center;
   box-sizing: border-box;
+  caret-color: #fff;
+}
+
+.member-supporterpayment-input:focus {
+  outline: 2px solid var(--btn-selected);
+  outline-offset: 2px;
 }
 
 .member-auth-submit[data-action="register"] {
@@ -1096,6 +1102,8 @@
   outline-offset: 2px;
   background: #1c1c1c;
 }
+
+/* Support FunMap custom amount input uses its own class: .member-supporterpayment-input */
 
 .member-auth-submit {
   align-self: flex-start;

@@ -116,7 +116,8 @@ const MemberModule = (function() {
     var avatarGridRegister = null;
     var avatarGridProfile = null;
     var activeAvatarTarget = null; // 'register' | 'profile' (used by cropper/file picker)
-    var avatarSelection = { register: 'self', profile: 'self' };
+    // Register has no "self/upload" tile, so keep register empty until we can default to the first site avatar.
+    var avatarSelection = { register: '', profile: 'self' };
     var pendingRegisterSiteUrl = '';
     var pendingProfileSiteUrl = '';
     var pendingRegisterAvatarPreviewUrl = ''; // objectURL for showing staged crop in grid
@@ -835,6 +836,19 @@ const MemberModule = (function() {
         // Default selection
         if (!avatarSelection[target]) {
             avatarSelection[target] = (target === 'register') ? 'site-0' : 'self';
+        }
+
+        // Register: keep pendingRegisterSiteUrl in sync with the selected site avatar (required for submit).
+        if (target === 'register' && String(avatarSelection[target] || '').indexOf('site-') === 0) {
+            var selIdx = parseInt(String(avatarSelection[target]).split('-')[1] || '0', 10);
+            if (!isFinite(selIdx) || selIdx < 0) selIdx = 0;
+            var selChoice = choices[selIdx] || null;
+            var nextUrl = (selChoice && selChoice.url) ? String(selChoice.url) : '';
+            if (nextUrl) {
+                pendingRegisterSiteUrl = nextUrl;
+                pendingRegisterAvatarBlob = null;
+                pendingRegisterAvatarPreviewUrl = '';
+            }
         }
 
         container.innerHTML = '';
