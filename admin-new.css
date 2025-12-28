@@ -249,13 +249,7 @@
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 
-/* Consistent "extra scroll space under content" mechanism (see member/filter panels). */
-.admin-panel-body::after {
-  content: '';
-  display: block;
-  height: 300px;
-  flex: 0 0 auto;
-}
+/* Bottom slack is provided by `.panel-bottom-slack` elements. */
 
 .admin-panel-body::-webkit-scrollbar {
   width: 12px;

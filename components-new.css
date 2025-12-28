@@ -19,6 +19,20 @@
    
    ============================================================================ */
 
+/* ============================================================================
+   PANEL BOTTOM SLACK (Reusable bottom spacer)
+   ============================================================================
+   Use as the last child inside any scrollable panel/tab content:
+   <div class="panel-bottom-slack" aria-hidden="true"></div>
+   Defaults to 300px; override via CSS variable: --panel-bottom-slack
+   ============================================================================ */
+
+.panel-bottom-slack {
+  height: var(--panel-bottom-slack, 300px);
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 
 /* ============================================================================
    CLEAR BUTTON

@@ -411,14 +411,7 @@
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 
-/* Extra scroll space UNDER the scrolled content (consistent with admin/filter). */
-.member-panel-body::after {
-  content: '';
-  display: block;
-  height: 300px;
-  flex: 0 0 auto;
-  pointer-events: none;
-}
+/* Bottom slack is provided by `.panel-bottom-slack` elements. */
 
 .member-panel-body::-webkit-scrollbar {
   width: 12px;
@@ -1374,10 +1367,7 @@
   font-size: 14px;
 }
 
-/* Tiny sanity check spacing: 10px under the Log Out button */
-#member-logout-btn {
-  margin-bottom: 300px;
-}
+/* Spacing under content is handled by `.panel-bottom-slack` at the end of each tab. */
 
 /* ============================================================================
    UNSAVED PROMPT DIALOG
