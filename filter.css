@@ -161,7 +161,6 @@
   overflow-y:auto;
   overflow-x:hidden;
   padding:0 10px;
-  padding-bottom:env(safe-area-inset-bottom, 0px);
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
@@ -169,14 +168,6 @@
   gap:20px;
   scrollbar-width:thin;
   scrollbar-color:var(--panel-scrollbar-thumb) transparent;
-}
-
-/* Extra scroll space UNDER the scrolled content (not the panel container). */
-#filterPanel .panel-body::after{
-  content:'';
-  display:block;
-  height:300px;
-  flex:0 0 auto;
 }
 #filterPanel .panel-body::-webkit-scrollbar{
   width:12px;

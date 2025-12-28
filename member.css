@@ -159,7 +159,6 @@
   overflow-y:auto;
   overflow-x:hidden;
   padding:0 10px;
-  padding-bottom:env(safe-area-inset-bottom, 0px);
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
@@ -167,15 +166,6 @@
   gap:20px;
   scrollbar-width:thin;
   scrollbar-color:var(--panel-scrollbar-thumb) transparent;
-}
-
-/* Extra scroll space UNDER the scrolled content (consistent with admin/filter). */
-#memberPanel .panel-body::after{
-  content:'';
-  display:block;
-  height:300px;
-  flex:0 0 auto;
-  pointer-events:none;
 }
 
 #memberPanel .panel-body::-webkit-scrollbar{
@@ -872,10 +862,6 @@
   white-space:nowrap;
 }
 
-/* Tiny sanity check spacing: 10px under the Log Out button */
-#memberLogoutBtn{
-  margin-bottom:10px;
-}
 
 /* ============================================================================
    MAP CONTROLS
