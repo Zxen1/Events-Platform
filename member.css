@@ -872,6 +872,11 @@
   white-space:nowrap;
 }
 
+/* Tiny sanity check spacing: 10px under the Log Out button */
+#memberLogoutBtn{
+  margin-bottom:10px;
+}
+
 /* ============================================================================
    MAP CONTROLS
    ============================================================================ */
