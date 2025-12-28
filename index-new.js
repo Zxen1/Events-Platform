@@ -569,6 +569,22 @@ const App = (function() {
       fadeScrollbar();
     }
 
+    // If slack is ON (4000) but still OFF-SCREEN below the viewport, and the click window is over,
+    // turn it OFF immediately before the user can ever scroll into it.
+    function collapseSlackIfOffscreenBelow() {
+      try {
+        if (currentSlackPx !== expandedSlackPx) return false;
+        if (Date.now() < clickHoldUntil) return false;
+        // Only collapse when the spacer is NOT on-screen (off-screen is allowed).
+        if (isBottomSlackOnScreen()) return false;
+        pendingOffscreenCollapse = false;
+        applySlackPx(collapsedSlackPx);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
     function getBottomSlackEl() {
       if (bottomSlackEl && bottomSlackEl instanceof Element) return bottomSlackEl;
       try { bottomSlackEl = scrollEl.querySelector('.panel-bottom-slack'); } catch (e) { bottomSlackEl = null; }
@@ -657,6 +673,10 @@ const App = (function() {
         // any slack/lock behaviors. Downward scrolling is blocked proactively in wheel/touch/key handlers.
         if (st > lastScrollTop && isBottomSlackOnScreen()) return;
 
+        // If the user is scrolling down and slack is ON but still off-screen, kill it now so the user
+        // never ends up with an extra 4000px of empty space beneath expanded menus.
+        if (st > lastScrollTop) collapseSlackIfOffscreenBelow();
+
         // If the scroll position didn't actually change (common at the bottom edge on some devices),
         // do nothing to avoid "shudder" loops.
         if (st === lastScrollTop) return;
@@ -677,6 +697,8 @@ const App = (function() {
     scrollEl.addEventListener('wheel', function(e) {
       try {
         var deltaY = Number(e && e.deltaY) || 0;
+        // If the user is trying to scroll down, remove off-screen slack first so it never becomes reachable.
+        if (deltaY > 0) collapseSlackIfOffscreenBelow();
         // While the spacer is visible, NO downward scrolling is allowed.
         // User scrolls down -> nothing happens.
         if (deltaY > 0 && isBottomSlackOnScreen()) {
@@ -716,6 +738,7 @@ const App = (function() {
         var dy = y - lastTouchY;
         lastTouchY = y;
         // Finger moving up (dy < 0) attempts to scroll down.
+        if (dy < 0) collapseSlackIfOffscreenBelow();
         if (dy < 0 && isBottomSlackOnScreen()) {
           if (e && typeof e.preventDefault === 'function') e.preventDefault();
           if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
