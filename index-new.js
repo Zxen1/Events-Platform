@@ -520,6 +520,14 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
+        // Safety cleanup: if a top-anchor spacer was previously attached in an older session/build,
+        // remove its injected element and clear its CSS var so it cannot cause 4000px "jump" effects.
+        try {
+          el.style.setProperty('--panel-top-slack', '0px');
+          var topSlack = el.querySelector('.panel-top-slack');
+          if (topSlack && topSlack.parentNode) topSlack.parentNode.removeChild(topSlack);
+        } catch (e) {}
+
         // Strict behavior lives inside the component.
         ButtonAnchorBottom.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
