@@ -514,12 +514,14 @@ const App = (function() {
   /* --------------------------------------------------------------------------
      BUTTON ANCHOR COLLAPSIBLE SPACER + SCROLL HEIGHT LOCK (Anti-jank)
      --------------------------------------------------------------------------
-     Requirements:
-     - When the user starts scrolling, lock the scroll container's max-height to
-       its current pixel height so accordion/menu expansion can't change layout mid-scroll.
-     - The bottom slack should NOT be visible all the time.
-       It should expand only when needed (menus/accordions open) and must NOT collapse
-       while it is visible on-screen (prevents buttons snapping away under the finger).
+     USER RULE (STRICT):
+     Only TWO triggers exist:
+     1) Scrolling
+     2) Not scrolling
+     --------------------------------------------------------------------------
+     Behavior:
+     - On scroll start: lock max-height to current pixel height and collapse slack to 1px.
+     - On scroll stop: remove max-height lock and restore slack to 300px.
   */
 
   function setupScrollHeightLock(scrollEl, opts) {
@@ -531,49 +533,12 @@ const App = (function() {
     var unlockTimer = null;
     var locked = false;
     var fullSlackPx = (opts && typeof opts.fullSlackPx === 'number') ? opts.fullSlackPx : 300;
-    var desiredSlackPx = 0; // 0 unless "needed"
+    var collapsedSlackPx = (opts && typeof opts.collapsedSlackPx === 'number') ? opts.collapsedSlackPx : 1;
 
-    function applySlackOverridePx(px) {
-      if (px == null) {
-        scrollEl.style.removeProperty('--panel-bottom-slack');
-      } else {
-        scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
-      }
+    function applySlackPx(px) {
+      scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
       // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
       try { scrollEl.getBoundingClientRect(); } catch (e) {}
-    }
-
-    function getSlackEl() {
-      return scrollEl.querySelector('.panel-bottom-slack');
-    }
-
-    function slackIsOnScreen() {
-      var slackEl = getSlackEl();
-      if (!slackEl) return false;
-      try {
-        var s = slackEl.getBoundingClientRect();
-        var c = scrollEl.getBoundingClientRect();
-        return (s.top < c.bottom) && (s.bottom > c.top);
-      } catch (e) {
-        return false;
-      }
-    }
-
-    function setDesiredSlackPx(px) {
-      desiredSlackPx = Math.max(0, Math.floor(Number(px) || 0));
-      // If we're not currently locked (not scrolling), apply immediately.
-      if (!locked) applySlackOverridePx(desiredSlackPx);
-    }
-
-    function updateSlackForCurrentViewport() {
-      // If slack is visible on screen, do NOT collapse it.
-      // Otherwise, collapse it during scroll bursts to avoid a permanent 300px gap.
-      if (desiredSlackPx <= 0) {
-        applySlackOverridePx(0);
-        return;
-      }
-      if (slackIsOnScreen()) applySlackOverridePx(desiredSlackPx);
-      else applySlackOverridePx(1);
     }
 
     function lock() {
@@ -581,21 +546,20 @@ const App = (function() {
       var h = scrollEl.clientHeight || 0;
       if (h <= 0) return;
       scrollEl.style.maxHeight = h + 'px';
-      updateSlackForCurrentViewport();
+      applySlackPx(collapsedSlackPx);
       locked = true;
     }
 
     function unlock() {
       if (!locked) return;
       scrollEl.style.maxHeight = '';
-      applySlackOverridePx(desiredSlackPx); // restore to "needed" slack (0 or 300)
+      applySlackPx(fullSlackPx);
       locked = false;
     }
 
     function onScroll() {
       // First scroll event in a burst is our "scroll start" trigger
       lock();
-      updateSlackForCurrentViewport();
       if (unlockTimer) clearTimeout(unlockTimer);
       unlockTimer = setTimeout(unlock, stopDelayMs);
     }
@@ -604,61 +568,8 @@ const App = (function() {
     // Trigger lock *before* the first scroll position change (wheel/touch), so the thumb doesn't lag behind.
     scrollEl.addEventListener('wheel', function() { lock(); }, { passive: true });
     scrollEl.addEventListener('touchstart', function() { lock(); }, { passive: true });
-
-    // Expose a tiny hook for the "needed slack" controller.
-    scrollEl._setDesiredSlackPx = setDesiredSlackPx;
-    // Default: no permanent gap.
-    setDesiredSlackPx(0);
-  }
-
-  function setupButtonAnchorCollapsibleSpacer(scrollEl) {
-    if (!scrollEl) return;
-    if (scrollEl.dataset && scrollEl.dataset.bacsInit === '1') return;
-    if (scrollEl.dataset) scrollEl.dataset.bacsInit = '1';
-
-    // "Needed" = any open menu/accordion state inside this scroll container.
-    // Keep this as a single selector list to avoid multiple code paths.
-    var openSelector = [
-      '[aria-expanded="true"]',
-      '.fieldset-menu--open',
-      '.member-formpicker-menu--open',
-      '.filter-sort-menu--open',
-      '.filter-calendar-container--open',
-      '.filter-categoryfilter-accordion--open',
-      '.admin-settings-imagemanager-accordion--open',
-      '.admin-messages-accordion--open',
-      '.admin-checkout-accordion-editpanel-more-menu--open',
-      '.admin-textpicker-popup--open'
-    ].join(',');
-
-    var raf = 0;
-    function recompute() {
-      if (raf) cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(function() {
-        raf = 0;
-        var needed = !!scrollEl.querySelector(openSelector);
-        if (typeof scrollEl._setDesiredSlackPx === 'function') {
-          scrollEl._setDesiredSlackPx(needed ? 300 : 0);
-        } else {
-          // Fallback if lock wasn't attached for some reason
-          scrollEl.style.setProperty('--panel-bottom-slack', needed ? '300px' : '0px');
-        }
-      });
-    }
-
-    // Initial
-    recompute();
-
-    // Observe class/aria-expanded changes under this container
-    try {
-      var obs = new MutationObserver(recompute);
-      obs.observe(scrollEl, { subtree: true, attributes: true, attributeFilter: ['class', 'aria-expanded', 'hidden'] });
-    } catch (e) {
-      // If observer fails, we'll still update on common interactions
-    }
-
-    scrollEl.addEventListener('click', recompute, { passive: true });
-    scrollEl.addEventListener('keydown', recompute, { passive: true });
+    // Not scrolling (default): slack available for stable clicks.
+    applySlackPx(fullSlackPx);
   }
 
   function initScrollHeightLocks() {
@@ -666,8 +577,7 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        setupScrollHeightLock(el, { stopDelayMs: 150, fullSlackPx: 300 });
-        setupButtonAnchorCollapsibleSpacer(el);
+        setupScrollHeightLock(el, { stopDelayMs: 150, fullSlackPx: 300, collapsedSlackPx: 1 });
       });
     });
   }
