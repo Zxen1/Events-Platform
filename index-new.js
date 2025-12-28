@@ -525,6 +525,10 @@ const App = (function() {
      - Slack may only change from 4000px -> 0px when the spacer is fully off-screen.
   */
 
+  // Controllers for each scroll container (kept internal).
+  // Used to force the spacer OFF during tab switching.
+  var panelSlackControllers = new WeakMap();
+
   function setupScrollHeightLock(scrollEl, opts) {
     if (!scrollEl) return;
     if (scrollEl.dataset && scrollEl.dataset.scrollHeightLockInit === '1') return;
@@ -703,6 +707,20 @@ const App = (function() {
 
     // Default (on tab open): no slack to avoid scrollbar flicker.
     applySlackPx(collapsedSlackPx);
+
+    // Expose a tiny internal controller so tab switching can force slack OFF immediately.
+    try {
+      panelSlackControllers.set(scrollEl, {
+        forceOff: function() {
+          try { clickHoldUntil = 0; } catch (e) {}
+          try { pendingOffscreenCollapse = false; } catch (e) {}
+          try { if (unlockTimer) clearTimeout(unlockTimer); } catch (e) {}
+          try { scrollEl.style.maxHeight = ''; } catch (e) {}
+          locked = false;
+          applySlackPx(collapsedSlackPx);
+        }
+      });
+    } catch (e) {}
   }
 
   function initScrollHeightLocks() {
@@ -714,6 +732,31 @@ const App = (function() {
         setupScrollHeightLock(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
+
+    // If the user switches tabs, the spacer must be OFF.
+    // This runs in capture phase so it happens before the tab-switch handlers run.
+    try {
+      document.addEventListener('click', function(e) {
+        var t = e && e.target;
+        if (!t || !t.closest) return;
+        // Any tab or sub-tab (including future ones) must force the spacer OFF on switch.
+        var tabBtn = t.closest('[role="tab"], .admin-tab-bar-button, .member-tab-bar-button, .member-auth-tab');
+        if (!tabBtn) return;
+
+        var panel = tabBtn.closest('.admin-panel, .member-panel');
+        if (!panel) return;
+
+        var body = null;
+        if (panel.classList.contains('admin-panel')) body = panel.querySelector('.admin-panel-body');
+        else if (panel.classList.contains('member-panel')) body = panel.querySelector('.member-panel-body');
+        if (!body) return;
+
+        var ctl = null;
+        try { ctl = panelSlackControllers.get(body); } catch (e2) { ctl = null; }
+        if (ctl && typeof ctl.forceOff === 'function') ctl.forceOff();
+        else body.style.setProperty('--panel-bottom-slack', '0px');
+      }, true);
+    } catch (e) {}
   }
 
   function init() {
