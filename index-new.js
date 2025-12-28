@@ -538,6 +538,8 @@ const App = (function() {
     var clickHoldMs = (opts && typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
     var clickHoldUntil = 0;
     var currentSlackPx = null;
+    var lastScrollTop = scrollEl.scrollTop || 0;
+    var slackEl = null;
 
     function applySlackPx(px) {
       if (currentSlackPx === px) return;
@@ -547,9 +549,30 @@ const App = (function() {
       try { scrollEl.getBoundingClientRect(); } catch (e) {}
     }
 
+    function ensureSlackEl() {
+      if (!slackEl) slackEl = scrollEl.querySelector('.panel-bottom-slack');
+      return slackEl;
+    }
+
+    function isSlackVisibleOnScreen() {
+      // Footer spacer rule: if visible, it must not collapse and must not scroll DOWN further into it.
+      var el = ensureSlackEl();
+      if (!el) return false;
+      try {
+        var s = el.getBoundingClientRect();
+        var c = scrollEl.getBoundingClientRect();
+        return (s.top < c.bottom) && (s.bottom > c.top);
+      } catch (e) {
+        return false;
+      }
+    }
+
     function applyScrollStateSlackScrolling() {
       // Two triggers only: scrolling -> collapsed slack
-      applySlackPx(collapsedSlackPx);
+      // Footer spacer exception (user requirement for anchor safety):
+      // if the footer spacer is visible on-screen, do NOT collapse it while scrolling.
+      if (isSlackVisibleOnScreen()) applySlackPx(fullSlackPx);
+      else applySlackPx(collapsedSlackPx);
     }
 
     function applyScrollStateSlackNotScrolling() {
@@ -590,6 +613,17 @@ const App = (function() {
     function onScroll() {
       // First scroll event in a burst is our "scroll start" trigger
       startScrollBurst();
+
+      // Footer spacer rule:
+      // If the footer spacer is visible, user may scroll UP (to shrink it / move it off-screen),
+      // but may NOT scroll DOWN further into it.
+      try {
+        var st = scrollEl.scrollTop || 0;
+        if (isSlackVisibleOnScreen() && st > lastScrollTop) {
+          scrollEl.scrollTop = lastScrollTop;
+        }
+        lastScrollTop = scrollEl.scrollTop || 0;
+      } catch (e) {}
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
@@ -615,7 +649,8 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        setupScrollHeightLock(el, { stopDelayMs: 180, fullSlackPx: 300, collapsedSlackPx: 0, clickHoldMs: 250 });
+        // TEMP TEST: very tall footer spacer to simulate extremely tall accordion menus (e.g. Image folders).
+        setupScrollHeightLock(el, { stopDelayMs: 180, fullSlackPx: 4000, collapsedSlackPx: 0, clickHoldMs: 250 });
       });
     });
   }
