@@ -909,15 +909,16 @@
 
 .admin-lighting-button:hover,
 .admin-style-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: #3b82f6;
 }
 
 .admin-lighting-button--active,
 .admin-lighting-button[aria-pressed="true"],
 .admin-style-button--active,
 .admin-style-button[aria-pressed="true"] {
-  background: var(--btn-selected, #3b82f6);
-  color: var(--button-active-text, #fff);
+  background: rgba(0, 0, 0, 0.2);
+  color: #3b82f6;
 }
 
 .admin-lighting-button-icon {
