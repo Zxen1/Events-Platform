@@ -652,9 +652,25 @@ const App = (function() {
     function onScroll() {
       try {
         var st = scrollEl.scrollTop || 0;
+        // If the bottom slack spacer is on-screen, DO NOT allow downward scrolling.
+        // (Upward scrolling is allowed so the user can leave the bottom.)
+        var delta = st - lastScrollTop;
+        if (delta > 0 && isBottomSlackOnScreen()) {
+          // Snap back to the last allowed position (no computed clamps, no guessing).
+          // This prevents "scrolling into the spacer" without breaking anchor behavior.
+          var maxNow = (scrollEl.scrollHeight || 0) - (scrollEl.clientHeight || 0);
+          if (maxNow < 0) maxNow = 0;
+          if (st > maxNow) st = maxNow;
+          if (lastScrollTop > maxNow) lastScrollTop = maxNow;
+          scrollEl.scrollTop = lastScrollTop;
+          return;
+        }
+
         // If the scroll position didn't actually change (common at the bottom edge on some devices),
         // do nothing to avoid "shudder" loops.
         if (st === lastScrollTop) return;
+
+        // Update lastScrollTop after the downward-scroll guard above.
         lastScrollTop = st;
       } catch (e) {}
       // First real scroll movement in a burst is our "scroll start" trigger
