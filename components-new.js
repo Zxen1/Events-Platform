@@ -6980,6 +6980,8 @@ const ButtonAnchorTop = (function() {
         var pendingOffscreenCollapse = false;
         var internalAdjust = false;
         var pendingAnchor = null; // { el, topBefore }
+        var anchorObserver = null;
+        var anchorApplied = false;
         
         function fadeScrollbar() {
             try {
@@ -7116,7 +7118,35 @@ const ButtonAnchorTop = (function() {
             }
         }
         
-        // Capture the anchor target before DOM changes, then correct scroll after click handlers run.
+        function startAnchorObserver() {
+            if (anchorObserver) return;
+            try {
+                anchorObserver = new MutationObserver(function() {
+                    // Runs as a microtask before the next paint -> prevents flicker.
+                    if (anchorApplied) return;
+                    anchorApplied = true;
+                    try { anchorObserver.disconnect(); } catch (e0) {}
+                    anchorObserver = null;
+                    applyAnchorAdjustment();
+                });
+                anchorObserver.observe(scrollEl, {
+                    subtree: true,
+                    childList: true,
+                    attributes: true,
+                    characterData: false
+                });
+            } catch (e) {
+                anchorObserver = null;
+            }
+        }
+
+        function stopAnchorObserver() {
+            if (!anchorObserver) return;
+            try { anchorObserver.disconnect(); } catch (e0) {}
+            anchorObserver = null;
+        }
+
+        // Capture the anchor target before DOM changes, then correct scroll *before paint* when mutations occur.
         scrollEl.addEventListener('pointerdown', function(e) {
             try {
                 var t = e && e.target;
@@ -7126,16 +7156,20 @@ const ButtonAnchorTop = (function() {
                 if (!scrollEl.contains(t)) return;
                 pendingAnchor = { el: t, topBefore: t.getBoundingClientRect().top };
                 clickHoldUntil = Date.now() + clickHoldMs;
+                anchorApplied = false;
+                startAnchorObserver();
             } catch (e0) {}
         }, { passive: true, capture: true });
         
         // Bubble phase so any inner click handlers (that close panels above) run first.
+        // If no mutations occurred, apply once at end of the click task (still avoids rAF "refresh" flicker).
         scrollEl.addEventListener('click', function() {
             try {
-                requestAnimationFrame(function() {
-                    requestAnimationFrame(function() {
-                        applyAnchorAdjustment();
-                    });
+                queueMicrotask(function() {
+                    if (anchorApplied) return;
+                    anchorApplied = true;
+                    stopAnchorObserver();
+                    applyAnchorAdjustment();
                 });
             } catch (e0) {}
         }, false);
