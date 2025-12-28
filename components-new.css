@@ -24,7 +24,7 @@
    ============================================================================
    Use as the last child inside any scrollable panel/tab content:
    <div class="panel-bottom-slack" aria-hidden="true"></div>
-   Defaults to 300px; override via CSS variable: --panel-bottom-slack
+   Default is 0px; the JS spacer system toggles this via: --panel-bottom-slack
    ============================================================================ */
 
 .panel-bottom-slack {
@@ -32,8 +32,8 @@
   height: var(--panel-bottom-slack, 0px);
   flex: 0 0 auto;
   pointer-events: none;
-  transition: height 140ms ease;
-  will-change: height;
+  /* Do not animate height changes (avoids visible resize/flick). */
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

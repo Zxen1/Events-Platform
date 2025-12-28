@@ -782,8 +782,8 @@
   flex-direction: column;
   gap: 12px;
   /* Ensure the tab panel is at least as tall as the scroll container.
-     This makes the existing `.member-panel-body` bottom padding (300px) always scrollable,
-     even when the tab content is short (e.g. logged-in Profile). */
+     This ensures any bottom slack/spacer remains scrollable even when the tab content is short
+     (e.g. logged-in Profile). */
   min-height: 100%;
 }
 
