@@ -539,7 +539,6 @@ const App = (function() {
     var clickHoldUntil = 0;
     var currentSlackPx = null;
     var lastScrollTop = scrollEl.scrollTop || 0;
-    var slackEl = null;
     var scrollbarFadeMs = (opts && typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
     var scrollbarFadeTimer = null;
 
@@ -563,30 +562,9 @@ const App = (function() {
       fadeScrollbar();
     }
 
-    function ensureSlackEl() {
-      if (!slackEl) slackEl = scrollEl.querySelector('.panel-bottom-slack');
-      return slackEl;
-    }
-
-    function isSlackVisibleOnScreen() {
-      // Footer spacer rule: if visible, it must not collapse and must not scroll DOWN further into it.
-      var el = ensureSlackEl();
-      if (!el) return false;
-      try {
-        var s = el.getBoundingClientRect();
-        var c = scrollEl.getBoundingClientRect();
-        return (s.top < c.bottom) && (s.bottom > c.top);
-      } catch (e) {
-        return false;
-      }
-    }
-
     function applyScrollStateSlackScrolling() {
       // Two triggers only: scrolling -> collapsed slack
-      // Footer spacer exception (user requirement for anchor safety):
-      // if the footer spacer is visible on-screen, do NOT collapse it while scrolling.
-      if (isSlackVisibleOnScreen()) applySlackPx(fullSlackPx);
-      else applySlackPx(collapsedSlackPx);
+      applySlackPx(collapsedSlackPx);
     }
 
     function applyScrollStateSlackNotScrolling() {
@@ -625,19 +603,15 @@ const App = (function() {
     }
 
     function onScroll() {
-      // First scroll event in a burst is our "scroll start" trigger
-      startScrollBurst();
-
-      // Footer spacer rule:
-      // If the footer spacer is visible, user may scroll UP (to shrink it / move it off-screen),
-      // but may NOT scroll DOWN further into it.
       try {
         var st = scrollEl.scrollTop || 0;
-        if (isSlackVisibleOnScreen() && st > lastScrollTop) {
-          scrollEl.scrollTop = lastScrollTop;
-        }
-        lastScrollTop = scrollEl.scrollTop || 0;
+        // If the scroll position didn't actually change (common at the bottom edge on some devices),
+        // do nothing to avoid "shudder" loops.
+        if (st === lastScrollTop) return;
+        lastScrollTop = st;
       } catch (e) {}
+      // First real scroll movement in a burst is our "scroll start" trigger
+      startScrollBurst();
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
