@@ -42,14 +42,7 @@
   background: #222222;
   color: #fff;
   overflow-y: auto;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-}
-
-/* TEST: extra scroll room UNDER the content (ONLY when panel overflows) */
-.filter-panel-content.panel-scrollpad-300::after{
-  content: '';
-  display: block;
-  height: 300px;
+  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
 }
 
 .filter-panel-content[data-side="left"] {

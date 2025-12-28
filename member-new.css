@@ -202,13 +202,7 @@
   background: #222222;
   color: #fff;
   overscroll-behavior: contain;
-}
-
-/* TEST: extra scroll room UNDER the content (ONLY when panel overflows) */
-.member-panel-content.panel-scrollpad-300::after{
-  content: '';
-  display: block;
-  height: 300px;
+  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
 }
 
 .member-panel-content--side-left {

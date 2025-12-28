@@ -120,27 +120,8 @@ const FilterModule = (function() {
         
         contentEl.classList.add('panel-visible');
         
-        // TEST: only add extra bottom scroll space when content actually overflows
-        updatePanelScrollPad();
-        
         // Bring panel to front of stack
         App.bringToTop(panelEl);
-    }
-
-    function updatePanelScrollPad() {
-        try {
-            if (!contentEl) return;
-            requestAnimationFrame(function() {
-                try {
-                    var hasOverflow = contentEl.scrollHeight > (contentEl.clientHeight + 1);
-                    contentEl.classList.toggle('panel-scrollpad-300', !!hasOverflow);
-                } catch (e) {
-                    // ignore
-                }
-            });
-        } catch (e) {
-            // ignore
-        }
     }
     
     function closePanel() {
