@@ -577,7 +577,8 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        setupScrollHeightLock(el, { stopDelayMs: 150, fullSlackPx: 300, collapsedSlackPx: 1 });
+        // TEMP TEST: huge "full height" slack to simulate very tall accordion content.
+        setupScrollHeightLock(el, { stopDelayMs: 150, fullSlackPx: 2000, collapsedSlackPx: 1 });
       });
     });
   }
