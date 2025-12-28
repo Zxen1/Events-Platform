@@ -42,15 +42,19 @@
    SUPPORT FUNMAP (REGISTER TAB)
    ============================================================================ */
 
+.member-auth #member-auth-register {
+  gap: 10px;
+}
+
 .member-supporter-message {
-  margin: 10px 0;
+  margin: 0;
   color: #ddd;
   font-size: 13px;
   line-height: 1.35;
 }
 
 .member-supporter-payment {
-  margin: 10px 0;
+  margin: 0;
   padding: 10px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -60,7 +64,7 @@
 .member-supporter-payment-presets {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 0;
 }
 
@@ -68,11 +72,14 @@
   width: 100%;
   height: 44px;
   font-weight: 600;
+  border-color: rgba(34, 197, 94, 0.55);
+  background: rgba(34, 197, 94, 0.14);
+  color: #fff;
 }
 
 .member-supporter-payment-preset--selected {
-  border-color: rgba(59, 130, 245, 1);
-  background: rgba(59, 130, 245, 0.15);
+  border-color: rgba(34, 197, 94, 1);
+  background: rgba(34, 197, 94, 0.26);
 }
 
 .member-supporter-payment-custom {
@@ -88,7 +95,7 @@
 }
 
 .member-supporter-join-fields {
-  margin-top: 10px;
+  margin-top: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
