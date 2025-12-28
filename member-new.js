@@ -75,12 +75,10 @@ const MemberModule = (function() {
     var loginInputs = [];
     var registerInputs = [];
     var supporterMessageEl = null;
-    var supporterJoinToggleBtn = null;
     var supporterJoinFieldsEl = null;
     var supporterPresetButtons = [];
     var supporterCustomAmountInput = null;
     var supporterAmountHiddenInput = null;
-    var supporterPaymentLabelEl = null;
     var profileAvatar = null;
     var profileName = null;
     var profileEmail = null;
@@ -227,11 +225,9 @@ const MemberModule = (function() {
 
         // Supporter UI (register tab)
         supporterMessageEl = document.getElementById('member-supporter-message');
-        supporterJoinToggleBtn = document.getElementById('member-supporter-join-toggle');
         supporterJoinFieldsEl = document.getElementById('member-supporter-join-fields');
         supporterCustomAmountInput = document.getElementById('member-supporter-payment-custom');
         supporterAmountHiddenInput = document.getElementById('member-supporter-payment-amount');
-        supporterPaymentLabelEl = document.getElementById('member-supporter-payment-label');
         supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporter-payment-preset'));
         
         profileAvatar = document.getElementById('member-profile-avatar');
@@ -310,13 +306,6 @@ const MemberModule = (function() {
         if (registerTab) {
             registerTab.addEventListener('click', function() {
                 setAuthPanel('register');
-            });
-        }
-
-        if (supporterJoinToggleBtn) {
-            supporterJoinToggleBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                setSupporterJoinExpanded(supporterJoinFieldsEl ? !!supporterJoinFieldsEl.hidden : true);
             });
         }
 
@@ -2989,7 +2978,6 @@ const MemberModule = (function() {
 
         if (!isLogin) {
             // Support tab opened
-            setSupporterJoinExpanded(false);
             loadSupporterMessage();
             syncSupporterCurrencyUi();
         }
@@ -2998,12 +2986,6 @@ const MemberModule = (function() {
         
         // Focus first field
         focusFirstField(isLogin ? loginPanel : registerPanel);
-    }
-
-    function setSupporterJoinExpanded(isExpanded) {
-        if (!supporterJoinFieldsEl) return;
-        supporterJoinFieldsEl.hidden = !isExpanded;
-        supporterJoinFieldsEl.classList.toggle('member-supporter-join-fields--open', !!isExpanded);
     }
 
     function getSiteCurrencyCode() {
@@ -3022,9 +3004,6 @@ const MemberModule = (function() {
     function syncSupporterCurrencyUi() {
         var code = getSiteCurrencyCode();
         if (!code) return;
-        if (supporterPaymentLabelEl) {
-            supporterPaymentLabelEl.textContent = 'Support Amount (' + code + ')';
-        }
         if (supporterCustomAmountInput) {
             supporterCustomAmountInput.placeholder = 'Custom (' + code + ')';
         }
@@ -3211,17 +3190,6 @@ const MemberModule = (function() {
     }
 
     function handleRegister() {
-        // If user hasn't opted into joining yet, expand the join fields before validating.
-        if (supporterJoinFieldsEl && supporterJoinFieldsEl.hidden) {
-            setSupporterJoinExpanded(true);
-            var focusEl = document.getElementById('member-register-name');
-            if (focusEl && typeof focusEl.focus === 'function') {
-                focusEl.focus();
-                if (typeof focusEl.select === 'function') focusEl.select();
-            }
-            return;
-        }
-
         var nameInput = document.getElementById('member-register-name');
         var emailInput = document.getElementById('member-register-email');
         var passwordInput = document.getElementById('member-register-password');

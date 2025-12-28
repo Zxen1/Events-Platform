@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 27, 2025 at 11:54 PM
+-- Generation Time: Dec 28, 2025 at 12:14 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1425,7 +1425,7 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (81, 'Admin Submit Without Payment Button', 'msg_admin_submit_without_payment', 'label', 'admin', 'msg_admin', 'Admin: Submit without Payment', 'Button text for admin to submit post without payment', 0, NULL, 1, 1, 0, 0, '2025-12-04 04:08:15', '2025-12-04 04:08:15'),
 (10001, 'Registration Invalid Email', 'msg_auth_register_email_invalid', 'error', 'auth', 'msg_member', 'Please enter a valid email address.', 'Register: invalid email format', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56'),
 (10002, 'Registration Email Taken', 'msg_auth_register_email_taken', 'error', 'auth', 'msg_member', 'That email is already registered.', 'Register: duplicate email', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56'),
-(10003, 'Support FunMap Explainer (Member Tab)', 'msg_member_supporter_message', 'label', 'member', 'msg_member', 'Thank you for supporting FunMap.\n\nChoose an amount, enter your email, and (optionally) join to save favourites and settings across devices.', 'Shown at top of Support FunMap tab above amount/email', 0, NULL, 1, 1, 0, NULL, '2025-12-27 12:48:54', '2025-12-27 12:48:54'),
+(10003, 'Support FunMap Explainer (Member Tab)', 'msg_member_supporter_message', 'label', 'member', 'msg_member', 'Thank you for supporting FunMap.com!\n<p>\nTo protect this site from spambots and ensure all our members and posts are genuine, we have implemented a paywall for registration.\n<p>\nYou can become a member in two ways:\n<br>1. Create a post\n<br>2. Complete this registration form\n<p>\nYour site settings, favorites and search history will be remembered across all devices when you are logged in.\n<p>\nYour contribution will help us maintain and grow this awesome platform.', 'Shown at top of Support FunMap tab above amount/email', 0, NULL, 1, 1, 0, NULL, '2025-12-27 12:48:54', '2025-12-28 01:12:53'),
 (10004, 'Supporter Payment Required', 'msg_supporter_payment_required', 'error', 'member', 'msg_member', 'Supporter signup is not available until the payment gateway is active.', 'Shown when Support FunMap submit is blocked because payment is not approved', 0, NULL, 1, 1, 0, 3000, '2025-12-27 12:53:58', '2025-12-27 12:53:58');
 
 -- --------------------------------------------------------
