@@ -70,6 +70,23 @@ Website loading speed is critical. Any changes that slow down initial page load 
 
 **CRITICAL:** AI agents CANNOT access the database directly. AI agents have NO way to run SQL queries or modify the database.
 
+### ⚠️ CRITICAL: DB SPLIT SQL MUST BE THREE-SCHEMA SAFE ⚠️
+
+This project uses split storage schemas:
+- `funmapco_system` (platform/system tables like `admins`)
+- `funmapco_content` (user data tables like `members`, `posts`)
+- `funmapco_db` (compatibility layer made of **views** that the website queries)
+
+**CRITICAL RULES:**
+1. When providing SQL that edits tables, always use **schema-qualified names**, not bare table names.
+   - ✅ Good: `ALTER TABLE \`funmapco_system\`.\`admins\` ...`
+   - ✅ Good: `ALTER TABLE \`funmapco_content\`.\`members\` ...`
+   - ❌ Bad: `ALTER TABLE \`admins\` ...` (phpMyAdmin may run it against the wrong selected database)
+2. After changing columns in storage schemas, you MUST also update the matching **views** in `funmapco_db`,
+   otherwise the site will break (views will reference missing columns).
+   - Example: if `country_code` is renamed to `country` in storage tables, then update the `funmapco_db.admins`
+     and `funmapco_db.members` views to select `country` instead of `country_code`.
+
 **How Database Changes Work:**
 1. AI agent provides SQL statements (SELECT, UPDATE, INSERT, etc.)
 2. User copies the SQL and runs it themselves in their database tool (phpMyAdmin, MySQL client, etc.)

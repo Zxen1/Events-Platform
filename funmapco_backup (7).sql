@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 28, 2025 at 12:14 PM
+-- Generation Time: Dec 28, 2025 at 02:30 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -91,12 +91,9 @@ CREATE TABLE `members` (
   `email` varchar(255) NOT NULL,
   `avatar_file` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `language` varchar(10) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
-  `timezone` varchar(64) DEFAULT NULL,
-  `country_code` varchar(2) DEFAULT NULL,
+  `country` varchar(2) DEFAULT NULL,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -106,8 +103,8 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `language`, `currency`, `map_lighting`, `map_style`, `timezone`, `country_code`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-27 17:34:01', '2025-12-27 19:51:34');
+INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, NULL, NULL, '2025-12-27 17:34:01', '2025-12-27 19:51:34');
 
 -- --------------------------------------------------------
 
@@ -426,12 +423,9 @@ CREATE TABLE `admins` (
 ,`email` varchar(255)
 ,`avatar_file` varchar(255)
 ,`password_hash` varchar(255)
-,`language` varchar(10)
-,`currency` varchar(10)
 ,`map_lighting` varchar(20)
 ,`map_style` varchar(20)
-,`timezone` varchar(64)
-,`country_code` varchar(2)
+,`country` varchar(2)
 ,`backup_json` longtext
 ,`created_at` datetime
 ,`updated_at` datetime
@@ -765,12 +759,9 @@ CREATE TABLE `members` (
 ,`email` varchar(255)
 ,`avatar_file` varchar(255)
 ,`password_hash` varchar(255)
-,`language` varchar(10)
-,`currency` varchar(10)
 ,`map_lighting` varchar(20)
 ,`map_style` varchar(20)
-,`timezone` varchar(64)
-,`country_code` varchar(2)
+,`country` varchar(2)
 ,`backup_json` longtext
 ,`created_at` datetime
 ,`updated_at` datetime
@@ -1006,7 +997,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `admins`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `funmapco_system`.`admins`.`id` AS `id`, `funmapco_system`.`admins`.`username` AS `username`, `funmapco_system`.`admins`.`username_key` AS `username_key`, `funmapco_system`.`admins`.`email` AS `email`, `funmapco_system`.`admins`.`avatar_file` AS `avatar_file`, `funmapco_system`.`admins`.`password_hash` AS `password_hash`, `funmapco_system`.`admins`.`language` AS `language`, `funmapco_system`.`admins`.`currency` AS `currency`, `funmapco_system`.`admins`.`map_lighting` AS `map_lighting`, `funmapco_system`.`admins`.`map_style` AS `map_style`, `funmapco_system`.`admins`.`timezone` AS `timezone`, `funmapco_system`.`admins`.`country_code` AS `country_code`, `funmapco_system`.`admins`.`backup_json` AS `backup_json`, `funmapco_system`.`admins`.`created_at` AS `created_at`, `funmapco_system`.`admins`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `s`.`id` AS `id`, `s`.`username` AS `username`, `s`.`username_key` AS `username_key`, `s`.`email` AS `email`, `s`.`avatar_file` AS `avatar_file`, `s`.`password_hash` AS `password_hash`, `s`.`map_lighting` AS `map_lighting`, `s`.`map_style` AS `map_style`, `s`.`country` AS `country`, `s`.`backup_json` AS `backup_json`, `s`.`created_at` AS `created_at`, `s`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `s` ;
 
 -- --------------------------------------------------------
 
@@ -1168,7 +1159,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `members`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `funmapco_content`.`members`.`id` AS `id`, `funmapco_content`.`members`.`username` AS `username`, `funmapco_content`.`members`.`username_key` AS `username_key`, `funmapco_content`.`members`.`email` AS `email`, `funmapco_content`.`members`.`avatar_file` AS `avatar_file`, `funmapco_content`.`members`.`password_hash` AS `password_hash`, `funmapco_content`.`members`.`language` AS `language`, `funmapco_content`.`members`.`currency` AS `currency`, `funmapco_content`.`members`.`map_lighting` AS `map_lighting`, `funmapco_content`.`members`.`map_style` AS `map_style`, `funmapco_content`.`members`.`timezone` AS `timezone`, `funmapco_content`.`members`.`country_code` AS `country_code`, `funmapco_content`.`members`.`backup_json` AS `backup_json`, `funmapco_content`.`members`.`created_at` AS `created_at`, `funmapco_content`.`members`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `c`.`id` AS `id`, `c`.`username` AS `username`, `c`.`username_key` AS `username_key`, `c`.`email` AS `email`, `c`.`avatar_file` AS `avatar_file`, `c`.`password_hash` AS `password_hash`, `c`.`map_lighting` AS `map_lighting`, `c`.`map_style` AS `map_style`, `c`.`country` AS `country`, `c`.`backup_json` AS `backup_json`, `c`.`created_at` AS `created_at`, `c`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `c` ;
 
 -- --------------------------------------------------------
 
@@ -1296,12 +1287,9 @@ CREATE TABLE `admins` (
   `email` varchar(255) NOT NULL,
   `avatar_file` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `language` varchar(10) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
-  `timezone` varchar(64) DEFAULT NULL,
-  `country_code` varchar(2) DEFAULT NULL,
+  `country` varchar(2) DEFAULT NULL,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -1311,8 +1299,8 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `language`, `currency`, `map_lighting`, `map_style`, `timezone`, `country_code`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'USD', 'USD', 'night', 'standard', NULL, NULL, NULL, '2025-10-22 01:00:41', '2025-12-27 20:38:31');
+INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'night', 'standard', NULL, NULL, '2025-10-22 01:00:41', '2025-12-27 20:38:31');
 
 -- --------------------------------------------------------
 
@@ -1425,7 +1413,7 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `message_type
 (81, 'Admin Submit Without Payment Button', 'msg_admin_submit_without_payment', 'label', 'admin', 'msg_admin', 'Admin: Submit without Payment', 'Button text for admin to submit post without payment', 0, NULL, 1, 1, 0, 0, '2025-12-04 04:08:15', '2025-12-04 04:08:15'),
 (10001, 'Registration Invalid Email', 'msg_auth_register_email_invalid', 'error', 'auth', 'msg_member', 'Please enter a valid email address.', 'Register: invalid email format', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56'),
 (10002, 'Registration Email Taken', 'msg_auth_register_email_taken', 'error', 'auth', 'msg_member', 'That email is already registered.', 'Register: duplicate email', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-24 10:12:56'),
-(10003, 'Support FunMap Explainer (Member Tab)', 'msg_member_supporter_message', 'label', 'member', 'msg_member', 'Thank you for supporting FunMap.com!\n<p>\nTo protect this site from spambots and ensure all our members and posts are genuine, we have implemented a paywall for registration.\n<p>\nYou can become a member in two ways:\n<br>1. Create a post\n<br>2. Complete this registration form\n<p>\nYour site settings, favorites and search history will be remembered across all devices when you are logged in.\n<p>\nYour contribution will help us maintain and grow this awesome platform.', 'Shown at top of Support FunMap tab above amount/email', 0, NULL, 1, 1, 0, NULL, '2025-12-27 12:48:54', '2025-12-28 01:12:53'),
+(10003, 'Support FunMap Explainer (Member Tab)', 'msg_member_supporter_message', 'label', 'member', 'msg_member', 'Thank you for supporting FunMap.com!\n<p>\nTo protect this site from spambots and ensure all our members and posts are genuine, we have implemented a paywall for registration.\n<p>\nYou can become a member in two ways:\n<br>1. Create a post\n<br>2. Complete this registration form\n<p>\nYour site settings, favorites and search history will be remembered across all devices when you are logged in.\n<p>\nYour contribution will help us maintain and grow this awesome platform.\n', 'Shown at top of Support FunMap tab above amount/email', 0, NULL, 1, 1, 0, NULL, '2025-12-27 12:48:54', '2025-12-28 02:02:51'),
 (10004, 'Supporter Payment Required', 'msg_supporter_payment_required', 'error', 'member', 'msg_member', 'Supporter signup is not available until the payment gateway is active.', 'Shown when Support FunMap submit is blocked because payment is not approved', 0, NULL, 1, 1, 0, 3000, '2025-12-27 12:53:58', '2025-12-27 12:53:58');
 
 -- --------------------------------------------------------
