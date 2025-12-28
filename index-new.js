@@ -533,10 +533,14 @@ const App = (function() {
     var currentPx = null;
 
     function isVisible() {
+      // IMPORTANT: "Visible" must mean the user is actually at the bottom of the scroll container.
+      // If the content is short (no scroll), the slack element can sit "on screen" immediately,
+      // which would incorrectly enable the 4000px spacer everywhere.
       try {
-        var s = slackEl.getBoundingClientRect();
-        var c = scrollEl.getBoundingClientRect();
-        return (s.top < c.bottom) && (s.bottom > c.top);
+        var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
+        if (maxScrollTop <= 0) return false; // no real scrolling => spacer must stay off
+        var st = scrollEl.scrollTop || 0;
+        return st >= (maxScrollTop - 1); // 1px tolerance for rounding
       } catch (e) {
         return false;
       }
