@@ -522,7 +522,6 @@ const App = (function() {
       document.querySelectorAll(sel).forEach(function(el) {
         // Strict behavior lives inside the component.
         ButtonAnchorBottom.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
-        ButtonAnchorTop.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
