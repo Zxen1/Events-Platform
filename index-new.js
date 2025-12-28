@@ -572,6 +572,14 @@ const App = (function() {
       locked = true;
     }
 
+    function startScrollBurst() {
+      // "Scrolling" trigger: may start from wheel/touch even if the scroll position doesn't change
+      // (e.g. a dropdown/menu intercepts the wheel). We still must schedule the unlock.
+      lock();
+      if (unlockTimer) clearTimeout(unlockTimer);
+      unlockTimer = setTimeout(unlock, stopDelayMs);
+    }
+
     function unlock() {
       if (!locked) return;
       scrollEl.style.maxHeight = '';
@@ -581,15 +589,14 @@ const App = (function() {
 
     function onScroll() {
       // First scroll event in a burst is our "scroll start" trigger
-      lock();
-      if (unlockTimer) clearTimeout(unlockTimer);
-      unlockTimer = setTimeout(unlock, stopDelayMs);
+      startScrollBurst();
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
-    // Trigger lock *before* the first scroll position change (wheel/touch), so the thumb doesn't lag behind.
-    scrollEl.addEventListener('wheel', function() { lock(); }, { passive: true });
-    scrollEl.addEventListener('touchstart', function() { lock(); }, { passive: true });
+    // Trigger scroll burst *before* the first scroll position change (wheel/touch),
+    // and ALWAYS schedule unlock even if no scroll event fires.
+    scrollEl.addEventListener('wheel', startScrollBurst, { passive: true });
+    scrollEl.addEventListener('touchstart', startScrollBurst, { passive: true });
 
     // Clicking: keep slack stable until the click is complete.
     function holdClickSlack() {
