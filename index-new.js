@@ -512,104 +512,151 @@ const App = (function() {
      Called on DOMContentLoaded
      -------------------------------------------------------------------------- */
   /* --------------------------------------------------------------------------
-     BUTTON ANCHOR COLLAPSIBLE SPACER (FOOTER) — BINARY RULES ONLY
+     BUTTON ANCHOR COLLAPSIBLE SPACER + SCROLL HEIGHT LOCK (Anti-jank)
      --------------------------------------------------------------------------
-     CRITICAL RULES:
-     - Spacer height is 4000px when visible on-screen, else 0px.
-     - While visible: downward scrolling is blocked (upward allowed).
-     - No intermediate spacer sizes (never 1px, never 300px).
-     - No timers, no thresholds, no fades, no scroll-lock.
+     USER RULE (STRICT):
+     Only TWO triggers exist:
+     1) Scrolling
+     2) Not scrolling
+     --------------------------------------------------------------------------
+     Behavior:
+     - On scroll start: lock max-height to current pixel height and collapse slack to 1px.
+     - On scroll stop: remove max-height lock and restore slack to 300px.
   */
 
-  function setupFooterSpacer(scrollEl, opts) {
+  function setupScrollHeightLock(scrollEl, opts) {
     if (!scrollEl) return;
-    if (scrollEl.dataset && scrollEl.dataset.footerSpacerInit === '1') return;
-    if (scrollEl.dataset) scrollEl.dataset.footerSpacerInit = '1';
+    if (scrollEl.dataset && scrollEl.dataset.scrollHeightLockInit === '1') return;
+    if (scrollEl.dataset) scrollEl.dataset.scrollHeightLockInit = '1';
 
-    var spacerPx = (opts && typeof opts.spacerPx === 'number') ? opts.spacerPx : 4000;
-    var slackEl = scrollEl.querySelector('.panel-bottom-slack');
-    if (!slackEl) return;
+    var stopDelayMs = (opts && typeof opts.stopDelayMs === 'number') ? opts.stopDelayMs : 150;
+    var unlockTimer = null;
+    var locked = false;
+    // Expanded slack is only used during the short click-hold window (anchor protection).
+    var expandedSlackPx = (opts && typeof opts.expandedSlackPx === 'number') ? opts.expandedSlackPx : 300;
+    // Collapsed slack should be 0px to avoid visible "micro-flicker" between 0px and 1px.
+    var collapsedSlackPx = (opts && typeof opts.collapsedSlackPx === 'number') ? opts.collapsedSlackPx : 0;
+    var clickHoldMs = (opts && typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
+    var clickHoldUntil = 0;
+    var currentSlackPx = null;
+    var lastScrollTop = scrollEl.scrollTop || 0;
+    var scrollbarFadeMs = (opts && typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
+    var scrollbarFadeTimer = null;
 
-    var currentPx = null;
-
-    function setPx(px) {
-      if (currentPx === px) return;
-      currentPx = px;
-      scrollEl.style.setProperty('--panel-bottom-slack', px + 'px');
-      // Force layout update so scrollbar thumb updates once (only on 0<->4000 toggle).
-      try { scrollEl.getBoundingClientRect(); } catch (e) {}
+    function fadeScrollbar() {
+      try {
+        scrollEl.classList.add('panel-scrollbar-fade');
+        if (scrollbarFadeTimer) clearTimeout(scrollbarFadeTimer);
+        scrollbarFadeTimer = setTimeout(function() {
+          try { scrollEl.classList.remove('panel-scrollbar-fade'); } catch (e) {}
+        }, scrollbarFadeMs);
+      } catch (e) {}
     }
 
-    // LATCHED STATE (prevents oscillation/flicker):
-    // - Turns ON only when the user reaches bottom while scrolling down.
-    // - Turns OFF on any upward scroll.
-    var active = false;
-    var lastTop = scrollEl.scrollTop || 0;
+    function applySlackPx(px) {
+      if (currentSlackPx === px) return;
+      currentSlackPx = px;
+      scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
+      // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
+      try { scrollEl.getBoundingClientRect(); } catch (e) {}
+      // Smooth the visual jump by fading the thumb during the resize.
+      fadeScrollbar();
+    }
 
-    function setActive(next) {
-      if (active === next) return;
-      active = next;
-      setPx(active ? spacerPx : 0);
+    function applyScrollStateSlackScrolling() {
+      // Two triggers only: scrolling -> collapsed slack
+      applySlackPx(collapsedSlackPx);
+    }
+
+    function applyScrollStateSlackNotScrolling() {
+      // Under nearly all circumstances, keep the spacer OFF when not scrolling
+      // (prevents empty tabs like My Posts from showing a scrollbar).
+      applySlackPx(0);
+    }
+
+    function lock() {
+      if (locked) return;
+      var h = scrollEl.clientHeight || 0;
+      if (h <= 0) return;
+      // If the user is in the middle of a click, do NOT apply the scrolling lock.
+      // (This prevents the "1px" spacer from being enforced mid-click.)
+      if (Date.now() < clickHoldUntil) {
+        applyScrollStateSlackNotScrolling();
+        return;
+      }
+      scrollEl.style.maxHeight = h + 'px';
+      applyScrollStateSlackScrolling();
+      locked = true;
+    }
+
+    function startScrollBurst() {
+      // "Scrolling" trigger: may start from wheel/touch even if the scroll position doesn't change
+      // (e.g. a dropdown/menu intercepts the wheel). We still must schedule the unlock.
+      lock();
+      if (unlockTimer) clearTimeout(unlockTimer);
+      unlockTimer = setTimeout(unlock, stopDelayMs);
+    }
+
+    function unlock() {
+      if (!locked) return;
+      scrollEl.style.maxHeight = '';
+      applyScrollStateSlackNotScrolling();
+      locked = false;
     }
 
     function onScroll() {
-      var st = scrollEl.scrollTop || 0;
-      var delta = st - lastTop;
-      lastTop = st;
-
-      // Any upward scroll turns it off (spacer can shrink / move off-screen)
-      if (delta < 0) {
-        if (active) setActive(false);
-        return;
-      }
-
-      // Only turn it on when scrolling down and we're at the bottom of the current content.
-      if (!active && delta > 0) {
-        var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
-        if (maxScrollTop > 0 && st >= (maxScrollTop - 1)) {
-          setActive(true);
-        }
-      }
+      try {
+        var st = scrollEl.scrollTop || 0;
+        // If the scroll position didn't actually change (common at the bottom edge on some devices),
+        // do nothing to avoid "shudder" loops.
+        if (st === lastScrollTop) return;
+        lastScrollTop = st;
+      } catch (e) {}
+      // First real scroll movement in a burst is our "scroll start" trigger
+      startScrollBurst();
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
-
-    // Block DOWNWARD scrolling while spacer is visible (wheel).
+    // Trigger scroll burst *before* the first scroll position change (wheel/touch).
+    // IMPORTANT: If the user is already at the top/bottom and scrolling further in that direction
+    // is impossible, do NOT engage the system (prevents bottom-edge "shudder").
     scrollEl.addEventListener('wheel', function(e) {
-      var dy = Number(e && e.deltaY) || 0;
-      if (dy > 0 && active) {
-        e.preventDefault();
-        return;
+      try {
+        var deltaY = Number(e && e.deltaY) || 0;
+        var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
+        var st = scrollEl.scrollTop || 0;
+        var eps = 1; // px tolerance
+        var canScrollDown = st < (maxScrollTop - eps);
+        var canScrollUp = st > eps;
+        if (deltaY > 0 && !canScrollDown) return;
+        if (deltaY < 0 && !canScrollUp) return;
+      } catch (err) {
+        // If anything goes wrong, fall back to previous behavior.
       }
-    }, { passive: false });
-
-    // Touch: block “scroll down” gesture while spacer is visible.
-    var lastTouchY = null;
-    scrollEl.addEventListener('touchstart', function(e) {
-      lastTouchY = (e.touches && e.touches[0]) ? e.touches[0].clientY : null;
+      startScrollBurst();
     }, { passive: true });
+    scrollEl.addEventListener('touchstart', startScrollBurst, { passive: true });
 
-    scrollEl.addEventListener('touchmove', function(e) {
-      if (!active) return;
-      if (!(e.touches && e.touches[0]) || lastTouchY == null) return;
+    // Clicking: keep slack stable until the click is complete.
+    function holdClickSlack() {
+      clickHoldUntil = Date.now() + clickHoldMs;
+      // Anchor protection: temporarily expand slack during the click window only.
+      applySlackPx(expandedSlackPx);
+    }
+    scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
+    scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
 
-      var y = e.touches[0].clientY;
-      var dy = lastTouchY - y; // finger moves up => dy>0 => scroll down
-      lastTouchY = y;
-
-      if (dy > 0) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    // Initial
-    setActive(false);
+    // Default (on tab open): no slack to avoid scrollbar flicker.
+    applySlackPx(0);
   }
 
-  function initFooterSpacers() {
-    ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'].forEach(function(sel) {
+  function initScrollHeightLocks() {
+    // These are the NEW site scroll containers
+    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
+    selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        setupFooterSpacer(el, { spacerPx: 4000 });
+        // TEST VALUE: very tall footer spacer to simulate extremely tall accordion menus.
+        setupScrollHeightLock(el, { stopDelayMs: 180, expandedSlackPx: 4000, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
@@ -641,8 +688,8 @@ const App = (function() {
       }
     });
 
-    // Button Anchor Collapsible Spacer (footer)
-    initFooterSpacers();
+    // Anti-jank: lock panel-body max-height while scrolling (accordion/menu stability)
+    initScrollHeightLocks();
 
     // App initialization complete
   }
