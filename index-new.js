@@ -556,7 +556,6 @@ const App = (function() {
     function applySlackPx(px) {
       if (currentSlackPx === px) return;
       currentSlackPx = px;
-      scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
       scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
       // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
       try { scrollEl.getBoundingClientRect(); } catch (e) {}
