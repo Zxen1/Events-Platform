@@ -539,6 +539,9 @@ const App = (function() {
     var clickHoldUntil = 0;
     var currentSlackPx = null;
     var lastScrollTop = scrollEl.scrollTop || 0;
+    // Only show the spacer after the user has actually scrolled this container.
+    // This prevents empty tabs (e.g. My Posts with zero data) from having a scrollbar.
+    var hasScrolled = false;
     var scrollbarFadeMs = (opts && typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
     var scrollbarFadeTimer = null;
 
@@ -569,7 +572,7 @@ const App = (function() {
 
     function applyScrollStateSlackNotScrolling() {
       // Two triggers only: not scrolling -> full slack
-      applySlackPx(fullSlackPx);
+      applySlackPx(hasScrolled ? fullSlackPx : 0);
     }
 
     function lock() {
@@ -610,6 +613,7 @@ const App = (function() {
         if (st === lastScrollTop) return;
         lastScrollTop = st;
       } catch (e) {}
+      hasScrolled = true;
       // First real scroll movement in a burst is our "scroll start" trigger
       startScrollBurst();
     }
@@ -638,7 +642,8 @@ const App = (function() {
     // Clicking: keep slack stable until the click is complete.
     function holdClickSlack() {
       clickHoldUntil = Date.now() + clickHoldMs;
-      applyScrollStateSlackNotScrolling();
+      // Do not force-enable slack on click; slack should only appear after real scrolling.
+      applySlackPx(hasScrolled ? fullSlackPx : 0);
     }
     scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
     scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
