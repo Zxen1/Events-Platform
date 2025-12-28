@@ -273,16 +273,6 @@
   background-color: rgba(255, 255, 255, 0.7);
 }
 
-/* Smooth scrollbar resize: fade thumb during spacer/lock transitions */
-.admin-panel-body.panel-scrollbar-fade {
-  scrollbar-color: transparent transparent;
-}
-
-.admin-panel-body.panel-scrollbar-fade::-webkit-scrollbar-thumb,
-.admin-panel-body.panel-scrollbar-fade::-webkit-scrollbar-thumb:hover {
-  background-color: transparent;
-}
-
 .admin-panel-body::-webkit-scrollbar-corner {
   background: transparent;
 }

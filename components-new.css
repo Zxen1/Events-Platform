@@ -32,14 +32,6 @@
   height: var(--panel-bottom-slack, 0px);
   flex: 0 0 auto;
   pointer-events: none;
-  transition: height 140ms ease;
-  will-change: height;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .panel-bottom-slack {
-    transition: none;
-  }
 }
 
 
