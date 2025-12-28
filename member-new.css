@@ -1068,9 +1068,9 @@
 }
 
 .member-auth-tab--selected {
-  /* Keep Login/Register visually identical even when active */
-  background: var(--btn);
-  border-color: var(--btn);
+  /* Match tab button behavior: active state uses the same styling as hover */
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
   color: var(--button-text);
 }
 
