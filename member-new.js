@@ -116,8 +116,8 @@ const MemberModule = (function() {
     var avatarGridRegister = null;
     var avatarGridProfile = null;
     var activeAvatarTarget = null; // 'register' | 'profile' (used by cropper/file picker)
-    // Register has no "self/upload" tile, so keep register empty until we can default to the first site avatar.
-    var avatarSelection = { register: '', profile: 'self' };
+    // Register has no "self/upload" tile, so default to first site avatar.
+    var avatarSelection = { register: 'site-0', profile: 'self' };
     var pendingRegisterSiteUrl = '';
     var pendingProfileSiteUrl = '';
     var pendingRegisterAvatarPreviewUrl = ''; // objectURL for showing staged crop in grid
@@ -320,6 +320,69 @@ const MemberModule = (function() {
             });
         }
         if (supporterCustomAmountInput) {
+            function lockSupporterCurrencyCaret() {
+                try {
+                    var code = getSiteCurrencyCode();
+                    if (!code) return;
+                    var prefix = code + ' ';
+                    var v = String(supporterCustomAmountInput.value || '');
+                    if (v.indexOf(prefix) !== 0) return;
+                    var min = prefix.length;
+                    var s = supporterCustomAmountInput.selectionStart;
+                    var e = supporterCustomAmountInput.selectionEnd;
+                    if (typeof s !== 'number' || typeof e !== 'number') return;
+                    if (s < min || e < min) {
+                        var ns = Math.max(min, s);
+                        var ne = Math.max(min, e);
+                        supporterCustomAmountInput.setSelectionRange(ns, ne);
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            supporterCustomAmountInput.addEventListener('keydown', function(e) {
+                try {
+                    var code = getSiteCurrencyCode();
+                    if (!code) return;
+                    var prefix = code + ' ';
+                    var v = String(supporterCustomAmountInput.value || '');
+                    if (v.indexOf(prefix) !== 0) return;
+                    var min = prefix.length;
+                    var s = supporterCustomAmountInput.selectionStart;
+                    var end = supporterCustomAmountInput.selectionEnd;
+                    if (typeof s !== 'number' || typeof end !== 'number') return;
+
+                    if (e.key === 'Backspace') {
+                        // Don't let backspace delete into the prefix.
+                        if (s <= min && end <= min) {
+                            e.preventDefault();
+                            supporterCustomAmountInput.setSelectionRange(min, min);
+                        }
+                        return;
+                    }
+                    if (e.key === 'ArrowLeft') {
+                        if (s <= min) {
+                            e.preventDefault();
+                            supporterCustomAmountInput.setSelectionRange(min, min);
+                        }
+                        return;
+                    }
+                    if (e.key === 'Home') {
+                        e.preventDefault();
+                        supporterCustomAmountInput.setSelectionRange(min, min);
+                        return;
+                    }
+                } catch (err) {
+                    // ignore
+                }
+            });
+
+            supporterCustomAmountInput.addEventListener('focus', lockSupporterCurrencyCaret);
+            supporterCustomAmountInput.addEventListener('click', lockSupporterCurrencyCaret);
+            supporterCustomAmountInput.addEventListener('mouseup', lockSupporterCurrencyCaret);
+            supporterCustomAmountInput.addEventListener('select', lockSupporterCurrencyCaret);
+
             supporterCustomAmountInput.addEventListener('input', function() {
                 var code = getSiteCurrencyCode();
                 var raw = String(supporterCustomAmountInput.value || '');
@@ -345,8 +408,10 @@ const MemberModule = (function() {
                 if (displayValue !== supporterCustomAmountInput.value) {
                     supporterCustomAmountInput.value = displayValue;
                     try {
-                        var len = supporterCustomAmountInput.value.length;
-                        supporterCustomAmountInput.setSelectionRange(len, len);
+                        // Keep caret on the digits, never inside the currency prefix.
+                        var prefixLen = code ? (String(code).length + 1) : 0;
+                        var caret = prefixLen + raw.length;
+                        supporterCustomAmountInput.setSelectionRange(caret, caret);
                     } catch (e) {
                         // ignore
                     }
@@ -791,6 +856,21 @@ const MemberModule = (function() {
         return ensureSiteAvatarFilenames().then(function() {
             // Register grid uses 4 site avatars
             pickRandomSiteAvatarChoices(4);
+
+            // Ensure first avatar is selected by default for registration.
+            try {
+                if (!avatarSelection.register || String(avatarSelection.register).indexOf('site-') !== 0) {
+                    avatarSelection.register = 'site-0';
+                }
+                if (Array.isArray(siteAvatarChoices) && siteAvatarChoices[0] && siteAvatarChoices[0].url) {
+                    pendingRegisterSiteUrl = String(siteAvatarChoices[0].url);
+                    pendingRegisterAvatarBlob = null;
+                    pendingRegisterAvatarPreviewUrl = '';
+                }
+            } catch (e) {
+                // ignore
+            }
+
             renderAvatarGrids();
         });
     }
