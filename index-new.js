@@ -534,6 +534,10 @@ const App = (function() {
     var locked = false;
     var fullSlackPx = (opts && typeof opts.fullSlackPx === 'number') ? opts.fullSlackPx : 300;
     var collapsedSlackPx = (opts && typeof opts.collapsedSlackPx === 'number') ? opts.collapsedSlackPx : 1;
+    var clickHoldMs = (opts && typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
+    var clickHoldUntil = 0;
+    var lastScrollTop = scrollEl.scrollTop || 0;
+    var slackEl = null;
 
     function applySlackPx(px) {
       scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
@@ -541,12 +545,46 @@ const App = (function() {
       try { scrollEl.getBoundingClientRect(); } catch (e) {}
     }
 
+    function ensureSlackEl() {
+      if (!slackEl) slackEl = scrollEl.querySelector('.panel-bottom-slack');
+      return slackEl;
+    }
+
+    function isSlackVisibleOnScreen() {
+      var el = ensureSlackEl();
+      if (!el) return false;
+      try {
+        var s = el.getBoundingClientRect();
+        var c = scrollEl.getBoundingClientRect();
+        return (s.top < c.bottom) && (s.bottom > c.top);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function applyScrollStateSlack() {
+      // STRICT RULES (as clarified by user):
+      // - While user is actively clicking (closing/opening), do NOT collapse slack.
+      // - If slack is currently visible on screen, do NOT collapse slack (prevents anchor ripping).
+      // - Otherwise, during scrolling collapse slack to 1px.
+      var now = Date.now();
+      if (now < clickHoldUntil) return applySlackPx(fullSlackPx);
+      if (isSlackVisibleOnScreen()) return applySlackPx(fullSlackPx);
+      return applySlackPx(collapsedSlackPx);
+    }
+
     function lock() {
       if (locked) return;
       var h = scrollEl.clientHeight || 0;
       if (h <= 0) return;
+      // If the user is in the middle of a click, do NOT apply the scrolling lock.
+      // (This prevents the "1px" spacer from being enforced mid-click.)
+      if (Date.now() < clickHoldUntil) {
+        applySlackPx(fullSlackPx);
+        return;
+      }
       scrollEl.style.maxHeight = h + 'px';
-      applySlackPx(collapsedSlackPx);
+      applyScrollStateSlack();
       locked = true;
     }
 
@@ -560,6 +598,18 @@ const App = (function() {
     function onScroll() {
       // First scroll event in a burst is our "scroll start" trigger
       lock();
+      applyScrollStateSlack();
+
+      // Enforce: if slack is visible, do not allow further downward scrolling.
+      // Allow upward scrolling (shrinking the visible slack).
+      try {
+        var st = scrollEl.scrollTop || 0;
+        if (isSlackVisibleOnScreen() && st > lastScrollTop) {
+          scrollEl.scrollTop = lastScrollTop;
+        }
+        lastScrollTop = scrollEl.scrollTop || 0;
+      } catch (e) {}
+
       if (unlockTimer) clearTimeout(unlockTimer);
       unlockTimer = setTimeout(unlock, stopDelayMs);
     }
@@ -568,8 +618,17 @@ const App = (function() {
     // Trigger lock *before* the first scroll position change (wheel/touch), so the thumb doesn't lag behind.
     scrollEl.addEventListener('wheel', function() { lock(); }, { passive: true });
     scrollEl.addEventListener('touchstart', function() { lock(); }, { passive: true });
-    // Not scrolling (default): slack available for stable clicks.
-    applySlackPx(fullSlackPx);
+
+    // Clicking: keep slack stable until the click is complete.
+    function holdClickSlack() {
+      clickHoldUntil = Date.now() + clickHoldMs;
+      applySlackPx(fullSlackPx);
+    }
+    scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
+    scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
+
+    // Default (on tab open): no slack to avoid scrollbar flicker.
+    applySlackPx(0);
   }
 
   function initScrollHeightLocks() {
@@ -577,8 +636,7 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        // TEMP TEST: huge "full height" slack to simulate very tall accordion content.
-        setupScrollHeightLock(el, { stopDelayMs: 150, fullSlackPx: 2000, collapsedSlackPx: 1 });
+        setupScrollHeightLock(el, { stopDelayMs: 150, fullSlackPx: 300, collapsedSlackPx: 1, clickHoldMs: 250 });
       });
     });
   }
