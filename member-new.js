@@ -94,11 +94,7 @@ const MemberModule = (function() {
     var loginFormEl = null;
     var registerFormEl = null;
     
-    // Preferences pickers (Profile tab)
-    var languageMenuContainer = null;
-    var currencyMenuContainer = null;
-    var languageMenuInstance = null;
-    var currencyMenuInstance = null;
+    // Preferences pickers (Profile tab) - removed (no language/currency filters)
     
     // Profile edit
     var profileEditNameInput = null;
@@ -244,9 +240,6 @@ const MemberModule = (function() {
 
         headerSaveBtn = panel.querySelector('#member-panel-save-btn');
         headerDiscardBtn = panel.querySelector('#member-panel-discard-btn');
-        
-        languageMenuContainer = document.getElementById('memberLanguageMenu');
-        currencyMenuContainer = document.getElementById('memberCurrencyMenu');
         
         profileEditNameInput = document.getElementById('member-profile-edit-name');
         profileEditPasswordInput = document.getElementById('member-profile-edit-password');
@@ -697,62 +690,9 @@ const MemberModule = (function() {
         }
     }
 
-    function initProfilePickers() {
-        if (!languageMenuContainer || !currencyMenuContainer) return;
-        if (!window.CurrencyComponent || typeof CurrencyComponent.loadFromDatabase !== 'function') return;
-
-        function getSettingsDefaultCurrency() {
-            try {
-                if (!window.App || typeof App.getState !== 'function') return null;
-                var settings = App.getState('settings') || {};
-                return settings.website_currency || settings.site_currency || settings.siteCurrency || null;
-            } catch (e) {
-                return null;
-            }
-        }
-        
-        CurrencyComponent.loadFromDatabase().then(function() {
-            // Language (TEMP: this is intentionally the same as Currency menu for now)
-            languageMenuContainer.innerHTML = '';
-            languageMenuInstance = CurrencyComponent.buildFullMenu({
-                container: panelContent,
-                initialValue: localStorage.getItem('member_language') || (currentUser && currentUser.language) || getSettingsDefaultCurrency() || null,
-                onSelect: function(code) {
-                    localStorage.setItem('member_language', code);
-                    if (currentUser) {
-                        saveMemberSetting('language', code);
-                    }
-                }
-            });
-            if (languageMenuInstance && languageMenuInstance.element) {
-                languageMenuContainer.appendChild(languageMenuInstance.element);
-            }
-            
-            // Currency
-            currencyMenuContainer.innerHTML = '';
-            currencyMenuInstance = CurrencyComponent.buildFullMenu({
-                container: panelContent,
-                initialValue: localStorage.getItem('member_currency') || (currentUser && currentUser.currency) || getSettingsDefaultCurrency() || null,
-                onSelect: function(code) {
-                    localStorage.setItem('member_currency', code);
-                    if (currentUser) {
-                        saveMemberSetting('currency', code);
-                    }
-                }
-            });
-            if (currencyMenuInstance && currencyMenuInstance.element) {
-                currencyMenuContainer.appendChild(currencyMenuInstance.element);
-            }
-        }).catch(function(err) {
-            console.warn('[Member] Failed to load currency data for pickers', err);
-        });
-    }
-
     function syncLocalProfilePrefsFromUser(user) {
         try {
             if (!user) return;
-            if (user.language) localStorage.setItem('member_language', String(user.language));
-            if (user.currency) localStorage.setItem('member_currency', String(user.currency));
             if (user.country_code) localStorage.setItem('member_country_code', String(user.country_code));
             if (user.timezone) localStorage.setItem('member_timezone', String(user.timezone));
         } catch (e) {
@@ -761,7 +701,18 @@ const MemberModule = (function() {
     }
 
     function getDefaultCurrencyForForms() {
-        return localStorage.getItem('member_currency') || null;
+        // Default currency for all forms comes from admin settings (website_currency), not profile pickers.
+        if (siteCurrency && typeof siteCurrency === 'string' && siteCurrency.trim()) return siteCurrency.trim();
+        try {
+            if (!window.App || typeof App.getState !== 'function') return null;
+            var settings = App.getState('settings') || {};
+            var code = settings.website_currency || settings.site_currency || settings.siteCurrency || null;
+            if (!code) return null;
+            code = String(code).trim();
+            return code ? code : null;
+        } catch (e) {
+            return null;
+        }
     }
 
     function setAvatarForTarget(url) {
@@ -1746,7 +1697,6 @@ const MemberModule = (function() {
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();
         initMapStyleButtons();
-        initProfilePickers();
         // Load 3 random site avatars for the 4-tile picker (lazy: only when panel is opened)
         ensureAvatarChoicesReady();
         

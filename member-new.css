@@ -498,9 +498,7 @@
   gap: 10px;
 }
 
-.member-preferences-container {
-  margin-bottom: 10px;
-}
+/* member-preferences-container removed (no language/currency filters) */
 
 .member-lighting-buttons,
 .member-style-buttons {
