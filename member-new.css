@@ -1367,7 +1367,7 @@
   font-size: 14px;
 }
 
-/* Spacing under content is handled by `.panel-bottom-slack` at the end of each tab. */
+/* Spacing under content is handled by `.panel-bottom-slack` at the end of the panel body. */
 
 /* ============================================================================
    UNSAVED PROMPT DIALOG
