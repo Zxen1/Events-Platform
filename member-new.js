@@ -3115,6 +3115,21 @@ const MemberModule = (function() {
             } catch (e) {
                 // ignore
             }
+
+            // Focus first payment option (first preset button)
+            try {
+                if (supporterPresetButtons && supporterPresetButtons.length && supporterPresetButtons[0]) {
+                    requestAnimationFrame(function() {
+                        try {
+                            supporterPresetButtons[0].focus();
+                        } catch (e) {
+                            // ignore
+                        }
+                    });
+                }
+            } catch (e) {
+                // ignore
+            }
         }
         
         authForm.dataset.active = target;
