@@ -521,7 +521,7 @@ const App = (function() {
      --------------------------------------------------------------------------
      Behavior:
      - On scroll start: lock max-height to current pixel height and collapse slack to 1px.
-     - On scroll stop: remove max-height lock and restore slack to 300px.
+     - On scroll stop: remove max-height lock and restore slack to 4000px.
   */
 
   function setupScrollHeightLock(scrollEl, opts) {
@@ -532,8 +532,8 @@ const App = (function() {
     var stopDelayMs = (opts && typeof opts.stopDelayMs === 'number') ? opts.stopDelayMs : 150;
     var unlockTimer = null;
     var locked = false;
-    // Expanded slack is only used during the short click-hold window (anchor protection).
-    var expandedSlackPx = (opts && typeof opts.expandedSlackPx === 'number') ? opts.expandedSlackPx : 300;
+    // Expanded slack is the anchor protection spacer size (project standard: 4000px).
+    var expandedSlackPx = (opts && typeof opts.expandedSlackPx === 'number') ? opts.expandedSlackPx : 4000;
     // Collapsed slack should be 0px to avoid visible "micro-flicker" between 0px and 1px.
     var collapsedSlackPx = (opts && typeof opts.collapsedSlackPx === 'number') ? opts.collapsedSlackPx : 0;
     var clickHoldMs = (opts && typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
@@ -556,6 +556,7 @@ const App = (function() {
     function applySlackPx(px) {
       if (currentSlackPx === px) return;
       currentSlackPx = px;
+      scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
       scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
       // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
       try { scrollEl.getBoundingClientRect(); } catch (e) {}
@@ -569,9 +570,8 @@ const App = (function() {
     }
 
     function applyScrollStateSlackNotScrolling() {
-      // Under nearly all circumstances, keep the spacer OFF when not scrolling
-      // (prevents empty tabs like My Posts from showing a scrollbar).
-      applySlackPx(0);
+      // Two triggers only: not scrolling -> expanded slack
+      applySlackPx(expandedSlackPx);
     }
 
     function lock() {
@@ -646,8 +646,8 @@ const App = (function() {
     scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
     scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
 
-    // Default (on tab open): no slack to avoid scrollbar flicker.
-    applySlackPx(0);
+    // Default (on tab open): expanded slack (project standard).
+    applySlackPx(expandedSlackPx);
   }
 
   function initScrollHeightLocks() {
@@ -655,7 +655,7 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        setupScrollHeightLock(el, { stopDelayMs: 180, expandedSlackPx: 300, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        setupScrollHeightLock(el, { stopDelayMs: 180, expandedSlackPx: 4000, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
