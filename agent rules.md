@@ -70,6 +70,13 @@ Website loading speed is critical. Any changes that slow down initial page load 
 
 **CRITICAL:** AI agents CANNOT access the database directly. AI agents have NO way to run SQL queries or modify the database.
 
+### ⚠️ CRITICAL: SQL EXPORTS / BACKUPS ⚠️
+
+**CRITICAL RULES:**
+1. **Never edit any SQL export/backup/dump files in the workspace** (they are historical snapshots and may be needed for recovery).
+2. **Never provide SQL as a “file” for the user to download/import**.
+3. When SQL is needed, **paste the SQL directly in chat** so Paul can run it themselves (Paul is the only one with database access).
+
 ### ⚠️ CRITICAL: DB SPLIT SQL MUST BE THREE-SCHEMA SAFE ⚠️
 
 This project uses split storage schemas:
