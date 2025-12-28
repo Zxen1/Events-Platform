@@ -772,6 +772,8 @@
      This makes the existing `.member-panel-body` bottom padding (300px) always scrollable,
      even when the tab content is short (e.g. logged-in Profile). */
   min-height: 100%;
+  /* Extra scroll space UNDER the actual tab contents (not the panel wrapper) */
+  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ============================================================================

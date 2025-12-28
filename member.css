@@ -576,6 +576,8 @@
   display:flex;
   flex-direction:column;
   gap:12px;
+  /* Extra scroll space UNDER the actual tab contents (not the panel wrapper) */
+  padding-bottom:calc(300px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ============================================================================
