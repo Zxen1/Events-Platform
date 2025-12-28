@@ -585,6 +585,17 @@ const App = (function() {
 
     function maybeCollapseSlackOffscreen() {
       if (!pendingOffscreenCollapse) return;
+      // If the panel/tab content does not overflow (excluding any current slack),
+      // the spacer must never be on-screen.
+      try {
+        var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
+        var h = scrollEl.clientHeight || 0;
+        if (contentNoSlack <= h) {
+          pendingOffscreenCollapse = false;
+          applySlackPx(collapsedSlackPx);
+          return;
+        }
+      } catch (e0) {}
       // Only collapse when the spacer is fully OFF the screen.
       if (isBottomSlackOnScreen()) return;
       pendingOffscreenCollapse = false;
@@ -671,6 +682,18 @@ const App = (function() {
 
     // Clicking: keep slack stable until the click is complete.
     function holdClickSlack() {
+      // Never show slack for tabs/panels that don't overflow (content doesn't reach the bottom).
+      try {
+        var h = scrollEl.clientHeight || 0;
+        var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
+        if (contentNoSlack <= h) {
+          // Ensure slack is OFF immediately in this non-scrollable state.
+          pendingOffscreenCollapse = false;
+          applySlackPx(collapsedSlackPx);
+          return;
+        }
+      } catch (e0) {}
+
       clickHoldUntil = Date.now() + clickHoldMs;
       // Anchor protection: temporarily expand slack during the click window only.
       applySlackPx(expandedSlackPx);
