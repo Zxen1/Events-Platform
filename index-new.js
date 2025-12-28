@@ -540,6 +540,18 @@ const App = (function() {
     var currentSlackPx = null;
     var lastScrollTop = scrollEl.scrollTop || 0;
     var slackEl = null;
+    var scrollbarFadeMs = (opts && typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
+    var scrollbarFadeTimer = null;
+
+    function fadeScrollbar() {
+      try {
+        scrollEl.classList.add('panel-scrollbar-fade');
+        if (scrollbarFadeTimer) clearTimeout(scrollbarFadeTimer);
+        scrollbarFadeTimer = setTimeout(function() {
+          try { scrollEl.classList.remove('panel-scrollbar-fade'); } catch (e) {}
+        }, scrollbarFadeMs);
+      } catch (e) {}
+    }
 
     function applySlackPx(px) {
       if (currentSlackPx === px) return;
@@ -547,6 +559,8 @@ const App = (function() {
       scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
       // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
       try { scrollEl.getBoundingClientRect(); } catch (e) {}
+      // Smooth the visual jump by fading the thumb during the resize.
+      fadeScrollbar();
     }
 
     function ensureSlackEl() {
@@ -649,8 +663,9 @@ const App = (function() {
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        // TEMP TEST: very tall footer spacer to simulate extremely tall accordion menus (e.g. Image folders).
-        setupScrollHeightLock(el, { stopDelayMs: 180, fullSlackPx: 4000, collapsedSlackPx: 0, clickHoldMs: 250 });
+        // Default behavior: 300px footer spacer when not scrolling; collapsed while scrolling.
+        // If you want to stress-test with huge menus, temporarily change fullSlackPx to 4000.
+        setupScrollHeightLock(el, { stopDelayMs: 180, fullSlackPx: 300, collapsedSlackPx: 0, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
