@@ -49,6 +49,15 @@ This is inherent logic - you must track what you read vs what you changed. Every
 
 Website loading speed is critical. Any changes that slow down initial page load are strictly forbidden.
 
+## ⚠️ CRITICAL CONSISTENCY / COMPATIBILITY RULE ⚠️
+
+**CRITICAL:** For any feature/UI behavior that already exists elsewhere in the project, you must implement it using the **same method/pattern**, not a new method that “also works”.
+
+**CRITICAL RULES:**
+1. **Do not invent a second approach** to achieve the same outcome (two methods = future bugs).
+2. Before changing/adding a container/button/menu/etc., **compare it to its closest equivalent** nearby (same panel, same component type).
+3. If a similar thing already works, **copy that exact strategy** (CSS structure, JS flow, selectors, naming), then apply the minimal edits needed.
+
 ## Critical Information for All Future AI Agents
 
 ---
