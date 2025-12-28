@@ -28,7 +28,8 @@
    ============================================================================ */
 
 .panel-bottom-slack {
-  height: var(--panel-bottom-slack, 300px);
+  /* Default is 0. The Button Anchor Collapsible Spacer logic sets this variable as needed. */
+  height: var(--panel-bottom-slack, 0px);
   flex: 0 0 auto;
   pointer-events: none;
   transition: height 140ms ease;
