@@ -42,6 +42,29 @@
   }
 }
 
+/* ============================================================================
+   PANEL TOP SLACK (Reusable top spacer)
+   ============================================================================
+   Use as the FIRST child inside any scrollable panel/tab content:
+   <div class="panel-top-slack" aria-hidden="true"></div>
+   Defaults to 300px; override via CSS variable: --panel-top-slack
+   ============================================================================ */
+
+.panel-top-slack {
+  /* Default is 0. The Button Anchor Collapsible Spacer logic sets this variable as needed. */
+  height: var(--panel-top-slack, 0px);
+  flex: 0 0 auto;
+  pointer-events: none;
+  transition: height 140ms ease;
+  will-change: height;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-top-slack {
+    transition: none;
+  }
+}
+
 
 /* ============================================================================
    CLEAR BUTTON
