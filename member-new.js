@@ -228,7 +228,7 @@ const MemberModule = (function() {
         supporterJoinFieldsEl = document.getElementById('member-supporter-join-fields');
         supporterCustomAmountInput = document.getElementById('member-supporter-payment-custom');
         supporterAmountHiddenInput = document.getElementById('member-supporter-payment-amount');
-        supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporter-payment-preset'));
+        supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporterpayment-button'));
         
         profileAvatar = document.getElementById('member-profile-avatar');
         profileName = document.getElementById('member-profile-name');
@@ -3046,9 +3046,14 @@ const MemberModule = (function() {
         }
 
         if (supporterPresetButtons && supporterPresetButtons.length) {
+            var vNum = parseFloat(value);
+            var vFixed = isFinite(vNum) ? vNum.toFixed(2) : null;
             supporterPresetButtons.forEach(function(btn) {
                 var btnAmount = String(btn.getAttribute('data-amount') || '');
-                btn.classList.toggle('member-supporter-payment-preset--selected', value !== '' && btnAmount === value);
+                var bNum = parseFloat(btnAmount);
+                var bFixed = isFinite(bNum) ? bNum.toFixed(2) : null;
+                var isSelected = (vFixed !== null && bFixed !== null && vFixed === bFixed);
+                btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
             });
         }
     }
