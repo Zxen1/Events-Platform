@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 28, 2025 at 02:30 PM
+-- Generation Time: Dec 28, 2025 at 02:40 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -93,6 +93,8 @@ CREATE TABLE `members` (
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
+  `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `recents` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `country` varchar(2) DEFAULT NULL,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
@@ -103,8 +105,8 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, NULL, NULL, '2025-12-27 17:34:01', '2025-12-27 19:51:34');
+INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recents`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21');
 
 -- --------------------------------------------------------
 
@@ -425,6 +427,8 @@ CREATE TABLE `admins` (
 ,`password_hash` varchar(255)
 ,`map_lighting` varchar(20)
 ,`map_style` varchar(20)
+,`favorites` text
+,`recents` text
 ,`country` varchar(2)
 ,`backup_json` longtext
 ,`created_at` datetime
@@ -761,6 +765,8 @@ CREATE TABLE `members` (
 ,`password_hash` varchar(255)
 ,`map_lighting` varchar(20)
 ,`map_style` varchar(20)
+,`favorites` text
+,`recents` text
 ,`country` varchar(2)
 ,`backup_json` longtext
 ,`created_at` datetime
@@ -997,7 +1003,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `admins`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `s`.`id` AS `id`, `s`.`username` AS `username`, `s`.`username_key` AS `username_key`, `s`.`email` AS `email`, `s`.`avatar_file` AS `avatar_file`, `s`.`password_hash` AS `password_hash`, `s`.`map_lighting` AS `map_lighting`, `s`.`map_style` AS `map_style`, `s`.`country` AS `country`, `s`.`backup_json` AS `backup_json`, `s`.`created_at` AS `created_at`, `s`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `s` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`email` AS `email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recents` AS `recents`, `a`.`country` AS `country`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
 
 -- --------------------------------------------------------
 
@@ -1159,7 +1165,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `members`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `c`.`id` AS `id`, `c`.`username` AS `username`, `c`.`username_key` AS `username_key`, `c`.`email` AS `email`, `c`.`avatar_file` AS `avatar_file`, `c`.`password_hash` AS `password_hash`, `c`.`map_lighting` AS `map_lighting`, `c`.`map_style` AS `map_style`, `c`.`country` AS `country`, `c`.`backup_json` AS `backup_json`, `c`.`created_at` AS `created_at`, `c`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `c` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuos9z1w8f`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`email` AS `email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recents` AS `recents`, `m`.`country` AS `country`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
 
 -- --------------------------------------------------------
 
@@ -1289,6 +1295,8 @@ CREATE TABLE `admins` (
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
+  `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `recents` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `country` varchar(2) DEFAULT NULL,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
@@ -1299,8 +1307,8 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'night', 'standard', NULL, NULL, '2025-10-22 01:00:41', '2025-12-27 20:38:31');
+INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recents`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'night', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, '2025-10-22 01:00:41', '2025-12-28 14:39:21');
 
 -- --------------------------------------------------------
 
