@@ -1515,6 +1515,7 @@ The user has spent weeks on this project with thousands of failures caused by:
 - **Core idea:** Treat the clicked header/row as an “anchor”. After the UI changes (panels open/close), adjust the scroll position so the anchor ends up in the **same screen position** as before.
 - **Top slack (“gap”)**: When the math would require scrolling above the top (negative scroll), create a temporary invisible gap above content, then auto-remove it as the user scrolls up.
 - **Bottom slack (“gap”)**: Near the bottom, collapsing content can force the browser to clamp scroll (causing a yank). We add a temporary invisible gap at the bottom so the browser has room, then auto-remove it as the user scrolls down.
+- **Additional discovery (Dec 28, 2025):** Button anchoring/bounce issues are often solved at the **bottom** of a scroll area when that area can “extend into padding”. Adding **~300px bottom padding** beneath the scrolling contents prevented the Support FunMap **Country** dropdown from bouncing the panel when it closed.
 
 **Exact Files Changed:**
 - `formbuilder-new.js`
