@@ -401,7 +401,7 @@
   overflow-x: hidden;
   /* Total interior spacing should add up to 10px (not 20px). */
   padding: 0 10px;
-  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -409,6 +409,15 @@
   gap: 20px;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
+}
+
+/* Extra scroll space UNDER the scrolled content (consistent with admin/filter). */
+.member-panel-body::after {
+  content: '';
+  display: block;
+  height: 300px;
+  flex: 0 0 auto;
+  pointer-events: none;
 }
 
 .member-panel-body::-webkit-scrollbar {
@@ -772,8 +781,6 @@
      This makes the existing `.member-panel-body` bottom padding (300px) always scrollable,
      even when the tab content is short (e.g. logged-in Profile). */
   min-height: 100%;
-  /* Extra scroll space UNDER the actual tab contents (not the panel wrapper) */
-  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ============================================================================
