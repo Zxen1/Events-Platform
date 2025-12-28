@@ -532,20 +532,6 @@ const App = (function() {
 
     var currentPx = null;
 
-    function isVisible() {
-      // IMPORTANT: "Visible" must mean the user is actually at the bottom of the scroll container.
-      // If the content is short (no scroll), the slack element can sit "on screen" immediately,
-      // which would incorrectly enable the 4000px spacer everywhere.
-      try {
-        var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
-        if (maxScrollTop <= 0) return false; // no real scrolling => spacer must stay off
-        var st = scrollEl.scrollTop || 0;
-        return st >= (maxScrollTop - 1); // 1px tolerance for rounding
-      } catch (e) {
-        return false;
-      }
-    }
-
     function setPx(px) {
       if (currentPx === px) return;
       currentPx = px;
@@ -554,17 +540,44 @@ const App = (function() {
       try { scrollEl.getBoundingClientRect(); } catch (e) {}
     }
 
-    function update() {
-      setPx(isVisible() ? spacerPx : 0);
+    // LATCHED STATE (prevents oscillation/flicker):
+    // - Turns ON only when the user reaches bottom while scrolling down.
+    // - Turns OFF on any upward scroll.
+    var active = false;
+    var lastTop = scrollEl.scrollTop || 0;
+
+    function setActive(next) {
+      if (active === next) return;
+      active = next;
+      setPx(active ? spacerPx : 0);
     }
 
-    // Keep spacer correct as you scroll.
-    scrollEl.addEventListener('scroll', update, { passive: true });
+    function onScroll() {
+      var st = scrollEl.scrollTop || 0;
+      var delta = st - lastTop;
+      lastTop = st;
+
+      // Any upward scroll turns it off (spacer can shrink / move off-screen)
+      if (delta < 0) {
+        if (active) setActive(false);
+        return;
+      }
+
+      // Only turn it on when scrolling down and we're at the bottom of the current content.
+      if (!active && delta > 0) {
+        var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
+        if (maxScrollTop > 0 && st >= (maxScrollTop - 1)) {
+          setActive(true);
+        }
+      }
+    }
+
+    scrollEl.addEventListener('scroll', onScroll, { passive: true });
 
     // Block DOWNWARD scrolling while spacer is visible (wheel).
     scrollEl.addEventListener('wheel', function(e) {
       var dy = Number(e && e.deltaY) || 0;
-      if (dy > 0 && isVisible()) {
+      if (dy > 0 && active) {
         e.preventDefault();
         return;
       }
@@ -577,7 +590,7 @@ const App = (function() {
     }, { passive: true });
 
     scrollEl.addEventListener('touchmove', function(e) {
-      if (!isVisible()) return;
+      if (!active) return;
       if (!(e.touches && e.touches[0]) || lastTouchY == null) return;
 
       var y = e.touches[0].clientY;
@@ -590,7 +603,7 @@ const App = (function() {
     }, { passive: false });
 
     // Initial
-    update();
+    setActive(false);
   }
 
   function initFooterSpacers() {
