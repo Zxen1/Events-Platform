@@ -194,7 +194,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  overflow-y: auto;
   pointer-events: auto;
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
@@ -202,7 +201,6 @@
   background: #222222;
   color: #fff;
   overscroll-behavior: contain;
-  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
 }
 
 .member-panel-content--side-left {
@@ -402,6 +400,7 @@
   overflow-x: hidden;
   /* Total interior spacing should add up to 10px (not 20px). */
   padding: 0 10px;
+  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
