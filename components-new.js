@@ -6970,15 +6970,16 @@ const ButtonAnchorTop = (function() {
         var expandedSlackPx = 4000;
         var collapsedSlackPx = 0;
         
+        var slackEl = ensureSlackEl(scrollEl);
         var unlockTimer = null;
         var locked = false;
         var clickHoldUntil = 0;
-        var currentSlackPx = null;
+        var currentSlackPx = 0;
         var lastScrollTop = scrollEl.scrollTop || 0;
         var scrollbarFadeTimer = null;
-        
-        var slackEl = ensureSlackEl(scrollEl);
         var pendingOffscreenCollapse = false;
+        var internalAdjust = false;
+        var pendingAnchor = null; // { el, topBefore }
         
         function fadeScrollbar() {
             try {
@@ -6991,11 +6992,30 @@ const ButtonAnchorTop = (function() {
         }
         
         function applySlackPx(px) {
+            if (px !== collapsedSlackPx && px !== expandedSlackPx) return;
             if (currentSlackPx === px) return;
+            
+            var oldPx = currentSlackPx;
             currentSlackPx = px;
-            scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
-            try { scrollEl.getBoundingClientRect(); } catch (e) {}
+            
+            // IMPORTANT: changing top slack changes layout; compensate scrollTop so there is no visible jump.
+            internalAdjust = true;
+            try {
+                if (px > oldPx) {
+                    scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
+                    scrollEl.scrollTop = (scrollEl.scrollTop || 0) + (px - oldPx);
+                } else {
+                    scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
+                    var next = (scrollEl.scrollTop || 0) - (oldPx - px);
+                    scrollEl.scrollTop = next < 0 ? 0 : next;
+                }
+            } catch (e0) {}
+            internalAdjust = false;
+            
+            try { scrollEl.getBoundingClientRect(); } catch (e1) {}
             fadeScrollbar();
+            
+            try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e2) {}
         }
         
         function isSlackOnScreen() {
@@ -7009,21 +7029,20 @@ const ButtonAnchorTop = (function() {
             }
         }
         
+        function isSlackOffscreenAbove() {
+            if (!slackEl) return false;
+            try {
+                var slackRect = slackEl.getBoundingClientRect();
+                var scrollRect = scrollEl.getBoundingClientRect();
+                return slackRect.bottom <= scrollRect.top;
+            } catch (e) {
+                return false;
+            }
+        }
+        
         function maybeCollapseOffscreen() {
             if (!pendingOffscreenCollapse) return;
-            
-            // If the panel/tab content does not overflow (excluding any current slack),
-            // the spacer must never be on-screen.
-            try {
-                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
-                var h = scrollEl.clientHeight || 0;
-                if (contentNoSlack <= h) {
-                    pendingOffscreenCollapse = false;
-                    applySlackPx(collapsedSlackPx);
-                    return;
-                }
-            } catch (e0) {}
-            
+            // Never resize while visible
             if (isSlackOnScreen()) return;
             pendingOffscreenCollapse = false;
             applySlackPx(collapsedSlackPx);
@@ -7034,14 +7053,12 @@ const ButtonAnchorTop = (function() {
             maybeCollapseOffscreen();
         }
         
-        // If slack is ON (4000) but still OFF-SCREEN above the viewport, and the click window is over,
-        // turn it OFF before the user can ever scroll back into it.
+        // If slack is ON but sits above the viewport, collapse it before the user can ever scroll into it.
         function collapseIfOffscreenAbove() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
                 if (Date.now() < clickHoldUntil) return false;
-                // Only collapse when the spacer is NOT on-screen.
-                if (isSlackOnScreen()) return false;
+                if (!isSlackOffscreenAbove()) return false;
                 pendingOffscreenCollapse = false;
                 applySlackPx(collapsedSlackPx);
                 return true;
@@ -7054,7 +7071,6 @@ const ButtonAnchorTop = (function() {
             if (locked) return;
             var h = scrollEl.clientHeight || 0;
             if (h <= 0) return;
-            // Anchor protection window: don't engage lock/collapse.
             if (Date.now() < clickHoldUntil) return;
             scrollEl.style.maxHeight = h + 'px';
             locked = true;
@@ -7073,14 +7089,65 @@ const ButtonAnchorTop = (function() {
             unlockTimer = setTimeout(unlock, stopDelayMs);
         }
         
+        function applyAnchorAdjustment() {
+            if (!pendingAnchor) return;
+            var a = pendingAnchor;
+            pendingAnchor = null;
+            if (!a || !a.el || !a.el.isConnected) return;
+            
+            try {
+                var afterTop = a.el.getBoundingClientRect().top;
+                var delta = afterTop - a.topBefore;
+                if (!delta) return;
+                
+                var desired = (scrollEl.scrollTop || 0) + delta;
+                if (desired < 0) {
+                    // Need room above: enable slack (compensated, no visible jump), then offset desired.
+                    applySlackPx(expandedSlackPx);
+                    desired = desired + expandedSlackPx;
+                }
+                
+                internalAdjust = true;
+                scrollEl.scrollTop = desired;
+                internalAdjust = false;
+                lastScrollTop = scrollEl.scrollTop || 0;
+            } catch (e) {
+                internalAdjust = false;
+            }
+        }
+        
+        // Capture the anchor target before DOM changes, then correct scroll after click handlers run.
+        scrollEl.addEventListener('pointerdown', function(e) {
+            try {
+                var t = e && e.target;
+                if (!(t instanceof Element)) return;
+                if (slackEl && (t === slackEl || slackEl.contains(t))) return;
+                // Only anchor if the click is inside this scroll container.
+                if (!scrollEl.contains(t)) return;
+                pendingAnchor = { el: t, topBefore: t.getBoundingClientRect().top };
+                clickHoldUntil = Date.now() + clickHoldMs;
+            } catch (e0) {}
+        }, { passive: true, capture: true });
+        
+        // Bubble phase so any inner click handlers (that close panels above) run first.
+        scrollEl.addEventListener('click', function() {
+            try {
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        applyAnchorAdjustment();
+                    });
+                });
+            } catch (e0) {}
+        }, false);
+        
         function onScroll() {
+            if (internalAdjust) return;
             try {
                 var st = scrollEl.scrollTop || 0;
-                // If slack is on-screen and scrollTop decreased anyway (e.g. scrollbar drag),
-                // do NOT snap forward/back. Just ignore this scroll event.
+                // While slack is visible, do not allow upward scrolling (no snapping).
                 if (st < lastScrollTop && isSlackOnScreen()) return;
                 
-                // If the user is scrolling up and slack is ON but still off-screen, kill it now.
+                // If the user is scrolling up and slack exists above, collapse it before it becomes reachable.
                 if (st < lastScrollTop) collapseIfOffscreenAbove();
                 
                 if (st === lastScrollTop) return;
@@ -7093,7 +7160,7 @@ const ButtonAnchorTop = (function() {
         
         scrollEl.addEventListener('scroll', onScroll, { passive: true });
         
-        // Wheel/trackpad: block UPWARD scroll while slack is visible.
+        // Wheel/trackpad: block upward scroll while slack is visible.
         scrollEl.addEventListener('wheel', function(e) {
             try {
                 var deltaY = Number(e && e.deltaY) || 0;
@@ -7107,7 +7174,7 @@ const ButtonAnchorTop = (function() {
             startScrollBurst();
         }, { passive: false });
         
-        // Touch (mobile): block upward scroll while slack is visible.
+        // Touch: block upward scroll while slack is visible.
         var lastTouchY = null;
         scrollEl.addEventListener('touchstart', function(e) {
             try {
@@ -7139,33 +7206,12 @@ const ButtonAnchorTop = (function() {
             try {
                 if (!isSlackOnScreen()) return;
                 var k = e && (e.key || e.code) ? String(e.key || e.code) : '';
-                // Upward scroll attempts:
-                // ArrowUp, PageUp, Home
                 if (k === 'ArrowUp' || k === 'PageUp' || k === 'Home') {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                 }
             } catch (e2) {}
         }, true);
-        
-        // Clicking: click-hold window + temporary slack ON.
-        function holdClickSlack() {
-            // Never show slack for containers that don't overflow.
-            try {
-                var h = scrollEl.clientHeight || 0;
-                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
-                if (contentNoSlack <= h) {
-                    pendingOffscreenCollapse = false;
-                    applySlackPx(collapsedSlackPx);
-                    return;
-                }
-            } catch (e0) {}
-            
-            clickHoldUntil = Date.now() + clickHoldMs;
-            applySlackPx(expandedSlackPx);
-        }
-        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
-        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
         
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
@@ -7177,6 +7223,7 @@ const ButtonAnchorTop = (function() {
                 try { if (unlockTimer) clearTimeout(unlockTimer); } catch (e2) {}
                 try { scrollEl.style.maxHeight = ''; } catch (e3) {}
                 locked = false;
+                pendingAnchor = null;
                 applySlackPx(collapsedSlackPx);
                 try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e4) {}
             }
@@ -7194,9 +7241,7 @@ const ButtonAnchorTop = (function() {
         return controller;
     }
     
-    return {
-        attach: attach
-    };
+    return { attach: attach };
 })();
 
 
