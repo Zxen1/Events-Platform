@@ -44,7 +44,6 @@
 
 .member-auth #member-auth-register {
   gap: 10px;
-  padding-bottom: 300px;
 }
 
 .member-supporter-message {
@@ -149,10 +148,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.member-supporter-join-fields--open {
-  /* state hook for future styling if needed */
 }
 
 /* ============================================================================
