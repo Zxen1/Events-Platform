@@ -536,14 +536,12 @@ const App = (function() {
     // STRICT RULE: only two spacer sizes exist.
     var expandedSlackPx = 4000;
     var collapsedSlackPx = 0;
-    var clickHoldMs = (opts && typeof opts.clickHoldMs === 'number') ? opts.clickHoldMs : 250;
-    var clickHoldUntil = 0;
     var currentSlackPx = null;
     var lastScrollTop = scrollEl.scrollTop || 0;
     var scrollbarFadeMs = (opts && typeof opts.scrollbarFadeMs === 'number') ? opts.scrollbarFadeMs : 160;
     var scrollbarFadeTimer = null;
     var bottomSlackEl = null;
-    var pendingOffscreenCollapse = false;
+    var pendingSlackPx = null;
 
     function fadeScrollbar() {
       try {
@@ -584,38 +582,37 @@ const App = (function() {
     }
 
     function maybeCollapseSlackOffscreen() {
-      if (!pendingOffscreenCollapse) return;
-      // Only collapse when the spacer is fully OFF the screen.
+      if (pendingSlackPx === null) return;
+      if (pendingSlackPx !== collapsedSlackPx && pendingSlackPx !== expandedSlackPx) {
+        // No other sizes are allowed.
+        pendingSlackPx = null;
+        return;
+      }
+      // Only apply size changes when the spacer is fully OFF the screen.
       if (isBottomSlackOnScreen()) return;
-      pendingOffscreenCollapse = false;
-      applySlackPx(collapsedSlackPx);
+      if (currentSlackPx !== pendingSlackPx) applySlackPx(pendingSlackPx);
+      pendingSlackPx = null;
     }
 
-    function requestCollapseSlackOffscreen() {
-      pendingOffscreenCollapse = true;
+    function requestSlackOffscreen(px) {
+      pendingSlackPx = px;
       maybeCollapseSlackOffscreen();
     }
 
     function applyScrollStateSlackScrolling() {
       // Two triggers only: scrolling -> collapsed slack
-      // IMPORTANT: do not change slack during scrolling (prevents visible flick while spacer is on-screen).
+      requestSlackOffscreen(collapsedSlackPx);
     }
 
     function applyScrollStateSlackNotScrolling() {
-      // Under nearly all circumstances, keep the spacer OFF when not scrolling
-      // (prevents empty tabs like My Posts from showing a scrollbar).
-      requestCollapseSlackOffscreen();
+      // Two triggers only: not scrolling -> expanded slack
+      requestSlackOffscreen(expandedSlackPx);
     }
 
     function lock() {
       if (locked) return;
       var h = scrollEl.clientHeight || 0;
       if (h <= 0) return;
-      // If the user is in the middle of a click, do NOT apply the scrolling lock.
-      if (Date.now() < clickHoldUntil) {
-        applyScrollStateSlackNotScrolling();
-        return;
-      }
       scrollEl.style.maxHeight = h + 'px';
       applyScrollStateSlackScrolling();
       locked = true;
@@ -646,8 +643,21 @@ const App = (function() {
       } catch (e) {}
       // First real scroll movement in a burst is our "scroll start" trigger
       startScrollBurst();
-      // If a collapse is pending, allow it to happen once the spacer is off-screen.
+      // If a size change is pending, allow it to happen once the spacer is off-screen.
       maybeCollapseSlackOffscreen();
+      // While the slack exists (expanded), never allow the user to scroll down into it.
+      // This prevents the spacer from ever being visible.
+      try {
+        if (currentSlackPx === expandedSlackPx) {
+          var maxNoSlack = (scrollEl.scrollHeight - expandedSlackPx) - scrollEl.clientHeight;
+          if (maxNoSlack < 0) maxNoSlack = 0;
+          var cur = scrollEl.scrollTop || 0;
+          if (cur > maxNoSlack) {
+            scrollEl.scrollTop = maxNoSlack;
+            lastScrollTop = maxNoSlack;
+          }
+        }
+      } catch (e2) {}
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
@@ -660,6 +670,12 @@ const App = (function() {
         var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
         var st = scrollEl.scrollTop || 0;
         var eps = 0; // STRICT: spacer system must not rely on micro spacer/tolerances
+        // If slack is expanded, do not allow downward wheel scrolling into it.
+        if (currentSlackPx === expandedSlackPx && deltaY > 0) {
+          var maxNoSlack = (scrollEl.scrollHeight - expandedSlackPx) - scrollEl.clientHeight;
+          if (maxNoSlack < 0) maxNoSlack = 0;
+          if (st >= (maxNoSlack - eps)) return;
+        }
         var canScrollDown = st < (maxScrollTop - eps);
         var canScrollUp = st > eps;
         if (deltaY > 0 && !canScrollDown) return;
@@ -671,17 +687,8 @@ const App = (function() {
     }, { passive: true });
     scrollEl.addEventListener('touchstart', startScrollBurst, { passive: true });
 
-    // Clicking: keep slack stable until the click is complete.
-    function holdClickSlack() {
-      clickHoldUntil = Date.now() + clickHoldMs;
-      // Anchor protection: temporarily expand slack during the click window only.
-      applySlackPx(expandedSlackPx);
-    }
-    scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
-    scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
-
     // Default (on tab open): no slack to avoid scrollbar flicker.
-    applySlackPx(0);
+    applySlackPx(collapsedSlackPx);
   }
 
   function initScrollHeightLocks() {
@@ -690,7 +697,7 @@ const App = (function() {
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
         // TEST VALUE: very tall footer spacer to simulate extremely tall accordion menus.
-        setupScrollHeightLock(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        setupScrollHeightLock(el, { stopDelayMs: 180, scrollbarFadeMs: 160 });
       });
     });
   }
