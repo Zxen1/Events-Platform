@@ -511,6 +511,60 @@ const App = (function() {
      INITIALIZATION
      Called on DOMContentLoaded
      -------------------------------------------------------------------------- */
+  /* --------------------------------------------------------------------------
+     SCROLL HEIGHT LOCK (Anti-jank)
+     --------------------------------------------------------------------------
+     User requirement:
+     - When the user starts scrolling, lock the scroll container's max-height to
+       whatever it currently is (in px) so accordion/menu expansion can't change
+       layout mid-scroll.
+     - When scrolling stops, restore full height (remove max-height lock).
+     This is automatic and not user-controlled.
+  */
+
+  function setupScrollHeightLock(scrollEl, opts) {
+    if (!scrollEl) return;
+    if (scrollEl.dataset && scrollEl.dataset.scrollHeightLockInit === '1') return;
+    if (scrollEl.dataset) scrollEl.dataset.scrollHeightLockInit = '1';
+
+    var stopDelayMs = (opts && typeof opts.stopDelayMs === 'number') ? opts.stopDelayMs : 150;
+    var unlockTimer = null;
+    var locked = false;
+
+    function lock() {
+      if (locked) return;
+      var h = scrollEl.clientHeight || 0;
+      if (h <= 0) return;
+      scrollEl.style.maxHeight = h + 'px';
+      locked = true;
+    }
+
+    function unlock() {
+      if (!locked) return;
+      scrollEl.style.maxHeight = '';
+      locked = false;
+    }
+
+    function onScroll() {
+      // First scroll event in a burst is our "scroll start" trigger
+      lock();
+      if (unlockTimer) clearTimeout(unlockTimer);
+      unlockTimer = setTimeout(unlock, stopDelayMs);
+    }
+
+    scrollEl.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  function initScrollHeightLocks() {
+    // These are the NEW site scroll containers
+    var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
+    selectors.forEach(function(sel) {
+      document.querySelectorAll(sel).forEach(function(el) {
+        setupScrollHeightLock(el, { stopDelayMs: 150 });
+      });
+    });
+  }
+
   function init() {
     // App initializing...
 
@@ -537,6 +591,9 @@ const App = (function() {
         }
       }
     });
+
+    // Anti-jank: lock panel-body max-height while scrolling (accordion/menu stability)
+    initScrollHeightLocks();
 
     // App initialization complete
   }
