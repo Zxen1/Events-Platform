@@ -641,9 +641,24 @@ const App = (function() {
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
-    // Trigger scroll burst *before* the first scroll position change (wheel/touch),
-    // and ALWAYS schedule unlock even if no scroll event fires.
-    scrollEl.addEventListener('wheel', startScrollBurst, { passive: true });
+    // Trigger scroll burst *before* the first scroll position change (wheel/touch).
+    // IMPORTANT: If the user is already at the top/bottom and scrolling further in that direction
+    // is impossible, do NOT engage the system (prevents bottom-edge "shudder").
+    scrollEl.addEventListener('wheel', function(e) {
+      try {
+        var deltaY = Number(e && e.deltaY) || 0;
+        var maxScrollTop = scrollEl.scrollHeight - scrollEl.clientHeight;
+        var st = scrollEl.scrollTop || 0;
+        var eps = 1; // px tolerance
+        var canScrollDown = st < (maxScrollTop - eps);
+        var canScrollUp = st > eps;
+        if (deltaY > 0 && !canScrollDown) return;
+        if (deltaY < 0 && !canScrollUp) return;
+      } catch (err) {
+        // If anything goes wrong, fall back to previous behavior.
+      }
+      startScrollBurst();
+    }, { passive: true });
     scrollEl.addEventListener('touchstart', startScrollBurst, { passive: true });
 
     // Clicking: keep slack stable until the click is complete.
