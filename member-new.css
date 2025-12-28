@@ -1068,10 +1068,10 @@
 }
 
 .member-auth-tab--selected {
-  /* Keep Login/Register visually identical even when active */
-  background: var(--btn);
-  border-color: var(--btn);
-  color: var(--button-text);
+  /* Active state should match the website blue used by the top tab bar */
+  background: var(--btn-selected);
+  border-color: var(--btn-selected);
+  color: var(--button-active-text);
 }
 
 .member-auth-tab:focus-visible {
