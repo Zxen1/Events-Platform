@@ -539,6 +539,9 @@ const App = (function() {
       // While scrolling, collapse bottom slack so the user isn't "always able" to scroll into it.
       // Slack returns when scrolling stops (unlock()).
       scrollEl.style.setProperty('--panel-bottom-slack', '1px');
+      // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
+      // (Otherwise some browsers update the thumb on the next paint, which looks like it still "expects" 300px.)
+      try { scrollEl.getBoundingClientRect(); } catch (e) {}
       locked = true;
     }
 
@@ -546,6 +549,7 @@ const App = (function() {
       if (!locked) return;
       scrollEl.style.maxHeight = '';
       scrollEl.style.removeProperty('--panel-bottom-slack'); // back to default (300px)
+      try { scrollEl.getBoundingClientRect(); } catch (e) {}
       locked = false;
     }
 
@@ -557,6 +561,9 @@ const App = (function() {
     }
 
     scrollEl.addEventListener('scroll', onScroll, { passive: true });
+    // Trigger lock *before* the first scroll position change (wheel/touch), so the thumb doesn't lag behind.
+    scrollEl.addEventListener('wheel', function() { lock(); }, { passive: true });
+    scrollEl.addEventListener('touchstart', function() { lock(); }, { passive: true });
   }
 
   function initScrollHeightLocks() {
