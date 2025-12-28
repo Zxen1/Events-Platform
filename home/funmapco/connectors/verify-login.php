@@ -52,18 +52,20 @@ try {
     $stmt = null;
     $avatarCol = null;
 
-    $extraCols = '';
-    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, language, currency, country_code, map_lighting, map_style, timezone{$extraCols}, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+    // IMPORTANT:
+    // - Database schemas evolve; do not select columns that may not exist (mysqli->prepare will fail).
+    // - Keep this SELECT limited to columns that exist in current funmapco_db views/tables (see latest dump).
+    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recents, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
       $avatarCol = 'avatar_file';
     } else {
-      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, language, currency, country_code, map_lighting, map_style, timezone{$extraCols}, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recents, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
       $stmt = $db->prepare($sqlWithAvatarUrl);
       if ($stmt) {
         $avatarCol = 'avatar_url';
       } else {
-        $sqlNoAvatar = "SELECT id, email, username, username_key, language, currency, country_code, map_lighting, map_style, timezone{$extraCols}, password_hash FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+        $sqlNoAvatar = "SELECT id, email, username, username_key, password_hash, map_lighting, map_style, favorites, recents, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $db->prepare($sqlNoAvatar);
         if (!$stmt) return null;
       }
@@ -84,12 +86,15 @@ try {
         'username'  => (string)$row['username'],
         'username_key' => isset($row['username_key']) ? (string)$row['username_key'] : '',
         'avatar' => ($avatarCol && isset($row[$avatarCol])) ? (string)$row[$avatarCol] : '',
-        'language' => isset($row['language']) ? (string)$row['language'] : null,
-        'currency' => isset($row['currency']) ? (string)$row['currency'] : null,
-        'country_code' => isset($row['country_code']) ? (string)$row['country_code'] : null,
+        // Keep response keys stable for frontend, even if some values are not stored on the user row.
+        'language' => null,
+        'currency' => null,
+        'country_code' => isset($row['country']) ? (string)$row['country'] : null,
         'map_lighting' => isset($row['map_lighting']) ? (string)$row['map_lighting'] : null,
         'map_style' => isset($row['map_style']) ? (string)$row['map_style'] : null,
-        'timezone' => isset($row['timezone']) ? (string)$row['timezone'] : null
+        'timezone' => null,
+        'favorites' => isset($row['favorites']) ? (string)$row['favorites'] : null,
+        'recents' => isset($row['recents']) ? (string)$row['recents'] : null
       ]
     ];
   };
