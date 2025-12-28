@@ -114,6 +114,14 @@
   margin: 0;
   width: 100%;
   height: 44px;
+  padding: 0 10px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: rgba(34, 197, 94, 0.14);
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .member-auth-submit[data-action="register"] {
@@ -1012,7 +1020,7 @@
 }
 
 .member-auth-tab {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 0;
   height: 36px;
   border-radius: 5px;

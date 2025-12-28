@@ -320,7 +320,17 @@ const MemberModule = (function() {
         }
         if (supporterCustomAmountInput) {
             supporterCustomAmountInput.addEventListener('input', function() {
+                var code = getSiteCurrencyCode();
                 var raw = String(supporterCustomAmountInput.value || '');
+
+                // If the currency prefix is present, strip it for numeric processing.
+                if (code) {
+                    var prefix = code + ' ';
+                    if (raw.indexOf(prefix) === 0) {
+                        raw = raw.slice(prefix.length);
+                    }
+                }
+
                 // Keep only numbers + decimal point (no formatting/libraries)
                 raw = raw.replace(/[^0-9.]/g, '');
                 // Allow only first decimal point
@@ -328,12 +338,32 @@ const MemberModule = (function() {
                 if (parts.length > 2) {
                     raw = parts[0] + '.' + parts.slice(1).join('');
                 }
-                if (raw !== supporterCustomAmountInput.value) supporterCustomAmountInput.value = raw;
+
+                // Show currency in the visible input (button-like layout).
+                var displayValue = code ? (code + ' ' + raw) : raw;
+                if (displayValue !== supporterCustomAmountInput.value) {
+                    supporterCustomAmountInput.value = displayValue;
+                    try {
+                        var len = supporterCustomAmountInput.value.length;
+                        supporterCustomAmountInput.setSelectionRange(len, len);
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
                 // Allow under-min values while typing; clamp happens on blur/finalize.
                 setSupporterAmount(raw, { fromCustom: true, allowUnderMin: true });
             });
             supporterCustomAmountInput.addEventListener('blur', function() {
+                var code = getSiteCurrencyCode();
                 var raw = String(supporterCustomAmountInput.value || '').trim();
+                if (code) {
+                    var prefix = code + ' ';
+                    if (raw.indexOf(prefix) === 0) {
+                        raw = raw.slice(prefix.length);
+                    }
+                }
+                raw = raw.replace(/[^0-9.]/g, '');
                 setSupporterAmount(raw, { fromCustom: true });
             });
         }
@@ -3016,7 +3046,7 @@ const MemberModule = (function() {
         var code = getSiteCurrencyCode();
         if (!code) return;
         if (supporterCustomAmountInput) {
-            supporterCustomAmountInput.placeholder = 'Custom (' + code + ')';
+            supporterCustomAmountInput.placeholder = code + ' 0.00';
         }
         if (supporterPresetButtons && supporterPresetButtons.length) {
             supporterPresetButtons.forEach(function(btn) {
@@ -3074,7 +3104,12 @@ const MemberModule = (function() {
         if (supporterCustomAmountInput) {
             // If the value was clamped/formatted, write it back so the UI matches the hidden value.
             if (!options.fromCustom || (!options.allowUnderMin)) {
-                supporterCustomAmountInput.value = value ? value : '';
+                var code = getSiteCurrencyCode();
+                if (code && value) {
+                    supporterCustomAmountInput.value = code + ' ' + value;
+                } else {
+                    supporterCustomAmountInput.value = value ? value : '';
+                }
             }
         }
 
