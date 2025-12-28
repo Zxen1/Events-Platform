@@ -2980,6 +2980,17 @@ const MemberModule = (function() {
             // Support tab opened
             loadSupporterMessage();
             syncSupporterCurrencyUi();
+            // Default to the first preset amount if none selected yet (no hardcoding).
+            try {
+                if (supporterAmountHiddenInput && String(supporterAmountHiddenInput.value || '').trim() === '') {
+                    if (supporterPresetButtons && supporterPresetButtons.length) {
+                        var firstAmt = String(supporterPresetButtons[0].getAttribute('data-amount') || '').trim();
+                        if (firstAmt) setSupporterAmount(firstAmt);
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
         }
         
         authForm.dataset.active = target;
@@ -3016,6 +3027,28 @@ const MemberModule = (function() {
                 var formatted = isFinite(n) ? n.toFixed(2) : amt;
                 btn.textContent = code + ' ' + formatted;
             });
+        }
+
+        // Ensure the submit button always shows currency context.
+        try {
+            if (!registerPanel) return;
+            var submitBtn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
+            if (!submitBtn) return;
+            var baseLabel = submitBtn.getAttribute('data-base-label');
+            if (!baseLabel) {
+                baseLabel = String(submitBtn.textContent || '').trim();
+                submitBtn.setAttribute('data-base-label', baseLabel);
+            }
+            var rawAmt = supporterAmountHiddenInput ? String(supporterAmountHiddenInput.value || '').trim() : '';
+            var nAmt = parseFloat(rawAmt);
+            var formattedAmt = isFinite(nAmt) ? nAmt.toFixed(2) : '';
+            if (formattedAmt) {
+                submitBtn.textContent = baseLabel + ' — ' + code + ' ' + formattedAmt;
+            } else {
+                submitBtn.textContent = baseLabel;
+            }
+        } catch (e) {
+            // ignore
         }
     }
 
@@ -3055,6 +3088,32 @@ const MemberModule = (function() {
                 var isSelected = (vFixed !== null && bFixed !== null && vFixed === bFixed);
                 btn.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
             });
+        }
+
+        // Keep submit button label in sync with the current amount.
+        try {
+            if (!registerPanel) return;
+            var submitBtn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
+            if (!submitBtn) return;
+            var baseLabel = submitBtn.getAttribute('data-base-label');
+            if (!baseLabel) {
+                baseLabel = String(submitBtn.textContent || '').trim();
+                submitBtn.setAttribute('data-base-label', baseLabel);
+            }
+            var code = getSiteCurrencyCode();
+            if (!code) {
+                submitBtn.textContent = baseLabel;
+                return;
+            }
+            var nAmt = parseFloat(value);
+            var formattedAmt = isFinite(nAmt) ? nAmt.toFixed(2) : '';
+            if (formattedAmt) {
+                submitBtn.textContent = baseLabel + ' — ' + code + ' ' + formattedAmt;
+            } else {
+                submitBtn.textContent = baseLabel;
+            }
+        } catch (e) {
+            // ignore
         }
     }
 
