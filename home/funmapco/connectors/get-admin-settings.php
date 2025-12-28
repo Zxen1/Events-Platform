@@ -255,6 +255,26 @@ try {
         } catch (Throwable $e) {
             // Table might not exist yet, continue
         }
+
+        // Fetch countries (country code dropdown)
+        try {
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `countries` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $countryRows = $stmt->fetchAll();
+            $dropdownOptions['country'] = [];
+            foreach ($countryRows as $row) {
+                // Country needs filename, value (2-letter code), and label (country name)
+                if (empty($row['option_filename']) || empty($row['option_value']) || empty($row['option_label'])) {
+                    continue;
+                }
+                $dropdownOptions['country'][] = [
+                    'value' => strtolower((string)$row['option_value']),
+                    'label' => $row['option_label'],
+                    'filename' => $row['option_filename'] ? $row['option_filename'] : null,
+                ];
+            }
+        } catch (Throwable $e) {
+            // Table might not exist yet, continue
+        }
         
         // Fetch amenities
         try {

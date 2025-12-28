@@ -79,6 +79,9 @@ const MemberModule = (function() {
     var supporterPresetButtons = [];
     var supporterCustomAmountInput = null;
     var supporterAmountHiddenInput = null;
+    var supporterCountryMenuContainer = null;
+    var supporterCountryHiddenInput = null;
+    var supporterCountryMenuInstance = null;
     var profileAvatar = null;
     var profileName = null;
     var profileEmail = null;
@@ -230,6 +233,8 @@ const MemberModule = (function() {
         supporterCustomAmountInput = document.getElementById('member-supporter-payment-custom');
         supporterAmountHiddenInput = document.getElementById('member-supporter-payment-amount');
         supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporterpayment-button'));
+        supporterCountryMenuContainer = document.getElementById('member-supporter-country-menu');
+        supporterCountryHiddenInput = document.getElementById('member-supporter-country');
         
         profileAvatar = document.getElementById('member-profile-avatar');
         profileName = document.getElementById('member-profile-name');
@@ -3104,6 +3109,7 @@ const MemberModule = (function() {
             // Support tab opened
             loadSupporterMessage();
             syncSupporterCurrencyUi();
+            initSupporterCountryMenu();
             // Default to the first preset amount if none selected yet (no hardcoding).
             try {
                 if (supporterAmountHiddenInput && String(supporterAmountHiddenInput.value || '').trim() === '') {
@@ -3206,6 +3212,29 @@ const MemberModule = (function() {
             }
         } catch (e) {
             // ignore
+        }
+    }
+
+    function initSupporterCountryMenu() {
+        try {
+            if (!supporterCountryMenuContainer || !supporterCountryHiddenInput) return;
+            if (!window.CountryComponent || typeof CountryComponent.loadFromDatabase !== 'function') return;
+            if (supporterCountryMenuInstance) return;
+            
+            CountryComponent.loadFromDatabase().then(function() {
+                supporterCountryMenuContainer.innerHTML = '';
+                supporterCountryMenuInstance = CountryComponent.buildMenu({
+                    initialValue: (supporterCountryHiddenInput.value || '').toLowerCase() || null,
+                    onSelect: function(code) {
+                        supporterCountryHiddenInput.value = String(code || '').toLowerCase();
+                    }
+                });
+                if (supporterCountryMenuInstance && supporterCountryMenuInstance.element) {
+                    supporterCountryMenuContainer.appendChild(supporterCountryMenuInstance.element);
+                }
+            });
+        } catch (e) {
+            console.warn('[Member] Failed to init supporter country menu', e);
         }
     }
 
@@ -3514,6 +3543,9 @@ const MemberModule = (function() {
             formData.set('email', email);
             formData.set('password', password);
             formData.set('confirm', confirm);
+            if (supporterCountryHiddenInput && String(supporterCountryHiddenInput.value || '').trim() !== '') {
+                formData.set('country', String(supporterCountryHiddenInput.value || '').trim());
+            }
             if (avatarBlob) {
                 formData.append('avatar_file', avatarBlob, 'avatar.png');
             }

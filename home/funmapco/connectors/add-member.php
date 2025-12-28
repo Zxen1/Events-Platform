@@ -57,6 +57,7 @@ $email = trim($_POST['email'] ?? '');
 $pass = $_POST['password'] ?? '';
 $conf = $_POST['confirm'] ?? '';
 $avatar = trim($_POST['avatar_file'] ?? '');
+$country = strtolower(trim($_POST['country'] ?? ''));
 // Optional uploaded avatar file (cropped client-side); only upload after member is created
 $hasAvatarFile = isset($_FILES['avatar_file']) && isset($_FILES['avatar_file']['tmp_name']) && is_uploaded_file($_FILES['avatar_file']['tmp_name']);
 
@@ -69,6 +70,8 @@ if($conf==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Confirm
 if(!$hasAvatarFile && $avatar==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Avatar']);
 if(!filter_var($email,FILTER_VALIDATE_EMAIL)) fail_key(400,'msg_auth_register_email_invalid');
 if($pass!==$conf) fail_key(400,'msg_auth_register_password_mismatch');
+
+$country = preg_match('/^[a-z]{2}$/', $country) ? $country : '';
 
 $hash = password_hash($pass, PASSWORD_BCRYPT);
 if(!$hash) fail(500,'Hash failed');
@@ -129,9 +132,9 @@ while (true) {
 }
 
 // Store username as the public username, and store username_key
-$insert = $mysqli->prepare('INSERT INTO members (email,password_hash,username,avatar_file,username_key,created_at) VALUES (?,?,?,?,?,NOW())');
+$insert = $mysqli->prepare('INSERT INTO members (email,password_hash,username,avatar_file,username_key,country,created_at) VALUES (?,?,?,?,?,?,NOW())');
 if(!$insert) fail(500,'Insert prepare failed');
-$insert->bind_param('sssss',$email,$hash,$username,$avatar,$candidateKey);
+$insert->bind_param('ssssss',$email,$hash,$username,$avatar,$candidateKey,$country);
 if(!$insert->execute()){ $insert->close(); fail(500,'Database insert failed'); }
 $id = $insert->insert_id;
 $insert->close();

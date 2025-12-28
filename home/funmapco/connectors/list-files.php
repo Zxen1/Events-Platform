@@ -13,7 +13,7 @@
  * from their corresponding Bunny CDN folders to their respective separate tables.
  * 
  * Steps:
- * 1. Receives filenames array and option_group (system-image, category-icon, currency, phone-prefix, amenity)
+ * 1. Receives filenames array and option_group (system-image, category-icon, currency, phone-prefix, amenity, country)
  * 2. Maps option_group to table name (system-image -> system_images, etc.)
  * 3. Detects and removes duplicate option_filename entries (keeps lowest ID)
  * 4. Normalizes API filenames (trims, filters empty, removes duplicates from API list)
@@ -27,6 +27,7 @@
  * - currency -> currencies
  * - phone-prefix -> phone_prefixes
  * - amenity -> amenities
+ * - country -> countries
  * 
  * Returns changes array so frontend can update menu if needed.
  */
@@ -58,8 +59,8 @@ try {
             return;
         }
 
-        $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity'
-        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity'];
+        $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country'
+        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country'];
         if (!in_array($optionGroup, $validGroups)) {
             http_response_code(400);
             echo json_encode([
@@ -75,7 +76,8 @@ try {
             'category-icon' => 'category_icons',
             'currency' => 'currencies',
             'phone-prefix' => 'phone_prefixes',
-            'amenity' => 'amenities'
+            'amenity' => 'amenities',
+            'country' => 'countries'
         ];
         $tableName = $tableMap[$optionGroup];
 

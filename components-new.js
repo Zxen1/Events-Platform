@@ -779,6 +779,9 @@ const FieldsetComponent = (function(){
         if (data && data['phone-prefix'] && typeof PhonePrefixComponent !== 'undefined') {
             PhonePrefixComponent.setData(data['phone-prefix']);
         }
+        if (data && data.country && typeof CountryComponent !== 'undefined') {
+            CountryComponent.setData(data.country);
+        }
     }
     
     /**
@@ -4019,6 +4022,208 @@ const PhonePrefixComponent = (function(){
     };
 })();
 
+/* ============================================================================
+   COUNTRY (2-letter code + flag)
+   Pattern: copied from CurrencyComponent.buildCompactMenu (fieldset-menu combobox)
+   ============================================================================ */
+
+const CountryComponent = (function(){
+    
+    // Data loaded from database - no hardcoded fallback
+    var countryData = [];
+    var dataLoaded = false;
+    
+    function getData() {
+        return countryData;
+    }
+    
+    function setData(data) {
+        countryData = data || [];
+        dataLoaded = true;
+    }
+    
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    // Load country data from database via gateway
+    function loadFromDatabase() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.dropdown_options && res.dropdown_options.country) {
+                    countryData = res.dropdown_options.country;
+                    dataLoaded = true;
+                }
+                return countryData;
+            });
+    }
+    
+    // Build a country menu (full width, shows code + label)
+    function buildMenu(options) {
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var initialValue = options.initialValue || null;
+        var selectedCode = initialValue;
+        
+        var menu = document.createElement('div');
+        menu.className = 'fieldset-menu fieldset-country-menu';
+        var initialFlagUrl = '';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Select country" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnInput = menu.querySelector('.fieldset-menu-button-input');
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('fieldset-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+        }
+        
+        // Required by MenuManager (strict)
+        menu.__menuIsOpen = function() {
+            return menu.classList.contains('fieldset-menu--open');
+        };
+        menu.__menuApplyOpenState = applyOpenState;
+        
+        // Store all option elements for filtering
+        var allOptions = [];
+        
+        function setValue(code) {
+            var found = countryData.find(function(item) {
+                return item.value === code;
+            });
+            if (found) {
+                var filename = found.filename ? String(found.filename) : '';
+                if (filename) {
+                    btnImg.src = window.App.getImageUrl('countries', filename);
+                    btnImg.style.display = 'block';
+                } else {
+                    btnImg.src = '';
+                    btnImg.style.display = 'none';
+                }
+                btnInput.value = (found.value || '').toUpperCase() + ' - ' + (found.label || '');
+                selectedCode = code;
+            }
+        }
+        
+        function filterOptions(searchText) {
+            var search = String(searchText || '').toLowerCase();
+            allOptions.forEach(function(optData) {
+                var matches = optData.searchText.indexOf(search) !== -1;
+                optData.element.style.display = matches ? '' : 'none';
+            });
+        }
+        
+        // Build options
+        countryData.forEach(function(item) {
+            if (!item || !item.filename || !item.value || !item.label) return;
+            var code = String(item.value || '').toLowerCase();
+            var displayText = code.toUpperCase() + ' - ' + item.label;
+            
+            var op = document.createElement('div');
+            op.className = 'fieldset-menu-option';
+            var flagUrl = window.App.getImageUrl('countries', item.filename);
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
+            op.onclick = function(e) {
+                e.stopPropagation();
+                btnImg.src = flagUrl;
+                btnImg.style.display = 'block';
+                btnInput.value = displayText;
+                selectedCode = code;
+                applyOpenState(false);
+                filterOptions('');
+                onSelect(code, item.label, item.filename);
+            };
+            opts.appendChild(op);
+            
+            allOptions.push({
+                element: op,
+                searchText: displayText.toLowerCase() + ' ' + String(item.label || '').toLowerCase()
+            });
+        });
+        
+        if (initialValue) {
+            setValue(initialValue);
+        }
+        
+        MenuManager.register(menu);
+        
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                if (e) e.stopPropagation();
+                if (!menu.classList.contains('fieldset-menu--open')) {
+                    MenuManager.closeAll(menu);
+                    applyOpenState(true);
+                }
+                if (btnInput) {
+                    btnInput.focus();
+                    btnInput.select();
+                }
+            });
+        }
+        
+        btnInput.addEventListener('focus', function(e) {
+            e.stopPropagation();
+            MenuManager.closeAll(menu);
+            applyOpenState(true);
+            this.select();
+        });
+        
+        btnInput.addEventListener('input', function() {
+            filterOptions(this.value);
+            if (document.activeElement !== this) return;
+            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
+        });
+        
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                applyOpenState(false);
+                setValue(selectedCode);
+                filterOptions('');
+            }
+        });
+        
+        btnInput.addEventListener('blur', function() {
+            setTimeout(function() {
+                if (!menu.classList.contains('fieldset-menu--open')) {
+                    setValue(selectedCode);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+        
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('fieldset-menu--open')) {
+                applyOpenState(false);
+            } else {
+                MenuManager.closeAll(menu);
+                applyOpenState(true);
+                btnInput.focus();
+                btnInput.select();
+            }
+        });
+        
+        return {
+            element: menu,
+            setValue: setValue
+        };
+    }
+    
+    return {
+        getData: getData,
+        setData: setData,
+        isLoaded: isLoaded,
+        loadFromDatabase: loadFromDatabase,
+        buildMenu: buildMenu
+    };
+})();
+
 
 /* ============================================================================
    ICON PICKER COMPONENT
@@ -6385,6 +6590,7 @@ window.CalendarComponent = CalendarComponent;
 window.CurrencyComponent = CurrencyComponent;
 window.LanguageMenuComponent = LanguageMenuComponent;
 window.PhonePrefixComponent = PhonePrefixComponent;
+window.CountryComponent = CountryComponent;
 window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;
 window.AmenitiesMenuComponent = AmenitiesMenuComponent;

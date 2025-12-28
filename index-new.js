@@ -220,6 +220,7 @@ const App = (function() {
     amenities: 'folder_amenities',
     avatars: 'folder_avatars',
     categoryIcons: 'folder_category_icons',
+    countries: 'folder_countries',
     dummyImages: 'folder_dummy_images',
     currencies: 'folder_currencies',
     phonePrefixes: 'folder_phone_prefixes',
