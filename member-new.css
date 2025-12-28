@@ -202,6 +202,8 @@
   background: #222222;
   color: #fff;
   overscroll-behavior: contain;
+  /* TEST: extra scroll room at bottom */
+  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
 }
 
 .member-panel-content--side-left {
