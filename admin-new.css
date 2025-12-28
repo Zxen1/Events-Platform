@@ -239,7 +239,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 0 10px;
-  padding-bottom: calc(300px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -247,6 +247,14 @@
   gap: 20px;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
+}
+
+/* Consistent "extra scroll space under content" mechanism (see member/filter panels). */
+.admin-panel-body::after {
+  content: '';
+  display: block;
+  height: 300px;
+  flex: 0 0 auto;
 }
 
 .admin-panel-body::-webkit-scrollbar {

@@ -166,7 +166,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 10px calc(300px + var(--gap) + env(safe-area-inset-bottom, 0px));
+  padding: 0 10px calc(var(--gap) + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -175,6 +175,14 @@
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
   background: #222222;
+}
+
+/* Consistent "extra scroll space under content" mechanism (see member/admin panels). */
+.filter-panel-body::after {
+  content: '';
+  display: block;
+  height: 300px;
+  flex: 0 0 auto;
 }
 
 .filter-panel-body::-webkit-scrollbar {
