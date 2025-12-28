@@ -44,6 +44,7 @@
 
 .member-auth #member-auth-register {
   gap: 10px;
+  padding-bottom: 300px;
 }
 
 .member-supporter-message {
