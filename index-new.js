@@ -563,15 +563,36 @@ const App = (function() {
       fadeScrollbar();
     }
 
+    // Footer spacer visibility guard: if the spacer is visible on-screen, it must not collapse.
+    var slackEl = null;
+    function ensureSlackEl() {
+      if (!slackEl) slackEl = scrollEl.querySelector('.panel-bottom-slack');
+      return slackEl;
+    }
+    function isSlackVisibleOnScreen() {
+      var el = ensureSlackEl();
+      if (!el) return false;
+      try {
+        var s = el.getBoundingClientRect();
+        var c = scrollEl.getBoundingClientRect();
+        return (s.top < c.bottom) && (s.bottom > c.top);
+      } catch (e) {
+        return false;
+      }
+    }
+
     function applyScrollStateSlackScrolling() {
       // Two triggers only: scrolling -> collapsed slack
-      applySlackPx(collapsedSlackPx);
+      // If the footer spacer is currently visible, it is NOT allowed to snap shut.
+      if (isSlackVisibleOnScreen()) applySlackPx(expandedSlackPx);
+      else applySlackPx(collapsedSlackPx);
     }
 
     function applyScrollStateSlackNotScrolling() {
       // Under nearly all circumstances, keep the spacer OFF when not scrolling
       // (prevents empty tabs like My Posts from showing a scrollbar).
-      applySlackPx(0);
+      if (isSlackVisibleOnScreen()) applySlackPx(expandedSlackPx);
+      else applySlackPx(0);
     }
 
     function lock() {
