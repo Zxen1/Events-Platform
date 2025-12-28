@@ -177,7 +177,7 @@ const MapModule = (function() {
    */
   function onMapLoad() {
     // Map loaded
-
+    
     // Show the map (fade in) - immediate
     const mapEl = document.querySelector('.map-container');
     if (mapEl) {
@@ -207,7 +207,7 @@ const MapModule = (function() {
       if (spinEnabled) {
         startSpin();
       }
-
+      
       // Apply lighting preset (deferred, after map is fully loaded)
       // Priority: member settings > admin settings > localStorage > default
       var lighting = 'day';
