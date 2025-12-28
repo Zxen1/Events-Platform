@@ -413,6 +413,12 @@
 
 /* Bottom slack is provided by `.panel-bottom-slack` elements. */
 
+/* IMPORTANT: panel bodies are flex columns; prevent children shrinking so bottom slack
+   always creates real overflow/scroll (especially for short tabs like logged-in Profile). */
+.member-panel-body > * {
+  flex-shrink: 0;
+}
+
 .member-panel-body::-webkit-scrollbar {
   width: 12px;
 }

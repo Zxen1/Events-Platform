@@ -179,6 +179,11 @@
 
 /* Bottom slack is provided by `.panel-bottom-slack` elements. */
 
+/* Prevent flex children shrinking so bottom slack always creates real overflow/scroll. */
+.filter-panel-body > * {
+  flex-shrink: 0;
+}
+
 .filter-panel-body::-webkit-scrollbar {
   width: 12px;
 }
