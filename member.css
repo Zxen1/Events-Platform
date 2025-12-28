@@ -159,7 +159,7 @@
   overflow-y:auto;
   overflow-x:hidden;
   padding:0 10px;
-  padding-bottom:env(safe-area-inset-bottom, 0px);
+  padding-bottom:calc(300px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior:contain;
   display:flex;
   flex-direction:column;
@@ -169,13 +169,6 @@
   scrollbar-color:var(--panel-scrollbar-thumb) transparent;
 }
 
-/* Extra scroll space UNDER the scrolled content (not the panel container). */
-#memberPanel .panel-body::after{
-  content:'';
-  display:block;
-  height:300px;
-  flex:0 0 auto;
-}
 #memberPanel .panel-body::-webkit-scrollbar{
   width:12px;
 }
