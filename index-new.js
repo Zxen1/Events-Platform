@@ -530,32 +530,58 @@ const App = (function() {
     var stopDelayMs = (opts && typeof opts.stopDelayMs === 'number') ? opts.stopDelayMs : 150;
     var unlockTimer = null;
     var locked = false;
+    // Capture the intended "full" slack once (before we ever override it while scrolling).
+    var baseSlackPx = (function() {
+      try {
+        var v = String(getComputedStyle(scrollEl).getPropertyValue('--panel-bottom-slack') || '').trim();
+        var n = parseFloat(v);
+        return Number.isFinite(n) ? n : 300;
+      } catch (e) {
+        return 300;
+      }
+    })();
+
+    function applySlackOverridePx(px) {
+      if (px == null) {
+        scrollEl.style.removeProperty('--panel-bottom-slack');
+      } else {
+        scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
+      }
+      // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
+      try { scrollEl.getBoundingClientRect(); } catch (e) {}
+    }
+
+    function updateSlackForCurrentViewport() {
+      // If the "bottom slack region" is visible in the viewport, do NOT shrink it.
+      // This prevents open buttons/accordions from snapping shut under the user's finger.
+      var distFromBottom = scrollEl.scrollHeight - (scrollEl.scrollTop + scrollEl.clientHeight);
+      var slackIsOnScreen = distFromBottom < (baseSlackPx - 0.5);
+      if (slackIsOnScreen) applySlackOverridePx(null); // keep full slack
+      else applySlackOverridePx(1); // collapse while scrolling elsewhere
+    }
 
     function lock() {
       if (locked) return;
       var h = scrollEl.clientHeight || 0;
       if (h <= 0) return;
       scrollEl.style.maxHeight = h + 'px';
-      // While scrolling, collapse bottom slack so the user isn't "always able" to scroll into it.
-      // Slack returns when scrolling stops (unlock()).
-      scrollEl.style.setProperty('--panel-bottom-slack', '1px');
-      // Force style/layout recalculation so the scrollbar reflects the new slack immediately.
-      // (Otherwise some browsers update the thumb on the next paint, which looks like it still "expects" 300px.)
-      try { scrollEl.getBoundingClientRect(); } catch (e) {}
+      // While scrolling: collapse slack UNLESS that slack is currently visible on screen.
+      updateSlackForCurrentViewport();
       locked = true;
     }
 
     function unlock() {
       if (!locked) return;
       scrollEl.style.maxHeight = '';
-      scrollEl.style.removeProperty('--panel-bottom-slack'); // back to default (300px)
-      try { scrollEl.getBoundingClientRect(); } catch (e) {}
+      applySlackOverridePx(null); // back to default (300px)
       locked = false;
     }
 
     function onScroll() {
       // First scroll event in a burst is our "scroll start" trigger
       lock();
+      // During a scroll burst, the slack may enter/leave the viewport; keep it full if visible.
+      updateSlackForCurrentViewport();
       if (unlockTimer) clearTimeout(unlockTimer);
       unlockTimer = setTimeout(unlock, stopDelayMs);
     }
