@@ -3484,6 +3484,22 @@ const MemberModule = (function() {
             showFieldError('msg_post_validation_required', { field: 'Avatar' }, null);
             return;
         }
+        
+        // Country is REQUIRED to register
+        try {
+            var countryCode = supporterCountryHiddenInput ? String(supporterCountryHiddenInput.value || '').trim() : '';
+            if (!countryCode) {
+                var focusEl = null;
+                if (supporterCountryMenuContainer) {
+                    focusEl = supporterCountryMenuContainer.querySelector('input') || supporterCountryMenuContainer.querySelector('button') || null;
+                }
+                showFieldError('msg_post_validation_required', { field: 'Country' }, focusEl);
+                return;
+            }
+        } catch (e) {
+            showFieldError('msg_post_validation_required', { field: 'Country' }, null);
+            return;
+        }
 
         // Basic email format check (server still validates too)
         if (emailInput && typeof emailInput.checkValidity === 'function' && !emailInput.checkValidity()) {

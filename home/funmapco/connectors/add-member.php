@@ -72,6 +72,7 @@ if(!filter_var($email,FILTER_VALIDATE_EMAIL)) fail_key(400,'msg_auth_register_em
 if($pass!==$conf) fail_key(400,'msg_auth_register_password_mismatch');
 
 $country = preg_match('/^[a-z]{2}$/', $country) ? $country : '';
+if($country==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Country']);
 
 $hash = password_hash($pass, PASSWORD_BCRYPT);
 if(!$hash) fail(500,'Hash failed');
