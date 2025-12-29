@@ -6886,7 +6886,6 @@ const ButtonAnchorBottom = (function() {
         // - shrink/collapse (accordion closes) => allow temporary lock to protect the interacted element
         var lastContentNoSlack = null;
         var lastGrowAt = 0;
-        var lastShrinkAt = 0;
         var shrinkProtectUntil = 0;
 
         function getContentNoSlack() {
@@ -6910,7 +6909,6 @@ const ButtonAnchorBottom = (function() {
                     // Growth must never be blocked by a stale lock from a recent scroll burst.
                     if (locked) unlock();
                 } else if (v < lastContentNoSlack) {
-                    lastShrinkAt = now;
                     // Briefly permit locking during/after a real shrink event (protect the click).
                     shrinkProtectUntil = now + stopDelayMs + 250;
                 }
@@ -7178,8 +7176,44 @@ const ButtonAnchorBottom = (function() {
                 }
             } catch (e0) {}
             
+            // Arm the protection window immediately, but DO NOT turn slack on unless we detect
+            // a real shrink/collapse event. This prevents false activation on normal growth
+            // events like dropdown menus opening near the bottom.
             clickHoldUntil = Date.now() + clickHoldMs;
-            applySlackPx(expandedSlackPx);
+
+            // If slack is already on, keep it; otherwise only enable it on actual shrink.
+            if (currentSlackPx === expandedSlackPx) return;
+
+            var baseClientH = 0;
+            var baseContent = 0;
+            try { baseClientH = scrollEl.clientHeight || 0; } catch (_eH) { baseClientH = 0; }
+            try { baseContent = getContentNoSlack(); } catch (_eC) { baseContent = 0; }
+
+            var checks = 0;
+            function checkForShrink() {
+                try {
+                    if (Date.now() > clickHoldUntil) return;
+                    if (currentSlackPx === expandedSlackPx) return;
+
+                    var hNow = scrollEl.clientHeight || 0;
+                    var cNow = getContentNoSlack();
+
+                    // Detect true shrink: viewport shrank OR real content shrank.
+                    if (hNow < (baseClientH - 1) || cNow < (baseContent - 1)) {
+                        applySlackPx(expandedSlackPx);
+                        // Permit locking briefly during the shrink window.
+                        shrinkProtectUntil = Date.now() + stopDelayMs + 250;
+                        return;
+                    }
+                } catch (_eChk) {}
+
+                checks++;
+                if (checks < 8 && Date.now() <= clickHoldUntil) {
+                    setTimeout(checkForShrink, 24);
+                }
+            }
+            // Schedule a few quick checks across the hold window (covers CSS transitions/accordion timing).
+            setTimeout(checkForShrink, 0);
         }
         scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
         scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
