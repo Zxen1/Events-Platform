@@ -6880,41 +6880,6 @@ const ButtonAnchorBottom = (function() {
         
         var slackEl = ensureSlackEl(scrollEl);
         var pendingOffscreenCollapse = false;
-
-        // Track real content size (excluding slack) so we can distinguish:
-        // - normal growth (dropdown opens, content expands) => DO NOT lock the panel
-        // - shrink/collapse (accordion closes) => allow temporary lock to protect the interacted element
-        var lastContentNoSlack = null;
-        var lastGrowAt = 0;
-        var shrinkProtectUntil = 0;
-
-        function getContentNoSlack() {
-            try {
-                return (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
-            } catch (e) {
-                return 0;
-            }
-        }
-
-        function noteContentChange() {
-            try {
-                var now = Date.now();
-                var v = getContentNoSlack();
-                if (lastContentNoSlack === null) {
-                    lastContentNoSlack = v;
-                    return;
-                }
-                if (v > lastContentNoSlack) {
-                    lastGrowAt = now;
-                    // Growth must never be blocked by a stale lock from a recent scroll burst.
-                    if (locked) unlock();
-                } else if (v < lastContentNoSlack) {
-                    // Briefly permit locking during/after a real shrink event (protect the click).
-                    shrinkProtectUntil = now + stopDelayMs + 250;
-                }
-                lastContentNoSlack = v;
-            } catch (e0) {}
-        }
         
         function fadeScrollbar() {
             try {
@@ -6932,7 +6897,6 @@ const ButtonAnchorBottom = (function() {
             scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
             try { scrollEl.getBoundingClientRect(); } catch (e) {}
             fadeScrollbar();
-            noteContentChange();
         }
         
         function isSlackOnScreen() {
@@ -7024,17 +6988,13 @@ const ButtonAnchorBottom = (function() {
         }
         
         function startScrollBurst() {
-            noteContentChange();
-            // Only lock when we have evidence of a real shrink/collapse event.
-            // Normal panel growth must remain natural (no lock on dropdown open).
-            if (Date.now() < shrinkProtectUntil) lock();
+            lock();
             if (unlockTimer) clearTimeout(unlockTimer);
             unlockTimer = setTimeout(unlock, stopDelayMs);
         }
         
         function onScroll() {
             try {
-                noteContentChange();
                 var st = scrollEl.scrollTop || 0;
                 // If slack is on-screen and scrollTop increases anyway (e.g. scrollbar drag),
                 // do NOT snap back. Just ignore this scroll event.
@@ -7082,27 +7042,11 @@ const ButtonAnchorBottom = (function() {
                     }
                 } catch (_eMenu) {}
 
-                if (deltaY > 0) {
-                    // IMPORTANT: if the user starts wheel-scrolling down, the click-hold window is over.
-                    // Allow the spacer to collapse OFF-SCREEN so the panel can behave naturally.
-                    // (Never collapse while visible.)
-                    try {
-                        if (Date.now() < clickHoldUntil && !isSlackOnScreen()) clickHoldUntil = 0;
-                    } catch (_eHold) {}
-
-                    collapseIfOffscreenBelow();
-
-                    // Never allow wheel to scroll further down once the slack is visible (no abyss).
-                    if (isSlackOnScreen()) {
-                        // If we recently detected growth, unlock so the panel can expand naturally,
-                        // but still block the wheel from entering ghost space.
-                        if ((Date.now() - lastGrowAt) < 600) {
-                            try { unlock(); } catch (_eUn) {}
-                        }
-                        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-                        return;
-                    }
+                if (deltaY > 0) collapseIfOffscreenBelow();
+                if (deltaY > 0 && isSlackOnScreen()) {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    return;
                 }
             } catch (e0) {}
             startScrollBurst();
@@ -7127,21 +7071,10 @@ const ButtonAnchorBottom = (function() {
                 var dy = y - lastTouchY;
                 lastTouchY = y;
                 // Finger moving up (dy < 0) attempts to scroll down.
-                if (dy < 0) {
-                    // User started scrolling down; end click-hold window so off-screen slack can collapse.
-                    try {
-                        if (Date.now() < clickHoldUntil && !isSlackOnScreen()) clickHoldUntil = 0;
-                    } catch (_eHold2) {}
-
-                    collapseIfOffscreenBelow();
-
-                    if (isSlackOnScreen()) {
-                        if ((Date.now() - lastGrowAt) < 600) {
-                            try { unlock(); } catch (_eUn2) {}
-                        }
-                        if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-                    }
+                if (dy < 0) collapseIfOffscreenBelow();
+                if (dy < 0 && isSlackOnScreen()) {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                 }
             } catch (e1) {}
         }, { passive: false });
@@ -7176,44 +7109,8 @@ const ButtonAnchorBottom = (function() {
                 }
             } catch (e0) {}
             
-            // Arm the protection window immediately, but DO NOT turn slack on unless we detect
-            // a real shrink/collapse event. This prevents false activation on normal growth
-            // events like dropdown menus opening near the bottom.
             clickHoldUntil = Date.now() + clickHoldMs;
-
-            // If slack is already on, keep it; otherwise only enable it on actual shrink.
-            if (currentSlackPx === expandedSlackPx) return;
-
-            var baseClientH = 0;
-            var baseContent = 0;
-            try { baseClientH = scrollEl.clientHeight || 0; } catch (_eH) { baseClientH = 0; }
-            try { baseContent = getContentNoSlack(); } catch (_eC) { baseContent = 0; }
-
-            var checks = 0;
-            function checkForShrink() {
-                try {
-                    if (Date.now() > clickHoldUntil) return;
-                    if (currentSlackPx === expandedSlackPx) return;
-
-                    var hNow = scrollEl.clientHeight || 0;
-                    var cNow = getContentNoSlack();
-
-                    // Detect true shrink: viewport shrank OR real content shrank.
-                    if (hNow < (baseClientH - 1) || cNow < (baseContent - 1)) {
-                        applySlackPx(expandedSlackPx);
-                        // Permit locking briefly during the shrink window.
-                        shrinkProtectUntil = Date.now() + stopDelayMs + 250;
-                        return;
-                    }
-                } catch (_eChk) {}
-
-                checks++;
-                if (checks < 8 && Date.now() <= clickHoldUntil) {
-                    setTimeout(checkForShrink, 24);
-                }
-            }
-            // Schedule a few quick checks across the hold window (covers CSS transitions/accordion timing).
-            setTimeout(checkForShrink, 0);
+            applySlackPx(expandedSlackPx);
         }
         scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
         scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
