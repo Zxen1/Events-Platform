@@ -407,6 +407,12 @@
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 
+/* Profile tab: when scrolling to the end, keep a small bottom breathing room
+   (this is NOT ButtonAnchor slack; it's just base padding). */
+.member-panel-body.member-panel-body--profile {
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
 /* Bottom slack is provided by `.panel-bottom-slack` elements. */
 
 /* IMPORTANT: panel bodies are flex columns; prevent children shrinking so bottom slack
