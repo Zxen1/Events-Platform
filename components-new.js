@@ -7172,7 +7172,9 @@ const ButtonAnchorTop = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
-                /* DEBUG VISUAL: show spacer presence */
+                '} ' +
+                '.panel-top-slack.panel-top-slack--active{' +
+                /* DEBUG VISUAL: show spacer presence only when active */
                 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
                 'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
@@ -7272,10 +7274,14 @@ const ButtonAnchorTop = (function() {
                 if (px > oldPx) {
                     scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
                     scrollEl.scrollTop = (scrollEl.scrollTop || 0) + (px - oldPx);
+                    // Show purple styling only when active
+                    if (slackEl) slackEl.classList.add('panel-top-slack--active');
                 } else {
                     scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
                     var next = (scrollEl.scrollTop || 0) - (oldPx - px);
                     scrollEl.scrollTop = next < 0 ? 0 : next;
+                    // Hide purple styling when collapsed
+                    if (slackEl) slackEl.classList.remove('panel-top-slack--active');
                 }
             } catch (e0) {}
             internalAdjust = false;
