@@ -64,6 +64,101 @@ const ImageAddTileComponent = (function(){
 
 const MenuManager = (function(){
     var openMenus = [];
+
+    /* --------------------------------------------------------------------------
+       TYPE-TO-FILTER MENUS (no click required)
+       When a menu is open, typing should go into its input automatically.
+       -------------------------------------------------------------------------- */
+
+    function isEditableTarget(t) {
+        if (!t || !(t instanceof Element)) return false;
+        try {
+            if (t.isContentEditable) return true;
+            if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
+        } catch (e) {}
+        return false;
+    }
+
+    function getOpenMenu() {
+        var open = null;
+        try {
+            openMenus.forEach(function(menu) {
+                try {
+                    if (menu && isMenuOpen(menu)) open = menu;
+                } catch (e0) {}
+            });
+        } catch (e1) {}
+        return open;
+    }
+
+    function getMenuTypingInput(menu) {
+        if (!menu || !menu.querySelector) return null;
+        try {
+            // Menus designed to accept typing in their "button" row.
+            return (
+                menu.querySelector('input.fieldset-menu-button-input') ||
+                menu.querySelector('input.admin-currency-button-input') ||
+                menu.querySelector('input.admin-language-button-input') ||
+                menu.querySelector('input.phoneprefix-filter-input') ||
+                null
+            );
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function applyTypingKeyToInput(input, e) {
+        if (!input || !e) return false;
+        var key = String(e.key || '');
+        var hasModifier = !!(e.ctrlKey || e.metaKey || e.altKey);
+        if (hasModifier) return false;
+
+        var isBackspace = key === 'Backspace';
+        var isChar = key.length === 1;
+        if (!isBackspace && !isChar) return false;
+
+        try {
+            if (document.activeElement !== input) {
+                input.focus();
+                try { input.select(); } catch (e0) {}
+            }
+
+            var v = String(input.value || '');
+            var s = (typeof input.selectionStart === 'number') ? input.selectionStart : v.length;
+            var en = (typeof input.selectionEnd === 'number') ? input.selectionEnd : v.length;
+
+            var next = v;
+            if (isBackspace) {
+                if (s !== en) {
+                    next = v.slice(0, s) + v.slice(en);
+                } else if (s > 0) {
+                    next = v.slice(0, s - 1) + v.slice(en);
+                }
+            } else {
+                next = v.slice(0, s) + key + v.slice(en);
+            }
+
+            input.value = next;
+
+            try {
+                var caret = isBackspace ? Math.max(0, s - 1) : (s + 1);
+                input.setSelectionRange(caret, caret);
+            } catch (e1) {}
+
+            try {
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            } catch (e2) {
+                var ev = document.createEvent('Event');
+                ev.initEvent('input', true, true);
+                input.dispatchEvent(ev);
+            }
+
+            if (typeof e.preventDefault === 'function') e.preventDefault();
+            return true;
+        } catch (e3) {
+            return false;
+        }
+    }
     
     function isMenuOpen(menu) {
         if (!menu) return false;
@@ -112,6 +207,27 @@ const MenuManager = (function(){
             }
         });
     });
+
+    // Type-to-filter: if a menu is open, route keystrokes to its input without requiring a click.
+    document.addEventListener('keydown', function(e) {
+        try {
+            if (!e) return;
+            if (isEditableTarget(e.target)) return;
+
+            var menu = getOpenMenu();
+            if (!menu) return;
+
+            if (e.key === 'Escape') {
+                setMenuOpen(menu, false);
+                if (typeof e.preventDefault === 'function') e.preventDefault();
+                return;
+            }
+
+            var input = getMenuTypingInput(menu);
+            if (!input) return;
+            applyTypingKeyToInput(input, e);
+        } catch (e0) {}
+    }, true);
     
     return {
         closeAll: closeAll,
@@ -122,6 +238,42 @@ const MenuManager = (function(){
 })();
 
 window.MenuManager = MenuManager;
+
+/* --------------------------------------------------------------------------
+   MENU FILTER MATCHING (prefix/word-start, not substring-anywhere)
+   -------------------------------------------------------------------------- */
+
+function menuFilterMatch(optData, searchText) {
+    var s = String(searchText || '').trim().toLowerCase();
+    if (!s) return true;
+    if (!optData) return false;
+
+    var value = String(optData.valueLower || '').toLowerCase();
+    var label = String(optData.labelLower || '').toLowerCase();
+    var words = optData.labelWords || [];
+
+    var tokens = s.split(/\s+/).filter(Boolean);
+    for (var i = 0; i < tokens.length; i++) {
+        var t = tokens[i];
+        var isNumeric = /^[0-9+]/.test(t);
+
+        var ok = false;
+        if (isNumeric) {
+            ok = value.indexOf(t) === 0;
+        } else {
+            if (value.indexOf(t) === 0) ok = true;
+            if (!ok && label.indexOf(t) === 0) ok = true;
+            if (!ok && Array.isArray(words)) {
+                for (var w = 0; w < words.length; w++) {
+                    if (String(words[w] || '').indexOf(t) === 0) { ok = true; break; }
+                }
+            }
+        }
+
+        if (!ok) return false;
+    }
+    return true;
+}
 
 
 /* ============================================================================
@@ -3297,9 +3449,9 @@ const CurrencyComponent = (function(){
 
         // Filter options based on search text
         function filterOptions(searchText) {
-            var search = searchText.toLowerCase();
+            var search = String(searchText || '').toLowerCase();
             allOptions.forEach(function(optData) {
-                var matches = optData.searchText.indexOf(search) !== -1;
+                var matches = menuFilterMatch(optData, search);
                 optData.element.style.display = matches ? '' : 'none';
             });
         }
@@ -3330,11 +3482,13 @@ const CurrencyComponent = (function(){
             };
             opts.appendChild(op);
 
-            // Store for filtering
-                    allOptions.push({
-                        element: op,
-                        searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
-                    });
+            // Store for filtering (prefix-first, word-start matching)
+            allOptions.push({
+                element: op,
+                valueLower: String(item.value || '').toLowerCase(),
+                labelLower: String(item.label || '').toLowerCase(),
+                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+            });
         });
 
         // Set initial value
@@ -3471,9 +3625,9 @@ const CurrencyComponent = (function(){
 
         // Filter options based on search text
         function filterOptions(searchText) {
-            var search = searchText.toLowerCase();
+            var search = String(searchText || '').toLowerCase();
             allOptions.forEach(function(optData) {
-                var matches = optData.searchText.indexOf(search) !== -1;
+                var matches = menuFilterMatch(optData, search);
                 optData.element.style.display = matches ? '' : 'none';
             });
         }
@@ -3508,7 +3662,9 @@ const CurrencyComponent = (function(){
             // Store for filtering
             allOptions.push({
                 element: op,
-                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+                valueLower: String(item.value || '').toLowerCase(),
+                labelLower: String(item.label || '').toLowerCase(),
+                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
             });
         });
 
@@ -3693,9 +3849,9 @@ const LanguageMenuComponent = (function(){
 
         // Filter options based on search text
         function filterOptions(searchText) {
-            var search = searchText.toLowerCase();
+            var search = String(searchText || '').toLowerCase();
             allOptions.forEach(function(optData) {
-                var matches = optData.searchText.indexOf(search) !== -1;
+                var matches = menuFilterMatch(optData, search);
                 optData.element.style.display = matches ? '' : 'none';
             });
         }
@@ -3730,7 +3886,9 @@ const LanguageMenuComponent = (function(){
             // Store for filtering
             allOptions.push({
                 element: op,
-                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+                valueLower: String(item.value || '').toLowerCase(),
+                labelLower: String(item.label || '').toLowerCase(),
+                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
             });
         });
 
@@ -3909,11 +4067,27 @@ const PhonePrefixComponent = (function(){
         menu.appendChild(button);
         menu.appendChild(opts);
 
+        // Type-to-filter input inside dropdown (supports numeric and text searching)
+        var filterInput = document.createElement('input');
+        filterInput.type = 'text';
+        filterInput.className = 'phoneprefix-filter-input';
+        filterInput.placeholder = 'Search…';
+        filterInput.autocomplete = 'off';
+        filterInput.setAttribute('aria-label', 'Search phone prefixes');
+        opts.appendChild(filterInput);
+
         function applyOpenState(isOpen) {
             var open = !!isOpen;
             opts.hidden = !open;
             button.setAttribute('aria-expanded', open ? 'true' : 'false');
             arrow.classList.toggle('phoneprefix-button-arrow--open', open);
+            if (open) {
+                // Reset filter each time menu opens (keeps behavior consistent across panels/tabs)
+                try {
+                    filterInput.value = '';
+                    filterOptions('');
+                } catch (e0) {}
+            }
         }
 
         // Required by MenuManager (strict)
@@ -3921,6 +4095,17 @@ const PhonePrefixComponent = (function(){
             return opts.hidden === false;
         };
         menu.__menuApplyOpenState = applyOpenState;
+
+        // Store all option elements for filtering
+        var allOptions = [];
+
+        function filterOptions(searchText) {
+            var search = String(searchText || '').toLowerCase();
+            allOptions.forEach(function(optData) {
+                var matches = menuFilterMatch(optData, search);
+                optData.element.style.display = matches ? '' : 'none';
+            });
+        }
 
         // Find and set value
         function setValue(code) {
@@ -3967,9 +4152,18 @@ const PhonePrefixComponent = (function(){
                 btnText.textContent = item.value;
                 selectedCode = item.value;
                 applyOpenState(false);
+                filterInput.value = '';
+                filterOptions('');
                 onSelect(item.value, item.label, countryCode);
             });
             opts.appendChild(op);
+
+            allOptions.push({
+                element: op,
+                valueLower: String(item.value || '').toLowerCase(),
+                labelLower: String(item.label || '').toLowerCase(),
+                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+            });
         });
 
         // Set initial value
@@ -3991,6 +4185,23 @@ const PhonePrefixComponent = (function(){
             } else {
                 MenuManager.closeAll(menu);
                 applyOpenState(true);
+            }
+        });
+
+        filterInput.addEventListener('click', function(e) {
+            if (e) e.stopPropagation();
+        });
+
+        filterInput.addEventListener('input', function() {
+            filterOptions(filterInput.value);
+        });
+
+        filterInput.addEventListener('keydown', function(e) {
+            if (e && e.key === 'Escape') {
+                e.stopPropagation();
+                applyOpenState(false);
+                filterInput.value = '';
+                filterOptions('');
             }
         });
 
@@ -4102,7 +4313,7 @@ const CountryComponent = (function(){
         function filterOptions(searchText) {
             var search = String(searchText || '').toLowerCase();
             allOptions.forEach(function(optData) {
-                var matches = optData.searchText.indexOf(search) !== -1;
+                var matches = menuFilterMatch(optData, search);
                 optData.element.style.display = matches ? '' : 'none';
             });
         }
@@ -4131,7 +4342,9 @@ const CountryComponent = (function(){
             
             allOptions.push({
                 element: op,
-                searchText: displayText.toLowerCase() + ' ' + String(item.label || '').toLowerCase()
+                valueLower: String(code || '').toLowerCase(),
+                labelLower: String(item.label || '').toLowerCase(),
+                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
             });
         });
         

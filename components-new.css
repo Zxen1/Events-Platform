@@ -1842,6 +1842,26 @@
     z-index: var(--layer-menu, 85);
 }
 
+.phoneprefix-filter-input {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 36px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    background: #222;
+    color: #fff;
+    font: inherit;
+    outline: none;
+    z-index: 1;
+}
+
+.phoneprefix-filter-input::placeholder {
+    color: rgba(255,255,255,0.45);
+}
+
 .phoneprefix-options[hidden] {
     display: none;
 }
