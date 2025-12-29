@@ -6799,13 +6799,14 @@ const ButtonAnchorBottom = (function() {
             style.id = STYLE_ID;
             style.textContent =
                 '.panel-bottom-slack{' +
-                'height:var(--panel-bottom-slack,0px);' +
+                'height:var(--panel-bottom-slack,1px);' +
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
                 /* DEBUG VISUAL: show spacer presence */
                 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
-                'border-top:2px solid rgba(160, 32, 240, 0.95);' +
+                /* IMPORTANT: do not use borders here; borders make "0px slack" still have height and cause jitter. */
+                'box-shadow:inset 0 2px 0 rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -6869,7 +6870,7 @@ const ButtonAnchorBottom = (function() {
         
         // STRICT RULE: only two slack sizes exist.
         var expandedSlackPx = 4000;
-        var collapsedSlackPx = 0;
+        var collapsedSlackPx = 1;
         
         var unlockTimer = null;
         var locked = false;
@@ -7249,13 +7250,14 @@ const ButtonAnchorTop = (function() {
             style.id = STYLE_ID;
             style.textContent =
                 '.panel-top-slack{' +
-                'height:var(--panel-top-slack,0px);' +
+                'height:var(--panel-top-slack,1px);' +
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
                 /* DEBUG VISUAL: show spacer presence */
                 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
-                'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
+                /* IMPORTANT: do not use borders here; borders make "0px slack" still have height and cause jitter. */
+                'box-shadow:inset 0 -2px 0 rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -7319,7 +7321,7 @@ const ButtonAnchorTop = (function() {
         
         // STRICT RULE: only two slack sizes exist.
         var expandedSlackPx = 4000;
-        var collapsedSlackPx = 0;
+        var collapsedSlackPx = 1;
         
         var slackEl = ensureSlackEl(scrollEl);
         var unlockTimer = null;

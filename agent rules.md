@@ -34,7 +34,7 @@ This is inherent logic - you must track what you read vs what you changed. Every
 
 3. **No abyss / no man’s land**: The user must never be able to scroll into empty ghost space (neither below nor above the real content), regardless of scroll speed, momentum, wheel, touch, or scrollbar drag.
 
-4. **Ghost space only when required**: There is **no ButtonAnchor space** when it isn’t needed. The scrollable area behaves normally at the top and bottom by default.
+4. **Ghost space only when required**: There is **no usable ButtonAnchor space** when it isn’t needed. “Off” means the slack is collapsed to the minimum debug size (currently **1px**, not 0).
 
 5. **On alert when content grows**: If the scrollable content grows (a drawer opens / content expands), the system must be ready to prevent the interacted element from moving.
 
@@ -42,7 +42,7 @@ This is inherent logic - you must track what you read vs what you changed. Every
 
 7. **Applies to both directions**: The same rules apply to **Bottom Anchor** (footer direction) and **Top Anchor** (header direction).
 
-8. **Never collapse while visible**: If a ghost spacer exists and is visible on screen, it must not collapse to zero while it’s visible.
+8. **Never collapse while visible**: If a ghost spacer exists and is visible on screen, it must not collapse to the **collapsed size** while it’s visible (collapsed size is currently **1px**, not 0).
 
 9. **No existence when off-screen**: If the ButtonAnchor would be off-screen (not needed for the current view), it must not be created/kept in a way that makes it reachable by scrolling.
 
@@ -302,7 +302,7 @@ This project uses split storage schemas:
    - `enableForceOffOnTabs: false`
 
 ### Non-negotiable behavior constraints (do not change without Paul’s explicit instruction)
-1. **Only two slack sizes exist**: `4000px` and `0px` (no other values, no “1px”, no “300px”, no transitions).
+1. **Only two slack sizes exist**: `4000px` and `1px` (no other values, no transitions). “Off” = `1px` collapsed, “On” = `4000px` expanded.
 2. **No resizing while visible**: slack must not change size while the spacer is on-screen.
 3. **No snapping**: do not “snap back” scroll positions as a workaround.
 
