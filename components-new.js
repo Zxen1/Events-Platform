@@ -6873,7 +6873,6 @@ const ButtonAnchorBottom = (function() {
         
         var unlockTimer = null;
         var locked = false;
-        var clickHoldUntil = 0;
         var currentSlackPx = null;
         var lastScrollTop = scrollEl.scrollTop || 0;
         var scrollbarFadeTimer = null;
@@ -6954,7 +6953,6 @@ const ButtonAnchorBottom = (function() {
         function collapseIfOffscreenBelow() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
-                if (Date.now() < clickHoldUntil) return false;
                 if (isSlackOnScreen()) return false;
                 pendingOffscreenCollapse = false;
                 applySlackPx(collapsedSlackPx);
@@ -6968,8 +6966,6 @@ const ButtonAnchorBottom = (function() {
             if (locked) return;
             var h = scrollEl.clientHeight || 0;
             if (h <= 0) return;
-            // Anchor protection window: don't engage lock/collapse.
-            if (Date.now() < clickHoldUntil) return;
             scrollEl.style.maxHeight = h + 'px';
             locked = true;
         }
@@ -7059,25 +7055,6 @@ const ButtonAnchorBottom = (function() {
                 }
             } catch (e2) {}
         }, true);
-        
-        // Clicking: click-hold window + temporary slack ON.
-        function holdClickSlack() {
-            // Never show slack for containers that don't overflow.
-            try {
-                var h = scrollEl.clientHeight || 0;
-                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
-                if (contentNoSlack <= h) {
-                    pendingOffscreenCollapse = false;
-                    applySlackPx(collapsedSlackPx);
-                    return;
-                }
-            } catch (e0) {}
-            
-            clickHoldUntil = Date.now() + clickHoldMs;
-            applySlackPx(expandedSlackPx);
-        }
-        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
-        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
         
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
@@ -7207,16 +7184,11 @@ const ButtonAnchorTop = (function() {
         var slackEl = ensureSlackEl(scrollEl);
         var unlockTimer = null;
         var locked = false;
-        var clickHoldUntil = 0;
         var currentSlackPx = 0;
         var lastScrollTop = scrollEl.scrollTop || 0;
         var scrollbarFadeTimer = null;
         var pendingOffscreenCollapse = false;
         var internalAdjust = false;
-        var pendingAnchor = null; // { el, topBefore }
-        var anchorObserver = null;
-        var anchorApplied = false;
-        var anchorDirty = false;
         
         function fadeScrollbar() {
             try {
@@ -7297,7 +7269,6 @@ const ButtonAnchorTop = (function() {
         function collapseIfOffscreenAbove() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
-                if (Date.now() < clickHoldUntil) return false;
                 if (!isSlackOffscreenAbove()) return false;
                 pendingOffscreenCollapse = false;
                 applySlackPx(collapsedSlackPx);
@@ -7311,7 +7282,6 @@ const ButtonAnchorTop = (function() {
             if (locked) return;
             var h = scrollEl.clientHeight || 0;
             if (h <= 0) return;
-            if (Date.now() < clickHoldUntil) return;
             scrollEl.style.maxHeight = h + 'px';
             locked = true;
         }
@@ -7328,92 +7298,6 @@ const ButtonAnchorTop = (function() {
             if (unlockTimer) clearTimeout(unlockTimer);
             unlockTimer = setTimeout(unlock, stopDelayMs);
         }
-        
-        function applyAnchorAdjustment() {
-            if (!pendingAnchor) return;
-            var a = pendingAnchor;
-            pendingAnchor = null;
-            if (!a || !a.el || !a.el.isConnected) return;
-            
-            try {
-                var afterTop = a.el.getBoundingClientRect().top;
-                var delta = afterTop - a.topBefore;
-                if (!delta) return;
-                
-                var desired = (scrollEl.scrollTop || 0) + delta;
-                if (desired < 0) {
-                    // Need room above: enable slack (compensated, no visible jump), then offset desired.
-                    applySlackPx(expandedSlackPx);
-                    desired = desired + expandedSlackPx;
-                }
-                
-                internalAdjust = true;
-                scrollEl.scrollTop = desired;
-                internalAdjust = false;
-                lastScrollTop = scrollEl.scrollTop || 0;
-            } catch (e) {
-                internalAdjust = false;
-            }
-        }
-        
-        function startAnchorObserver() {
-            if (anchorObserver) return;
-            try {
-                anchorObserver = new MutationObserver(function() {
-                    // Many tiny mutations happen before the *real* auto-close mutation.
-                    // We only mark dirty here, and apply once at the end of the click task.
-                    if (anchorApplied) return;
-                    anchorDirty = true;
-                });
-                anchorObserver.observe(scrollEl, {
-                    subtree: true,
-                    childList: true,
-                    attributes: true,
-                    characterData: false
-                });
-            } catch (e) {
-                anchorObserver = null;
-            }
-        }
-
-        function stopAnchorObserver() {
-            if (!anchorObserver) return;
-            try { anchorObserver.disconnect(); } catch (e0) {}
-            anchorObserver = null;
-        }
-        
-        // Capture the anchor target before DOM changes.
-        scrollEl.addEventListener('pointerdown', function(e) {
-            try {
-                var t = e && e.target;
-                if (!(t instanceof Element)) return;
-                if (slackEl && (t === slackEl || slackEl.contains(t))) return;
-                // Only anchor if the click is inside this scroll container.
-                if (!scrollEl.contains(t)) return;
-                // Anchor the closest "button-like" element to avoid anchoring to inner icon spans.
-                var anchorEl = t.closest('button, [role="button"], a') || t;
-                pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
-                clickHoldUntil = Date.now() + clickHoldMs;
-                anchorApplied = false;
-                anchorDirty = false;
-                startAnchorObserver();
-            } catch (e0) {}
-        }, { passive: true, capture: true });
-        
-        // Bubble phase so any inner click handlers (that close panels above) run first.
-        // Apply once at the end of the click task, after all synchronous handlers ran.
-        scrollEl.addEventListener('click', function() {
-            try {
-                queueMicrotask(function() {
-                    if (anchorApplied) return;
-                    anchorApplied = true;
-                    stopAnchorObserver();
-                    // If nothing changed, no-op.
-                    if (!anchorDirty) return;
-                    applyAnchorAdjustment();
-                });
-            } catch (e0) {}
-        }, false);
         
         function onScroll() {
             if (internalAdjust) return;
@@ -7493,12 +7377,10 @@ const ButtonAnchorTop = (function() {
         
         var controller = {
             forceOff: function() {
-                try { clickHoldUntil = 0; } catch (e0) {}
                 try { pendingOffscreenCollapse = false; } catch (e1) {}
                 try { if (unlockTimer) clearTimeout(unlockTimer); } catch (e2) {}
                 try { scrollEl.style.maxHeight = ''; } catch (e3) {}
                 locked = false;
-                pendingAnchor = null;
                 applySlackPx(collapsedSlackPx);
                 try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e4) {}
             }
