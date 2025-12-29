@@ -6878,15 +6878,6 @@ const ButtonAnchorBottom = (function() {
         var slackEl = ensureSlackEl(scrollEl);
         var pendingOffscreenCollapse = false;
         
-        function isEditableTarget(t) {
-            if (!t || !(t instanceof Element)) return false;
-            try {
-                if (t.isContentEditable) return true;
-                if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
-            } catch (e) {}
-            return false;
-        }
-        
         function fadeScrollbar() {
             try {
                 scrollEl.classList.add('panel-scrollbar-fade');
@@ -6907,6 +6898,9 @@ const ButtonAnchorBottom = (function() {
         
         function isSlackOnScreen() {
             if (!slackEl) return false;
+            // If slack is collapsed (0px), it must behave like it doesn't exist.
+            // Otherwise a 0-height slack element can be treated as "on-screen" and block scrolling.
+            if ((currentSlackPx || 0) <= 0) return false;
             try {
                 var slackRect = slackEl.getBoundingClientRect();
                 var scrollRect = scrollEl.getBoundingClientRect();
@@ -7053,13 +7047,7 @@ const ButtonAnchorBottom = (function() {
         }, true);
         
         // Clicking: click-hold window + temporary slack ON.
-        function holdClickSlack(e) {
-            // Never engage slack for text editing interactions (prevents admin/messages edit jumps).
-            try {
-                var t = e && e.target;
-                if (isEditableTarget(t)) return;
-            } catch (e0) {}
-            
+        function holdClickSlack() {
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
@@ -7213,15 +7201,6 @@ const ButtonAnchorTop = (function() {
         var anchorApplied = false;
         var anchorDirty = false;
         
-        function isEditableTarget(t) {
-            if (!t || !(t instanceof Element)) return false;
-            try {
-                if (t.isContentEditable) return true;
-                if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
-            } catch (e) {}
-            return false;
-        }
-        
         function fadeScrollbar() {
             try {
                 scrollEl.classList.add('panel-scrollbar-fade');
@@ -7261,6 +7240,8 @@ const ButtonAnchorTop = (function() {
         
         function isSlackOnScreen() {
             if (!slackEl) return false;
+            // If slack is collapsed (0px), it must behave like it doesn't exist.
+            if ((currentSlackPx || 0) <= 0) return false;
             try {
                 var slackRect = slackEl.getBoundingClientRect();
                 var scrollRect = scrollEl.getBoundingClientRect();
@@ -7388,8 +7369,6 @@ const ButtonAnchorTop = (function() {
             try {
                 var t = e && e.target;
                 if (!(t instanceof Element)) return;
-                // Never engage top-anchor logic for text editing interactions.
-                if (isEditableTarget(t)) return;
                 if (slackEl && (t === slackEl || slackEl.contains(t))) return;
                 // Only anchor if the click is inside this scroll container.
                 if (!scrollEl.contains(t)) return;
