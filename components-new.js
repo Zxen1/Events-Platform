@@ -6901,16 +6901,15 @@ const ButtonAnchorBottom = (function() {
         
         function isSlackOnScreen() {
             if (!slackEl) return false;
-            // Use scroll-metrics, not getBoundingClientRect().
-            // During big accordion reflows, rects can transiently misreport and cause premature collapse.
+            // Slack is always the last child (at the bottom). Use scrollHeight math (most reliable),
+            // not offsetTop/getBoundingClientRect (can misreport during big reflows).
             try {
                 var slackH = slackEl.offsetHeight || 0;
                 if (slackH <= 0) return false;
-                var viewTop = scrollEl.scrollTop || 0;
-                var viewBottom = viewTop + (scrollEl.clientHeight || 0);
-                var slackTop = slackEl.offsetTop || 0;
-                var slackBottom = slackTop + slackH;
-                return slackBottom > viewTop && slackTop < viewBottom;
+                var viewBottom = (scrollEl.scrollTop || 0) + (scrollEl.clientHeight || 0);
+                var totalH = scrollEl.scrollHeight || 0;
+                var slackStart = totalH - slackH;
+                return viewBottom > slackStart;
             } catch (e) {
                 return false;
             }
