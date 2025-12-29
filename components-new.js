@@ -6803,6 +6803,9 @@ const ButtonAnchorBottom = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
+                /* DEBUG VISUAL: show spacer presence */
+                'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
+                'border-top:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -6898,10 +6901,16 @@ const ButtonAnchorBottom = (function() {
         
         function isSlackOnScreen() {
             if (!slackEl) return false;
+            // Use scroll-metrics, not getBoundingClientRect().
+            // During big accordion reflows, rects can transiently misreport and cause premature collapse.
             try {
-                var slackRect = slackEl.getBoundingClientRect();
-                var scrollRect = scrollEl.getBoundingClientRect();
-                return slackRect.bottom > scrollRect.top && slackRect.top < scrollRect.bottom;
+                var slackH = slackEl.offsetHeight || 0;
+                if (slackH <= 0) return false;
+                var viewTop = scrollEl.scrollTop || 0;
+                var viewBottom = viewTop + (scrollEl.clientHeight || 0);
+                var slackTop = slackEl.offsetTop || 0;
+                var slackBottom = slackTop + slackH;
+                return slackBottom > viewTop && slackTop < viewBottom;
             } catch (e) {
                 return false;
             }
@@ -7119,6 +7128,9 @@ const ButtonAnchorTop = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
+                /* DEBUG VISUAL: show spacer presence */
+                'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
+                'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -7249,9 +7261,12 @@ const ButtonAnchorTop = (function() {
         function isSlackOffscreenAbove() {
             if (!slackEl) return false;
             try {
-                var slackRect = slackEl.getBoundingClientRect();
-                var scrollRect = scrollEl.getBoundingClientRect();
-                return slackRect.bottom <= scrollRect.top;
+                var slackH = slackEl.offsetHeight || 0;
+                if (slackH <= 0) return true;
+                var viewTop = scrollEl.scrollTop || 0;
+                var slackTop = slackEl.offsetTop || 0;
+                var slackBottom = slackTop + slackH;
+                return slackBottom <= viewTop;
             } catch (e) {
                 return false;
             }
