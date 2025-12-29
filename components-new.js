@@ -7185,7 +7185,11 @@ const ButtonAnchorTop = (function() {
     function ensureSlackEl(scrollEl) {
         var slackEl = null;
         try { slackEl = scrollEl.querySelector('.panel-top-slack'); } catch (e) { slackEl = null; }
-        if (slackEl) return slackEl;
+        if (slackEl) {
+            // Ensure class is removed if it exists from previous session
+            slackEl.classList.remove('panel-top-slack--active');
+            return slackEl;
+        }
         try {
             slackEl = document.createElement('div');
             slackEl.className = 'panel-top-slack';
@@ -7462,6 +7466,8 @@ const ButtonAnchorTop = (function() {
 
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
+        // Ensure class is removed on initialization (in case element existed from previous session)
+        if (slackEl) slackEl.classList.remove('panel-top-slack--active');
         
         var controller = {
             forceOff: function() {
