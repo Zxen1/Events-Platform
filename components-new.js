@@ -6794,12 +6794,7 @@ const ButtonAnchorBottom = (function() {
     
     function ensureStyle() {
         try {
-            // Force remove any existing style element to ensure clean state
-            var existing = document.getElementById(STYLE_ID);
-            if (existing && existing.parentNode) {
-                existing.parentNode.removeChild(existing);
-            }
-            // Create new style element with no purple styling
+            if (document.getElementById(STYLE_ID)) return;
             var style = document.createElement('style');
             style.id = STYLE_ID;
             style.textContent =
@@ -7366,24 +7361,8 @@ const ButtonAnchorTop = (function() {
         function unlock() {
             if (!locked) return;
             scrollEl.style.maxHeight = '';
+            requestCollapseOffscreen();
             locked = false;
-            // When scrolling stops, expand slack if we're not at the top to prevent button movement
-            try {
-                var st = scrollEl.scrollTop || 0;
-                if (st > 0 && currentSlackPx === collapsedSlackPx) {
-                    applySlackPx(expandedSlackPx);
-                    // Collapse after delay if still offscreen
-                    setTimeout(function() {
-                        if (!isSlackOnScreen()) {
-                            requestCollapseOffscreen();
-                        }
-                    }, clickHoldMs);
-                } else {
-                    requestCollapseOffscreen();
-                }
-            } catch (e) {
-                requestCollapseOffscreen();
-            }
         }
         
         function startScrollBurst() {
