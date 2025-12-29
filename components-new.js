@@ -6803,9 +6803,9 @@ const ButtonAnchorBottom = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
-                /* DEBUG VISUAL: show spacer presence - DISABLED */
-                /* 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' + */
-                /* 'border-top:2px solid rgba(160, 32, 240, 0.95);' + */
+                /* DEBUG VISUAL: show spacer presence */
+                'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
+                'border-top:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -7163,12 +7163,7 @@ const ButtonAnchorTop = (function() {
     
     function ensureStyle() {
         try {
-            // Force remove any existing style element to ensure clean state
-            var existing = document.getElementById(STYLE_ID);
-            if (existing && existing.parentNode) {
-                existing.parentNode.removeChild(existing);
-            }
-            // Create new style element with no purple styling
+            if (document.getElementById(STYLE_ID)) return;
             var style = document.createElement('style');
             style.id = STYLE_ID;
             style.textContent =
@@ -7177,9 +7172,9 @@ const ButtonAnchorTop = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
-                /* DEBUG VISUAL: show spacer presence - DISABLED */
-                /* 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' + */
-                /* 'border-bottom:2px solid rgba(160, 32, 240, 0.95);' + */
+                /* DEBUG VISUAL: show spacer presence */
+                'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
+                'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -7188,11 +7183,7 @@ const ButtonAnchorTop = (function() {
     function ensureSlackEl(scrollEl) {
         var slackEl = null;
         try { slackEl = scrollEl.querySelector('.panel-top-slack'); } catch (e) { slackEl = null; }
-        if (slackEl) {
-            // Ensure class is removed if it exists from previous session
-            slackEl.classList.remove('panel-top-slack--active');
-            return slackEl;
-        }
+        if (slackEl) return slackEl;
         try {
             slackEl = document.createElement('div');
             slackEl.className = 'panel-top-slack';
@@ -7281,14 +7272,10 @@ const ButtonAnchorTop = (function() {
                 if (px > oldPx) {
                     scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
                     scrollEl.scrollTop = (scrollEl.scrollTop || 0) + (px - oldPx);
-                    // Show purple styling only when active
-                    if (slackEl) slackEl.classList.add('panel-top-slack--active');
                 } else {
                     scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
                     var next = (scrollEl.scrollTop || 0) - (oldPx - px);
                     scrollEl.scrollTop = next < 0 ? 0 : next;
-                    // Hide purple styling when collapsed
-                    if (slackEl) slackEl.classList.remove('panel-top-slack--active');
                 }
             } catch (e0) {}
             internalAdjust = false;
@@ -7469,8 +7456,6 @@ const ButtonAnchorTop = (function() {
 
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
-        // Ensure class is removed on initialization (in case element existed from previous session)
-        if (slackEl) slackEl.classList.remove('panel-top-slack--active');
         
         var controller = {
             forceOff: function() {
