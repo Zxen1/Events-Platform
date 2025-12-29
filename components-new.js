@@ -7043,26 +7043,8 @@ const ButtonAnchorBottom = (function() {
             } catch (e2) {}
         }, true);
         
-        function isEditableTarget(t) {
-            if (!t || !(t instanceof Element)) return false;
-            try {
-                if (t.isContentEditable) return true;
-                if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
-            } catch (e) {}
-            return false;
-        }
-        
         // Clicking: click-hold window + temporary slack ON.
-        function holdClickSlack(e) {
-            // Never engage slack for text editing interactions (messages tab bug fix).
-            try {
-                var t = e && e.target;
-                if (isEditableTarget(t)) return;
-                // Only engage for real interactive clicks (prevents message editor "click to edit" div
-                // from triggering slack).
-                if (!(t && t.closest && t.closest('button, [role="button"], a'))) return;
-            } catch (e0) {}
-            
+        function holdClickSlack() {
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
@@ -7376,29 +7358,17 @@ const ButtonAnchorTop = (function() {
             try { anchorObserver.disconnect(); } catch (e0) {}
             anchorObserver = null;
         }
-
-        function isEditableTarget(t) {
-            if (!t || !(t instanceof Element)) return false;
-            try {
-                if (t.isContentEditable) return true;
-                if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
-            } catch (e) {}
-            return false;
-        }
         
         // Capture the anchor target before DOM changes.
         scrollEl.addEventListener('pointerdown', function(e) {
             try {
                 var t = e && e.target;
                 if (!(t instanceof Element)) return;
-                // Never engage top-anchor logic for text editing interactions (messages tab bug fix).
-                if (isEditableTarget(t)) return;
                 if (slackEl && (t === slackEl || slackEl.contains(t))) return;
                 // Only anchor if the click is inside this scroll container.
                 if (!scrollEl.contains(t)) return;
                 // Anchor the closest "button-like" element to avoid anchoring to inner icon spans.
-                var anchorEl = t.closest('button, [role="button"], a');
-                if (!anchorEl) return;
+                var anchorEl = t.closest('button, [role="button"], a') || t;
                 pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
                 clickHoldUntil = Date.now() + clickHoldMs;
                 anchorApplied = false;
