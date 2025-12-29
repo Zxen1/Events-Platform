@@ -2809,6 +2809,17 @@ const MemberModule = (function() {
         
         actionsWrapper.appendChild(adminSubmitBtn);
         formFields.appendChild(actionsWrapper);
+        
+        // Attach click handlers for submit buttons
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleCreatePostSubmit(false);
+        });
+        
+        adminSubmitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleCreatePostSubmit(true);
+        });
     }
     
     function updateSubmitButtonState() {
@@ -2819,6 +2830,313 @@ const MemberModule = (function() {
         if (adminSubmitBtn) {
             adminSubmitBtn.disabled = !ready;
         }
+    }
+    
+    /* --------------------------------------------------------------------------
+       POST SUBMISSION
+       -------------------------------------------------------------------------- */
+    
+    var isSubmittingPost = false;
+    
+    function handleCreatePostSubmit(isAdminFree) {
+        if (isSubmittingPost) return;
+        
+        // Validate terms agreed
+        if (!termsAgreed) {
+            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                getMessage('msg_post_terms_required', {}, false).then(function(msg) {
+                    ToastComponent.showError(msg || 'Please agree to the terms and conditions.');
+                });
+            }
+            return;
+        }
+        
+        // Validate category/subcategory selected
+        if (!selectedCategory || !selectedSubcategory) {
+            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                getMessage('msg_post_create_no_category', {}, false).then(function(msg) {
+                    ToastComponent.showError(msg || 'Please select a category and subcategory.');
+                });
+            }
+            return;
+        }
+        
+        // Collect and validate form fields
+        var validation = validateAndCollectFormData();
+        if (validation.error || validation.errorKey) {
+            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                if (validation.errorKey) {
+                    getMessage(validation.errorKey, validation.errorPlaceholders || {}, false).then(function(msg) {
+                        ToastComponent.showError(msg || validation.error || 'Validation error.');
+                    });
+                } else {
+                    ToastComponent.showError(validation.error);
+                }
+            }
+            if (validation.focusElement && typeof validation.focusElement.focus === 'function') {
+                validation.focusElement.focus();
+            }
+            return;
+        }
+        
+        // Start submission
+        isSubmittingPost = true;
+        if (submitBtn) submitBtn.disabled = true;
+        if (adminSubmitBtn) adminSubmitBtn.disabled = true;
+        
+        // Submit the post
+        submitPostData(validation.payload, isAdminFree)
+            .then(function(result) {
+                isSubmittingPost = false;
+                if (submitBtn) submitBtn.disabled = !termsAgreed;
+                if (adminSubmitBtn) adminSubmitBtn.disabled = !termsAgreed;
+                
+                if (result.success) {
+                    if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
+                        getMessage('msg_post_create_success', {}, false).then(function(msg) {
+                            ToastComponent.showSuccess(msg || 'Your listing has been posted!');
+                        });
+                    }
+                    // Reset form
+                    resetCreatePostForm();
+                } else {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        // Use server message if provided, otherwise use existing message key
+                        if (result.message) {
+                            ToastComponent.showError(result.message);
+                        } else {
+                            getMessage('msg_post_create_error', {}, false).then(function(msg) {
+                                ToastComponent.showError(msg || 'Unable to post your listing. Please try again.');
+                            });
+                        }
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.error('[Member] Post submission failed:', err);
+                isSubmittingPost = false;
+                if (submitBtn) submitBtn.disabled = !termsAgreed;
+                if (adminSubmitBtn) adminSubmitBtn.disabled = !termsAgreed;
+                
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    getMessage('msg_post_create_error', {}, false).then(function(msg) {
+                        ToastComponent.showError(msg || 'Unable to post your listing. Please try again.');
+                    });
+                }
+            });
+    }
+    
+    function validateAndCollectFormData() {
+        var payload = {
+            category: selectedCategory,
+            subcategory: selectedSubcategory,
+            fields: []
+        };
+        
+        // Get all rendered fieldsets
+        var fieldsetEls = formFields ? formFields.querySelectorAll('[data-fieldset-key]') : [];
+        
+        for (var i = 0; i < fieldsetEls.length; i++) {
+            var el = fieldsetEls[i];
+            var fieldsetKey = el.dataset.fieldsetKey;
+            var fieldType = el.dataset.fieldsetType || '';
+            var fieldName = el.dataset.fieldsetName || fieldsetKey;
+            var required = el.dataset.required === 'true';
+            
+            var value = extractFieldValue(el, fieldType);
+            
+            // Validate required fields
+            if (required && isEmptyValue(value, fieldType)) {
+                // Use existing message key with {field} placeholder
+                var errorMsg = null;
+                try {
+                    // getMessage is async but we need sync here, use fallback
+                    errorMsg = 'Enter a value for ' + fieldName + '.';
+                } catch (e) {}
+                return {
+                    error: errorMsg,
+                    errorKey: 'msg_post_validation_required',
+                    errorPlaceholders: { field: fieldName },
+                    focusElement: findFocusableInFieldset(el, fieldType)
+                };
+            }
+            
+            payload.fields.push({
+                key: fieldsetKey,
+                type: fieldType,
+                name: fieldName,
+                value: value
+            });
+        }
+        
+        return { payload: payload };
+    }
+    
+    function extractFieldValue(el, fieldType) {
+        var baseType = fieldType.replace(/-locked$/, '').replace(/-hidden$/, '');
+        
+        switch (baseType) {
+            case 'text':
+            case 'text-short':
+            case 'text-medium':
+            case 'text-long':
+            case 'email':
+            case 'url':
+            case 'phone':
+                var input = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');
+                return input ? input.value.trim() : '';
+                
+            case 'text-area':
+            case 'description':
+                var textarea = el.querySelector('textarea');
+                return textarea ? textarea.value.trim() : '';
+                
+            case 'number':
+                var numInput = el.querySelector('input[type="number"], input[type="text"]');
+                return numInput ? numInput.value.trim() : '';
+                
+            case 'dropdown':
+                var menuBtn = el.querySelector('button.form-preview-select');
+                var select = el.querySelector('select');
+                if (menuBtn) return menuBtn.dataset.value || '';
+                if (select) return select.value || '';
+                return '';
+                
+            case 'radio':
+                var checked = el.querySelector('input[type="radio"]:checked');
+                return checked ? checked.value : '';
+                
+            case 'checkbox':
+                var cb = el.querySelector('input[type="checkbox"]');
+                return cb ? cb.checked : false;
+                
+            case 'switch':
+                var sw = el.querySelector('input[type="checkbox"]');
+                return sw ? sw.checked : false;
+                
+            case 'date':
+            case 'date-time':
+                var dateInput = el.querySelector('input[type="date"], input[type="datetime-local"], input[type="text"]');
+                return dateInput ? dateInput.value.trim() : '';
+                
+            case 'images':
+                var fileInput = el.querySelector('input[type="file"]');
+                if (fileInput && fileInput._imageFiles) {
+                    return fileInput._imageFiles.slice();
+                } else if (fileInput && fileInput.files) {
+                    return Array.from(fileInput.files);
+                }
+                return [];
+                
+            case 'currency':
+                var currBtn = el.querySelector('button[data-currency-value]');
+                return currBtn ? currBtn.dataset.currencyValue || '' : '';
+                
+            case 'amenities':
+                var amenitiesData = el.dataset.selectedAmenities;
+                try {
+                    return amenitiesData ? JSON.parse(amenitiesData) : [];
+                } catch (e) {
+                    return [];
+                }
+                
+            default:
+                // Try to get value from any input
+                var anyInput = el.querySelector('input, select, textarea');
+                if (anyInput) {
+                    if (anyInput.type === 'checkbox') return anyInput.checked;
+                    return anyInput.value || '';
+                }
+                return '';
+        }
+    }
+    
+    function isEmptyValue(value, fieldType) {
+        if (value === null || value === undefined) return true;
+        if (typeof value === 'string') return value.trim() === '';
+        if (typeof value === 'boolean') return false; // booleans are never "empty"
+        if (Array.isArray(value)) return value.length === 0;
+        if (typeof value === 'object') return Object.keys(value).length === 0;
+        return false;
+    }
+    
+    function findFocusableInFieldset(el, fieldType) {
+        var selectors = ['input:not([type="hidden"])', 'select', 'textarea', 'button'];
+        for (var i = 0; i < selectors.length; i++) {
+            var found = el.querySelector(selectors[i]);
+            if (found) return found;
+        }
+        return null;
+    }
+    
+    function submitPostData(payload, isAdminFree) {
+        return new Promise(function(resolve, reject) {
+            // Prepare form data for submission
+            var formData = new FormData();
+            formData.append('category', payload.category);
+            formData.append('subcategory', payload.subcategory);
+            formData.append('admin_free', isAdminFree ? '1' : '0');
+            
+            // Handle image uploads separately
+            var imageFields = [];
+            var otherFields = [];
+            
+            payload.fields.forEach(function(field) {
+                if (field.type === 'images' && Array.isArray(field.value)) {
+                    field.value.forEach(function(file, idx) {
+                        formData.append('images_' + field.key + '_' + idx, file);
+                    });
+                    imageFields.push({ key: field.key, count: field.value.length });
+                } else {
+                    otherFields.push({
+                        key: field.key,
+                        type: field.type,
+                        name: field.name,
+                        value: field.value
+                    });
+                }
+            });
+            
+            formData.append('fields', JSON.stringify(otherFields));
+            formData.append('image_fields', JSON.stringify(imageFields));
+            
+            // Add user info if logged in
+            if (currentUser && currentUser.id) {
+                formData.append('member_id', currentUser.id);
+            }
+            
+            fetch('/gateway.php?action=add-post', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                resolve(data);
+            })
+            .catch(function(err) {
+                reject(err);
+            });
+        });
+    }
+    
+    function resetCreatePostForm() {
+        // Reset selections
+        selectedCategory = '';
+        selectedSubcategory = '';
+        termsAgreed = false;
+        
+        // Hide form wrapper
+        if (formWrapper) formWrapper.hidden = true;
+        if (formFields) formFields.innerHTML = '';
+        
+        // Reset state
+        submitBtn = null;
+        adminSubmitBtn = null;
+        
+        // Re-render category picker
+        renderCategoryPicker();
     }
     
     /* --------------------------------------------------------------------------

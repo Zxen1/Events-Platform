@@ -2619,5 +2619,46 @@ How I will prevent this next time:
 - Before coding: restate the exact rule set, and refuse to add any logic that violates it.
 - Copy existing patterns first (consistency rule) and change the minimum surface area.
 - When dealing with scroll/slack: assume any change to height can create metric feedback loops, and design state changes to be non-oscillating.
-- If you revert to a “mostly works” baseline, I must treat that as the new source of truth and only make the smallest safe deltas from it.
+- If you revert to a "mostly works" baseline, I must treat that as the new source of truth and only make the smallest safe deltas from it.
+
+---
+
+## Confession — 2025-12-30 — Guessing SQL Column Names Without Checking Database
+
+**What I did wrong:**
+
+I provided SQL INSERT statements for the `admin_messages` table without first checking the actual database schema. I **guessed** column names based on common conventions instead of verifying the actual structure in the SQL backup files.
+
+**My guessed columns vs actual columns:**
+| I Guessed | Actual Column |
+|-----------|---------------|
+| `title` | `message_name` |
+| `description` | `message_description` |
+| `enabled` | `is_active` |
+| `visible` | `is_visible` |
+| `is_html` | `supports_html` |
+| `duration` | `display_duration` |
+| `category` | `message_category` |
+| `toast_type` | `message_type` |
+
+**The danger:** If the user had run my incorrect SQL without noticing the error, it could have:
+- Failed silently or with cryptic errors
+- Corrupted the database structure
+- Caused permanent data loss
+- Required restoration from backups
+
+**What I should have done:**
+1. **ALWAYS** check `funmapco_backup (17).sql` for the actual `CREATE TABLE` statement before writing any SQL
+2. Look at existing `INSERT INTO` statements to see the exact column order and names
+3. Never assume column names match common conventions
+4. The agent rules explicitly state: "AI agents CANNOT access the database directly" — this makes accuracy even MORE critical because the user trusts the SQL I provide
+
+**The rule I violated:**
+> "Make sure SQL is correct and safe before providing it"
+
+**How I will prevent this next time:**
+- Before writing ANY SQL, grep the backup file for `CREATE TABLE \`table_name\`` to see actual columns
+- Look at existing `INSERT INTO` statements to copy the exact format
+- Never provide SQL based on assumptions or "common" column names
+- Treat SQL like production code — verify before shipping
 
