@@ -8,10 +8,11 @@
    --layer-image-modal: 88 (lightbox)
    --layer-dialog: 86     (confirmations, toasts)
    --layer-menu: 85       (dropdowns, tooltips)
-   --layer-panel: 60      (side panels)
+   --layer-panel: 60      (side panels: filter, admin, member)
    --layer-header: 40     (header bar)
    --layer-card: 30       (floating cards)
-   --layer-content: 20    (primary content)
+   --layer-post-panel: 20 (post/recent panels - below filter panel)
+   --layer-content: 10    (primary content)
    --layer-base: 0        (map/base)
    
    ============================================================================ */
@@ -30,7 +31,8 @@
   --layer-panel: 60;
   --layer-header: 40;
   --layer-card: 30;
-  --layer-content: 20;
+  --layer-post-panel: 20;
+  --layer-content: 10;
   --layer-base: 0;
 
   /* Layout */

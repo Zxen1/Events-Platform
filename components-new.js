@@ -281,6 +281,65 @@ function menuFilterMatch(optData, searchText) {
     return true;
 }
 
+/* --------------------------------------------------------------------------
+   MENU ARROW KEY NAVIGATION
+   Allows navigating menu options with ArrowUp/ArrowDown and selecting with Enter.
+   -------------------------------------------------------------------------- */
+
+function menuArrowKeyNav(e, optsContainer, optionSelector, onSelect) {
+    if (!e || !optsContainer) return false;
+    var key = e.key;
+    if (key !== 'ArrowUp' && key !== 'ArrowDown' && key !== 'Enter') return false;
+    
+    // Get visible options only
+    var allOpts = Array.from(optsContainer.querySelectorAll(optionSelector));
+    var visibleOpts = allOpts.filter(function(opt) {
+        return opt.offsetParent !== null && !opt.hidden && opt.style.display !== 'none';
+    });
+    if (visibleOpts.length === 0) return false;
+    
+    // Find currently highlighted option
+    var highlightClass = 'menu-option--highlighted';
+    var currentIdx = -1;
+    for (var i = 0; i < visibleOpts.length; i++) {
+        if (visibleOpts[i].classList.contains(highlightClass)) {
+            currentIdx = i;
+            break;
+        }
+    }
+    
+    if (key === 'Enter') {
+        if (currentIdx >= 0 && visibleOpts[currentIdx]) {
+            e.preventDefault();
+            visibleOpts[currentIdx].click();
+            return true;
+        }
+        return false;
+    }
+    
+    // ArrowUp / ArrowDown
+    e.preventDefault();
+    var nextIdx;
+    if (key === 'ArrowDown') {
+        nextIdx = currentIdx < 0 ? 0 : (currentIdx + 1) % visibleOpts.length;
+    } else {
+        nextIdx = currentIdx <= 0 ? visibleOpts.length - 1 : currentIdx - 1;
+    }
+    
+    // Remove highlight from all, add to new
+    visibleOpts.forEach(function(opt) { opt.classList.remove(highlightClass); });
+    visibleOpts[nextIdx].classList.add(highlightClass);
+    
+    // Scroll into view
+    try {
+        visibleOpts[nextIdx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } catch (err) {
+        visibleOpts[nextIdx].scrollIntoView(false);
+    }
+    
+    return true;
+}
+
 
 /* ============================================================================
    CLEAR BUTTON
@@ -3543,6 +3602,11 @@ const CurrencyComponent = (function(){
                 applyOpenState(false);
                 setValue(selectedCode);
                 filterOptions('');
+                return;
+            }
+            // Arrow key navigation
+            if (menu.classList.contains('fieldset-menu--open')) {
+                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
             }
         });
 
@@ -3716,6 +3780,11 @@ const CurrencyComponent = (function(){
                 // Restore selected value
                 setValue(selectedCode);
                 filterOptions('');
+                return;
+            }
+            // Arrow key navigation
+            if (menu.classList.contains('admin-currency-wrapper--open')) {
+                menuArrowKeyNav(e, opts, '.admin-currency-option', function(opt) { opt.click(); });
             }
         });
         
@@ -3941,6 +4010,11 @@ const LanguageMenuComponent = (function(){
                 // Restore selected value
                 setValue(selectedCode);
                 filterOptions('');
+                return;
+            }
+            // Arrow key navigation
+            if (menu.classList.contains('admin-language-wrapper--open')) {
+                menuArrowKeyNav(e, opts, '.admin-language-option', function(opt) { opt.click(); });
             }
         });
         
@@ -4178,6 +4252,11 @@ const PhonePrefixComponent = (function(){
                 applyOpenState(false);
                 setValue(selectedCode);
                 filterOptions('');
+                return;
+            }
+            // Arrow key navigation
+            if (menu.classList.contains('fieldset-menu--open')) {
+                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
             }
         });
 
@@ -4379,6 +4458,11 @@ const CountryComponent = (function(){
                 applyOpenState(false);
                 setValue(selectedCode);
                 filterOptions('');
+                return;
+            }
+            // Arrow key navigation
+            if (menu.classList.contains('fieldset-menu--open')) {
+                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
             }
         });
         

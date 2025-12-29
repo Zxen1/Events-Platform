@@ -45,7 +45,7 @@
   height: calc(var(--vh, 1vh) * 100);
   background: transparent;
   display: none;
-  z-index: var(--layer-panel);
+  z-index: var(--layer-post-panel);
   pointer-events: none;
 }
 
@@ -103,7 +103,7 @@
   height: calc(var(--vh, 1vh) * 100);
   background: transparent;
   display: none;
-  z-index: var(--layer-panel);
+  z-index: var(--layer-post-panel);
   pointer-events: none;
 }
 

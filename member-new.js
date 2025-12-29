@@ -671,6 +671,14 @@ const MemberModule = (function() {
     function saveMemberSetting(key, value) {
         if (!currentUser) return;
         
+        // Guard: Only save if we have a valid member id (positive integer) and email
+        // (prevents 400 errors from stale localStorage sessions without id, or id=0)
+        var memberId = parseInt(currentUser.id, 10);
+        if (!memberId || memberId <= 0 || !currentUser.email) {
+            console.warn('[Member] Cannot save setting - missing or invalid id/email in session');
+            return;
+        }
+        
         // Save to database via API
         fetch('/gateway.php?action=' + getEditUserAction(), {
             method: 'POST',
@@ -680,6 +688,10 @@ const MemberModule = (function() {
                 email: currentUser.email,
                 [key]: value
             })
+        }).then(function(response) {
+            if (!response.ok) {
+                console.warn('[Member] Failed to save setting:', key, '- server returned', response.status);
+            }
         }).catch(function(err) {
             console.error('[Member] Failed to save setting:', err);
         });
@@ -1403,6 +1415,24 @@ const MemberModule = (function() {
 
     function handleProfileSave(onSuccessNext) {
         if (!currentUser) return;
+        
+        // Guard: session must have valid id (positive integer) and email to save
+        // (stale localStorage sessions may be missing these fields, or id=0 is invalid)
+        var memberId = parseInt(currentUser.id, 10);
+        if (!memberId || memberId <= 0 || !currentUser.email) {
+            console.warn('[Member] Cannot save profile - invalid/missing id or email, needs re-login');
+            getMessage('msg_auth_session_expired', {}, false).then(function(message) {
+                var text = message || 'Your session has expired. Please log in again.';
+                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                    ToastComponent.showError(text);
+                } else {
+                    showStatus(text, { error: true });
+                }
+            });
+            // Force logout to clear stale session
+            handleLogout();
+            return;
+        }
         
         var name = profileEditNameInput ? profileEditNameInput.value.trim() : '';
         var pw = profileEditPasswordInput ? profileEditPasswordInput.value : '';
@@ -3068,6 +3098,8 @@ const MemberModule = (function() {
             loadSupporterMessage();
             syncSupporterCurrencyUi();
             initSupporterCountryMenu();
+            // Ensure avatar grid is rendered with first avatar selected
+            ensureAvatarChoicesReady();
             // Default to the first preset amount if none selected yet (no hardcoding).
             try {
                 if (supporterAmountHiddenInput && String(supporterAmountHiddenInput.value || '').trim() === '') {
@@ -3373,6 +3405,12 @@ const MemberModule = (function() {
             storeCurrent(currentUser);
             render();
             
+            // Scroll panel body to top after login
+            try {
+                var panelBody = panel && panel.querySelector('.member-panel-body');
+                if (panelBody) panelBody.scrollTop = 0;
+            } catch (e) {}
+            
             // Apply member map settings
             if (currentUser.map_lighting && window.MapModule && window.MapModule.setMapLighting) {
                 window.MapModule.setMapLighting(currentUser.map_lighting);
@@ -3570,6 +3608,13 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
+            
+            // Scroll panel body to top after registration
+            try {
+                var panelBody = panel && panel.querySelector('.member-panel-body');
+                if (panelBody) panelBody.scrollTop = 0;
+            } catch (e) {}
+            
             getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
                 if (message) {
                     ToastComponent.showSuccess(message);

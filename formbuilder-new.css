@@ -677,7 +677,8 @@
   font-size: 13px;
 }
 
-.formbuilder-fieldset-menu-option:hover {
+.formbuilder-fieldset-menu-option:hover,
+.formbuilder-fieldset-menu-option.menu-option--highlighted {
   background: #3b82f5;
 }
 

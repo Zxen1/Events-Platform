@@ -920,7 +920,8 @@
     display: block;
 }
 
-.fieldset-menu-option:hover {
+.fieldset-menu-option:hover,
+.fieldset-menu-option.menu-option--highlighted {
     background: #3b82f5;
 }
 
@@ -1763,8 +1764,11 @@
 }
 
 .fieldset-currency-option:hover,
+.fieldset-currency-option.menu-option--highlighted,
 .admin-currency-option:hover,
-.admin-language-option:hover {
+.admin-currency-option.menu-option--highlighted,
+.admin-language-option:hover,
+.admin-language-option.menu-option--highlighted {
     background: #3b82f5;
 }
 
