@@ -397,7 +397,7 @@
   overflow-x: hidden;
   /* Total interior spacing should add up to 10px (not 20px). */
   padding: 0 10px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;

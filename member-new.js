@@ -1765,7 +1765,7 @@ const MemberModule = (function() {
             panel.classList.toggle('member-tab-panel--active', isActive);
             panel.hidden = !isActive;
         });
-
+        
         // Lazy load Create Post tab content
         if (tabName === 'create') {
             loadFormpicker();

@@ -64,148 +64,6 @@ const ImageAddTileComponent = (function(){
 
 const MenuManager = (function(){
     var openMenus = [];
-
-    // Allow wheel scrolling inside scrollable dropdown menus without bubbling to panel scroll
-    // containers that may have ButtonAnchor wheel guards.
-    function installDropdownWheelGuard(menuElement) {
-        try {
-            if (!menuElement || typeof menuElement.querySelectorAll !== 'function') return;
-            var dropdowns = menuElement.querySelectorAll('.fieldset-menu-options');
-            if (!dropdowns || !dropdowns.length) return;
-
-            dropdowns.forEach(function(dropdown) {
-                if (!dropdown || !dropdown.addEventListener) return;
-
-                // Prevent double-binding
-                if (dropdown.__wheelGuardInstalled) return;
-                dropdown.__wheelGuardInstalled = true;
-
-                dropdown.addEventListener('wheel', function(e) {
-                    try {
-                        // Only matter when the menu is open
-                        if (typeof menuElement.__menuIsOpen === 'function' && !menuElement.__menuIsOpen()) return;
-
-                        var dy = Number(e && e.deltaY) || 0;
-                        if (!dy) return;
-
-                        // If dropdown isn't scrollable, don't interfere.
-                        var canScroll = (dropdown.scrollHeight || 0) > ((dropdown.clientHeight || 0) + 1);
-                        if (!canScroll) return;
-
-                        var st = Number(dropdown.scrollTop) || 0;
-                        var ch = Number(dropdown.clientHeight) || 0;
-                        var sh = Number(dropdown.scrollHeight) || 0;
-                        var atTop = st <= 0;
-                        var atBottom = (st + ch) >= (sh - 1);
-
-                        // If user is trying to scroll past the bounds, allow bubbling so the panel can scroll.
-                        if ((dy < 0 && atTop) || (dy > 0 && atBottom)) return;
-
-                        // Otherwise, keep the wheel event inside the dropdown so anchors/panels don't block it.
-                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-                    } catch (e0) {
-                        // ignore
-                    }
-                }, { passive: true });
-            });
-        } catch (e1) {
-            // ignore
-        }
-    }
-
-    function isEditableTarget(t) {
-        if (!t || !(t instanceof Element)) return false;
-        try {
-            if (t.isContentEditable) return true;
-            if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
-        } catch (e) {}
-        return false;
-    }
-
-    function getOpenMenu() {
-        var open = null;
-        try {
-            openMenus.forEach(function(menu) {
-                try {
-                    if (menu && isMenuOpen(menu)) open = menu;
-                } catch (e0) {}
-            });
-        } catch (e1) {}
-        return open;
-    }
-
-    function getMenuTypingInput(menu) {
-        if (!menu || !menu.querySelector) return null;
-        try {
-            // Only menus that are designed to accept typing in their "button" row.
-            return (
-                menu.querySelector('input.fieldset-menu-button-input') ||
-                menu.querySelector('input.admin-currency-button-input') ||
-                menu.querySelector('input.admin-language-button-input') ||
-                null
-            );
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function applyTypingKeyToInput(input, e) {
-        if (!input || !e) return false;
-        var key = String(e.key || '');
-        var hasModifier = !!(e.ctrlKey || e.metaKey || e.altKey);
-        if (hasModifier) return false;
-
-        // Ignore non-character keys (except Backspace).
-        var isBackspace = key === 'Backspace';
-        var isChar = key.length === 1;
-        if (!isBackspace && !isChar) return false;
-
-        try {
-            // If input isn't focused, focus + select all so first key starts a new search.
-            if (document.activeElement !== input) {
-                input.focus();
-                try { input.select(); } catch (e0) {}
-            }
-
-            var v = String(input.value || '');
-            var s = (typeof input.selectionStart === 'number') ? input.selectionStart : v.length;
-            var en = (typeof input.selectionEnd === 'number') ? input.selectionEnd : v.length;
-
-            var next = v;
-            if (isBackspace) {
-                if (s !== en) {
-                    next = v.slice(0, s) + v.slice(en);
-                } else if (s > 0) {
-                    next = v.slice(0, s - 1) + v.slice(en);
-                }
-            } else {
-                next = v.slice(0, s) + key + v.slice(en);
-            }
-
-            input.value = next;
-
-            // Move caret to end of inserted text (best-effort)
-            try {
-                var caret = isBackspace ? Math.max(0, s - 1) : (s + 1);
-                input.setSelectionRange(caret, caret);
-            } catch (e1) {}
-
-            // Trigger filtering logic
-            try {
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            } catch (e2) {
-                // IE fallback
-                var ev = document.createEvent('Event');
-                ev.initEvent('input', true, true);
-                input.dispatchEvent(ev);
-            }
-
-            if (typeof e.preventDefault === 'function') e.preventDefault();
-            return true;
-        } catch (e3) {
-            return false;
-        }
-    }
     
     function isMenuOpen(menu) {
         if (!menu) return false;
@@ -238,7 +96,6 @@ const MenuManager = (function(){
         if (openMenus.indexOf(menuElement) === -1) {
             openMenus.push(menuElement);
         }
-        installDropdownWheelGuard(menuElement);
     }
     
     // Close all menus when clicking outside
@@ -255,31 +112,6 @@ const MenuManager = (function(){
             }
         });
     });
-
-    // Type-to-filter: if a menu is open, route keystrokes to its input without requiring a click.
-    document.addEventListener('keydown', function(e) {
-        try {
-            if (!e) return;
-            if (isEditableTarget(e.target)) return;
-
-            var menu = getOpenMenu();
-            if (!menu) return;
-
-            // Allow Esc to close any open menu.
-            if (e.key === 'Escape') {
-                setMenuOpen(menu, false);
-                if (typeof e.preventDefault === 'function') e.preventDefault();
-                return;
-            }
-
-            var input = getMenuTypingInput(menu);
-            if (!input) return;
-
-            applyTypingKeyToInput(input, e);
-        } catch (e0) {
-            // ignore
-        }
-    }, true);
     
     return {
         closeAll: closeAll,
@@ -290,40 +122,6 @@ const MenuManager = (function(){
 })();
 
 window.MenuManager = MenuManager;
-
-// Shared matching helper for "type to filter" menus.
-function menuFilterMatch(optData, searchText) {
-    var s = String(searchText || '').trim().toLowerCase();
-    if (!s) return true;
-    if (!optData) return false;
-
-    var value = String(optData.valueLower || '').toLowerCase();
-    var label = String(optData.labelLower || '').toLowerCase();
-    var words = optData.labelWords || [];
-
-    var tokens = s.split(/\s+/).filter(Boolean);
-    for (var i = 0; i < tokens.length; i++) {
-        var t = tokens[i];
-        var isNumeric = /^[0-9+]/.test(t);
-
-        var ok = false;
-        if (isNumeric) {
-            // For numeric search (e.g. phone prefixes), prefer value prefix matching.
-            ok = value.indexOf(t) === 0;
-        } else {
-            if (value.indexOf(t) === 0) ok = true;
-            if (!ok && label.indexOf(t) === 0) ok = true;
-            if (!ok && Array.isArray(words)) {
-                for (var w = 0; w < words.length; w++) {
-                    if (String(words[w] || '').indexOf(t) === 0) { ok = true; break; }
-                }
-            }
-        }
-
-        if (!ok) return false;
-    }
-    return true;
-}
 
 
 /* ============================================================================
@@ -3499,9 +3297,9 @@ const CurrencyComponent = (function(){
 
         // Filter options based on search text
         function filterOptions(searchText) {
-            var search = String(searchText || '').toLowerCase();
+            var search = searchText.toLowerCase();
             allOptions.forEach(function(optData) {
-                var matches = menuFilterMatch(optData, search);
+                var matches = optData.searchText.indexOf(search) !== -1;
                 optData.element.style.display = matches ? '' : 'none';
             });
         }
@@ -3532,13 +3330,11 @@ const CurrencyComponent = (function(){
             };
             opts.appendChild(op);
 
-            // Store for filtering (prefix-first, word-start matching)
-            allOptions.push({
-                element: op,
-                valueLower: String(item.value || '').toLowerCase(),
-                labelLower: String(item.label || '').toLowerCase(),
-                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
-            });
+            // Store for filtering
+                    allOptions.push({
+                        element: op,
+                        searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
+                    });
         });
 
         // Set initial value
@@ -3675,9 +3471,9 @@ const CurrencyComponent = (function(){
 
         // Filter options based on search text
         function filterOptions(searchText) {
-            var search = String(searchText || '').toLowerCase();
+            var search = searchText.toLowerCase();
             allOptions.forEach(function(optData) {
-                var matches = menuFilterMatch(optData, search);
+                var matches = optData.searchText.indexOf(search) !== -1;
                 optData.element.style.display = matches ? '' : 'none';
             });
         }
@@ -3712,9 +3508,7 @@ const CurrencyComponent = (function(){
             // Store for filtering
             allOptions.push({
                 element: op,
-                valueLower: String(item.value || '').toLowerCase(),
-                labelLower: String(item.label || '').toLowerCase(),
-                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+                searchText: displayText.toLowerCase() + ' ' + item.label.toLowerCase()
             });
         });
 
@@ -4308,7 +4102,7 @@ const CountryComponent = (function(){
         function filterOptions(searchText) {
             var search = String(searchText || '').toLowerCase();
             allOptions.forEach(function(optData) {
-                var matches = menuFilterMatch(optData, search);
+                var matches = optData.searchText.indexOf(search) !== -1;
                 optData.element.style.display = matches ? '' : 'none';
             });
         }
@@ -4337,9 +4131,7 @@ const CountryComponent = (function(){
             
             allOptions.push({
                 element: op,
-                valueLower: String(code || '').toLowerCase(),
-                labelLower: String(item.label || '').toLowerCase(),
-                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+                searchText: displayText.toLowerCase() + ' ' + String(item.label || '').toLowerCase()
             });
         });
         

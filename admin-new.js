@@ -1398,6 +1398,7 @@ const AdminModule = (function() {
     function createMessageItem(message) {
         var item = document.createElement('div');
         item.className = 'admin-message-item';
+        item.dataset.messageId = message.id;
         item.dataset.messageKey = message.message_key;
         
         var originalValue = message.message_text || '';
