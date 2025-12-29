@@ -7087,8 +7087,11 @@ const ButtonAnchorBottom = (function() {
             } catch (e2) {}
         }, true);
         
-        // Clicking: click-hold window + temporary slack ON.
-        function holdClickSlack() {
+        // IMPORTANT RULE:
+        // Button Anchor Bottom should NOT trigger on normal panel/content expansion.
+        // It should trigger only when the scroll viewport shrinks (clientHeight decreases),
+        // which is when buttons near the bottom can "fly away" as the visible area collapses.
+        function maybeArmSlackForShrink() {
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
@@ -7103,8 +7106,25 @@ const ButtonAnchorBottom = (function() {
             clickHoldUntil = Date.now() + clickHoldMs;
             applySlackPx(expandedSlackPx);
         }
-        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
-        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
+        
+        // Detect actual viewport shrink (the only allowed trigger).
+        var lastClientHeight = scrollEl.clientHeight || 0;
+        if (typeof ResizeObserver !== 'undefined') {
+            try {
+                var anchorResizeObserver = new ResizeObserver(function() {
+                    try {
+                        var h = scrollEl.clientHeight || 0;
+                        if (lastClientHeight > 0 && h > 0 && h < lastClientHeight) {
+                            maybeArmSlackForShrink();
+                        }
+                        lastClientHeight = h;
+                    } catch (e0) {}
+                });
+                anchorResizeObserver.observe(scrollEl);
+            } catch (e1) {
+                // ignore
+            }
+        }
         
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
