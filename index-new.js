@@ -531,8 +531,8 @@ const App = (function() {
         } catch (e) {}
 
         // Strict behavior lives inside the component.
+        // TEST MODE: TopAnchor disabled for current experiment.
         ButtonAnchorBottom.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
-        ButtonAnchorTop.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
