@@ -7348,22 +7348,8 @@ const ButtonAnchorTop = (function() {
         function unlock() {
             if (!locked) return;
             scrollEl.style.maxHeight = '';
+            requestCollapseOffscreen();
             locked = false;
-            // When scrolling stops, expand slack if we're not at the top to prevent button movement
-            try {
-                var st = scrollEl.scrollTop || 0;
-                if (st > 0 && currentSlackPx === collapsedSlackPx) {
-                    applySlackPx(expandedSlackPx);
-                    // Collapse after delay if still offscreen
-                    setTimeout(function() {
-                        if (!isSlackOnScreen()) {
-                            requestCollapseOffscreen();
-                        }
-                    }, clickHoldMs);
-                } else {
-                    requestCollapseOffscreen();
-                }
-            } catch (e) {}
         }
         
         function startScrollBurst() {
