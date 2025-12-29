@@ -6898,9 +6898,6 @@ const ButtonAnchorBottom = (function() {
         
         function isSlackOnScreen() {
             if (!slackEl) return false;
-            // If slack is collapsed (0px), it must behave like it doesn't exist.
-            // Otherwise a 0-height slack element can be treated as "on-screen" and block scrolling.
-            if ((currentSlackPx || 0) <= 0) return false;
             try {
                 var slackRect = slackEl.getBoundingClientRect();
                 var scrollRect = scrollEl.getBoundingClientRect();
@@ -7240,8 +7237,6 @@ const ButtonAnchorTop = (function() {
         
         function isSlackOnScreen() {
             if (!slackEl) return false;
-            // If slack is collapsed (0px), it must behave like it doesn't exist.
-            if ((currentSlackPx || 0) <= 0) return false;
             try {
                 var slackRect = slackEl.getBoundingClientRect();
                 var scrollRect = scrollEl.getBoundingClientRect();
