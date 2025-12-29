@@ -6925,6 +6925,11 @@ const ButtonAnchorBottom = (function() {
                 var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
                 var h = scrollEl.clientHeight || 0;
                 if (contentNoSlack <= h) {
+                    // Do not collapse slack while it's visibly on-screen (prevents "slam shut").
+                    // If there truly is no overflow, we'll collapse once the slack is off-screen.
+                    try {
+                        if (isSlackOnScreen()) return;
+                    } catch (_eVis) {}
                     pendingOffscreenCollapse = false;
                     applySlackPx(collapsedSlackPx);
                     return;
@@ -7028,7 +7033,6 @@ const ButtonAnchorBottom = (function() {
                                 var st = opts.scrollTop || 0;
                                 if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
                                     opts.scrollTop = st + deltaY;
-                                    startScrollBurst();
                                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                                     return;
@@ -7095,6 +7099,10 @@ const ButtonAnchorBottom = (function() {
                 var h = scrollEl.clientHeight || 0;
                 var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
                 if (contentNoSlack <= h) {
+                    // Do not collapse slack while it's visibly on-screen (prevents "slam shut").
+                    try {
+                        if (isSlackOnScreen()) return;
+                    } catch (_eVis) {}
                     pendingOffscreenCollapse = false;
                     applySlackPx(collapsedSlackPx);
                     return;
@@ -7388,7 +7396,6 @@ const ButtonAnchorTop = (function() {
                                 var st = opts.scrollTop || 0;
                                 if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
                                     opts.scrollTop = st + deltaY;
-                                    startScrollBurst();
                                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                                     return;
