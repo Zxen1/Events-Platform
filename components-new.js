@@ -7040,11 +7040,7 @@ const ButtonAnchorBottom = (function() {
                 var st = scrollEl.scrollTop || 0;
                 // If slack is on-screen and scrollTop increases anyway (e.g. scrollbar drag),
                 // do NOT snap back. Just ignore this scroll event.
-                if (st > lastScrollTop && isSlackOnScreen()) {
-                    // Keep our notion of lastScrollTop in sync so future direction checks behave.
-                    lastScrollTop = st;
-                    return;
-                }
+                if (st > lastScrollTop && isSlackOnScreen()) return;
                 
                 // If the user is scrolling down and slack is ON but still off-screen, kill it now.
                 if (st > lastScrollTop) collapseIfOffscreenBelow();
@@ -7090,22 +7086,6 @@ const ButtonAnchorBottom = (function() {
 
                 if (deltaY > 0) collapseIfOffscreenBelow();
                 if (deltaY > 0 && isSlackOnScreen()) {
-                    // Key behavior: let wheel behave like scrollbar drag would in this situation.
-                    // If there is still REAL content below (excluding slack), allow scrolling down
-                    // but clamp to the real-content bottom so the user can never enter ghost space.
-                    try {
-                        var stNow = scrollEl.scrollTop || 0;
-                        var hNow = scrollEl.clientHeight || 0;
-                        var contentNoSlack = getContentNoSlack();
-                        var maxReal = contentNoSlack - hNow;
-                        if (!isFinite(maxReal) || maxReal < 0) maxReal = 0;
-                        var next = stNow + deltaY;
-                        if (next > maxReal) next = maxReal;
-                        if (next < 0) next = 0;
-                        if (next !== stNow) {
-                            scrollEl.scrollTop = next;
-                        }
-                    } catch (_eClamp) {}
                     // If content just grew (e.g. dropdown opened), do NOT trap the panel.
                     // Growth must be natural; the lock is only for real shrink events.
                     if ((Date.now() - lastGrowAt) < 600) {
@@ -7141,22 +7121,6 @@ const ButtonAnchorBottom = (function() {
                 // Finger moving up (dy < 0) attempts to scroll down.
                 if (dy < 0) collapseIfOffscreenBelow();
                 if (dy < 0 && isSlackOnScreen()) {
-                    // Match the wheel behavior: allow moving down through real content only,
-                    // clamped to the real-content bottom (never into slack).
-                    try {
-                        var stNow = scrollEl.scrollTop || 0;
-                        var hNow = scrollEl.clientHeight || 0;
-                        var contentNoSlack = getContentNoSlack();
-                        var maxReal = contentNoSlack - hNow;
-                        if (!isFinite(maxReal) || maxReal < 0) maxReal = 0;
-                        var delta = -dy; // dy<0 means attempt to scroll down
-                        var next = stNow + delta;
-                        if (next > maxReal) next = maxReal;
-                        if (next < 0) next = 0;
-                        if (next !== stNow) {
-                            scrollEl.scrollTop = next;
-                        }
-                    } catch (_eClamp2) {}
                     if ((Date.now() - lastGrowAt) < 600) {
                         try { unlock(); } catch (_eUn2) {}
                     } else {
