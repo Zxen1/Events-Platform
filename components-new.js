@@ -7172,13 +7172,9 @@ const ButtonAnchorTop = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
-                'background:none;' +
-                'border:none;' +
-                '} ' +
-                '.panel-top-slack.panel-top-slack--active{' +
-                /* DEBUG VISUAL: show spacer presence only when active */
-                'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
-                'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
+                /* DEBUG VISUAL: show spacer presence - DISABLED */
+                /* 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' + */
+                /* 'border-bottom:2px solid rgba(160, 32, 240, 0.95);' + */
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
