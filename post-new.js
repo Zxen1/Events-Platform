@@ -274,20 +274,15 @@ const PostModule = (function() {
     // Invalidate any pending show RAF.
     contentEl[showTokenKey] = (contentEl[showTokenKey] || 0) + 1;
 
-    contentEl.classList.remove(visibleClass);
-    contentEl.classList.add(hiddenClass);
     panelEl.setAttribute('aria-hidden', 'true');
 
-    // If we weren't visible, there may be no transition; hide immediately and
-    // avoid leaving a stale transitionend handler behind.
-    if (!panelEl.classList.contains(panelShowClass)) {
-      panelEl.classList.remove(panelShowClass);
-      return;
-    }
-    if (!contentEl.classList.contains(visibleClass)) {
-      panelEl.classList.remove(panelShowClass);
-      return;
-    }
+    // Always keep the panel mounted while we "close" so it never teleports
+    // off-screen due to an immediate unmount.
+    panelEl.classList.add(panelShowClass);
+
+    // Trigger (or ensure) slide-out state.
+    contentEl.classList.remove(visibleClass);
+    contentEl.classList.add(hiddenClass);
 
     // Remove any previous hide handler before installing a new one.
     if (contentEl[hideHandlerKey]) {
@@ -295,15 +290,50 @@ const PostModule = (function() {
       contentEl[hideHandlerKey] = null;
     }
 
+    // Safety: transitionend can fail to fire in edge cases; use a timeout based
+    // on computed duration so we still remove the outer shell after the same time.
+    var timeoutKey = hideHandlerKey + 'Timeout';
+    if (contentEl[timeoutKey]) {
+      clearTimeout(contentEl[timeoutKey]);
+      contentEl[timeoutKey] = null;
+    }
+
+    var durationMs = 300;
+    try {
+      var cs = window.getComputedStyle(contentEl);
+      var dur = (cs && cs.transitionDuration) ? String(cs.transitionDuration).split(',')[0].trim() : '';
+      if (dur.endsWith('ms')) durationMs = Math.max(0, parseFloat(dur) || 0);
+      else if (dur.endsWith('s')) durationMs = Math.max(0, (parseFloat(dur) || 0) * 1000);
+    } catch (e) {
+      // ignore
+    }
+    durationMs = Math.max(0, Math.ceil(durationMs));
+
+    var finalized = false;
+    function finalizeHide() {
+      if (finalized) return;
+      finalized = true;
+      if (contentEl[timeoutKey]) {
+        clearTimeout(contentEl[timeoutKey]);
+        contentEl[timeoutKey] = null;
+      }
+      if (contentEl[hideHandlerKey]) {
+        contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
+        contentEl[hideHandlerKey] = null;
+      }
+      panelEl.classList.remove(panelShowClass);
+    }
+
     contentEl[hideHandlerKey] = function handler(e) {
       if (e && e.target !== contentEl) return;
       // Only finalize hiding if we're still in the hidden state.
       if (!contentEl.classList.contains(hiddenClass)) return;
-      contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
-      contentEl[hideHandlerKey] = null;
-      panelEl.classList.remove(panelShowClass);
+      finalizeHide();
     };
     contentEl.addEventListener('transitionend', contentEl[hideHandlerKey], { once: true });
+
+    // Timeout cleanup: a tiny buffer keeps it aligned with the easing end.
+    contentEl[timeoutKey] = setTimeout(finalizeHide, durationMs + 50);
   }
 
   function forceMapMode() {
