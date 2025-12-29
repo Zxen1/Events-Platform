@@ -4098,6 +4098,73 @@ App.registerModule('member', MemberModule);
 // Expose globally for consistency with other modules
 window.MemberModule = MemberModule;
 
+// Early header avatar update - runs on page load BEFORE full module init
+// This ensures logged-in users see their avatar immediately on refresh
+(function() {
+    var CURRENT_KEY = 'member-auth-current';
+    
+    function updateHeaderAvatarEarly() {
+        try {
+            var raw = localStorage.getItem(CURRENT_KEY);
+            if (!raw) return;
+            
+            var user = JSON.parse(raw);
+            if (!user || typeof user !== 'object' || !user.email) return;
+            
+            var memberBtn = document.querySelector('.header-access-button[data-panel="member"]');
+            if (!memberBtn) return;
+            
+            var avatarImg = memberBtn.querySelector('.header-access-button-avatar');
+            var iconSpan = memberBtn.querySelector('.header-access-button-icon--member');
+            
+            // Get avatar source (simplified version)
+            var avatarFile = user.avatar ? String(user.avatar).trim() : '';
+            if (!avatarFile) return; // No avatar, keep showing icon
+            
+            // Resolve avatar URL
+            var src = '';
+            if (avatarFile.startsWith('http://') || avatarFile.startsWith('https://') || avatarFile.startsWith('data:')) {
+                src = avatarFile;
+            } else if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                var folder = settings.folder_avatars || 'https://cdn.funmap.com/avatars/';
+                if (folder && !folder.endsWith('/')) folder += '/';
+                src = folder + avatarFile;
+            } else {
+                src = 'https://cdn.funmap.com/avatars/' + avatarFile;
+            }
+            
+            if (!src) return;
+            
+            // Preload and show avatar
+            var pre = new Image();
+            pre.onload = function() {
+                if (avatarImg) {
+                    avatarImg.src = src;
+                    avatarImg.classList.remove('header-access-button-avatar--hidden');
+                }
+                if (iconSpan) {
+                    iconSpan.classList.add('header-access-button-icon--hidden');
+                }
+                memberBtn.classList.add('has-avatar');
+            };
+            pre.onerror = function() {
+                // Avatar failed to load, keep showing icon
+            };
+            pre.src = src;
+        } catch (e) {
+            // Silently fail - header will show default icon
+        }
+    }
+    
+    // Run on DOMContentLoaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateHeaderAvatarEarly);
+    } else {
+        updateHeaderAvatarEarly();
+    }
+})();
+
 // Lazy initialization - only init when panel is first opened
 (function() {
     var isInitialized = false;
