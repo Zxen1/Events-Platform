@@ -6880,6 +6880,9 @@ const ButtonAnchorBottom = (function() {
         
         var slackEl = ensureSlackEl(scrollEl);
         var pendingOffscreenCollapse = false;
+        var isArmed = false; // becomes true after growth; enables shrink protection
+        var lastContentNoSlack = null;
+        var mutationObserver = null;
         
         function fadeScrollbar() {
             try {
@@ -6898,6 +6901,47 @@ const ButtonAnchorBottom = (function() {
             try { scrollEl.getBoundingClientRect(); } catch (e) {}
             fadeScrollbar();
         }
+
+        function getContentNoSlackPx() {
+            try {
+                var sh = scrollEl.scrollHeight || 0;
+                return sh - (currentSlackPx || 0);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function setArmedFromGrowth(nextContentNoSlack) {
+            // If content grows (drawer opens / content expands), arm the shrink-protection.
+            // We only care once growth exists; before that, anchors should be completely idle.
+            if (lastContentNoSlack === null || nextContentNoSlack === null) return;
+            if (nextContentNoSlack > lastContentNoSlack + 1) {
+                isArmed = true;
+            }
+        }
+
+        function maybeEngageOnShrink(nextContentNoSlack) {
+            // Only engage when shrink happens AFTER we've seen growth.
+            if (!isArmed) return;
+            if (lastContentNoSlack === null || nextContentNoSlack === null) return;
+            if (nextContentNoSlack < lastContentNoSlack - 1) {
+                // Shrink detected: enable slack briefly so the user doesn't get yanked to footer.
+                clickHoldUntil = Date.now() + clickHoldMs;
+                applySlackPx(expandedSlackPx);
+            }
+        }
+
+        function maybeDisarmWhenNotOverflowing(nextContentNoSlack) {
+            // If there is no overflow at all, anchors should not exist and should disarm.
+            try {
+                var h = scrollEl.clientHeight || 0;
+                if (nextContentNoSlack !== null && nextContentNoSlack <= h) {
+                    isArmed = false;
+                    pendingOffscreenCollapse = false;
+                    applySlackPx(collapsedSlackPx);
+                }
+            } catch (e) {}
+        }
         
         function isSlackOnScreen() {
             if (!slackEl) return false;
@@ -6913,6 +6957,36 @@ const ButtonAnchorBottom = (function() {
             } catch (e) {
                 return false;
             }
+        }
+
+        function getMaxScrollTopBeforeSlack() {
+            // The user must never be able to scroll into slack.
+            // Compute the maximum scrollTop such that viewport bottom is at (or above) slackStart.
+            try {
+                if (!slackEl) return null;
+                var slackH = slackEl.offsetHeight || 0;
+                if (slackH <= 0) return null;
+                var totalH = scrollEl.scrollHeight || 0;
+                var slackStart = totalH - slackH;
+                var viewH = scrollEl.clientHeight || 0;
+                var maxSt = slackStart - viewH;
+                return maxSt < 0 ? 0 : maxSt;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function clampIntoNoAbyss() {
+            if (currentSlackPx !== expandedSlackPx) return false;
+            var maxSt = getMaxScrollTopBeforeSlack();
+            if (maxSt === null) return false;
+            var st = scrollEl.scrollTop || 0;
+            if (st > maxSt) {
+                scrollEl.scrollTop = maxSt;
+                lastScrollTop = scrollEl.scrollTop || 0;
+                return true;
+            }
+            return false;
         }
         
         var collapseRafPending = false;
@@ -6991,6 +7065,11 @@ const ButtonAnchorBottom = (function() {
         function onScroll() {
             try {
                 var st = scrollEl.scrollTop || 0;
+
+                // Commandment #3/#9: never allow entry into the abyss (even with fast swipe / scrollbar drag).
+                if (st > lastScrollTop) {
+                    if (clampIntoNoAbyss()) return;
+                }
                 // If slack is on-screen and scrollTop increases anyway (e.g. scrollbar drag),
                 // do NOT snap back. Just ignore this scroll event.
                 if (st > lastScrollTop && isSlackOnScreen()) return;
@@ -7013,6 +7092,20 @@ const ButtonAnchorBottom = (function() {
             try {
                 var deltaY = Number(e && e.deltaY) || 0;
                 if (deltaY > 0) collapseIfOffscreenBelow();
+                // Hard-stop entering slack (prevents momentum overshoot where possible).
+                if (deltaY > 0) {
+                    var maxSt = getMaxScrollTopBeforeSlack();
+                    if (maxSt !== null) {
+                        var st = scrollEl.scrollTop || 0;
+                        if (st >= maxSt) {
+                            scrollEl.scrollTop = maxSt;
+                            lastScrollTop = scrollEl.scrollTop || 0;
+                            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                            return;
+                        }
+                    }
+                }
                 if (deltaY > 0 && isSlackOnScreen()) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -7042,6 +7135,20 @@ const ButtonAnchorBottom = (function() {
                 lastTouchY = y;
                 // Finger moving up (dy < 0) attempts to scroll down.
                 if (dy < 0) collapseIfOffscreenBelow();
+                // Hard-stop entering slack on touch.
+                if (dy < 0) {
+                    var maxSt = getMaxScrollTopBeforeSlack();
+                    if (maxSt !== null) {
+                        var st = scrollEl.scrollTop || 0;
+                        if (st >= maxSt) {
+                            scrollEl.scrollTop = maxSt;
+                            lastScrollTop = scrollEl.scrollTop || 0;
+                            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                            return;
+                        }
+                    }
+                }
                 if (dy < 0 && isSlackOnScreen()) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -7061,26 +7168,34 @@ const ButtonAnchorBottom = (function() {
             } catch (e2) {}
         }, true);
         
-        // Clicking: click-hold window + temporary slack ON.
-        function holdClickSlack() {
-            // Never show slack for containers that don't overflow.
+        function installGrowthShrinkObserver() {
+            if (mutationObserver) return;
             try {
-                var h = scrollEl.clientHeight || 0;
-                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
-                if (contentNoSlack <= h) {
-                    pendingOffscreenCollapse = false;
-                    applySlackPx(collapsedSlackPx);
-                    return;
-                }
-            } catch (e0) {}
-            
-            clickHoldUntil = Date.now() + clickHoldMs;
-            applySlackPx(expandedSlackPx);
+                lastContentNoSlack = getContentNoSlackPx();
+                mutationObserver = new MutationObserver(function() {
+                    try {
+                        var next = getContentNoSlackPx();
+                        if (next === null) return;
+                        setArmedFromGrowth(next);
+                        maybeEngageOnShrink(next);
+                        maybeDisarmWhenNotOverflowing(next);
+                        lastContentNoSlack = next;
+                    } catch (e0) {}
+                });
+                mutationObserver.observe(scrollEl, {
+                    subtree: true,
+                    childList: true,
+                    attributes: true,
+                    characterData: false
+                });
+            } catch (e) {
+                mutationObserver = null;
+            }
         }
-        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
-        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
-        
-        // Default: slack off.
+
+        installGrowthShrinkObserver();
+
+        // Default: slack off and disarmed until growth is observed.
         applySlackPx(collapsedSlackPx);
         
         var controller = {
@@ -7090,6 +7205,7 @@ const ButtonAnchorBottom = (function() {
                 try { if (unlockTimer) clearTimeout(unlockTimer); } catch (e2) {}
                 try { scrollEl.style.maxHeight = ''; } catch (e3) {}
                 locked = false;
+                isArmed = false;
                 applySlackPx(collapsedSlackPx);
                 try { lastScrollTop = scrollEl.scrollTop || 0; } catch (e4) {}
             }
