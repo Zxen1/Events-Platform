@@ -531,18 +531,8 @@ const App = (function() {
         } catch (e) {}
 
         // Strict behavior lives inside the component.
-        ButtonAnchorBottom.attach(el, {
-          stopDelayMs: 180,
-          clickHoldMs: 250,
-          scrollbarFadeMs: 160,
-          panelSelector: '.admin-panel, .member-panel, .filter-panel'
-        });
-        ButtonAnchorTop.attach(el, {
-          stopDelayMs: 180,
-          clickHoldMs: 250,
-          scrollbarFadeMs: 160,
-          panelSelector: '.admin-panel, .member-panel, .filter-panel'
-        });
+        ButtonAnchorBottom.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        ButtonAnchorTop.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
