@@ -7348,8 +7348,22 @@ const ButtonAnchorTop = (function() {
         function unlock() {
             if (!locked) return;
             scrollEl.style.maxHeight = '';
-            requestCollapseOffscreen();
             locked = false;
+            // When scrolling stops, expand slack if we're not at the top to prevent button movement
+            try {
+                var st = scrollEl.scrollTop || 0;
+                if (st > 0 && currentSlackPx === collapsedSlackPx) {
+                    applySlackPx(expandedSlackPx);
+                    // Collapse after delay if still offscreen
+                    setTimeout(function() {
+                        if (!isSlackOnScreen()) {
+                            requestCollapseOffscreen();
+                        }
+                    }, clickHoldMs);
+                } else {
+                    requestCollapseOffscreen();
+                }
+            } catch (e) {}
         }
         
         function startScrollBurst() {
@@ -7453,25 +7467,6 @@ const ButtonAnchorTop = (function() {
                 }
             } catch (e2) {}
         }, true);
-
-        // Clicking: expand slack on pointerdown to prevent button movement when content above collapses.
-        // Use capture phase so it happens before click handlers that might collapse content.
-        scrollEl.addEventListener('pointerdown', function(e) {
-            try {
-                // Only expand if we're not already at the top (scrollTop > 0)
-                // and the click is within the scroll container
-                var st = scrollEl.scrollTop || 0;
-                if (st > 0 && scrollEl.contains(e.target)) {
-                    applySlackPx(expandedSlackPx);
-                    // Collapse after a delay if still offscreen
-                    setTimeout(function() {
-                        if (!isSlackOnScreen()) {
-                            requestCollapseOffscreen();
-                        }
-                    }, clickHoldMs);
-                }
-            } catch (e0) {}
-        }, { passive: true, capture: true });
 
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
