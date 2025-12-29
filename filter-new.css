@@ -167,7 +167,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 10px calc(var(--gap) + env(safe-area-inset-bottom, 0px));
+  padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;

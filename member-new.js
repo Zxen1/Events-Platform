@@ -60,7 +60,6 @@ const MemberModule = (function() {
     // DOM references
     var panel = null;
     var panelContent = null;
-    var panelBody = null;
     var closeBtn = null;
     var tabButtons = null;
     var tabPanels = null;
@@ -163,7 +162,6 @@ const MemberModule = (function() {
         initHeaderDrag();
         loadStoredSession();
         render();
-        syncPanelBodyTabClass(getActiveMainTabName());
     }
     
     function initHeaderDrag() {
@@ -203,7 +201,6 @@ const MemberModule = (function() {
         if (!panel) return;
         
         panelContent = panel.querySelector('.member-panel-content');
-        panelBody = panel.querySelector('.member-panel-body');
         closeBtn = panel.querySelector('.member-panel-actions-icon-btn--close');
         tabButtons = panel.querySelectorAll('.member-tab-bar-button');
         tabPanels = panel.querySelectorAll('.member-tab-panel');
@@ -261,26 +258,6 @@ const MemberModule = (function() {
         cropperSaveBtn = document.getElementById('member-avatar-cropper-save');
 
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
-    }
-
-    function syncPanelBodyTabClass(activeTabName) {
-        if (!panelBody) return;
-        var isProfile = String(activeTabName || '') === 'profile';
-        panelBody.classList.toggle('member-panel-body--profile', isProfile);
-    }
-
-    function getActiveMainTabName() {
-        var active = 'profile';
-        try {
-            if (!tabButtons) return active;
-            tabButtons.forEach(function(btn) {
-                if (btn && btn.getAttribute && btn.getAttribute('aria-selected') === 'true') {
-                    var n = btn.dataset ? String(btn.dataset.tab || '') : '';
-                    if (n) active = n;
-                }
-            });
-        } catch (e) {}
-        return active;
     }
 
     function bindEvents() {
@@ -1789,10 +1766,6 @@ const MemberModule = (function() {
             panel.hidden = !isActive;
         });
 
-        // Profile tab gets a small bottom padding when scrolling to the end
-        // (independent of ButtonAnchor slack).
-        syncPanelBodyTabClass(tabName);
-        
         // Lazy load Create Post tab content
         if (tabName === 'create') {
             loadFormpicker();

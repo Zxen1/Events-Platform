@@ -69,6 +69,7 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   pointer-events: auto;
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
@@ -127,6 +128,7 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   pointer-events: auto;
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;

@@ -397,7 +397,7 @@
   overflow-x: hidden;
   /* Total interior spacing should add up to 10px (not 20px). */
   padding: 0 10px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
@@ -405,12 +405,6 @@
   gap: 20px;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
-}
-
-/* Profile tab: when scrolling to the end, keep a small bottom breathing room
-   (this is NOT ButtonAnchor slack; it's just base padding). */
-.member-panel-body.member-panel-body--profile {
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Bottom slack is provided by `.panel-bottom-slack` elements. */
