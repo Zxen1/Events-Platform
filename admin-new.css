@@ -28,6 +28,7 @@
    ============================================================================ */
 
 .admin-panel-content {
+  --panel-transition-duration: 0.3s;
   position: absolute;
   left: auto;
   right: 0;

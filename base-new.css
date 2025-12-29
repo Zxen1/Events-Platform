@@ -42,7 +42,6 @@
   --gap: 10px;
   --logo-size: 40px;
   --filter-panel-offset: 0px;
-  --panel-transition-duration: 0.3s;
   --panel-area-height: calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h));
   --media-h: 200px;
   --calendar-scale: 1;

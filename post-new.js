@@ -40,10 +40,11 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   var panelsContainerEl = null;
-  var backgroundEl = null;
   var postPanelEl = null;
+  var postPanelContentEl = null;
   var postListEl = null;
   var recentsPanelEl = null;
+  var recentsPanelContentEl = null;
 
   var currentMode = 'map';
   var lastZoom = null;
@@ -62,6 +63,7 @@ const PostModule = (function() {
     }
 
     ensureBoardsDom();
+    attachButtonAnchors();
     bindAppEvents();
     bindModeButtons();
 
@@ -75,42 +77,45 @@ const PostModule = (function() {
   }
 
   function ensureBoardsDom() {
-    // Background (dim layer)
-    backgroundEl = panelsContainerEl.querySelector('.post-mode-background');
-    if (!backgroundEl) {
-      backgroundEl = document.createElement('div');
-      backgroundEl.className = 'post-mode-background';
-      panelsContainerEl.appendChild(backgroundEl);
+    // Recent panel
+    recentsPanelEl = panelsContainerEl.querySelector('.recents-panel');
+    if (!recentsPanelEl) {
+      recentsPanelEl = document.createElement('aside');
+      recentsPanelEl.className = 'recents-panel';
+      recentsPanelEl.setAttribute('aria-hidden', 'true');
+      recentsPanelEl.setAttribute('role', 'dialog');
+      panelsContainerEl.appendChild(recentsPanelEl);
     }
 
-    // Recent panel (post-prefixed section naming)
-    recentsPanelEl = panelsContainerEl.querySelector('.post-recents-panel');
-    if (!recentsPanelEl) {
-      recentsPanelEl = document.createElement('section');
-      recentsPanelEl.className = 'post-recents-panel post-recents-panel--side-left';
-      recentsPanelEl.setAttribute('aria-hidden', 'true');
-      panelsContainerEl.appendChild(recentsPanelEl);
+    recentsPanelContentEl = recentsPanelEl.querySelector('.recents-panel-content');
+    if (!recentsPanelContentEl) {
+      recentsPanelContentEl = document.createElement('div');
+      recentsPanelContentEl.className = 'recents-panel-content recents-panel-content--side-left recents-panel-content--hidden';
+      recentsPanelEl.appendChild(recentsPanelContentEl);
     }
 
     // Posts panel
     postPanelEl = panelsContainerEl.querySelector('.post-panel');
     if (!postPanelEl) {
-      postPanelEl = document.createElement('section');
-      postPanelEl.className = 'post-panel post-panel--side-right';
+      postPanelEl = document.createElement('aside');
+      postPanelEl.className = 'post-panel';
       postPanelEl.setAttribute('aria-hidden', 'true');
+      postPanelEl.setAttribute('role', 'dialog');
+      panelsContainerEl.appendChild(postPanelEl);
+    }
 
+    postPanelContentEl = postPanelEl.querySelector('.post-panel-content');
+    if (!postPanelContentEl) {
+      postPanelContentEl = document.createElement('div');
+      postPanelContentEl.className = 'post-panel-content post-panel-content--side-left post-panel-content--hidden';
+      postPanelEl.appendChild(postPanelContentEl);
+    }
+
+    postListEl = postPanelContentEl.querySelector('.post-list');
+    if (!postListEl) {
       postListEl = document.createElement('div');
       postListEl.className = 'post-list';
-      postPanelEl.appendChild(postListEl);
-
-      panelsContainerEl.appendChild(postPanelEl);
-    } else {
-      postListEl = postPanelEl.querySelector('.post-list');
-      if (!postListEl) {
-        postListEl = document.createElement('div');
-        postListEl.className = 'post-list';
-        postPanelEl.appendChild(postListEl);
-      }
+      postPanelContentEl.appendChild(postListEl);
     }
   }
 
@@ -207,28 +212,49 @@ const PostModule = (function() {
       return;
     }
 
-    var showBoards = (mode === 'posts' || mode === 'recents');
-    if (backgroundEl) {
-      backgroundEl.classList.toggle('post-mode-background--visible', showBoards);
-    }
-
-    if (postPanelEl) {
+    if (postPanelEl && postPanelContentEl) {
       var showPosts = (mode === 'posts');
-      postPanelEl.classList.toggle('post-panel--visible', showPosts);
-      postPanelEl.setAttribute('aria-hidden', showPosts ? 'false' : 'true');
+      togglePanel(postPanelEl, postPanelContentEl, 'post', showPosts);
       if (showPosts) {
         renderPostsEmptyState();
       }
     }
 
-    if (recentsPanelEl) {
+    if (recentsPanelEl && recentsPanelContentEl) {
       var showRecents = (mode === 'recents');
-      recentsPanelEl.classList.toggle('post-recents-panel--visible', showRecents);
-      recentsPanelEl.setAttribute('aria-hidden', showRecents ? 'false' : 'true');
+      togglePanel(recentsPanelEl, recentsPanelContentEl, 'recents', showRecents);
       if (showRecents) {
         renderRecentsEmptyState();
       }
     }
+  }
+
+  function togglePanel(panelEl, contentEl, panelKey, shouldShow) {
+    if (!panelEl || !contentEl) return;
+
+    var panelShowClass = panelKey + '-panel--show';
+    var visibleClass = panelKey + '-panel-content--visible';
+    var hiddenClass = panelKey + '-panel-content--hidden';
+
+    if (shouldShow) {
+      // Show
+      panelEl.classList.add(panelShowClass);
+      panelEl.setAttribute('aria-hidden', 'false');
+      contentEl.classList.remove(hiddenClass);
+      contentEl.classList.add(visibleClass);
+      return;
+    }
+
+    // Hide (slide out, then remove from display)
+    contentEl.classList.remove(visibleClass);
+    contentEl.classList.add(hiddenClass);
+    panelEl.setAttribute('aria-hidden', 'true');
+
+    contentEl.addEventListener('transitionend', function handler(e) {
+      if (e && e.target !== contentEl) return;
+      contentEl.removeEventListener('transitionend', handler);
+      panelEl.classList.remove(panelShowClass);
+    }, { once: true });
   }
 
   function forceMapMode() {
@@ -321,22 +347,22 @@ const PostModule = (function() {
   }
 
   function renderRecentsEmptyState() {
-    if (!recentsPanelEl) return;
+    if (!recentsPanelContentEl) return;
 
     // Always empty (no posts exist), but show the login reminder (like live site).
-    recentsPanelEl.innerHTML = '';
+    recentsPanelContentEl.innerHTML = '';
 
     var reminderWrap = document.createElement('div');
-    reminderWrap.className = 'post-recents-panel-reminder';
+    reminderWrap.className = 'recents-panel-reminder';
 
     var reminderImg = document.createElement('img');
     reminderImg.src = 'assets/monkeys/Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png';
     reminderImg.alt = 'Cute little monkey in red cape pointing up';
-    reminderImg.className = 'post-recents-panel-reminder-image';
+    reminderImg.className = 'recents-panel-reminder-image';
     reminderWrap.appendChild(reminderImg);
 
     var reminderMsg = document.createElement('p');
-    reminderMsg.className = 'post-recents-panel-reminder-text';
+    reminderMsg.className = 'recents-panel-reminder-text';
     reminderMsg.dataset.messageKey = 'msg_member_login_reminder';
     reminderMsg.textContent = '';
     reminderWrap.appendChild(reminderMsg);
@@ -351,7 +377,26 @@ const PostModule = (function() {
       });
     }
 
-    recentsPanelEl.appendChild(reminderWrap);
+    recentsPanelContentEl.appendChild(reminderWrap);
+  }
+
+  /* --------------------------------------------------------------------------
+     BUTTON ANCHORS (Anti-jank)
+     Attach to scroll containers so clicked controls don't "fly away"
+     -------------------------------------------------------------------------- */
+
+  function attachButtonAnchors() {
+    if (!postPanelContentEl || !recentsPanelContentEl) return;
+    if (!window.ButtonAnchorBottom || !window.ButtonAnchorTop) {
+      throw new Error('[Post] ButtonAnchorBottom and ButtonAnchorTop are required (components-new.js).');
+    }
+
+    // Same options used elsewhere (keep site-wide feel consistent).
+    var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
+    ButtonAnchorBottom.attach(postPanelContentEl, options);
+    ButtonAnchorTop.attach(postPanelContentEl, options);
+    ButtonAnchorBottom.attach(recentsPanelContentEl, options);
+    ButtonAnchorTop.attach(recentsPanelContentEl, options);
   }
 
   function getFilterSummaryText() {

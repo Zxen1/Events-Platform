@@ -22,6 +22,7 @@
 
 /* Panel content (sliding drawer) */
 .filter-panel-content {
+  --panel-transition-duration: 0.3s;
   position: absolute;
   left: 0;
   top: calc(var(--header-h) + var(--safe-top));
