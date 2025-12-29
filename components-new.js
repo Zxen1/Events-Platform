@@ -64,6 +64,54 @@ const ImageAddTileComponent = (function(){
 
 const MenuManager = (function(){
     var openMenus = [];
+
+    // Allow wheel scrolling inside scrollable dropdown menus without bubbling to panel scroll
+    // containers that may have ButtonAnchor wheel guards.
+    function installDropdownWheelGuard(menuElement) {
+        try {
+            if (!menuElement || typeof menuElement.querySelectorAll !== 'function') return;
+            var dropdowns = menuElement.querySelectorAll('.fieldset-menu-options');
+            if (!dropdowns || !dropdowns.length) return;
+
+            dropdowns.forEach(function(dropdown) {
+                if (!dropdown || !dropdown.addEventListener) return;
+
+                // Prevent double-binding
+                if (dropdown.__wheelGuardInstalled) return;
+                dropdown.__wheelGuardInstalled = true;
+
+                dropdown.addEventListener('wheel', function(e) {
+                    try {
+                        // Only matter when the menu is open
+                        if (typeof menuElement.__menuIsOpen === 'function' && !menuElement.__menuIsOpen()) return;
+
+                        var dy = Number(e && e.deltaY) || 0;
+                        if (!dy) return;
+
+                        // If dropdown isn't scrollable, don't interfere.
+                        var canScroll = (dropdown.scrollHeight || 0) > ((dropdown.clientHeight || 0) + 1);
+                        if (!canScroll) return;
+
+                        var st = Number(dropdown.scrollTop) || 0;
+                        var ch = Number(dropdown.clientHeight) || 0;
+                        var sh = Number(dropdown.scrollHeight) || 0;
+                        var atTop = st <= 0;
+                        var atBottom = (st + ch) >= (sh - 1);
+
+                        // If user is trying to scroll past the bounds, allow bubbling so the panel can scroll.
+                        if ((dy < 0 && atTop) || (dy > 0 && atBottom)) return;
+
+                        // Otherwise, keep the wheel event inside the dropdown so anchors/panels don't block it.
+                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    } catch (e0) {
+                        // ignore
+                    }
+                }, { passive: true });
+            });
+        } catch (e1) {
+            // ignore
+        }
+    }
     
     function isMenuOpen(menu) {
         if (!menu) return false;
@@ -96,6 +144,7 @@ const MenuManager = (function(){
         if (openMenus.indexOf(menuElement) === -1) {
             openMenus.push(menuElement);
         }
+        installDropdownWheelGuard(menuElement);
     }
     
     // Close all menus when clicking outside
