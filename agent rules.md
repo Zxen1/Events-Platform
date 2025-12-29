@@ -85,6 +85,7 @@ Website loading speed is critical. Any changes that slow down initial page load 
 1. **Never edit any SQL export/backup/dump files in the workspace** (they are historical snapshots and may be needed for recovery).
 2. **Never provide SQL as a “file” for the user to download/import**.
 3. When SQL is needed, **paste the SQL directly in chat** so Paul can run it themselves (Paul is the only one with database access).
+4. **Never create new `.sql` files in the workspace** (draft SQL must live only in chat).
 
 ### ⚠️ CRITICAL: DB SPLIT SQL MUST BE THREE-SCHEMA SAFE ⚠️
 
