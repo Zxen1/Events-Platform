@@ -3587,6 +3587,11 @@ const MemberModule = (function() {
     }
 
     function isSupporterPaymentApprovedForTesting() {
+        // TEMPORARY: Allow all registrations without payment for testing
+        // TODO: Revert this when payment gateway is ready
+        return true;
+        
+        /* ORIGINAL CODE - uncomment when done testing:
         try {
             // If payments are enabled, we require a real gateway success signal (not implemented yet).
             // This prevents uploads/emails/DB rows until payment is actually wired.
@@ -3599,6 +3604,7 @@ const MemberModule = (function() {
         } catch (e) {
             return false;
         }
+        */
     }
 
     function showSupporterPaymentRequiredMessage() {
