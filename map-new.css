@@ -78,8 +78,7 @@
 .map-container {
   position: absolute;
   inset: 0;
-  /* Show immediately; do not hide map behind a delayed fade-in. */
-  opacity: 1;
+  opacity: 0;
 }
 
 .map-area {

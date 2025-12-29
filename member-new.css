@@ -782,6 +782,10 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  /* Ensure the tab panel is at least as tall as the scroll container.
+     This ensures any bottom slack/spacer remains scrollable even when the tab content is short
+     (e.g. logged-in Profile). */
+  min-height: 100%;
 }
 
 /* ============================================================================
