@@ -7087,58 +7087,13 @@ const ButtonAnchorBottom = (function() {
             } catch (e2) {}
         }, true);
         
-        // Anchor arming must happen BEFORE a collapse-induced shrink, otherwise the jump already happened.
-        // We pre-arm on interaction, but auto-cancel quickly unless an actual shrink is detected.
-        function getContentNoSlackHeight() {
-            try { return (scrollEl.scrollHeight || 0) - (currentSlackPx || 0); } catch (e) { return 0; }
-        }
-        
-        var armWatchUntil = 0;
-        var armWatchRaf = 0;
-        var armBaseClientH = 0;
-        var armBaseContentH = 0;
-        
-        function stopArmWatch() {
-            armWatchUntil = 0;
-            if (armWatchRaf) {
-                try { cancelAnimationFrame(armWatchRaf); } catch (e) {}
-            }
-            armWatchRaf = 0;
-        }
-        
-        function cancelIfNoShrink() {
-            // If we never saw a shrink, undo slack immediately (normal expansions should not trigger the anchor).
-            stopArmWatch();
-            clickHoldUntil = 0;
-            pendingOffscreenCollapse = false;
-            applySlackPx(collapsedSlackPx);
-        }
-        
-        function armWatchTick() {
-            armWatchRaf = 0;
-            if (!armWatchUntil || Date.now() > armWatchUntil) {
-                cancelIfNoShrink();
-                return;
-            }
-            
-            var curClientH = scrollEl.clientHeight || 0;
-            var curContentH = getContentNoSlackHeight();
-            
-            // If something actually SHRANK (tolerance 1px), keep slack armed for the hold window.
-            if ((armBaseClientH > 0 && curClientH > 0 && curClientH < (armBaseClientH - 1)) ||
-                (armBaseContentH > 0 && curContentH > 0 && curContentH < (armBaseContentH - 1))) {
-                stopArmWatch();
-                return;
-            }
-            
-            armWatchRaf = requestAnimationFrame(armWatchTick);
-        }
-        
-        function armOnInteraction() {
+        // Clicking: click-hold window + temporary slack ON.
+        // This must arm BEFORE collapse-induced shrink so the button doesn't "fly away".
+        function holdClickSlack() {
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
-                var contentNoSlack = getContentNoSlackHeight();
+                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
                 if (contentNoSlack <= h) {
                     pendingOffscreenCollapse = false;
                     applySlackPx(collapsedSlackPx);
@@ -7146,18 +7101,11 @@ const ButtonAnchorBottom = (function() {
                 }
             } catch (e0) {}
             
-            // Pre-arm immediately (prevents the jump), but watch for a real shrink to justify it.
             clickHoldUntil = Date.now() + clickHoldMs;
             applySlackPx(expandedSlackPx);
-            
-            armBaseClientH = scrollEl.clientHeight || 0;
-            armBaseContentH = getContentNoSlackHeight();
-            armWatchUntil = Date.now() + clickHoldMs;
-            if (!armWatchRaf) armWatchRaf = requestAnimationFrame(armWatchTick);
         }
-        
-        scrollEl.addEventListener('pointerdown', armOnInteraction, { passive: true, capture: true });
-        scrollEl.addEventListener('click', armOnInteraction, { passive: true, capture: true });
+        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
+        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
         
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
