@@ -5556,11 +5556,15 @@ const SystemImagePickerComponent = (function(){
     }
     
     // Build system image picker dropdown menu (matches menu-test.html design)
-    // options: { onSelect, databaseValue } - databaseValue is checked against loaded images
+    // options:
+    //   - onSelect(imagePath)
+    //   - databaseValue (filename or full path)
+    //   - folderPath (optional override; uses this folder instead of folder_system_images)
     function buildPicker(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var databaseValue = options.databaseValue || null;
+        var folderPathOverride = options.folderPath || null;
         var currentImage = null; // Only set if databaseValue exists in loaded images
         
         var menu = document.createElement('div');
@@ -5609,15 +5613,16 @@ const SystemImagePickerComponent = (function(){
         
         // Set button if database value exists (NO API CALL - just construct URL from folder + filename)
         // Ensure folder and system_images are loaded from settings if not already set
-        var loadPromise = (imageFolder && systemImagesData) ? Promise.resolve() : loadFolderFromSettings();
+        var loadPromise = (systemImagesData && (folderPathOverride || imageFolder)) ? Promise.resolve() : loadFolderFromSettings();
         loadPromise.then(function() {
             if (databaseValue) {
                 var databaseFilename = getFilename(databaseValue);
                 var fullImageUrl = null;
                 
-                if (imageFolder) {
+                var effectiveFolder = folderPathOverride || imageFolder;
+                if (effectiveFolder) {
                     // Construct URL from folder + filename (no API call needed for button display)
-                    var folder = imageFolder.endsWith('/') ? imageFolder : imageFolder + '/';
+                    var folder = effectiveFolder.endsWith('/') ? effectiveFolder : effectiveFolder + '/';
                     fullImageUrl = folder + databaseFilename;
                 }
                 
@@ -5693,19 +5698,20 @@ const SystemImagePickerComponent = (function(){
                 applyOpenState(true);
                 
                 // Show database images instantly (menu is now open and interactive)
+                var effectiveFolder2 = folderPathOverride || imageFolder;
                 if (!systemImagesBasket) {
                     loadFolderFromSettings().then(function() {
                         // Update with database images now that they're loaded
-                        var updatedDbImages = getDatabaseImages(imageFolder);
+                        var updatedDbImages = getDatabaseImages(effectiveFolder2);
                         renderImageOptions(updatedDbImages, true);
                     });
                 } else {
-                    var dbImages = getDatabaseImages(imageFolder);
+                    var dbImages = getDatabaseImages(effectiveFolder2);
                     renderImageOptions(dbImages, true);
                 }
                 
                 // Load API in background and append new images (always runs)
-                loadImagesFromFolder(null, function(updatedImageList) {
+                loadImagesFromFolder(effectiveFolder2, function(updatedImageList) {
                     renderImageOptions(updatedImageList, false);
                 });
             }

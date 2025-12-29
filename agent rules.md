@@ -122,6 +122,22 @@ This project uses split storage schemas:
 3. If schema: include the required `funmapco_db` **view updates** in the same chat message.
 4. If data-only: do **not** claim view changes are required.
 
+---
+
+## ⚠️ CRITICAL: ADMIN SETTINGS ID BATCHING (phpMyAdmin “folders”) ⚠️
+
+**Purpose:** Paul uses ID ranges as “subfolders” inside phpMyAdmin for the `admin_settings` table.
+
+**Rules (admin_settings only):**
+1. **Folder settings** (`setting_key` starts with `folder_`) must live in the **100s**.
+2. **System image slot settings** (keys used as `system_images.<key>` in the frontend) must live in the **200s**.
+3. **Misc settings** can live outside those ranges (e.g. 1–99, 300+).
+4. **Never assume IDs** in code. All code must reference `admin_settings` by **`setting_key`**, not by numeric `id`.
+5. When adding new `admin_settings` rows, the agent must:
+   - Check the latest SQL dump for the current highest used IDs in the 100s/200s blocks
+   - Choose the next available IDs without collisions
+   - Provide SQL in chat (never as files)
+
 **How Database Changes Work:**
 1. AI agent provides SQL statements (SELECT, UPDATE, INSERT, etc.)
 2. User copies the SQL and runs it themselves in their database tool (phpMyAdmin, MySQL client, etc.)

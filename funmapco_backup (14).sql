@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 29, 2025 at 01:46 PM
+-- Generation Time: Dec 29, 2025 at 02:43 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -94,7 +94,7 @@ CREATE TABLE `members` (
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
   `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `recents` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `country` varchar(2) DEFAULT NULL,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
@@ -105,7 +105,7 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recents`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
+INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
 (1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21');
 
 -- --------------------------------------------------------
@@ -428,7 +428,7 @@ CREATE TABLE `admins` (
 ,`map_lighting` varchar(20)
 ,`map_style` varchar(20)
 ,`favorites` text
-,`recents` text
+,`recent` text
 ,`country` varchar(2)
 ,`backup_json` longtext
 ,`created_at` datetime
@@ -781,7 +781,7 @@ CREATE TABLE `members` (
 ,`map_lighting` varchar(20)
 ,`map_style` varchar(20)
 ,`favorites` text
-,`recents` text
+,`recent` text
 ,`country` varchar(2)
 ,`backup_json` longtext
 ,`created_at` datetime
@@ -1018,7 +1018,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `admins`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`email` AS `email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recents` AS `recents`, `a`.`country` AS `country`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuqrucdozc`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`email` AS `email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recent` AS `recent`, `a`.`country` AS `country`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
 
 -- --------------------------------------------------------
 
@@ -1189,7 +1189,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `members`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`email` AS `email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recents` AS `recents`, `m`.`country` AS `country`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuqrucdozc`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`email` AS `email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recent` AS `recent`, `m`.`country` AS `country`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
 
 -- --------------------------------------------------------
 
@@ -1320,7 +1320,7 @@ CREATE TABLE `admins` (
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
   `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `recents` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `country` varchar(2) DEFAULT NULL,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
@@ -1331,7 +1331,7 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recents`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
+INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
 (1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'night', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, '2025-10-22 01:00:41', '2025-12-28 22:25:26');
 
 -- --------------------------------------------------------
@@ -1514,6 +1514,8 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (108, 'folder_site_avatars', 'https://cdn.funmap.com/site-avatars', 'string', 'Folder path for site/library avatars', '2025-12-21 11:53:19', '2025-12-29 02:44:01'),
 (109, 'folder_site_images', 'https://cdn.funmap.com/site-images', 'string', 'Folder path for site-generated images', '2025-12-21 11:53:19', '2025-12-29 02:44:01'),
 (110, 'folder_system_images', 'https://cdn.funmap.com/system-images', 'string', 'Folder path for admin message category icons', '2025-11-13 16:17:10', '2025-12-29 02:44:01'),
+(111, 'folder_post_system_images', '', 'string', 'Folder path for Post system images', '2025-12-29 03:38:23', '2025-12-29 03:39:17'),
+(112, 'folder_recent_system_images', '', 'string', 'Folder path for Recent system images', '2025-12-29 03:38:23', '2025-12-29 03:39:17'),
 (200, 'big_logo', 'funmap welcome message 2025-12-10c.webp', 'string', 'Path to big logo', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (201, 'big_map_card_pill', '225x60-pill-2f3b73.webp', 'string', 'Path to big map card pill image (225×60px)', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (202, 'favicon', 'favicon.ico', 'string', 'Path to favicon', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
@@ -1536,7 +1538,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (219, 'icon_map', 'icon-map.svg', 'string', 'Map mode button icon filename (location pin icon)', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (220, 'icon_member', 'icon-member.svg', 'string', 'Header member button icon filename', '2025-12-24 23:26:45', '2025-12-29 02:44:01'),
 (221, 'icon_posts', 'icon-posts.svg', 'string', 'Posts mode button icon filename (list icon)', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
-(222, 'icon_recents', 'icon-recents.svg', 'string', 'Recents mode button icon filename (clock icon)', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
+(222, 'icon_recent', 'icon-recents.svg', 'string', 'Recent mode button icon filename (clock icon)', '2025-12-21 16:28:13', '2025-12-29 03:38:23'),
 (223, 'icon_save', 'icon-save.svg', 'string', 'Panel save icon filename', '2025-12-25 00:27:58', '2025-12-29 02:44:01'),
 (224, 'marker_cluster_icon', 'red-balloon-40.png', 'string', 'Path to marker cluster/balloon icon', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (225, 'msg_category_admin_icon', 'admin-messages.svg', 'string', 'Path to admin messages category icon', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
@@ -1547,6 +1549,8 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (230, 'multi_post_icon', 'multi-post-icon-50.webp', 'string', 'Path to multi-post icon image (30×30px small / 50×50px big)', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (231, 'small_logo', 'earth toy.png', 'string', 'Path to small logo', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (232, 'small_map_card_pill', '150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
+(233, 'post_panel_empty_image', '', 'string', 'System image filename for Post Empty Image (uses folder_post_system_images)', '2025-12-29 03:38:23', '2025-12-29 03:39:17'),
+(234, 'recent_panel_footer_image', '', 'string', 'System image filename for Recent Footer Image (uses folder_recent_system_images)', '2025-12-29 03:38:23', '2025-12-29 03:42:35'),
 (300, 'map_lighting', 'night', 'string', 'Mapbox lighting preset: dawn, day, dusk, or night', '2025-12-23 02:44:08', '2025-12-29 02:44:01'),
 (301, 'map_style', 'standard', 'string', 'Mapbox style: standard or standard-satellite', '2025-12-23 02:44:08', '2025-12-29 02:44:01');
 

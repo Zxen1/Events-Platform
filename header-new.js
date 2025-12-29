@@ -148,8 +148,8 @@ const HeaderModule = (function() {
         }
         
         // Mode switch icons (NO FALLBACKS)
-        if (systemImages.icon_recents) {
-            setHeaderCssVar('--header-icon-recents', window.App.getImageUrl('systemImages', systemImages.icon_recents));
+        if (systemImages.icon_recent) {
+            setHeaderCssVar('--header-icon-recent', window.App.getImageUrl('systemImages', systemImages.icon_recent));
         }
         if (systemImages.icon_posts) {
             setHeaderCssVar('--header-icon-posts', window.App.getImageUrl('systemImages', systemImages.icon_posts));

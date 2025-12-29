@@ -53,11 +53,11 @@
       <span class="header-filter-button-icon"></span>
     </button>
     
-    <!-- Mode switch (Recents / Posts / Map) -->
+    <!-- Mode switch (Recent / Posts / Map) -->
     <nav class="header-modeswitch" aria-label="View mode">
-      <button class="header-modeswitch-button" type="button" data-mode="recents">
-        <span class="header-modeswitch-button-icon header-modeswitch-button-icon--recents" aria-hidden="true"></span>
-        <span class="header-modeswitch-button-text">Recents</span>
+      <button class="header-modeswitch-button" type="button" data-mode="recent">
+        <span class="header-modeswitch-button-icon header-modeswitch-button-icon--recent" aria-hidden="true"></span>
+        <span class="header-modeswitch-button-text">Recent</span>
       </button>
       <button class="header-modeswitch-button header-modeswitch-button--bordered" type="button" data-mode="posts">
         <span class="header-modeswitch-button-icon header-modeswitch-button-icon--posts" aria-hidden="true"></span>
@@ -192,11 +192,11 @@
   </main>
 
   <!-- ========================================================================
-       SECTION 4: POST PANELS (includes Recents)
+      SECTION 4: POST PANELS (includes Recent)
        File: post.js, post.css
        ======================================================================== -->
   <div class="post-mode-panels">
-    <!-- Post panel and recents panel go here -->
+    <!-- Post panel and recent panel go here -->
   </div>
 
   <!-- ========================================================================
@@ -311,8 +311,8 @@
                   <div id="adminIconFilterPicker" data-setting-key="icon_filter"></div>
                 </div>
                 <div class="admin-settings-field admin-settings-field--imagepicker">
-                  <label class="admin-settings-field-label">Header Icon: Recents</label>
-                  <div id="adminIconRecentsPicker" data-setting-key="icon_recents"></div>
+                  <label class="admin-settings-field-label">Header Icon: Recent</label>
+                  <div id="adminIconRecentPicker" data-setting-key="icon_recent"></div>
                 </div>
                 <div class="admin-settings-field admin-settings-field--imagepicker">
                   <label class="admin-settings-field-label">Header Icon: Posts</label>
@@ -386,6 +386,14 @@
                   <label class="admin-settings-field-label">Icon: Favourites (star)</label>
                   <div id="adminIconFavouritesPicker" data-setting-key="icon_favourites"></div>
                 </div>
+                <div class="admin-settings-field admin-settings-field--imagepicker">
+                  <label class="admin-settings-field-label">Post Empty Image</label>
+                  <div id="adminPostPanelEmptyImagePicker" data-setting-key="post_panel_empty_image"></div>
+                </div>
+                <div class="admin-settings-field admin-settings-field--imagepicker">
+                  <label class="admin-settings-field-label">Recent Bottom Image</label>
+                  <div id="adminRecentPanelEmptyImagePicker" data-setting-key="recent_panel_footer_image"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -428,6 +436,14 @@
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderPostImages">Post Images Folder</label>
                   <input type="text" class="admin-settings-field-input" id="adminFolderPostImages" data-setting-key="folder_post_images" autocomplete="off" placeholder="post-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderPostSystemImages">Post System Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderPostSystemImages" data-setting-key="folder_post_system_images" autocomplete="off" placeholder="system-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderRecentSystemImages">Recent System Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderRecentSystemImages" data-setting-key="folder_recent_system_images" autocomplete="off" placeholder="system-images/" />
                 </div>
                 <div class="admin-settings-field">
                   <label class="admin-settings-field-label" for="adminFolderSiteAvatars">Site Avatars Folder</label>

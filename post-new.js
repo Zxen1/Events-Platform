@@ -17,7 +17,7 @@
      - Images gallery
    - Share button
    - Favourite star
-   - Mascot illustration (recents panel)
+   - Mascot illustration (recent panel)
    
    CONTAINERS:
    - (TBD - need to name all post containers)
@@ -43,8 +43,8 @@ const PostModule = (function() {
   var postPanelEl = null;
   var postPanelContentEl = null;
   var postListEl = null;
-  var recentsPanelEl = null;
-  var recentsPanelContentEl = null;
+  var recentPanelEl = null;
+  var recentPanelContentEl = null;
 
   var currentMode = 'map';
   var lastZoom = null;
@@ -55,7 +55,7 @@ const PostModule = (function() {
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
     post: { token: 0, hideHandler: null, hideTimeoutId: 0 },
-    recents: { token: 0, hideHandler: null, hideTimeoutId: 0 }
+    recent: { token: 0, hideHandler: null, hideTimeoutId: 0 }
   };
 
   /* --------------------------------------------------------------------------
@@ -84,20 +84,20 @@ const PostModule = (function() {
 
   function ensurePanelsDom() {
     // Recent panel
-    recentsPanelEl = panelsContainerEl.querySelector('.recents-panel');
-    if (!recentsPanelEl) {
-      recentsPanelEl = document.createElement('aside');
-      recentsPanelEl.className = 'recents-panel';
-      recentsPanelEl.setAttribute('aria-hidden', 'true');
-      recentsPanelEl.setAttribute('role', 'dialog');
-      panelsContainerEl.appendChild(recentsPanelEl);
+    recentPanelEl = panelsContainerEl.querySelector('.recent-panel');
+    if (!recentPanelEl) {
+      recentPanelEl = document.createElement('aside');
+      recentPanelEl.className = 'recent-panel';
+      recentPanelEl.setAttribute('aria-hidden', 'true');
+      recentPanelEl.setAttribute('role', 'dialog');
+      panelsContainerEl.appendChild(recentPanelEl);
     }
 
-    recentsPanelContentEl = recentsPanelEl.querySelector('.recents-panel-content');
-    if (!recentsPanelContentEl) {
-      recentsPanelContentEl = document.createElement('div');
-      recentsPanelContentEl.className = 'recents-panel-content recents-panel-content--side-left recents-panel-content--hidden';
-      recentsPanelEl.appendChild(recentsPanelContentEl);
+    recentPanelContentEl = recentPanelEl.querySelector('.recent-panel-content');
+    if (!recentPanelContentEl) {
+      recentPanelContentEl = document.createElement('div');
+      recentPanelContentEl.className = 'recent-panel-content recent-panel-content--side-left recent-panel-content--hidden';
+      recentPanelEl.appendChild(recentPanelContentEl);
     }
 
     // Posts panel
@@ -162,7 +162,7 @@ const PostModule = (function() {
     modeButtonsBound = true;
 
     var postsBtn = getModeButton('posts');
-    var recentsBtn = getModeButton('recents');
+    var recentBtn = getModeButton('recent');
     var mapBtn = getModeButton('map');
 
     // Posts lockout + "toggle back to map" behavior (capture so HeaderModule doesn't eat it).
@@ -193,9 +193,9 @@ const PostModule = (function() {
     }
 
     // Recent is always allowed, but clicking when already active returns to map (like live site).
-    if (recentsBtn && mapBtn) {
-      recentsBtn.addEventListener('click', function(e) {
-        if (currentMode !== 'recents') return;
+    if (recentBtn && mapBtn) {
+      recentBtn.addEventListener('click', function(e) {
+        if (currentMode !== 'recent') return;
         if (e) {
           e.preventDefault();
           e.stopPropagation();
@@ -226,11 +226,11 @@ const PostModule = (function() {
       }
     }
 
-    if (recentsPanelEl && recentsPanelContentEl) {
-      var showRecents = (mode === 'recents');
-      togglePanel(recentsPanelEl, recentsPanelContentEl, 'recents', showRecents);
-      if (showRecents) {
-        renderRecentsEmptyState();
+    if (recentPanelEl && recentPanelContentEl) {
+      var showRecent = (mode === 'recent');
+      togglePanel(recentPanelEl, recentPanelContentEl, 'recent', showRecent);
+      if (showRecent) {
+        renderRecentEmptyState();
       }
     }
   }
@@ -243,7 +243,7 @@ const PostModule = (function() {
     var hiddenClass = panelKey + '-panel-content--hidden';
     var m = panelMotion[panelKey];
     if (!m) {
-      // Should never happen (only "post" and "recents"), but keep it safe.
+      // Should never happen (only "post" and "recent"), but keep it safe.
       m = { token: 0, hideHandler: null, hideTimeoutId: 0 };
       panelMotion[panelKey] = m;
     }
@@ -400,9 +400,9 @@ const PostModule = (function() {
     wrap.appendChild(summaryCopy);
 
     var img = document.createElement('img');
-    img.src = 'assets/monkeys/Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png';
-    img.alt = 'Cute little monkey in red cape pointing up';
+    img.alt = 'Posts empty state image';
     img.className = 'post-panel-empty-image';
+    applySystemImage(img, 'postSystemImages', 'post_panel_empty_image');
     wrap.appendChild(img);
 
     var msg = document.createElement('p');
@@ -425,23 +425,23 @@ const PostModule = (function() {
     postListEl.appendChild(wrap);
   }
 
-  function renderRecentsEmptyState() {
-    if (!recentsPanelContentEl) return;
+  function renderRecentEmptyState() {
+    if (!recentPanelContentEl) return;
 
     // Always empty (no posts exist), but show the login reminder (like live site).
-    recentsPanelContentEl.innerHTML = '';
+    recentPanelContentEl.innerHTML = '';
 
     var reminderWrap = document.createElement('div');
-    reminderWrap.className = 'recents-panel-reminder';
+    reminderWrap.className = 'recent-panel-reminder';
 
     var reminderImg = document.createElement('img');
-    reminderImg.src = 'assets/monkeys/Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png';
-    reminderImg.alt = 'Cute little monkey in red cape pointing up';
-    reminderImg.className = 'recents-panel-reminder-image';
+    reminderImg.alt = 'Recents reminder image';
+    reminderImg.className = 'recent-panel-reminder-image';
+    applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image');
     reminderWrap.appendChild(reminderImg);
 
     var reminderMsg = document.createElement('p');
-    reminderMsg.className = 'recents-panel-reminder-text';
+    reminderMsg.className = 'recent-panel-reminder-text';
     reminderMsg.dataset.messageKey = 'msg_member_login_reminder';
     reminderMsg.textContent = '';
     reminderWrap.appendChild(reminderMsg);
@@ -456,7 +456,7 @@ const PostModule = (function() {
       });
     }
 
-    recentsPanelContentEl.appendChild(reminderWrap);
+    recentPanelContentEl.appendChild(reminderWrap);
   }
 
   /* --------------------------------------------------------------------------
@@ -465,7 +465,7 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function attachButtonAnchors() {
-    if (!postPanelContentEl || !recentsPanelContentEl) return;
+    if (!postPanelContentEl || !recentPanelContentEl) return;
     if (!window.ButtonAnchorBottom || !window.ButtonAnchorTop) {
       throw new Error('[Post] ButtonAnchorBottom and ButtonAnchorTop are required (components-new.js).');
     }
@@ -474,8 +474,8 @@ const PostModule = (function() {
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
     ButtonAnchorBottom.attach(postPanelContentEl, options);
     ButtonAnchorTop.attach(postPanelContentEl, options);
-    ButtonAnchorBottom.attach(recentsPanelContentEl, options);
-    ButtonAnchorTop.attach(recentsPanelContentEl, options);
+    ButtonAnchorBottom.attach(recentPanelContentEl, options);
+    ButtonAnchorTop.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
@@ -486,6 +486,30 @@ const PostModule = (function() {
     } catch (e) {
       return '';
     }
+  }
+
+  function applySystemImage(imgEl, folderKey, systemImageKey) {
+    if (!imgEl) return;
+    if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') {
+      throw new Error('[Post] App.getState and App.getImageUrl are required to load system images.');
+    }
+
+    var sys = App.getState('system_images') || {};
+    var filename = sys && sys[systemImageKey] ? String(sys[systemImageKey]) : '';
+    if (!filename) {
+      imgEl.dataset.missingSystemImageKey = systemImageKey;
+      console.error('[Post] Missing system image setting: ' + systemImageKey);
+      return;
+    }
+
+    var url = App.getImageUrl(folderKey, filename);
+    if (!url) {
+      imgEl.dataset.missingSystemImageUrl = systemImageKey;
+      console.error('[Post] Empty system image URL for: ' + systemImageKey);
+      return;
+    }
+
+    imgEl.src = url;
   }
 
   /* --------------------------------------------------------------------------

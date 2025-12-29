@@ -55,17 +55,17 @@ try {
     // IMPORTANT:
     // - Database schemas evolve; do not select columns that may not exist (mysqli->prepare will fail).
     // - Keep this SELECT limited to columns that exist in current funmapco_db views/tables (see latest dump).
-    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recents, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
       $avatarCol = 'avatar_file';
     } else {
-      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recents, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
       $stmt = $db->prepare($sqlWithAvatarUrl);
       if ($stmt) {
         $avatarCol = 'avatar_url';
       } else {
-        $sqlNoAvatar = "SELECT id, email, username, username_key, password_hash, map_lighting, map_style, favorites, recents, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+        $sqlNoAvatar = "SELECT id, email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $db->prepare($sqlNoAvatar);
         if (!$stmt) return null;
       }
@@ -94,7 +94,7 @@ try {
         'map_style' => isset($row['map_style']) ? (string)$row['map_style'] : null,
         'timezone' => null,
         'favorites' => isset($row['favorites']) ? (string)$row['favorites'] : null,
-        'recents' => isset($row['recents']) ? (string)$row['recents'] : null
+        'recent' => isset($row['recent']) ? (string)$row['recent'] : null
       ]
     ];
   };

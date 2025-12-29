@@ -2505,7 +2505,7 @@ const AdminModule = (function() {
         initImagePicker('adminSmallLogoPicker', 'small_logo');
         initImagePicker('adminFaviconPicker', 'favicon');
         initImagePicker('adminIconFilterPicker', 'icon_filter');
-        initImagePicker('adminIconRecentsPicker', 'icon_recents');
+        initImagePicker('adminIconRecentPicker', 'icon_recent');
         initImagePicker('adminIconPostsPicker', 'icon_posts');
         initImagePicker('adminIconMapPicker', 'icon_map');
         initImagePicker('adminIconMemberPicker', 'icon_member');
@@ -2524,6 +2524,8 @@ const AdminModule = (function() {
         initImagePicker('adminIconClearPicker', 'icon_clear');
         initImagePicker('adminIconAddImagePicker', 'icon_add_image');
         initImagePicker('adminIconFavouritesPicker', 'icon_favourites');
+        initImagePicker('adminPostPanelEmptyImagePicker', 'post_panel_empty_image', 'folder_post_system_images');
+        initImagePicker('adminRecentPanelEmptyImagePicker', 'recent_panel_footer_image', 'folder_recent_system_images');
         
         // Initialize currency picker (using CurrencyComponent from components file)
         initCurrencyPicker('adminCurrencyPicker', 'website_currency');
@@ -2568,7 +2570,7 @@ const AdminModule = (function() {
         apiContainer.appendChild(explanation);
     }
     
-    function initImagePicker(containerId, settingKey) {
+    function initImagePicker(containerId, settingKey, folderSettingKey) {
         var container = document.getElementById(containerId);
         if (!container || !window.SystemImagePickerComponent) return;
 
@@ -2578,9 +2580,15 @@ const AdminModule = (function() {
             initialValue = settingsData.system_images[settingKey];
         }
 
+        var folderPathOverride = null;
+        if (folderSettingKey && settingsData && settingsData[folderSettingKey]) {
+            folderPathOverride = settingsData[folderSettingKey];
+        }
+
         var picker = SystemImagePickerComponent.buildPicker({
             container: settingsContainer,
             databaseValue: initialValue,
+            folderPath: folderPathOverride,
             onSelect: function(imagePath) {
                 // Extract filename from full path
                 var filename = imagePath;

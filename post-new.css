@@ -1,6 +1,6 @@
 /* ============================================================================
-   POST / RECENTS PANELS
-   Post cards, recents cards, open post view
+   POST / RECENT PANELS
+   Post cards, recent cards, open post view
    Calendar component has its own CSS (calendar-test.html)
    ============================================================================ */
 
@@ -91,10 +91,10 @@
 }
 
 /* ============================================================================
-   RECENTS PANEL
+   RECENT PANEL
    ============================================================================ */
 
-.recents-panel {
+.recent-panel {
   position: fixed;
   top: 0;
   left: 0;
@@ -107,11 +107,11 @@
   pointer-events: none;
 }
 
-.recents-panel--show {
+.recent-panel--show {
   display: block;
 }
 
-.recents-panel-content {
+.recent-panel-content {
   --panel-transition-duration: 0.3s;
   position: absolute;
   left: 0;
@@ -135,15 +135,15 @@
   color: #fff;
 }
 
-.recents-panel-content--side-left {
+.recent-panel-content--side-left {
   transform: translateX(-100%);
 }
 
-.recents-panel-content--hidden {
+.recent-panel-content--hidden {
   pointer-events: none;
 }
 
-.recents-panel-content--visible {
+.recent-panel-content--visible {
   pointer-events: auto;
   transform: translateX(0);
 }
@@ -181,22 +181,22 @@
   background-color: rgba(0, 0, 0, 0);
 }
 
-/* Recents panel scrollbar */
-.recents-panel-content::-webkit-scrollbar {
+/* Recent panel scrollbar */
+.recent-panel-content::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.recents-panel-content::-webkit-scrollbar-track {
+.recent-panel-content::-webkit-scrollbar-track {
   background-color: rgba(0, 0, 0, 0);
 }
 
-.recents-panel-content::-webkit-scrollbar-thumb {
+.recent-panel-content::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.4);
   border-radius: 999px;
 }
 
-.recents-panel-content::-webkit-scrollbar-corner {
+.recent-panel-content::-webkit-scrollbar-corner {
   background-color: rgba(0, 0, 0, 0);
 }
 
@@ -235,10 +235,10 @@
 }
 
 /* ============================================================================
-   RECENTS CARD
+   RECENT CARD
    ============================================================================ */
 
-.recents-card {
+.recent-card {
   display: grid;
   grid-template-columns: 100px 1fr 36px;
   gap: 12px;
@@ -256,21 +256,21 @@
   box-sizing: border-box;
 }
 
-.recents-card:last-child {
+.recent-card:last-child {
   border-bottom: none;
 }
 
-.recents-card:hover {
+.recent-card:hover {
   background: #2e3a72;
 }
 
-.recents-card--selected {
+.recent-card--selected {
   position: relative;
   z-index: 0;
   background: none;
 }
 
-.recents-card--selected::before {
+.recent-card--selected::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1192,7 +1192,7 @@
   margin: 10px 0 0;
 }
 
-.recents-panel-reminder {
+.recent-panel-reminder {
   margin: 10px 0 20px;
   padding: 0 12px;
   text-align: center;
@@ -1202,13 +1202,13 @@
   gap: 10px;
 }
 
-.recents-panel-reminder-image {
+.recent-panel-reminder-image {
   max-width: 100%;
   height: auto;
   border-radius: 5px;
 }
 
-.recents-panel-reminder-text {
+.recent-panel-reminder-text {
   margin: 0;
 }
 
@@ -1271,7 +1271,7 @@
     max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   }
   
-  .recents-panel {
+  .recent-panel {
     width: 100%;
     max-width: 100%;
     left: 0;
@@ -1290,7 +1290,7 @@
     padding: 12px;
   }
   
-  .recents-card {
+  .recent-card {
     margin: 0;
     border-radius: 0;
     padding: 12px;
@@ -1324,7 +1324,7 @@
     max-width: 100%;
   }
   
-  .recents-panel {
+  .recent-panel {
     width: 100%;
     max-width: 100%;
   }

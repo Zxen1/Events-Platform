@@ -183,9 +183,9 @@
   mask-position: center;
 }
 
-.header-modeswitch-button-icon--recents {
-  -webkit-mask-image: var(--header-icon-recents);
-  mask-image: var(--header-icon-recents);
+.header-modeswitch-button-icon--recent {
+  -webkit-mask-image: var(--header-icon-recent);
+  mask-image: var(--header-icon-recent);
 }
 
 .header-modeswitch-button-icon--posts {

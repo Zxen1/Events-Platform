@@ -225,6 +225,8 @@ const App = (function() {
     currencies: 'folder_currencies',
     phonePrefixes: 'folder_phone_prefixes',
     postImages: 'folder_post_images',
+    postSystemImages: 'folder_post_system_images',
+    recentSystemImages: 'folder_recent_system_images',
     siteAvatars: 'folder_site_avatars',
     siteImages: 'folder_site_images',
     systemImages: 'folder_system_images'
