@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>FunMap - Do Stuff</title>
+  
+  <!-- Favicons (loaded dynamically from admin settings) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="">
+  <link rel="icon" type="image/png" sizes="32x32" href="">
+  <link rel="icon" type="image/png" sizes="16x16" href="">
+  <link rel="icon" type="image/png" sizes="192x192" href="">
+  <link rel="icon" type="image/png" sizes="512x512" href="">
+  <link rel="manifest" href="">
+  <link rel="shortcut icon" href="">
+  
+  <!-- External APIs -->
+  <!-- Console filter - always load (tiny file), checks localStorage internally -->
+  <script src="console-filter.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.17.0/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.3/mapbox-gl-geocoder.min.js"></script>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.3/mapbox-gl-geocoder.css">
+  <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATJV1D6MtAUsQ58fSEHcSD8QmznJXAPqY&libraries=places&loading=async"></script>
+  
+  <!-- CSS Files (9 total) -->
+  <link rel="stylesheet" href="base-new.css">
+  <link rel="stylesheet" href="header-new.css">
+  <link rel="stylesheet" href="filter-new.css">
+  <link rel="stylesheet" href="map-new.css">
+  <link rel="stylesheet" href="post-new.css">
+  <link rel="stylesheet" href="components-new.css">
+  <link rel="stylesheet" href="admin-new.css">
+  <link rel="stylesheet" href="formbuilder-new.css">
+  <link rel="stylesheet" href="member-new.css">
+  <link rel="stylesheet" href="marquee-new.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       SECTION 1: HEADER
+       File: header.js, header.css
+       ======================================================================== -->
+  <header class="header-bar">
+    
+    <!-- Logo button (image loaded from admin settings) -->
+    <button class="header-logo-button" type="button" aria-label="Home">
+      <img class="header-logo-button-image" src="" alt="">
+    </button>
+    
+    <!-- Filter button -->
+    <button class="header-filter-button" type="button" aria-label="Toggle filters" aria-expanded="false" aria-controls="filter-panel">
+      <span class="header-filter-button-icon"></span>
+    </button>
+    
+    <!-- Mode switch (Recents / Posts / Map) -->
+    <nav class="header-modeswitch" aria-label="View mode">
+      <button class="header-modeswitch-button" type="button" data-mode="recents">
+        <img class="header-modeswitch-button-icon" src="" alt="">
+        <span class="header-modeswitch-button-text">Recents</span>
+      </button>
+      <button class="header-modeswitch-button header-modeswitch-button--bordered" type="button" data-mode="posts">
+        <img class="header-modeswitch-button-icon" src="" alt="">
+        <span class="header-modeswitch-button-text">Posts</span>
+      </button>
+      <button class="header-modeswitch-button header-modeswitch-button--bordered" type="button" data-mode="map" aria-pressed="true">
+        <img class="header-modeswitch-button-icon" src="" alt="">
+        <span class="header-modeswitch-button-text">Map</span>
+      </button>
+    </nav>
+    
+    <!-- Access buttons (Member / Admin / Fullscreen) -->
+    <button class="header-access-button" type="button" data-panel="member" title="Members" aria-label="Member" aria-expanded="false" aria-controls="member-panel">
+      <span class="header-access-button-icon header-access-button-icon--member"></span>
+      <img class="header-access-button-avatar header-access-button-avatar--hidden" src="" alt="">
+    </button>
+    <button class="header-access-button header-access-button--hidden" type="button" data-panel="admin" title="Admin" aria-label="Admin" aria-expanded="false" aria-controls="admin-panel" aria-hidden="true">
+      <span class="header-access-button-icon header-access-button-icon--admin"></span>
+    </button>
+    <button class="header-access-button fullscreen-btn" type="button" data-action="fullscreen" title="Fullscreen" aria-label="Toggle fullscreen">
+      <span class="header-access-button-icon header-access-button-icon--fullscreen"></span>
+    </button>
+    
+  </header>
+
+  <!-- ========================================================================
+       SECTION 2: FILTER PANEL
+       File: filter.js, filter.css
+       ======================================================================== -->
+  <aside class="filter-panel" role="dialog" aria-hidden="true">
+    <div class="filter-panel-backdrop"></div>
+    <div class="filter-panel-content" data-side="left">
+      <div class="filter-panel-header">
+        <div class="filter-panel-summary"></div>
+      </div>
+      <div class="filter-panel-body">
+        <div class="filter-map-controls"></div>
+        <div class="filter-reset-box">
+          <button class="filter-reset-btn" type="button" data-reset="filters" disabled>Reset All Filters</button>
+        </div>
+        <div class="filter-reset-box">
+          <button class="filter-reset-btn" type="button" data-reset="categories" disabled>Reset All Categories</button>
+        </div>
+        <button class="filter-favourites-btn" type="button" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>
+          <span>Favourites on top</span>
+        </button>
+        <div class="filter-sort-menu">
+          <div class="filter-sort-menu-button">
+            <span class="filter-sort-menu-button-text">Sort by Title A-Z</span>
+            <span class="filter-sort-menu-button-arrow">▼</span>
+          </div>
+          <div class="filter-sort-menu-options">
+            <div class="filter-sort-menu-option" data-sort="az">Sort by Title A-Z</div>
+            <div class="filter-sort-menu-option" data-sort="nearest">Sort by Closest</div>
+            <div class="filter-sort-menu-option" data-sort="soon">Sort by Soonest</div>
+          </div>
+        </div>
+        
+        <!-- Filter Basics Container -->
+        <section class="filter-basics-container" aria-label="Filters">
+          <div class="filter-keyword-row">
+            <div class="filter-keyword-input-wrap">
+              <input class="filter-keyword-input" type="text" placeholder="Keywords" aria-label="Keywords">
+              <button class="clear-button filter-keyword-clear" type="button" aria-label="Clear keywords"></button>
+            </div>
+          </div>
+          <div class="filter-price-row">
+            <div class="filter-price-input-wrap">
+              <input class="filter-price-input filter-price-min" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Min price" aria-label="Minimum price">
+              <span class="filter-price-separator" aria-hidden="true">-</span>
+              <input class="filter-price-input filter-price-max" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Max price" aria-label="Maximum price">
+              <button class="clear-button filter-price-clear" type="button" aria-label="Clear price range"></button>
+            </div>
+          </div>
+          <div class="filter-daterange-row">
+            <div class="filter-daterange-input-wrap">
+              <input class="filter-daterange-input" type="text" placeholder="Date Range" aria-label="Date range" readonly aria-haspopup="dialog" aria-expanded="false">
+              <button class="clear-button filter-daterange-clear" type="button" aria-label="Clear date"></button>
+            </div>
+          </div>
+          <div class="filter-expired-row">
+            <span class="filter-expired-label">Show Expired Events</span>
+            <label class="filter-expired-switch">
+              <input class="filter-expired-input" type="checkbox">
+              <span class="filter-expired-slider"></span>
+            </label>
+          </div>
+          <div class="filter-calendar-container" aria-hidden="true">
+            <div class="filter-calendar"></div>
+          </div>
+        </section>
+        
+        <!-- Category Filter Container -->
+        <section class="filter-categoryfilter-container" aria-label="Categories">
+          <!-- Populated by JavaScript from database -->
+        </section>
+        
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       SECTION 3: MAP
+       File: map.js, map.css
+       ======================================================================== -->
+  <main class="map-area">
+    
+    <!-- Map controls (geocoder, geolocate, compass) -->
+    <div class="map-controls"></div>
+    
+    <!-- Zoom indicator -->
+    <div class="map-zoom-indicator">Zoom -- • Pitch --</div>
+    
+    <!-- Mapbox map renders here -->
+    <div class="map-container"></div>
+    
+    <!-- Map shadow overlay (post mode) -->
+    <div class="map-shadow"></div>
+    
+  </main>
+
+  <!-- ========================================================================
+       SECTION 4: POST BOARDS (includes Recents)
+       File: post.js, post.css
+       ======================================================================== -->
+  <div class="post-mode-boards">
+    <!-- Post board and recents board go here -->
+  </div>
+
+  <!-- ========================================================================
+       SECTION 5: ADMIN PANEL
+       File: admin.js, admin.css
+       ======================================================================== -->
+  <aside id="admin-panel" class="admin-panel" role="dialog" aria-hidden="true">
+    <div class="admin-panel-content admin-panel-content--side-right admin-panel-content--hidden">
+      
+      <!-- Panel Header -->
+      <div class="admin-panel-header">
+        <div class="admin-panel-header-top">
+          <h2 class="admin-panel-header-title">Admin</h2>
+          <div class="admin-panel-actions">
+            <label class="admin-autosave-toggle" title="Auto-save changes">
+              <input type="checkbox" id="admin-autosave-checkbox" class="admin-autosave-toggle-input">
+              <span class="admin-autosave-toggle-label">Auto</span>
+            </label>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--save admin-panel-actions-icon-btn--disabled" title="Save Changes" aria-label="Save Changes" disabled>
+              <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--save admin-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--discard admin-panel-actions-icon-btn--disabled" title="Discard Changes" aria-label="Discard Changes" disabled>
+              <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--discard admin-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>
+            </button>
+            <button type="button" class="admin-panel-actions-icon-btn admin-panel-actions-icon-btn--close" title="Close Panel" aria-label="Close Panel">
+              <span class="admin-panel-actions-icon-btn-icon admin-panel-actions-icon-btn-icon--close" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Tab Bar -->
+        <div class="admin-tab-bar" role="tablist" aria-label="Admin sections">
+          <button type="button" id="admin-tab-settings-btn" class="admin-tab-bar-button admin-tab-bar-button--selected" data-tab="settings" role="tab" aria-selected="true" aria-controls="admin-tab-settings">Settings</button>
+          <button type="button" id="admin-tab-forms-btn" class="admin-tab-bar-button" data-tab="forms" role="tab" aria-selected="false" aria-controls="admin-tab-forms">Forms</button>
+          <button type="button" id="admin-tab-map-btn" class="admin-tab-bar-button" data-tab="map" role="tab" aria-selected="false" aria-controls="admin-tab-map">Map</button>
+          <button type="button" id="admin-tab-messages-btn" class="admin-tab-bar-button" data-tab="messages" role="tab" aria-selected="false" aria-controls="admin-tab-messages">Messages</button>
+          <button type="button" id="admin-tab-checkout-btn" class="admin-tab-bar-button" data-tab="checkout" role="tab" aria-selected="false" aria-controls="admin-tab-checkout">Checkout</button>
+        </div>
+      </div>
+      
+      <!-- Panel Body -->
+      <div class="admin-panel-body">
+        
+        <!-- Settings Tab -->
+        <section id="admin-tab-settings" class="admin-tab-panel admin-tab-panel--active" role="tabpanel" aria-labelledby="admin-tab-settings-btn">
+          <form id="adminSettingsForm" style="display: contents;" onsubmit="return false;">
+          <div class="admin-settings-general-container">
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWebsiteName">Website Name</label>
+              <input type="text" class="admin-settings-field-input" id="adminWebsiteName" data-setting-key="website_name" autocomplete="off" placeholder="Enter website name" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminWebsiteTagline">Website Tagline</label>
+              <input type="text" class="admin-settings-field-input" id="adminWebsiteTagline" data-setting-key="website_tagline" autocomplete="off" placeholder="Enter website tagline" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminContactEmail">Contact Email</label>
+              <input type="email" class="admin-settings-field-input" id="adminContactEmail" data-setting-key="contact_email" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="contact@example.com" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminSupportEmail">Support Email</label>
+              <input type="email" class="admin-settings-field-input" id="adminSupportEmail" data-setting-key="support_email" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="support@example.com" />
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Big Logo</label>
+              <div id="adminBigLogoPicker" data-setting-key="big_logo"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Small Logo</label>
+              <div id="adminSmallLogoPicker" data-setting-key="small_logo"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Favicon</label>
+              <div id="adminFaviconPicker" data-setting-key="favicon"></div>
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label">Website Currency</label>
+              <div id="adminCurrencyPicker" data-setting-key="website_currency"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Maintenance Mode</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminMaintenanceMode" data-setting-key="maintenance_mode" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+            </div>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Welcome Message on Load</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminWelcomeEnabled" data-setting-key="welcome_enabled" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+            </div>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Devtools Console Filter</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminEnableConsoleFilter" data-setting-key="console_filter" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div class="admin-settings-imagemanager-accordion">
+            <div class="admin-settings-imagemanager-accordion-header">
+              <span class="admin-settings-imagemanager-accordion-header-text">Image Manager</span>
+              <span class="admin-settings-imagemanager-accordion-header-arrow">▼</span>
+            </div>
+            <div class="admin-settings-imagemanager-accordion-body">
+              <div class="admin-settings-folders-container">
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderAmenities">Amenities Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderAmenities" data-setting-key="folder_amenities" autocomplete="off" placeholder="amenities/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderAvatars">Avatars Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderAvatars" data-setting-key="folder_avatars" autocomplete="off" placeholder="avatars/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderCategoryIcons">Category Icons Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderCategoryIcons" data-setting-key="folder_category_icons" autocomplete="off" placeholder="category-icons/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderCurrencies">Currencies Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderCurrencies" data-setting-key="folder_currencies" autocomplete="off" placeholder="currencies/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderDummyImages">Dummy Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderDummyImages" data-setting-key="folder_dummy_images" autocomplete="off" placeholder="dummy-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderPhonePrefixes">Phone Prefixes Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderPhonePrefixes" data-setting-key="folder_phone_prefixes" autocomplete="off" placeholder="phone-prefixes/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderPostImages">Post Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderPostImages" data-setting-key="folder_post_images" autocomplete="off" placeholder="post-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderSiteAvatars">Site Avatars Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderSiteAvatars" data-setting-key="folder_site_avatars" autocomplete="off" placeholder="site-avatars/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderSiteImages">Site Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderSiteImages" data-setting-key="folder_site_images" autocomplete="off" placeholder="site-images/" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminFolderSystemImages">System Images Folder</label>
+                  <input type="text" class="admin-settings-field-input" id="adminFolderSystemImages" data-setting-key="folder_system_images" autocomplete="off" placeholder="system-images/" />
+                </div>
+              </div>
+              <div class="admin-settings-api-container">
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminStorageApiKey">Bunny Storage Zone Password (Read-Only)</label>
+                  <input type="password" class="admin-settings-field-input" id="adminStorageApiKey" data-setting-key="storage_api_key" autocomplete="new-password" data-lpignore="true" data-form-type="other" placeholder="Enter read-only password from Bunny Storage Zone" />
+                </div>
+                <div class="admin-settings-field">
+                  <label class="admin-settings-field-label" for="adminStorageZoneName">Bunny Storage Zone Name</label>
+                  <input type="text" class="admin-settings-field-input" id="adminStorageZoneName" data-setting-key="storage_zone_name" autocomplete="off" placeholder="Enter storage zone name" />
+                </div>
+              </div>
+            </div>
+          </div>
+          </form>
+        </section>
+        
+        <!-- Forms Tab -->
+        <section id="admin-tab-forms" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-forms-btn">
+          <div id="admin-formbuilder" class="admin-formbuilder-container"></div>
+        </section>
+        
+        <!-- Map Tab -->
+        <section id="admin-tab-map" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-map-btn">
+          
+          <!-- Starting Location -->
+          <div class="admin-map-defaults-container">
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminStartingAddress">Starting Location</label>
+              <p class="admin-settings-field-description">Default map center for new visitors</p>
+              <div class="admin-map-controls-starting">
+                <div id="admin-geocoder-starting" class="admin-map-controls-starting-geocoder"></div>
+                <div id="admin-starting-address-display" class="admin-map-controls-starting-address-display" hidden></div>
+              </div>
+              <input type="hidden" id="adminStartingAddress" />
+              <input type="hidden" id="adminStartingLat" />
+              <input type="hidden" id="adminStartingLng" />
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminStartingZoom">Starting Zoom</label>
+              <div class="admin-spin-control-row">
+                <span id="adminStartingZoomDisplay" class="admin-slider-value">10</span>
+                <input type="range" id="adminStartingZoom" min="1" max="18" step="1" value="10" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--spaced">
+              <label class="admin-settings-field-label" for="adminStartingPitch">Starting Pitch</label>
+              <div class="admin-spin-control-row">
+                <span id="adminStartingPitchDisplay" class="admin-slider-value">0°</span>
+                <input type="range" id="adminStartingPitch" min="0" max="85" step="1" value="0" class="admin-spin-slider" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Spin Settings -->
+          <div class="admin-map-spin-container">
+            <div class="admin-panel-field">
+              <div class="admin-option-label">
+                <span>Spin on Load</span>
+                <label class="admin-switch">
+                  <input type="checkbox" id="adminSpinLoadStart" class="admin-switch-input" />
+                  <span class="admin-switch-slider"></span>
+                </label>
+                <div id="adminSpinType" class="admin-spin-type-toggles">
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminSpinType" value="everyone" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Everyone</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminSpinType" value="new_users" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">New Users</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <div class="admin-option-label">
+                <span>Spin on Logo</span>
+                <label class="admin-switch">
+                  <input type="checkbox" id="adminSpinLogoClick" class="admin-switch-input" checked />
+                  <span class="admin-switch-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminSpinZoomMax">Spin Max Zoom</label>
+              <div class="admin-spin-control-row">
+                <span id="adminSpinZoomMaxDisplay" class="admin-slider-value">4</span>
+                <input type="range" id="adminSpinZoomMax" min="1" max="10" step="1" value="4" class="admin-spin-slider" />
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminSpinSpeed">Spin Speed</label>
+              <div class="admin-spin-control-row">
+                <span id="adminSpinSpeedDisplay" class="admin-slider-value">0.3</span>
+                <input type="range" id="adminSpinSpeed" min="0.1" max="2.0" step="0.1" value="0.3" class="admin-spin-slider" />
+              </div>
+            </div>
+          </div>
+          
+          <!-- Map Lighting & Style -->
+          <div class="admin-map-lighting-container" id="admin-map-lighting-container">
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label">Map Lighting</label>
+              <div class="admin-lighting-buttons">
+                <button type="button" class="admin-lighting-button" data-lighting="dawn" aria-pressed="false" title="Dawn">
+                  <img class="admin-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3C/svg%3E" alt="Dawn" />
+                </button>
+                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="day" aria-pressed="true" title="Day">
+                  <img class="admin-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3Cpath d='M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l-1.42-1.42M18.36 5.64l-1.42-1.42'/%3E%3C/svg%3E" alt="Day" />
+                </button>
+                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="dusk" aria-pressed="false" title="Dusk">
+                  <img class="admin-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v2M12 19v2M5.64 5.64l1.41 1.41M16.95 16.95l1.41 1.41M3 12h2M19 12h2M5.64 18.36l-1.41-1.41M16.95 7.05l-1.41-1.41'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 8v4l2 2'/%3E%3C/svg%3E" alt="Dusk" />
+                </button>
+                <button type="button" class="admin-lighting-button admin-lighting-button--bordered" data-lighting="night" aria-pressed="false" title="Night">
+                  <img class="admin-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/%3E%3C/svg%3E" alt="Night" />
+                </button>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label">Map Style</label>
+              <div class="admin-style-buttons">
+                <button type="button" class="admin-style-button" data-style="standard" aria-pressed="true">
+                  <span class="admin-style-button-text">Standard</span>
+                </button>
+                <button type="button" class="admin-style-button admin-style-button--bordered" data-style="standard-satellite" aria-pressed="false">
+                  <span class="admin-style-button-text">Satellite</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Map Shadow -->
+          <div class="admin-map-shadow-container" id="admin-map-shadow-container">
+            <div class="admin-panel-field">
+              <label class="admin-settings-field-label" for="adminMapShadowOpacity">Map Shadow</label>
+              <div class="admin-spin-control-row">
+                <span id="adminMapShadowOpacityDisplay" class="admin-slider-value">0.00</span>
+                <input type="range" id="adminMapShadowOpacity" min="0" max="1" step="0.01" class="admin-spin-slider" />
+              </div>
+              <div class="admin-panel-field admin-panel-field--spaced-small">
+                <div class="admin-spin-type-toggles admin-spin-type-toggles--no-margin">
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapShadowMode" value="post_mode_only" id="adminMapShadowModePostOnly" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Post Mode Only</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapShadowMode" value="always" id="adminMapShadowModeAlways" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Always</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="admin-panel-field">
+              <div class="admin-option-label">
+                <span>Wait for Map Tiles</span>
+                <label class="admin-switch">
+                  <input type="checkbox" id="adminWaitForMapTiles" class="admin-switch-input" checked />
+                  <span class="admin-switch-slider"></span>
+                </label>
+              </div>
+            </div>
+            <div class="admin-panel-field admin-panel-field--separator">
+              <div class="admin-option-label">
+                <span>Map Card Display</span>
+                <div class="admin-spin-type-toggles">
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapCardDisplay" value="hover_only" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Hover Only</span>
+                  </label>
+                  <label class="admin-spin-type-option">
+                    <input type="radio" name="adminMapCardDisplay" value="always" class="admin-spin-type-option-input" />
+                    <span class="admin-spin-type-option-label">Always</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Map Card Image Pickers -->
+          <div class="admin-settings-container">
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Small Map Card Pill</label>
+              <div id="adminSmallMapCardPillPicker" data-setting-key="small_map_card_pill"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Big Map Card Pill</label>
+              <div id="adminBigMapCardPillPicker" data-setting-key="big_map_card_pill"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Hover Map Card Pill</label>
+              <div id="adminHoverMapCardPillPicker" data-setting-key="hover_map_card_pill"></div>
+            </div>
+            <div class="admin-settings-field admin-settings-field--imagepicker">
+              <label class="admin-settings-field-label">Multi Post Icon</label>
+              <div id="adminMultiPostIconPicker" data-setting-key="multi_post_icon"></div>
+            </div>
+          </div>
+          
+        </section>
+        
+        <!-- Messages Tab -->
+        <section id="admin-tab-messages" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-messages-btn">
+          <p class="admin-tab-intro">Messages content will go here.</p>
+        </section>
+        
+        <!-- Checkout Tab -->
+        <section id="admin-tab-checkout" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
+          <div class="admin-checkout-paypal-container">
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminPaypalClientId">PayPal Client ID</label>
+              <input type="text" class="admin-settings-field-input" id="adminPaypalClientId" data-setting-key="paypal_client_id" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client ID" />
+            </div>
+            <div class="admin-settings-field">
+              <label class="admin-settings-field-label" for="adminPaypalClientSecret">PayPal Client Secret</label>
+              <input type="text" class="admin-settings-field-input admin-settings-field-input--secret" id="adminPaypalClientSecret" data-setting-key="paypal_client_secret" autocomplete="off" data-lpignore="true" data-form-type="other" placeholder="Enter PayPal Client Secret" />
+            </div>
+          </div>
+          <div class="admin-checkout-options-container">
+            <span class="admin-checkout-options-header-label">Checkout Options</span>
+            <div class="admin-checkout-options-tiers" id="adminCheckoutTiers">
+              <!-- Checkout options will be populated by JavaScript -->
+            </div>
+            <button type="button" class="admin-checkout-options-add">Add Tier</button>
+          </div>
+        </section>
+        
+      </div>
+      
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       SECTION 6: MEMBER PANEL
+       File: member.js, member.css
+       ======================================================================== -->
+  <aside id="member-panel" class="member-panel" role="dialog" aria-hidden="true">
+    <div class="member-panel-content member-panel-content--side-right member-panel-content--hidden">
+      
+      <!-- Panel Header -->
+      <div class="member-panel-header">
+        <div class="member-panel-header-top">
+          <h2 class="member-panel-header-title">Members</h2>
+          <div class="member-panel-actions">
+            <button type="button" class="member-panel-actions-icon-btn member-panel-actions-icon-btn--close" aria-label="Close Panel">
+              <span class="member-panel-actions-icon-btn-icon member-panel-actions-icon-btn-icon--close" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Tab Bar -->
+        <div class="member-tab-bar" role="tablist" aria-label="Member sections">
+          <button type="button" id="member-tab-profile-btn" class="member-tab-bar-button member-tab-bar-button--selected" data-tab="profile" role="tab" aria-selected="true" aria-controls="member-tab-profile">Profile</button>
+          <button type="button" id="member-tab-create-btn" class="member-tab-bar-button" data-tab="create" role="tab" aria-selected="false" aria-controls="member-tab-create">Create Post</button>
+          <button type="button" id="member-tab-myposts-btn" class="member-tab-bar-button" data-tab="myposts" role="tab" aria-selected="false" aria-controls="member-tab-myposts">My Posts</button>
+        </div>
+      </div>
+      
+      <!-- Panel Body -->
+      <div class="member-panel-body">
+        
+        <!-- ================================================================
+             PROFILE TAB
+             ================================================================ -->
+        <section id="member-tab-profile" class="member-tab-panel member-tab-panel--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
+          
+          <!-- Map Settings (always visible) -->
+          <div class="member-map-settings-container">
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Map Lighting</label>
+              <div class="member-lighting-buttons">
+                <button type="button" class="member-lighting-button" data-lighting="dawn" aria-pressed="false" title="Dawn">
+                  <img class="member-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3C/svg%3E" alt="Dawn" />
+                </button>
+                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="day" aria-pressed="true" title="Day">
+                  <img class="member-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='5'/%3E%3Cpath d='M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l-1.42-1.42M18.36 5.64l-1.42-1.42'/%3E%3C/svg%3E" alt="Day" />
+                </button>
+                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="dusk" aria-pressed="false" title="Dusk">
+                  <img class="member-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v2M12 19v2M5.64 5.64l1.41 1.41M16.95 16.95l1.41 1.41M3 12h2M19 12h2M5.64 18.36l-1.41-1.41M16.95 7.05l-1.41-1.41'/%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 8v4l2 2'/%3E%3C/svg%3E" alt="Dusk" />
+                </button>
+                <button type="button" class="member-lighting-button member-lighting-button--bordered" data-lighting="night" aria-pressed="false" title="Night">
+                  <img class="member-lighting-button-icon" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'/%3E%3C/svg%3E" alt="Night" />
+                </button>
+              </div>
+            </div>
+            <div class="member-panel-field">
+              <label class="member-settings-field-label">Map Style</label>
+              <div class="member-style-buttons">
+                <button type="button" class="member-style-button" data-style="standard" aria-pressed="true">
+                  <span class="member-style-button-text">Standard</span>
+                </button>
+                <button type="button" class="member-style-button member-style-button--bordered" data-style="standard-satellite" aria-pressed="false">
+                  <span class="member-style-button-text">Satellite</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="member-auth" data-state="logged-out">
+            
+            <!-- Login/Register Subtabs -->
+            <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
+              <button type="button" class="member-auth-tab member-auth-tab--selected" data-target="login" role="tab" aria-selected="true" aria-controls="member-auth-login">Log In</button>
+              <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="member-auth-register">Register</button>
+            </div>
+            
+            <!-- Login Panel -->
+            <form id="memberAuthFormLogin" class="member-auth-form" autocomplete="off">
+              <section id="member-auth-login" class="member-auth-panel" role="tabpanel">
+                <label class="member-auth-panel-label" for="memberLoginEmail">Email</label>
+                <input type="email" id="memberLoginEmail" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
+                <label class="member-auth-panel-label" for="memberLoginPassword">Password</label>
+                <input type="password" id="memberLoginPassword" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
+                <button type="submit" class="member-button-auth member-auth-submit" data-action="login">Log In</button>
+              </section>
+            </form>
+            
+            <!-- Register Panel -->
+            <form id="memberAuthFormRegister" class="member-auth-form" autocomplete="off">
+              <section id="member-auth-register" class="member-auth-panel member-auth-panel--hidden" role="tabpanel" hidden>
+                <label class="member-auth-panel-label" for="member-register-name">Display Name</label>
+                <input type="text" id="member-register-name" class="member-auth-panel-input" name="registerName" autocomplete="name">
+                <label class="member-auth-panel-label" for="member-register-email">Email</label>
+                <input type="email" id="member-register-email" class="member-auth-panel-input" name="registerEmail" autocomplete="email">
+                <label class="member-auth-panel-label" for="member-register-password">Password</label>
+                <input type="password" id="member-register-password" class="member-auth-panel-input" name="registerPassword" autocomplete="new-password">
+                <label class="member-auth-panel-label" for="member-register-confirm">Confirm Password</label>
+                <input type="password" id="member-register-confirm" class="member-auth-panel-input" name="registerConfirm" autocomplete="new-password">
+                <label class="member-auth-panel-label" for="member-register-avatar">Avatar URL</label>
+                <input type="url" id="member-register-avatar" class="member-auth-panel-input" name="registerAvatar" placeholder="https://example.com/avatar.jpg">
+                <button type="submit" class="member-button-auth member-auth-submit" data-action="register">Create Account</button>
+              </section>
+            </form>
+            
+            <!-- Profile Panel (shown when logged in) -->
+            <section id="member-auth-profile" class="member-auth-panel member-auth-profile member-auth-panel--hidden" role="region" aria-live="polite" hidden>
+              <div class="member-profile">
+                <img id="member-profile-avatar" class="member-profile-avatar" src="" alt="">
+                <div class="member-profile-details">
+                  <p id="member-profile-name" class="member-profile-name"></p>
+                  <p id="member-profile-email" class="member-profile-email"></p>
+                </div>
+              </div>
+              <div class="member-profile-actions">
+                <button type="button" class="member-button-auth member-profile-actions-btn" id="member-logout-btn">Log Out</button>
+              </div>
+            </section>
+            
+          </div>
+          
+        </section>
+        
+        <!-- ================================================================
+             CREATE POST TAB
+             ================================================================ -->
+        <section id="member-tab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-create-btn" hidden>
+          <div class="member-formpicker-container">
+            <div class="member-formpicker-cats" id="member-formpicker-cats" aria-label="Categories"></div>
+          </div>
+          <div id="member-create-form-wrapper" class="member-form-container" hidden>
+            <div id="member-create-fields" class="member-create-fields" role="group" aria-live="polite"></div>
+          </div>
+        </section>
+        
+        <!-- ================================================================
+             MY POSTS TAB
+             ================================================================ -->
+        <section id="member-tab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-myposts-btn" hidden>
+          <!-- Content loaded when logged in -->
+        </section>
+        
+      </div>
+    </div>
+  </aside>
+  
+  <!-- Unsaved Changes Prompt -->
+  <div class="member-unsaved-prompt" id="member-unsaved-prompt" aria-hidden="true">
+    <div class="member-unsaved-dialog">
+      <p>You have unsaved changes. What would you like to do?</p>
+      <div class="member-unsaved-actions">
+        <button type="button" class="member-button-auth" data-action="cancel">Cancel</button>
+        <button type="button" class="member-button-auth" data-action="discard">Discard</button>
+        <button type="button" class="member-button-auth" data-action="save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       SECTION 7: MARQUEE
+       File: marquee.js, marquee.css
+       ======================================================================== -->
+  <aside class="marquee">
+    <div class="marquee-content">
+      <!-- Slides inserted dynamically by marquee.js -->
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       STATUS MESSAGES (Toast notifications)
+       ======================================================================== -->
+  <div id="adminStatusMessage" class="admin-status-message" role="status" aria-live="polite" aria-hidden="true"></div>
+  <div id="memberStatusMessage" class="member-status-message" role="status" aria-live="polite" aria-hidden="true"></div>
+
+  <!-- ========================================================================
+       MODALS (not counted as sections)
+       ======================================================================== -->
+  <div class="welcome-modal">
+    <!-- Welcome message, geocoder, instructions -->
+  </div>
+
+  <div class="terms-modal">
+    <!-- Terms and conditions -->
+  </div>
+
+  <div class="lightbox-modal">
+    <!-- Image lightbox -->
+  </div>
+
+  <!-- ========================================================================
+       JAVASCRIPT FILES (9 total)
+       Load order matters: backbone first, then sections
+       ======================================================================== -->
+  <script src="index-new.js"></script>
+  <script src="components-new.js"></script>
+  <script src="header-new.js"></script>
+  <script src="filter-new.js"></script>
+  <script src="map-new.js"></script>
+  <script src="post-new.js"></script>
+  <script src="admin-new.js"></script>
+  <script src="formbuilder-new.js"></script>
+  <script src="member-new.js"></script>
+  <script src="marquee-new.js"></script>
+
+</body>
+</html>
+
