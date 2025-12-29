@@ -26,32 +26,6 @@ This is inherent logic - you must track what you read vs what you changed. Every
 
 **I’ll stick to verifiable file state only and won’t speak as if something exists unless I’ve confirmed it in the folder.**
 
-## ✅ BUTTONANCHOR COMMANDMENTS (MANDATORY)
-
-1. **Single objective**: The interacted element (button or input) must not slip out of the user’s hand. Nothing else matters.
-
-2. **No flicker**: The system must never introduce flashing, popping, or visible “double moves.” If a fix causes flicker, it’s rejected.
-
-3. **No abyss / no man’s land**: The user must never be able to scroll into empty ghost space (neither below nor above the real content), regardless of scroll speed, momentum, wheel, touch, or scrollbar drag.
-
-4. **Ghost space only when required**: There is **no usable ButtonAnchor space** when it isn’t needed. “Off” means the slack is collapsed to the minimum debug size (currently **1px**, not 0).
-
-5. **On alert when content grows**: If the scrollable content grows (a drawer opens / content expands), the system must be ready to prevent the interacted element from moving.
-
-6. **Active when content shrinks**: If the scrollable content shrinks (a drawer closes / content collapses), the system must actively prevent the interacted element from being yanked toward the footer or header.
-
-7. **Applies to both directions**: The same rules apply to **Bottom Anchor** (footer direction) and **Top Anchor** (header direction).
-
-8. **Never collapse while visible**: If a ghost spacer exists and is visible on screen, it must not collapse to the **collapsed size** while it’s visible (collapsed size is currently **1px**, not 0).
-
-9. **No existence when off-screen**: If the ButtonAnchor would be off-screen (not needed for the current view), it must not be created/kept in a way that makes it reachable by scrolling.
-
-10. **Fast scrolling must not “summon” the anchor**: Rapid scrolling must not make the ButtonAnchor suddenly become accessible. The system must not “turn on” in a way that allows the user to scroll into it.
-
-11. **No premature activation**: The anchor must not be activated unless it is necessary to keep the interacted element stable during a real expand/collapse change.
-
-12. **Lazy-loading compatible**: The system must not require knowing post heights in advance; it must work even when content loads later.
-
 ## ⚠️ CRITICAL PERFORMANCE RULE ⚠️
 
 **YOU ARE NOT ALLOWED TO DO ANYTHING THAT WILL JEOPARDIZE THE LOADING SPEED OF THE WEBSITE.**
@@ -302,7 +276,7 @@ This project uses split storage schemas:
    - `enableForceOffOnTabs: false`
 
 ### Non-negotiable behavior constraints (do not change without Paul’s explicit instruction)
-1. **Only two slack sizes exist**: `4000px` and `1px` (no other values, no transitions). “Off” = `1px` collapsed, “On” = `4000px` expanded.
+1. **Only two slack sizes exist**: `4000px` and `0px` (no other values, no “1px”, no “300px”, no transitions).
 2. **No resizing while visible**: slack must not change size while the spacer is on-screen.
 3. **No snapping**: do not “snap back” scroll positions as a workaround.
 

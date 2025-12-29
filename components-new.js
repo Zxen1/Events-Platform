@@ -6799,14 +6799,13 @@ const ButtonAnchorBottom = (function() {
             style.id = STYLE_ID;
             style.textContent =
                 '.panel-bottom-slack{' +
-                'height:var(--panel-bottom-slack,1px);' +
+                'height:var(--panel-bottom-slack,0px);' +
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
                 /* DEBUG VISUAL: show spacer presence */
                 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
-                /* IMPORTANT: do not use borders here; borders make "0px slack" still have height and cause jitter. */
-                'box-shadow:inset 0 2px 0 rgba(160, 32, 240, 0.95);' +
+                'border-top:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -6870,7 +6869,7 @@ const ButtonAnchorBottom = (function() {
         
         // STRICT RULE: only two slack sizes exist.
         var expandedSlackPx = 4000;
-        var collapsedSlackPx = 1;
+        var collapsedSlackPx = 0;
         
         var unlockTimer = null;
         var locked = false;
@@ -6899,7 +6898,7 @@ const ButtonAnchorBottom = (function() {
             try { scrollEl.getBoundingClientRect(); } catch (e) {}
             fadeScrollbar();
         }
-
+        
         function isSlackOnScreen() {
             if (!slackEl) return false;
             // Slack is always the last child (at the bottom). Use scrollHeight math (most reliable),
@@ -7062,6 +7061,25 @@ const ButtonAnchorBottom = (function() {
             } catch (e2) {}
         }, true);
         
+        // Clicking: click-hold window + temporary slack ON.
+        function holdClickSlack() {
+            // Never show slack for containers that don't overflow.
+            try {
+                var h = scrollEl.clientHeight || 0;
+                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
+                if (contentNoSlack <= h) {
+                    pendingOffscreenCollapse = false;
+                    applySlackPx(collapsedSlackPx);
+                    return;
+                }
+            } catch (e0) {}
+            
+            clickHoldUntil = Date.now() + clickHoldMs;
+            applySlackPx(expandedSlackPx);
+        }
+        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
+        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
+        
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
         
@@ -7115,14 +7133,13 @@ const ButtonAnchorTop = (function() {
             style.id = STYLE_ID;
             style.textContent =
                 '.panel-top-slack{' +
-                'height:var(--panel-top-slack,1px);' +
+                'height:var(--panel-top-slack,0px);' +
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
                 /* DEBUG VISUAL: show spacer presence */
                 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
-                /* IMPORTANT: do not use borders here; borders make "0px slack" still have height and cause jitter. */
-                'box-shadow:inset 0 -2px 0 rgba(160, 32, 240, 0.95);' +
+                'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -7186,7 +7203,7 @@ const ButtonAnchorTop = (function() {
         
         // STRICT RULE: only two slack sizes exist.
         var expandedSlackPx = 4000;
-        var collapsedSlackPx = 1;
+        var collapsedSlackPx = 0;
         
         var slackEl = ensureSlackEl(scrollEl);
         var unlockTimer = null;
