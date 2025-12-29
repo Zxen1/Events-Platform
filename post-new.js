@@ -235,8 +235,17 @@ const PostModule = (function() {
     var panelShowClass = panelKey + '-panel--show';
     var visibleClass = panelKey + '-panel-content--visible';
     var hiddenClass = panelKey + '-panel-content--hidden';
+    var hideHandlerKey = '__' + panelKey + 'PanelHideHandler';
+    var showTokenKey = '__' + panelKey + 'PanelShowToken';
 
     if (shouldShow) {
+      // Cancel any pending hide handler (otherwise it can fire at the end of
+      // the *open* transition and remove the show class).
+      if (contentEl[hideHandlerKey]) {
+        contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
+        contentEl[hideHandlerKey] = null;
+      }
+
       // Show (force a frame between "off-screen" and "visible" so the slide-in
       // always transitions at the same speed as slide-out)
       panelEl.classList.add(panelShowClass);
@@ -249,7 +258,12 @@ const PostModule = (function() {
       // Force the browser to apply the initial transform before we switch to visible.
       try { void contentEl.offsetWidth; } catch (e) {}
 
+      // Token prevents stale RAF from reopening after a rapid close/open.
+      contentEl[showTokenKey] = (contentEl[showTokenKey] || 0) + 1;
+      var token = contentEl[showTokenKey];
+
       requestAnimationFrame(function() {
+        if (contentEl[showTokenKey] !== token) return;
         contentEl.classList.remove(hiddenClass);
         contentEl.classList.add(visibleClass);
       });
@@ -257,15 +271,39 @@ const PostModule = (function() {
     }
 
     // Hide (slide out, then remove from display)
+    // Invalidate any pending show RAF.
+    contentEl[showTokenKey] = (contentEl[showTokenKey] || 0) + 1;
+
     contentEl.classList.remove(visibleClass);
     contentEl.classList.add(hiddenClass);
     panelEl.setAttribute('aria-hidden', 'true');
 
-    contentEl.addEventListener('transitionend', function handler(e) {
-      if (e && e.target !== contentEl) return;
-      contentEl.removeEventListener('transitionend', handler);
+    // If we weren't visible, there may be no transition; hide immediately and
+    // avoid leaving a stale transitionend handler behind.
+    if (!panelEl.classList.contains(panelShowClass)) {
       panelEl.classList.remove(panelShowClass);
-    }, { once: true });
+      return;
+    }
+    if (!contentEl.classList.contains(visibleClass)) {
+      panelEl.classList.remove(panelShowClass);
+      return;
+    }
+
+    // Remove any previous hide handler before installing a new one.
+    if (contentEl[hideHandlerKey]) {
+      contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
+      contentEl[hideHandlerKey] = null;
+    }
+
+    contentEl[hideHandlerKey] = function handler(e) {
+      if (e && e.target !== contentEl) return;
+      // Only finalize hiding if we're still in the hidden state.
+      if (!contentEl.classList.contains(hiddenClass)) return;
+      contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
+      contentEl[hideHandlerKey] = null;
+      panelEl.classList.remove(panelShowClass);
+    };
+    contentEl.addEventListener('transitionend', contentEl[hideHandlerKey], { once: true });
   }
 
   function forceMapMode() {
