@@ -6850,6 +6850,9 @@ const ButtonAnchorBottom = (function() {
             try {
                 var t = e && e.target;
                 if (isEditableTarget(t)) return;
+                // Only engage for real interactive clicks (prevents message editor "click to edit" div
+                // from triggering slack).
+                if (!(t && t.closest && t.closest('button, [role="button"], a'))) return;
             } catch (e0) {}
             
             // Never show slack for containers that don't overflow.
@@ -7186,7 +7189,8 @@ const ButtonAnchorTop = (function() {
                 // Only anchor if the click is inside this scroll container.
                 if (!scrollEl.contains(t)) return;
                 // Anchor the closest "button-like" element to avoid anchoring to inner icon spans.
-                var anchorEl = t.closest('button, [role="button"], a') || t;
+                var anchorEl = t.closest('button, [role="button"], a');
+                if (!anchorEl) return;
                 pendingAnchor = { el: anchorEl, topBefore: anchorEl.getBoundingClientRect().top };
                 clickHoldUntil = Date.now() + clickHoldMs;
                 anchorApplied = false;
