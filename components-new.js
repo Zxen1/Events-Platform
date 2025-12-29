@@ -7011,16 +7011,33 @@ const ButtonAnchorBottom = (function() {
         // Wheel/trackpad: block downward scroll while slack is visible.
         scrollEl.addEventListener('wheel', function(e) {
             try {
-                // Allow wheel scrolling inside open dropdown option lists (e.g. Country menu).
-                // The anchor should not cancel the default scrolling of nested scroll containers.
-                var t = e && e.target;
-                if (t && t.closest) {
-                    if (t.closest('.fieldset-menu-options, .admin-currency-options, .admin-language-options')) {
-                        startScrollBurst();
-                        return;
-                    }
-                }
                 var deltaY = Number(e && e.deltaY) || 0;
+                
+                // If the wheel event happens within an open dropdown wrapper, route the scroll to the
+                // dropdown options list when it can actually scroll in that direction.
+                // This prevents the anchor from "eating" the first downward scroll.
+                try {
+                    var t = e && e.target;
+                    if (t && t.closest) {
+                        var wrap = t.closest('.fieldset-menu.fieldset-menu--open, .admin-currency-wrapper.admin-currency-wrapper--open, .admin-language-wrapper.admin-language-wrapper--open');
+                        if (wrap) {
+                            var opts = wrap.querySelector('.fieldset-menu-options--open, .admin-currency-options--open, .admin-language-options--open') ||
+                                       wrap.querySelector('.fieldset-menu-options, .admin-currency-options, .admin-language-options');
+                            if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
+                                var max = opts.scrollHeight - opts.clientHeight;
+                                var st = opts.scrollTop || 0;
+                                if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
+                                    opts.scrollTop = st + deltaY;
+                                    startScrollBurst();
+                                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                } catch (_eMenu) {}
+
                 if (deltaY > 0) collapseIfOffscreenBelow();
                 if (deltaY > 0 && isSlackOnScreen()) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
@@ -7355,15 +7372,31 @@ const ButtonAnchorTop = (function() {
         // Wheel/trackpad: block upward scroll while slack is visible.
         scrollEl.addEventListener('wheel', function(e) {
             try {
-                // Allow wheel scrolling inside open dropdown option lists.
-                var t = e && e.target;
-                if (t && t.closest) {
-                    if (t.closest('.fieldset-menu-options, .admin-currency-options, .admin-language-options')) {
-                        startScrollBurst();
-                        return;
-                    }
-                }
                 var deltaY = Number(e && e.deltaY) || 0;
+
+                // Route wheel scrolling within open dropdown wrappers to their options list when possible.
+                try {
+                    var t = e && e.target;
+                    if (t && t.closest) {
+                        var wrap = t.closest('.fieldset-menu.fieldset-menu--open, .admin-currency-wrapper.admin-currency-wrapper--open, .admin-language-wrapper.admin-language-wrapper--open');
+                        if (wrap) {
+                            var opts = wrap.querySelector('.fieldset-menu-options--open, .admin-currency-options--open, .admin-language-options--open') ||
+                                       wrap.querySelector('.fieldset-menu-options, .admin-currency-options, .admin-language-options');
+                            if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
+                                var max = opts.scrollHeight - opts.clientHeight;
+                                var st = opts.scrollTop || 0;
+                                if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
+                                    opts.scrollTop = st + deltaY;
+                                    startScrollBurst();
+                                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                } catch (_eMenu) {}
+
                 if (deltaY < 0) collapseIfOffscreenAbove();
                 if (deltaY < 0 && isSlackOnScreen()) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
