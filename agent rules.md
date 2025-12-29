@@ -22,6 +22,10 @@ The user can only see committed/live code, not workspace changes. You can see bo
 
 This is inherent logic - you must track what you read vs what you changed. Every customer expects this.
 
+## ✅ SOURCE OF TRUTH RULE (MANDATORY)
+
+**I’ll stick to verifiable file state only and won’t speak as if something exists unless I’ve confirmed it in the folder.**
+
 ## ⚠️ CRITICAL PERFORMANCE RULE ⚠️
 
 **YOU ARE NOT ALLOWED TO DO ANYTHING THAT WILL JEOPARDIZE THE LOADING SPEED OF THE WEBSITE.**
