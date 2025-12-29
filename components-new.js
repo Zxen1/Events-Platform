@@ -7172,6 +7172,8 @@ const ButtonAnchorTop = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
+                'background:none;' +
+                'border:none;' +
                 '} ' +
                 '.panel-top-slack.panel-top-slack--active{' +
                 /* DEBUG VISUAL: show spacer presence only when active */
