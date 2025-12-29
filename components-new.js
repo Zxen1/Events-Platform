@@ -6835,8 +6835,23 @@ const ButtonAnchorBottom = (function() {
             } catch (e2) {}
         }, true);
         
+        function isEditableTarget(t) {
+            if (!t || !(t instanceof Element)) return false;
+            try {
+                if (t.isContentEditable) return true;
+                if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
+            } catch (e) {}
+            return false;
+        }
+        
         // Clicking: click-hold window + temporary slack ON.
-        function holdClickSlack() {
+        function holdClickSlack(e) {
+            // Never engage slack for text editing interactions (messages tab bug fix).
+            try {
+                var t = e && e.target;
+                if (isEditableTarget(t)) return;
+            } catch (e0) {}
+            
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
@@ -7151,11 +7166,22 @@ const ButtonAnchorTop = (function() {
             anchorObserver = null;
         }
 
+        function isEditableTarget(t) {
+            if (!t || !(t instanceof Element)) return false;
+            try {
+                if (t.isContentEditable) return true;
+                if (t.closest && t.closest('input, textarea, select, option, [contenteditable], [contenteditable="true"], [contenteditable="plaintext-only"]')) return true;
+            } catch (e) {}
+            return false;
+        }
+        
         // Capture the anchor target before DOM changes.
         scrollEl.addEventListener('pointerdown', function(e) {
             try {
                 var t = e && e.target;
                 if (!(t instanceof Element)) return;
+                // Never engage top-anchor logic for text editing interactions (messages tab bug fix).
+                if (isEditableTarget(t)) return;
                 if (slackEl && (t === slackEl || slackEl.contains(t))) return;
                 // Only anchor if the click is inside this scroll container.
                 if (!scrollEl.contains(t)) return;
