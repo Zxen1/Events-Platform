@@ -237,11 +237,22 @@ const PostModule = (function() {
     var hiddenClass = panelKey + '-panel-content--hidden';
 
     if (shouldShow) {
-      // Show
+      // Show (force a frame between "off-screen" and "visible" so the slide-in
+      // always transitions at the same speed as slide-out)
       panelEl.classList.add(panelShowClass);
       panelEl.setAttribute('aria-hidden', 'false');
-      contentEl.classList.remove(hiddenClass);
-      contentEl.classList.add(visibleClass);
+
+      // Ensure we start from the hidden/off-screen state.
+      contentEl.classList.remove(visibleClass);
+      contentEl.classList.add(hiddenClass);
+
+      // Force the browser to apply the initial transform before we switch to visible.
+      try { void contentEl.offsetWidth; } catch (e) {}
+
+      requestAnimationFrame(function() {
+        contentEl.classList.remove(hiddenClass);
+        contentEl.classList.add(visibleClass);
+      });
       return;
     }
 

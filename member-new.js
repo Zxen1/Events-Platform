@@ -1691,8 +1691,16 @@ const MemberModule = (function() {
         
         panel.classList.add('member-panel--show');
         panel.setAttribute('aria-hidden', 'false');
-        panelContent.classList.remove('member-panel-content--hidden');
-        panelContent.classList.add('member-panel-content--visible');
+
+        // Show (force a frame between "off-screen" and "visible" so slide-in
+        // always transitions at the same speed as slide-out)
+        panelContent.classList.remove('member-panel-content--visible');
+        panelContent.classList.add('member-panel-content--hidden');
+        try { void panelContent.offsetWidth; } catch (e) {}
+        requestAnimationFrame(function() {
+            panelContent.classList.remove('member-panel-content--hidden');
+            panelContent.classList.add('member-panel-content--visible');
+        });
         
         // Refresh map settings buttons (in case member logged in/out)
         initMapLightingButtons();

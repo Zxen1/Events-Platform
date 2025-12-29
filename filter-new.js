@@ -117,8 +117,14 @@ const FilterModule = (function() {
         panelEl.classList.add('show');
         panelEl.setAttribute('aria-hidden', 'false');
         panelEl.removeAttribute('inert');
-        
-        contentEl.classList.add('panel-visible');
+
+        // Show (force a frame between "off-screen" and "visible" so slide-in
+        // always transitions at the same speed as slide-out)
+        contentEl.classList.remove('panel-visible');
+        try { void contentEl.offsetWidth; } catch (e) {}
+        requestAnimationFrame(function() {
+            contentEl.classList.add('panel-visible');
+        });
         
         // Bring panel to front of stack
         App.bringToTop(panelEl);

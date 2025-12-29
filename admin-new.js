@@ -427,8 +427,16 @@ const AdminModule = (function() {
         
         panel.classList.add('admin-panel--show');
         panel.setAttribute('aria-hidden', 'false');
-        panelContent.classList.remove('admin-panel-content--hidden');
-        panelContent.classList.add('admin-panel-content--visible');
+
+        // Show (force a frame between "off-screen" and "visible" so slide-in
+        // always transitions at the same speed as slide-out)
+        panelContent.classList.remove('admin-panel-content--visible');
+        panelContent.classList.add('admin-panel-content--hidden');
+        try { void panelContent.offsetWidth; } catch (e) {}
+        requestAnimationFrame(function() {
+            panelContent.classList.remove('admin-panel-content--hidden');
+            panelContent.classList.add('admin-panel-content--visible');
+        });
         
         // Bring panel to front of stack
         App.bringToTop(panel);
