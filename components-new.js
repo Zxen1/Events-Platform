@@ -6873,6 +6873,7 @@ const ButtonAnchorBottom = (function() {
         
         var unlockTimer = null;
         var locked = false;
+        var clickHoldUntil = 0;
         var currentSlackPx = null;
         var lastScrollTop = scrollEl.scrollTop || 0;
         var scrollbarFadeTimer = null;
@@ -6953,6 +6954,8 @@ const ButtonAnchorBottom = (function() {
         function collapseIfOffscreenBelow() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
+                // During the click hold window, never collapse slack.
+                if (Date.now() < clickHoldUntil) return false;
                 if (isSlackOnScreen()) return false;
                 pendingOffscreenCollapse = false;
                 applySlackPx(collapsedSlackPx);
@@ -6966,6 +6969,8 @@ const ButtonAnchorBottom = (function() {
             if (locked) return;
             var h = scrollEl.clientHeight || 0;
             if (h <= 0) return;
+            // During click hold window, don't lock/collapse.
+            if (Date.now() < clickHoldUntil) return;
             scrollEl.style.maxHeight = h + 'px';
             locked = true;
         }
@@ -7055,6 +7060,25 @@ const ButtonAnchorBottom = (function() {
                 }
             } catch (e2) {}
         }, true);
+        
+        // Clicking: click-hold window + temporary slack ON.
+        function holdClickSlack() {
+            // Never show slack for containers that don't overflow.
+            try {
+                var h = scrollEl.clientHeight || 0;
+                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
+                if (contentNoSlack <= h) {
+                    pendingOffscreenCollapse = false;
+                    applySlackPx(collapsedSlackPx);
+                    return;
+                }
+            } catch (e0) {}
+            
+            clickHoldUntil = Date.now() + clickHoldMs;
+            applySlackPx(expandedSlackPx);
+        }
+        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
+        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
         
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
