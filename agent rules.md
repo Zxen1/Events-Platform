@@ -104,6 +104,24 @@ This project uses split storage schemas:
    - Example: if `country_code` is renamed to `country` in storage tables, then update the `funmapco_db.admins`
      and `funmapco_db.members` views to select `country` instead of `country_code`.
 
+### ⚠️ CRITICAL: WHEN VIEWS DO / DO NOT NEED UPDATES ⚠️
+
+**Views MUST be updated** when you change **schema** in `funmapco_system` / `funmapco_content`:
+- Adding/removing/renaming a column
+- Changing a column name a view references
+- Moving a table between schemas
+
+**Views do NOT need updates** when you only change **row data** (no column changes), such as:
+- Updating `setting_value` in `admin_settings`
+- Renumbering IDs (changing values in an `id` column) while keeping the same columns
+- Reordering rows
+
+**DB change safety checklist (mandatory before giving SQL):**
+1. Identify the **storage schema table** being edited (`funmapco_system` or `funmapco_content`).
+2. Confirm whether the change is **schema** (columns) or **data** (rows).
+3. If schema: include the required `funmapco_db` **view updates** in the same chat message.
+4. If data-only: do **not** claim view changes are required.
+
 **How Database Changes Work:**
 1. AI agent provides SQL statements (SELECT, UPDATE, INSERT, etc.)
 2. User copies the SQL and runs it themselves in their database tool (phpMyAdmin, MySQL client, etc.)
