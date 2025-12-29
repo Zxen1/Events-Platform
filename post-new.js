@@ -442,12 +442,12 @@ const PostModule = (function() {
 
     var reminderMsg = document.createElement('p');
     reminderMsg.className = 'recent-panel-reminder-text';
-    reminderMsg.dataset.messageKey = 'msg_member_login_reminder';
+    reminderMsg.dataset.messageKey = 'msg_recent_footer';
     reminderMsg.textContent = '';
     reminderWrap.appendChild(reminderMsg);
 
     if (typeof window.getMessage === 'function') {
-      window.getMessage('msg_member_login_reminder', {}, false).then(function(text) {
+      window.getMessage('msg_recent_footer', {}, false).then(function(text) {
         if (typeof text === 'string') {
           reminderMsg.textContent = text;
         }
