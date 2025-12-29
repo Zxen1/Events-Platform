@@ -7084,16 +7084,26 @@ const ButtonAnchorBottom = (function() {
                     }
                 } catch (_eMenu) {}
 
-                if (deltaY > 0) collapseIfOffscreenBelow();
-                if (deltaY > 0 && isSlackOnScreen()) {
-                    // If content just grew (e.g. dropdown opened), do NOT trap the panel.
-                    // Growth must be natural; the lock is only for real shrink events.
-                    if ((Date.now() - lastGrowAt) < 600) {
-                        try { unlock(); } catch (_eUn) {}
-                    } else {
-                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-                    return;
+                if (deltaY > 0) {
+                    // IMPORTANT: if the user starts wheel-scrolling down, the click-hold window is over.
+                    // Allow the spacer to collapse OFF-SCREEN so the panel can behave naturally.
+                    // (Never collapse while visible.)
+                    try {
+                        if (Date.now() < clickHoldUntil && !isSlackOnScreen()) clickHoldUntil = 0;
+                    } catch (_eHold) {}
+
+                    collapseIfOffscreenBelow();
+
+                    // Never allow wheel to scroll further down once the slack is visible (no abyss).
+                    if (isSlackOnScreen()) {
+                        // If we recently detected growth, unlock so the panel can expand naturally,
+                        // but still block the wheel from entering ghost space.
+                        if ((Date.now() - lastGrowAt) < 600) {
+                            try { unlock(); } catch (_eUn) {}
+                        }
+                        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                        return;
                     }
                 }
             } catch (e0) {}
@@ -7119,11 +7129,18 @@ const ButtonAnchorBottom = (function() {
                 var dy = y - lastTouchY;
                 lastTouchY = y;
                 // Finger moving up (dy < 0) attempts to scroll down.
-                if (dy < 0) collapseIfOffscreenBelow();
-                if (dy < 0 && isSlackOnScreen()) {
-                    if ((Date.now() - lastGrowAt) < 600) {
-                        try { unlock(); } catch (_eUn2) {}
-                    } else {
+                if (dy < 0) {
+                    // User started scrolling down; end click-hold window so off-screen slack can collapse.
+                    try {
+                        if (Date.now() < clickHoldUntil && !isSlackOnScreen()) clickHoldUntil = 0;
+                    } catch (_eHold2) {}
+
+                    collapseIfOffscreenBelow();
+
+                    if (isSlackOnScreen()) {
+                        if ((Date.now() - lastGrowAt) < 600) {
+                            try { unlock(); } catch (_eUn2) {}
+                        }
                         if (e && typeof e.preventDefault === 'function') e.preventDefault();
                         if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                     }
@@ -7135,8 +7152,6 @@ const ButtonAnchorBottom = (function() {
         scrollEl.addEventListener('keydown', function(e) {
             try {
                 if (!isSlackOnScreen()) return;
-                // If content just grew, allow normal navigation.
-                if ((Date.now() - lastGrowAt) < 600) return;
                 var k = e && (e.key || e.code) ? String(e.key || e.code) : '';
                 if (k === 'ArrowDown' || k === 'PageDown' || k === 'End' || k === ' ' || k === 'Spacebar' || k === 'Space') {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
