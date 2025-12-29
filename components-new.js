@@ -7089,9 +7089,9 @@ const ButtonAnchorBottom = (function() {
         
         // IMPORTANT RULE:
         // Button Anchor Bottom should NOT trigger on normal panel/content expansion.
-        // It should trigger only when the scroll viewport shrinks (clientHeight decreases),
-        // which is when buttons near the bottom can "fly away" as the visible area collapses.
-        function maybeArmSlackForShrink() {
+        // It should arm ONLY when the scrollable area shrinks (content height or viewport height decreases),
+        // which is when buttons near the bottom can "fly away" (scrollTop clamp/jump).
+        function armSlackForDetectedShrink() {
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
@@ -7107,24 +7107,54 @@ const ButtonAnchorBottom = (function() {
             applySlackPx(expandedSlackPx);
         }
         
-        // Detect actual viewport shrink (the only allowed trigger).
-        var lastClientHeight = scrollEl.clientHeight || 0;
-        if (typeof ResizeObserver !== 'undefined') {
-            try {
-                var anchorResizeObserver = new ResizeObserver(function() {
-                    try {
-                        var h = scrollEl.clientHeight || 0;
-                        if (lastClientHeight > 0 && h > 0 && h < lastClientHeight) {
-                            maybeArmSlackForShrink();
-                        }
-                        lastClientHeight = h;
-                    } catch (e0) {}
-                });
-                anchorResizeObserver.observe(scrollEl);
-            } catch (e1) {
-                // ignore
-            }
+        // Shrink watch: start a short observation window after user interaction.
+        // If the scrollable area shrinks during this window, arm slack.
+        function getContentNoSlackHeight() {
+            try { return (scrollEl.scrollHeight || 0) - (currentSlackPx || 0); } catch (e) { return 0; }
         }
+        
+        var shrinkWatchUntil = 0;
+        var shrinkWatchRaf = 0;
+        var shrinkBaseClientH = scrollEl.clientHeight || 0;
+        var shrinkBaseContentH = getContentNoSlackHeight();
+        
+        function stopShrinkWatch() {
+            shrinkWatchUntil = 0;
+            if (shrinkWatchRaf) {
+                try { cancelAnimationFrame(shrinkWatchRaf); } catch (e) {}
+            }
+            shrinkWatchRaf = 0;
+        }
+        
+        function shrinkWatchTick() {
+            shrinkWatchRaf = 0;
+            if (!shrinkWatchUntil || Date.now() > shrinkWatchUntil) return;
+            
+            var curClientH = scrollEl.clientHeight || 0;
+            var curContentH = getContentNoSlackHeight();
+            
+            // Only arm if something actually SHRANK (tolerance 1px).
+            if ((shrinkBaseClientH > 0 && curClientH > 0 && curClientH < (shrinkBaseClientH - 1)) ||
+                (shrinkBaseContentH > 0 && curContentH > 0 && curContentH < (shrinkBaseContentH - 1))) {
+                stopShrinkWatch();
+                armSlackForDetectedShrink();
+                return;
+            }
+            
+            shrinkWatchRaf = requestAnimationFrame(shrinkWatchTick);
+        }
+        
+        function startShrinkWatch() {
+            // Reset baseline each time.
+            shrinkBaseClientH = scrollEl.clientHeight || 0;
+            shrinkBaseContentH = getContentNoSlackHeight();
+            shrinkWatchUntil = Date.now() + clickHoldMs;
+            if (!shrinkWatchRaf) shrinkWatchRaf = requestAnimationFrame(shrinkWatchTick);
+        }
+        
+        // Interaction points that can trigger collapses/shrinks.
+        scrollEl.addEventListener('pointerdown', startShrinkWatch, { passive: true, capture: true });
+        scrollEl.addEventListener('click', startShrinkWatch, { passive: true, capture: true });
         
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
