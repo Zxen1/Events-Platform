@@ -52,6 +52,12 @@ const PostModule = (function() {
 
   var modeButtonsBound = false;
 
+  // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
+  var panelMotion = {
+    post: { token: 0, hideHandler: null, hideTimeoutId: 0 },
+    recents: { token: 0, hideHandler: null, hideTimeoutId: 0 }
+  };
+
   /* --------------------------------------------------------------------------
      INIT
      -------------------------------------------------------------------------- */
@@ -62,7 +68,7 @@ const PostModule = (function() {
       throw new Error('[Post] .post-mode-panels container not found.');
     }
 
-    ensureBoardsDom();
+    ensurePanelsDom();
     attachButtonAnchors();
     bindAppEvents();
     bindModeButtons();
@@ -76,7 +82,7 @@ const PostModule = (function() {
     updatePostsButtonState();
   }
 
-  function ensureBoardsDom() {
+  function ensurePanelsDom() {
     // Recent panel
     recentsPanelEl = panelsContainerEl.querySelector('.recents-panel');
     if (!recentsPanelEl) {
@@ -235,16 +241,41 @@ const PostModule = (function() {
     var panelShowClass = panelKey + '-panel--show';
     var visibleClass = panelKey + '-panel-content--visible';
     var hiddenClass = panelKey + '-panel-content--hidden';
-    var hideHandlerKey = '__' + panelKey + 'PanelHideHandler';
-    var showTokenKey = '__' + panelKey + 'PanelShowToken';
+    var m = panelMotion[panelKey];
+    if (!m) {
+      // Should never happen (only "post" and "recents"), but keep it safe.
+      m = { token: 0, hideHandler: null, hideTimeoutId: 0 };
+      panelMotion[panelKey] = m;
+    }
+
+    function clearPendingHide() {
+      if (m.hideHandler) {
+        contentEl.removeEventListener('transitionend', m.hideHandler);
+        m.hideHandler = null;
+      }
+      if (m.hideTimeoutId) {
+        clearTimeout(m.hideTimeoutId);
+        m.hideTimeoutId = 0;
+      }
+    }
+
+    function getTransitionDurationMs() {
+      var durationMs = 300;
+      try {
+        var cs = window.getComputedStyle(contentEl);
+        var dur = (cs && cs.transitionDuration) ? String(cs.transitionDuration).split(',')[0].trim() : '';
+        if (dur.endsWith('ms')) durationMs = Math.max(0, parseFloat(dur) || 0);
+        else if (dur.endsWith('s')) durationMs = Math.max(0, (parseFloat(dur) || 0) * 1000);
+      } catch (e) {
+        // ignore
+      }
+      return Math.max(0, Math.ceil(durationMs));
+    }
 
     if (shouldShow) {
-      // Cancel any pending hide handler (otherwise it can fire at the end of
-      // the *open* transition and remove the show class).
-      if (contentEl[hideHandlerKey]) {
-        contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
-        contentEl[hideHandlerKey] = null;
-      }
+      clearPendingHide();
+      m.token += 1;
+      var token = m.token;
 
       // Show (force a frame between "off-screen" and "visible" so the slide-in
       // always transitions at the same speed as slide-out)
@@ -258,12 +289,8 @@ const PostModule = (function() {
       // Force the browser to apply the initial transform before we switch to visible.
       try { void contentEl.offsetWidth; } catch (e) {}
 
-      // Token prevents stale RAF from reopening after a rapid close/open.
-      contentEl[showTokenKey] = (contentEl[showTokenKey] || 0) + 1;
-      var token = contentEl[showTokenKey];
-
       requestAnimationFrame(function() {
-        if (contentEl[showTokenKey] !== token) return;
+        if (m.token !== token) return;
         contentEl.classList.remove(hiddenClass);
         contentEl.classList.add(visibleClass);
       });
@@ -271,69 +298,42 @@ const PostModule = (function() {
     }
 
     // Hide (slide out, then remove from display)
-    // Invalidate any pending show RAF.
-    contentEl[showTokenKey] = (contentEl[showTokenKey] || 0) + 1;
+    m.token += 1; // invalidates any pending open RAF
+    clearPendingHide();
+
+    var isShown = panelEl.classList.contains(panelShowClass);
+    var isVisible = contentEl.classList.contains(visibleClass);
 
     panelEl.setAttribute('aria-hidden', 'true');
 
-    // Always keep the panel mounted while we "close" so it never teleports
-    // off-screen due to an immediate unmount.
-    panelEl.classList.add(panelShowClass);
+    // If not shown/visible, there's nothing to animate (already off-screen).
+    if (!isShown || !isVisible) {
+      contentEl.classList.remove(visibleClass);
+      contentEl.classList.add(hiddenClass);
+      panelEl.classList.remove(panelShowClass);
+      return;
+    }
 
-    // Trigger (or ensure) slide-out state.
+    // Start slide-out.
     contentEl.classList.remove(visibleClass);
     contentEl.classList.add(hiddenClass);
 
-    // Remove any previous hide handler before installing a new one.
-    if (contentEl[hideHandlerKey]) {
-      contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
-      contentEl[hideHandlerKey] = null;
-    }
-
-    // Safety: transitionend can fail to fire in edge cases; use a timeout based
-    // on computed duration so we still remove the outer shell after the same time.
-    var timeoutKey = hideHandlerKey + 'Timeout';
-    if (contentEl[timeoutKey]) {
-      clearTimeout(contentEl[timeoutKey]);
-      contentEl[timeoutKey] = null;
-    }
-
-    var durationMs = 300;
-    try {
-      var cs = window.getComputedStyle(contentEl);
-      var dur = (cs && cs.transitionDuration) ? String(cs.transitionDuration).split(',')[0].trim() : '';
-      if (dur.endsWith('ms')) durationMs = Math.max(0, parseFloat(dur) || 0);
-      else if (dur.endsWith('s')) durationMs = Math.max(0, (parseFloat(dur) || 0) * 1000);
-    } catch (e) {
-      // ignore
-    }
-    durationMs = Math.max(0, Math.ceil(durationMs));
-
-    var finalized = false;
-    function finalizeHide() {
-      if (finalized) return;
-      finalized = true;
-      if (contentEl[timeoutKey]) {
-        clearTimeout(contentEl[timeoutKey]);
-        contentEl[timeoutKey] = null;
-      }
-      if (contentEl[hideHandlerKey]) {
-        contentEl.removeEventListener('transitionend', contentEl[hideHandlerKey]);
-        contentEl[hideHandlerKey] = null;
-      }
+    var durationMs2 = getTransitionDurationMs();
+    var finalized2 = false;
+    function finalizeHide2() {
+      if (finalized2) return;
+      finalized2 = true;
+      clearPendingHide();
       panelEl.classList.remove(panelShowClass);
     }
 
-    contentEl[hideHandlerKey] = function handler(e) {
+    m.hideHandler = function(e) {
       if (e && e.target !== contentEl) return;
-      // Only finalize hiding if we're still in the hidden state.
       if (!contentEl.classList.contains(hiddenClass)) return;
-      finalizeHide();
+      finalizeHide2();
     };
-    contentEl.addEventListener('transitionend', contentEl[hideHandlerKey], { once: true });
-
-    // Timeout cleanup: a tiny buffer keeps it aligned with the easing end.
-    contentEl[timeoutKey] = setTimeout(finalizeHide, durationMs + 50);
+    contentEl.addEventListener('transitionend', m.hideHandler, { once: true });
+    m.hideTimeoutId = setTimeout(finalizeHide2, durationMs2 + 50);
   }
 
   function forceMapMode() {
