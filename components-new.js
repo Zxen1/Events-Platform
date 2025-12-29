@@ -6880,6 +6880,43 @@ const ButtonAnchorBottom = (function() {
         
         var slackEl = ensureSlackEl(scrollEl);
         var pendingOffscreenCollapse = false;
+
+        // Track real content size (excluding slack) so we can distinguish:
+        // - normal growth (dropdown opens, content expands) => DO NOT lock the panel
+        // - shrink/collapse (accordion closes) => allow temporary lock to protect the interacted element
+        var lastContentNoSlack = null;
+        var lastGrowAt = 0;
+        var lastShrinkAt = 0;
+        var shrinkProtectUntil = 0;
+
+        function getContentNoSlack() {
+            try {
+                return (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function noteContentChange() {
+            try {
+                var now = Date.now();
+                var v = getContentNoSlack();
+                if (lastContentNoSlack === null) {
+                    lastContentNoSlack = v;
+                    return;
+                }
+                if (v > lastContentNoSlack) {
+                    lastGrowAt = now;
+                    // Growth must never be blocked by a stale lock from a recent scroll burst.
+                    if (locked) unlock();
+                } else if (v < lastContentNoSlack) {
+                    lastShrinkAt = now;
+                    // Briefly permit locking during/after a real shrink event (protect the click).
+                    shrinkProtectUntil = now + stopDelayMs + 250;
+                }
+                lastContentNoSlack = v;
+            } catch (e0) {}
+        }
         
         function fadeScrollbar() {
             try {
@@ -6897,6 +6934,7 @@ const ButtonAnchorBottom = (function() {
             scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
             try { scrollEl.getBoundingClientRect(); } catch (e) {}
             fadeScrollbar();
+            noteContentChange();
         }
         
         function isSlackOnScreen() {
@@ -6988,13 +7026,17 @@ const ButtonAnchorBottom = (function() {
         }
         
         function startScrollBurst() {
-            lock();
+            noteContentChange();
+            // Only lock when we have evidence of a real shrink/collapse event.
+            // Normal panel growth must remain natural (no lock on dropdown open).
+            if (Date.now() < shrinkProtectUntil) lock();
             if (unlockTimer) clearTimeout(unlockTimer);
             unlockTimer = setTimeout(unlock, stopDelayMs);
         }
         
         function onScroll() {
             try {
+                noteContentChange();
                 var st = scrollEl.scrollTop || 0;
                 // If slack is on-screen and scrollTop increases anyway (e.g. scrollbar drag),
                 // do NOT snap back. Just ignore this scroll event.
@@ -7044,9 +7086,15 @@ const ButtonAnchorBottom = (function() {
 
                 if (deltaY > 0) collapseIfOffscreenBelow();
                 if (deltaY > 0 && isSlackOnScreen()) {
+                    // If content just grew (e.g. dropdown opened), do NOT trap the panel.
+                    // Growth must be natural; the lock is only for real shrink events.
+                    if ((Date.now() - lastGrowAt) < 600) {
+                        try { unlock(); } catch (_eUn) {}
+                    } else {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
                     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
                     return;
+                    }
                 }
             } catch (e0) {}
             startScrollBurst();
@@ -7073,8 +7121,12 @@ const ButtonAnchorBottom = (function() {
                 // Finger moving up (dy < 0) attempts to scroll down.
                 if (dy < 0) collapseIfOffscreenBelow();
                 if (dy < 0 && isSlackOnScreen()) {
-                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    if ((Date.now() - lastGrowAt) < 600) {
+                        try { unlock(); } catch (_eUn2) {}
+                    } else {
+                        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                    }
                 }
             } catch (e1) {}
         }, { passive: false });
@@ -7083,6 +7135,8 @@ const ButtonAnchorBottom = (function() {
         scrollEl.addEventListener('keydown', function(e) {
             try {
                 if (!isSlackOnScreen()) return;
+                // If content just grew, allow normal navigation.
+                if ((Date.now() - lastGrowAt) < 600) return;
                 var k = e && (e.key || e.code) ? String(e.key || e.code) : '';
                 if (k === 'ArrowDown' || k === 'PageDown' || k === 'End' || k === ' ' || k === 'Spacebar' || k === 'Space') {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
