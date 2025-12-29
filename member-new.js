@@ -1422,11 +1422,12 @@ const MemberModule = (function() {
         if (!memberId || memberId <= 0 || !currentUser.email) {
             console.warn('[Member] Cannot save profile - invalid/missing id or email, needs re-login');
             getMessage('msg_auth_session_expired', {}, false).then(function(message) {
-                var text = message || 'Your session has expired. Please log in again.';
-                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    ToastComponent.showError(text);
-                } else {
-                    showStatus(text, { error: true });
+                if (message) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(message);
+                    } else {
+                        showStatus(message, { error: true });
+                    }
                 }
             });
             // Force logout to clear stale session
@@ -1441,22 +1442,24 @@ const MemberModule = (function() {
         // Validation warnings using existing component (Toast)
         if ((pw || confirm) && (!pw || !confirm)) {
             getMessage('msg_auth_register_empty', {}, false).then(function(message) {
-                var text = message || 'Please enter and confirm your new password.';
-                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    ToastComponent.showError(text);
-                } else {
-                    showStatus(text, { error: true });
+                if (message) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(message);
+                    } else {
+                        showStatus(message, { error: true });
+                    }
                 }
             });
             return;
         }
         if (pw && confirm && pw !== confirm) {
             getMessage('msg_auth_register_password_mismatch', {}, false).then(function(message) {
-                var text = message || 'Passwords do not match.';
-                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    ToastComponent.showError(text);
-                } else {
-                    showStatus(text, { error: true });
+                if (message) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(message);
+                    } else {
+                        showStatus(message, { error: true });
+                    }
                 }
             });
             return;
@@ -1542,11 +1545,12 @@ const MemberModule = (function() {
                       return;
                   }
                   getMessage('msg_admin_save_error_response', {}, false).then(function(message) {
-                      var text = message || 'Save failed';
-                      if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                          ToastComponent.showError(text);
-                      } else {
-                          showStatus(text, { error: true });
+                      if (message) {
+                          if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                              ToastComponent.showError(message);
+                          } else {
+                              showStatus(message, { error: true });
+                          }
                       }
                   });
               });
@@ -2845,7 +2849,7 @@ const MemberModule = (function() {
         if (!termsAgreed) {
             if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                 getMessage('msg_post_terms_required', {}, false).then(function(msg) {
-                    ToastComponent.showError(msg || 'Please agree to the terms and conditions.');
+                    if (msg) ToastComponent.showError(msg);
                 });
             }
             return;
@@ -2855,7 +2859,7 @@ const MemberModule = (function() {
         if (!selectedCategory || !selectedSubcategory) {
             if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                 getMessage('msg_post_create_no_category', {}, false).then(function(msg) {
-                    ToastComponent.showError(msg || 'Please select a category and subcategory.');
+                    if (msg) ToastComponent.showError(msg);
                 });
             }
             return;
@@ -2863,15 +2867,11 @@ const MemberModule = (function() {
         
         // Collect and validate form fields
         var validation = validateAndCollectFormData();
-        if (validation.error || validation.errorKey) {
+        if (validation.errorKey) {
             if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                if (validation.errorKey) {
-                    getMessage(validation.errorKey, validation.errorPlaceholders || {}, false).then(function(msg) {
-                        ToastComponent.showError(msg || validation.error || 'Validation error.');
-                    });
-                } else {
-                    ToastComponent.showError(validation.error);
-                }
+                getMessage(validation.errorKey, validation.errorPlaceholders || {}, false).then(function(msg) {
+                    if (msg) ToastComponent.showError(msg);
+                });
             }
             if (validation.focusElement && typeof validation.focusElement.focus === 'function') {
                 validation.focusElement.focus();
@@ -2894,7 +2894,7 @@ const MemberModule = (function() {
                 if (result.success) {
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
                         getMessage('msg_post_create_success', {}, false).then(function(msg) {
-                            ToastComponent.showSuccess(msg || 'Your listing has been posted!');
+                            if (msg) ToastComponent.showSuccess(msg);
                         });
                     }
                     // Reset form
@@ -2906,7 +2906,7 @@ const MemberModule = (function() {
                             ToastComponent.showError(result.message);
                         } else {
                             getMessage('msg_post_create_error', {}, false).then(function(msg) {
-                                ToastComponent.showError(msg || 'Unable to post your listing. Please try again.');
+                                if (msg) ToastComponent.showError(msg);
                             });
                         }
                     }
@@ -2920,7 +2920,7 @@ const MemberModule = (function() {
                 
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                     getMessage('msg_post_create_error', {}, false).then(function(msg) {
-                        ToastComponent.showError(msg || 'Unable to post your listing. Please try again.');
+                        if (msg) ToastComponent.showError(msg);
                     });
                 }
             });
@@ -2947,14 +2947,7 @@ const MemberModule = (function() {
             
             // Validate required fields
             if (required && isEmptyValue(value, fieldType)) {
-                // Use existing message key with {field} placeholder
-                var errorMsg = null;
-                try {
-                    // getMessage is async but we need sync here, use fallback
-                    errorMsg = 'Enter a value for ' + fieldName + '.';
-                } catch (e) {}
                 return {
-                    error: errorMsg,
                     errorKey: 'msg_post_validation_required',
                     errorPlaceholders: { field: fieldName },
                     focusElement: findFocusableInFieldset(el, fieldType)
