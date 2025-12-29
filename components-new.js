@@ -99,7 +99,6 @@ const MenuManager = (function(){
                 menu.querySelector('input.fieldset-menu-button-input') ||
                 menu.querySelector('input.admin-currency-button-input') ||
                 menu.querySelector('input.admin-language-button-input') ||
-                menu.querySelector('input.phoneprefix-filter-input') ||
                 null
             );
         } catch (e) {
@@ -4033,67 +4032,33 @@ const PhonePrefixComponent = (function(){
         var initialValue = options.initialValue || null;
         var selectedCode = initialValue;
 
-        // Dedicated phone prefix UI (uses existing .phoneprefix-* classes)
+        // Match the Currency compact menu pattern (fieldset-menu combobox)
         var menu = document.createElement('div');
-        menu.className = 'phoneprefix-button-wrapper';
+        menu.className = 'phoneprefix-button-wrapper fieldset-menu fieldset-currency-compact';
 
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'phoneprefix-button';
-        button.setAttribute('aria-haspopup', 'true');
-        button.setAttribute('aria-expanded', 'false');
+        var initialFlagUrl = '';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
-        var btnImg = document.createElement('img');
-        btnImg.className = 'phoneprefix-button-flag';
-        btnImg.alt = '';
-        btnImg.style.display = 'none';
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnInput = menu.querySelector('.fieldset-menu-button-input');
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
 
-        var btnText = document.createElement('span');
-        btnText.className = 'phoneprefix-button-text';
-        btnText.textContent = '';
-
-        var arrow = document.createElement('span');
-        arrow.className = 'phoneprefix-button-arrow';
-        arrow.textContent = '▼';
-
-        button.appendChild(btnImg);
-        button.appendChild(btnText);
-        button.appendChild(arrow);
-
-        var opts = document.createElement('div');
-        opts.className = 'phoneprefix-options';
-        opts.hidden = true;
-
-        menu.appendChild(button);
-        menu.appendChild(opts);
-
-        // Type-to-filter input inside dropdown (supports numeric and text searching)
-        var filterInput = document.createElement('input');
-        filterInput.type = 'text';
-        filterInput.className = 'phoneprefix-filter-input';
-        filterInput.placeholder = 'Search…';
-        filterInput.autocomplete = 'off';
-        filterInput.setAttribute('aria-label', 'Search phone prefixes');
-        opts.appendChild(filterInput);
+        // Compact variant styling (no descendant selectors)
+        btn.classList.add('fieldset-menu-button--compact');
+        btnInput.classList.add('fieldset-menu-button-input--compact');
+        opts.classList.add('fieldset-menu-options--compact');
 
         function applyOpenState(isOpen) {
-            var open = !!isOpen;
-            opts.hidden = !open;
-            button.setAttribute('aria-expanded', open ? 'true' : 'false');
-            arrow.classList.toggle('phoneprefix-button-arrow--open', open);
-            if (open) {
-                // Reset filter each time menu opens (keeps behavior consistent across panels/tabs)
-                try {
-                    filterInput.value = '';
-                    filterOptions('');
-                } catch (e0) {}
-            }
+            menu.classList.toggle('fieldset-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
         }
 
         // Required by MenuManager (strict)
-        menu.__menuIsOpen = function() {
-            return opts.hidden === false;
-        };
+        menu.__menuIsOpen = function() { return menu.classList.contains('fieldset-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
 
         // Store all option elements for filtering
@@ -4121,7 +4086,7 @@ const PhonePrefixComponent = (function(){
                     btnImg.src = '';
                     btnImg.style.display = 'none';
                 }
-                btnText.textContent = found.value;
+                btnInput.value = found.value;
                 selectedCode = code;
             }
         }
@@ -4137,9 +4102,9 @@ const PhonePrefixComponent = (function(){
 
             var op = document.createElement('button');
             op.type = 'button';
-            op.className = 'phoneprefix-option';
+            op.className = 'fieldset-menu-option';
             var flagUrl = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="phoneprefix-option-flag" src="' + flagUrl + '" alt=""><span class="phoneprefix-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.addEventListener('click', function(e) {
                 e.stopPropagation();
                 if (countryCode) {
@@ -4149,10 +4114,9 @@ const PhonePrefixComponent = (function(){
                     btnImg.src = '';
                     btnImg.style.display = 'none';
                 }
-                btnText.textContent = item.value;
+                btnInput.value = item.value;
                 selectedCode = item.value;
                 applyOpenState(false);
-                filterInput.value = '';
                 filterOptions('');
                 onSelect(item.value, item.label, countryCode);
             });
@@ -4177,31 +4141,55 @@ const PhonePrefixComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
 
-        // Clicking anywhere on the button opens/closes
-        button.addEventListener('click', function(e) {
+        if (btn) {
+            btn.addEventListener('click', function(e) {
+                if (e) e.stopPropagation();
+                if (!menu.classList.contains('fieldset-menu--open')) {
+                    MenuManager.closeAll(menu);
+                    applyOpenState(true);
+                } else {
+                    applyOpenState(false);
+                }
+            });
+        }
+
+        btnInput.addEventListener('focus', function(e) {
             e.stopPropagation();
-            if (menu.__menuIsOpen()) {
+            MenuManager.closeAll(menu);
+            applyOpenState(true);
+            this.select();
+        });
+
+        btnInput.addEventListener('input', function() {
+            filterOptions(this.value);
+            if (document.activeElement !== this) return;
+            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
+        });
+
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                applyOpenState(false);
+                setValue(selectedCode);
+                filterOptions('');
+            }
+        });
+
+        btnInput.addEventListener('blur', function() {
+            setTimeout(function() {
+                if (!menu.classList.contains('fieldset-menu--open')) {
+                    setValue(selectedCode);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
+        arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (menu.classList.contains('fieldset-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
                 applyOpenState(true);
-            }
-        });
-
-        filterInput.addEventListener('click', function(e) {
-            if (e) e.stopPropagation();
-        });
-
-        filterInput.addEventListener('input', function() {
-            filterOptions(filterInput.value);
-        });
-
-        filterInput.addEventListener('keydown', function(e) {
-            if (e && e.key === 'Escape') {
-                e.stopPropagation();
-                applyOpenState(false);
-                filterInput.value = '';
-                filterOptions('');
             }
         });
 
