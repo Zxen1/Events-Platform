@@ -127,8 +127,9 @@ const MapModule = (function() {
     }
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    // Load admin settings for starting position
-    await loadSettings();
+    // Load admin settings for starting position (non-blocking).
+    // The map must render immediately; settings can arrive after.
+    loadSettings();
     
     // Determine initial style (member setting > admin setting > localStorage > default)
     var initialStyle = 'standard';
@@ -178,11 +179,7 @@ const MapModule = (function() {
   function onMapLoad() {
     // Map loaded
     
-    // Show the map (fade in) - immediate
-    const mapEl = document.querySelector('.map-container');
-    if (mapEl) {
-      mapEl.style.opacity = '1';
-    }
+    // Map container is not hidden by default; no "delayed fade-in" here.
     
     // Emit ready event immediately (other modules may depend on this)
     App.emit('map:ready', { map });
@@ -208,7 +205,7 @@ const MapModule = (function() {
         startSpin();
       }
       
-      // Apply lighting preset (deferred, after map is fully loaded)
+      // Apply lighting preset (after map is fully loaded)
       // Priority: member settings > admin settings > localStorage > default
       var lighting = 'day';
       if (window.MemberModule && window.MemberModule.getCurrentUser) {
@@ -220,9 +217,8 @@ const MapModule = (function() {
       if (lighting === 'day') {
         lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
       }
-      if (lighting && setMapLighting) {
-        setMapLighting(lighting);
-      }
+      // Day is Mapbox default; applying it only adds work and can look like a delayed "switch".
+      if (lighting && lighting !== 'day' && setMapLighting) setMapLighting(lighting);
     });
   }
 
@@ -299,6 +295,16 @@ const MapModule = (function() {
    */
   async function loadSettings() {
     try {
+      // Fast-path: if startup settings already exist, use them immediately.
+      if (window.App && typeof App.getState === 'function') {
+        var existing = App.getState('settings');
+        if (existing) {
+          adminSettings = existing || {};
+          adminSettings.system_images = App.getState('system_images') || {};
+          applySettings(adminSettings);
+          return;
+        }
+      }
       // Use shared startup settings (single request). No extra fetch here.
       if (window.App && typeof App.whenStartupSettingsReady === 'function') {
         await App.whenStartupSettingsReady();
