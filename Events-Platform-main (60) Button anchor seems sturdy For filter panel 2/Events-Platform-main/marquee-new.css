@@ -1,0 +1,203 @@
+/* ============================================================================
+   MARQUEE - Premium ads, testimonials, competitions, notices
+   ============================================================================
+   
+   CRITICAL SPECIFICATIONS:
+   
+   1. .marquee MUST have padding: 0 (no margins/padding)
+   2. .marquee MUST have border-radius: 0px (no rounded corners)
+   3. Height MUST span from header base to viewport bottom
+   4. .marquee-slide-info displays FOUR lines from post cards:
+      - Title line (.marquee-slide-info-title)
+      - Category line (.marquee-slide-info-cat) with subcategory icon
+      - Location line (.marquee-slide-info-loc) with 📍 badge
+      - Date line (.marquee-slide-info-date) with 📅 badge
+   
+   These specifications ensure the marquee displays edge-to-edge with
+   complete event information matching the post card structure.
+   
+   ========================================================================== */
+
+/* ============================================================================
+   MARQUEE BASE (outer container)
+   ============================================================================ */
+
+.marquee {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-panel);
+  pointer-events: none;
+}
+
+.marquee--show {
+  display: block;
+}
+
+/* ============================================================================
+   MARQUEE CONTENT (inner container)
+   ============================================================================ */
+
+.marquee-content {
+  position: absolute;
+  top: calc(var(--header-h) + var(--safe-top));
+  bottom: auto;
+  right: 0;
+  width: 440px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  z-index: 2;
+  transform: translateX(0);
+  transition: transform var(--panel-transition-duration, 0.3s) ease,
+              opacity var(--panel-transition-duration, 0.3s) ease;
+  will-change: transform, opacity;
+  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 0px;
+}
+
+.marquee-content--side-left {
+  right: auto;
+  left: 0;
+  transform: translateX(-110%);
+}
+
+.marquee-content--side-right {
+  transform: translateX(110%);
+}
+
+.marquee-content--visible {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.marquee-content--hidden {
+  pointer-events: none;
+  opacity: 0;
+}
+
+@media (min-width: 1900px) {
+  .marquee-content {
+    display: block;
+  }
+}
+
+/* ============================================================================
+   MARQUEE SLIDE
+   ============================================================================ */
+
+.marquee-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.marquee-slide--active {
+  opacity: 1;
+}
+
+/* ============================================================================
+   MARQUEE SLIDE IMAGE
+   ============================================================================ */
+
+.marquee-slide-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: marquee-zoom 20s linear forwards;
+}
+
+@keyframes marquee-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+/* ============================================================================
+   MARQUEE SLIDE INFO
+   ============================================================================ */
+
+.marquee-slide-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 10px;
+  text-shadow: 0 0 4px #000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+/* Info Lines - Title, Category, Location, Date */
+.marquee-slide-info-line {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.marquee-slide-info-title {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.marquee-slide-info-cat {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.marquee-slide-info-loc {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.marquee-slide-info-date {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+/* ============================================================================
+   SUBCATEGORY ICON
+   ============================================================================ */
+
+.marquee-subicon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding-right: 5px;
+}
+
+.marquee-subicon--empty {
+  display: none;
+  padding-right: 0;
+}
+
+.marquee-subicon-image {
+  width: 18px;
+  height: 18px;
+}
