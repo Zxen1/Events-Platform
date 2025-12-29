@@ -1,0 +1,284 @@
+/* ============================================================================
+   HEADER.CSS - HEADER SECTION STYLES
+   ============================================================================ */
+
+/* Header bar */
+.header-bar {
+  height: var(--header-h, 56px);
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  padding-left: 60px;
+  gap: 10px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(0,0,0,0.7);
+  box-sizing: border-box;
+}
+
+/* Logo button */
+.header-logo-button {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.header-logo-button-image {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.header-logo-button-image--spinning {
+  animation: header-logo-spin 1s linear infinite;
+}
+
+@keyframes header-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Filter button */
+.header-filter-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid #333;
+  border-radius: 20px;
+  background: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.header-filter-button:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.header-filter-button--active,
+.header-filter-button[aria-expanded="true"] {
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+/* When counter is present, button becomes wider */
+.header-filter-button:has(.header-filter-button-counter) {
+  width: auto;
+  padding: 0 10px 0 0;
+  border-radius: 20px 0 0 20px;
+}
+
+.header-filter-button-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.header-filter-button-counter {
+  position: relative;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: 6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 0 20px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mode switch container */
+.header-modeswitch {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  height: 40px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+@media (min-width: 601px) {
+  .header-modeswitch {
+    grid-template-columns: repeat(3, auto);
+  }
+}
+
+/* Mode switch buttons */
+.header-modeswitch-button {
+  width: 40px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(0,0,0,0.2);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.header-modeswitch-button:hover {
+  background: #3b82f6;
+}
+
+/* Active mode - blue background, white text */
+.header-modeswitch-button--active,
+.header-modeswitch-button[aria-pressed="true"] {
+  background: var(--btn-selected, #3b82f6);
+  color: var(--button-active-text, #fff);
+}
+
+.header-modeswitch-button--bordered {
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+.header-modeswitch-button-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.header-modeswitch-button-text {
+  display: none;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+@media (min-width: 601px) {
+  .header-modeswitch-button {
+    width: auto;
+    padding: 0 16px;
+  }
+  
+  .header-modeswitch-button-icon {
+    display: none;
+  }
+  
+  .header-modeswitch-button-text {
+    display: block;
+  }
+}
+
+/* Access buttons */
+.header-access-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.header-access-button:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* Active access buttons - color the icon, not the button background */
+.header-access-button--active .header-access-button-icon,
+.header-access-button[aria-pressed="true"] .header-access-button-icon,
+.header-access-button[aria-expanded="true"] .header-access-button-icon {
+  background-color: var(--website-color, #3b82f6);
+}
+
+.header-access-button--hidden {
+  display: none;
+}
+
+/* Access button icon */
+.header-access-button-icon {
+  width: 35px;
+  height: 35px;
+  background-color: #888;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.header-access-button-icon--member {
+  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-member.svg');
+  mask-image: url('https://cdn.funmap.com/system-images/icon-member.svg');
+}
+
+.header-access-button-icon--admin {
+  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-admin.svg');
+  mask-image: url('https://cdn.funmap.com/system-images/icon-admin.svg');
+}
+
+.header-access-button-icon--fullscreen {
+  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen.svg');
+  mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen.svg');
+}
+
+.header-access-button.fullscreen-btn.is-fullscreen .header-access-button-icon {
+  background-color: #3b82f6;
+  -webkit-mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen-exit.svg');
+  mask-image: url('https://cdn.funmap.com/system-images/icon-fullscreen-exit.svg');
+}
+
+.header-access-button.fullscreen-btn.is-fullscreen:hover .header-access-button-icon {
+  background-color: #60a5fa;
+}
+
+/* Access button avatar (for logged-in member) */
+.header-access-button-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  object-fit: cover;
+  box-sizing: border-box;
+}
+
+/* Avatar glow when panel is open */
+.header-access-button--active .header-access-button-avatar,
+.header-access-button[aria-pressed="true"] .header-access-button-avatar,
+.header-access-button[aria-expanded="true"] .header-access-button-avatar {
+  border-color: #3b82f6;
+}
+
+.header-access-button--active:hover .header-access-button-avatar,
+.header-access-button[aria-pressed="true"]:hover .header-access-button-avatar,
+.header-access-button[aria-expanded="true"]:hover .header-access-button-avatar {
+  border-color: #60a5fa;
+}
+
+.header-access-button-avatar--hidden {
+  display: none;
+}
+
+.header-access-button-icon--hidden {
+  display: none;
+}

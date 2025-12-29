@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test: Currency Menu Component</title>
+  <style>
+    /* Base styles */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      padding: 40px;
+      margin: 0;
+    }
+    h1 { color: #3b82f6; margin-bottom: 30px; }
+    .test-container {
+      background: rgba(0,0,0,0.3);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 400px;
+    }
+    label { display: block; margin-bottom: 8px; font-weight: 600; }
+
+    /* Currency dropdown button */
+    .currency-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 150px;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+      position: relative;
+    }
+    .currency-button:hover {
+      border-color: rgba(255,255,255,0.4);
+    }
+
+    /* Flag */
+    .dropdown-flag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 20px;
+      height: 15px;
+      line-height: 0;
+    }
+    .dropdown-flag img {
+      display: block;
+      width: 20px;
+      height: 15px;
+      object-fit: cover;
+      border-radius: 2px;
+    }
+
+    /* Text */
+    .dropdown-text {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      line-height: 1;
+      flex: 1;
+    }
+
+    /* Arrow */
+    .dropdown-arrow {
+      margin-left: auto;
+      font-size: 10px;
+      opacity: 0.6;
+      transition: transform 0.15s;
+    }
+    .currency-button[aria-expanded="true"] .dropdown-arrow {
+      transform: rotate(180deg);
+    }
+
+    /* Dropdown menu */
+    .currency-wrapper {
+      position: relative;
+    }
+    .options-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background: #222;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      margin-top: 4px;
+      z-index: 100;
+    }
+    .options-menu[hidden] {
+      display: none;
+    }
+
+    /* Menu options */
+    .menu-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 12px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .menu-option:focus-visible {
+      outline: 2px solid #3b82f6;
+      outline-offset: -2px;
+    }
+    .menu-option .dropdown-text {
+      flex-shrink: 1;
+      min-width: 0;
+    }
+
+    /* Status */
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .status strong { color: #3b82f6; }
+  </style>
+</head>
+<body>
+  <h1>Currency Menu Component Test</h1>
+  
+  <div class="test-container">
+    <label>Select Currency</label>
+    <div class="currency-wrapper" id="currencyWrapper">
+      <button type="button" class="currency-button" id="currencyBtn" aria-haspopup="true" aria-expanded="false" aria-controls="currencyMenu">
+        <span class="dropdown-text">Select...</span>
+        <span class="dropdown-arrow">▼</span>
+      </button>
+      <div class="options-menu" id="currencyMenu" hidden>
+        <!-- Options populated by JS -->
+      </div>
+    </div>
+    
+    <div class="status">
+      <strong>Selected:</strong> <span id="selectedValue">None</span>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // EXTRACTED FROM INDEX.JS - Currency Menu Functions
+    // =========================================================================
+
+    // Mock currency data (normally from database)
+    window.currencyData = [
+      { value: 'us USD', label: 'US Dollar' },
+      { value: 'gb GBP', label: 'British Pound' },
+      { value: 'eu EUR', label: 'Euro' },
+      { value: 'au AUD', label: 'Australian Dollar' },
+      { value: 'ca CAD', label: 'Canadian Dollar' },
+      { value: 'jp JPY', label: 'Japanese Yen' },
+      { value: 'cn CNY', label: 'Chinese Yuan' },
+      { value: 'in INR', label: 'Indian Rupee' },
+      { value: 'br BRL', label: 'Brazilian Real' },
+      { value: 'mx MXN', label: 'Mexican Peso' },
+      { value: 'kr KRW', label: 'South Korean Won' },
+      { value: 'sg SGD', label: 'Singapore Dollar' },
+      { value: 'nz NZD', label: 'New Zealand Dollar' },
+      { value: 'ch CHF', label: 'Swiss Franc' },
+      { value: 'se SEK', label: 'Swedish Krona' },
+    ];
+
+    // Parse currency value "us USD" into { countryCode: "us", currencyCode: "USD" }
+    function parseCurrencyValue(optionValue) {
+      if (!optionValue || typeof optionValue !== 'string') return { countryCode: null, currencyCode: optionValue || '' };
+      const parts = optionValue.trim().split(' ');
+      if (parts.length >= 2) {
+        return { countryCode: parts[0].toLowerCase(), currencyCode: parts.slice(1).join(' ') };
+      }
+      return { countryCode: null, currencyCode: optionValue };
+    }
+
+    // Get flag HTML
+    function getFlagHTML(countryCode) {
+      if (!countryCode) return '';
+      return `<span class="dropdown-flag"><img src="assets/flags/${countryCode}.svg" alt="" /></span>`;
+    }
+
+    // Get button HTML (flag + code)
+    function getCurrencyButtonHTML(countryCode, currencyCode) {
+      const flagHTML = countryCode ? getFlagHTML(countryCode) : '';
+      return `${flagHTML}<span class="dropdown-text">${currencyCode}</span>`;
+    }
+
+    // Get currency options
+    function getCurrencyOptions() {
+      if (Array.isArray(window.currencyData) && window.currencyData.length > 0) {
+        return window.currencyData;
+      }
+      return [];
+    }
+
+    // Keyboard navigation
+    function setupDropdownKeyboardNav(menuElement, closeMenuCallback) {
+      let searchString = '';
+      let searchTimeout = null;
+      
+      const keydownHandler = (e) => {
+        if (e.key.length === 1 && /^[a-zA-Z]$/.test(e.key) && !e.isComposing) {
+          e.preventDefault();
+          if (searchTimeout) clearTimeout(searchTimeout);
+          searchString += e.key.toUpperCase();
+          
+          const options = menuElement.querySelectorAll('.menu-option[data-label]');
+          for (const opt of options) {
+            const label = (opt.dataset.label || '').toUpperCase();
+            if (label && label.startsWith(searchString)) {
+              opt.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              opt.focus();
+              break;
+            }
+          }
+          
+          searchTimeout = setTimeout(() => { searchString = ''; }, 800);
+        }
+        else if (e.key === 'Escape') {
+          e.preventDefault();
+          if (typeof closeMenuCallback === 'function') closeMenuCallback();
+          cleanup();
+        }
+        else if (e.key === 'Enter') {
+          const focused = menuElement.querySelector('.menu-option:focus');
+          if (focused) {
+            e.preventDefault();
+            focused.click();
+          }
+        }
+      };
+      
+      const cleanup = () => {
+        menuElement.removeEventListener('keydown', keydownHandler);
+        if (searchTimeout) clearTimeout(searchTimeout);
+        searchString = '';
+      };
+      
+      menuElement.addEventListener('keydown', keydownHandler);
+      return cleanup;
+    }
+
+    // =========================================================================
+    // Initialize currency menu
+    // =========================================================================
+    
+    const currencyWrapper = document.getElementById('currencyWrapper');
+    const currencyBtn = document.getElementById('currencyBtn');
+    const currencyMenu = document.getElementById('currencyMenu');
+    const selectedValue = document.getElementById('selectedValue');
+    
+    // Populate options
+    const options = getCurrencyOptions();
+    options.forEach(opt => {
+      const { countryCode, currencyCode } = parseCurrencyValue(opt.value);
+      const optionBtn = document.createElement('button');
+      optionBtn.type = 'button';
+      optionBtn.className = 'menu-option';
+      optionBtn.dataset.value = currencyCode;
+      optionBtn.dataset.countryCode = countryCode;
+      optionBtn.dataset.label = opt.label;
+      optionBtn.innerHTML = getFlagHTML(countryCode) + `<span class="dropdown-text">${currencyCode} - ${opt.label}</span>`;
+      
+      optionBtn.addEventListener('click', () => {
+        const arrow = currencyBtn.querySelector('.dropdown-arrow');
+        currencyBtn.innerHTML = getCurrencyButtonHTML(countryCode, currencyCode);
+        if (arrow) currencyBtn.appendChild(arrow);
+        currencyBtn.dataset.value = currencyCode;
+        currencyMenu.hidden = true;
+        currencyBtn.setAttribute('aria-expanded', 'false');
+        selectedValue.textContent = `${currencyCode} (${opt.label})`;
+      });
+      
+      currencyMenu.appendChild(optionBtn);
+    });
+    
+    // Toggle menu
+    let cleanupKeyboardNav = null;
+    currencyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = !currencyMenu.hasAttribute('hidden');
+      if (open) {
+        currencyMenu.hidden = true;
+        currencyBtn.setAttribute('aria-expanded', 'false');
+        if (cleanupKeyboardNav) cleanupKeyboardNav();
+      } else {
+        currencyMenu.hidden = false;
+        currencyBtn.setAttribute('aria-expanded', 'true');
+        cleanupKeyboardNav = setupDropdownKeyboardNav(currencyMenu, () => {
+          currencyMenu.hidden = true;
+          currencyBtn.setAttribute('aria-expanded', 'false');
+        });
+      }
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!currencyWrapper.contains(e.target)) {
+        currencyMenu.hidden = true;
+        currencyBtn.setAttribute('aria-expanded', 'false');
+        if (cleanupKeyboardNav) cleanupKeyboardNav();
+      }
+    });
+    
+    console.log('✅ Currency menu component loaded');
+  </script>
+</body>
+</html>
+
