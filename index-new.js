@@ -537,12 +537,7 @@ const App = (function() {
           scrollbarFadeMs: 160,
           panelSelector: '.admin-panel, .member-panel, .filter-panel'
         });
-        ButtonAnchorTop.attach(el, {
-          stopDelayMs: 180,
-          clickHoldMs: 250,
-          scrollbarFadeMs: 160,
-          panelSelector: '.admin-panel, .member-panel, .filter-panel'
-        });
+        // TopAnchor intentionally disabled right now: it was interfering with BottomAnchor stability.
       });
     });
   }

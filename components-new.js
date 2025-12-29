@@ -7243,8 +7243,6 @@ const ButtonAnchorTop = (function() {
         var slackEl = ensureSlackEl(scrollEl);
         var unlockTimer = null;
         var locked = false;
-        var clickHoldUntil = 0;
-        var clickHoldTimer = null;
         var currentSlackPx = 0;
         var lastScrollTop = scrollEl.scrollTop || 0;
         var scrollbarFadeTimer = null;
@@ -7330,8 +7328,6 @@ const ButtonAnchorTop = (function() {
         function collapseIfOffscreenAbove() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
-                // During click-hold window, never collapse slack.
-                if (Date.now() < clickHoldUntil) return false;
                 if (!isSlackOffscreenAbove()) return false;
                 pendingOffscreenCollapse = false;
                 applySlackPx(collapsedSlackPx);
@@ -7345,8 +7341,6 @@ const ButtonAnchorTop = (function() {
             if (locked) return;
             var h = scrollEl.clientHeight || 0;
             if (h <= 0) return;
-            // During click-hold window, don't lock/collapse.
-            if (Date.now() < clickHoldUntil) return;
             scrollEl.style.maxHeight = h + 'px';
             locked = true;
         }
@@ -7460,44 +7454,6 @@ const ButtonAnchorTop = (function() {
             } catch (e2) {}
         }, true);
 
-        // Clicking: click-hold window + temporary TOP slack ON.
-        // This must arm BEFORE a collapse-induced shrink near the top edge, otherwise the jump already happened.
-        function holdClickSlackTop(e) {
-            try {
-                var t = e && e.target;
-                if (t && t.closest) {
-                    // Don't arm TopAnchor for dropdown/menu interactions (they have their own wheel behavior).
-                    if (t.closest('.fieldset-menu, .admin-currency-wrapper, .admin-language-wrapper')) return;
-                }
-            } catch (_e0) {}
-
-            // Never show slack for containers that don't overflow.
-            try {
-                var h = scrollEl.clientHeight || 0;
-                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
-                if (contentNoSlack <= h) {
-                    pendingOffscreenCollapse = false;
-                    applySlackPx(collapsedSlackPx);
-                    return;
-                }
-            } catch (_e1) {}
-
-            clickHoldUntil = Date.now() + clickHoldMs;
-            applySlackPx(expandedSlackPx);
-
-            // Auto-collapse once the hold window expires, but only if slack is already safely off-screen above.
-            try {
-                if (clickHoldTimer) clearTimeout(clickHoldTimer);
-                clickHoldTimer = setTimeout(function() {
-                    try { clickHoldUntil = 0; } catch (_e2) {}
-                    try { collapseIfOffscreenAbove(); } catch (_e3) {}
-                    try { requestCollapseOffscreen(); } catch (_e4) {}
-                }, clickHoldMs + 20);
-            } catch (_e5) {}
-        }
-        scrollEl.addEventListener('pointerdown', holdClickSlackTop, { passive: true, capture: true });
-        scrollEl.addEventListener('click', holdClickSlackTop, { passive: true, capture: true });
-        
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
         
