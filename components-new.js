@@ -7062,7 +7062,6 @@ const ButtonAnchorBottom = (function() {
         }, true);
         
         // Clicking: click-hold window + temporary slack ON.
-        var clickReleaseTimer = null;
         function holdClickSlack() {
             // Never show slack for containers that don't overflow.
             try {
@@ -7077,22 +7076,6 @@ const ButtonAnchorBottom = (function() {
             
             clickHoldUntil = Date.now() + clickHoldMs;
             applySlackPx(expandedSlackPx);
-
-            // Global rule: if content later becomes "short" (no overflow) while slack is visible,
-            // BottomAnchor must release even if the spacer is on-screen.
-            // This prevents the content being pinned near the footer in short tabs/panels.
-            try { if (clickReleaseTimer) clearTimeout(clickReleaseTimer); } catch (e1) {}
-            clickReleaseTimer = setTimeout(function() {
-                try {
-                    if (Date.now() < clickHoldUntil) return;
-                    var hh = scrollEl.clientHeight || 0;
-                    var contentNoSlack2 = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
-                    if (contentNoSlack2 <= hh) {
-                        pendingOffscreenCollapse = false;
-                        applySlackPx(collapsedSlackPx);
-                    }
-                } catch (e2) {}
-            }, clickHoldMs + 30);
         }
         scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
         scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
