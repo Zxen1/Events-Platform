@@ -466,16 +466,14 @@ const PostModule = (function() {
 
   function attachButtonAnchors() {
     if (!postPanelContentEl || !recentPanelContentEl) return;
-    if (!window.ButtonAnchorBottom || !window.ButtonAnchorTop) {
-      throw new Error('[Post] ButtonAnchorBottom and ButtonAnchorTop are required (components-new.js).');
+    if (!window.ButtonAnchorBottom) {
+      throw new Error('[Post] ButtonAnchorBottom is required (components-new.js).');
     }
 
     // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
     ButtonAnchorBottom.attach(postPanelContentEl, options);
-    ButtonAnchorTop.attach(postPanelContentEl, options);
     ButtonAnchorBottom.attach(recentPanelContentEl, options);
-    ButtonAnchorTop.attach(recentPanelContentEl, options);
   }
 
   function getFilterSummaryText() {
