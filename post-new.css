@@ -1,5 +1,5 @@
 /* ============================================================================
-   POST/RECENTS BOARD
+   POST / RECENTS PANELS
    Post cards, recents cards, open post view
    Calendar component has its own CSS (calendar-test.html)
    ============================================================================ */
@@ -25,10 +25,10 @@
 }
 
 /* ============================================================================
-   POST MODE BOARDS CONTAINER
+   POST MODE PANELS CONTAINER
    ============================================================================ */
 
-.post-mode-boards {
+.post-mode-panels {
   position: fixed;
   top: calc(var(--header-h) + var(--safe-top));
   bottom: auto;
@@ -48,12 +48,12 @@
 }
 
 /* ============================================================================
-   POST BOARD
+   POST PANEL
    ============================================================================ */
 
-.post-board {
-  width: var(--post-board-max-w);
-  max-width: var(--post-board-max-w);
+.post-panel {
+  width: var(--post-panel-max-w);
+  max-width: var(--post-panel-max-w);
   flex-shrink: 0;
   position: relative;
   left: 0;
@@ -76,29 +76,29 @@
   border-color: var(--border);
 }
 
-.post-board--side-left:not(.post-board--visible) {
+.post-panel--side-left:not(.post-panel--visible) {
   transform: translateX(-110%);
 }
 
-.post-board--side-right:not(.post-board--visible) {
+.post-panel--side-right:not(.post-panel--visible) {
   transform: translateX(110%);
 }
 
-.post-board--visible {
+.post-panel--visible {
   transform: translateX(0);
 }
 
-.post-board:not(.post-board--visible) {
+.post-panel:not(.post-panel--visible) {
   pointer-events: none;
 }
 
 /* ============================================================================
-   RECENTS BOARD
+   RECENTS PANEL (post-prefixed section naming)
    ============================================================================ */
 
-.recents-board {
-  width: var(--post-board-max-w);
-  max-width: var(--post-board-max-w);
+.post-recents-panel {
+  width: var(--post-panel-max-w);
+  max-width: var(--post-panel-max-w);
   flex-shrink: 0;
   position: relative;
   top: auto;
@@ -123,24 +123,24 @@
   border-color: var(--border);
 }
 
-.recents-board--side-left:not(.recents-board--visible) {
+.post-recents-panel--side-left:not(.post-recents-panel--visible) {
   transform: translateX(-110%);
 }
 
-.recents-board--side-right:not(.recents-board--visible) {
+.post-recents-panel--side-right:not(.post-recents-panel--visible) {
   transform: translateX(110%);
 }
 
-.recents-board--visible {
+.post-recents-panel--visible {
   transform: translateX(0);
 }
 
-.recents-board:not(.recents-board--visible) {
+.post-recents-panel:not(.post-recents-panel--visible) {
   pointer-events: none;
 }
 
 /* ============================================================================
-   POST LIST (inside post-board)
+   POST LIST (inside post-panel)
    ============================================================================ */
 
 .post-list {
@@ -173,22 +173,22 @@
   background-color: rgba(0, 0, 0, 0);
 }
 
-/* Recents board scrollbar */
-.recents-board::-webkit-scrollbar {
+/* Recents panel scrollbar */
+.post-recents-panel::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-.recents-board::-webkit-scrollbar-track {
+.post-recents-panel::-webkit-scrollbar-track {
   background-color: rgba(0, 0, 0, 0);
 }
 
-.recents-board::-webkit-scrollbar-thumb {
+.post-recents-panel::-webkit-scrollbar-thumb {
   background-color: rgba(255, 255, 255, 0.4);
   border-radius: 999px;
 }
 
-.recents-board::-webkit-scrollbar-corner {
+.post-recents-panel::-webkit-scrollbar-corner {
   background-color: rgba(0, 0, 0, 0);
 }
 
@@ -198,13 +198,13 @@
 
 .post-card {
   display: grid;
-  grid-template-columns: 80px 1fr 36px;
+  grid-template-columns: 100px 1fr 36px;
   gap: 12px;
-  align-items: flex-start;
+  align-items: stretch;
   background-color: transparent;
   border: none;
   border-radius: 0;
-  padding: 12px;
+  padding: 0;
   margin: 0;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -227,18 +227,18 @@
 }
 
 /* ============================================================================
-   RECENTS CARD
+   RECENTS CARD (post-prefixed section naming)
    ============================================================================ */
 
-.recents-card {
+.post-recents-card {
   display: grid;
-  grid-template-columns: 80px 1fr 36px;
+  grid-template-columns: 100px 1fr 36px;
   gap: 12px;
-  align-items: flex-start;
+  align-items: stretch;
   background-color: transparent;
   border: none;
   border-radius: 0;
-  padding: 12px;
+  padding: 0;
   margin: 0;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -248,21 +248,21 @@
   box-sizing: border-box;
 }
 
-.recents-card:last-child {
+.post-recents-card:last-child {
   border-bottom: none;
 }
 
-.recents-card:hover {
+.post-recents-card:hover {
   background: #2e3a72;
 }
 
-.recents-card--selected {
+.post-recents-card--selected {
   position: relative;
   z-index: 0;
   background: none;
 }
 
-.recents-card--selected::before {
+.post-recents-card--selected::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -277,10 +277,11 @@
 
 /* Thumbnail */
 .post-card-thumb {
-  flex: 0 0 80px;
-  width: 80px;
-  height: 80px;
-  border-radius: 5px;
+  flex: 0 0 100px;
+  width: 100px;
+  height: 100%;
+  min-height: 100px;
+  border-radius: 0;
   object-fit: cover;
   display: block;
   background: var(--panel-bg);
@@ -1156,7 +1157,7 @@
    EMPTY STATE MESSAGES
    ============================================================================ */
 
-.post-board-empty {
+.post-panel-empty {
   padding: 20px 16px;
   text-align: center;
   display: flex;
@@ -1165,13 +1166,13 @@
   gap: 0;
 }
 
-.post-board-empty-summary {
+.post-panel-empty-summary {
   margin: 0 0 10px;
   width: 100%;
-  max-width: var(--post-board-max-w);
+  max-width: var(--post-panel-max-w);
 }
 
-.post-board-empty-image {
+.post-panel-empty-image {
   margin-top: 10px;
   width: auto;
   max-width: 100%;
@@ -1179,11 +1180,11 @@
   border-radius: 5px;
 }
 
-.post-board-empty-message {
+.post-panel-empty-message {
   margin: 10px 0 0;
 }
 
-.recents-board-reminder {
+.post-recents-panel-reminder {
   margin: 10px 0 20px;
   padding: 0 12px;
   text-align: center;
@@ -1193,13 +1194,13 @@
   gap: 10px;
 }
 
-.recents-board-reminder-image {
+.post-recents-panel-reminder-image {
   max-width: 100%;
   height: auto;
   border-radius: 5px;
 }
 
-.recents-board-reminder-text {
+.post-recents-panel-reminder-text {
   margin: 0;
 }
 
@@ -1240,7 +1241,7 @@
    ============================================================================ */
 
 @media (max-width: 600px) {
-  .post-mode-boards {
+  .post-mode-panels {
     top: calc(var(--header-h) + var(--safe-top));
     bottom: var(--footer-h);
     padding: 0;
@@ -1249,7 +1250,7 @@
     align-items: flex-start;
   }
   
-  .post-board {
+  .post-panel {
     width: 100%;
     max-width: 100%;
     left: 0;
@@ -1262,7 +1263,7 @@
     max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
   }
   
-  .recents-board {
+  .post-recents-panel {
     width: 100%;
     max-width: 100%;
     left: 0;
@@ -1281,7 +1282,7 @@
     padding: 12px;
   }
   
-  .recents-card {
+  .post-recents-card {
     margin: 0;
     border-radius: 0;
     padding: 12px;
@@ -1310,12 +1311,12 @@
 }
 
 @media (max-width: 440px) {
-  .post-board {
+  .post-panel {
     width: 100%;
     max-width: 100%;
   }
   
-  .recents-board {
+  .post-recents-panel {
     width: 100%;
     max-width: 100%;
   }

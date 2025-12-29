@@ -157,6 +157,15 @@
   color: var(--button-active-text, #fff);
 }
 
+.header-modeswitch-button[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.header-modeswitch-button[aria-disabled="true"]:hover {
+  background: rgba(0,0,0,0.2);
+}
+
 .header-modeswitch-button--bordered {
   border-left: 1px solid rgba(255,255,255,0.1);
 }
