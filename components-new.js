@@ -7163,21 +7163,12 @@ const ButtonAnchorTop = (function() {
     
     function ensureStyle() {
         try {
+            // Force remove any existing style element to ensure clean state
             var existing = document.getElementById(STYLE_ID);
-            if (existing) {
-                // Update existing style to remove visibility
-                existing.textContent =
-                    '.panel-top-slack{' +
-                    'height:var(--panel-top-slack,0px);' +
-                    'flex:0 0 auto;' +
-                    'pointer-events:none;' +
-                    'transition:none;' +
-                    /* DEBUG VISUAL: show spacer presence - DISABLED */
-                    /* 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' + */
-                    /* 'border-bottom:2px solid rgba(160, 32, 240, 0.95);' + */
-                    '}';
-                return;
+            if (existing && existing.parentNode) {
+                existing.parentNode.removeChild(existing);
             }
+            // Create new style element with no purple styling
             var style = document.createElement('style');
             style.id = STYLE_ID;
             style.textContent =
