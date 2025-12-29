@@ -7243,6 +7243,7 @@ const ButtonAnchorTop = (function() {
         var slackEl = ensureSlackEl(scrollEl);
         var unlockTimer = null;
         var locked = false;
+        var clickHoldUntil = 0;
         var currentSlackPx = 0;
         var lastScrollTop = scrollEl.scrollTop || 0;
         var scrollbarFadeTimer = null;
@@ -7328,6 +7329,8 @@ const ButtonAnchorTop = (function() {
         function collapseIfOffscreenAbove() {
             try {
                 if (currentSlackPx !== expandedSlackPx) return false;
+                // During the click hold window, never collapse slack.
+                if (Date.now() < clickHoldUntil) return false;
                 if (!isSlackOffscreenAbove()) return false;
                 pendingOffscreenCollapse = false;
                 applySlackPx(collapsedSlackPx);
@@ -7341,6 +7344,8 @@ const ButtonAnchorTop = (function() {
             if (locked) return;
             var h = scrollEl.clientHeight || 0;
             if (h <= 0) return;
+            // During click hold window, don't lock/collapse.
+            if (Date.now() < clickHoldUntil) return;
             scrollEl.style.maxHeight = h + 'px';
             locked = true;
         }
@@ -7454,11 +7459,36 @@ const ButtonAnchorTop = (function() {
             } catch (e2) {}
         }, true);
 
+        // Clicking: click-hold window + temporary slack ON.
+        // This must arm BEFORE collapse-induced shrink so the button doesn't "fly away".
+        function holdClickSlack() {
+            // Never show slack for containers that don't overflow.
+            try {
+                var h = scrollEl.clientHeight || 0;
+                var contentNoSlack = (scrollEl.scrollHeight || 0) - (currentSlackPx || 0);
+                if (contentNoSlack <= h) {
+                    // Do not collapse slack while it's visibly on-screen (prevents "slam shut").
+                    try {
+                        if (isSlackOnScreen()) return;
+                    } catch (_eVis) {}
+                    pendingOffscreenCollapse = false;
+                    applySlackPx(collapsedSlackPx);
+                    return;
+                }
+            } catch (e0) {}
+            
+            clickHoldUntil = Date.now() + clickHoldMs;
+            applySlackPx(expandedSlackPx);
+        }
+        scrollEl.addEventListener('pointerdown', holdClickSlack, { passive: true, capture: true });
+        scrollEl.addEventListener('click', holdClickSlack, { passive: true, capture: true });
+
         // Default: slack off.
         applySlackPx(collapsedSlackPx);
         
         var controller = {
             forceOff: function() {
+                try { clickHoldUntil = 0; } catch (e0) {}
                 try { pendingOffscreenCollapse = false; } catch (e1) {}
                 try { if (unlockTimer) clearTimeout(unlockTimer); } catch (e2) {}
                 try { scrollEl.style.maxHeight = ''; } catch (e3) {}
