@@ -253,12 +253,19 @@ function menuFilterMatch(optData, searchText) {
 
     var tokens = s.split(/\s+/).filter(Boolean);
     for (var i = 0; i < tokens.length; i++) {
-        var t = tokens[i];
-        var isNumeric = /^[0-9+]/.test(t);
+        var raw = tokens[i];
+        // Allow optional '+' prefix for phone prefixes.
+        // "+61" and "61" should behave the same for numeric matching.
+        var hasPlus = raw.charAt(0) === '+';
+        var t = hasPlus ? raw.slice(1) : raw;
+        if (!t) t = raw; // If user typed just "+", fall back to raw.
+        var isNumeric = /^[0-9]+$/.test(t);
 
         var ok = false;
         if (isNumeric) {
-            ok = value.indexOf(t) === 0;
+            // Numeric search prefers prefix matching against value, ignoring optional '+'.
+            var vDigits = value.charAt(0) === '+' ? value.slice(1) : value;
+            ok = vDigits.indexOf(t) === 0;
         } else {
             if (value.indexOf(t) === 0) ok = true;
             if (!ok && label.indexOf(t) === 0) ok = true;
