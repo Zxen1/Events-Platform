@@ -127,8 +127,16 @@ const MapModule = (function() {
     }
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    // Load admin settings for starting position
-    await loadSettings();
+    // Prime settings if already loaded, and start async load (non-blocking).
+    // Removes startup delay caused by waiting on network before creating the map.
+    try {
+      if (window.App && typeof App.getState === 'function') {
+        adminSettings = App.getState('settings') || {};
+        adminSettings.system_images = App.getState('system_images') || {};
+        applySettings(adminSettings);
+      }
+    } catch (_e) {}
+    loadSettings();
     
     // Determine initial style (member setting > admin setting > localStorage > default)
     var initialStyle = 'standard';

@@ -7011,6 +7011,15 @@ const ButtonAnchorBottom = (function() {
         // Wheel/trackpad: block downward scroll while slack is visible.
         scrollEl.addEventListener('wheel', function(e) {
             try {
+                // Allow wheel scrolling inside open dropdown option lists (e.g. Country menu).
+                // The anchor should not cancel the default scrolling of nested scroll containers.
+                var t = e && e.target;
+                if (t && t.closest) {
+                    if (t.closest('.fieldset-menu-options, .admin-currency-options, .admin-language-options')) {
+                        startScrollBurst();
+                        return;
+                    }
+                }
                 var deltaY = Number(e && e.deltaY) || 0;
                 if (deltaY > 0) collapseIfOffscreenBelow();
                 if (deltaY > 0 && isSlackOnScreen()) {
@@ -7346,6 +7355,14 @@ const ButtonAnchorTop = (function() {
         // Wheel/trackpad: block upward scroll while slack is visible.
         scrollEl.addEventListener('wheel', function(e) {
             try {
+                // Allow wheel scrolling inside open dropdown option lists.
+                var t = e && e.target;
+                if (t && t.closest) {
+                    if (t.closest('.fieldset-menu-options, .admin-currency-options, .admin-language-options')) {
+                        startScrollBurst();
+                        return;
+                    }
+                }
                 var deltaY = Number(e && e.deltaY) || 0;
                 if (deltaY < 0) collapseIfOffscreenAbove();
                 if (deltaY < 0 && isSlackOnScreen()) {
