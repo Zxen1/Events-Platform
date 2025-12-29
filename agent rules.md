@@ -138,6 +138,17 @@ This project uses split storage schemas:
    - Choose the next available IDs without collisions
    - Provide SQL in chat (never as files)
 
+---
+
+## ⚠️ CRITICAL: ADMIN MESSAGES ID BATCHING ⚠️
+
+**Purpose:** Use 100-block ranges to organize `funmapco_system.admin_messages` in phpMyAdmin.
+
+**Rules (admin_messages only):**
+1. Website/runtime must reference messages by **`message_key`** (never hard-code numeric IDs).
+2. Admin panel save/edit must update by **`message_key`** so IDs can be rebucketed safely.
+3. After rebucketing `admin_messages.id`, reset `AUTO_INCREMENT` to `MAX(id)+1`.
+
 **How Database Changes Work:**
 1. AI agent provides SQL statements (SELECT, UPDATE, INSERT, etc.)
 2. User copies the SQL and runs it themselves in their database tool (phpMyAdmin, MySQL client, etc.)

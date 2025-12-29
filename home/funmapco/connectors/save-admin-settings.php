@@ -209,7 +209,7 @@ try {
         }
     }
 
-    // Save messages if provided
+    // Save messages if provided (use message_key so IDs can be rebucketed safely)
     $messagesUpdated = 0;
     if ($messages !== null && is_array($messages) && !empty($messages)) {
         // Check if admin_messages table exists
@@ -219,15 +219,15 @@ try {
                 UPDATE `admin_messages`
                 SET `message_text` = :message_text,
                     `updated_at` = CURRENT_TIMESTAMP
-                WHERE `id` = :id
+                WHERE `message_key` = :message_key
             ');
 
             foreach ($messages as $message) {
-                if (!isset($message['id']) || !isset($message['message_text'])) {
+                if (!isset($message['message_key']) || !isset($message['message_text'])) {
                     continue;
                 }
                 $stmt->execute([
-                    ':id' => (int)$message['id'],
+                    ':message_key' => (string)$message['message_key'],
                     ':message_text' => (string)$message['message_text'],
                 ]);
                 if ($stmt->rowCount() > 0) {

@@ -983,11 +983,11 @@ const AdminModule = (function() {
             }
         });
 
-        // Capture message textareas
-        messagesContainer.querySelectorAll('.admin-message-text-input[data-message-id]').forEach(function(textarea) {
-            var id = textarea.dataset.messageId;
-            if (id) {
-                state.messages[id] = textarea.value;
+        // Capture message textareas (keyed by message_key so IDs can be rebucketed safely)
+        messagesContainer.querySelectorAll('.admin-message-text-input[data-message-key]').forEach(function(textarea) {
+            var key = textarea.dataset.messageKey;
+            if (key) {
+                state.messages[key] = textarea.value;
             }
         });
 
@@ -1466,7 +1466,7 @@ const AdminModule = (function() {
         textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
         textInput.value = originalValue;
         textInput.rows = 3;
-        textInput.dataset.messageId = message.id;
+        textInput.dataset.messageKey = message.message_key;
         
         // Click to edit
         textDisplay.addEventListener('click', function() {
@@ -1621,13 +1621,13 @@ const AdminModule = (function() {
         var originalState = JSON.parse(entry.original);
         var currentState = captureMessagesState();
         
-        // Compare each message
-        for (var id in currentState.messages) {
-            var currentValue = currentState.messages[id];
-            var originalValue = originalState.messages[id];
+        // Compare each message (by message_key)
+        for (var key in currentState.messages) {
+            var currentValue = currentState.messages[key];
+            var originalValue = originalState.messages[key];
             if (currentValue !== originalValue) {
                 modified.push({
-                    id: parseInt(id, 10),
+                    message_key: key,
                     message_text: currentValue
                 });
             }
@@ -1741,11 +1741,11 @@ const AdminModule = (function() {
             }
         });
         
-        // Reset message textareas
-        messagesContainer.querySelectorAll('.admin-message-text-input[data-message-id]').forEach(function(textarea) {
-            var id = textarea.dataset.messageId;
-            if (id && originalState.messages[id] !== undefined) {
-                var originalValue = originalState.messages[id];
+        // Reset message textareas (by message_key)
+        messagesContainer.querySelectorAll('.admin-message-text-input[data-message-key]').forEach(function(textarea) {
+            var key = textarea.dataset.messageKey;
+            if (key && originalState.messages[key] !== undefined) {
+                var originalValue = originalState.messages[key];
                 textarea.value = originalValue;
                 
                 var item = textarea.closest('.admin-message-item');
