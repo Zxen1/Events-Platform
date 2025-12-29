@@ -6803,9 +6803,9 @@ const ButtonAnchorBottom = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
-                /* DEBUG VISUAL: show spacer presence */
-                'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
-                'border-top:2px solid rgba(160, 32, 240, 0.95);' +
+                /* DEBUG VISUAL: commented out to achieve true zero */
+                // 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
+                // 'border-top:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
@@ -7172,9 +7172,9 @@ const ButtonAnchorTop = (function() {
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
-                /* DEBUG VISUAL: show spacer presence */
-                'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
-                'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
+                /* DEBUG VISUAL: commented out to achieve true zero */
+                // 'background:repeating-linear-gradient(45deg, rgba(160, 32, 240, 0.22), rgba(160, 32, 240, 0.22) 12px, rgba(160, 32, 240, 0.12) 12px, rgba(160, 32, 240, 0.12) 24px);' +
+                // 'border-bottom:2px solid rgba(160, 32, 240, 0.95);' +
                 '}';
             document.head.appendChild(style);
         } catch (e) {}
