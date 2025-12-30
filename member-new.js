@@ -781,7 +781,7 @@ const MemberModule = (function() {
         siteAvatarFilesPromise = fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
-                var folder = (res && res.settings && res.settings.folder_site_avatars) ? String(res.settings.folder_site_avatars) : 'https://cdn.funmap.com/site-avatars/';
+                var folder = (res && res.settings && res.settings.folder_site_avatars) ? String(res.settings.folder_site_avatars) : '';
                 if (folder && !folder.endsWith('/')) folder += '/';
                 siteAvatarFolder = folder;
                 return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folder))
@@ -4438,11 +4438,12 @@ window.MemberModule = MemberModule;
                 src = avatarFile;
             } else if (window.App && typeof App.getState === 'function') {
                 var settings = App.getState('settings') || {};
-                var folder = settings.folder_avatars || 'https://cdn.funmap.com/avatars/';
-                if (folder && !folder.endsWith('/')) folder += '/';
+                var folder = settings.folder_avatars;
+                if (!folder) return; // Settings not loaded yet, skip early avatar display
+                if (!folder.endsWith('/')) folder += '/';
                 src = folder + avatarFile;
             } else {
-                src = 'https://cdn.funmap.com/avatars/' + avatarFile;
+                return; // App not ready, skip early avatar display
             }
             
             if (!src) return;
