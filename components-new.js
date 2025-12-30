@@ -7169,13 +7169,13 @@ const ButtonAnchorBottom = (function() {
                 if (t && t.closest && t.closest('[role="tab"]')) return;
             } catch (_eTab) {}
             
-            // Check if the clicked element is within a tab that has top anchor disabled.
+            // Check if the clicked element is within a tab/panel that has BOTTOM anchor disabled.
             try {
                 var t2 = e && e.target;
                 if (t2 && t2.closest) {
-                    var anchorDisabled = t2.closest('[data-anchor-top="false"]');
+                    var anchorDisabled = t2.closest('[data-anchor-bottom="false"]');
                     if (anchorDisabled) {
-                        // This tab doesn't want top anchor - collapse any existing slack and return.
+                        // This tab/panel doesn't want bottom anchor - collapse any existing slack and return.
                         applySlackPx(collapsedSlackPx);
                         return;
                     }
@@ -7453,10 +7453,10 @@ const ButtonAnchorTop = (function() {
             pendingAnchor = null;
             if (!a || !a.el || !a.el.isConnected) return;
             
-            // Check if the anchor element is within a tab that has top anchor disabled.
+            // Check if the anchor element is within a tab/panel that has BOTTOM anchor disabled.
             try {
-                if (a.el.closest && a.el.closest('[data-anchor-top="false"]')) {
-                    return; // This tab doesn't want top anchor adjustments.
+                if (a.el.closest && a.el.closest('[data-anchor-bottom="false"]')) {
+                    return; // This tab/panel doesn't want bottom anchor adjustments.
                 }
             } catch (_eAttr) {}
             
