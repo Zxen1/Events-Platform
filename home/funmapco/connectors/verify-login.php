@@ -49,23 +49,24 @@ try {
   $attempt = function(mysqli $db, string $table, string $user, string $pass){
     // avatar_file is preferred (filename-only). Some installs may still be on avatar_url.
     // Try avatar_file first, then avatar_url, then no-avatar.
+    // Also select deleted_at to handle soft-deleted accounts (reactivation on login)
     $stmt = null;
     $avatarCol = null;
 
     // IMPORTANT:
     // - Database schemas evolve; do not select columns that may not exist (mysqli->prepare will fail).
     // - Keep this SELECT limited to columns that exist in current funmapco_db views/tables (see latest dump).
-    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+    $sqlWithAvatarFile = "SELECT id, email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, deleted_at FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
       $avatarCol = 'avatar_file';
     } else {
-      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+      $sqlWithAvatarUrl = "SELECT id, email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country, deleted_at FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
       $stmt = $db->prepare($sqlWithAvatarUrl);
       if ($stmt) {
         $avatarCol = 'avatar_url';
       } else {
-        $sqlNoAvatar = "SELECT id, email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
+        $sqlNoAvatar = "SELECT id, email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country, deleted_at FROM {$table} WHERE email = ? OR username = ? LIMIT 1";
         $stmt = $db->prepare($sqlNoAvatar);
         if (!$stmt) return null;
       }
@@ -77,9 +78,25 @@ try {
     $stmt->close();
     if(!$row) return null;
     if (!isset($row['password_hash']) || !password_verify($pass, $row['password_hash'])) return null;
+    
+    // Check if account was soft-deleted (scheduled for deletion)
+    $reactivated = false;
+    if (!empty($row['deleted_at'])) {
+      // Clear deleted_at to reactivate the account
+      $storageTable = ($table === 'admins') ? 'funmapco_system.admins' : 'funmapco_content.members';
+      $reactivateStmt = $db->prepare("UPDATE {$storageTable} SET deleted_at = NULL WHERE id = ?");
+      if ($reactivateStmt) {
+        $reactivateStmt->bind_param('i', $row['id']);
+        $reactivateStmt->execute();
+        $reactivateStmt->close();
+        $reactivated = true;
+      }
+    }
+    
     return [
       'success' => true,
       'role'    => $table === 'admins' ? 'admin' : 'member',
+      'reactivated' => $reactivated,
       'user'    => [
         'id'    => (int)$row['id'],
         'email' => (string)$row['email'],

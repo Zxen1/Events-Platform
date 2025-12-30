@@ -1824,27 +1824,54 @@ const MemberModule = (function() {
     }
     
     function confirmDeleteAccount() {
-        if (!currentUser) return;
+        if (!currentUser || !currentUser.id) return;
         
-        var displayName = currentUser.name || currentUser.username || currentUser.email || 'your account';
-        
-        getMessage('msg_confirm_delete_account', { name: displayName }, false).then(function(message) {
-            var text = message || ('Delete the account "' + displayName + '"? This action cannot be undone.');
-            
-            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
-                ConfirmDialogComponent.show({
-                    titleText: 'Delete Account',
-                    messageText: text,
-                    confirmLabel: 'Delete Account',
-                    cancelLabel: 'Cancel',
-                    confirmClass: 'danger',
-                    focusCancel: true
-                }).then(function(confirmed) {
-                    if (confirmed) {
-                        performDeleteAccount();
-                    }
-                });
+        // First check if member has active posts
+        fetch('/gateway.php?action=check-member-posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ member_id: currentUser.id })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (!data.success) {
+                if (window.ToastComponent) ToastComponent.showError('Unable to check account status.');
+                return;
             }
+            
+            if (!data.can_delete) {
+                // Has active posts - show blocking message
+                getMessage('msg_delete_blocked_active_posts', { count: data.active_post_count }, false).then(function(msg) {
+                    if (window.ToastComponent) ToastComponent.showError(msg);
+                });
+                return;
+            }
+            
+            // No active posts - proceed with confirmation
+            var displayName = currentUser.name || currentUser.username || currentUser.email || 'your account';
+            
+            getMessage('msg_confirm_delete_account', { name: displayName }, false).then(function(message) {
+                var text = message;
+                
+                if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                    ConfirmDialogComponent.show({
+                        titleText: 'Delete Account',
+                        messageText: text,
+                        confirmLabel: 'Delete Account',
+                        cancelLabel: 'Cancel',
+                        confirmClass: 'danger',
+                        focusCancel: true
+                    }).then(function(confirmed) {
+                        if (confirmed) {
+                            performDeleteAccount();
+                        }
+                    });
+                }
+            });
+        })
+        .catch(function(err) {
+            console.error('[Member] Failed to check active posts:', err);
+            if (window.ToastComponent) ToastComponent.showError('Unable to check account status.');
         });
     }
     
@@ -1862,7 +1889,8 @@ const MemberModule = (function() {
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data.success) {
-                getMessage('msg_account_deleted', {}, false).then(function(msg) {
+                // Show scheduled deletion message (soft delete with 30-day grace period)
+                getMessage('msg_account_scheduled_delete', {}, false).then(function(msg) {
                     if (msg && window.ToastComponent) ToastComponent.showSuccess(msg);
                 });
                 handleLogout();
@@ -3917,11 +3945,21 @@ const MemberModule = (function() {
             initMapStyleButtons();
             
             var displayName = currentUser.name || currentUser.email || currentUser.username;
-            getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
-                if (message) {
-                    ToastComponent.showSuccess(message);
-                }
-            });
+            
+            // Check if account was reactivated (soft-deleted member logging back in)
+            if (result.reactivated === true) {
+                getMessage('msg_account_reactivated', {}, false).then(function(message) {
+                    if (message && window.ToastComponent) {
+                        ToastComponent.showSuccess(message);
+                    }
+                });
+            } else {
+                getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
+                    if (message) {
+                        ToastComponent.showSuccess(message);
+                    }
+                });
+            }
             
         }).catch(function(err) {
             console.error('Login failed', err);
