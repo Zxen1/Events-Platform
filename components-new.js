@@ -4417,6 +4417,45 @@ const MemberAuthFieldsetsComponent = (function(){
                 el.value = usernameValue || '';
             });
 
+            // Move the 3-dot "more" button to the right of the username input (same layout as before fieldsets).
+            // The button/menu are part of the member panel UI, but the username layout is built here.
+            try {
+                if (username && username.fieldset && username.input) {
+                    var moreBtn = document.getElementById('member-profile-more-btn');
+                    var moreMenu = document.getElementById('member-profile-more-menu');
+                    if (moreBtn) {
+                        // If it's already positioned correctly (inside the username row), do nothing.
+                        var currentRow = username.input.closest ? username.input.closest('.member-profile-edit-row') : null;
+                        if (currentRow && currentRow.contains(moreBtn)) {
+                            // Ensure the menu is also inside the row if present.
+                            if (moreMenu && !currentRow.contains(moreMenu)) currentRow.appendChild(moreMenu);
+                        } else {
+                            var oldRow = moreBtn.closest ? moreBtn.closest('.member-profile-edit-row') : null;
+
+                            var row = document.createElement('div');
+                            row.className = 'member-profile-edit-row';
+
+                            // Replace the raw input with the row wrapper (row sits directly under the label).
+                            var inputEl = username.input;
+                            var parent = inputEl.parentNode;
+                            if (parent) {
+                                parent.insertBefore(row, inputEl);
+                                row.appendChild(inputEl);
+                                row.appendChild(moreBtn);
+                                if (moreMenu) row.appendChild(moreMenu);
+                            }
+
+                            // Remove the old row container (it was only a placeholder in the HTML).
+                            if (oldRow && oldRow !== row && oldRow.parentNode) {
+                                oldRow.parentNode.removeChild(oldRow);
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                // If anything about the more button structure changes, fail silently (no layout break).
+            }
+
             var newPw = addFieldset('new-password', function(el) {
                 if (!el) return;
                 el.id = 'member-profile-edit-password';
