@@ -567,8 +567,103 @@ const App = (function() {
 
     // Anti-jank: Button Anchor Bottom (reusable component)
     initButtonAnchorBottom();
+    
+    // Global Escape key handler - closes modals, menus, panels in order of focus
+    // Priority: Dialogs (capture phase) > Menus (MenuManager) > Panels (panelStack)
+    initGlobalEscapeHandler();
 
     // App initialization complete
+  }
+  
+  /**
+   * Global Escape key handler
+   * Closes the topmost open element in focus order:
+   * 1. Dialogs/Modals (handled by their own capture listeners with stopPropagation)
+   * 2. Menus (handled by MenuManager which calls preventDefault)
+   * 3. Image modal (lightbox)
+   * 4. Post modal
+   * 5. Welcome modal
+   * 6. Panels (topmost first via panelStack)
+   */
+  function initGlobalEscapeHandler() {
+    document.addEventListener('keydown', function(e) {
+      if (e.key !== 'Escape') return;
+      
+      // If a dialog/menu already handled this, skip
+      if (e.defaultPrevented) return;
+      
+      // 1. Check for image modal (lightbox)
+      var imageModal = document.querySelector('.image-modal-container:not(.hidden)');
+      if (imageModal) {
+        imageModal.classList.add('hidden');
+        var modal = imageModal.querySelector('.image-modal');
+        if (modal) modal.innerHTML = '';
+        e.preventDefault();
+        return;
+      }
+      
+      // 2. Check for post modal
+      var postModal = document.querySelector('#post-modal-container:not(.hidden)');
+      if (postModal) {
+        postModal.classList.add('hidden');
+        e.preventDefault();
+        return;
+      }
+      
+      // 3. Check for welcome modal
+      var welcomeModal = document.querySelector('#welcome-modal.show');
+      if (welcomeModal) {
+        if (window.WelcomeModalComponent && typeof WelcomeModalComponent.close === 'function') {
+          WelcomeModalComponent.close();
+        } else {
+          welcomeModal.classList.remove('show');
+          welcomeModal.setAttribute('aria-hidden', 'true');
+        }
+        e.preventDefault();
+        return;
+      }
+      
+      // 4. Check panelStack for topmost panel
+      var top = panelStack[panelStack.length - 1];
+      if (!top) return;
+      
+      // Handle Element panels
+      if (top instanceof Element) {
+        // Admin panel - module handles unsaved changes internally
+        if (top.classList.contains('admin-panel')) {
+          if (window.AdminModule && typeof AdminModule.closePanel === 'function') {
+            AdminModule.closePanel();
+            e.preventDefault();
+          }
+          return;
+        }
+        
+        // Member panel - module handles unsaved changes internally  
+        if (top.classList.contains('member-panel')) {
+          if (window.MemberModule && typeof MemberModule.closePanel === 'function') {
+            MemberModule.closePanel();
+            e.preventDefault();
+          }
+          return;
+        }
+        
+        // Filter panel
+        if (top.classList.contains('filter-panel')) {
+          if (window.FilterModule && typeof FilterModule.closePanel === 'function') {
+            FilterModule.closePanel();
+            e.preventDefault();
+          }
+          return;
+        }
+      }
+      
+      // Handle cleanup callbacks (objects with remove function)
+      if (top && typeof top.remove === 'function') {
+        panelStack.pop();
+        top.remove();
+        e.preventDefault();
+      }
+    }, false);
   }
 
 

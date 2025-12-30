@@ -354,7 +354,59 @@ const MapModule = (function() {
       if (window.App && typeof App.getState === 'function') {
         adminSettings = App.getState('settings') || {};
         adminSettings.system_images = App.getState('system_images') || {};
+        console.log('[Map] loadSettings: map_lighting =', adminSettings.map_lighting, 'map_style =', adminSettings.map_style, 'spin_on_load =', adminSettings.spin_on_load);
         applySettings(adminSettings);
+        
+        // If map already exists, apply settings that weren't available at creation time
+        if (map) {
+          // Apply lighting from admin settings (if no member/localStorage override)
+          var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
+          var lighting = null;
+          if (member && member.map_lighting) {
+            lighting = member.map_lighting;
+            console.log('[Map] loadSettings: Using member lighting:', lighting);
+          } else {
+            var storedLighting = localStorage.getItem('map_lighting');
+            if (storedLighting) {
+              lighting = storedLighting;
+              console.log('[Map] loadSettings: Using localStorage lighting:', lighting);
+            } else if (adminSettings.map_lighting) {
+              lighting = adminSettings.map_lighting;
+              console.log('[Map] loadSettings: Using admin lighting:', lighting);
+            }
+          }
+          if (lighting) {
+            console.log('[Map] loadSettings: Applying lighting:', lighting);
+            setMapLighting(lighting);
+          }
+          
+          // Apply style from admin settings (if no member/localStorage override)
+          var style = null;
+          if (member && member.map_style) {
+            style = member.map_style;
+            console.log('[Map] loadSettings: Using member style:', style);
+          } else {
+            var storedStyle = localStorage.getItem('map_style');
+            if (storedStyle) {
+              style = storedStyle;
+              console.log('[Map] loadSettings: Using localStorage style:', style);
+            } else if (adminSettings.map_style) {
+              style = adminSettings.map_style;
+              console.log('[Map] loadSettings: Using admin style:', style);
+            }
+          }
+          if (style && style !== 'standard') {
+            console.log('[Map] loadSettings: Applying style:', style);
+            setMapStyle(style);
+          }
+          
+          // Start spin if enabled (updateSpinEnabled was called in applySettings)
+          console.log('[Map] loadSettings: spinEnabled =', spinEnabled, 'spinning =', spinning);
+          if (spinEnabled && !spinning) {
+            console.log('[Map] loadSettings: Starting spin');
+            startSpin();
+          }
+        }
       }
     } catch (err) {
       console.warn('[Map] Failed to load settings:', err);
@@ -388,15 +440,19 @@ const MapModule = (function() {
       }
     }
     
-    // Spin settings
+    // Spin settings (database stores as string 'true'/'false' or '1'/'0')
     if (settings.spin_on_load !== undefined) {
-      spinLoadStart = settings.spin_on_load === '1' || settings.spin_on_load === true;
+      var val = settings.spin_on_load;
+      spinLoadStart = val === '1' || val === 'true' || val === true;
+      console.log('[Map] applySettings: spin_on_load =', val, '→ spinLoadStart =', spinLoadStart);
     }
     if (settings.spin_load_type) {
       spinLoadType = settings.spin_load_type;
+      console.log('[Map] applySettings: spin_load_type =', spinLoadType);
     }
     if (settings.spin_on_logo !== undefined) {
-      spinLogoClick = settings.spin_on_logo === '1' || settings.spin_on_logo === true;
+      var val2 = settings.spin_on_logo;
+      spinLogoClick = val2 === '1' || val2 === 'true' || val2 === true;
     }
     if (settings.spin_zoom_max) {
       const max = parseFloat(settings.spin_zoom_max);
@@ -713,6 +769,7 @@ const MapModule = (function() {
     const isFirstVisit = !localStorage.getItem('funmap_visited');
     const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && isFirstVisit));
     spinEnabled = shouldSpin;
+    console.log('[Map] updateSpinEnabled: spinLoadStart =', spinLoadStart, 'spinLoadType =', spinLoadType, 'isFirstVisit =', isFirstVisit, '→ spinEnabled =', spinEnabled);
   }
 
   /**
