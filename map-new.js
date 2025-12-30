@@ -138,20 +138,55 @@ const MapModule = (function() {
     } catch (_e) {}
     loadSettings();
     
-    // Determine initial style (member setting > admin setting > localStorage > default)
+    // Determine initial style
+    // Priority: member setting > localStorage (guest's choice) > admin setting > default
     var initialStyle = 'standard';
+    var member = null;
     if (window.MemberModule && window.MemberModule.getCurrentUser) {
-      var member = window.MemberModule.getCurrentUser();
+      member = window.MemberModule.getCurrentUser();
       if (member && member.map_style) {
         initialStyle = member.map_style;
       }
     }
     if (initialStyle === 'standard') {
-      initialStyle = adminSettings.map_style || localStorage.getItem('map_style') || 'standard';
+      // Guest: localStorage first (their previous choice), then admin setting (site default)
+      var storedStyle = localStorage.getItem('map_style');
+      if (storedStyle) {
+        initialStyle = storedStyle;
+      } else if (adminSettings.map_style) {
+        initialStyle = adminSettings.map_style;
+      }
+      // else stays 'standard' default
     }
     var styleUrl = initialStyle === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
+    
+    // Determine initial lighting BEFORE map creation
+    // Priority: member setting > localStorage (guest's choice) > admin setting > default
+    // This prevents the "flash" of default lighting before switching to the correct value
+    var initialLighting = 'day';
+    if (member && member.map_lighting) {
+      // Logged-in member: use their saved setting
+      initialLighting = member.map_lighting;
+    } else {
+      // Guest: localStorage first (their previous choice), then admin setting (site default)
+      var storedLighting = localStorage.getItem('map_lighting');
+      if (storedLighting) {
+        initialLighting = storedLighting;
+      } else if (adminSettings.map_lighting) {
+        initialLighting = adminSettings.map_lighting;
+      }
+      // else stays 'day' default
+    }
+
+    // Apply waitForMapTiles setting: if false, show map immediately; if true, wait for tiles
+    if (waitForMapTiles) {
+      container.style.opacity = '0';
+      container.style.transition = 'opacity 0.8s ease-in';
+    } else {
+      container.style.opacity = '1';
+    }
 
     // Create map (pass DOM element directly, not ID)
     // Performance optimizations: renderWorldCopies=false reduces initial load, preserveDrawingBuffer only if needed
@@ -170,7 +205,15 @@ const MapModule = (function() {
       antialias: false // Disable antialiasing for better performance (can enable if quality needed)
     });
 
-    // Handle map load
+    // Apply lighting immediately when style loads (BEFORE tiles finish loading)
+    // This prevents the "flash" of default lighting
+    map.once('style.load', function() {
+      if (initialLighting && typeof setMapLighting === 'function') {
+        setMapLighting(initialLighting);
+      }
+    });
+
+    // Handle map load (tiles finished)
     map.once('load', onMapLoad);
     
     // Handle errors
@@ -186,8 +229,13 @@ const MapModule = (function() {
   function onMapLoad() {
     // Map loaded
     
-    // Map is already visible (CSS opacity: 1) - no need to show it here
-    // Tiles render progressively as they load
+    // Fade in map if waitForMapTiles was enabled
+    if (waitForMapTiles) {
+      const mapEl = document.querySelector('.map-container');
+      if (mapEl) {
+        mapEl.style.opacity = '1';
+      }
+    }
     
     // Emit ready event immediately (other modules may depend on this)
     App.emit('map:ready', { map });
@@ -213,21 +261,8 @@ const MapModule = (function() {
         startSpin();
       }
       
-      // Apply lighting preset (deferred, after map is fully loaded)
-      // Priority: member settings > admin settings > localStorage > default
-      var lighting = 'day';
-      if (window.MemberModule && window.MemberModule.getCurrentUser) {
-        var member = window.MemberModule.getCurrentUser();
-        if (member && member.map_lighting) {
-          lighting = member.map_lighting;
-        }
-      }
-      if (lighting === 'day') {
-        lighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
-      }
-      if (lighting && setMapLighting) {
-        setMapLighting(lighting);
-      }
+      // Lighting is now applied earlier on style.load (before tiles finish)
+      // This prevents the "flash" of default lighting before switching to correct value
     });
   }
 

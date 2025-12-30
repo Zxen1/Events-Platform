@@ -665,13 +665,19 @@ const MemberModule = (function() {
             }
         })();
         
-        // Load from localStorage (guests) or database (members)
+        // Load from member data (logged in) or localStorage (guest) or admin settings (fresh visitor)
         var currentLighting = 'day';
         if (currentUser) {
-            // Load from member data (will be set when member data loads)
             currentLighting = currentUser.map_lighting || 'day';
         } else {
-            currentLighting = localStorage.getItem('map_lighting') || 'day';
+            // For guests: check localStorage first, then admin settings, then default
+            var storedLighting = localStorage.getItem('map_lighting');
+            if (storedLighting) {
+                currentLighting = storedLighting;
+            } else if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                currentLighting = settings.map_lighting || 'day';
+            }
         }
         
         lightingButtons.forEach(function(btn) {
@@ -709,12 +715,19 @@ const MemberModule = (function() {
         var styleButtons = panel.querySelectorAll('.member-style-button');
         if (!styleButtons.length) return;
         
-        // Load from localStorage (guests) or database (members)
+        // Load from member data (logged in) or localStorage (guest) or admin settings (fresh visitor)
         var currentStyle = 'standard';
         if (currentUser) {
             currentStyle = currentUser.map_style || 'standard';
         } else {
-            currentStyle = localStorage.getItem('map_style') || 'standard';
+            // For guests: check localStorage first, then admin settings, then default
+            var storedStyle = localStorage.getItem('map_style');
+            if (storedStyle) {
+                currentStyle = storedStyle;
+            } else if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                currentStyle = settings.map_style || 'standard';
+            }
         }
         
         styleButtons.forEach(function(btn) {

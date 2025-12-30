@@ -172,7 +172,12 @@ const MenuManager = (function(){
         if (typeof menu.__menuApplyOpenState !== 'function') {
             throw new Error('MenuManager: menu is missing __menuApplyOpenState(isOpen)');
         }
+        var wasOpen = isMenuOpen(menu);
         menu.__menuApplyOpenState(!!isOpen);
+        // If closing the menu, trigger the revert callback to restore selected value
+        if (wasOpen && !isOpen && typeof menu.__menuOnClose === 'function') {
+            menu.__menuOnClose();
+        }
     }
     
     // Close all open menus
@@ -3564,6 +3569,12 @@ const CurrencyComponent = (function(){
         // Data must be loaded BEFORE building menu (via FieldsetComponent.setPicklist)
         // If data isn't loaded, menu will be empty - this is expected behavior
 
+        // Called when menu closes externally - revert to selected value
+        menu.__menuOnClose = function() {
+            setValue(selectedCode);
+            filterOptions('');
+        };
+
         // Register with MenuManager
         MenuManager.register(menu);
 
@@ -3972,6 +3983,12 @@ const LanguageMenuComponent = (function(){
             setValue(initialValue);
         }
 
+        // Called when menu closes externally - revert to selected value
+        menu.__menuOnClose = function() {
+            setValue(selectedCode);
+            filterOptions('');
+        };
+
         // Register with MenuManager
         MenuManager.register(menu);
 
@@ -3980,7 +3997,7 @@ const LanguageMenuComponent = (function(){
         if (btn) {
             btn.addEventListener('click', function(e) {
                 if (e) e.stopPropagation();
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('admin-language-wrapper--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -4219,6 +4236,12 @@ const PhonePrefixComponent = (function(){
         // Data must be loaded BEFORE building menu (via FieldsetComponent.setPicklist)
         // If data isn't loaded, menu will be empty - this is expected behavior
 
+        // Called when menu closes externally - revert to selected value
+        menu.__menuOnClose = function() {
+            setValue(selectedCode);
+            filterOptions('');
+        };
+
         // Register with MenuManager
         MenuManager.register(menu);
 
@@ -4370,6 +4393,14 @@ const CountryComponent = (function(){
             var found = countryData.find(function(item) {
                 return item.value === code;
             });
+            if (!found && !code) {
+                // Clear the input if no code
+                btnImg.src = '';
+                btnImg.style.display = 'none';
+                btnInput.value = '';
+                selectedCode = null;
+                return;
+            }
             if (found) {
                 var filename = found.filename ? String(found.filename) : '';
                 if (filename) {
@@ -4425,6 +4456,12 @@ const CountryComponent = (function(){
         if (initialValue) {
             setValue(initialValue);
         }
+        
+        // Called when menu closes externally - revert to selected value
+        menu.__menuOnClose = function() {
+            setValue(selectedCode);
+            filterOptions('');
+        };
         
         MenuManager.register(menu);
         
