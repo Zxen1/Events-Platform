@@ -811,6 +811,7 @@
             
             <!-- Profile Panel (shown when logged in) -->
             <section id="member-auth-profile" class="member-auth-panel member-auth-profile member-auth-panel--hidden" role="region" aria-live="polite" hidden>
+              <!-- Profile Header -->
               <div class="member-profile">
                 <img id="member-profile-avatar" class="member-profile-avatar" alt="">
                 <div class="member-profile-details">
@@ -818,16 +819,43 @@
                   <p id="member-profile-email" class="member-profile-email"></p>
                 </div>
               </div>
-              <label class="member-auth-panel-label">Avatar</label>
-              <div id="member-avatar-grid-profile" class="member-avatar-grid" aria-label="Avatar choices"></div>
-              <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
-                <label class="member-auth-panel-label" for="member-profile-edit-name">Username</label>
-                <input type="text" id="member-profile-edit-name" class="member-auth-panel-input" autocomplete="name">
-                <label class="member-auth-panel-label" for="member-profile-edit-password">New Password</label>
-                <input type="password" id="member-profile-edit-password" class="member-auth-panel-input" autocomplete="new-password">
-                <label class="member-auth-panel-label" for="member-profile-edit-confirm">Confirm Password</label>
-                <input type="password" id="member-profile-edit-confirm" class="member-auth-panel-input" autocomplete="new-password">
-              </form>
+              
+              <!-- Update Profile Drawer -->
+              <div class="member-profile-drawer">
+                <div class="member-profile-drawer-header">
+                  <span class="member-profile-drawer-title">Update Profile</span>
+                </div>
+                <div class="member-profile-drawer-content">
+                  <label class="member-auth-panel-label">Avatar</label>
+                  <div id="member-avatar-grid-profile" class="member-avatar-grid" aria-label="Avatar choices"></div>
+                  <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
+                    <label class="member-auth-panel-label" for="member-profile-edit-name">Username</label>
+                    <div class="member-profile-edit-row">
+                      <input type="text" id="member-profile-edit-name" class="member-auth-panel-input member-profile-edit-name-input" autocomplete="name">
+                      <button type="button" id="member-profile-more-btn" class="member-profile-more-btn" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>
+                      </button>
+                      <!-- More Menu (Hidden by default) -->
+                      <div id="member-profile-more-menu" class="member-profile-more-menu" hidden>
+                        <div class="member-profile-more-item">
+                          <span class="member-profile-more-item-text">Hide Account</span>
+                          <div id="member-profile-hide-switch" class="member-profile-more-switch" role="switch" aria-checked="false" tabindex="0"></div>
+                        </div>
+                        <button type="button" id="member-profile-delete-btn" class="member-profile-more-item member-profile-more-delete">
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                          <span>Delete Account</span>
+                        </button>
+                      </div>
+                    </div>
+                    <label class="member-auth-panel-label" for="member-profile-edit-password">New Password</label>
+                    <input type="password" id="member-profile-edit-password" class="member-auth-panel-input" autocomplete="new-password">
+                    <label class="member-auth-panel-label" for="member-profile-edit-confirm">Confirm Password</label>
+                    <input type="password" id="member-profile-edit-confirm" class="member-auth-panel-input" autocomplete="new-password">
+                  </form>
+                </div>
+              </div>
+              
+              <!-- Logout Button (outside drawer) -->
               <div class="member-profile-actions">
                 <button type="button" class="member-button-auth member-profile-actions-btn" id="member-logout-btn">Log Out</button>
               </div>

@@ -104,6 +104,12 @@ const MemberModule = (function() {
     var profileSaveBtn = null;
     var profileEditForm = null;
     var profileOriginalName = '';
+    
+    // Profile more menu (3-dot button)
+    var profileMoreBtn = null;
+    var profileMoreMenu = null;
+    var profileHideSwitch = null;
+    var profileDeleteBtn = null;
     var profileOriginalAvatarUrl = '';
     var pendingAvatarUrl = '';
     var pendingRegisterAvatarBlob = null;
@@ -246,6 +252,12 @@ const MemberModule = (function() {
         profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
+        
+        // Profile more menu
+        profileMoreBtn = document.getElementById('member-profile-more-btn');
+        profileMoreMenu = document.getElementById('member-profile-more-menu');
+        profileHideSwitch = document.getElementById('member-profile-hide-switch');
+        profileDeleteBtn = document.getElementById('member-profile-delete-btn');
 
         // Avatar UI
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
@@ -482,6 +494,55 @@ const MemberModule = (function() {
             profileEditForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleHeaderSave();
+            });
+        }
+        
+        // Profile more menu (3-dot button)
+        if (profileMoreBtn && profileMoreMenu) {
+            profileMoreBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = !profileMoreMenu.hidden;
+                closeAllProfileMenus();
+                if (!isOpen) {
+                    profileMoreMenu.hidden = false;
+                    profileMoreBtn.setAttribute('aria-expanded', 'true');
+                }
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (profileMoreMenu && !profileMoreMenu.hidden) {
+                    if (!profileMoreBtn.contains(e.target) && !profileMoreMenu.contains(e.target)) {
+                        closeAllProfileMenus();
+                    }
+                }
+            });
+        }
+        
+        // Hide Account switch
+        if (profileHideSwitch) {
+            profileHideSwitch.addEventListener('click', function() {
+                var isHidden = profileHideSwitch.getAttribute('aria-checked') === 'true';
+                profileHideSwitch.setAttribute('aria-checked', !isHidden ? 'true' : 'false');
+                // Save to database
+                if (currentUser && currentUser.id) {
+                    saveProfileHiddenState(!isHidden);
+                }
+            });
+            profileHideSwitch.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    profileHideSwitch.click();
+                }
+            });
+        }
+        
+        // Delete Account button
+        if (profileDeleteBtn) {
+            profileDeleteBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                closeAllProfileMenus();
+                confirmDeleteAccount();
             });
         }
 
@@ -1696,6 +1757,95 @@ const MemberModule = (function() {
             return;
         }
         handleLogout();
+    }
+    
+    function closeAllProfileMenus() {
+        if (profileMoreMenu) {
+            profileMoreMenu.hidden = true;
+        }
+        if (profileMoreBtn) {
+            profileMoreBtn.setAttribute('aria-expanded', 'false');
+        }
+    }
+    
+    function saveProfileHiddenState(hidden) {
+        if (!currentUser || !currentUser.id || !currentUser.email) return;
+        
+        fetch('/gateway.php?action=edit-member', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: currentUser.id,
+                email: currentUser.email,
+                hidden: hidden ? 1 : 0
+            })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                currentUser.hidden = hidden;
+                storeCurrent(currentUser);
+                getMessage('msg_profile_hidden_updated', {}, false).then(function(msg) {
+                    if (msg && window.ToastComponent) ToastComponent.showSuccess(msg);
+                });
+            }
+        })
+        .catch(function(err) {
+            console.error('[Member] Failed to update hidden state:', err);
+        });
+    }
+    
+    function confirmDeleteAccount() {
+        if (!currentUser) return;
+        
+        var displayName = currentUser.name || currentUser.username || currentUser.email || 'your account';
+        
+        getMessage('msg_confirm_delete_account', { name: displayName }, false).then(function(message) {
+            var text = message || ('Delete the account "' + displayName + '"? This action cannot be undone.');
+            
+            if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
+                ThreeButtonDialogComponent.show({
+                    message: text,
+                    button1: { label: 'Delete Account', variant: 'danger' },
+                    button2: { label: 'Cancel', variant: 'secondary' },
+                    onButton1: function() {
+                        performDeleteAccount();
+                    }
+                });
+            }
+        });
+    }
+    
+    function performDeleteAccount() {
+        if (!currentUser || !currentUser.id || !currentUser.email) return;
+        
+        fetch('/gateway.php?action=delete-member', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: currentUser.id,
+                email: currentUser.email
+            })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                getMessage('msg_account_deleted', {}, false).then(function(msg) {
+                    if (msg && window.ToastComponent) ToastComponent.showSuccess(msg);
+                });
+                handleLogout();
+            } else {
+                getMessage('msg_account_delete_failed', {}, false).then(function(msg) {
+                    if (msg && window.ToastComponent) ToastComponent.showError(msg);
+                });
+            }
+        })
+        .catch(function(err) {
+            console.error('[Member] Failed to delete account:', err);
+            getMessage('msg_account_delete_failed', {}, false).then(function(msg) {
+                if (msg && window.ToastComponent) ToastComponent.showError(msg);
+            });
+        });
     }
 
     function requestTabSwitch(tabName) {
@@ -4199,6 +4349,12 @@ const MemberModule = (function() {
             pendingAvatarUrl = profileOriginalAvatarUrl;
             pendingProfileSiteUrl = '';
             pendingProfileAvatarPreviewUrl = '';
+            
+            // Set hide account switch state
+            if (profileHideSwitch) {
+                var isHidden = currentUser.hidden === true || currentUser.hidden === 1 || currentUser.hidden === '1';
+                profileHideSwitch.setAttribute('aria-checked', isHidden ? 'true' : 'false');
+            }
             pendingProfileAvatarBlob = null;
             avatarSelection.profile = 'self';
             updateProfileSaveState();

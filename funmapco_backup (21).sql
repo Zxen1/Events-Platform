@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 30, 2025 at 01:47 PM
+-- Generation Time: Dec 30, 2025 at 02:07 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -95,7 +95,8 @@ CREATE TABLE `members` (
   `map_style` varchar(20) DEFAULT 'standard',
   `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `country` varchar(2) DEFAULT NULL,
+  `country` varchar(100) DEFAULT NULL,
+  `hidden` tinyint(1) NOT NULL DEFAULT 0,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -105,9 +106,10 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21'),
-(2, 'Test', 'test', 'test@funmap.com', '0-avatar.png', '$2y$10$HGrZ8HMv6aPzQVGgXUN1yu6iWyGJwlvg2QtaXvK0G530OCLgvJFlu', 'night', 'standard', NULL, NULL, 'au', NULL, '2025-12-30 04:51:12', '2025-12-30 05:16:05');
+INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21'),
+(2, 'Test', 'test', 'test@funmap.com', '0-avatar.png', '$2y$10$HGrZ8HMv6aPzQVGgXUN1yu6iWyGJwlvg2QtaXvK0G530OCLgvJFlu', 'night', 'standard', NULL, NULL, 'Australia', 0, NULL, '2025-12-30 04:51:12', '2025-12-30 14:03:37'),
+(3, 'Test2', 'test2', 'test2@funmap.com', '3-avatar.png', '$2y$10$ZduCC1xwBOB.cg3xsWTIN.9WeHuoSUzMpcwHu4ckATtO.SqWjzdRS', 'day', 'standard', NULL, NULL, 'Australia', 0, NULL, '2025-12-30 13:49:07', '2025-12-30 14:03:37');
 
 -- --------------------------------------------------------
 
@@ -358,7 +360,7 @@ ALTER TABLE `media`
 -- AUTO_INCREMENT for table `members`
 --
 ALTER TABLE `members`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `moderation_log`
@@ -436,7 +438,7 @@ CREATE TABLE `admins` (
 ,`map_style` varchar(20)
 ,`favorites` text
 ,`recent` text
-,`country` varchar(2)
+,`country` varchar(100)
 ,`backup_json` longtext
 ,`created_at` datetime
 ,`updated_at` datetime
@@ -789,7 +791,7 @@ CREATE TABLE `members` (
 ,`map_style` varchar(20)
 ,`favorites` text
 ,`recent` text
-,`country` varchar(2)
+,`country` varchar(100)
 ,`backup_json` longtext
 ,`created_at` datetime
 ,`updated_at` datetime
@@ -1328,7 +1330,8 @@ CREATE TABLE `admins` (
   `map_style` varchar(20) DEFAULT 'standard',
   `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `country` varchar(2) DEFAULT NULL,
+  `country` varchar(100) DEFAULT NULL,
+  `hidden` tinyint(1) NOT NULL DEFAULT 0,
   `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -1338,8 +1341,8 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'day', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, NULL, '2025-10-22 01:00:41', '2025-12-29 17:43:30');
+INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'day', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, '2025-10-22 01:00:41', '2025-12-29 17:43:30');
 
 -- --------------------------------------------------------
 
