@@ -1905,145 +1905,143 @@
 
 
 /* ============================================================================
-   PHONE PREFIX (component-phoneprefix-menu)
+   PHONE PREFIX
    
    No variants - same everywhere.
    ============================================================================ */
 
 /* Appearance */
-.component-phoneprefix-menu {
-    width: 120px;
-    height: 36px;
+.phoneprefix-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.phoneprefix-button-wrapper {
     position: relative;
+    flex-shrink: 0;
+    flex: 0 0 100px;
+}
+
+.phoneprefix-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
     flex-shrink: 0;
 }
 
-.component-phoneprefix-menu-button {
-    width: 120px;
-    height: 36px;
+.phoneprefix-button-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.phoneprefix-button-text {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    line-height: 1;
+    flex: 1;
+}
+
+.phoneprefix-button-arrow {
+    margin-left: auto;
+    font-size: 10px;
+    opacity: 0.6;
+    transition: transform 0.15s;
+}
+
+.phoneprefix-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 280px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #222;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    margin-top: 4px;
+    z-index: var(--layer-menu, 85);
+}
+
+.phoneprefix-options[hidden] {
+    display: none;
+}
+
+.phoneprefix-option {
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 10px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
 }
 
-.component-phoneprefix-menu-button-image {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
+.phoneprefix-option-flag {
+    width: 20px;
+    height: 15px;
+    object-fit: cover;
+    border-radius: 2px;
     flex-shrink: 0;
 }
 
-.component-phoneprefix-menu-button-input {
+.phoneprefix-option-text {
     flex: 1;
-    text-align: left;
-    padding-left: 6px;
-    font-size: 12px;
-    color: #fff;
-    caret-color: #fff;
-    background: transparent;
-    border: none;
-    outline: none;
+    flex-shrink: 1;
     min-width: 0;
 }
 
-.component-phoneprefix-menu:not(.component-phoneprefix-menu--open) .component-phoneprefix-menu-button-input {
-    pointer-events: none;
-}
-
-.component-phoneprefix-menu-button-input::placeholder {
-    color: #666;
-}
-
-.component-phoneprefix-menu-button-arrow {
-    width: 16px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: #888;
-    transition: transform 0.2s;
-    cursor: pointer;
-}
-
-.component-phoneprefix-menu-options {
-    display: none;
-    position: absolute;
-    top: 36px;
-    left: 0;
-    width: 280px;
-    background: #222;
-    border: 1px solid #3b82f5;
-    border-radius: 5px;
-    max-height: 300px;
-    overflow-y: auto;
-    z-index: var(--layer-menu, 85);
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
-}
-
-.component-phoneprefix-menu-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-phoneprefix-menu-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.component-phoneprefix-menu-option {
-    width: 100%;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    padding: 0 10px;
-    cursor: pointer;
-    color: #fff;
-    font-size: 13px;
-    background: transparent;
-    border: none;
-}
-
-.component-phoneprefix-menu-option-image {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.component-phoneprefix-menu-option-text {
+.phoneprefix-input {
     flex: 1;
-    text-align: left;
-    padding-left: 10px;
-    font-size: 13px;
+    min-width: 0;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
+    background: rgba(0,0,0,0.35);
     color: #fff;
+    font: inherit;
 }
 
 /* States */
-.component-phoneprefix-menu-button:hover {
-    border-color: #555;
+.phoneprefix-button:hover {
+    border-color: rgba(255,255,255,0.4);
 }
 
-.component-phoneprefix-menu-button--open {
-    border-color: #3b82f5;
-}
-
-.component-phoneprefix-menu-button-arrow--open {
+.phoneprefix-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.component-phoneprefix-menu-options--open {
-    display: block;
+.phoneprefix-option:hover {
+    background: rgba(255,255,255,0.1);
 }
 
-.component-phoneprefix-menu-option:hover,
-.component-phoneprefix-menu-option.menu-option--highlighted {
-    background: #3b82f5;
+.phoneprefix-option:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+}
+
+.phoneprefix-input:focus {
+    outline: none;
+    border-color: #3b82f6;
 }
 
 
