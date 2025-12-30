@@ -3225,6 +3225,18 @@
     outline: none;
 }
 
+/* Danger variant for destructive actions */
+.component-confirm-dialog-button--confirm.danger {
+    background: #7f1d1d;
+    border-color: #dc2626;
+    color: #fff;
+}
+
+.component-confirm-dialog-button--confirm.danger:focus-visible,
+.component-confirm-dialog-button--confirm.danger:hover {
+    background: #991b1b;
+}
+
 /* ============================================================================
    THREE BUTTON DIALOG COMPONENT
    Duplicated from ConfirmDialogComponent with independent classes

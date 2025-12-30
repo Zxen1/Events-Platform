@@ -1191,13 +1191,12 @@
 }
 
 /* ============================================================================
-   UPDATE PROFILE DRAWER
+   UPDATE PROFILE DRAWER (Accordion style - copied from admin settings)
    ============================================================================ */
 
 .member-profile-drawer {
   width: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #080808;
   border-radius: 5px;
   overflow: visible;
 }
@@ -1206,23 +1205,53 @@
   height: 36px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  justify-content: space-between;
+  padding: 0 10px;
   background: rgba(59, 130, 245, 0.15);
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.member-profile-drawer-header:hover {
+  border-color: #3b82f5;
+}
+
+.member-profile-drawer-header--open {
   border-radius: 5px 5px 0 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
 }
 
 .member-profile-drawer-title {
+  flex: 1;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: bold;
   color: #fff;
 }
 
-.member-profile-drawer-content {
-  padding: 12px;
+.member-profile-drawer-arrow {
+  width: 20px;
+  height: 20px;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.member-profile-drawer-arrow--open {
+  transform: rotate(180deg);
+}
+
+.member-profile-drawer-body {
+  display: none;
+  padding: 12px;
   flex-direction: column;
   gap: 12px;
+}
+
+.member-profile-drawer-body--open {
+  display: flex;
 }
 
 /* Username row with more button */

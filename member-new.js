@@ -105,6 +105,12 @@ const MemberModule = (function() {
     var profileEditForm = null;
     var profileOriginalName = '';
     
+    // Profile drawer (accordion)
+    var profileDrawer = null;
+    var profileDrawerHeader = null;
+    var profileDrawerArrow = null;
+    var profileDrawerBody = null;
+    
     // Profile more menu (3-dot button)
     var profileMoreBtn = null;
     var profileMoreMenu = null;
@@ -252,6 +258,12 @@ const MemberModule = (function() {
         profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
+        
+        // Profile drawer (accordion)
+        profileDrawer = document.getElementById('member-profile-drawer');
+        profileDrawerHeader = document.getElementById('member-profile-drawer-header');
+        profileDrawerArrow = profileDrawer ? profileDrawer.querySelector('.member-profile-drawer-arrow') : null;
+        profileDrawerBody = profileDrawer ? profileDrawer.querySelector('.member-profile-drawer-body') : null;
         
         // Profile more menu
         profileMoreBtn = document.getElementById('member-profile-more-btn');
@@ -494,6 +506,13 @@ const MemberModule = (function() {
             profileEditForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleHeaderSave();
+            });
+        }
+        
+        // Profile drawer toggle (accordion)
+        if (profileDrawerHeader) {
+            profileDrawerHeader.addEventListener('click', function() {
+                toggleProfileDrawer();
             });
         }
         
@@ -1768,6 +1787,15 @@ const MemberModule = (function() {
         }
     }
     
+    function toggleProfileDrawer() {
+        if (!profileDrawer) return;
+        var isOpen = profileDrawer.classList.contains('member-profile-drawer--open');
+        profileDrawer.classList.toggle('member-profile-drawer--open', !isOpen);
+        if (profileDrawerHeader) profileDrawerHeader.classList.toggle('member-profile-drawer-header--open', !isOpen);
+        if (profileDrawerArrow) profileDrawerArrow.classList.toggle('member-profile-drawer-arrow--open', !isOpen);
+        if (profileDrawerBody) profileDrawerBody.classList.toggle('member-profile-drawer-body--open', !isOpen);
+    }
+    
     function saveProfileHiddenState(hidden) {
         if (!currentUser || !currentUser.id || !currentUser.email) return;
         
@@ -1803,12 +1831,16 @@ const MemberModule = (function() {
         getMessage('msg_confirm_delete_account', { name: displayName }, false).then(function(message) {
             var text = message || ('Delete the account "' + displayName + '"? This action cannot be undone.');
             
-            if (window.ThreeButtonDialogComponent && typeof ThreeButtonDialogComponent.show === 'function') {
-                ThreeButtonDialogComponent.show({
-                    message: text,
-                    button1: { label: 'Delete Account', variant: 'danger' },
-                    button2: { label: 'Cancel', variant: 'secondary' },
-                    onButton1: function() {
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                ConfirmDialogComponent.show({
+                    titleText: 'Delete Account',
+                    messageText: text,
+                    confirmLabel: 'Delete Account',
+                    cancelLabel: 'Cancel',
+                    confirmClass: 'danger',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (confirmed) {
                         performDeleteAccount();
                     }
                 });
