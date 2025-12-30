@@ -95,7 +95,7 @@ try {
                 'spin_on_load' => false,
                 'spin_load_type' => 'everyone',
                 'spin_on_logo' => true,
-                'site_currency' => 'USD',
+                'website_currency' => 'USD',
             ],
         ]);
         return;

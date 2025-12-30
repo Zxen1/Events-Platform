@@ -273,11 +273,11 @@ try {
         // Check if checkout_options table exists
         $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
         if ($stmt->rowCount() > 0) {
-            // Get site currency from admin_settings
+            // Get website currency from admin_settings
             $siteCurrency = 'USD'; // Default
             try {
                 $currencyStmt = $pdo->prepare('SELECT `setting_value` FROM `admin_settings` WHERE `setting_key` = ? LIMIT 1');
-                $currencyStmt->execute(['site_currency']);
+                $currencyStmt->execute(['website_currency']);
                 $currencyRow = $currencyStmt->fetch(PDO::FETCH_ASSOC);
                 if ($currencyRow && !empty($currencyRow['setting_value'])) {
                     $siteCurrency = strtoupper(trim($currencyRow['setting_value']));
