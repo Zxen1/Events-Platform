@@ -46,7 +46,7 @@ switch ($action) {
   case 'reactivate_member':
     if ($memberId <= 0) fail(400, 'Missing member_id');
     
-    $stmt = $mysqli->prepare('UPDATE `funmapco_content`.`members` SET deleted_at = NULL WHERE id = ?');
+    $stmt = $mysqli->prepare('UPDATE `members` SET deleted_at = NULL WHERE id = ?');
     if (!$stmt) fail(500, 'Prepare failed');
     $stmt->bind_param('i', $memberId);
     if (!$stmt->execute()) { $stmt->close(); fail(500, 'Update failed'); }
@@ -64,7 +64,7 @@ switch ($action) {
     $anonEmail = 'deleted_' . $memberId . '@anonymized.local';
     
     $stmt = $mysqli->prepare('
-      UPDATE `funmapco_content`.`members` 
+      UPDATE `members` 
       SET username = ?, 
           email = ?, 
           avatar_file = NULL,
@@ -82,7 +82,7 @@ switch ($action) {
     $stmt->close();
     
     // Update posts to show "Former Member" as author
-    $stmt2 = $mysqli->prepare('UPDATE `funmapco_content`.`posts` SET member_name = ? WHERE member_id = ?');
+    $stmt2 = $mysqli->prepare('UPDATE `posts` SET member_name = ? WHERE member_id = ?');
     if ($stmt2) {
       $stmt2->bind_param('si', $anonUsername, $memberId);
       $stmt2->execute();
@@ -95,7 +95,7 @@ switch ($action) {
   case 'clear_post_flag':
     if ($postId <= 0) fail(400, 'Missing post_id');
     
-    $stmt = $mysqli->prepare('UPDATE `funmapco_content`.`posts` SET flag_reason = NULL WHERE id = ?');
+    $stmt = $mysqli->prepare('UPDATE `posts` SET flag_reason = NULL WHERE id = ?');
     if (!$stmt) fail(500, 'Prepare failed');
     $stmt->bind_param('i', $postId);
     if (!$stmt->execute()) { $stmt->close(); fail(500, 'Update failed'); }
@@ -108,7 +108,7 @@ switch ($action) {
   case 'hide_post':
     if ($postId <= 0) fail(400, 'Missing post_id');
     
-    $stmt = $mysqli->prepare('UPDATE `funmapco_content`.`posts` SET moderation_status = "hidden", flag_reason = NULL WHERE id = ?');
+    $stmt = $mysqli->prepare('UPDATE `posts` SET moderation_status = "hidden", flag_reason = NULL WHERE id = ?');
     if (!$stmt) fail(500, 'Prepare failed');
     $stmt->bind_param('i', $postId);
     if (!$stmt->execute()) { $stmt->close(); fail(500, 'Update failed'); }

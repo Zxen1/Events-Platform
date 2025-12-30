@@ -43,7 +43,7 @@ if ($memberId <= 0) {
 // Count active posts (visibility='active' and not expired)
 $stmt = $mysqli->prepare('
   SELECT COUNT(*) as count 
-  FROM `funmapco_content`.`posts` 
+  FROM `posts` 
   WHERE member_id = ? 
     AND visibility = "active"
     AND (expires_at IS NULL OR expires_at > NOW())

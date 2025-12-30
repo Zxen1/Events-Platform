@@ -62,7 +62,7 @@ if ($mysqli->connect_error) {
 $pendingDeletion = [];
 $stmt = $mysqli->prepare('
   SELECT id, username, email, avatar_file, deleted_at 
-  FROM `funmapco_content`.`members` 
+  FROM `members` 
   WHERE deleted_at IS NOT NULL 
   ORDER BY deleted_at ASC
   LIMIT 50
@@ -106,7 +106,7 @@ $stmt->close();
 $flaggedPosts = [];
 $stmt = $mysqli->prepare('
   SELECT id, post_key, member_id, member_name, checkout_title, flag_reason, moderation_status, created_at
-  FROM `funmapco_content`.`posts` 
+  FROM `posts` 
   WHERE flag_reason IS NOT NULL AND flag_reason != ""
   ORDER BY created_at DESC
   LIMIT 50

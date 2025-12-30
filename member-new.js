@@ -2020,13 +2020,6 @@ const MemberModule = (function() {
         App.emit('member:closed');
     }
     
-    function refreshPanel() {
-        // Close and reopen the panel to reset ButtonAnchor slack
-        closePanel();
-        setTimeout(function() {
-            openPanel();
-        }, 50);
-    }
 
     /* --------------------------------------------------------------------------
        TAB SWITCHING
@@ -3964,7 +3957,6 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
-            refreshPanel();
             
             // Apply member map settings
             if (currentUser.map_lighting && window.MapModule && window.MapModule.setMapLighting) {
@@ -4173,7 +4165,6 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
-            refreshPanel();
             
             getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
                 if (message) {
@@ -4234,7 +4225,6 @@ const MemberModule = (function() {
         currentUser = null;
         storeCurrent(null);
         render();
-        refreshPanel();
         
         // Revert to admin/localStorage settings
         var lighting = localStorage.getItem('map_lighting') || 'day';

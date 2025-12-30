@@ -42,7 +42,7 @@ if ($id <= 0 || $email === '') {
 }
 
 // Verify email matches id before proceeding
-$check = $mysqli->prepare('SELECT email FROM `funmapco_content`.`members` WHERE id = ?');
+$check = $mysqli->prepare('SELECT email FROM `members` WHERE id = ?');
 if (!$check) fail(500, 'Prepare failed');
 $check->bind_param('i', $id);
 if (!$check->execute()) { $check->close(); fail(500, 'Query failed'); }
@@ -57,7 +57,7 @@ if (!$row || strtolower($row['email']) !== strtolower($email)) {
 // Check for active posts first
 $postCheck = $mysqli->prepare('
   SELECT COUNT(*) as count 
-  FROM `funmapco_content`.`posts` 
+  FROM `posts` 
   WHERE member_id = ? 
     AND visibility = "active"
     AND (expires_at IS NULL OR expires_at > NOW())
@@ -75,7 +75,7 @@ if ($activeCount > 0) {
 }
 
 // Soft delete: set deleted_at timestamp
-$update = $mysqli->prepare('UPDATE `funmapco_content`.`members` SET deleted_at = NOW() WHERE id = ?');
+$update = $mysqli->prepare('UPDATE `members` SET deleted_at = NOW() WHERE id = ?');
 if (!$update) fail(500, 'Prepare failed');
 $update->bind_param('i', $id);
 if (!$update->execute()) { $update->close(); fail(500, 'Update failed'); }
