@@ -293,29 +293,7 @@ const MemberModule = (function() {
         }
     }
 
-    function setProfileLoggedInBottomSpacer(isEnabled) {
-        try {
-            if (!profileTabPanel) return;
-            var id = 'member-profile-loggedin-bottom-spacer';
-            var el = document.getElementById(id);
-            if (!isEnabled) {
-                if (el && el.parentNode) el.parentNode.removeChild(el);
-                return;
-            }
-            if (!el) {
-                el = document.createElement('div');
-                el.id = id;
-                el.setAttribute('aria-hidden', 'true');
-                // Minimal, explicit inline style (workaround requested by Paul).
-                el.style.height = '200px';
-                el.style.flex = '0 0 auto';
-                el.style.pointerEvents = 'none';
-                profileTabPanel.appendChild(el);
-            }
-        } catch (e) {
-            // ignore
-        }
-    }
+    // NOTE: Temporary bottom spacer workaround removed (per Paul request). Keep code clean.
 
     function bindEvents() {
         // Bring to front when panel is clicked
@@ -4128,7 +4106,6 @@ const MemberModule = (function() {
         if (currentUser) {
             // Logged in state
             authForm.dataset.state = 'logged-in';
-            setProfileLoggedInBottomSpacer(true);
             
             // Hide login/register panels
             setAuthPanelState(loginPanel, false, loginInputs);
@@ -4192,7 +4169,6 @@ const MemberModule = (function() {
         } else {
             // Logged out state
             authForm.dataset.state = 'logged-out';
-            setProfileLoggedInBottomSpacer(false);
             
             // Update profile tab label
             if (profileTabBtn) {
