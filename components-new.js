@@ -7221,6 +7221,19 @@ const ButtonAnchorBottom = (function() {
                 if (t && t.closest && t.closest('[role="tab"]')) return;
             } catch (_eTab) {}
             
+            // Check if the clicked element is within a tab that has top anchor disabled.
+            try {
+                var t2 = e && e.target;
+                if (t2 && t2.closest) {
+                    var anchorDisabled = t2.closest('[data-anchor-top="false"]');
+                    if (anchorDisabled) {
+                        // This tab doesn't want top anchor - collapse any existing slack and return.
+                        applySlackPx(collapsedSlackPx);
+                        return;
+                    }
+                }
+            } catch (_eAttr) {}
+            
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
@@ -7491,6 +7504,13 @@ const ButtonAnchorTop = (function() {
             var a = pendingAnchor;
             pendingAnchor = null;
             if (!a || !a.el || !a.el.isConnected) return;
+            
+            // Check if the anchor element is within a tab that has top anchor disabled.
+            try {
+                if (a.el.closest && a.el.closest('[data-anchor-top="false"]')) {
+                    return; // This tab doesn't want top anchor adjustments.
+                }
+            } catch (_eAttr) {}
             
             try {
                 var afterTop = a.el.getBoundingClientRect().top;

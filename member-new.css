@@ -1199,6 +1199,11 @@
   background: #080808;
   border-radius: 5px;
   overflow: visible;
+  border: 1px solid transparent;
+}
+
+.member-profile-drawer:hover {
+  border-color: #3b82f5;
 }
 
 .member-profile-drawer-header {
@@ -1208,18 +1213,12 @@
   justify-content: space-between;
   padding: 0 10px;
   background: rgba(59, 130, 245, 0.15);
-  border: 1px solid transparent;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.member-profile-drawer-header:hover {
-  border-color: #3b82f5;
-}
-
-.member-profile-drawer-header--open {
-  border-radius: 5px 5px 0 0;
-  border-bottom: none;
+.member-profile-drawer--open .member-profile-drawer-header {
+  border-radius: 4px 4px 0 0;
 }
 
 .member-profile-drawer-title {

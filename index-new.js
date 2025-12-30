@@ -515,11 +515,54 @@ const App = (function() {
      Called on DOMContentLoaded
      -------------------------------------------------------------------------- */
   /* --------------------------------------------------------------------------
-     BUTTON ANCHOR BOTTOM (Anti-jank)
-     Implemented as reusable component: `window.ButtonAnchorBottom` in `components-new.js`.
-  */
+     BUTTON ANCHOR CONFIG
+     
+     Controls which tabs have top/bottom anchors enabled.
+     Tabs not listed here default to both anchors ON.
+     
+     OPTIONS:
+       top: false    - Disable top anchor (use for short tabs)
+       bottom: false - Disable bottom anchor (rarely needed)
+     
+     TO ADD A TAB:
+       'element-id': { top: false }
+       'element-id': { bottom: false }
+       'element-id': { top: false, bottom: false }
+     
+     TO REMOVE A TAB:
+       Delete its line (defaults to both anchors ON)
+     
+     WHEN TO DISABLE TOP ANCHOR:
+       Short tabs that don't have expandable content above clickable elements.
+       Prevents the "pushed to bottom of screen" issue on small content.
+     
+     WHEN TO DISABLE BOTTOM ANCHOR:
+       Rarely needed. Only if a tab has no expandable content below clicks.
+     -------------------------------------------------------------------------- */
+  var BUTTON_ANCHOR_CONFIG = {
+    'admin-tab-moderation':  { top: false },
+    'member-auth-login':     { top: false },
+    'member-auth-profile':   { top: false }
+  };
 
-  function initButtonAnchorBottom() {
+  function applyButtonAnchorConfig() {
+    Object.keys(BUTTON_ANCHOR_CONFIG).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var cfg = BUTTON_ANCHOR_CONFIG[id];
+      if (cfg.top === false) el.setAttribute('data-anchor-top', 'false');
+      if (cfg.bottom === false) el.setAttribute('data-anchor-bottom', 'false');
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     BUTTON ANCHOR INIT
+     Implemented as reusable components in `components-new.js`.
+  */
+  function initButtonAnchors() {
+    // Apply per-tab config first
+    applyButtonAnchorConfig();
+    
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
@@ -531,7 +574,7 @@ const App = (function() {
           if (topSlack && topSlack.parentNode) topSlack.parentNode.removeChild(topSlack);
         } catch (e) {}
 
-        // Strict behavior lives inside the component.
+        // Attach both anchors - they check data attributes internally
         ButtonAnchorBottom.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
         ButtonAnchorTop.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
@@ -565,8 +608,8 @@ const App = (function() {
       }
     });
 
-    // Anti-jank: Button Anchor Bottom (reusable component)
-    initButtonAnchorBottom();
+    // Anti-jank: Button Anchors (top & bottom, per-tab config)
+    initButtonAnchors();
     
     // Global Escape key handler - closes modals, menus, panels in order of focus
     // Priority: Dialogs (capture phase) > Menus (MenuManager) > Panels (panelStack)
