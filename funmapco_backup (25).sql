@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 30, 2025 at 05:23 PM
+-- Generation Time: Dec 30, 2025 at 09:54 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -62,25 +62,6 @@ CREATE TABLE `logs` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `media`
---
-
-CREATE TABLE `media` (
-  `id` int(11) NOT NULL,
-  `member_id` int(11) DEFAULT NULL,
-  `post_id` int(11) DEFAULT NULL,
-  `file_name` varchar(255) DEFAULT NULL,
-  `file_url` varchar(500) DEFAULT NULL,
-  `file_size` int(11) DEFAULT NULL,
-  `uploaded_at` datetime DEFAULT current_timestamp(),
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
-  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `members`
 --
 
@@ -109,7 +90,7 @@ CREATE TABLE `members` (
 
 INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
 (1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21'),
-(2, 'Test', 'test', 'test@funmap.com', '0-avatar.png', '$2y$10$HGrZ8HMv6aPzQVGgXUN1yu6iWyGJwlvg2QtaXvK0G530OCLgvJFlu', 'dawn', 'standard-satellite', NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 04:51:12', '2025-12-30 14:16:35'),
+(2, 'Test', 'test', 'test@funmap.com', '0-avatar.png', '$2y$10$HGrZ8HMv6aPzQVGgXUN1yu6iWyGJwlvg2QtaXvK0G530OCLgvJFlu', 'dawn', 'standard', NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 04:51:12', '2025-12-30 18:17:06'),
 (3, 'Test2', 'test2', 'test2@funmap.com', '3-avatar.png', '$2y$10$ZduCC1xwBOB.cg3xsWTIN.9WeHuoSUzMpcwHu4ckATtO.SqWjzdRS', 'day', 'standard', NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 13:49:07', '2025-12-30 14:03:37');
 
 -- --------------------------------------------------------
@@ -149,6 +130,7 @@ CREATE TABLE `posts` (
   `checkout_title` varchar(255) DEFAULT NULL,
   `payment_status` enum('pending','paid','failed','refunded') DEFAULT 'pending',
   `expires_at` datetime DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -210,6 +192,25 @@ CREATE TABLE `post_map_cards` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `post_media`
+--
+
+CREATE TABLE `post_media` (
+  `id` int(11) NOT NULL,
+  `member_id` int(11) DEFAULT NULL,
+  `post_id` int(11) DEFAULT NULL,
+  `file_name` varchar(255) DEFAULT NULL,
+  `file_url` varchar(500) DEFAULT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `uploaded_at` datetime DEFAULT current_timestamp(),
+  `backup_json` longtext DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `post_revisions`
 --
 
@@ -222,10 +223,10 @@ CREATE TABLE `post_revisions` (
   `edited_at` datetime DEFAULT current_timestamp(),
   `change_type` varchar(50) DEFAULT NULL,
   `change_summary` varchar(255) DEFAULT NULL,
-  `data_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`data_json`)),
+  `data_json` longtext DEFAULT NULL CHECK (json_valid(`data_json`)),
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -271,14 +272,6 @@ ALTER TABLE `logs`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `media`
---
-ALTER TABLE `media`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `member_id` (`member_id`),
-  ADD KEY `post_id` (`post_id`);
-
---
 -- Indexes for table `members`
 --
 ALTER TABLE `members`
@@ -320,6 +313,14 @@ ALTER TABLE `post_map_cards`
   ADD KEY `idx_lat_lng` (`latitude`,`longitude`);
 
 --
+-- Indexes for table `post_media`
+--
+ALTER TABLE `post_media`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `member_id` (`member_id`),
+  ADD KEY `post_id` (`post_id`);
+
+--
 -- Indexes for table `post_revisions`
 --
 ALTER TABLE `post_revisions`
@@ -352,12 +353,6 @@ ALTER TABLE `logs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `media`
---
-ALTER TABLE `media`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT for table `members`
 --
 ALTER TABLE `members`
@@ -385,6 +380,12 @@ ALTER TABLE `post_children`
 -- AUTO_INCREMENT for table `post_map_cards`
 --
 ALTER TABLE `post_map_cards`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `post_media`
+--
+ALTER TABLE `post_media`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -761,25 +762,6 @@ CREATE TABLE `logs` (
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `media`
--- (See below for the actual view)
---
-CREATE TABLE `media` (
-`id` int(11)
-,`member_id` int(11)
-,`post_id` int(11)
-,`file_name` varchar(255)
-,`file_url` varchar(500)
-,`file_size` int(11)
-,`uploaded_at` datetime
-,`backup_json` longtext
-,`created_at` datetime
-,`updated_at` datetime
-);
-
--- --------------------------------------------------------
-
---
 -- Stand-in structure for view `members`
 -- (See below for the actual view)
 --
@@ -869,6 +851,7 @@ CREATE TABLE `posts` (
 ,`checkout_title` varchar(255)
 ,`payment_status` enum('pending','paid','failed','refunded')
 ,`expires_at` datetime
+,`deleted_at` datetime
 ,`created_at` datetime
 ,`updated_at` datetime
 );
@@ -922,6 +905,25 @@ CREATE TABLE `post_map_cards` (
 ,`checkout_title` varchar(255)
 ,`session_summary` varchar(255)
 ,`price_summary` varchar(255)
+,`created_at` datetime
+,`updated_at` datetime
+);
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `post_media`
+-- (See below for the actual view)
+--
+CREATE TABLE `post_media` (
+`id` int(11)
+,`member_id` int(11)
+,`post_id` int(11)
+,`file_name` varchar(255)
+,`file_url` varchar(500)
+,`file_size` int(11)
+,`uploaded_at` datetime
+,`backup_json` longtext
 ,`created_at` datetime
 ,`updated_at` datetime
 );
@@ -1190,15 +1192,6 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Structure for view `media`
---
-DROP TABLE IF EXISTS `media`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `media`  AS SELECT `funmapco_content`.`media`.`id` AS `id`, `funmapco_content`.`media`.`member_id` AS `member_id`, `funmapco_content`.`media`.`post_id` AS `post_id`, `funmapco_content`.`media`.`file_name` AS `file_name`, `funmapco_content`.`media`.`file_url` AS `file_url`, `funmapco_content`.`media`.`file_size` AS `file_size`, `funmapco_content`.`media`.`uploaded_at` AS `uploaded_at`, `funmapco_content`.`media`.`backup_json` AS `backup_json`, `funmapco_content`.`media`.`created_at` AS `created_at`, `funmapco_content`.`media`.`updated_at` AS `updated_at` FROM `funmapco_content`.`media` ;
-
--- --------------------------------------------------------
-
---
 -- Structure for view `members`
 --
 DROP TABLE IF EXISTS `members`;
@@ -1239,7 +1232,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `posts`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `posts`  AS SELECT `funmapco_content`.`posts`.`id` AS `id`, `funmapco_content`.`posts`.`post_key` AS `post_key`, `funmapco_content`.`posts`.`member_id` AS `member_id`, `funmapco_content`.`posts`.`member_name` AS `member_name`, `funmapco_content`.`posts`.`subcategory_key` AS `subcategory_key`, `funmapco_content`.`posts`.`loc_qty` AS `loc_qty`, `funmapco_content`.`posts`.`visibility` AS `visibility`, `funmapco_content`.`posts`.`moderation_status` AS `moderation_status`, `funmapco_content`.`posts`.`flag_reason` AS `flag_reason`, `funmapco_content`.`posts`.`checkout_title` AS `checkout_title`, `funmapco_content`.`posts`.`payment_status` AS `payment_status`, `funmapco_content`.`posts`.`expires_at` AS `expires_at`, `funmapco_content`.`posts`.`created_at` AS `created_at`, `funmapco_content`.`posts`.`updated_at` AS `updated_at` FROM `funmapco_content`.`posts` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwnr7tpx3`@`localhost` SQL SECURITY DEFINER VIEW `posts`  AS SELECT `funmapco_content`.`posts`.`id` AS `id`, `funmapco_content`.`posts`.`post_key` AS `post_key`, `funmapco_content`.`posts`.`member_id` AS `member_id`, `funmapco_content`.`posts`.`member_name` AS `member_name`, `funmapco_content`.`posts`.`subcategory_key` AS `subcategory_key`, `funmapco_content`.`posts`.`loc_qty` AS `loc_qty`, `funmapco_content`.`posts`.`visibility` AS `visibility`, `funmapco_content`.`posts`.`moderation_status` AS `moderation_status`, `funmapco_content`.`posts`.`flag_reason` AS `flag_reason`, `funmapco_content`.`posts`.`checkout_title` AS `checkout_title`, `funmapco_content`.`posts`.`payment_status` AS `payment_status`, `funmapco_content`.`posts`.`expires_at` AS `expires_at`, `funmapco_content`.`posts`.`deleted_at` AS `deleted_at`, `funmapco_content`.`posts`.`created_at` AS `created_at`, `funmapco_content`.`posts`.`updated_at` AS `updated_at` FROM `funmapco_content`.`posts` ;
 
 -- --------------------------------------------------------
 
@@ -1258,6 +1251,15 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP TABLE IF EXISTS `post_map_cards`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `post_map_cards`  AS SELECT `funmapco_content`.`post_map_cards`.`id` AS `id`, `funmapco_content`.`post_map_cards`.`post_id` AS `post_id`, `funmapco_content`.`post_map_cards`.`subcategory_key` AS `subcategory_key`, `funmapco_content`.`post_map_cards`.`title` AS `title`, `funmapco_content`.`post_map_cards`.`description` AS `description`, `funmapco_content`.`post_map_cards`.`custom_text` AS `custom_text`, `funmapco_content`.`post_map_cards`.`custom_textarea` AS `custom_textarea`, `funmapco_content`.`post_map_cards`.`custom_dropdown` AS `custom_dropdown`, `funmapco_content`.`post_map_cards`.`custom_radio` AS `custom_radio`, `funmapco_content`.`post_map_cards`.`email` AS `email`, `funmapco_content`.`post_map_cards`.`phone` AS `phone`, `funmapco_content`.`post_map_cards`.`venue_name` AS `venue_name`, `funmapco_content`.`post_map_cards`.`address_line` AS `address_line`, `funmapco_content`.`post_map_cards`.`latitude` AS `latitude`, `funmapco_content`.`post_map_cards`.`longitude` AS `longitude`, `funmapco_content`.`post_map_cards`.`country_code` AS `country_code`, `funmapco_content`.`post_map_cards`.`website_url` AS `website_url`, `funmapco_content`.`post_map_cards`.`tickets_url` AS `tickets_url`, `funmapco_content`.`post_map_cards`.`coupon_code` AS `coupon_code`, `funmapco_content`.`post_map_cards`.`checkout_title` AS `checkout_title`, `funmapco_content`.`post_map_cards`.`session_summary` AS `session_summary`, `funmapco_content`.`post_map_cards`.`price_summary` AS `price_summary`, `funmapco_content`.`post_map_cards`.`created_at` AS `created_at`, `funmapco_content`.`post_map_cards`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_map_cards` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `post_media`
+--
+DROP TABLE IF EXISTS `post_media`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwnr7tpx3`@`localhost` SQL SECURITY DEFINER VIEW `post_media`  AS SELECT `funmapco_content`.`post_media`.`id` AS `id`, `funmapco_content`.`post_media`.`member_id` AS `member_id`, `funmapco_content`.`post_media`.`post_id` AS `post_id`, `funmapco_content`.`post_media`.`file_name` AS `file_name`, `funmapco_content`.`post_media`.`file_url` AS `file_url`, `funmapco_content`.`post_media`.`file_size` AS `file_size`, `funmapco_content`.`post_media`.`uploaded_at` AS `uploaded_at`, `funmapco_content`.`post_media`.`backup_json` AS `backup_json`, `funmapco_content`.`post_media`.`created_at` AS `created_at`, `funmapco_content`.`post_media`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_media` ;
 
 -- --------------------------------------------------------
 
@@ -1348,7 +1350,7 @@ CREATE TABLE `admins` (
 --
 
 INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'day', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-10-22 01:00:41', '2025-12-29 17:43:30');
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'dawn', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-10-22 01:00:41', '2025-12-30 18:08:02');
 
 -- --------------------------------------------------------
 
@@ -1499,7 +1501,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (4, 'contact_email', '', 'string', 'Admin contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (5, 'support_email', '', 'string', 'Support contact email', '2025-11-13 16:17:10', '2025-11-14 09:10:02'),
 (6, 'maintenance_mode', 'false', 'boolean', 'Enable maintenance mode', '2025-11-13 16:17:10', '2025-11-13 16:17:10'),
-(7, 'welcome_enabled', 'false', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-12-20 06:37:54'),
+(7, 'welcome_enabled', 'true', 'boolean', 'Show welcome modal to new users', '2025-11-13 16:17:10', '2025-12-30 06:26:44'),
 (8, 'welcome_title', 'Welcome to FunMap', 'string', 'Title shown in the welcome modal', '2025-11-13 16:17:10', '2025-12-08 14:16:17'),
 (9, 'welcome_message', '\"<p>Welcome to Funmap! Choose an area on the map to search for events and listings. Click the <svg class=\\\"icon-search\\\" width=\\\"30\\\" height=\\\"30\\\" viewBox=\\\"0 0 24 24\\\" fill=\\\"none\\\" stroke=\\\"currentColor\\\" stroke-width=\\\"2\\\" role=\\\"img\\\" aria-label=\\\"Filters\\\"><circle cx=\\\"11\\\" cy=\\\"11\\\" r=\\\"8\\\"></circle><line x1=\\\"21\\\" y1=\\\"21\\\" x2=\\\"16.65\\\" y2=\\\"16.65\\\"></line></svg> button to refine your search.</p>\"', 'json', 'Main content of the welcome modal (supports HTML and SVG)', '2025-11-13 16:17:10', '2025-12-08 14:16:17'),
 (11, 'console_filter', 'false', 'boolean', 'Enable/disable console filter on page load', '2025-11-13 16:17:10', '2025-12-26 07:05:53'),
@@ -1563,9 +1565,9 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (232, 'small_map_card_pill', '150x40-pill-70.webp', 'string', 'Path to small map card base pill image (150×40px)', '2025-12-21 16:28:13', '2025-12-29 02:44:01'),
 (233, 'post_panel_empty_image', 'Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png', 'string', 'System image filename for Post Empty Image (uses folder_post_system_images)', '2025-12-29 03:38:23', '2025-12-29 03:47:17'),
 (234, 'recent_panel_footer_image', 'Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png', 'string', 'System image filename for Recent Footer Image (uses folder_recent_system_images)', '2025-12-29 03:38:23', '2025-12-29 03:47:17'),
-(300, 'map_lighting', 'night', 'string', 'Mapbox lighting preset: dawn, day, dusk, or night', '2025-12-23 02:44:08', '2025-12-29 02:44:01'),
-(301, 'map_style', 'standard', 'string', 'Mapbox style: standard or standard-satellite', '2025-12-23 02:44:08', '2025-12-29 02:44:01'),
-(302, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-30 06:22:01'),
+(300, 'map_lighting', 'dusk', 'string', 'Mapbox lighting preset: dawn, day, dusk, or night', '2025-12-23 02:44:08', '2025-12-30 06:36:36'),
+(301, 'map_style', 'standard', 'string', 'Mapbox style: standard or standard-satellite', '2025-12-23 02:44:08', '2025-12-30 07:08:27'),
+(302, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-30 07:07:27'),
 (303, 'spin_load_type', 'everyone', 'string', 'Spin for: everyone or new_users', '2025-11-13 16:17:10', '2025-12-30 06:22:01'),
 (304, 'spin_on_logo', 'true', 'boolean', 'Enable map spin when logo clicked', '2025-11-13 16:17:10', '2025-12-30 06:22:01'),
 (305, 'spin_zoom_max', '4', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-12-30 06:22:01'),
@@ -1822,10 +1824,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_logic`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`, `created_at`, `updated_at`) VALUES
-(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2025-12-30 16:15:01'),
-(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2025-12-30 16:15:01'),
-(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2025-12-30 16:15:01'),
-(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2025-12-30 16:15:01');
+(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2025-12-30 18:08:27'),
+(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2025-12-30 18:08:27'),
+(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2025-12-30 18:08:27'),
+(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2025-12-30 18:08:27');
 
 -- --------------------------------------------------------
 
@@ -3320,7 +3322,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=314;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=320;
 
 --
 -- AUTO_INCREMENT for table `amenities`

@@ -3306,43 +3306,20 @@ const MemberModule = (function() {
     
     function submitPostData(payload, isAdminFree) {
         return new Promise(function(resolve, reject) {
-            // Prepare form data for submission
-            var formData = new FormData();
-            formData.append('category', payload.category);
-            formData.append('subcategory', payload.subcategory);
-            formData.append('admin_free', isAdminFree ? '1' : '0');
-            
-            // Handle image uploads separately
-            var imageFields = [];
-            var otherFields = [];
-            
-            payload.fields.forEach(function(field) {
-                if (field.type === 'images' && Array.isArray(field.value)) {
-                    field.value.forEach(function(file, idx) {
-                        formData.append('images_' + field.key + '_' + idx, file);
-                    });
-                    imageFields.push({ key: field.key, count: field.value.length });
-                } else {
-                    otherFields.push({
-                        key: field.key,
-                        type: field.type,
-                        name: field.name,
-                        value: field.value
-                    });
-                }
-            });
-            
-            formData.append('fields', JSON.stringify(otherFields));
-            formData.append('image_fields', JSON.stringify(imageFields));
-            
-            // Add user info if logged in
-            if (currentUser && currentUser.id) {
-                formData.append('member_id', currentUser.id);
-            }
+            // Backend expects JSON, not FormData
+            var postData = {
+                subcategory_key: payload.subcategory,
+                member_id: currentUser ? currentUser.id : null,
+                member_name: currentUser ? (currentUser.username || currentUser.name || '') : '',
+                member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',
+                skip_payment: isAdminFree,
+                fields: payload.fields
+            };
             
             fetch('/gateway.php?action=add-post', {
                 method: 'POST',
-                body: formData
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(postData)
             })
             .then(function(response) {
                 return response.json();
