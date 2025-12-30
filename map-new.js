@@ -90,7 +90,7 @@ const MapModule = (function() {
   let startZoom = 1.5;
   let startPitch = DEFAULT_PITCH;
   let startBearing = 0;
-  let waitForMapTiles = true;
+  let waitForMapTiles = false; // Default false = show immediately; database can override
   
   // Markers
   let mapCardMarkers = new Map();    // postId -> { marker, element, state }
@@ -207,9 +207,17 @@ const MapModule = (function() {
 
     // Apply lighting immediately when style loads (BEFORE tiles finish loading)
     // This prevents the "flash" of default lighting
+    // Note: We call setConfigProperty directly here because setMapLighting() 
+    // checks isStyleLoaded() which can cause issues when called from style.load
     map.once('style.load', function() {
-      if (initialLighting && typeof setMapLighting === 'function') {
-        setMapLighting(initialLighting);
+      if (initialLighting) {
+        try {
+          if (typeof map.setConfigProperty === 'function') {
+            map.setConfigProperty('basemap', 'lightPreset', initialLighting);
+          }
+        } catch (e) {
+          console.warn('[Map] Initial lighting failed:', e);
+        }
       }
     });
 
