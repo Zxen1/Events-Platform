@@ -82,6 +82,12 @@ const MemberModule = (function() {
     var supporterCountryMenuContainer = null;
     var supporterCountryHiddenInput = null;
     var supporterCountryMenuInstance = null;
+    var registerFieldsetsContainer = null;
+    var profileFieldsetsContainer = null;
+    var registerUsernameInput = null;
+    var registerEmailInput = null;
+    var registerPasswordInput = null;
+    var registerConfirmInput = null;
     var profileAvatar = null;
     var profileName = null;
     var profileEmail = null;
@@ -96,7 +102,7 @@ const MemberModule = (function() {
     
     // Preferences pickers (Profile tab) - removed (no language/currency filters)
     
-    // Profile edit
+    // Profile edit (inputs are created from fieldsets at runtime)
     var profileEditNameInput = null;
     var profileEditPasswordInput = null;
     var profileEditConfirmInput = null;
@@ -226,6 +232,7 @@ const MemberModule = (function() {
         // Supporter UI (register tab)
         supporterMessageEl = document.getElementById('member-supporter-message');
         supporterJoinFieldsEl = document.getElementById('member-supporter-join-fields');
+        registerFieldsetsContainer = document.getElementById('member-register-fieldsets');
         supporterCustomAmountInput = document.getElementById('member-supporter-payment-custom');
         supporterAmountHiddenInput = document.getElementById('member-supporter-payment-amount');
         supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporterpayment-button'));
@@ -241,9 +248,10 @@ const MemberModule = (function() {
         headerSaveBtn = panel.querySelector('#member-panel-save-btn');
         headerDiscardBtn = panel.querySelector('#member-panel-discard-btn');
         
-        profileEditNameInput = document.getElementById('member-profile-edit-name');
-        profileEditPasswordInput = document.getElementById('member-profile-edit-password');
-        profileEditConfirmInput = document.getElementById('member-profile-edit-confirm');
+        profileFieldsetsContainer = document.getElementById('member-profile-fieldsets');
+        profileEditNameInput = null;
+        profileEditPasswordInput = null;
+        profileEditConfirmInput = null;
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
         
@@ -482,9 +490,7 @@ const MemberModule = (function() {
         }
         
         // Inline save removed; profile save is via header buttons
-        if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
-        if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
-        if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+        // Profile edit inputs are rendered from DB fieldsets at runtime; listeners are attached after renderProfileFieldsets().
         if (profileEditForm) {
             profileEditForm.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -3258,6 +3264,7 @@ const MemberModule = (function() {
             initSupporterCountryMenu();
             // Ensure avatar grid is rendered with first avatar selected
             ensureAvatarChoicesReady();
+            renderRegisterFieldsets();
             // Default to the first preset amount if none selected yet (no hardcoding).
             try {
                 if (supporterAmountHiddenInput && String(supporterAmountHiddenInput.value || '').trim() === '') {
@@ -3384,6 +3391,63 @@ const MemberModule = (function() {
         } catch (e) {
             console.warn('[Member] Failed to init supporter country menu', e);
         }
+    }
+
+    /* --------------------------------------------------------------------------
+       AUTH FIELDSETS (Register + Profile)
+       Rendered via MemberAuthFieldsetsComponent (components file).
+       -------------------------------------------------------------------------- */
+
+    var authFieldsetsReady = false;
+    var authFieldsetsPromise = null;
+
+    function renderRegisterFieldsets() {
+        if (!registerPanel || !registerFieldsetsContainer) return;
+        if (!window.MemberAuthFieldsetsComponent || typeof MemberAuthFieldsetsComponent.renderRegister !== 'function') return;
+        if (authFieldsetsReady) return;
+
+        authFieldsetsPromise = MemberAuthFieldsetsComponent.renderRegister(registerFieldsetsContainer, {
+            avatarHost: avatarGridRegister,
+            countryHost: supporterCountryMenuContainer
+        }).then(function(refs) {
+            authFieldsetsReady = true;
+            registerUsernameInput = refs ? refs.usernameInput : null;
+            registerEmailInput = refs ? refs.emailInput : null;
+            registerPasswordInput = refs ? refs.passwordInput : null;
+            registerConfirmInput = refs ? refs.confirmInput : null;
+
+            // Refresh registerInputs list (used for enable/disable + clearing)
+            try {
+                registerInputs = Array.from(registerPanel.querySelectorAll('input, textarea, select'));
+            } catch (e) {}
+        });
+    }
+
+    function renderProfileFieldsets() {
+        if (!profilePanel || !profileFieldsetsContainer) return;
+        if (!currentUser) return;
+        if (!window.MemberAuthFieldsetsComponent || typeof MemberAuthFieldsetsComponent.renderProfile !== 'function') return;
+
+        MemberAuthFieldsetsComponent.renderProfile(profileFieldsetsContainer, {
+            avatarHost: avatarGridProfile,
+            usernameValue: profileOriginalName || ''
+        }).then(function(refs) {
+            profileEditNameInput = refs ? refs.usernameInput : null;
+            profileEditPasswordInput = refs ? refs.newPasswordInput : null;
+            profileEditConfirmInput = refs ? refs.confirmInput : null;
+
+            // Input listeners (now that inputs exist)
+            try {
+                if (profileEditNameInput) profileEditNameInput.addEventListener('input', updateProfileSaveState);
+                if (profileEditPasswordInput) profileEditPasswordInput.addEventListener('input', updateProfileSaveState);
+                if (profileEditConfirmInput) profileEditConfirmInput.addEventListener('input', updateProfileSaveState);
+            } catch (e) {}
+
+            try {
+                updateProfileSaveState();
+                updateHeaderSaveDiscardState();
+            } catch (e) {}
+        });
     }
 
     function setSupporterAmount(amount, options) {
@@ -3603,10 +3667,19 @@ const MemberModule = (function() {
     }
 
     function handleRegister() {
-        var nameInput = document.getElementById('member-register-name');
-        var emailInput = document.getElementById('member-register-email');
-        var passwordInput = document.getElementById('member-register-password');
-        var confirmInput = document.getElementById('member-register-confirm');
+        var nameInput = registerUsernameInput || document.getElementById('member-register-name');
+        var emailInput = registerEmailInput || document.getElementById('member-register-email');
+        var passwordInput = registerPasswordInput || document.getElementById('member-register-password');
+        var confirmInput = registerConfirmInput || document.getElementById('member-register-confirm');
+
+        // If fieldsets haven't finished rendering yet, don't validate empty values.
+        if (!nameInput || !emailInput || !passwordInput || !confirmInput) {
+            renderRegisterFieldsets();
+            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                ToastComponent.showError('Please wait, loading the registration fields...');
+            }
+            return;
+        }
         
         var name = nameInput ? nameInput.value.trim() : '';
         var email = emailInput ? emailInput.value.trim() : '';
@@ -4037,9 +4110,7 @@ const MemberModule = (function() {
             
             // Profile edit defaults
             profileOriginalName = currentUser.name || '';
-            if (profileEditNameInput) profileEditNameInput.value = profileOriginalName;
-            if (profileEditPasswordInput) profileEditPasswordInput.value = '';
-            if (profileEditConfirmInput) profileEditConfirmInput.value = '';
+            renderProfileFieldsets();
             profileOriginalAvatarUrl = currentUser.avatar ? String(currentUser.avatar) : '';
             pendingAvatarUrl = profileOriginalAvatarUrl;
             pendingProfileSiteUrl = '';

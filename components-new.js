@@ -1079,6 +1079,19 @@ const FieldsetBuilder = (function(){
         
         // Build based on fieldset type
         switch (key) {
+            case 'password':
+            case 'confirm-password':
+            case 'new-password':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var pwInput = document.createElement('input');
+                pwInput.type = 'password';
+                pwInput.className = 'fieldset-input';
+                applyPlaceholder(pwInput, placeholder);
+                var pwValidation = addInputValidation(pwInput, minLength, maxLength, null);
+                fieldset.appendChild(pwInput);
+                fieldset.appendChild(pwValidation.charCount);
+                break;
+
             case 'title':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var titleInput = document.createElement('input');
@@ -4244,6 +4257,192 @@ const CountryComponent = (function(){
         isLoaded: isLoaded,
         loadFromDatabase: loadFromDatabase,
         buildMenu: buildMenu
+    };
+})();
+
+/* ============================================================================
+   MEMBER AUTH FIELDSETS (Register + Profile)
+   Uses DB-driven fieldsets (labels/tooltips/placeholders) via FieldsetBuilder.
+   ============================================================================ */
+
+const MemberAuthFieldsetsComponent = (function(){
+    var fieldsetMap = null;
+    var loadPromise = null;
+
+    function loadFromDatabase() {
+        if (loadPromise) return loadPromise;
+        loadPromise = fetch('/gateway.php?action=get-form')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                var fs = res && res.formData && Array.isArray(res.formData.fieldsets) ? res.formData.fieldsets : [];
+                fieldsetMap = {};
+                fs.forEach(function(f) {
+                    var k = (f && (f.fieldset_key || f.key || f.fieldsetKey)) ? String(f.fieldset_key || f.key || f.fieldsetKey).trim() : '';
+                    if (!k) return;
+                    fieldsetMap[k] = f;
+                });
+                return fieldsetMap;
+            })
+            .catch(function(err) {
+                console.warn('[MemberAuthFieldsetsComponent] Failed to load fieldsets', err);
+                fieldsetMap = {};
+                return fieldsetMap;
+            });
+        return loadPromise;
+    }
+
+    function getFieldset(key) {
+        if (!fieldsetMap) return null;
+        return fieldsetMap[key] || null;
+    }
+
+    // Wrap a host element (like AvatarPicker/Country menu) in a DB-driven fieldset label.
+    function wrapHostInFieldset(fieldsetKey, hostEl) {
+        var fs = getFieldset(fieldsetKey) || {};
+        var name = fs.fieldset_name || fs.name || fieldsetKey;
+        var tooltip = fs.fieldset_tooltip || fs.tooltip || '';
+
+        var wrap = document.createElement('div');
+        wrap.className = 'fieldset';
+        if (typeof fieldsetKey === 'string' && fieldsetKey) wrap.dataset.fieldsetKey = fieldsetKey;
+        if (window.FieldsetBuilder && typeof FieldsetBuilder.buildLabel === 'function') {
+            wrap.appendChild(FieldsetBuilder.buildLabel(String(name || ''), tooltip || '', null, null));
+        }
+        if (hostEl) wrap.appendChild(hostEl);
+        return wrap;
+    }
+
+    function renderRegister(containerEl, options) {
+        options = options || {};
+        if (!containerEl) throw new Error('MemberAuthFieldsetsComponent.renderRegister: containerEl is required');
+        if (!window.FieldsetBuilder || typeof FieldsetBuilder.buildFieldset !== 'function') {
+            throw new Error('MemberAuthFieldsetsComponent.renderRegister: FieldsetBuilder is required');
+        }
+
+        var avatarHost = options.avatarHost || null;   // existing element, will be moved into container
+        var countryHost = options.countryHost || null; // existing element, will be moved into container
+
+        return loadFromDatabase().then(function() {
+            containerEl.innerHTML = '';
+
+            function addFieldset(fieldsetKey, patchInput) {
+                var fd = getFieldset(fieldsetKey);
+                if (!fd) return null;
+                var fieldset = FieldsetBuilder.buildFieldset(fd, {
+                    idPrefix: 'memberRegister',
+                    fieldIndex: 0,
+                    container: containerEl
+                });
+                containerEl.appendChild(fieldset);
+                var input = fieldset.querySelector('input, textarea, select');
+                if (typeof patchInput === 'function') patchInput(input || null);
+                return { fieldset: fieldset, input: input || null };
+            }
+
+            var username = addFieldset('username', function(el) {
+                if (!el) return;
+                el.id = 'member-register-name';
+                el.name = 'registerName';
+                el.autocomplete = 'name';
+            });
+
+            if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost));
+
+            var email = addFieldset('email', function(el) {
+                if (!el) return;
+                el.id = 'member-register-email';
+                el.name = 'registerEmail';
+                el.autocomplete = 'email';
+            });
+
+            var password = addFieldset('password', function(el) {
+                if (!el) return;
+                el.id = 'member-register-password';
+                el.name = 'registerPassword';
+                el.autocomplete = 'new-password';
+            });
+
+            var confirm = addFieldset('confirm-password', function(el) {
+                if (!el) return;
+                el.id = 'member-register-confirm';
+                el.name = 'registerConfirm';
+                el.autocomplete = 'new-password';
+            });
+
+            if (countryHost) containerEl.appendChild(wrapHostInFieldset('country', countryHost));
+
+            return {
+                usernameInput: username ? username.input : null,
+                emailInput: email ? email.input : null,
+                passwordInput: password ? password.input : null,
+                confirmInput: confirm ? confirm.input : null
+            };
+        });
+    }
+
+    function renderProfile(containerEl, options) {
+        options = options || {};
+        if (!containerEl) throw new Error('MemberAuthFieldsetsComponent.renderProfile: containerEl is required');
+        if (!window.FieldsetBuilder || typeof FieldsetBuilder.buildFieldset !== 'function') {
+            throw new Error('MemberAuthFieldsetsComponent.renderProfile: FieldsetBuilder is required');
+        }
+
+        var avatarHost = options.avatarHost || null; // existing element, will be moved into container
+        var usernameValue = typeof options.usernameValue === 'string' ? options.usernameValue : '';
+
+        return loadFromDatabase().then(function() {
+            containerEl.innerHTML = '';
+
+            function addFieldset(fieldsetKey, patchInput) {
+                var fd = getFieldset(fieldsetKey);
+                if (!fd) return null;
+                var fieldset = FieldsetBuilder.buildFieldset(fd, {
+                    idPrefix: 'memberProfile',
+                    fieldIndex: 0,
+                    container: containerEl
+                });
+                containerEl.appendChild(fieldset);
+                var input = fieldset.querySelector('input, textarea, select');
+                if (typeof patchInput === 'function') patchInput(input || null);
+                return { fieldset: fieldset, input: input || null };
+            }
+
+            if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost));
+
+            var username = addFieldset('username', function(el) {
+                if (!el) return;
+                el.id = 'member-profile-edit-name';
+                el.classList.add('member-profile-edit-name-input');
+                el.autocomplete = 'name';
+                el.value = usernameValue || '';
+            });
+
+            var newPw = addFieldset('new-password', function(el) {
+                if (!el) return;
+                el.id = 'member-profile-edit-password';
+                el.autocomplete = 'new-password';
+                el.value = '';
+            });
+
+            var confirm = addFieldset('confirm-password', function(el) {
+                if (!el) return;
+                el.id = 'member-profile-edit-confirm';
+                el.autocomplete = 'new-password';
+                el.value = '';
+            });
+
+            return {
+                usernameInput: username ? username.input : null,
+                newPasswordInput: newPw ? newPw.input : null,
+                confirmInput: confirm ? confirm.input : null
+            };
+        });
+    }
+
+    return {
+        loadFromDatabase: loadFromDatabase,
+        renderRegister: renderRegister,
+        renderProfile: renderProfile
     };
 })();
 
@@ -8447,6 +8646,7 @@ window.CurrencyComponent = CurrencyComponent;
 window.LanguageMenuComponent = LanguageMenuComponent;
 window.PhonePrefixComponent = PhonePrefixComponent;
 window.CountryComponent = CountryComponent;
+window.MemberAuthFieldsetsComponent = MemberAuthFieldsetsComponent;
 window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;
 window.AmenitiesMenuComponent = AmenitiesMenuComponent;
