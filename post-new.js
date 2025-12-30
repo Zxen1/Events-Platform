@@ -148,6 +148,10 @@ const PostModule = (function() {
           lastZoom = map.getZoom();
           updatePostsButtonState();
         }
+        // Re-render markers if we have cached posts
+        if (cachedPosts && cachedPosts.length) {
+          renderMapMarkers(cachedPosts);
+        }
       } catch (e) {
         // ignore
       }
@@ -160,6 +164,52 @@ const PostModule = (function() {
         updatePostsButtonState();
       }
     });
+
+    // Listen for map marker clicks
+    App.on('map:cardClicked', function(data) {
+      if (!data || !data.postId) return;
+      openPostById(data.postId, { fromMap: true });
+    });
+  }
+
+  /**
+   * Open a post by ID (looks up in cache)
+   * @param {number|string} postId - Post ID
+   * @param {Object} options - Options
+   */
+  function openPostById(postId, options) {
+    options = options || {};
+
+    // Find post in cache
+    var post = null;
+    if (cachedPosts) {
+      for (var i = 0; i < cachedPosts.length; i++) {
+        if (String(cachedPosts[i].id) === String(postId)) {
+          post = cachedPosts[i];
+          break;
+        }
+      }
+    }
+
+    if (!post) {
+      console.warn('[Post] Post not found in cache:', postId);
+      return;
+    }
+
+    // Switch to posts mode if coming from map
+    if (options.fromMap && currentMode !== 'posts') {
+      var postsBtn = getModeButton('posts');
+      if (postsBtn && postsEnabled) {
+        postsBtn.click();
+        // Wait for mode change then open
+        setTimeout(function() {
+          openPost(post, options);
+        }, 50);
+        return;
+      }
+    }
+
+    openPost(post, options);
   }
 
   function bindModeButtons() {
@@ -599,7 +649,7 @@ const PostModule = (function() {
     el.addEventListener('click', function(e) {
       // Don't open if clicking favorite button
       if (e.target.closest('.post-card-fav')) return;
-      openPost(post);
+      openPost(post, { originEl: el });
     });
 
     // Favorite toggle handler
@@ -611,7 +661,40 @@ const PostModule = (function() {
       });
     }
 
+    // Hover sync with map markers
+    el.addEventListener('mouseenter', function() {
+      el.classList.add('post-card--map-highlight');
+      syncMapMarkerHover(post.id, true);
+    });
+
+    el.addEventListener('mouseleave', function() {
+      el.classList.remove('post-card--map-highlight');
+      syncMapMarkerHover(post.id, false);
+    });
+
     return el;
+  }
+
+  /**
+   * Sync hover state between post card and map marker
+   * @param {number|string} postId - Post ID
+   * @param {boolean} isHovering - Whether hovering
+   */
+  function syncMapMarkerHover(postId, isHovering) {
+    // Use MapCards API if available (from map.js)
+    if (window.MapCards) {
+      if (isHovering && MapCards.setMapCardHover) {
+        MapCards.setMapCardHover(postId);
+      } else if (!isHovering && MapCards.removeMapCardHover) {
+        MapCards.removeMapCardHover(postId);
+      }
+      return;
+    }
+
+    // Fallback to MapModule
+    if (window.MapModule) {
+      // MapModule doesn't have hover API yet - could add later
+    }
   }
 
   /**
@@ -644,6 +727,118 @@ const PostModule = (function() {
       var card = renderPostCard(post);
       postListEl.appendChild(card);
     });
+
+    // Render markers on the map
+    renderMapMarkers(posts);
+  }
+
+  /* --------------------------------------------------------------------------
+     MAP MARKER INTEGRATION
+     -------------------------------------------------------------------------- */
+
+  /**
+   * Convert API post data to marker-friendly format
+   * @param {Object} post - Post data from API
+   * @returns {Object} Marker-friendly post object
+   */
+  function convertPostForMarker(post) {
+    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    if (!mapCard) return null;
+
+    var lat = mapCard.latitude;
+    var lng = mapCard.longitude;
+
+    // Skip if no valid coordinates
+    if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return null;
+    }
+
+    var title = mapCard.title || post.checkout_title || '';
+    var venueName = mapCard.venue_name || '';
+    var subcategoryKey = post.subcategory_key || mapCard.subcategory_key || '';
+
+    // Get icon URL from subcategoryMarkers or subcategoryIconPaths
+    var iconUrl = getSubcategoryIconUrl(subcategoryKey);
+
+    // Get thumbnail URL
+    var thumbnailUrl = (mapCard.media_urls && mapCard.media_urls.length) ? mapCard.media_urls[0] : '';
+
+    return {
+      id: post.id,
+      post_key: post.post_key,
+      title: title,
+      venue: venueName,
+      sub: subcategoryKey,
+      iconUrl: iconUrl,
+      thumbnailUrl: thumbnailUrl,
+      lat: lat,
+      lng: lng,
+      // Keep reference to original post
+      _originalPost: post
+    };
+  }
+
+  /**
+   * Render map markers for all posts
+   * @param {Array} posts - Array of post data from API
+   */
+  function renderMapMarkers(posts) {
+    // Check if MapModule is available
+    if (!window.MapModule) {
+      console.warn('[Post] MapModule not available for marker rendering');
+      return;
+    }
+
+    var mapModule = window.MapModule;
+
+    // Check if map is ready
+    var map = mapModule.getMap ? mapModule.getMap() : null;
+    if (!map) {
+      // Map not ready yet - listen for map:ready event
+      if (window.App && typeof App.on === 'function') {
+        App.on('map:ready', function() {
+          renderMapMarkers(posts);
+        });
+      }
+      return;
+    }
+
+    // Clear existing markers
+    if (mapModule.clearAllMapCardMarkers) {
+      mapModule.clearAllMapCardMarkers();
+    }
+
+    // Create markers for each post with valid coordinates
+    var markerCount = 0;
+    posts.forEach(function(post) {
+      var markerPost = convertPostForMarker(post);
+      if (!markerPost) return;
+
+      if (mapModule.createMapCardMarker) {
+        mapModule.createMapCardMarker(markerPost, markerPost.lng, markerPost.lat);
+        markerCount++;
+      }
+    });
+
+    console.log('[Post] Rendered ' + markerCount + ' map markers');
+  }
+
+  /**
+   * Highlight a post's marker on the map
+   * @param {number|string} postId - Post ID
+   */
+  function highlightMapMarker(postId) {
+    if (!window.MapModule || !MapModule.setActiveMapCard) return;
+    MapModule.setActiveMapCard(postId);
+  }
+
+  /**
+   * Clear marker highlight
+   * @param {number|string} postId - Post ID (optional, clears all if not provided)
+   */
+  function clearMapMarkerHighlight(postId) {
+    if (!window.MapModule) return;
+    // MapModule doesn't have a direct "deactivate" - setActiveMapCard handles toggling
   }
 
   /**
@@ -683,6 +878,9 @@ const PostModule = (function() {
     if (postPanelContentEl) {
       postPanelContentEl.scrollTop = 0;
     }
+
+    // Highlight the map marker
+    highlightMapMarker(post.id);
 
     // Emit event for map highlighting
     if (window.App && typeof App.emit === 'function') {
@@ -1370,7 +1568,10 @@ const PostModule = (function() {
     loadPosts: loadPosts,
     refreshPosts: refreshPosts,
     openPost: openPost,
-    closePost: closePost
+    openPostById: openPostById,
+    closePost: closePost,
+    renderMapMarkers: renderMapMarkers,
+    highlightMapMarker: highlightMapMarker
   };
 
 })();
