@@ -138,16 +138,8 @@ const MemberModule = (function() {
     var siteAvatarFilenames = [];  // all filenames in site avatars folder
     var siteAvatarChoices = [];    // 3 picked: [{ filename, url }]
 
-    // Avatar upload + crop
+    // Avatar upload (uses AvatarCropperComponent from components-new.js)
     var avatarFileInput = null;
-    var cropperOverlay = null;
-    var cropperCanvas = null;
-    var cropperZoom = null;
-    var cropperCancelBtn = null;
-    var cropperSaveBtn = null;
-    var cropImg = null;
-    // Cropper zoom is "cover-only": zoom=1 is the minimum (image always fills the square; no blank areas).
-    var cropState = { zoom: 1, minZoom: 1, offsetX: 0, offsetY: 0, dragging: false, lastX: 0, lastY: 0 };
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
@@ -275,12 +267,8 @@ const MemberModule = (function() {
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
         avatarGridProfile = document.getElementById('member-avatar-grid-profile');
         avatarFileInput = document.getElementById('member-avatar-file-input');
-        cropperOverlay = document.getElementById('member-avatar-cropper');
-        cropperCanvas = document.getElementById('member-avatar-cropper-canvas');
-        cropperZoom = document.getElementById('member-avatar-cropper-zoom');
-        cropperCancelBtn = document.getElementById('member-avatar-cropper-cancel');
-        cropperSaveBtn = document.getElementById('member-avatar-cropper-save');
 
+        // Note: Avatar cropper is now handled by AvatarCropperComponent (components-new.js)
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
     }
 
@@ -583,52 +571,8 @@ const MemberModule = (function() {
                 openCropperForFile(file);
             });
         }
-        if (cropperCancelBtn) {
-            cropperCancelBtn.addEventListener('click', function() {
-                closeCropper();
-            });
-        }
-        if (cropperSaveBtn) {
-            cropperSaveBtn.addEventListener('click', function() {
-                saveCroppedAvatar();
-            });
-        }
-        if (cropperZoom) {
-            cropperZoom.addEventListener('input', function() {
-                var z = parseFloat(cropperZoom.value || '1');
-                if (!isFinite(z) || z <= 0) z = 1;
-                var minZ = (cropState && cropState.minZoom) ? cropState.minZoom : 1;
-                if (z < minZ) z = minZ;
-                cropState.zoom = z;
-                drawCropper();
-            });
-        }
-        if (cropperCanvas) {
-            cropperCanvas.addEventListener('mousedown', function(e) {
-                cropState.dragging = true;
-                cropState.lastX = e.clientX;
-                cropState.lastY = e.clientY;
-            });
-            window.addEventListener('mousemove', function(e) {
-                if (!cropState.dragging) return;
-                var dx = e.clientX - cropState.lastX;
-                var dy = e.clientY - cropState.lastY;
-                cropState.lastX = e.clientX;
-                cropState.lastY = e.clientY;
-                
-                // Scale mouse delta to canvas pixel coords (canvas may be displayed smaller than its internal size)
-                var rect = cropperCanvas.getBoundingClientRect();
-                var scaleX = rect.width ? (cropperCanvas.width / rect.width) : 1;
-                var scaleY = rect.height ? (cropperCanvas.height / rect.height) : 1;
-                cropState.offsetX += dx * scaleX;
-                cropState.offsetY += dy * scaleY;
-                drawCropper();
-            });
-            window.addEventListener('mouseup', function() {
-                cropState.dragging = false;
-            });
-        }
-
+        
+        // Note: Avatar cropper events are now handled by AvatarCropperComponent
         // Note: unsaved changes dialogs are controlled from components.
         
         // Map Lighting buttons
@@ -1236,187 +1180,48 @@ const MemberModule = (function() {
     }
 
     function openCropperForFile(file) {
-        if (!cropperOverlay || !cropperCanvas) return;
-        if (!file || !file.type || file.type.indexOf('image/') !== 0) {
-            if (window.ToastComponent && ToastComponent.showError) {
-                ToastComponent.showError('Please select an image file.');
-            }
+        // Uses AvatarCropperComponent from components-new.js
+        if (!window.AvatarCropperComponent) {
+            console.error('[Member] AvatarCropperComponent not available');
             return;
         }
-
-        var url = URL.createObjectURL(file);
-        cropImg = new Image();
-        cropImg.onload = function() {
-            // Reset crop state
-            cropState.zoom = 1;
-            cropState.offsetX = 0;
-            cropState.offsetY = 0;
-
-            // Cover-only zoom (no blank areas)
-            cropState.minZoom = 1;
-            if (cropperZoom) {
-                cropperZoom.min = '1';
-                cropperZoom.value = '1';
-            }
-
-            drawCropper();
-            cropperOverlay.hidden = false;
-            cropperOverlay.setAttribute('aria-hidden', 'false');
-        };
-        cropImg.src = url;
-        cropImg.dataset.objectUrl = url;
-    }
-
-    function closeCropper() {
-        if (!cropperOverlay) return;
-        cropperOverlay.hidden = true;
-        cropperOverlay.setAttribute('aria-hidden', 'true');
-        if (cropImg && cropImg.dataset && cropImg.dataset.objectUrl) {
-            try { URL.revokeObjectURL(cropImg.dataset.objectUrl); } catch(e) {}
-        }
-        cropImg = null;
-    }
-
-    function drawCropper() {
-        if (!cropImg || !cropperCanvas) return;
-        var ctx = cropperCanvas.getContext('2d');
-        if (!ctx) return;
-
-        var cw = cropperCanvas.width;
-        var ch = cropperCanvas.height;
-        ctx.clearRect(0, 0, cw, ch);
-
-        // Fit image to cover canvas, then apply zoom/offset
-        var iw = cropImg.naturalWidth || cropImg.width;
-        var ih = cropImg.naturalHeight || cropImg.height;
-        if (!iw || !ih) return;
-
-        var cover = Math.max(cw / iw, ch / ih);
-        var scale = cover * (cropState.zoom || 1);
-        var drawW = iw * scale;
-        var drawH = ih * scale;
-        // Clamp offsets so the image always fully covers the crop square (no blank areas)
-        // Allowed x range is [cw - drawW, 0], same for y.
-        var baseX = (cw - drawW) / 2;
-        var baseY = (ch - drawH) / 2;
-        var offX = cropState.offsetX || 0;
-        var offY = cropState.offsetY || 0;
-        if (drawW <= cw) {
-            offX = 0;
-        } else {
-            var minOffX = baseX;   // cw-drawW - baseX
-            var maxOffX = -baseX;  // 0 - baseX
-            if (offX < minOffX) offX = minOffX;
-            if (offX > maxOffX) offX = maxOffX;
-        }
-        if (drawH <= ch) {
-            offY = 0;
-        } else {
-            var minOffY = baseY;
-            var maxOffY = -baseY;
-            if (offY < minOffY) offY = minOffY;
-            if (offY > maxOffY) offY = maxOffY;
-        }
-        // Persist clamped values so dragging can't "escape" and stay escaped.
-        cropState.offsetX = offX;
-        cropState.offsetY = offY;
-
-        var x = baseX + offX;
-        var y = baseY + offY;
-        ctx.drawImage(cropImg, x, y, drawW, drawH);
-    }
-
-    function saveCroppedAvatar() {
-        try {
-            if (!cropperCanvas) return;
+        
+        AvatarCropperComponent.open(file, function(result) {
+            // result = { blob, previewUrl }
+            if (!result || !result.blob) return;
             
-            // Always show some feedback (toast if available, otherwise member status)
-            if (window.ToastComponent && ToastComponent.show) {
-                ToastComponent.show('Uploading avatar...');
+            handleCroppedAvatar(result.blob, result.previewUrl);
+        });
+    }
+
+    function handleCroppedAvatar(blob, previewUrl) {
+        // Do NOT upload immediately. Store blob and only upload on registration submit / header save.
+        if (activeAvatarTarget === 'register') {
+            pendingRegisterAvatarBlob = blob;
+            pendingRegisterSiteUrl = '';
+            avatarSelection.register = 'self';
+            pendingRegisterAvatarPreviewUrl = previewUrl || '';
+            renderAvatarGrids();
+            if (window.ToastComponent && ToastComponent.showSuccess) {
+                ToastComponent.showSuccess('Avatar selected');
             } else {
-                showStatus('Uploading avatar...');
+                showStatus('Avatar selected');
             }
-            
-            if (cropperSaveBtn) {
-                cropperSaveBtn.disabled = true;
-                cropperSaveBtn.classList.add('member-button-auth--disabled');
+        } else if (activeAvatarTarget === 'profile') {
+            pendingProfileAvatarBlob = blob;
+            pendingProfileSiteUrl = '';
+            avatarSelection.profile = 'self';
+            pendingProfileAvatarPreviewUrl = previewUrl || '';
+            if (profileAvatar && pendingProfileAvatarPreviewUrl) {
+                profileAvatar.src = pendingProfileAvatarPreviewUrl;
             }
-            
-            var toBlobFn = cropperCanvas.toBlob;
-            if (typeof toBlobFn !== 'function') {
-                throw new Error('[Member] saveCroppedAvatar: HTMLCanvasElement.toBlob is required.');
-            }
-            
-            cropperCanvas.toBlob(function(blob) {
-                if (!blob) {
-                    if (cropperSaveBtn) {
-                        cropperSaveBtn.disabled = false;
-                        cropperSaveBtn.classList.remove('member-button-auth--disabled');
-                    }
-                    if (window.ToastComponent && ToastComponent.showError) {
-                        ToastComponent.showError('Could not create avatar image.');
-                    } else {
-                        showStatus('Could not create avatar image.', { error: true });
-                    }
-                    return;
-                }
-                
-                // Do NOT upload immediately. Store blob and only upload on registration submit / header save.
-                if (activeAvatarTarget === 'register') {
-                    pendingRegisterAvatarBlob = blob;
-                    pendingRegisterSiteUrl = '';
-                    avatarSelection.register = 'self';
-                    try {
-                        pendingRegisterAvatarPreviewUrl = URL.createObjectURL(blob);
-                    } catch (e) {
-                        pendingRegisterAvatarPreviewUrl = '';
-                    }
-                    renderAvatarGrids();
-                    closeCropper();
-                    if (window.ToastComponent && ToastComponent.showSuccess) {
-                        ToastComponent.showSuccess('Avatar selected');
-                    } else {
-                        showStatus('Avatar selected');
-                    }
-                } else if (activeAvatarTarget === 'profile') {
-                    pendingProfileAvatarBlob = blob;
-                    pendingProfileSiteUrl = '';
-                    avatarSelection.profile = 'self';
-                    try {
-                        pendingProfileAvatarPreviewUrl = URL.createObjectURL(blob);
-                    } catch (e) {
-                        pendingProfileAvatarPreviewUrl = '';
-                    }
-                    if (profileAvatar && pendingProfileAvatarPreviewUrl) {
-                        profileAvatar.src = pendingProfileAvatarPreviewUrl;
-                    }
-                    renderAvatarGrids();
-                    // Mark dirty so header Save lights up
-                    updateHeaderSaveDiscardState();
-                    closeCropper();
-                    if (window.ToastComponent && ToastComponent.showSuccess) {
-                        ToastComponent.showSuccess('Avatar ready to save');
-                    } else {
-                        showStatus('Avatar ready to save');
-                    }
-                }
-                
-                if (cropperSaveBtn) {
-                    cropperSaveBtn.disabled = false;
-                    cropperSaveBtn.classList.remove('member-button-auth--disabled');
-                }
-            }, 'image/png', 0.92);
-        } catch (e) {
-            console.error('[Member] saveCroppedAvatar error', e);
-            if (cropperSaveBtn) {
-                cropperSaveBtn.disabled = false;
-                cropperSaveBtn.classList.remove('member-button-auth--disabled');
-            }
-            var msg = (e && e.message) ? e.message : 'Avatar upload failed';
-            if (window.ToastComponent && ToastComponent.showError) {
-                ToastComponent.showError(msg);
+            renderAvatarGrids();
+            // Mark dirty so header Save lights up
+            updateHeaderSaveDiscardState();
+            if (window.ToastComponent && ToastComponent.showSuccess) {
+                ToastComponent.showSuccess('Avatar ready to save');
             } else {
-                showStatus(msg, { error: true });
+                showStatus('Avatar ready to save');
             }
         }
     }
@@ -1450,7 +1255,7 @@ const MemberModule = (function() {
             // Prefer filename-only storage (rules file)
             var avatarValue = (res && res.filename) ? String(res.filename) : String(res.url);
             setAvatarForTarget(avatarValue);
-            closeCropper();
+            // Note: Cropper is now handled by AvatarCropperComponent which auto-closes on save
             if (window.ToastComponent && ToastComponent.showSuccess) {
                 ToastComponent.showSuccess('Avatar uploaded');
             } else {

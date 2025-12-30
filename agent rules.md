@@ -264,6 +264,38 @@ This project uses split storage schemas:
 ---
 
 
+## ⚠️ CRITICAL: TIMEZONE POLICY (UTC-12) ⚠️
+
+**Purpose:** Give users the maximum benefit of the doubt for all date-related features.
+
+**The Rule:** All date/time calculations that affect user-facing deadlines use **UTC-12** ("the world's final timezone" / Baker Island).
+
+**Why UTC-12:**
+- UTC-12 is the **last** timezone on Earth to see a day/month/year end
+- A date only "ends" when it has ended **everywhere on Earth**
+- This ensures nothing expires prematurely for any user, anywhere
+
+**Applies to:**
+1. **Event expiry** — An event dated "December 31st" stays active until Dec 31st ends in UTC-12
+2. **Monthly folders** — Posts uploaded on "December 31st" (anywhere) go into the December folder
+3. **Any future deadline logic** — Same principle applies
+
+**PHP Implementation:**
+```php
+// UTC-12 (Baker Island / Howland Island)
+// Note: PHP uses INVERTED sign for Etc zones, so GMT+12 = UTC-12
+$utcMinus12 = new DateTimeZone('Etc/GMT+12');
+$now = new DateTime('now', $utcMinus12);
+```
+
+**NEVER:**
+- Use the server's local timezone for deadline calculations
+- Use UTC+0 (would expire 12 hours too early for some users)
+- Use UTC+14 (would expire 26 hours too early for some users)
+- Mix different timezones for different features (consistency is key)
+
+---
+
 ## BUTTON ANCHOR COMPONENTS (BOTTOM + TOP) — HOW TO USE
 
 **Purpose:** Keep the clicked control stationary when accordion/panels auto-close above or below it (no “yank”, no “flick”, no snapping).

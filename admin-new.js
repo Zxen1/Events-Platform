@@ -3549,7 +3549,7 @@ const AdminModule = (function() {
         });
         
         // Reset currency (uses CurrencyComponent from components file)
-        settingsContainer.querySelectorAll('.admin-currency-wrapper[data-setting-key]').forEach(function(menu) {
+        settingsContainer.querySelectorAll('.component-currencyfull-menu[data-setting-key]').forEach(function(menu) {
             var key = menu.dataset.settingKey;
             var entry = fieldRegistry['settings.' + key];
             if (entry && entry.type === 'simple') {
@@ -3566,12 +3566,12 @@ const AdminModule = (function() {
                 var found = currencyData.find(function(item) {
                     return item.value === code;
                 });
-                var btnImg = menu.querySelector('.admin-currency-button-flag');
-                var btnText = menu.querySelector('.admin-currency-button-text');
+                var btnImg = menu.querySelector('.component-currencyfull-menu-button-image');
+                var btnInput = menu.querySelector('.component-currencyfull-menu-button-input');
                 if (found) {
                     // Use filename directly for flag image
                     if (btnImg && found.filename) btnImg.src = window.App.getImageUrl('currencies', found.filename);
-                    if (btnText) btnText.textContent = code + ' - ' + found.label;
+                    if (btnInput) btnInput.value = code + ' - ' + found.label;
                 } else {
                     // Don't throw - just log warning and leave as-is (data might not be loaded yet)
                     console.warn('[Admin] Currency code not found in CurrencyComponent data: ' + code + '. Data count: ' + currencyData.length);

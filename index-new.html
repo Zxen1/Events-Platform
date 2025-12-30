@@ -941,21 +941,8 @@
     </div>
   </div>
 
-  <!-- Avatar Cropper Modal -->
-  <div id="member-avatar-cropper" class="member-avatar-cropper" hidden aria-hidden="true">
-    <div class="member-avatar-cropper-dialog" role="dialog" aria-modal="true" aria-label="Crop avatar">
-      <div class="member-avatar-cropper-preview-wrap">
-        <canvas id="member-avatar-cropper-canvas" class="member-avatar-cropper-canvas" width="530" height="530"></canvas>
-      </div>
-      <label class="member-auth-panel-label" for="member-avatar-cropper-zoom">Zoom</label>
-      <input id="member-avatar-cropper-zoom" type="range" min="1" max="3" step="0.01" value="1">
-      <div class="member-avatar-cropper-actions">
-        <button type="button" class="member-button-auth" id="member-avatar-cropper-cancel">Cancel</button>
-        <button type="button" class="member-button-auth" id="member-avatar-cropper-save">Use Avatar</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- Avatar Cropper is now created dynamically by AvatarCropperComponent (components-new.js) -->
+  
   <!-- Avatar Upload (shared within member panel) -->
   <input type="file" id="member-avatar-file-input" accept="image/*" hidden>
 

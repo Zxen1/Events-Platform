@@ -18,6 +18,7 @@
    - MAP CONTROL ROW     - Geocoder + Geolocate + Compass (has variants)
    - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
+   - AVATAR CROPPER      - Standalone reusable avatar cropper (destructive, outputs blob)
    
    ============================================================================ */
 
@@ -97,7 +98,8 @@ const MenuManager = (function(){
             // Menus designed to accept typing in their "button" row.
             return (
                 menu.querySelector('input.fieldset-menu-button-input') ||
-                menu.querySelector('input.admin-currency-button-input') ||
+                menu.querySelector('input.component-currencycompact-menu-button-input') ||
+                menu.querySelector('input.component-currencyfull-menu-button-input') ||
                 menu.querySelector('input.admin-language-button-input') ||
                 null
             );
@@ -1032,7 +1034,7 @@ const FieldsetComponent = (function(){
                 
                 if (child.classList.contains('fieldset-menu')) child.classList.add('fieldset-row-item--menu');
                 if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
-                if (child.classList.contains('fieldset-currency-compact')) child.classList.add('fieldset-row-item--currency-compact');
+                if (child.classList.contains('component-currencycompact-menu')) child.classList.add('fieldset-row-item--currency-compact');
                 if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
                 if (child.classList.contains('fieldset-pricing-add') || child.classList.contains('fieldset-pricing-remove')) {
                     child.classList.add('fieldset-row-item--no-flex');
@@ -1306,276 +1308,36 @@ const FieldsetComponent = (function(){
                 }
 
                 // ------------------------------------------------------------------
-                // Cropper (avatar-style UI), non-destructive for post images.
+                // Cropper - uses PostCropperComponent (non-destructive for post images)
                 // Uses Bunny Dynamic Image API crop params later (server-side + cached).
                 // ------------------------------------------------------------------
 
-                var cropper = {
-                    overlay: null,
-                    dialog: null,
-                    canvas: null,
-                    zoomInput: null,
-                    cancelBtn: null,
-                    saveBtn: null,
-                    img: null,
-                    activeEntry: null,
-                    state: {
-                        zoom: 1,
-                        offsetX: 0,
-                        offsetY: 0,
-                        dragging: false,
-                        lastX: 0,
-                        lastY: 0,
-                        didDrag: false,
-                        backdropMouseDown: false
-                    }
-                };
-
-                function ensureCropper() {
-                    if (cropper.overlay) return;
-
-                    var overlay = document.createElement('div');
-                    overlay.className = 'member-avatar-cropper';
-                    overlay.hidden = true;
-                    overlay.setAttribute('aria-hidden', 'true');
-
-                    var dialog = document.createElement('div');
-                    dialog.className = 'member-avatar-cropper-dialog';
-                    dialog.setAttribute('role', 'dialog');
-                    dialog.setAttribute('aria-modal', 'true');
-                    dialog.setAttribute('aria-label', 'Crop image');
-
-                    var previewWrap = document.createElement('div');
-                    previewWrap.className = 'member-avatar-cropper-preview-wrap';
-                    var canvas = document.createElement('canvas');
-                    canvas.className = 'member-avatar-cropper-canvas';
-                    canvas.width = 530;
-                    canvas.height = 530;
-                    previewWrap.appendChild(canvas);
-
-                    var zoomLabel = document.createElement('label');
-                    zoomLabel.className = 'member-auth-panel-label';
-                    zoomLabel.textContent = 'Zoom';
-
-                    var zoomInput = document.createElement('input');
-                    zoomInput.type = 'range';
-                    zoomInput.className = 'member-avatar-cropper-zoom-input';
-                    zoomInput.min = '1';
-                    zoomInput.max = '3';
-                    zoomInput.step = '0.01';
-                    zoomInput.value = '1';
-
-                    var actions = document.createElement('div');
-                    actions.className = 'member-avatar-cropper-actions';
-                    var cancelBtn = document.createElement('button');
-                    cancelBtn.type = 'button';
-                    cancelBtn.className = 'member-button-auth';
-                    cancelBtn.textContent = 'Cancel';
-                    var saveBtn = document.createElement('button');
-                    saveBtn.type = 'button';
-                    saveBtn.className = 'member-button-auth';
-                    saveBtn.textContent = 'Use Crop';
-                    actions.appendChild(cancelBtn);
-                    actions.appendChild(saveBtn);
-
-                    dialog.appendChild(previewWrap);
-                    dialog.appendChild(zoomLabel);
-                    dialog.appendChild(zoomInput);
-                    dialog.appendChild(actions);
-                    overlay.appendChild(dialog);
-                    document.body.appendChild(overlay);
-
-                    cropper.overlay = overlay;
-                    cropper.dialog = dialog;
-                    cropper.canvas = canvas;
-                    cropper.zoomInput = zoomInput;
-                    cropper.cancelBtn = cancelBtn;
-                    cropper.saveBtn = saveBtn;
-
-                    // Events
-                    // Backdrop close: only when the user deliberately clicks the backdrop (mouse down + mouse up on backdrop),
-                    // and never as a side-effect of dragging the image around.
-                    overlay.addEventListener('mousedown', function(e) {
-                        cropper.state.backdropMouseDown = (e.target === overlay);
-                    });
-                    dialog.addEventListener('mousedown', function() {
-                        cropper.state.backdropMouseDown = false;
-                    });
-                    overlay.addEventListener('click', function(e) {
-                        if (e.target !== overlay) return;
-                        if (!cropper.state.backdropMouseDown) return;
-                        if (cropper.state.dragging) return;
-                        if (cropper.state.didDrag) {
-                            cropper.state.didDrag = false;
-                            cropper.state.backdropMouseDown = false;
-                            return;
-                        }
-                        cropper.state.backdropMouseDown = false;
-                        closeCropper(false);
-                    });
-
-                    cancelBtn.addEventListener('click', function() {
-                        closeCropper(false);
-                    });
-
-                    saveBtn.addEventListener('click', function() {
-                        saveCropForActiveEntry();
-                    });
-
-                    zoomInput.addEventListener('input', function() {
-                        var z = parseFloat(zoomInput.value || '1');
-                        if (!isFinite(z) || z <= 0) z = 1;
-                        if (z < 1) z = 1;
-                        cropper.state.zoom = z;
-                        drawCropper();
-                    });
-
-                    // Drag to reposition
-                    canvas.addEventListener('mousedown', function(e) {
-                        cropper.state.dragging = true;
-                        cropper.state.didDrag = false;
-                        cropper.state.lastX = e.clientX;
-                        cropper.state.lastY = e.clientY;
-                    });
-                    window.addEventListener('mousemove', function(e) {
-                        if (!cropper.state.dragging) return;
-                        var dx = e.clientX - cropper.state.lastX;
-                        var dy = e.clientY - cropper.state.lastY;
-                        cropper.state.lastX = e.clientX;
-                        cropper.state.lastY = e.clientY;
-                        if (dx !== 0 || dy !== 0) {
-                            cropper.state.didDrag = true;
-                        }
-
-                        var rect = canvas.getBoundingClientRect();
-                        var scaleX = rect.width ? (canvas.width / rect.width) : 1;
-                        var scaleY = rect.height ? (canvas.height / rect.height) : 1;
-                        cropper.state.offsetX += dx * scaleX;
-                        cropper.state.offsetY += dy * scaleY;
-                        drawCropper();
-                    });
-                    window.addEventListener('mouseup', function() {
-                        cropper.state.dragging = false;
-                    });
-                }
+                var currentCropEntry = null;
 
                 function openCropperForEntry(entry) {
                     if (!entry || !entry.fileUrl) return;
-                    ensureCropper();
-
-                    cropper.activeEntry = entry;
-                    cropper.state.zoom = (entry.cropState && typeof entry.cropState.zoom === 'number') ? entry.cropState.zoom : 1;
-                    cropper.state.offsetX = (entry.cropState && typeof entry.cropState.offsetX === 'number') ? entry.cropState.offsetX : 0;
-                    cropper.state.offsetY = (entry.cropState && typeof entry.cropState.offsetY === 'number') ? entry.cropState.offsetY : 0;
-                    cropper.zoomInput.value = String(cropper.state.zoom);
-
-                    cropper.img = new Image();
-                    cropper.img.onload = function() {
-                        drawCropper();
-                        cropper.overlay.hidden = false;
-                        cropper.overlay.setAttribute('aria-hidden', 'false');
-                    };
-                    cropper.img.onerror = function() {
-                        cropper.img = null;
-                        throw new Error('Images fieldset cropper: failed to load image for cropping.');
-                    };
-                    cropper.img.src = entry.fileUrl;
-                }
-
-                function closeCropper(save) {
-                    if (!cropper.overlay) return;
-                    cropper.overlay.hidden = true;
-                    cropper.overlay.setAttribute('aria-hidden', 'true');
-                    cropper.activeEntry = null;
-                    cropper.img = null;
-                }
-
-                function drawCropper() {
-                    if (!cropper.canvas || !cropper.img) return;
-                    var ctx = cropper.canvas.getContext('2d');
-                    if (!ctx) throw new Error('Images fieldset cropper: canvas 2D context unavailable.');
-
-                    var cw = cropper.canvas.width;
-                    var ch = cropper.canvas.height;
-                    ctx.clearRect(0, 0, cw, ch);
-
-                    var iw = cropper.img.naturalWidth || cropper.img.width;
-                    var ih = cropper.img.naturalHeight || cropper.img.height;
-                    if (!iw || !ih) return;
-
-                    // Cover-only zoom (no blank areas)
-                    var cover = Math.max(cw / iw, ch / ih);
-                    var scale = cover * (cropper.state.zoom || 1);
-                    var drawW = iw * scale;
-                    var drawH = ih * scale;
-
-                    var baseX = (cw - drawW) / 2;
-                    var baseY = (ch - drawH) / 2;
-
-                    var offX = cropper.state.offsetX || 0;
-                    var offY = cropper.state.offsetY || 0;
-
-                    // Clamp offsets so the image always fully covers the crop square (no blank areas).
-                    if (drawW <= cw) {
-                        offX = 0;
-                    } else {
-                        var minOffX = baseX;
-                        var maxOffX = -baseX;
-                        if (offX < minOffX) offX = minOffX;
-                        if (offX > maxOffX) offX = maxOffX;
+                    
+                    if (!window.PostCropperComponent) {
+                        console.error('[Fieldset] PostCropperComponent not available');
+                        return;
                     }
-                    if (drawH <= ch) {
-                        offY = 0;
-                    } else {
-                        var minOffY = baseY;
-                        var maxOffY = -baseY;
-                        if (offY < minOffY) offY = minOffY;
-                        if (offY > maxOffY) offY = maxOffY;
-                    }
-
-                    cropper.state.offsetX = offX;
-                    cropper.state.offsetY = offY;
-
-                    var x = baseX + offX;
-                    var y = baseY + offY;
-                    ctx.drawImage(cropper.img, x, y, drawW, drawH);
-                }
-
-                function computeCropRectFromState(img, canvas, state) {
-                    var iw = img.naturalWidth || img.width;
-                    var ih = img.naturalHeight || img.height;
-                    var cw = canvas.width;
-                    var ch = canvas.height;
-                    if (!iw || !ih || !cw || !ch) return null;
-
-                    var cover = Math.max(cw / iw, ch / ih);
-                    var scale = cover * (state.zoom || 1);
-                    var drawW = iw * scale;
-                    var drawH = ih * scale;
-                    var baseX = (cw - drawW) / 2;
-                    var baseY = (ch - drawH) / 2;
-                    var x = baseX + (state.offsetX || 0);
-                    var y = baseY + (state.offsetY || 0);
-
-                    // Map full canvas to image coords
-                    var x1 = (0 - x) / scale;
-                    var y1 = (0 - y) / scale;
-                    var x2 = (cw - x) / scale;
-                    var y2 = (ch - y) / scale;
-
-                    // Clamp to image bounds
-                    x1 = Math.max(0, Math.min(iw, x1));
-                    y1 = Math.max(0, Math.min(ih, y1));
-                    x2 = Math.max(0, Math.min(iw, x2));
-                    y2 = Math.max(0, Math.min(ih, y2));
-
-                    // Ensure integer pixel crop
-                    return {
-                        x1: Math.round(x1),
-                        y1: Math.round(y1),
-                        x2: Math.round(x2),
-                        y2: Math.round(y2)
-                    };
+                    
+                    currentCropEntry = entry;
+                    
+                    PostCropperComponent.open({
+                        url: entry.fileUrl,
+                        cropState: entry.cropState || null,
+                        callback: function(result) {
+                            if (!result || !currentCropEntry) return;
+                            
+                            currentCropEntry.cropState = result.cropState;
+                            currentCropEntry.cropRect = result.cropRect;
+                            
+                            updateImagesMeta();
+                            renderEntryPreviewFromCrop(currentCropEntry);
+                            currentCropEntry = null;
+                        }
+                    });
                 }
 
                 function renderEntryPreviewFromCrop(entry) {
@@ -1617,24 +1379,6 @@ const FieldsetComponent = (function(){
                         throw new Error('Images fieldset crop preview: failed to load image for preview.');
                     };
                     img.src = url;
-                }
-
-                function saveCropForActiveEntry() {
-                    if (!cropper.activeEntry || !cropper.img || !cropper.canvas) return;
-
-                    var entry = cropper.activeEntry;
-                    entry.cropState = {
-                        zoom: cropper.state.zoom,
-                        offsetX: cropper.state.offsetX,
-                        offsetY: cropper.state.offsetY
-                    };
-
-                    var rect = computeCropRectFromState(cropper.img, cropper.canvas, cropper.state);
-                    entry.cropRect = rect;
-
-                    updateImagesMeta();
-                    closeCropper(true);
-                    renderEntryPreviewFromCrop(entry);
                 }
                 
                 function renderImages() {
@@ -2146,7 +1890,7 @@ const FieldsetComponent = (function(){
                     removeBtn.addEventListener('click', function() {
                         block.remove();
                         // Remove from tracked menus
-                        var blockMenu = block.querySelector('.fieldset-currency-compact');
+                        var blockMenu = block.querySelector('.component-currencycompact-menu');
                         var idx = itemCurrencyMenus.indexOf(blockMenu);
                         if (idx > -1) itemCurrencyMenus.splice(idx, 1);
                         updateItemVariantButtons();
@@ -2316,7 +2060,7 @@ const FieldsetComponent = (function(){
                     removeBtn.addEventListener('click', function() {
                         block.remove();
                         // Remove from tracked menus
-                        var blockMenu = block.querySelector('.fieldset-currency-compact');
+                        var blockMenu = block.querySelector('.component-currencycompact-menu');
                         var idx = ticketCurrencyMenus.indexOf(blockMenu);
                         if (idx > -1) ticketCurrencyMenus.splice(idx, 1);
                         updateTierButtons(tiersContainer);
@@ -3428,6 +3172,7 @@ const CurrencyComponent = (function(){
     // Build a compact currency menu (100px, code only)
     // Combobox style - type to filter options
     // Returns object with element and setValue method
+    // Class pattern: component-currencycompact-menu-{part}--{state}
     function buildCompactMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
@@ -3435,63 +3180,27 @@ const CurrencyComponent = (function(){
         var selectedCode = initialValue;
 
         var menu = document.createElement('div');
-        menu.className = 'fieldset-menu fieldset-currency-compact';
+        menu.className = 'component-currencycompact-menu';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencycompact-menu-button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input" placeholder="Search" autocomplete="off"><span class="component-currencycompact-menu-button-arrow">▼</span></div><div class="component-currencycompact-menu-options"></div>';
 
-        var btn = menu.querySelector('.fieldset-menu-button');
-        var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnInput = menu.querySelector('.fieldset-menu-button-input');
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        var btn = menu.querySelector('.component-currencycompact-menu-button');
+        var opts = menu.querySelector('.component-currencycompact-menu-options');
+        var btnImg = menu.querySelector('.component-currencycompact-menu-button-image');
+        var btnInput = menu.querySelector('.component-currencycompact-menu-button-input');
+        var arrow = menu.querySelector('.component-currencycompact-menu-button-arrow');
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('fieldset-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+            menu.classList.toggle('component-currencycompact-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('component-currencycompact-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('component-currencycompact-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('component-currencycompact-menu-options--open', !!isOpen);
         }
 
         // Required by MenuManager (strict)
         menu.__menuIsOpen = function() {
-            return menu.classList.contains('fieldset-menu--open');
-        };
-        menu.__menuApplyOpenState = applyOpenState;
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
-
-        // Compact variant styling (no descendant selectors)
-        btn.classList.add('fieldset-menu-button--compact');
-        btnInput.classList.add('fieldset-menu-button-input--compact');
-        opts.classList.add('fieldset-menu-options--compact');
-
-        // Compact variant styling (no descendant selectors)
-        btn.classList.add('fieldset-menu-button--compact');
-        btnInput.classList.add('fieldset-menu-button-input--compact');
-        opts.classList.add('fieldset-menu-options--compact');
-
-        function applyOpenState(isOpen) {
-            menu.classList.toggle('fieldset-menu--open', !!isOpen);
-            btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
-            arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
-            opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
-        }
-
-        menu.__menuIsOpen = function() {
-            return menu.classList.contains('fieldset-menu--open');
-        };
-        menu.__menuApplyOpenState = applyOpenState;
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
-
-        function applyOpenState(isOpen) {
-            menu.classList.toggle('fieldset-menu--open', !!isOpen);
-            btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
-            arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
-            opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
-        }
-
-        menu.__menuIsOpen = function() {
-            return menu.classList.contains('fieldset-menu--open');
+            return menu.classList.contains('component-currencycompact-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
 
@@ -3532,9 +3241,9 @@ const CurrencyComponent = (function(){
             var displayText = item.value + ' - ' + item.label;
 
             var op = document.createElement('div');
-            op.className = 'fieldset-menu-option';
+            op.className = 'component-currencycompact-menu-option';
             var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
                 if (countryCode) {
@@ -3583,7 +3292,7 @@ const CurrencyComponent = (function(){
         if (btn) {
             btn.addEventListener('click', function(e) {
                 if (e) e.stopPropagation();
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-currencycompact-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -3605,7 +3314,7 @@ const CurrencyComponent = (function(){
             // Only auto-open while the user is actually typing in this input.
             // Programmatic value copies (e.g. multi-location autofill dispatching input events) must NOT open menus.
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
+            if (!menu.classList.contains('component-currencycompact-menu--open')) applyOpenState(true);
         });
 
         btnInput.addEventListener('keydown', function(e) {
@@ -3616,15 +3325,15 @@ const CurrencyComponent = (function(){
                 return;
             }
             // Arrow key navigation
-            if (menu.classList.contains('fieldset-menu--open')) {
-                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
+            if (menu.classList.contains('component-currencycompact-menu--open')) {
+                menuArrowKeyNav(e, opts, '.component-currencycompact-menu-option', function(opt) { opt.click(); });
             }
         });
 
         // Blur - restore selected value when clicking away
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-currencycompact-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -3651,6 +3360,7 @@ const CurrencyComponent = (function(){
     // Build a full currency menu (wide, shows code + label)
     // Combobox style - type to filter options
     // Returns object with element and setValue method
+    // Class pattern: component-currencyfull-menu-{part}--{state}
     function buildFullMenu(options) {
         options = options || {};
         var onSelect = options.onSelect || function() {};
@@ -3659,26 +3369,26 @@ const CurrencyComponent = (function(){
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
-        menu.className = 'admin-currency-wrapper';
+        menu.className = 'component-currencyfull-menu';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="admin-currency-button"><img class="admin-currency-button-flag" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="admin-currency-button-input" placeholder="Select currency" autocomplete="off"><span class="admin-currency-button-arrow">▼</span></div><div class="admin-currency-options"></div>';
+        menu.innerHTML = '<div class="component-currencyfull-menu-button"><img class="component-currencyfull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencyfull-menu-button-input" placeholder="Select currency" autocomplete="off"><span class="component-currencyfull-menu-button-arrow">▼</span></div><div class="component-currencyfull-menu-options"></div>';
         
-        var btn = menu.querySelector('.admin-currency-button');
-        var opts = menu.querySelector('.admin-currency-options');
-        var btnImg = menu.querySelector('.admin-currency-button-flag');
-        var btnInput = menu.querySelector('.admin-currency-button-input');
-        var arrow = menu.querySelector('.admin-currency-button-arrow');
+        var btn = menu.querySelector('.component-currencyfull-menu-button');
+        var opts = menu.querySelector('.component-currencyfull-menu-options');
+        var btnImg = menu.querySelector('.component-currencyfull-menu-button-image');
+        var btnInput = menu.querySelector('.component-currencyfull-menu-button-input');
+        var arrow = menu.querySelector('.component-currencyfull-menu-button-arrow');
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('admin-currency-wrapper--open', !!isOpen);
-            btn.classList.toggle('admin-currency-button--open', !!isOpen);
-            arrow.classList.toggle('admin-currency-button-arrow--open', !!isOpen);
-            opts.classList.toggle('admin-currency-options--open', !!isOpen);
+            menu.classList.toggle('component-currencyfull-menu--open', !!isOpen);
+            btn.classList.toggle('component-currencyfull-menu-button--open', !!isOpen);
+            arrow.classList.toggle('component-currencyfull-menu-button-arrow--open', !!isOpen);
+            opts.classList.toggle('component-currencyfull-menu-options--open', !!isOpen);
         }
 
         menu.__menuIsOpen = function() {
-            return menu.classList.contains('admin-currency-wrapper--open');
+            return menu.classList.contains('component-currencyfull-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
 
@@ -3720,9 +3430,9 @@ const CurrencyComponent = (function(){
             var displayText = item.value + ' - ' + item.label;
             
             var op = document.createElement('div');
-            op.className = 'admin-currency-option';
+            op.className = 'component-currencyfull-menu-option';
             var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="admin-currency-option-flag" src="' + flagUrl + '" alt=""><span class="admin-currency-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
                 if (flagUrl) {
@@ -3761,7 +3471,7 @@ const CurrencyComponent = (function(){
         if (btn) {
             btn.addEventListener('click', function(e) {
                 if (e) e.stopPropagation();
-                if (!menu.classList.contains('admin-currency-wrapper--open')) {
+                if (!menu.classList.contains('component-currencyfull-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -3782,7 +3492,7 @@ const CurrencyComponent = (function(){
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('admin-currency-wrapper--open')) applyOpenState(true);
+            if (!menu.classList.contains('component-currencyfull-menu--open')) applyOpenState(true);
         });
         
         btnInput.addEventListener('keydown', function(e) {
@@ -3794,8 +3504,8 @@ const CurrencyComponent = (function(){
                 return;
             }
             // Arrow key navigation
-            if (menu.classList.contains('admin-currency-wrapper--open')) {
-                menuArrowKeyNav(e, opts, '.admin-currency-option', function(opt) { opt.click(); });
+            if (menu.classList.contains('component-currencyfull-menu--open')) {
+                menuArrowKeyNav(e, opts, '.component-currencyfull-menu-option', function(opt) { opt.click(); });
             }
         });
         
@@ -3803,7 +3513,7 @@ const CurrencyComponent = (function(){
         btnInput.addEventListener('blur', function() {
             // Small delay to allow option click to fire first
             setTimeout(function() {
-                if (!menu.classList.contains('admin-currency-wrapper--open')) {
+                if (!menu.classList.contains('component-currencyfull-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -3813,7 +3523,7 @@ const CurrencyComponent = (function(){
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('admin-currency-wrapper--open')) {
+            if (menu.classList.contains('component-currencyfull-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
@@ -7145,10 +6855,10 @@ const ButtonAnchorBottom = (function() {
                 try {
                     var t = e && e.target;
                     if (t && t.closest) {
-                        var wrap = t.closest('.fieldset-menu.fieldset-menu--open, .admin-currency-wrapper.admin-currency-wrapper--open, .admin-language-wrapper.admin-language-wrapper--open');
+                        var wrap = t.closest('.fieldset-menu.fieldset-menu--open, .component-currencycompact-menu.component-currencycompact-menu--open, .component-currencyfull-menu.component-currencyfull-menu--open, .admin-language-wrapper.admin-language-wrapper--open');
                         if (wrap) {
-                            var opts = wrap.querySelector('.fieldset-menu-options--open, .admin-currency-options--open, .admin-language-options--open') ||
-                                       wrap.querySelector('.fieldset-menu-options, .admin-currency-options, .admin-language-options');
+                            var opts = wrap.querySelector('.fieldset-menu-options--open, .component-currencycompact-menu-options--open, .component-currencyfull-menu-options--open, .admin-language-options--open') ||
+                                       wrap.querySelector('.fieldset-menu-options, .component-currencycompact-menu-options, .component-currencyfull-menu-options, .admin-language-options');
                             if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
                                 var max = opts.scrollHeight - opts.clientHeight;
                                 var st = opts.scrollTop || 0;
@@ -7697,7 +7407,939 @@ const ButtonAnchorTop = (function() {
 })();
 
 
+/* ============================================================================
+   AVATAR CROPPER COMPONENT
+   Standalone reusable avatar cropper (destructive - outputs cropped blob).
+   Used by: AvatarPickerComponent
+   Class pattern: component-avatarcropper-tool-{part}--{state}
+   ============================================================================ */
+
+const AvatarCropperComponent = (function() {
+    // Singleton overlay - created once, reused
+    var overlay = null;
+    var toolEl = null;
+    var canvas = null;
+    var zoomInput = null;
+    var cancelBtn = null;
+    var saveBtn = null;
+    var cropImg = null;
+    
+    var cropState = {
+        zoom: 1,
+        minZoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+        dragging: false,
+        lastX: 0,
+        lastY: 0,
+        didDrag: false,
+        backdropMouseDown: false
+    };
+    
+    var currentCallback = null;
+    
+    function ensureOverlay() {
+        if (overlay) return;
+        
+        overlay = document.createElement('div');
+        overlay.className = 'component-avatarcropper-tool-overlay';
+        overlay.hidden = true;
+        overlay.setAttribute('aria-hidden', 'true');
+        
+        toolEl = document.createElement('div');
+        toolEl.className = 'component-avatarcropper-tool';
+        toolEl.setAttribute('role', 'dialog');
+        toolEl.setAttribute('aria-modal', 'true');
+        toolEl.setAttribute('aria-label', 'Crop avatar');
+        
+        var previewWrap = document.createElement('div');
+        previewWrap.className = 'component-avatarcropper-tool-preview';
+        canvas = document.createElement('canvas');
+        canvas.className = 'component-avatarcropper-tool-canvas';
+        canvas.width = 530;
+        canvas.height = 530;
+        previewWrap.appendChild(canvas);
+        
+        var zoomWrap = document.createElement('div');
+        zoomWrap.className = 'component-avatarcropper-tool-zoom';
+        var zoomLabel = document.createElement('label');
+        zoomLabel.className = 'component-avatarcropper-tool-zoom-label';
+        zoomLabel.textContent = 'Zoom';
+        zoomInput = document.createElement('input');
+        zoomInput.type = 'range';
+        zoomInput.className = 'component-avatarcropper-tool-zoom-input';
+        zoomInput.min = '1';
+        zoomInput.max = '3';
+        zoomInput.step = '0.01';
+        zoomInput.value = '1';
+        zoomWrap.appendChild(zoomLabel);
+        zoomWrap.appendChild(zoomInput);
+        
+        var actions = document.createElement('div');
+        actions.className = 'component-avatarcropper-tool-actions';
+        cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'component-avatarcropper-tool-button component-avatarcropper-tool-button--cancel';
+        cancelBtn.textContent = 'Cancel';
+        saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'component-avatarcropper-tool-button component-avatarcropper-tool-button--save';
+        saveBtn.textContent = 'Use Avatar';
+        actions.appendChild(cancelBtn);
+        actions.appendChild(saveBtn);
+        
+        toolEl.appendChild(previewWrap);
+        toolEl.appendChild(zoomWrap);
+        toolEl.appendChild(actions);
+        overlay.appendChild(toolEl);
+        document.body.appendChild(overlay);
+        
+        // Events
+        overlay.addEventListener('mousedown', function(e) {
+            cropState.backdropMouseDown = (e.target === overlay);
+        });
+        toolEl.addEventListener('mousedown', function() {
+            cropState.backdropMouseDown = false;
+        });
+        overlay.addEventListener('click', function(e) {
+            if (e.target !== overlay) return;
+            if (!cropState.backdropMouseDown) return;
+            if (cropState.dragging) return;
+            if (cropState.didDrag) {
+                cropState.didDrag = false;
+                cropState.backdropMouseDown = false;
+                return;
+            }
+            cropState.backdropMouseDown = false;
+            close();
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            close();
+        });
+        
+        saveBtn.addEventListener('click', function() {
+            save();
+        });
+        
+        zoomInput.addEventListener('input', function() {
+            var z = parseFloat(zoomInput.value || '1');
+            if (!isFinite(z) || z <= 0) z = 1;
+            if (z < cropState.minZoom) z = cropState.minZoom;
+            cropState.zoom = z;
+            draw();
+        });
+        
+        // Drag to reposition
+        canvas.addEventListener('mousedown', function(e) {
+            cropState.dragging = true;
+            cropState.didDrag = false;
+            cropState.lastX = e.clientX;
+            cropState.lastY = e.clientY;
+        });
+        
+        window.addEventListener('mousemove', function(e) {
+            if (!cropState.dragging) return;
+            var dx = e.clientX - cropState.lastX;
+            var dy = e.clientY - cropState.lastY;
+            cropState.lastX = e.clientX;
+            cropState.lastY = e.clientY;
+            if (dx !== 0 || dy !== 0) {
+                cropState.didDrag = true;
+            }
+            
+            var rect = canvas.getBoundingClientRect();
+            var scaleX = rect.width ? (canvas.width / rect.width) : 1;
+            var scaleY = rect.height ? (canvas.height / rect.height) : 1;
+            cropState.offsetX += dx * scaleX;
+            cropState.offsetY += dy * scaleY;
+            draw();
+        });
+        
+        window.addEventListener('mouseup', function() {
+            cropState.dragging = false;
+        });
+        
+        // Touch support
+        canvas.addEventListener('touchstart', function(e) {
+            if (e.touches.length !== 1) return;
+            var touch = e.touches[0];
+            cropState.dragging = true;
+            cropState.didDrag = false;
+            cropState.lastX = touch.clientX;
+            cropState.lastY = touch.clientY;
+            e.preventDefault();
+        }, { passive: false });
+        
+        window.addEventListener('touchmove', function(e) {
+            if (!cropState.dragging || e.touches.length !== 1) return;
+            var touch = e.touches[0];
+            var dx = touch.clientX - cropState.lastX;
+            var dy = touch.clientY - cropState.lastY;
+            cropState.lastX = touch.clientX;
+            cropState.lastY = touch.clientY;
+            if (dx !== 0 || dy !== 0) {
+                cropState.didDrag = true;
+            }
+            
+            var rect = canvas.getBoundingClientRect();
+            var scaleX = rect.width ? (canvas.width / rect.width) : 1;
+            var scaleY = rect.height ? (canvas.height / rect.height) : 1;
+            cropState.offsetX += dx * scaleX;
+            cropState.offsetY += dy * scaleY;
+            draw();
+        }, { passive: true });
+        
+        window.addEventListener('touchend', function() {
+            cropState.dragging = false;
+        });
+    }
+    
+    function draw() {
+        if (!cropImg || !canvas) return;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        var cw = canvas.width;
+        var ch = canvas.height;
+        ctx.clearRect(0, 0, cw, ch);
+        
+        var iw = cropImg.naturalWidth || cropImg.width;
+        var ih = cropImg.naturalHeight || cropImg.height;
+        if (!iw || !ih) return;
+        
+        // Cover-only zoom (no blank areas)
+        var cover = Math.max(cw / iw, ch / ih);
+        var scale = cover * (cropState.zoom || 1);
+        var drawW = iw * scale;
+        var drawH = ih * scale;
+        
+        var baseX = (cw - drawW) / 2;
+        var baseY = (ch - drawH) / 2;
+        var offX = cropState.offsetX || 0;
+        var offY = cropState.offsetY || 0;
+        
+        // Clamp offsets so the image always fully covers the crop square
+        if (drawW <= cw) {
+            offX = 0;
+        } else {
+            var minOffX = baseX;
+            var maxOffX = -baseX;
+            if (offX < minOffX) offX = minOffX;
+            if (offX > maxOffX) offX = maxOffX;
+        }
+        if (drawH <= ch) {
+            offY = 0;
+        } else {
+            var minOffY = baseY;
+            var maxOffY = -baseY;
+            if (offY < minOffY) offY = minOffY;
+            if (offY > maxOffY) offY = maxOffY;
+        }
+        
+        cropState.offsetX = offX;
+        cropState.offsetY = offY;
+        
+        var x = baseX + offX;
+        var y = baseY + offY;
+        ctx.drawImage(cropImg, x, y, drawW, drawH);
+    }
+    
+    function open(file, callback) {
+        if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError('Please select an image file.');
+            }
+            return;
+        }
+        
+        ensureOverlay();
+        currentCallback = callback || null;
+        
+        var url = URL.createObjectURL(file);
+        cropImg = new Image();
+        cropImg.onload = function() {
+            // Reset crop state
+            cropState.zoom = 1;
+            cropState.offsetX = 0;
+            cropState.offsetY = 0;
+            cropState.minZoom = 1;
+            
+            if (zoomInput) {
+                zoomInput.min = '1';
+                zoomInput.value = '1';
+            }
+            
+            draw();
+            overlay.hidden = false;
+            overlay.setAttribute('aria-hidden', 'false');
+        };
+        cropImg.onerror = function() {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError('Failed to load image.');
+            }
+        };
+        cropImg.src = url;
+        cropImg.dataset.objectUrl = url;
+    }
+    
+    function close() {
+        if (!overlay) return;
+        overlay.hidden = true;
+        overlay.setAttribute('aria-hidden', 'true');
+        
+        if (cropImg && cropImg.dataset && cropImg.dataset.objectUrl) {
+            try { URL.revokeObjectURL(cropImg.dataset.objectUrl); } catch (e) {}
+        }
+        cropImg = null;
+        currentCallback = null;
+    }
+    
+    function save() {
+        if (!canvas) return;
+        
+        if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.classList.add('component-avatarcropper-tool-button--disabled');
+        }
+        
+        canvas.toBlob(function(blob) {
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('component-avatarcropper-tool-button--disabled');
+            }
+            
+            if (!blob) {
+                if (window.ToastComponent && ToastComponent.showError) {
+                    ToastComponent.showError('Could not create avatar image.');
+                }
+                return;
+            }
+            
+            // Create a preview URL for the blob
+            var previewUrl = '';
+            try {
+                previewUrl = URL.createObjectURL(blob);
+            } catch (e) {}
+            
+            if (currentCallback && typeof currentCallback === 'function') {
+                currentCallback({ blob: blob, previewUrl: previewUrl });
+            }
+            
+            close();
+        }, 'image/png', 0.92);
+    }
+    
+    function isOpen() {
+        return overlay && !overlay.hidden;
+    }
+    
+    return {
+        open: open,
+        close: close,
+        isOpen: isOpen
+    };
+})();
+
+
+/* ============================================================================
+   AVATAR PICKER COMPONENT
+   Avatar selection interface with site avatars grid + upload option.
+   Uses AvatarCropperComponent for cropping uploaded images.
+   Class pattern: component-avatarpicker-menu-{part}--{state}
+   ============================================================================ */
+
+const AvatarPickerComponent = (function() {
+    
+    // Build the avatar picker menu
+    // options: {
+    //   siteAvatars: [{ filename, url }],  // Available site avatars
+    //   currentAvatar: string,              // Current avatar URL or filename
+    //   allowUpload: boolean,               // Show upload option (default true)
+    //   onSelect: function(result)          // Callback: { type: 'site'|'upload', value: string|blob, previewUrl: string }
+    // }
+    function build(options) {
+        options = options || {};
+        var siteAvatars = options.siteAvatars || [];
+        var currentAvatar = options.currentAvatar || '';
+        var allowUpload = options.allowUpload !== false;
+        var onSelect = options.onSelect || function() {};
+        
+        var selectedType = 'site'; // 'site' or 'upload'
+        var selectedSiteIndex = 0;
+        var uploadedBlob = null;
+        var uploadedPreviewUrl = '';
+        
+        // Create menu container
+        var menu = document.createElement('div');
+        menu.className = 'component-avatarpicker-menu';
+        
+        // Create grid
+        var grid = document.createElement('div');
+        grid.className = 'component-avatarpicker-menu-grid';
+        
+        // File input (hidden)
+        var fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.hidden = true;
+        menu.appendChild(fileInput);
+        
+        // Track option elements for selection state
+        var optionElements = [];
+        
+        function updateSelection() {
+            optionElements.forEach(function(opt, idx) {
+                var isSelected = false;
+                if (opt.dataset.type === 'upload') {
+                    isSelected = (selectedType === 'upload');
+                } else if (opt.dataset.type === 'site') {
+                    isSelected = (selectedType === 'site' && parseInt(opt.dataset.index, 10) === selectedSiteIndex);
+                }
+                opt.classList.toggle('component-avatarpicker-menu-option--selected', isSelected);
+            });
+        }
+        
+        function notifySelection() {
+            if (selectedType === 'upload' && uploadedBlob) {
+                onSelect({ type: 'upload', value: uploadedBlob, previewUrl: uploadedPreviewUrl });
+            } else if (selectedType === 'site' && siteAvatars[selectedSiteIndex]) {
+                var avatar = siteAvatars[selectedSiteIndex];
+                onSelect({ type: 'site', value: avatar.filename || avatar.url, previewUrl: avatar.url });
+            }
+        }
+        
+        // Upload option (first in grid if allowed)
+        if (allowUpload) {
+            var uploadOption = document.createElement('div');
+            uploadOption.className = 'component-avatarpicker-menu-option component-avatarpicker-menu-upload';
+            uploadOption.dataset.type = 'upload';
+            
+            var uploadIcon = document.createElement('div');
+            uploadIcon.className = 'component-avatarpicker-menu-upload-icon';
+            var uploadText = document.createElement('div');
+            uploadText.className = 'component-avatarpicker-menu-upload-text';
+            uploadText.textContent = 'Upload';
+            
+            // Preview image (hidden until upload)
+            var uploadPreview = document.createElement('img');
+            uploadPreview.className = 'component-avatarpicker-menu-option-image';
+            uploadPreview.style.display = 'none';
+            
+            uploadOption.appendChild(uploadIcon);
+            uploadOption.appendChild(uploadText);
+            uploadOption.appendChild(uploadPreview);
+            
+            uploadOption.addEventListener('click', function() {
+                if (uploadedBlob) {
+                    // Already have an upload, just select it
+                    selectedType = 'upload';
+                    updateSelection();
+                    notifySelection();
+                } else {
+                    // Open file picker
+                    fileInput.value = '';
+                    fileInput.click();
+                }
+            });
+            
+            optionElements.push(uploadOption);
+            grid.appendChild(uploadOption);
+        }
+        
+        // Site avatar options
+        siteAvatars.forEach(function(avatar, idx) {
+            var option = document.createElement('div');
+            option.className = 'component-avatarpicker-menu-option';
+            option.dataset.type = 'site';
+            option.dataset.index = String(idx);
+            
+            var img = document.createElement('img');
+            img.className = 'component-avatarpicker-menu-option-image';
+            img.src = avatar.url || '';
+            img.alt = '';
+            
+            option.appendChild(img);
+            
+            option.addEventListener('click', function() {
+                selectedType = 'site';
+                selectedSiteIndex = idx;
+                updateSelection();
+                notifySelection();
+            });
+            
+            optionElements.push(option);
+            grid.appendChild(option);
+        });
+        
+        menu.appendChild(grid);
+        
+        // File input change handler
+        fileInput.addEventListener('change', function() {
+            var file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            
+            // Open cropper
+            if (window.AvatarCropperComponent) {
+                AvatarCropperComponent.open(file, function(result) {
+                    if (!result || !result.blob) return;
+                    
+                    uploadedBlob = result.blob;
+                    uploadedPreviewUrl = result.previewUrl || '';
+                    selectedType = 'upload';
+                    
+                    // Update upload option to show preview
+                    var uploadOpt = grid.querySelector('.component-avatarpicker-menu-upload');
+                    if (uploadOpt) {
+                        var icon = uploadOpt.querySelector('.component-avatarpicker-menu-upload-icon');
+                        var text = uploadOpt.querySelector('.component-avatarpicker-menu-upload-text');
+                        var preview = uploadOpt.querySelector('.component-avatarpicker-menu-option-image');
+                        if (icon) icon.style.display = 'none';
+                        if (text) text.style.display = 'none';
+                        if (preview) {
+                            preview.src = uploadedPreviewUrl;
+                            preview.style.display = 'block';
+                        }
+                    }
+                    
+                    updateSelection();
+                    notifySelection();
+                });
+            }
+        });
+        
+        // Select first site avatar by default
+        if (siteAvatars.length > 0) {
+            selectedType = 'site';
+            selectedSiteIndex = 0;
+            updateSelection();
+        }
+        
+        // Return element and control methods
+        return {
+            element: menu,
+            getSelection: function() {
+                if (selectedType === 'upload' && uploadedBlob) {
+                    return { type: 'upload', value: uploadedBlob, previewUrl: uploadedPreviewUrl };
+                } else if (selectedType === 'site' && siteAvatars[selectedSiteIndex]) {
+                    var avatar = siteAvatars[selectedSiteIndex];
+                    return { type: 'site', value: avatar.filename || avatar.url, previewUrl: avatar.url };
+                }
+                return null;
+            },
+            setSelection: function(type, index) {
+                if (type === 'site' && typeof index === 'number') {
+                    selectedType = 'site';
+                    selectedSiteIndex = index;
+                    updateSelection();
+                } else if (type === 'upload') {
+                    selectedType = 'upload';
+                    updateSelection();
+                }
+            },
+            reset: function() {
+                uploadedBlob = null;
+                if (uploadedPreviewUrl) {
+                    try { URL.revokeObjectURL(uploadedPreviewUrl); } catch (e) {}
+                }
+                uploadedPreviewUrl = '';
+                selectedType = 'site';
+                selectedSiteIndex = 0;
+                
+                // Reset upload option appearance
+                var uploadOpt = grid.querySelector('.component-avatarpicker-menu-upload');
+                if (uploadOpt) {
+                    var icon = uploadOpt.querySelector('.component-avatarpicker-menu-upload-icon');
+                    var text = uploadOpt.querySelector('.component-avatarpicker-menu-upload-text');
+                    var preview = uploadOpt.querySelector('.component-avatarpicker-menu-option-image');
+                    if (icon) icon.style.display = '';
+                    if (text) text.style.display = '';
+                    if (preview) {
+                        preview.src = '';
+                        preview.style.display = 'none';
+                    }
+                }
+                
+                updateSelection();
+            }
+        };
+    }
+    
+    return {
+        build: build
+    };
+})();
+
+
+/* ============================================================================
+   POST CROPPER COMPONENT
+   Standalone reusable post image cropper (non-destructive - stores crop coords).
+   Outputs crop coordinates for use with Bunny Dynamic Image API.
+   Class pattern: component-postcropper-tool-{part}--{state}
+   ============================================================================ */
+
+const PostCropperComponent = (function() {
+    // Singleton overlay - created once, reused
+    var overlay = null;
+    var toolEl = null;
+    var canvas = null;
+    var zoomInput = null;
+    var cancelBtn = null;
+    var saveBtn = null;
+    var cropImg = null;
+    
+    var cropState = {
+        zoom: 1,
+        minZoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+        dragging: false,
+        lastX: 0,
+        lastY: 0,
+        didDrag: false,
+        backdropMouseDown: false
+    };
+    
+    var currentCallback = null;
+    var currentImageUrl = null;
+    
+    function ensureOverlay() {
+        if (overlay) return;
+        
+        overlay = document.createElement('div');
+        overlay.className = 'component-postcropper-tool-overlay';
+        overlay.hidden = true;
+        overlay.setAttribute('aria-hidden', 'true');
+        
+        toolEl = document.createElement('div');
+        toolEl.className = 'component-postcropper-tool';
+        toolEl.setAttribute('role', 'dialog');
+        toolEl.setAttribute('aria-modal', 'true');
+        toolEl.setAttribute('aria-label', 'Crop image');
+        
+        var previewWrap = document.createElement('div');
+        previewWrap.className = 'component-postcropper-tool-preview';
+        canvas = document.createElement('canvas');
+        canvas.className = 'component-postcropper-tool-canvas';
+        canvas.width = 530;
+        canvas.height = 530;
+        previewWrap.appendChild(canvas);
+        
+        var zoomWrap = document.createElement('div');
+        zoomWrap.className = 'component-postcropper-tool-zoom';
+        var zoomLabel = document.createElement('label');
+        zoomLabel.className = 'component-postcropper-tool-zoom-label';
+        zoomLabel.textContent = 'Zoom';
+        zoomInput = document.createElement('input');
+        zoomInput.type = 'range';
+        zoomInput.className = 'component-postcropper-tool-zoom-input';
+        zoomInput.min = '1';
+        zoomInput.max = '3';
+        zoomInput.step = '0.01';
+        zoomInput.value = '1';
+        zoomWrap.appendChild(zoomLabel);
+        zoomWrap.appendChild(zoomInput);
+        
+        var actions = document.createElement('div');
+        actions.className = 'component-postcropper-tool-actions';
+        cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'component-postcropper-tool-button component-postcropper-tool-button--cancel';
+        cancelBtn.textContent = 'Cancel';
+        saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'component-postcropper-tool-button component-postcropper-tool-button--save';
+        saveBtn.textContent = 'Use Crop';
+        actions.appendChild(cancelBtn);
+        actions.appendChild(saveBtn);
+        
+        toolEl.appendChild(previewWrap);
+        toolEl.appendChild(zoomWrap);
+        toolEl.appendChild(actions);
+        overlay.appendChild(toolEl);
+        document.body.appendChild(overlay);
+        
+        // Events
+        overlay.addEventListener('mousedown', function(e) {
+            cropState.backdropMouseDown = (e.target === overlay);
+        });
+        toolEl.addEventListener('mousedown', function() {
+            cropState.backdropMouseDown = false;
+        });
+        overlay.addEventListener('click', function(e) {
+            if (e.target !== overlay) return;
+            if (!cropState.backdropMouseDown) return;
+            if (cropState.dragging) return;
+            if (cropState.didDrag) {
+                cropState.didDrag = false;
+                cropState.backdropMouseDown = false;
+                return;
+            }
+            cropState.backdropMouseDown = false;
+            close();
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            close();
+        });
+        
+        saveBtn.addEventListener('click', function() {
+            save();
+        });
+        
+        zoomInput.addEventListener('input', function() {
+            var z = parseFloat(zoomInput.value || '1');
+            if (!isFinite(z) || z <= 0) z = 1;
+            if (z < cropState.minZoom) z = cropState.minZoom;
+            cropState.zoom = z;
+            draw();
+        });
+        
+        // Drag to reposition
+        canvas.addEventListener('mousedown', function(e) {
+            cropState.dragging = true;
+            cropState.didDrag = false;
+            cropState.lastX = e.clientX;
+            cropState.lastY = e.clientY;
+        });
+        
+        window.addEventListener('mousemove', function(e) {
+            if (!cropState.dragging) return;
+            var dx = e.clientX - cropState.lastX;
+            var dy = e.clientY - cropState.lastY;
+            cropState.lastX = e.clientX;
+            cropState.lastY = e.clientY;
+            if (dx !== 0 || dy !== 0) {
+                cropState.didDrag = true;
+            }
+            
+            var rect = canvas.getBoundingClientRect();
+            var scaleX = rect.width ? (canvas.width / rect.width) : 1;
+            var scaleY = rect.height ? (canvas.height / rect.height) : 1;
+            cropState.offsetX += dx * scaleX;
+            cropState.offsetY += dy * scaleY;
+            draw();
+        });
+        
+        window.addEventListener('mouseup', function() {
+            cropState.dragging = false;
+        });
+        
+        // Touch support
+        canvas.addEventListener('touchstart', function(e) {
+            if (e.touches.length !== 1) return;
+            var touch = e.touches[0];
+            cropState.dragging = true;
+            cropState.didDrag = false;
+            cropState.lastX = touch.clientX;
+            cropState.lastY = touch.clientY;
+            e.preventDefault();
+        }, { passive: false });
+        
+        window.addEventListener('touchmove', function(e) {
+            if (!cropState.dragging || e.touches.length !== 1) return;
+            var touch = e.touches[0];
+            var dx = touch.clientX - cropState.lastX;
+            var dy = touch.clientY - cropState.lastY;
+            cropState.lastX = touch.clientX;
+            cropState.lastY = touch.clientY;
+            if (dx !== 0 || dy !== 0) {
+                cropState.didDrag = true;
+            }
+            
+            var rect = canvas.getBoundingClientRect();
+            var scaleX = rect.width ? (canvas.width / rect.width) : 1;
+            var scaleY = rect.height ? (canvas.height / rect.height) : 1;
+            cropState.offsetX += dx * scaleX;
+            cropState.offsetY += dy * scaleY;
+            draw();
+        }, { passive: true });
+        
+        window.addEventListener('touchend', function() {
+            cropState.dragging = false;
+        });
+    }
+    
+    function draw() {
+        if (!cropImg || !canvas) return;
+        var ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        
+        var cw = canvas.width;
+        var ch = canvas.height;
+        ctx.clearRect(0, 0, cw, ch);
+        
+        var iw = cropImg.naturalWidth || cropImg.width;
+        var ih = cropImg.naturalHeight || cropImg.height;
+        if (!iw || !ih) return;
+        
+        // Cover-only zoom (no blank areas)
+        var cover = Math.max(cw / iw, ch / ih);
+        var scale = cover * (cropState.zoom || 1);
+        var drawW = iw * scale;
+        var drawH = ih * scale;
+        
+        var baseX = (cw - drawW) / 2;
+        var baseY = (ch - drawH) / 2;
+        var offX = cropState.offsetX || 0;
+        var offY = cropState.offsetY || 0;
+        
+        // Clamp offsets so the image always fully covers the crop square
+        if (drawW <= cw) {
+            offX = 0;
+        } else {
+            var minOffX = baseX;
+            var maxOffX = -baseX;
+            if (offX < minOffX) offX = minOffX;
+            if (offX > maxOffX) offX = maxOffX;
+        }
+        if (drawH <= ch) {
+            offY = 0;
+        } else {
+            var minOffY = baseY;
+            var maxOffY = -baseY;
+            if (offY < minOffY) offY = minOffY;
+            if (offY > maxOffY) offY = maxOffY;
+        }
+        
+        cropState.offsetX = offX;
+        cropState.offsetY = offY;
+        
+        var x = baseX + offX;
+        var y = baseY + offY;
+        ctx.drawImage(cropImg, x, y, drawW, drawH);
+    }
+    
+    function computeCropRect() {
+        if (!cropImg || !canvas) return null;
+        
+        var iw = cropImg.naturalWidth || cropImg.width;
+        var ih = cropImg.naturalHeight || cropImg.height;
+        var cw = canvas.width;
+        var ch = canvas.height;
+        if (!iw || !ih || !cw || !ch) return null;
+        
+        var cover = Math.max(cw / iw, ch / ih);
+        var scale = cover * (cropState.zoom || 1);
+        var drawW = iw * scale;
+        var drawH = ih * scale;
+        var baseX = (cw - drawW) / 2;
+        var baseY = (ch - drawH) / 2;
+        var x = baseX + (cropState.offsetX || 0);
+        var y = baseY + (cropState.offsetY || 0);
+        
+        // Map full canvas to image coords
+        var x1 = (0 - x) / scale;
+        var y1 = (0 - y) / scale;
+        var x2 = (cw - x) / scale;
+        var y2 = (ch - y) / scale;
+        
+        // Clamp to image bounds
+        x1 = Math.max(0, Math.min(iw, x1));
+        y1 = Math.max(0, Math.min(ih, y1));
+        x2 = Math.max(0, Math.min(iw, x2));
+        y2 = Math.max(0, Math.min(ih, y2));
+        
+        return {
+            x1: Math.round(x1),
+            y1: Math.round(y1),
+            x2: Math.round(x2),
+            y2: Math.round(y2)
+        };
+    }
+    
+    // Open with image URL and optional initial crop state
+    // options: { url, cropState?, callback }
+    function open(options) {
+        options = options || {};
+        var url = options.url || '';
+        var initialCropState = options.cropState || null;
+        currentCallback = options.callback || null;
+        currentImageUrl = url;
+        
+        if (!url) {
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError('No image URL provided.');
+            }
+            return;
+        }
+        
+        ensureOverlay();
+        
+        cropImg = new Image();
+        cropImg.onload = function() {
+            // Set crop state from initial or reset
+            if (initialCropState) {
+                cropState.zoom = initialCropState.zoom || 1;
+                cropState.offsetX = initialCropState.offsetX || 0;
+                cropState.offsetY = initialCropState.offsetY || 0;
+            } else {
+                cropState.zoom = 1;
+                cropState.offsetX = 0;
+                cropState.offsetY = 0;
+            }
+            cropState.minZoom = 1;
+            
+            if (zoomInput) {
+                zoomInput.min = '1';
+                zoomInput.value = String(cropState.zoom);
+            }
+            
+            draw();
+            overlay.hidden = false;
+            overlay.setAttribute('aria-hidden', 'false');
+        };
+        cropImg.onerror = function() {
+            if (window.ToastComponent && ToastComponent.showError) {
+                ToastComponent.showError('Failed to load image.');
+            }
+        };
+        cropImg.src = url;
+    }
+    
+    function close() {
+        if (!overlay) return;
+        overlay.hidden = true;
+        overlay.setAttribute('aria-hidden', 'true');
+        cropImg = null;
+        currentCallback = null;
+        currentImageUrl = null;
+    }
+    
+    function save() {
+        var cropRect = computeCropRect();
+        
+        if (currentCallback && typeof currentCallback === 'function') {
+            currentCallback({
+                cropRect: cropRect,
+                cropState: {
+                    zoom: cropState.zoom,
+                    offsetX: cropState.offsetX,
+                    offsetY: cropState.offsetY
+                }
+            });
+        }
+        
+        close();
+    }
+    
+    function isOpen() {
+        return overlay && !overlay.hidden;
+    }
+    
+    return {
+        open: open,
+        close: close,
+        isOpen: isOpen
+    };
+})();
+
+
 // Expose globally
+window.AvatarCropperComponent = AvatarCropperComponent;
+window.AvatarPickerComponent = AvatarPickerComponent;
+window.PostCropperComponent = PostCropperComponent;
 window.ClearButtonComponent = ClearButtonComponent;
 window.SwitchComponent = SwitchComponent;
 window.FieldsetComponent = FieldsetComponent;
