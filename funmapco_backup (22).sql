@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 30, 2025 at 02:07 PM
+-- Generation Time: Dec 30, 2025 at 02:09 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -439,6 +439,7 @@ CREATE TABLE `admins` (
 ,`favorites` text
 ,`recent` text
 ,`country` varchar(100)
+,`hidden` tinyint(1)
 ,`backup_json` longtext
 ,`created_at` datetime
 ,`updated_at` datetime
@@ -792,6 +793,7 @@ CREATE TABLE `members` (
 ,`favorites` text
 ,`recent` text
 ,`country` varchar(100)
+,`hidden` tinyint(1)
 ,`backup_json` longtext
 ,`created_at` datetime
 ,`updated_at` datetime
@@ -1027,7 +1029,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `admins`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`email` AS `email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recent` AS `recent`, `a`.`country` AS `country`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwnr7tpx3`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`email` AS `email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recent` AS `recent`, `a`.`country` AS `country`, `a`.`hidden` AS `hidden`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
 
 -- --------------------------------------------------------
 
@@ -1198,7 +1200,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `members`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`email` AS `email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recent` AS `recent`, `m`.`country` AS `country`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwnr7tpx3`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`email` AS `email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recent` AS `recent`, `m`.`country` AS `country`, `m`.`hidden` AS `hidden`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
 
 -- --------------------------------------------------------
 
@@ -1457,7 +1459,11 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `container_ke
 (248, 'Registration Email Taken', 'msg_auth_register_email_taken', 'msg_member', 'That email is already registered.', 'Register: duplicate email', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2025-12-24 10:12:56', '2025-12-29 04:11:11'),
 (249, 'Support FunMap Explainer (Member Tab)', 'msg_member_supporter_message', 'msg_member', 'Thank you for supporting FunMap.com!\n<p>\nTo protect this site from spambots and ensure all our members and posts are genuine, we have implemented a paywall for registration.\n<p>\nYou can become a member in two ways:\n<br>1. Create a post\n<br>2. Complete this registration form\n<p>\nYour site settings, favorites and search history will be remembered across all devices when you are logged in.\n<p>\nYour contribution will help us maintain and grow this awesome platform.\n', 'Shown at top of Support FunMap tab above amount/email', 'label', 'member', 0, NULL, 1, 1, 0, NULL, '2025-12-27 12:48:54', '2025-12-29 04:11:11'),
 (250, 'Supporter Payment Required', 'msg_supporter_payment_required', 'msg_member', 'Supporter signup is not available until the payment gateway is active.', 'Shown when Support FunMap submit is blocked because payment is not approved', 'error', 'member', 0, NULL, 1, 1, 0, 3000, '2025-12-27 12:53:58', '2025-12-29 04:11:11'),
-(251, 'Terms Agreement Required', 'msg_post_terms_required', 'msg_member', 'Please agree to the terms and conditions.', 'When terms checkbox not checked before posting', 'error', 'post', 0, NULL, 1, 1, 0, 3000, '2025-12-29 18:42:33', '2025-12-29 18:48:26');
+(251, 'Terms Agreement Required', 'msg_post_terms_required', 'msg_member', 'Please agree to the terms and conditions.', 'When terms checkbox not checked before posting', 'error', 'post', 0, NULL, 1, 1, 0, 3000, '2025-12-29 18:42:33', '2025-12-29 18:48:26'),
+(252, 'Profile Hidden Updated', 'msg_profile_hidden_updated', 'msg_member', 'Account visibility updated.', 'When hide account toggle is changed', 'success', 'profile', 0, NULL, 1, 1, 0, 3000, '2025-12-30 03:09:35', '2025-12-30 03:09:35'),
+(253, 'Confirm Delete Account', 'msg_confirm_delete_account', 'msg_member', 'Delete the account \"{name}\"? This action cannot be undone.', 'Confirmation dialog for account deletion', 'confirm', 'profile', 0, '[\"name\"]', 1, 1, 0, NULL, '2025-12-30 03:09:35', '2025-12-30 03:09:35'),
+(254, 'Account Deleted', 'msg_account_deleted', 'msg_member', 'Your account has been deleted.', 'After successful account deletion', 'success', 'profile', 0, NULL, 1, 1, 0, 3000, '2025-12-30 03:09:35', '2025-12-30 03:09:35'),
+(255, 'Account Delete Failed', 'msg_account_delete_failed', 'msg_member', 'Unable to delete account. Please try again.', 'When account deletion fails', 'error', 'profile', 0, NULL, 1, 1, 0, 3000, '2025-12-30 03:09:35', '2025-12-30 03:09:35');
 
 -- --------------------------------------------------------
 
