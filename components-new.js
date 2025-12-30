@@ -7962,7 +7962,6 @@ const AvatarPickerComponent = (function() {
     //   resolveSrc: function(value) => string (optional; filename/url -> usable src)
     //   selfValue: string (optional; existing avatar filename/url)
     //   siteAvatars: [{ filename, url }]
-    //   showUploadTile: boolean
     //   allowUpload: boolean (default true)
     //   onChange: function(state)   // state: { selectedKey, selfBlob, selfPreviewUrl, selectedSite }
     // }
@@ -7975,9 +7974,6 @@ const AvatarPickerComponent = (function() {
         var allowUpload = options.allowUpload !== false;
 
         var siteAvatars = Array.isArray(options.siteAvatars) ? options.siteAvatars.slice() : [];
-        // RULE: If uploads are allowed, there must always be an upload tile (user must never get stuck).
-        // options.showUploadTile is treated as legacy/hint only; we enforce at least one upload tile.
-        var showUploadTile = !!allowUpload;
 
         var selfValue = options.selfValue || '';
         var onChange = typeof options.onChange === 'function' ? options.onChange : function() {};
@@ -8044,6 +8040,15 @@ const AvatarPickerComponent = (function() {
             });
         }
 
+        function hasSelfAvatar() {
+            if (selfPreviewUrl) return true;
+            if (selfValue) {
+                var src = resolveSrc(selfValue);
+                return !!(src && String(src).trim());
+            }
+            return false;
+        }
+
         function setSelfFromCropResult(result) {
             if (!result || !result.blob) return;
 
@@ -8054,8 +8059,8 @@ const AvatarPickerComponent = (function() {
             selfBlob = result.blob;
             selfPreviewUrl = result.previewUrl || '';
 
-            // Ensure self tile shows the staged preview
-            renderSelfTileContents();
+            // Ensure layout updates (self occupies tile 1; upload shifts to tile 2; site tiles reduce)
+            renderGrid();
             setSelectedKey('self');
         }
 
@@ -8090,62 +8095,78 @@ const AvatarPickerComponent = (function() {
             });
         }
 
-        function renderSelfTileContents() {
-            var btn = grid.querySelector('.component-avatarpicker-tile[data-choice-key="self"]');
-            if (!btn) return;
+        function renderGrid() {
+            var hasSelf = hasSelfAvatar();
+            var hasUploadTile = !!(allowUpload && hasSelf); // Upload tile exists only after a self avatar exists
 
-            btn.innerHTML = '';
-            var src = '';
-            if (selfPreviewUrl) src = selfPreviewUrl;
-            else if (selfValue) src = resolveSrc(selfValue);
+            // Keep exactly 4 tiles at all times.
+            // Layout rules (Paul):
+            // - If NO uploaded avatar: tile1 = upload (self), tiles2-4 = site avatars (3)
+            // - If HAS uploaded avatar: tile1 = self image, tile2 = upload, tiles3-4 = site avatars (2)
+            grid.innerHTML = '';
 
-            if (src) {
+            function renderAddTile(btn, text) {
+                btn.innerHTML = '';
+                var add = document.createElement('div');
+                add.className = 'component-avatarpicker-tile-add';
+                var t = document.createElement('div');
+                t.className = 'component-avatarpicker-tile-add-text';
+                t.textContent = text || 'Upload';
+                add.appendChild(t);
+                btn.appendChild(add);
+            }
+
+            function renderImgTile(btn, src) {
+                btn.innerHTML = '';
                 var img = document.createElement('img');
                 img.className = 'component-avatarpicker-tile-image';
                 img.alt = '';
                 img.src = src;
                 btn.appendChild(img);
-            } else {
-                var add = document.createElement('div');
-                add.className = 'component-avatarpicker-tile-add';
-                var t = document.createElement('div');
-                t.className = 'component-avatarpicker-tile-add-text';
-                t.textContent = 'Add';
-                add.appendChild(t);
-                btn.appendChild(add);
             }
+
+            // Tile 1: self OR upload box (if empty)
+            var selfBtn = buildTileButton('self', 'component-avatarpicker-tile--self');
+            grid.appendChild(selfBtn);
+
+            var selfSrc = '';
+            if (selfPreviewUrl) selfSrc = selfPreviewUrl;
+            else if (selfValue) selfSrc = resolveSrc(selfValue);
+
+            if (selfSrc) renderImgTile(selfBtn, selfSrc);
+            else renderAddTile(selfBtn, 'Upload');
+
+            // Tile 2: upload box (only if self exists)
+            if (hasUploadTile) {
+                var uploadBtn = buildTileButton('upload', 'component-avatarpicker-tile--upload');
+                renderAddTile(uploadBtn, 'Upload');
+                grid.appendChild(uploadBtn);
+            }
+
+            // Remaining tiles: site avatars
+            var siteSlots = hasUploadTile ? 2 : 3;
+            var visibleSites = siteAvatars.slice(0, siteSlots);
+            visibleSites.forEach(function(avatar, idx) {
+                var key = 'site-' + idx;
+                var b = buildTileButton(key, 'component-avatarpicker-tile--site');
+                var url = avatar && avatar.url ? String(avatar.url) : '';
+                if (url) renderImgTile(b, url);
+                else renderAddTile(b, '');
+                grid.appendChild(b);
+            });
+
+            // If the current selection no longer exists (site-2 disappears after upload), reset to self.
+            var hasSelected = !!grid.querySelector('.component-avatarpicker-tile[data-choice-key="' + selectedKey + '"]');
+            if (!hasSelected) selectedKey = 'self';
+
+            updateSelectionState();
         }
-
-        // Tiles:
-        // Self tile
-        var selfBtn = buildTileButton('self', 'component-avatarpicker-tile--self');
-        grid.appendChild(selfBtn);
-
-        // Upload tile (always present when uploads are allowed)
-        if (showUploadTile) {
-            var uploadBtn = buildTileButton('upload', 'component-avatarpicker-tile--upload');
-            uploadBtn.innerHTML = '<div class="component-avatarpicker-tile-add"><div class="component-avatarpicker-tile-add-text">Upload</div></div>';
-            grid.appendChild(uploadBtn);
-        }
-
-        // Site tiles
-        siteAvatars.forEach(function(avatar, idx) {
-            var key = 'site-' + idx;
-            var b = buildTileButton(key, 'component-avatarpicker-tile--site');
-            var img = document.createElement('img');
-            img.className = 'component-avatarpicker-tile-image';
-            img.alt = '';
-            img.src = avatar && avatar.url ? String(avatar.url) : '';
-            b.appendChild(img);
-            grid.appendChild(b);
-        });
 
         root.appendChild(grid);
         hostEl.appendChild(root);
 
-        // Initial self contents
-        renderSelfTileContents();
-        updateSelectionState();
+        // Initial render (tile order depends on whether a self avatar exists)
+        renderGrid();
         emitChange();
 
         // Events
@@ -8155,38 +8176,56 @@ const AvatarPickerComponent = (function() {
             var key = btn.dataset.choiceKey || '';
             if (!key) return;
 
-            // Second click on selected tile opens cropper/picker
-            if (key === selectedKey) {
-                if (key === 'upload') {
-                    openFilePicker();
-                    return;
-                }
-                if (key === 'self') {
-                    if (selfBlob) {
-                        var f = new File([selfBlob], 'avatar.png', { type: selfBlob.type || 'image/png' });
-                        openCropperForFile(f);
-                        return;
-                    }
-                    var src = selfValue ? resolveSrc(selfValue) : '';
-                    if (src) {
-                        openCropperForUrl(src, 'avatar.png');
-                        return;
-                    }
-                    openFilePicker();
-                    return;
-                }
-                if (key.indexOf('site-') === 0) {
-                    var idx = parseInt(String(key).split('-')[1] || '0', 10);
-                    var c = siteAvatars[idx];
-                    if (c && c.url) {
-                        openCropperForUrl(String(c.url), 'avatar.png');
-                    }
-                    return;
-                }
+            var hasSelf = hasSelfAvatar();
+            var hasUploadTile = !!(allowUpload && hasSelf);
+
+            // Upload tile is always direct-open (no double-click required)
+            if (key === 'upload') {
+                setSelectedKey('upload');
+                openFilePicker();
+                return;
             }
 
-            // First click selects tile only
-            setSelectedKey(key);
+            // Self tile acts as the upload tile when there is no self avatar yet (tile 1 upload).
+            if (key === 'self' && !hasSelf) {
+                setSelectedKey('self');
+                openFilePicker();
+                return;
+            }
+
+            // First click selects (for self w/ avatar + site avatars)
+            if (key !== selectedKey) {
+                setSelectedKey(key);
+                return;
+            }
+
+            // Second click on selected opens cropper for self/site
+            if (key === 'self') {
+                if (selfBlob) {
+                    var f = new File([selfBlob], 'avatar.png', { type: selfBlob.type || 'image/png' });
+                    openCropperForFile(f);
+                    return;
+                }
+                var src = selfValue ? resolveSrc(selfValue) : '';
+                if (src) {
+                    openCropperForUrl(src, 'avatar.png');
+                    return;
+                }
+                // No src, but should not happen here (handled above). Fall back to file picker.
+                if (allowUpload) openFilePicker();
+                return;
+            }
+
+            if (key.indexOf('site-') === 0) {
+                var idx = parseInt(String(key).split('-')[1] || '0', 10);
+                var maxIdx = hasUploadTile ? 1 : 2; // visible site tiles are 0..1 or 0..2
+                if (!isFinite(idx) || idx < 0 || idx > maxIdx) return;
+                var c = siteAvatars[idx];
+                if (c && c.url) {
+                    openCropperForUrl(String(c.url), 'avatar.png');
+                }
+                return;
+            }
         });
 
         fileInput.addEventListener('change', function() {
@@ -8201,7 +8240,7 @@ const AvatarPickerComponent = (function() {
             },
             setSelfValue: function(value) {
                 selfValue = value || '';
-                renderSelfTileContents();
+                renderGrid();
                 emitChange();
             },
             setSelfBlob: function(blob, previewUrl) {
@@ -8211,7 +8250,7 @@ const AvatarPickerComponent = (function() {
                     }
                     selfBlob = null;
                     selfPreviewUrl = '';
-                    renderSelfTileContents();
+                    renderGrid();
                     emitChange();
                     return;
                 }
@@ -8221,16 +8260,13 @@ const AvatarPickerComponent = (function() {
                 }
                 selfBlob = blob;
                 selfPreviewUrl = previewUrl || '';
-                renderSelfTileContents();
+                renderGrid();
                 setSelectedKey('self');
             },
             update: function(next) {
                 next = next || {};
                 if (Array.isArray(next.siteAvatars)) siteAvatars = next.siteAvatars.slice();
-                // Enforce: keep an upload tile whenever allowUpload is true.
-                // (Ignore next.showUploadTile to prevent "zero upload boxes" bug.)
                 if (typeof next.allowUpload === 'boolean') allowUpload = next.allowUpload;
-                showUploadTile = !!allowUpload;
                 if (typeof next.resolveSrc === 'function') resolveSrc = next.resolveSrc;
                 if (typeof next.onChange === 'function') onChange = next.onChange;
                 if (typeof next.selfValue === 'string') selfValue = next.selfValue;
@@ -8238,7 +8274,6 @@ const AvatarPickerComponent = (function() {
                 // Rebuild DOM by re-attaching (simpler + avoids drift)
                 return attach(hostEl, {
                     siteAvatars: siteAvatars,
-                    showUploadTile: showUploadTile,
                     allowUpload: allowUpload,
                     resolveSrc: resolveSrc,
                     selfValue: selfValue,

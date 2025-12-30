@@ -929,7 +929,9 @@ const MemberModule = (function() {
             return;
         }
 
-        // Register picker: self(add/upload) + 3 site avatars (total 4 tiles)
+        // AvatarPickerComponent enforces the 4-tile rule itself:
+        // - No self avatar yet: [upload/self] + 3 site avatars
+        // - Has self avatar: [self] + [upload] + 2 site avatars
         if (avatarGridRegister) {
             var registerChoices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, 3) : [];
 
@@ -939,7 +941,6 @@ const MemberModule = (function() {
 
             avatarPickerRegister = AvatarPickerComponent.attach(avatarGridRegister, {
                 siteAvatars: registerChoices,
-                showUploadTile: false,
                 allowUpload: true,
                 resolveSrc: resolveAvatarSrc,
                 selfValue: '',
@@ -954,7 +955,7 @@ const MemberModule = (function() {
                         return;
                     }
 
-                    // self/upload path (register has no upload tile, but self can stage a blob)
+                    // self/upload path
                     pendingRegisterSiteUrl = '';
                     pendingRegisterAvatarBlob = state.selfBlob || null;
                 }
@@ -966,7 +967,7 @@ const MemberModule = (function() {
             }
         }
 
-        // Profile picker: self + (upload tile if already has an avatar) + 2 or 3 site avatars
+        // Profile picker: same component + same rules; pass 3 site avatars and it will show 2 when self exists.
         if (avatarGridProfile) {
             if (!currentUser) {
                 avatarGridProfile.innerHTML = '';
@@ -974,9 +975,7 @@ const MemberModule = (function() {
                 return;
             }
 
-            var hasExistingProfileAvatar = !!(currentUser && currentUser.avatar);
-            var profileSiteCount = hasExistingProfileAvatar ? 2 : 3;
-            var profileChoices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, profileSiteCount) : [];
+            var profileChoices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, 3) : [];
 
             if (avatarPickerProfile && typeof avatarPickerProfile.destroy === 'function') {
                 avatarPickerProfile.destroy();
@@ -984,7 +983,6 @@ const MemberModule = (function() {
 
             avatarPickerProfile = AvatarPickerComponent.attach(avatarGridProfile, {
                 siteAvatars: profileChoices,
-                showUploadTile: hasExistingProfileAvatar,
                 allowUpload: true,
                 resolveSrc: resolveAvatarSrc,
                 selfValue: currentUser && currentUser.avatar ? String(currentUser.avatar) : '',
