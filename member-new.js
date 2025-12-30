@@ -877,12 +877,30 @@ const MemberModule = (function() {
                 var folder = (res && res.settings && res.settings.folder_site_avatars) ? String(res.settings.folder_site_avatars) : '';
                 if (folder && !folder.endsWith('/')) folder += '/';
                 siteAvatarFolder = folder;
+                
+                // If no folder configured, skip the list-files call
+                if (!folder || folder === '/') {
+                    console.warn('[Member] No site avatar folder configured');
+                    return [];
+                }
+                
                 return fetch('/gateway.php?action=list-files&folder=' + encodeURIComponent(folder))
-                    .then(function(r) { return r.json(); })
+                    .then(function(r) {
+                        // Handle HTTP errors gracefully
+                        if (!r.ok) {
+                            console.warn('[Member] list-files returned HTTP', r.status);
+                            return { success: false, icons: [] };
+                        }
+                        return r.json();
+                    })
                     .then(function(list) {
                         // list-files returns `icons` array for historical reasons
                         if (!list || list.success !== true || !Array.isArray(list.icons)) return [];
                         return list.icons.filter(function(fn) { return typeof fn === 'string' && fn.trim() !== ''; });
+                    })
+                    .catch(function(listErr) {
+                        console.warn('[Member] Failed to fetch site avatar list', listErr);
+                        return [];
                     });
             })
             .then(function(filenames) {
