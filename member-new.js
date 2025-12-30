@@ -4635,18 +4635,31 @@ App.registerModule('member', MemberModule);
 // Expose globally for consistency with other modules
 window.MemberModule = MemberModule;
 
-// Early header avatar update - runs on page load BEFORE full module init
-// This ensures logged-in users see their avatar immediately on refresh
+// Early header update - runs on page load BEFORE full module init
+// This ensures logged-in users see their avatar AND admin button immediately on refresh
 (function() {
     var CURRENT_KEY = 'member-auth-current';
+    var avatarUpdated = false;
+    var adminButtonUpdated = false;
     
-    function updateHeaderAvatarEarly() {
+    function getStoredUser() {
         try {
             var raw = localStorage.getItem(CURRENT_KEY);
-            if (!raw) return;
-            
+            if (!raw) return null;
             var user = JSON.parse(raw);
-            if (!user || typeof user !== 'object' || !user.email) return;
+            if (!user || typeof user !== 'object' || !user.email) return null;
+            return user;
+        } catch (e) {
+            return null;
+        }
+    }
+    
+    function updateHeaderAvatarEarly() {
+        if (avatarUpdated) return;
+        
+        try {
+            var user = getStoredUser();
+            if (!user) return;
             
             var memberBtn = document.querySelector('.header-access-button[data-panel="member"]');
             if (!memberBtn) return;
@@ -4654,7 +4667,7 @@ window.MemberModule = MemberModule;
             var avatarImg = memberBtn.querySelector('.header-access-button-avatar');
             var iconSpan = memberBtn.querySelector('.header-access-button-icon--member');
             
-            // Get avatar source (simplified version)
+            // Get avatar source
             var avatarFile = user.avatar ? String(user.avatar).trim() : '';
             if (!avatarFile) return; // No avatar, keep showing icon
             
@@ -4665,14 +4678,16 @@ window.MemberModule = MemberModule;
             } else if (window.App && typeof App.getState === 'function') {
                 var settings = App.getState('settings') || {};
                 var folder = settings.folder_avatars;
-                if (!folder) return; // Settings not loaded yet, skip early avatar display
+                if (!folder) return; // Settings not loaded yet, will retry when settings load
                 if (!folder.endsWith('/')) folder += '/';
                 src = folder + avatarFile;
             } else {
-                return; // App not ready, skip early avatar display
+                return; // App not ready, will retry when settings load
             }
             
             if (!src) return;
+            
+            avatarUpdated = true;
             
             // Preload and show avatar
             var pre = new Image();
@@ -4687,7 +4702,7 @@ window.MemberModule = MemberModule;
                 memberBtn.classList.add('has-avatar');
             };
             pre.onerror = function() {
-                // Avatar failed to load, keep showing icon
+                avatarUpdated = false; // Allow retry
             };
             pre.src = src;
         } catch (e) {
@@ -4695,11 +4710,55 @@ window.MemberModule = MemberModule;
         }
     }
     
-    // Run on DOMContentLoaded
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', updateHeaderAvatarEarly);
-    } else {
+    function updateAdminButtonEarly() {
+        if (adminButtonUpdated) return;
+        
+        try {
+            var user = getStoredUser();
+            var adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
+            if (!adminBtn) return;
+            
+            adminButtonUpdated = true;
+            
+            if (user && user.isAdmin === true) {
+                // Show admin button
+                adminBtn.classList.remove('header-access-button--hidden');
+                adminBtn.removeAttribute('hidden');
+                adminBtn.setAttribute('aria-hidden', 'false');
+            } else {
+                // Hide admin button
+                adminBtn.classList.add('header-access-button--hidden');
+                adminBtn.setAttribute('hidden', '');
+                adminBtn.setAttribute('aria-hidden', 'true');
+            }
+        } catch (e) {
+            // Silently fail
+        }
+    }
+    
+    function updateHeaderEarly() {
         updateHeaderAvatarEarly();
+        updateAdminButtonEarly();
+    }
+    
+    // Run immediately on DOMContentLoaded
+    function runOnDOMReady() {
+        updateHeaderEarly();
+        
+        // Also listen for settings to load (in case avatar folder wasn't available yet)
+        if (window.App && typeof App.on === 'function') {
+            App.on('state:settings', function() {
+                if (!avatarUpdated) {
+                    updateHeaderAvatarEarly();
+                }
+            });
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runOnDOMReady);
+    } else {
+        runOnDOMReady();
     }
 })();
 
