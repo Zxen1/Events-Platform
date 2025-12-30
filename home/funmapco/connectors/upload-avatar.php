@@ -41,7 +41,7 @@ if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');
 if(empty($_FILES['file']['name'])) fail(400,'No file uploaded');
 
 // Get avatar folder and Bunny Storage credentials from admin settings
-$stmt = $mysqli->prepare("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_avatars', 'storage_api_key', 'storage_zone_name')");
+$stmt = $mysqli->prepare("SELECT setting_key, setting_value FROM `funmapco_system`.`admin_settings` WHERE setting_key IN ('folder_avatars', 'storage_api_key', 'storage_zone_name')");
 if(!$stmt) fail(500,'Failed to get settings');
 $stmt->execute();
 $result = $stmt->get_result();

@@ -96,11 +96,11 @@ try {
         if ($isBunny) {
             // Bunny CDN - use Storage API
             try {
-                $stmt = $pdo->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'storage_api_key' LIMIT 1");
+                $stmt = $pdo->query("SELECT setting_value FROM `funmapco_system`.`admin_settings` WHERE setting_key = 'storage_api_key' LIMIT 1");
                 $apiKeyRow = $stmt->fetch();
                 $storageApiKey = $apiKeyRow && isset($apiKeyRow['setting_value']) ? trim($apiKeyRow['setting_value']) : '';
 
-                $stmt = $pdo->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'storage_zone_name' LIMIT 1");
+                $stmt = $pdo->query("SELECT setting_value FROM `funmapco_system`.`admin_settings` WHERE setting_key = 'storage_zone_name' LIMIT 1");
                 $zoneRow = $stmt->fetch();
                 $storageZoneName = $zoneRow && isset($zoneRow['setting_value']) ? trim($zoneRow['setting_value']) : '';
 

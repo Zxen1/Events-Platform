@@ -146,7 +146,7 @@ try {
     // Load folder_category_icons from admin_settings (no hardcoded fallback)
     $iconFolder = '';
     try {
-        $settingStmt = $pdo->query("SELECT setting_value FROM admin_settings WHERE setting_key = 'folder_category_icons' LIMIT 1");
+        $settingStmt = $pdo->query("SELECT setting_value FROM `funmapco_system`.`admin_settings` WHERE setting_key = 'folder_category_icons' LIMIT 1");
         if ($settingRow = $settingStmt->fetch(PDO::FETCH_ASSOC)) {
             if (isset($settingRow['setting_value']) && is_string($settingRow['setting_value']) && trim($settingRow['setting_value']) !== '') {
                 $iconFolder = trim($settingRow['setting_value']);

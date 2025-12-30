@@ -102,7 +102,7 @@ try {
     }
 
     // Fetch all settings
-    $stmt = $pdo->query('SELECT `setting_key`, `setting_value`, `setting_type` FROM `admin_settings`');
+    $stmt = $pdo->query('SELECT `setting_key`, `setting_value`, `setting_type` FROM `funmapco_system`.`admin_settings`');
     $rows = $stmt->fetchAll();
 
     // Sensitive fields that should NEVER be sent to frontend
