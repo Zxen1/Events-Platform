@@ -750,6 +750,9 @@ const MemberModule = (function() {
             pendingRegisterAvatarBlob = null;
             pendingRegisterAvatarPreviewUrl = resolveAvatarSrc(url) || '';
             if (avatarPickerRegister && typeof avatarPickerRegister.setSelfValue === 'function') {
+                if (typeof avatarPickerRegister.setSelfBlob === 'function') {
+                    avatarPickerRegister.setSelfBlob(null);
+                }
                 avatarPickerRegister.setSelfValue(url);
                 avatarPickerRegister.setSelectedKey('self');
             } else {
@@ -759,6 +762,11 @@ const MemberModule = (function() {
         }
 
         // profile
+        // Bump cache bust if this is a real avatar filename overwrite (same filename, new bytes)
+        if (currentUser && currentUser.id && /^\d+-avatar\./.test(String(url || ''))) {
+            bumpAvatarCacheBust(currentUser.id);
+        }
+
         pendingAvatarUrl = url;
         // Also update the main avatar + header immediately for feedback (even before saving)
         if (profileAvatar) {
@@ -772,6 +780,9 @@ const MemberModule = (function() {
         pendingProfileSiteUrl = '';
         pendingProfileAvatarPreviewUrl = '';
         if (avatarPickerProfile && typeof avatarPickerProfile.setSelfValue === 'function') {
+            if (typeof avatarPickerProfile.setSelfBlob === 'function') {
+                avatarPickerProfile.setSelfBlob(null);
+            }
             avatarPickerProfile.setSelfValue(url);
             avatarPickerProfile.setSelectedKey('self');
         } else {
@@ -784,6 +795,31 @@ const MemberModule = (function() {
     // Resolve to a usable src based on folder settings:
     // - user uploads: {id}-avatar.ext -> folder_avatars
     // - library picks: any other filename -> folder_site_avatars
+    function getAvatarCacheBustKey(userId) {
+        return 'avatar_cache_bust_' + String(userId || '');
+    }
+
+    function getAvatarCacheBust(userId) {
+        try {
+            if (!userId) return '';
+            return String(localStorage.getItem(getAvatarCacheBustKey(userId)) || '');
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function bumpAvatarCacheBust(userId) {
+        try {
+            if (!userId) return;
+            localStorage.setItem(getAvatarCacheBustKey(userId), String(Date.now()));
+        } catch (e) {}
+    }
+
+    function appendCacheBust(url, bust) {
+        if (!url || !bust) return url || '';
+        return url + (url.indexOf('?') === -1 ? '?' : '&') + 'v=' + encodeURIComponent(String(bust));
+    }
+
     function resolveAvatarSrc(value) {
         var v = (value || '').trim();
         if (!v) return '';
@@ -793,7 +829,9 @@ const MemberModule = (function() {
         // Filename-only
         if (window.App && typeof App.getImageUrl === 'function') {
             if (/^\d+-avatar\./.test(v)) {
-                return App.getImageUrl('avatars', v);
+                var url = App.getImageUrl('avatars', v);
+                var bust = currentUser && currentUser.id ? getAvatarCacheBust(currentUser.id) : '';
+                return appendCacheBust(url, bust);
             }
             return App.getImageUrl('siteAvatars', v);
         }
@@ -1033,6 +1071,10 @@ const MemberModule = (function() {
             }
             // Prefer filename-only storage (rules file)
             var avatarValue = (res && res.filename) ? String(res.filename) : String(res.url);
+            // The filename is stable (overwrite), so bump cache-bust to force the latest bytes after save/refresh.
+            if (currentUser && currentUser.id) {
+                bumpAvatarCacheBust(currentUser.id);
+            }
             setAvatarForTarget('profile', avatarValue);
             // Note: Cropper is now handled by AvatarCropperComponent which auto-closes on save
             if (window.ToastComponent && ToastComponent.showSuccess) {
