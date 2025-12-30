@@ -5,8 +5,22 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE') || FUNMAP_GATEWAY_ACTIVE !== true) {
 }
 // connectors/get-moderation-data.php — Fetch moderation queue data for admin panel
 header('Content-Type: application/json; charset=utf-8');
-error_reporting(0);
-ini_set('display_errors', 0);
+
+// Custom error handler to catch all errors and return JSON
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+  http_response_code(500);
+  echo json_encode(['success'=>false,'error'=>"PHP Error: $errstr in $errfile:$errline"]);
+  exit;
+});
+
+// Catch fatal errors too
+register_shutdown_function(function() {
+  $error = error_get_last();
+  if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+    http_response_code(500);
+    echo json_encode(['success'=>false,'error'=>"Fatal: {$error['message']} in {$error['file']}:{$error['line']}"]);
+  }
+});
 
 $configCandidates = [
   __DIR__ . '/../config/config-db.php',
@@ -29,12 +43,18 @@ if ($configPath === null) {
 try {
   require_once $configPath;
 } catch (Exception $e) {
-  echo json_encode(['success'=>false,'error'=>'Database connection failed.']);
+  echo json_encode(['success'=>false,'error'=>'Database connection failed: ' . $e->getMessage()]);
   exit;
 }
 
 if (!isset($mysqli) || !$mysqli) {
   echo json_encode(['success'=>false,'error'=>'Database not available.']);
+  exit;
+}
+
+// Check if connection is valid
+if ($mysqli->connect_error) {
+  echo json_encode(['success'=>false,'error'=>'Database connection error: ' . $mysqli->connect_error]);
   exit;
 }
 
@@ -47,34 +67,40 @@ $stmt = $mysqli->prepare('
   ORDER BY deleted_at ASC
   LIMIT 50
 ');
-if ($stmt) {
-  if ($stmt->execute()) {
-    $res = $stmt->get_result();
-    if ($res) {
-      while ($row = $res->fetch_assoc()) {
-        // Calculate days since deletion
-        try {
-          $deletedAt = new DateTime($row['deleted_at']);
-          $now = new DateTime();
-          $daysSince = $now->diff($deletedAt)->days;
-          $daysRemaining = max(0, 30 - $daysSince);
-        } catch (Exception $e) {
-          $daysRemaining = 30;
-        }
-        
-        $pendingDeletion[] = [
-          'id' => (int)$row['id'],
-          'username' => $row['username'],
-          'email' => $row['email'],
-          'avatar_file' => $row['avatar_file'],
-          'deleted_at' => $row['deleted_at'],
-          'days_remaining' => $daysRemaining
-        ];
+if (!$stmt) {
+  echo json_encode(['success'=>false,'error'=>'Prepare failed (members): ' . $mysqli->error]);
+  exit;
+}
+if ($stmt->execute()) {
+  $res = $stmt->get_result();
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      // Calculate days since deletion
+      try {
+        $deletedAt = new DateTime($row['deleted_at']);
+        $now = new DateTime();
+        $daysSince = $now->diff($deletedAt)->days;
+        $daysRemaining = max(0, 30 - $daysSince);
+      } catch (Exception $e) {
+        $daysRemaining = 30;
       }
+      
+      $pendingDeletion[] = [
+        'id' => (int)$row['id'],
+        'username' => $row['username'],
+        'email' => $row['email'],
+        'avatar_file' => $row['avatar_file'],
+        'deleted_at' => $row['deleted_at'],
+        'days_remaining' => $daysRemaining
+      ];
     }
   }
+} else {
   $stmt->close();
+  echo json_encode(['success'=>false,'error'=>'Execute failed (members): ' . $stmt->error]);
+  exit;
 }
+$stmt->close();
 
 // Get flagged posts (flag_reason is set)
 $flaggedPosts = [];
@@ -85,26 +111,32 @@ $stmt = $mysqli->prepare('
   ORDER BY created_at DESC
   LIMIT 50
 ');
-if ($stmt) {
-  if ($stmt->execute()) {
-    $res = $stmt->get_result();
-    if ($res) {
-      while ($row = $res->fetch_assoc()) {
-        $flaggedPosts[] = [
-          'id' => (int)$row['id'],
-          'post_key' => $row['post_key'],
-          'member_id' => (int)$row['member_id'],
-          'member_name' => $row['member_name'],
-          'title' => $row['checkout_title'],
-          'flag_reason' => $row['flag_reason'],
-          'moderation_status' => $row['moderation_status'],
-          'created_at' => $row['created_at']
-        ];
-      }
+if (!$stmt) {
+  echo json_encode(['success'=>false,'error'=>'Prepare failed (posts): ' . $mysqli->error]);
+  exit;
+}
+if ($stmt->execute()) {
+  $res = $stmt->get_result();
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      $flaggedPosts[] = [
+        'id' => (int)$row['id'],
+        'post_key' => $row['post_key'],
+        'member_id' => (int)$row['member_id'],
+        'member_name' => $row['member_name'],
+        'title' => $row['checkout_title'],
+        'flag_reason' => $row['flag_reason'],
+        'moderation_status' => $row['moderation_status'],
+        'created_at' => $row['created_at']
+      ];
     }
   }
+} else {
   $stmt->close();
+  echo json_encode(['success'=>false,'error'=>'Execute failed (posts): ' . $stmt->error]);
+  exit;
 }
+$stmt->close();
 
 echo json_encode([
   'success' => true,

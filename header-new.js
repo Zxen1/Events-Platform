@@ -188,8 +188,10 @@ const HeaderModule = (function() {
                 var mode = btn.dataset.mode;
                 if (!mode || mode === currentMode) return;
                 
-                // "Press X remotely" for any open panels. This triggers the normal close behavior,
-                // including unsaved-changes dialogs. Only switch mode if everything actually closes.
+                // Change mode immediately - no waiting
+                setMode(mode);
+                
+                // Close any open panels in parallel (non-blocking)
                 try {
                     var filterPanel = document.querySelector('.filter-panel');
                     if (filterPanel && filterPanel.classList.contains('show')) {
@@ -211,33 +213,6 @@ const HeaderModule = (function() {
                 } catch (e) {
                     // ignore
                 }
-                
-                // Wait briefly for panels to close (transitions), then only change mode if none are open.
-                var tries = 0;
-                (function waitForClose() {
-                    tries++;
-                    var filterOpen = false;
-                    var memberOpen = false;
-                    var adminOpen = false;
-                    try {
-                        var fp = document.querySelector('.filter-panel');
-                        filterOpen = !!(fp && fp.classList.contains('show'));
-                        var mp = document.querySelector('.member-panel');
-                        memberOpen = !!(mp && mp.classList.contains('member-panel--show'));
-                        var ap = document.querySelector('.admin-panel');
-                        adminOpen = !!(ap && ap.classList.contains('admin-panel--show'));
-                    } catch (e) {}
-                    
-                    if (!filterOpen && !memberOpen && !adminOpen) {
-                setMode(mode);
-                        return;
-                    }
-                    
-                    // If a dialog is open (cancel/save/discard), the panel stays open; don't force anything.
-                    if (tries < 12) {
-                        setTimeout(waitForClose, 50);
-                    }
-                })();
             });
         });
         
