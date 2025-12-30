@@ -313,6 +313,17 @@ const AdminModule = (function() {
         autosaveCheckbox = document.getElementById('admin-autosave-checkbox');
         tabButtons = panel.querySelectorAll('.admin-tab-bar-button');
         tabPanels = panel.querySelectorAll('.admin-tab-panel');
+        
+        // Enable horizontal scrolling with mouse wheel on tab bar
+        var tabBar = panel.querySelector('.admin-tab-bar');
+        if (tabBar) {
+            tabBar.addEventListener('wheel', function(e) {
+                if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                    e.preventDefault();
+                    tabBar.scrollLeft += e.deltaY;
+                }
+            }, { passive: false });
+        }
     }
     
     function initHeaderDrag() {
