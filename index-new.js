@@ -479,8 +479,6 @@ const App = (function() {
           setCssVarUrl('--ui-icon-clear', sys.icon_clear);
           setCssVarUrl('--ui-icon-favourites', sys.icon_favourites);
           setCssVarUrl('--ui-icon-add-image', sys.icon_add_image);
-          // Mark icons as loaded so CSS can show them
-          document.documentElement.classList.add('icons-loaded');
         } catch (e) {
           // ignore
         }

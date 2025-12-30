@@ -173,32 +173,6 @@ html, body, button, input, select, textarea {
 }
 
 /* ============================================================================
-   ICON LOADING - Hide icon backgrounds until CSS variables are set
-   ============================================================================ */
-
-/* Hide mask-based icon backgrounds until settings load */
-[class*="-icon-btn-icon"],
-[class*="-button-icon"],
-[class*="-geolocate-icon"],
-[class*="-compass-icon"],
-[class*="-lighting-button-icon"],
-.clear-button-icon,
-.fieldset-images-icon {
-  background-color: transparent;
-}
-
-/* Show icons once settings have loaded */
-html.icons-loaded [class*="-icon-btn-icon"],
-html.icons-loaded [class*="-button-icon"],
-html.icons-loaded [class*="-geolocate-icon"],
-html.icons-loaded [class*="-compass-icon"],
-html.icons-loaded [class*="-lighting-button-icon"],
-html.icons-loaded .clear-button-icon,
-html.icons-loaded .fieldset-images-icon {
-  background-color: currentColor;
-}
-
-/* ============================================================================
    RESET & BASE STYLES
    ============================================================================ */
 
