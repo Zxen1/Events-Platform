@@ -213,6 +213,8 @@ try {
 
     // Group results by post (a post can have multiple map cards)
     $postsById = [];
+    $allMediaIds = []; // Collect all media IDs for batch lookup
+    
     while ($row = $result->fetch_assoc()) {
         $postId = (int)$row['id'];
         
@@ -234,11 +236,19 @@ try {
 
         // Add map card if present
         if ($row['map_card_id'] !== null) {
+            $mediaIds = $row['media_ids'];
+            
+            // Collect media IDs for batch lookup
+            if (!empty($mediaIds)) {
+                $ids = array_filter(array_map('intval', explode(',', $mediaIds)));
+                $allMediaIds = array_merge($allMediaIds, $ids);
+            }
+            
             $postsById[$postId]['map_cards'][] = [
                 'id' => (int)$row['map_card_id'],
                 'title' => $row['title'],
                 'description' => $row['description'],
-                'media_ids' => $row['media_ids'],
+                'media_ids' => $mediaIds,
                 'custom_text' => $row['custom_text'],
                 'custom_textarea' => $row['custom_textarea'],
                 'custom_dropdown' => $row['custom_dropdown'],
@@ -255,11 +265,47 @@ try {
                 'coupon_code' => $row['coupon_code'],
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
+                'media_urls' => [], // Will be populated below
             ];
         }
     }
 
     $stmt->close();
+
+    // Batch lookup media URLs
+    $mediaUrlsById = [];
+    if (!empty($allMediaIds)) {
+        $allMediaIds = array_unique($allMediaIds);
+        $placeholders = implode(',', array_fill(0, count($allMediaIds), '?'));
+        $mediaStmt = $mysqli->prepare("SELECT id, file_url FROM `post_media` WHERE id IN ($placeholders)");
+        if ($mediaStmt) {
+            $types = str_repeat('i', count($allMediaIds));
+            $mediaStmt->bind_param($types, ...$allMediaIds);
+            $mediaStmt->execute();
+            $mediaResult = $mediaStmt->get_result();
+            while ($mediaRow = $mediaResult->fetch_assoc()) {
+                $mediaUrlsById[(int)$mediaRow['id']] = $mediaRow['file_url'];
+            }
+            $mediaStmt->close();
+        }
+    }
+
+    // Attach media URLs to map cards
+    foreach ($postsById as &$post) {
+        foreach ($post['map_cards'] as &$mapCard) {
+            if (!empty($mapCard['media_ids'])) {
+                $ids = array_filter(array_map('intval', explode(',', $mapCard['media_ids'])));
+                $urls = [];
+                foreach ($ids as $mediaId) {
+                    if (isset($mediaUrlsById[$mediaId])) {
+                        $urls[] = $mediaUrlsById[$mediaId];
+                    }
+                }
+                $mapCard['media_urls'] = $urls;
+            }
+        }
+    }
+    unset($post, $mapCard);
 
     // Convert to array
     $posts = array_values($postsById);

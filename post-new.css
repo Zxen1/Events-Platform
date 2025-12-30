@@ -300,6 +300,21 @@
   filter: none;
 }
 
+.post-card-thumb--empty {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Actions column */
+.post-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 12px;
+  padding-right: 12px;
+}
+
 /* Meta container */
 .post-card-meta {
   flex: 1 1 auto;
@@ -1178,6 +1193,13 @@
   margin: 0 0 10px;
   width: 100%;
   max-width: var(--post-panel-max-w);
+}
+
+.post-panel-summary {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .post-panel-empty-image {

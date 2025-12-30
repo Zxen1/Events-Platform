@@ -52,6 +52,11 @@ const PostModule = (function() {
 
   var modeButtonsBound = false;
 
+  // Post data cache
+  var cachedPosts = null;
+  var postsLoading = false;
+  var postsError = null;
+
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
     post: { token: 0, hideHandler: null, hideTimeoutId: 0 },
@@ -222,7 +227,12 @@ const PostModule = (function() {
       var showPosts = (mode === 'posts');
       togglePanel(postPanelEl, postPanelContentEl, 'post', showPosts);
       if (showPosts) {
-        renderPostsEmptyState();
+        // Load posts from API (or use cached data)
+        if (cachedPosts && cachedPosts.length) {
+          renderPostList(cachedPosts);
+        } else {
+          loadPosts();
+        }
       }
     }
 
@@ -379,6 +389,388 @@ const PostModule = (function() {
     } catch (e) {
       // ignore
     }
+  }
+
+  /* --------------------------------------------------------------------------
+     POST LOADING
+     -------------------------------------------------------------------------- */
+
+  /**
+   * Load posts from the API
+   * @param {Object} options - Optional filters (bounds, subcategory_key, limit, offset)
+   * @returns {Promise}
+   */
+  function loadPosts(options) {
+    if (postsLoading) return Promise.resolve(cachedPosts);
+
+    postsLoading = true;
+    postsError = null;
+
+    var params = new URLSearchParams();
+    params.append('limit', String((options && options.limit) || 50));
+    params.append('offset', String((options && options.offset) || 0));
+
+    if (options && options.bounds) {
+      params.append('bounds', options.bounds);
+    }
+    if (options && options.subcategory_key) {
+      params.append('subcategory_key', options.subcategory_key);
+    }
+
+    return fetch('/gateway.php?action=get-posts&' + params.toString())
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error('Failed to load posts: ' + response.status);
+        }
+        return response.json();
+      })
+      .then(function(data) {
+        postsLoading = false;
+        if (data.success && Array.isArray(data.posts)) {
+          cachedPosts = data.posts;
+          renderPostList(data.posts);
+          return data.posts;
+        } else {
+          postsError = data.message || 'Unknown error';
+          renderPostsEmptyState();
+          return [];
+        }
+      })
+      .catch(function(err) {
+        postsLoading = false;
+        postsError = err.message || 'Network error';
+        console.error('[Post] loadPosts error:', err);
+        renderPostsEmptyState();
+        return [];
+      });
+  }
+
+  /* --------------------------------------------------------------------------
+     POST RENDERING
+     -------------------------------------------------------------------------- */
+
+  /**
+   * Get thumbnail URL for a post
+   * Uses first image from first map card's media_urls
+   * @param {Object} post - Post data from API
+   * @returns {string} Image URL or empty string
+   */
+  function getPostThumbnailUrl(post) {
+    // Get first map card
+    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    if (!mapCard) return '';
+
+    // Use media_urls array (populated by backend)
+    var mediaUrls = mapCard.media_urls;
+    if (Array.isArray(mediaUrls) && mediaUrls.length > 0) {
+      return mediaUrls[0];
+    }
+
+    // Fallback: return empty (CSS will show placeholder background)
+    return '';
+  }
+
+  /**
+   * Get subcategory icon URL
+   * @param {string} subcategoryKey - Subcategory key (e.g., 'live-gigs')
+   * @returns {string} Icon URL or empty string
+   */
+  function getSubcategoryIconUrl(subcategoryKey) {
+    if (!subcategoryKey) return '';
+
+    // Check global subcategoryIconPaths (populated by form loader)
+    var iconPaths = window.subcategoryIconPaths || {};
+
+    // Try direct key match first
+    if (iconPaths[subcategoryKey]) {
+      return iconPaths[subcategoryKey];
+    }
+
+    // Try lowercase name key format
+    var nameKey = 'name:' + subcategoryKey.toLowerCase();
+    if (iconPaths[nameKey]) {
+      return iconPaths[nameKey];
+    }
+
+    return '';
+  }
+
+  /**
+   * Get subcategory display info (category name, subcategory name)
+   * @param {string} subcategoryKey - Subcategory key
+   * @returns {Object} { category: string, subcategory: string }
+   */
+  function getSubcategoryInfo(subcategoryKey) {
+    var result = { category: '', subcategory: '' };
+    if (!subcategoryKey) return result;
+
+    // Check global categories array
+    var categories = window.categories;
+    if (!Array.isArray(categories)) return result;
+
+    for (var i = 0; i < categories.length; i++) {
+      var cat = categories[i];
+      if (!cat || !cat.name) continue;
+
+      // Check if any sub matches the key
+      var subs = cat.subs || [];
+      for (var j = 0; j < subs.length; j++) {
+        var sub = subs[j];
+        var subName = (typeof sub === 'string') ? sub : (sub && sub.name);
+        if (!subName) continue;
+
+        // Convert subcategory name to key format for comparison
+        var keyFromName = subName.toLowerCase().replace(/\s+/g, '-');
+        if (keyFromName === subcategoryKey) {
+          result.category = cat.name;
+          result.subcategory = subName;
+          return result;
+        }
+      }
+    }
+
+    // If not found, use key as display name
+    result.subcategory = subcategoryKey.replace(/-/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+    return result;
+  }
+
+  /**
+   * Render a single post card
+   * @param {Object} post - Post data from API
+   * @returns {HTMLElement} Post card element
+   */
+  function renderPostCard(post) {
+    var el = document.createElement('article');
+    el.className = 'post-card';
+    el.dataset.id = String(post.id);
+    el.dataset.postKey = post.post_key || '';
+
+    // Get first map card data
+    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+
+    // Get display data
+    var title = (mapCard && mapCard.title) || post.checkout_title || '';
+    var venueName = (mapCard && mapCard.venue_name) || '';
+    var addressLine = (mapCard && mapCard.address_line) || '';
+    var location = venueName || addressLine || '';
+    var sessionSummary = (mapCard && mapCard.session_summary) || '';
+    var priceSummary = (mapCard && mapCard.price_summary) || '';
+
+    // Get subcategory info
+    var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
+    var subInfo = getSubcategoryInfo(subcategoryKey);
+    var iconUrl = getSubcategoryIconUrl(subcategoryKey);
+
+    // Get thumbnail
+    var thumbUrl = getPostThumbnailUrl(post);
+
+    // Build HTML
+    var thumbHtml = thumbUrl
+      ? '<img class="post-card-thumb" loading="lazy" src="' + thumbUrl + '" alt="" />'
+      : '<div class="post-card-thumb post-card-thumb--empty"></div>';
+
+    var iconHtml = iconUrl
+      ? '<span class="post-card-subicon"><img class="post-card-subicon-image" src="' + iconUrl + '" alt="" /></span>'
+      : '';
+
+    var catLineText = subInfo.category && subInfo.subcategory
+      ? subInfo.category + ' &gt; ' + subInfo.subcategory
+      : subInfo.subcategory || subcategoryKey;
+
+    el.innerHTML = [
+      thumbHtml,
+      '<div class="post-card-meta">',
+        '<div class="post-card-catline">' + iconHtml + '<span>' + catLineText + '</span></div>',
+        '<h3 class="post-card-title">' + escapeHtml(title) + '</h3>',
+        '<div class="post-card-info">',
+          location ? '<div class="post-card-info-row"><span class="post-card-badge">📍</span><span>' + escapeHtml(location) + '</span></div>' : '',
+          sessionSummary ? '<div class="post-card-info-row"><span class="post-card-badge">📅</span><span>' + escapeHtml(sessionSummary) + '</span></div>' : '',
+          priceSummary ? '<div class="post-card-info-row"><span class="post-card-badge">💰</span><span>' + escapeHtml(priceSummary) + '</span></div>' : '',
+        '</div>',
+      '</div>',
+      '<div class="post-card-actions">',
+        '<button class="post-card-fav" aria-pressed="false" aria-label="Toggle favourite">',
+          '<svg class="post-card-fav-icon" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+        '</button>',
+      '</div>'
+    ].join('');
+
+    // Click handler for opening post
+    el.addEventListener('click', function(e) {
+      // Don't open if clicking favorite button
+      if (e.target.closest('.post-card-fav')) return;
+      openPost(post);
+    });
+
+    // Favorite toggle handler
+    var favBtn = el.querySelector('.post-card-fav');
+    if (favBtn) {
+      favBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleFavorite(post, favBtn);
+      });
+    }
+
+    return el;
+  }
+
+  /**
+   * Render the post list
+   * @param {Array} posts - Array of post data
+   */
+  function renderPostList(posts) {
+    if (!postListEl) return;
+
+    // Clear existing
+    postListEl.innerHTML = '';
+
+    // Show empty state if no posts
+    if (!posts || !posts.length) {
+      renderPostsEmptyState();
+      return;
+    }
+
+    // Add filter summary if available
+    var summaryText = getFilterSummaryText();
+    if (summaryText) {
+      var summaryEl = document.createElement('div');
+      summaryEl.className = 'msg--summary post-panel-summary';
+      summaryEl.textContent = summaryText;
+      postListEl.appendChild(summaryEl);
+    }
+
+    // Render each post card
+    posts.forEach(function(post) {
+      var card = renderPostCard(post);
+      postListEl.appendChild(card);
+    });
+  }
+
+  /**
+   * Open a post (show detail view)
+   * @param {Object} post - Post data
+   */
+  function openPost(post) {
+    // TODO: Implement post detail view
+    console.log('[Post] openPost:', post);
+
+    // Add to recent history
+    addToRecentHistory(post);
+
+    // Emit event for map highlighting
+    if (window.App && typeof App.emit === 'function') {
+      App.emit('post:opened', { post: post });
+    }
+  }
+
+  /**
+   * Toggle favorite status
+   * @param {Object} post - Post data
+   * @param {HTMLElement} btn - Favorite button element
+   */
+  function toggleFavorite(post, btn) {
+    var isFav = btn.getAttribute('aria-pressed') === 'true';
+    var newFav = !isFav;
+
+    btn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
+
+    var icon = btn.querySelector('.post-card-fav-icon');
+    if (icon) {
+      if (newFav) {
+        icon.classList.add('post-card-fav-icon--active');
+      } else {
+        icon.classList.remove('post-card-fav-icon--active');
+      }
+    }
+
+    // Update all instances of this post's fav button
+    document.querySelectorAll('[data-id="' + post.id + '"] .post-card-fav').forEach(function(otherBtn) {
+      if (otherBtn === btn) return;
+      otherBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
+      var otherIcon = otherBtn.querySelector('.post-card-fav-icon');
+      if (otherIcon) {
+        if (newFav) {
+          otherIcon.classList.add('post-card-fav-icon--active');
+        } else {
+          otherIcon.classList.remove('post-card-fav-icon--active');
+        }
+      }
+    });
+
+    // Save to localStorage
+    saveFavorite(post.id, newFav);
+  }
+
+  /**
+   * Save favorite status to localStorage
+   * @param {number|string} postId - Post ID
+   * @param {boolean} isFav - Favorite status
+   */
+  function saveFavorite(postId, isFav) {
+    try {
+      var favs = JSON.parse(localStorage.getItem('postFavorites') || '{}');
+      if (isFav) {
+        favs[postId] = Date.now();
+      } else {
+        delete favs[postId];
+      }
+      localStorage.setItem('postFavorites', JSON.stringify(favs));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  /**
+   * Check if a post is favorited
+   * @param {number|string} postId - Post ID
+   * @returns {boolean}
+   */
+  function isFavorite(postId) {
+    try {
+      var favs = JSON.parse(localStorage.getItem('postFavorites') || '{}');
+      return !!favs[postId];
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Add post to recent history
+   * @param {Object} post - Post data
+   */
+  function addToRecentHistory(post) {
+    try {
+      var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
+      // Remove if already exists
+      history = history.filter(function(h) { return h.id !== post.id; });
+      // Add to front
+      history.unshift({
+        id: post.id,
+        post_key: post.post_key,
+        title: (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '',
+        timestamp: Date.now()
+      });
+      // Keep only last 50
+      history = history.slice(0, 50);
+      localStorage.setItem('recentPosts', JSON.stringify(history));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  /**
+   * Escape HTML special characters
+   * @param {string} str - Input string
+   * @returns {string} Escaped string
+   */
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   /* --------------------------------------------------------------------------
@@ -567,11 +959,24 @@ const PostModule = (function() {
   }
 
   /* --------------------------------------------------------------------------
-     PUBLIC API (minimal for now)
+     PUBLIC API
      -------------------------------------------------------------------------- */
 
+  /**
+   * Refresh posts (clear cache and reload)
+   * @param {Object} options - Optional filters
+   * @returns {Promise}
+   */
+  function refreshPosts(options) {
+    cachedPosts = null;
+    return loadPosts(options);
+  }
+
   return {
-    init: init
+    init: init,
+    loadPosts: loadPosts,
+    refreshPosts: refreshPosts,
+    openPost: openPost
   };
 
 })();
