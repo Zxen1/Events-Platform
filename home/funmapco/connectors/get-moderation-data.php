@@ -22,14 +22,19 @@ foreach ($configCandidates as $candidate) {
   if (is_file($candidate)) { $configPath = $candidate; break; }
 }
 if ($configPath === null) {
-  echo json_encode(['success'=>false,'message'=>'Database configuration file is missing.']);
+  echo json_encode(['success'=>false,'error'=>'Database configuration file is missing.']);
   exit;
 }
-require_once $configPath;
 
-function fail($code, $msg) {
-  http_response_code($code);
-  echo json_encode(['success' => false, 'error' => $msg]);
+try {
+  require_once $configPath;
+} catch (Exception $e) {
+  echo json_encode(['success'=>false,'error'=>'Database connection failed.']);
+  exit;
+}
+
+if (!isset($mysqli) || !$mysqli) {
+  echo json_encode(['success'=>false,'error'=>'Database not available.']);
   exit;
 }
 
@@ -43,23 +48,30 @@ $stmt = $mysqli->prepare('
   LIMIT 50
 ');
 if ($stmt) {
-  $stmt->execute();
-  $res = $stmt->get_result();
-  while ($row = $res->fetch_assoc()) {
-    // Calculate days since deletion
-    $deletedAt = new DateTime($row['deleted_at']);
-    $now = new DateTime();
-    $daysSince = $now->diff($deletedAt)->days;
-    $daysRemaining = max(0, 30 - $daysSince);
-    
-    $pendingDeletion[] = [
-      'id' => (int)$row['id'],
-      'username' => $row['username'],
-      'email' => $row['email'],
-      'avatar_file' => $row['avatar_file'],
-      'deleted_at' => $row['deleted_at'],
-      'days_remaining' => $daysRemaining
-    ];
+  if ($stmt->execute()) {
+    $res = $stmt->get_result();
+    if ($res) {
+      while ($row = $res->fetch_assoc()) {
+        // Calculate days since deletion
+        try {
+          $deletedAt = new DateTime($row['deleted_at']);
+          $now = new DateTime();
+          $daysSince = $now->diff($deletedAt)->days;
+          $daysRemaining = max(0, 30 - $daysSince);
+        } catch (Exception $e) {
+          $daysRemaining = 30;
+        }
+        
+        $pendingDeletion[] = [
+          'id' => (int)$row['id'],
+          'username' => $row['username'],
+          'email' => $row['email'],
+          'avatar_file' => $row['avatar_file'],
+          'deleted_at' => $row['deleted_at'],
+          'days_remaining' => $daysRemaining
+        ];
+      }
+    }
   }
   $stmt->close();
 }
@@ -74,19 +86,22 @@ $stmt = $mysqli->prepare('
   LIMIT 50
 ');
 if ($stmt) {
-  $stmt->execute();
-  $res = $stmt->get_result();
-  while ($row = $res->fetch_assoc()) {
-    $flaggedPosts[] = [
-      'id' => (int)$row['id'],
-      'post_key' => $row['post_key'],
-      'member_id' => (int)$row['member_id'],
-      'member_name' => $row['member_name'],
-      'title' => $row['checkout_title'],
-      'flag_reason' => $row['flag_reason'],
-      'moderation_status' => $row['moderation_status'],
-      'created_at' => $row['created_at']
-    ];
+  if ($stmt->execute()) {
+    $res = $stmt->get_result();
+    if ($res) {
+      while ($row = $res->fetch_assoc()) {
+        $flaggedPosts[] = [
+          'id' => (int)$row['id'],
+          'post_key' => $row['post_key'],
+          'member_id' => (int)$row['member_id'],
+          'member_name' => $row['member_name'],
+          'title' => $row['checkout_title'],
+          'flag_reason' => $row['flag_reason'],
+          'moderation_status' => $row['moderation_status'],
+          'created_at' => $row['created_at']
+        ];
+      }
+    }
   }
   $stmt->close();
 }
@@ -98,4 +113,3 @@ echo json_encode([
   'flagged_posts' => $flaggedPosts,
   'flagged_posts_count' => count($flaggedPosts)
 ]);
-
