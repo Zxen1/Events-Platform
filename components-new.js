@@ -7747,227 +7747,326 @@ const AvatarCropperComponent = (function() {
    AVATAR PICKER COMPONENT
    Avatar selection interface with site avatars grid + upload option.
    Uses AvatarCropperComponent for cropping uploaded images.
-   Class pattern: component-avatarpicker-menu-{part}--{state}
+   Class pattern: component-avatarpicker-{part}--{state}
    ============================================================================ */
 
 const AvatarPickerComponent = (function() {
-    
-    // Build the avatar picker menu
-    // options: {
-    //   siteAvatars: [{ filename, url }],  // Available site avatars
-    //   currentAvatar: string,              // Current avatar URL or filename
-    //   allowUpload: boolean,               // Show upload option (default true)
-    //   onSelect: function(result)          // Callback: { type: 'site'|'upload', value: string|blob, previewUrl: string }
+
+    // Host-integrated 4-tile picker:
+    // - "self" tile (shows current/staged avatar; shows Add tile if empty)
+    // - optional "upload" tile (second-click opens file picker)
+    // - N site tiles (so total stays 4)
+    //
+    // options:
+    // {
+    //   hostEl: Element (required)
+    //   resolveSrc: function(value) => string (optional; filename/url -> usable src)
+    //   selfValue: string (optional; existing avatar filename/url)
+    //   siteAvatars: [{ filename, url }]
+    //   showUploadTile: boolean
+    //   allowUpload: boolean (default true)
+    //   onChange: function(state)   // state: { selectedKey, selfBlob, selfPreviewUrl, selectedSite }
     // }
-    function build(options) {
+
+    function attach(hostEl, options) {
+        if (!hostEl) throw new Error('[AvatarPickerComponent] hostEl is required.');
+
         options = options || {};
-        var siteAvatars = options.siteAvatars || [];
-        var currentAvatar = options.currentAvatar || '';
+        var resolveSrc = typeof options.resolveSrc === 'function' ? options.resolveSrc : function(v) { return v || ''; };
         var allowUpload = options.allowUpload !== false;
-        var onSelect = options.onSelect || function() {};
-        
-        var selectedType = 'site'; // 'site' or 'upload'
-        var selectedSiteIndex = 0;
-        var uploadedBlob = null;
-        var uploadedPreviewUrl = '';
-        
-        // Create menu container
-        var menu = document.createElement('div');
-        menu.className = 'component-avatarpicker-menu';
-        
-        // Create grid
+
+        var siteAvatars = Array.isArray(options.siteAvatars) ? options.siteAvatars.slice() : [];
+        var showUploadTile = options.showUploadTile === true;
+
+        var selfValue = options.selfValue || '';
+        var onChange = typeof options.onChange === 'function' ? options.onChange : function() {};
+
+        // Internal staged self blob/preview (memory only)
+        var selfBlob = null;
+        var selfPreviewUrl = '';
+
+        // Selection keys: 'self' | 'upload' | 'site-0'...'site-N'
+        var selectedKey = 'self';
+
+        // Build DOM
+        hostEl.innerHTML = '';
+
+        var root = document.createElement('div');
+        root.className = 'component-avatarpicker';
+
         var grid = document.createElement('div');
-        grid.className = 'component-avatarpicker-menu-grid';
-        
-        // File input (hidden)
+        grid.className = 'component-avatarpicker-grid';
+
         var fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
         fileInput.hidden = true;
-        menu.appendChild(fileInput);
-        
-        // Track option elements for selection state
-        var optionElements = [];
-        
-        function updateSelection() {
-            optionElements.forEach(function(opt, idx) {
-                var isSelected = false;
-                if (opt.dataset.type === 'upload') {
-                    isSelected = (selectedType === 'upload');
-                } else if (opt.dataset.type === 'site') {
-                    isSelected = (selectedType === 'site' && parseInt(opt.dataset.index, 10) === selectedSiteIndex);
-                }
-                opt.classList.toggle('component-avatarpicker-menu-option--selected', isSelected);
+        root.appendChild(fileInput);
+
+        function buildTileButton(key, extraClass) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'component-avatarpicker-tile' + (extraClass ? (' ' + extraClass) : '');
+            btn.dataset.choiceKey = key;
+            btn.setAttribute('aria-pressed', 'false');
+            return btn;
+        }
+
+        function setSelectedKey(nextKey) {
+            selectedKey = nextKey || 'self';
+            updateSelectionState();
+            emitChange();
+        }
+
+        function updateSelectionState() {
+            var tiles = grid.querySelectorAll('.component-avatarpicker-tile');
+            tiles.forEach(function(tile) {
+                var key = tile.dataset.choiceKey || '';
+                var isSel = key === selectedKey;
+                tile.classList.toggle('component-avatarpicker-tile--selected', isSel);
+                tile.setAttribute('aria-pressed', isSel ? 'true' : 'false');
             });
         }
-        
-        function notifySelection() {
-            if (selectedType === 'upload' && uploadedBlob) {
-                onSelect({ type: 'upload', value: uploadedBlob, previewUrl: uploadedPreviewUrl });
-            } else if (selectedType === 'site' && siteAvatars[selectedSiteIndex]) {
-                var avatar = siteAvatars[selectedSiteIndex];
-                onSelect({ type: 'site', value: avatar.filename || avatar.url, previewUrl: avatar.url });
+
+        function emitChange() {
+            var selectedSite = null;
+            if (selectedKey.indexOf('site-') === 0) {
+                var idx = parseInt(String(selectedKey).split('-')[1] || '0', 10);
+                if (isFinite(idx) && idx >= 0 && siteAvatars[idx]) selectedSite = siteAvatars[idx];
+            }
+            onChange({
+                selectedKey: selectedKey,
+                selfBlob: selfBlob,
+                selfPreviewUrl: selfPreviewUrl,
+                selfValue: selfValue,
+                selectedSite: selectedSite
+            });
+        }
+
+        function setSelfFromCropResult(result) {
+            if (!result || !result.blob) return;
+
+            // Cleanup previous preview URL
+            if (selfPreviewUrl) {
+                try { URL.revokeObjectURL(selfPreviewUrl); } catch (e) {}
+            }
+            selfBlob = result.blob;
+            selfPreviewUrl = result.previewUrl || '';
+
+            // Ensure self tile shows the staged preview
+            renderSelfTileContents();
+            setSelectedKey('self');
+        }
+
+        function openCropperForFile(file) {
+            if (!allowUpload) return;
+            if (!window.AvatarCropperComponent || typeof AvatarCropperComponent.open !== 'function') {
+                throw new Error('[AvatarPickerComponent] AvatarCropperComponent is required.');
+            }
+            AvatarCropperComponent.open(file, function(result) {
+                setSelfFromCropResult(result);
+            });
+        }
+
+        function openFilePicker() {
+            if (!allowUpload) return;
+            fileInput.value = '';
+            fileInput.click();
+        }
+
+        function blobFromUrl(url) {
+            return fetch(url).then(function(r) { return r.blob(); });
+        }
+
+        function openCropperForUrl(url, filename) {
+            if (!allowUpload) return;
+            filename = filename || (url ? (String(url).split('/').pop() || 'avatar.png') : 'avatar.png');
+            return blobFromUrl(url).then(function(blob) {
+                var file = new File([blob], filename, { type: blob.type || 'image/png' });
+                openCropperForFile(file);
+            }).catch(function() {
+                // Silent fail; caller can show toast if desired.
+            });
+        }
+
+        function renderSelfTileContents() {
+            var btn = grid.querySelector('.component-avatarpicker-tile[data-choice-key="self"]');
+            if (!btn) return;
+
+            btn.innerHTML = '';
+            var src = '';
+            if (selfPreviewUrl) src = selfPreviewUrl;
+            else if (selfValue) src = resolveSrc(selfValue);
+
+            if (src) {
+                var img = document.createElement('img');
+                img.className = 'component-avatarpicker-tile-image';
+                img.alt = '';
+                img.src = src;
+                btn.appendChild(img);
+            } else {
+                var add = document.createElement('div');
+                add.className = 'component-avatarpicker-tile-add';
+                var t = document.createElement('div');
+                t.className = 'component-avatarpicker-tile-add-text';
+                t.textContent = 'Add';
+                add.appendChild(t);
+                btn.appendChild(add);
             }
         }
-        
-        // Upload option (first in grid if allowed)
-        if (allowUpload) {
-            var uploadOption = document.createElement('div');
-            uploadOption.className = 'component-avatarpicker-menu-option component-avatarpicker-menu-upload';
-            uploadOption.dataset.type = 'upload';
-            
-            var uploadIcon = document.createElement('div');
-            uploadIcon.className = 'component-avatarpicker-menu-upload-icon';
-            var uploadText = document.createElement('div');
-            uploadText.className = 'component-avatarpicker-menu-upload-text';
-            uploadText.textContent = 'Upload';
-            
-            // Preview image (hidden until upload)
-            var uploadPreview = document.createElement('img');
-            uploadPreview.className = 'component-avatarpicker-menu-option-image';
-            uploadPreview.style.display = 'none';
-            
-            uploadOption.appendChild(uploadIcon);
-            uploadOption.appendChild(uploadText);
-            uploadOption.appendChild(uploadPreview);
-            
-            uploadOption.addEventListener('click', function() {
-                if (uploadedBlob) {
-                    // Already have an upload, just select it
-                    selectedType = 'upload';
-                    updateSelection();
-                    notifySelection();
-                } else {
-                    // Open file picker
-                    fileInput.value = '';
-                    fileInput.click();
-                }
-            });
-            
-            optionElements.push(uploadOption);
-            grid.appendChild(uploadOption);
+
+        // Tiles:
+        // Self tile
+        var selfBtn = buildTileButton('self', 'component-avatarpicker-tile--self');
+        grid.appendChild(selfBtn);
+
+        // Upload tile (optional)
+        if (showUploadTile) {
+            var uploadBtn = buildTileButton('upload', 'component-avatarpicker-tile--upload');
+            uploadBtn.innerHTML = '<div class="component-avatarpicker-tile-add"><div class="component-avatarpicker-tile-add-text">Upload</div></div>';
+            grid.appendChild(uploadBtn);
         }
-        
-        // Site avatar options
+
+        // Site tiles
         siteAvatars.forEach(function(avatar, idx) {
-            var option = document.createElement('div');
-            option.className = 'component-avatarpicker-menu-option';
-            option.dataset.type = 'site';
-            option.dataset.index = String(idx);
-            
+            var key = 'site-' + idx;
+            var b = buildTileButton(key, 'component-avatarpicker-tile--site');
             var img = document.createElement('img');
-            img.className = 'component-avatarpicker-menu-option-image';
-            img.src = avatar.url || '';
+            img.className = 'component-avatarpicker-tile-image';
             img.alt = '';
-            
-            option.appendChild(img);
-            
-            option.addEventListener('click', function() {
-                selectedType = 'site';
-                selectedSiteIndex = idx;
-                updateSelection();
-                notifySelection();
-            });
-            
-            optionElements.push(option);
-            grid.appendChild(option);
+            img.src = avatar && avatar.url ? String(avatar.url) : '';
+            b.appendChild(img);
+            grid.appendChild(b);
         });
-        
-        menu.appendChild(grid);
-        
-        // File input change handler
+
+        root.appendChild(grid);
+        hostEl.appendChild(root);
+
+        // Initial self contents
+        renderSelfTileContents();
+        updateSelectionState();
+        emitChange();
+
+        // Events
+        grid.addEventListener('click', function(e) {
+            var btn = e.target && e.target.closest ? e.target.closest('.component-avatarpicker-tile') : null;
+            if (!btn) return;
+            var key = btn.dataset.choiceKey || '';
+            if (!key) return;
+
+            // Second click on selected tile opens cropper/picker
+            if (key === selectedKey) {
+                if (key === 'upload') {
+                    openFilePicker();
+                    return;
+                }
+                if (key === 'self') {
+                    if (selfBlob) {
+                        var f = new File([selfBlob], 'avatar.png', { type: selfBlob.type || 'image/png' });
+                        openCropperForFile(f);
+                        return;
+                    }
+                    var src = selfValue ? resolveSrc(selfValue) : '';
+                    if (src) {
+                        openCropperForUrl(src, 'avatar.png');
+                        return;
+                    }
+                    openFilePicker();
+                    return;
+                }
+                if (key.indexOf('site-') === 0) {
+                    var idx = parseInt(String(key).split('-')[1] || '0', 10);
+                    var c = siteAvatars[idx];
+                    if (c && c.url) {
+                        openCropperForUrl(String(c.url), 'avatar.png');
+                    }
+                    return;
+                }
+            }
+
+            // First click selects tile only
+            setSelectedKey(key);
+        });
+
         fileInput.addEventListener('change', function() {
             var file = fileInput.files && fileInput.files[0];
             if (!file) return;
-            
-            // Open cropper
-            if (window.AvatarCropperComponent) {
-                AvatarCropperComponent.open(file, function(result) {
-                    if (!result || !result.blob) return;
-                    
-                    uploadedBlob = result.blob;
-                    uploadedPreviewUrl = result.previewUrl || '';
-                    selectedType = 'upload';
-                    
-                    // Update upload option to show preview
-                    var uploadOpt = grid.querySelector('.component-avatarpicker-menu-upload');
-                    if (uploadOpt) {
-                        var icon = uploadOpt.querySelector('.component-avatarpicker-menu-upload-icon');
-                        var text = uploadOpt.querySelector('.component-avatarpicker-menu-upload-text');
-                        var preview = uploadOpt.querySelector('.component-avatarpicker-menu-option-image');
-                        if (icon) icon.style.display = 'none';
-                        if (text) text.style.display = 'none';
-                        if (preview) {
-                            preview.src = uploadedPreviewUrl;
-                            preview.style.display = 'block';
-                        }
-                    }
-                    
-                    updateSelection();
-                    notifySelection();
-                });
-            }
+            openCropperForFile(file);
         });
-        
-        // Select first site avatar by default
-        if (siteAvatars.length > 0) {
-            selectedType = 'site';
-            selectedSiteIndex = 0;
-            updateSelection();
-        }
-        
-        // Return element and control methods
+
         return {
-            element: menu,
-            getSelection: function() {
-                if (selectedType === 'upload' && uploadedBlob) {
-                    return { type: 'upload', value: uploadedBlob, previewUrl: uploadedPreviewUrl };
-                } else if (selectedType === 'site' && siteAvatars[selectedSiteIndex]) {
-                    var avatar = siteAvatars[selectedSiteIndex];
-                    return { type: 'site', value: avatar.filename || avatar.url, previewUrl: avatar.url };
-                }
-                return null;
+            setSelectedKey: function(key) {
+                setSelectedKey(key || 'self');
             },
-            setSelection: function(type, index) {
-                if (type === 'site' && typeof index === 'number') {
-                    selectedType = 'site';
-                    selectedSiteIndex = index;
-                    updateSelection();
-                } else if (type === 'upload') {
-                    selectedType = 'upload';
-                    updateSelection();
-                }
+            setSelfValue: function(value) {
+                selfValue = value || '';
+                renderSelfTileContents();
+                emitChange();
             },
-            reset: function() {
-                uploadedBlob = null;
-                if (uploadedPreviewUrl) {
-                    try { URL.revokeObjectURL(uploadedPreviewUrl); } catch (e) {}
-                }
-                uploadedPreviewUrl = '';
-                selectedType = 'site';
-                selectedSiteIndex = 0;
-                
-                // Reset upload option appearance
-                var uploadOpt = grid.querySelector('.component-avatarpicker-menu-upload');
-                if (uploadOpt) {
-                    var icon = uploadOpt.querySelector('.component-avatarpicker-menu-upload-icon');
-                    var text = uploadOpt.querySelector('.component-avatarpicker-menu-upload-text');
-                    var preview = uploadOpt.querySelector('.component-avatarpicker-menu-option-image');
-                    if (icon) icon.style.display = '';
-                    if (text) text.style.display = '';
-                    if (preview) {
-                        preview.src = '';
-                        preview.style.display = 'none';
+            setSelfBlob: function(blob, previewUrl) {
+                if (!blob) {
+                    if (selfPreviewUrl) {
+                        try { URL.revokeObjectURL(selfPreviewUrl); } catch (e) {}
                     }
+                    selfBlob = null;
+                    selfPreviewUrl = '';
+                    renderSelfTileContents();
+                    emitChange();
+                    return;
                 }
-                
-                updateSelection();
+                // Cleanup previous preview URL
+                if (selfPreviewUrl) {
+                    try { URL.revokeObjectURL(selfPreviewUrl); } catch (e) {}
+                }
+                selfBlob = blob;
+                selfPreviewUrl = previewUrl || '';
+                renderSelfTileContents();
+                setSelectedKey('self');
+            },
+            update: function(next) {
+                next = next || {};
+                if (Array.isArray(next.siteAvatars)) siteAvatars = next.siteAvatars.slice();
+                if (typeof next.showUploadTile === 'boolean') showUploadTile = next.showUploadTile;
+                if (typeof next.allowUpload === 'boolean') allowUpload = next.allowUpload;
+                if (typeof next.resolveSrc === 'function') resolveSrc = next.resolveSrc;
+                if (typeof next.onChange === 'function') onChange = next.onChange;
+                if (typeof next.selfValue === 'string') selfValue = next.selfValue;
+
+                // Rebuild DOM by re-attaching (simpler + avoids drift)
+                return attach(hostEl, {
+                    siteAvatars: siteAvatars,
+                    showUploadTile: showUploadTile,
+                    allowUpload: allowUpload,
+                    resolveSrc: resolveSrc,
+                    selfValue: selfValue,
+                    onChange: onChange
+                });
+            },
+            getState: function() {
+                var selectedSite = null;
+                if (selectedKey.indexOf('site-') === 0) {
+                    var idx = parseInt(String(selectedKey).split('-')[1] || '0', 10);
+                    if (isFinite(idx) && idx >= 0 && siteAvatars[idx]) selectedSite = siteAvatars[idx];
+                }
+                return {
+                    selectedKey: selectedKey,
+                    selfBlob: selfBlob,
+                    selfPreviewUrl: selfPreviewUrl,
+                    selfValue: selfValue,
+                    selectedSite: selectedSite
+                };
+            },
+            destroy: function() {
+                if (selfPreviewUrl) {
+                    try { URL.revokeObjectURL(selfPreviewUrl); } catch (e) {}
+                }
+                hostEl.innerHTML = '';
             }
         };
     }
-    
+
     return {
-        build: build
+        attach: attach
     };
 })();
 
