@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 31, 2025 at 03:37 AM
+-- Generation Time: Dec 31, 2025 at 03:55 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -2539,10 +2539,10 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31'),
 (19, 'ticket-pricing', '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', 'Ticket Pricing', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', 19, '2025-12-14 22:26:00', '2025-12-14 22:41:43'),
 (20, 'sessions', '[\"session-date\", \"session-time\"]', 'Sessions', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times for your event.', 20, '2025-12-14 22:26:00', '2025-12-15 01:42:09'),
-(21, 'username', '[\"username\"]', 'Username', NULL, 'eg. Paul8700k', 'Pick a username you will use to log in.', 21, '2025-12-30 16:30:08', '2025-12-30 16:30:08'),
-(22, 'password', '[\"password\"]', 'Password', NULL, 'Create a password', 'Create a password for your new account.', 22, '2025-12-30 16:30:08', '2025-12-30 16:37:37'),
-(23, 'confirm-password', '[\"confirm-password\"]', 'Confirm Password', NULL, 'Repeat your password', 'Re-type the same password to confirm.', 23, '2025-12-30 16:30:08', '2025-12-30 16:37:37'),
-(24, 'new-password', '[\"password\"]', 'New Password', NULL, NULL, NULL, 0, '2025-12-30 16:37:37', '2025-12-30 16:37:37');
+(21, 'username', '[\"username\"]', 'Username', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', 21, '2025-12-30 16:30:08', '2025-12-30 16:55:05'),
+(22, 'password', '[\"password\"]', 'Password', NULL, 'Choose a password', 'Choose a password to protect your account.', 22, '2025-12-30 16:30:08', '2025-12-30 16:53:23'),
+(23, 'confirm-password', '[\"confirm-password\"]', 'Confirm Password', NULL, 'Type it again', 'Type the same password again to confirm.', 23, '2025-12-30 16:30:08', '2025-12-30 16:53:23'),
+(24, 'new-password', '[\"password\"]', 'New Password', NULL, 'Choose a new password', 'Only fill this in if you want to change your password.', 24, '2025-12-30 16:37:37', '2025-12-30 16:53:23');
 
 -- --------------------------------------------------------
 
