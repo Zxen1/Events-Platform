@@ -7975,7 +7975,9 @@ const AvatarPickerComponent = (function() {
         var allowUpload = options.allowUpload !== false;
 
         var siteAvatars = Array.isArray(options.siteAvatars) ? options.siteAvatars.slice() : [];
-        var showUploadTile = options.showUploadTile === true;
+        // RULE: If uploads are allowed, there must always be an upload tile (user must never get stuck).
+        // options.showUploadTile is treated as legacy/hint only; we enforce at least one upload tile.
+        var showUploadTile = !!allowUpload;
 
         var selfValue = options.selfValue || '';
         var onChange = typeof options.onChange === 'function' ? options.onChange : function() {};
@@ -8119,7 +8121,7 @@ const AvatarPickerComponent = (function() {
         var selfBtn = buildTileButton('self', 'component-avatarpicker-tile--self');
         grid.appendChild(selfBtn);
 
-        // Upload tile (optional)
+        // Upload tile (always present when uploads are allowed)
         if (showUploadTile) {
             var uploadBtn = buildTileButton('upload', 'component-avatarpicker-tile--upload');
             uploadBtn.innerHTML = '<div class="component-avatarpicker-tile-add"><div class="component-avatarpicker-tile-add-text">Upload</div></div>';
@@ -8225,8 +8227,10 @@ const AvatarPickerComponent = (function() {
             update: function(next) {
                 next = next || {};
                 if (Array.isArray(next.siteAvatars)) siteAvatars = next.siteAvatars.slice();
-                if (typeof next.showUploadTile === 'boolean') showUploadTile = next.showUploadTile;
+                // Enforce: keep an upload tile whenever allowUpload is true.
+                // (Ignore next.showUploadTile to prevent "zero upload boxes" bug.)
                 if (typeof next.allowUpload === 'boolean') allowUpload = next.allowUpload;
+                showUploadTile = !!allowUpload;
                 if (typeof next.resolveSrc === 'function') resolveSrc = next.resolveSrc;
                 if (typeof next.onChange === 'function') onChange = next.onChange;
                 if (typeof next.selfValue === 'string') selfValue = next.selfValue;
