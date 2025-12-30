@@ -3742,14 +3742,15 @@
     width: min(420px, calc(100% - 40px));
     max-height: calc((var(--vh, 1vh) * 100) - (var(--safe-top, 0px)) - 40px);
     overflow: auto;
-    background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
-    border: 1px solid var(--border);
+    /* Match dialog surfaces used across the site; keep independent via hard fallback values. */
+    background: #222222;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 5px;
     padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
     color: #fff;
 }
 
@@ -3762,7 +3763,7 @@
     width: 260px;
     height: 260px;
     border-radius: 12px;
-    background: #111;
+    background: #111111;
     border: 1px solid rgba(255,255,255,0.12);
     cursor: grab;
 }
@@ -3801,7 +3802,7 @@
     font: inherit;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .component-postcropper-tool-button:hover {
