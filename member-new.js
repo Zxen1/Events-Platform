@@ -1990,11 +1990,11 @@ const MemberModule = (function() {
             return;
         }
 
-        // Ensure FieldsetComponent has its picklists (currencies, phone prefixes, amenities) loaded
+        // Ensure FieldsetBuilder has its picklists (currencies, phone prefixes, amenities) loaded
         // before we build fieldsets. This is intentionally NOT done at site startup for performance.
-        if (window.FieldsetComponent && typeof FieldsetComponent.loadFromDatabase === 'function') {
+        if (window.FieldsetBuilder && typeof FieldsetBuilder.loadFromDatabase === 'function') {
             if (!renderConfiguredFields._fieldsetLoadPromise) {
-                renderConfiguredFields._fieldsetLoadPromise = FieldsetComponent.loadFromDatabase();
+                renderConfiguredFields._fieldsetLoadPromise = FieldsetBuilder.loadFromDatabase();
             }
             renderConfiguredFields._fieldsetLoadPromise.then(function() {
                 renderConfiguredFields._renderBody();
@@ -2005,7 +2005,7 @@ const MemberModule = (function() {
         renderConfiguredFields._renderBody();
     }
 
-    // Extracted body so we can wait for FieldsetComponent.loadFromDatabase() when needed
+    // Extracted body so we can wait for FieldsetBuilder.loadFromDatabase() when needed
     renderConfiguredFields._renderBody = function() {
         
         // Get fields for this category/subcategory
@@ -2171,7 +2171,7 @@ const MemberModule = (function() {
                     // Rendering location fieldset with quantity selector
                 }
 
-                var fieldset = FieldsetComponent.buildFieldset(field, {
+                var fieldset = FieldsetBuilder.buildFieldset(field, {
                     idPrefix: 'memberCreate',
                     fieldIndex: index,
                     container: formFields,
@@ -2372,7 +2372,7 @@ const MemberModule = (function() {
             
             // Building fieldset for location
             
-            var locationFieldsetClone = FieldsetComponent.buildFieldset(locationFieldData, {
+            var locationFieldsetClone = FieldsetBuilder.buildFieldset(locationFieldData, {
                 idPrefix: 'memberCreate',
                 fieldIndex: 0,
                 locationNumber: i,
@@ -2390,7 +2390,7 @@ const MemberModule = (function() {
                 if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
                     return;
                 }
-                var fieldset = FieldsetComponent.buildFieldset(fieldData, {
+                var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
                     idPrefix: 'memberCreate',
                     fieldIndex: fieldIndex,
                     locationNumber: i,
@@ -2438,7 +2438,7 @@ const MemberModule = (function() {
         var fieldsetKeyLower = String(fieldData.key || fieldData.fieldset_key || fieldData.fieldsetKey || '').toLowerCase();
         if (!fieldsetKeyLower) throw new Error('[Member] copyFieldsetValues: fieldset key is required.');
         
-        // Find the location-1 fieldset by its canonical key (set by FieldsetComponent)
+        // Find the location-1 fieldset by its canonical key (set by FieldsetBuilder)
         var sourceFieldset = null;
         var allFieldsets = formFields.querySelectorAll('.fieldset');
         for (var i = 0; i < allFieldsets.length; i++) {

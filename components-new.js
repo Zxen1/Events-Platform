@@ -488,11 +488,11 @@ const SwitchComponent = (function(){
 
 
 /* ============================================================================
-   FIELDSETS
+   FIELDSET BUILDER
    Source: fieldset-test.html
    ============================================================================ */
 
-const FieldsetComponent = (function(){
+const FieldsetBuilder = (function(){
     var dropdownOptions = {};
     var fieldsets = [];
     var dataLoaded = false;
@@ -683,7 +683,7 @@ const FieldsetComponent = (function(){
     // Build compact currency menu - uses CurrencyComponent
     function buildCurrencyMenuCompact(container, defaultCurrency) {
         if (typeof CurrencyComponent === 'undefined') {
-            console.error('[FieldsetComponent] CurrencyComponent not available');
+            console.error('[FieldsetBuilder] CurrencyComponent not available');
             return document.createElement('div');
         }
         // Use defaultCurrency if provided (user must select if not provided)
@@ -698,7 +698,7 @@ const FieldsetComponent = (function(){
     // Build phone prefix menu - uses PhonePrefixComponent
     function buildPhonePrefixMenu(container) {
         if (typeof PhonePrefixComponent === 'undefined') {
-            console.error('[FieldsetComponent] PhonePrefixComponent not available');
+            console.error('[FieldsetBuilder] PhonePrefixComponent not available');
             return document.createElement('div');
         }
         // No default - user must select
@@ -1019,7 +1019,7 @@ const FieldsetComponent = (function(){
      */
     function buildFieldset(fieldData, options) {
         if (!options) {
-            throw new Error('FieldsetComponent.buildFieldset: options parameter is required');
+            throw new Error('FieldsetBuilder.buildFieldset: options parameter is required');
         }
         var idPrefix = options.idPrefix;
         var index = options.fieldIndex;
@@ -1815,7 +1815,7 @@ const FieldsetComponent = (function(){
 
                 function buildItemCurrencyMenu() {
                     if (typeof CurrencyComponent === 'undefined') {
-                        console.error('[FieldsetComponent] CurrencyComponent not available');
+                        console.error('[FieldsetBuilder] CurrencyComponent not available');
                         return document.createElement('div');
                     }
                     var result = CurrencyComponent.buildCompactMenu({
@@ -2002,7 +2002,7 @@ const FieldsetComponent = (function(){
 
                 function buildTicketCurrencyMenu() {
                     if (typeof CurrencyComponent === 'undefined') {
-                        console.error('[FieldsetComponent] CurrencyComponent not available');
+                        console.error('[FieldsetBuilder] CurrencyComponent not available');
                         return document.createElement('div');
                     }
                     var result = CurrencyComponent.buildCompactMenu({
@@ -2836,7 +2836,7 @@ const FieldsetComponent = (function(){
     }
     
     // NOTE: No auto-load at script startup (performance). Callers should call
-    // FieldsetComponent.loadFromDatabase() before building fieldsets that need picklists.
+    // FieldsetBuilder.loadFromDatabase() before building fieldsets that need picklists.
     
     return {
         initGooglePlaces: initGooglePlaces,
@@ -3275,7 +3275,7 @@ const CurrencyComponent = (function(){
             setValue(initialValue);
         }
 
-        // Data must be loaded BEFORE building menu (via FieldsetComponent.setPicklist)
+        // Data must be loaded BEFORE building menu (via FieldsetBuilder.setPicklist)
         // If data isn't loaded, menu will be empty - this is expected behavior
 
         // Called when menu closes externally - revert to selected value
@@ -3943,7 +3943,7 @@ const PhonePrefixComponent = (function(){
             setValue(initialValue);
         }
 
-        // Data must be loaded BEFORE building menu (via FieldsetComponent.setPicklist)
+        // Data must be loaded BEFORE building menu (via FieldsetBuilder.setPicklist)
         // If data isn't loaded, menu will be empty - this is expected behavior
 
         // Called when menu closes externally - revert to selected value
@@ -8441,7 +8441,7 @@ window.AvatarPickerComponent = AvatarPickerComponent;
 window.PostCropperComponent = PostCropperComponent;
 window.ClearButtonComponent = ClearButtonComponent;
 window.SwitchComponent = SwitchComponent;
-window.FieldsetComponent = FieldsetComponent;
+window.FieldsetBuilder = FieldsetBuilder;
 window.CalendarComponent = CalendarComponent;
 window.CurrencyComponent = CurrencyComponent;
 window.LanguageMenuComponent = LanguageMenuComponent;

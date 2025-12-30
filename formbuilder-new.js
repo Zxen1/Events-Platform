@@ -1049,11 +1049,11 @@
                 if (!res.success) {
                     throw new Error('Failed to load admin settings');
                 }
-                // Preload picklists for FieldsetComponent (amenities, currencies, phone prefixes)
+                // Preload picklists for FieldsetBuilder (amenities, currencies, phone prefixes)
                 // so building fieldsets later does not force its own extra fetch.
                 try {
-                    if (res.dropdown_options && window.FieldsetComponent && typeof FieldsetComponent.setPicklist === 'function') {
-                        FieldsetComponent.setPicklist(res.dropdown_options);
+                    if (res.dropdown_options && window.FieldsetBuilder && typeof FieldsetBuilder.setPicklist === 'function') {
+                        FieldsetBuilder.setPicklist(res.dropdown_options);
                     }
                 } catch (e) {
                     // ignore
@@ -3356,7 +3356,7 @@
         var body = document.createElement('div');
         body.className = 'formbuilder-formpreview-modal-body';
         
-        // Render fields using FieldsetComponent (auto-loads its own picklist data)
+        // Render fields using FieldsetBuilder (auto-loads its own picklist data)
         if (fields.length === 0) {
             var emptyMsg = document.createElement('p');
             emptyMsg.className = 'formbuilder-formpreview-empty';
@@ -3364,7 +3364,7 @@
             body.appendChild(emptyMsg);
         } else {
             fields.forEach(function(fieldData, index) {
-                var fieldset = FieldsetComponent.buildFieldset(fieldData, {
+                var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
                     idPrefix: 'formpreview',
                     fieldIndex: index,
                     container: body
