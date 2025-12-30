@@ -7453,10 +7453,10 @@ const ButtonAnchorTop = (function() {
             pendingAnchor = null;
             if (!a || !a.el || !a.el.isConnected) return;
             
-            // Check if the anchor element is within a tab/panel that has BOTTOM anchor disabled.
+            // Check if the anchor element is within a tab/panel that has TOP anchor disabled.
             try {
-                if (a.el.closest && a.el.closest('[data-anchor-bottom="false"]')) {
-                    return; // This tab/panel doesn't want bottom anchor adjustments.
+                if (a.el.closest && a.el.closest('[data-anchor-top="false"]')) {
+                    return; // This tab/panel doesn't want top anchor adjustments.
                 }
             } catch (_eAttr) {}
             
