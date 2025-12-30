@@ -4159,10 +4159,8 @@ const MemberModule = (function() {
             // Update header avatar
             updateHeaderAvatar(currentUser);
             
-            // Update profile tab label
-            if (profileTabBtn) {
-                profileTabBtn.textContent = 'Profile';
-            }
+            // Profile tab label is always "Profile" (never changes to "Log In")
+            if (profileTabBtn) profileTabBtn.textContent = 'Profile';
 
             updateHeaderSaveDiscardState();
             
@@ -4170,10 +4168,8 @@ const MemberModule = (function() {
             // Logged out state
             authForm.dataset.state = 'logged-out';
             
-            // Update profile tab label
-            if (profileTabBtn) {
-                profileTabBtn.textContent = 'Log In';
-            }
+            // Profile tab label is always "Profile" (never changes to "Log In")
+            if (profileTabBtn) profileTabBtn.textContent = 'Profile';
             
             // Hide profile panel
             if (profilePanel) {
