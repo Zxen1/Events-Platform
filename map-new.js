@@ -98,6 +98,12 @@ const MapModule = (function() {
   
   // Settings cache
   let adminSettings = {};
+  
+  // Debug logging (set to false for production)
+  const DEBUG_MAP = false;
+  function logDebug(...args) {
+    if (DEBUG_MAP) console.log(...args);
+  }
 
 
   /* ==========================================================================
@@ -354,56 +360,84 @@ const MapModule = (function() {
       if (window.App && typeof App.getState === 'function') {
         adminSettings = App.getState('settings') || {};
         adminSettings.system_images = App.getState('system_images') || {};
-        console.log('[Map] loadSettings: map_lighting =', adminSettings.map_lighting, 'map_style =', adminSettings.map_style, 'spin_on_load =', adminSettings.spin_on_load);
+        logDebug('[Map] loadSettings: map_lighting =', adminSettings.map_lighting, 'map_style =', adminSettings.map_style, 'spin_on_load =', adminSettings.spin_on_load);
         applySettings(adminSettings);
         
         // If map already exists, apply settings that weren't available at creation time
         if (map) {
-          // Apply lighting from admin settings (if no member/localStorage override)
+          // Apply starting position if map was at default (0,0)
+          // applySettings() already updated startCenter, startZoom, startPitch from admin settings
+          var currentCenter = map.getCenter();
+          if (currentCenter && Math.abs(currentCenter.lng) < 0.01 && Math.abs(currentCenter.lat) < 0.01) {
+            // Map is at default 0,0 - jump to admin starting position
+            if (startCenter[0] !== 0 || startCenter[1] !== 0) {
+              logDebug('[Map] loadSettings: Jumping to starting position:', startCenter, 'zoom:', startZoom);
+              map.jumpTo({
+                center: startCenter,
+                zoom: startZoom,
+                pitch: startPitch
+              });
+            }
+          }
+          
+          // Determine lighting and style from priority chain
           var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
-          var lighting = null;
+          
+          // Lighting: member > localStorage > admin > default
+          var lighting = 'day';
           if (member && member.map_lighting) {
             lighting = member.map_lighting;
-            console.log('[Map] loadSettings: Using member lighting:', lighting);
+            logDebug('[Map] loadSettings: Using member lighting:', lighting);
           } else {
             var storedLighting = localStorage.getItem('map_lighting');
             if (storedLighting) {
               lighting = storedLighting;
-              console.log('[Map] loadSettings: Using localStorage lighting:', lighting);
+              logDebug('[Map] loadSettings: Using localStorage lighting:', lighting);
             } else if (adminSettings.map_lighting) {
               lighting = adminSettings.map_lighting;
-              console.log('[Map] loadSettings: Using admin lighting:', lighting);
+              logDebug('[Map] loadSettings: Using admin lighting:', lighting);
             }
           }
-          if (lighting) {
-            console.log('[Map] loadSettings: Applying lighting:', lighting);
-            setMapLighting(lighting);
-          }
           
-          // Apply style from admin settings (if no member/localStorage override)
-          var style = null;
+          // Style: member > localStorage > admin > default
+          var style = 'standard';
           if (member && member.map_style) {
             style = member.map_style;
-            console.log('[Map] loadSettings: Using member style:', style);
+            logDebug('[Map] loadSettings: Using member style:', style);
           } else {
             var storedStyle = localStorage.getItem('map_style');
             if (storedStyle) {
               style = storedStyle;
-              console.log('[Map] loadSettings: Using localStorage style:', style);
+              logDebug('[Map] loadSettings: Using localStorage style:', style);
             } else if (adminSettings.map_style) {
               style = adminSettings.map_style;
-              console.log('[Map] loadSettings: Using admin style:', style);
+              logDebug('[Map] loadSettings: Using admin style:', style);
             }
           }
-          if (style && style !== 'standard') {
-            console.log('[Map] loadSettings: Applying style:', style);
-            setMapStyle(style);
+          
+          // Apply style FIRST (if different from default), then lighting AFTER style loads
+          // This prevents race conditions where lighting is applied then immediately lost
+          if (style !== 'standard') {
+            logDebug('[Map] loadSettings: Applying style:', style, 'then lighting:', lighting);
+            var styleUrl = style === 'standard-satellite' 
+              ? 'mapbox://styles/mapbox/standard-satellite'
+              : 'mapbox://styles/mapbox/standard';
+            map.setStyle(styleUrl);
+            // Apply lighting after new style loads
+            map.once('style.load', function() {
+              logDebug('[Map] loadSettings: Style loaded, now applying lighting:', lighting);
+              applyLightingDirect(lighting);
+            });
+          } else {
+            // Standard style - just apply lighting
+            logDebug('[Map] loadSettings: Applying lighting:', lighting);
+            setMapLighting(lighting);
           }
           
           // Start spin if enabled (updateSpinEnabled was called in applySettings)
-          console.log('[Map] loadSettings: spinEnabled =', spinEnabled, 'spinning =', spinning);
+          logDebug('[Map] loadSettings: spinEnabled =', spinEnabled, 'spinning =', spinning);
           if (spinEnabled && !spinning) {
-            console.log('[Map] loadSettings: Starting spin');
+            logDebug('[Map] loadSettings: Starting spin');
             startSpin();
           }
         }
@@ -423,6 +457,7 @@ const MapModule = (function() {
       const lng = parseFloat(settings.starting_lng);
       if (Number.isFinite(lat) && Number.isFinite(lng)) {
         startCenter = [lng, lat];
+        logDebug('[Map] applySettings: startCenter =', startCenter);
       }
     }
     
@@ -430,6 +465,7 @@ const MapModule = (function() {
       const zoom = parseFloat(settings.starting_zoom);
       if (Number.isFinite(zoom)) {
         startZoom = zoom;
+        logDebug('[Map] applySettings: startZoom =', startZoom);
       }
     }
     
@@ -437,6 +473,7 @@ const MapModule = (function() {
       const pitch = parseFloat(settings.starting_pitch);
       if (Number.isFinite(pitch)) {
         startPitch = pitch;
+        logDebug('[Map] applySettings: startPitch =', startPitch);
       }
     }
     
@@ -444,11 +481,11 @@ const MapModule = (function() {
     if (settings.spin_on_load !== undefined) {
       var val = settings.spin_on_load;
       spinLoadStart = val === '1' || val === 'true' || val === true;
-      console.log('[Map] applySettings: spin_on_load =', val, '→ spinLoadStart =', spinLoadStart);
+      logDebug('[Map] applySettings: spin_on_load =', val, '→ spinLoadStart =', spinLoadStart);
     }
     if (settings.spin_load_type) {
       spinLoadType = settings.spin_load_type;
-      console.log('[Map] applySettings: spin_load_type =', spinLoadType);
+      logDebug('[Map] applySettings: spin_load_type =', spinLoadType);
     }
     if (settings.spin_on_logo !== undefined) {
       var val2 = settings.spin_on_logo;
@@ -769,7 +806,7 @@ const MapModule = (function() {
     const isFirstVisit = !localStorage.getItem('funmap_visited');
     const shouldSpin = spinLoadStart && (spinLoadType === 'everyone' || (spinLoadType === 'new_users' && isFirstVisit));
     spinEnabled = shouldSpin;
-    console.log('[Map] updateSpinEnabled: spinLoadStart =', spinLoadStart, 'spinLoadType =', spinLoadType, 'isFirstVisit =', isFirstVisit, '→ spinEnabled =', spinEnabled);
+    logDebug('[Map] updateSpinEnabled: spinLoadStart =', spinLoadStart, 'spinLoadType =', spinLoadType, 'isFirstVisit =', isFirstVisit, '→ spinEnabled =', spinEnabled);
   }
 
   /**
@@ -1283,7 +1320,7 @@ const MapModule = (function() {
     var styleUrl = style === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
-    console.log('[Map] Setting style to:', styleUrl);
+    logDebug('[Map] Setting style to:', styleUrl);
     
     // Store current lighting to re-apply after style loads
     var currentLighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
@@ -1296,11 +1333,29 @@ const MapModule = (function() {
     
     map.setStyle(styleUrl);
     
-    // Re-apply lighting after style loads (only for Standard style, not Satellite)
-    if (style === 'standard') {
-      map.once('style.load', function() {
-        setMapLighting(currentLighting);
-      });
+    // Re-apply lighting after style loads
+    map.once('style.load', function() {
+      logDebug('[Map] Style loaded, re-applying lighting:', currentLighting);
+      applyLightingDirect(currentLighting);
+    });
+  }
+
+  /**
+   * Apply lighting directly without checking isStyleLoaded
+   * Use this when you know the style just loaded (e.g., from style.load callback)
+   */
+  function applyLightingDirect(preset) {
+    if (!map) return;
+    try {
+      if (typeof map.setConfigProperty === 'function') {
+        map.setConfigProperty('basemap', 'lightPreset', preset);
+        logDebug('[Map] Lighting preset applied:', preset);
+      } else if (typeof map.setConfig === 'function') {
+        map.setConfig({ basemap: { lightPreset: preset } });
+        logDebug('[Map] Lighting preset applied via setConfig:', preset);
+      }
+    } catch (e) {
+      console.warn('[Map] Failed to apply lighting:', e);
     }
   }
 
@@ -1313,35 +1368,18 @@ const MapModule = (function() {
       return;
     }
     
-    console.log('[Map] Setting lighting to:', preset);
+    logDebug('[Map] Setting lighting to:', preset);
     
     if (!map.isStyleLoaded()) {
-      console.log('[Map] Style not loaded yet, waiting...');
+      logDebug('[Map] Style not loaded yet, waiting...');
       map.once('style.load', function() {
-        setMapLighting(preset);
+        applyLightingDirect(preset);
       });
       return;
     }
     
-    try {
-      // Use setConfigProperty for lighting (works with Standard style)
-      if (typeof map.setConfigProperty === 'function') {
-        map.setConfigProperty('basemap', 'lightPreset', preset);
-        console.log('[Map] Lighting preset applied:', preset);
-      } else if (typeof map.setConfig === 'function') {
-        // Mapbox compatibility: older versions use setConfig()
-        map.setConfig({
-          basemap: {
-            lightPreset: preset
-          }
-        });
-        console.log('[Map] Lighting preset applied via setConfig:', preset);
-      } else {
-        throw new Error('[Map] setMapLighting: Mapbox config API not available (setConfigProperty/setConfig).');
-      }
-    } catch (e) {
-      console.error('[Map] Failed to set lighting preset:', e);
-    }
+    // Style is loaded, apply directly
+    applyLightingDirect(preset);
   }
 
   return {
