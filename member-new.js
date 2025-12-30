@@ -291,7 +291,7 @@ const MemberModule = (function() {
                 el.id = id;
                 el.setAttribute('aria-hidden', 'true');
                 // Minimal, explicit inline style (workaround requested by Paul).
-                el.style.height = '50px';
+                el.style.height = '200px';
                 el.style.flex = '0 0 auto';
                 el.style.pointerEvents = 'none';
                 profileTabPanel.appendChild(el);
