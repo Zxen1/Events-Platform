@@ -541,7 +541,7 @@ const App = (function() {
      -------------------------------------------------------------------------- */
   var BUTTON_ANCHOR_CONFIG = {
     'admin-tab-moderation':  { top: false },
-    'member-auth-login':     { top: false },
+    'member-auth-login':     { top: false, bottom: false },
     'member-auth-profile':   { top: false }
   };
 
