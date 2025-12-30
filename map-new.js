@@ -186,11 +186,8 @@ const MapModule = (function() {
   function onMapLoad() {
     // Map loaded
     
-    // Show the map (fade in) - immediate
-    const mapEl = document.querySelector('.map-container');
-    if (mapEl) {
-      mapEl.style.opacity = '1';
-    }
+    // Map is already visible (CSS opacity: 1) - no need to show it here
+    // Tiles render progressively as they load
     
     // Emit ready event immediately (other modules may depend on this)
     App.emit('map:ready', { map });

@@ -78,7 +78,7 @@
 .map-container {
   position: absolute;
   inset: 0;
-  opacity: 0;
+  opacity: 1; /* Show immediately - tiles render progressively */
 }
 
 .map-area {

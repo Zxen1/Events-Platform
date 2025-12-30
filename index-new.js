@@ -447,8 +447,9 @@ const App = (function() {
         }
         
         // Store settings in state FIRST so getImageUrl can access them
-        state.settings = settings;
-        state.system_images = data.system_images || {};
+        // Use setState to emit events so listeners (like early avatar update) are notified
+        setState('settings', settings);
+        setState('system_images', data.system_images || {});
 
         // Apply Devtools Console Filter (database source of truth; no localStorage dependency)
         try {

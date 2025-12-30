@@ -4745,13 +4745,32 @@ window.MemberModule = MemberModule;
     function runOnDOMReady() {
         updateHeaderEarly();
         
-        // Also listen for settings to load (in case avatar folder wasn't available yet)
-        if (window.App && typeof App.on === 'function') {
-            App.on('state:settings', function() {
-                if (!avatarUpdated) {
-                    updateHeaderAvatarEarly();
+        // Set up listener for settings to load (in case avatar folder wasn't available yet)
+        function setupSettingsListener() {
+            if (window.App && typeof App.on === 'function') {
+                App.on('state:settings', function() {
+                    if (!avatarUpdated) {
+                        updateHeaderAvatarEarly();
+                    }
+                });
+                return true;
+            }
+            return false;
+        }
+        
+        // Try to set up listener immediately, or retry a few times
+        if (!setupSettingsListener()) {
+            var retries = 0;
+            var retryInterval = setInterval(function() {
+                retries++;
+                if (setupSettingsListener() || retries >= 10) {
+                    clearInterval(retryInterval);
+                    // Final attempt to update avatar in case settings loaded during retries
+                    if (!avatarUpdated) {
+                        updateHeaderAvatarEarly();
+                    }
                 }
-            });
+            }, 50);
         }
     }
     
