@@ -170,6 +170,30 @@ const PostModule = (function() {
       if (!data || !data.postId) return;
       openPostById(data.postId, { fromMap: true });
     });
+
+    // Listen for filter changes
+    App.on('filter:changed', function(filterState) {
+      applyFilters(filterState);
+    });
+
+    App.on('filter:resetAll', function() {
+      applyFilters(null);
+    });
+
+    App.on('filter:resetCategories', function() {
+      // Reload posts with current filters (categories are now reset)
+      refreshPosts();
+    });
+
+    App.on('filter:sortChanged', function(data) {
+      if (!data || !data.sort) return;
+      sortPosts(data.sort);
+    });
+
+    App.on('filter:favouritesToggle', function(data) {
+      if (!data) return;
+      filterFavourites(data.enabled);
+    });
   }
 
   /**
@@ -290,7 +314,7 @@ const PostModule = (function() {
       var showRecent = (mode === 'recent');
       togglePanel(recentPanelEl, recentPanelContentEl, 'recent', showRecent);
       if (showRecent) {
-        renderRecentEmptyState();
+        renderRecentPanel();
       }
     }
   }
@@ -839,6 +863,194 @@ const PostModule = (function() {
   function clearMapMarkerHighlight(postId) {
     if (!window.MapModule) return;
     // MapModule doesn't have a direct "deactivate" - setActiveMapCard handles toggling
+  }
+
+  /* --------------------------------------------------------------------------
+     FILTER INTEGRATION
+     -------------------------------------------------------------------------- */
+
+  // Current filter state
+  var currentFilters = null;
+  var filteredPosts = null;
+
+  /**
+   * Apply filters to the cached posts
+   * @param {Object} filterState - Filter state from FilterModule
+   */
+  function applyFilters(filterState) {
+    currentFilters = filterState;
+
+    if (!cachedPosts || !cachedPosts.length) {
+      // No posts to filter
+      return;
+    }
+
+    // Apply client-side filtering
+    filteredPosts = filterPosts(cachedPosts, filterState);
+
+    // Re-render
+    renderPostList(filteredPosts);
+  }
+
+  /**
+   * Filter posts based on filter state
+   * @param {Array} posts - Array of posts
+   * @param {Object} filters - Filter state
+   * @returns {Array} Filtered posts
+   */
+  function filterPosts(posts, filters) {
+    if (!filters) return posts;
+
+    return posts.filter(function(post) {
+      var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+
+      // Keyword filter
+      if (filters.keyword) {
+        var kw = filters.keyword.toLowerCase();
+        var title = ((mapCard && mapCard.title) || post.checkout_title || '').toLowerCase();
+        var description = ((mapCard && mapCard.description) || '').toLowerCase();
+        var venue = ((mapCard && mapCard.venue_name) || '').toLowerCase();
+
+        if (title.indexOf(kw) === -1 && description.indexOf(kw) === -1 && venue.indexOf(kw) === -1) {
+          return false;
+        }
+      }
+
+      // Price filter (if price_summary contains a number)
+      if (filters.minPrice || filters.maxPrice) {
+        var priceSummary = (mapCard && mapCard.price_summary) || '';
+        var priceMatch = priceSummary.match(/[\d,.]+/);
+        var price = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : null;
+
+        if (price !== null) {
+          if (filters.minPrice && price < parseFloat(filters.minPrice)) {
+            return false;
+          }
+          if (filters.maxPrice && price > parseFloat(filters.maxPrice)) {
+            return false;
+          }
+        }
+      }
+
+      // Favorites filter
+      if (filters.favourites) {
+        if (!isFavorite(post.id)) {
+          return false;
+        }
+      }
+
+      // Date filter would require session dates in post_children
+      // For now, skip date filtering on client side
+
+      return true;
+    });
+  }
+
+  /**
+   * Sort posts by the given sort key
+   * @param {string} sortKey - Sort key (az, za, newest, oldest, price-low, price-high)
+   */
+  function sortPosts(sortKey) {
+    var posts = filteredPosts || cachedPosts;
+    if (!posts || !posts.length) return;
+
+    var sorted = posts.slice().sort(function(a, b) {
+      var mcA = (a.map_cards && a.map_cards.length) ? a.map_cards[0] : null;
+      var mcB = (b.map_cards && b.map_cards.length) ? b.map_cards[0] : null;
+
+      switch (sortKey) {
+        case 'az':
+          var titleA = ((mcA && mcA.title) || a.checkout_title || '').toLowerCase();
+          var titleB = ((mcB && mcB.title) || b.checkout_title || '').toLowerCase();
+          return titleA.localeCompare(titleB);
+
+        case 'za':
+          var titleA2 = ((mcA && mcA.title) || a.checkout_title || '').toLowerCase();
+          var titleB2 = ((mcB && mcB.title) || b.checkout_title || '').toLowerCase();
+          return titleB2.localeCompare(titleA2);
+
+        case 'newest':
+          var dateA = new Date(a.created_at || 0).getTime();
+          var dateB = new Date(b.created_at || 0).getTime();
+          return dateB - dateA;
+
+        case 'oldest':
+          var dateA2 = new Date(a.created_at || 0).getTime();
+          var dateB2 = new Date(b.created_at || 0).getTime();
+          return dateA2 - dateB2;
+
+        case 'price-low':
+          var priceA = extractPrice(mcA);
+          var priceB = extractPrice(mcB);
+          return priceA - priceB;
+
+        case 'price-high':
+          var priceA2 = extractPrice(mcA);
+          var priceB2 = extractPrice(mcB);
+          return priceB2 - priceA2;
+
+        default:
+          return 0;
+      }
+    });
+
+    filteredPosts = sorted;
+    renderFilteredPosts();
+  }
+
+  /**
+   * Extract price from map card
+   * @param {Object} mapCard - Map card data
+   * @returns {number} Price or 0
+   */
+  function extractPrice(mapCard) {
+    if (!mapCard || !mapCard.price_summary) return 0;
+    var match = mapCard.price_summary.match(/[\d,.]+/);
+    return match ? parseFloat(match[0].replace(/,/g, '')) : 0;
+  }
+
+  /**
+   * Filter to show only favourites
+   * @param {boolean} showFavouritesOnly - Whether to show only favourites
+   */
+  function filterFavourites(showFavouritesOnly) {
+    if (!currentFilters) {
+      currentFilters = {};
+    }
+    currentFilters.favourites = showFavouritesOnly;
+    applyFilters(currentFilters);
+  }
+
+  /**
+   * Render filtered posts (used after sort)
+   */
+  function renderFilteredPosts() {
+    var posts = filteredPosts || cachedPosts;
+    if (!posts) return;
+
+    if (!postListEl) return;
+    postListEl.innerHTML = '';
+
+    if (!posts.length) {
+      renderPostsEmptyState();
+      return;
+    }
+
+    var summaryText = getFilterSummaryText();
+    if (summaryText) {
+      var summaryEl = document.createElement('div');
+      summaryEl.className = 'msg--summary post-panel-summary';
+      summaryEl.textContent = summaryText;
+      postListEl.appendChild(summaryEl);
+    }
+
+    posts.forEach(function(post) {
+      var card = renderPostCard(post);
+      postListEl.appendChild(card);
+    });
+
+    // Re-render markers for filtered posts
+    renderMapMarkers(posts);
   }
 
   /**
@@ -1411,7 +1623,6 @@ const PostModule = (function() {
   function renderRecentEmptyState() {
     if (!recentPanelContentEl) return;
 
-    // Always empty (no posts exist), but show the login reminder (like live site).
     recentPanelContentEl.innerHTML = '';
 
     var reminderWrap = document.createElement('div');
@@ -1440,6 +1651,252 @@ const PostModule = (function() {
     }
 
     recentPanelContentEl.appendChild(reminderWrap);
+  }
+
+  /* --------------------------------------------------------------------------
+     RECENT PANEL
+     -------------------------------------------------------------------------- */
+
+  /**
+   * Get recent history from localStorage
+   * @returns {Array} Array of { id, post_key, title, timestamp }
+   */
+  function getRecentHistory() {
+    try {
+      var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
+      return Array.isArray(history) ? history : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /**
+   * Render the recent panel with history entries
+   */
+  function renderRecentPanel() {
+    if (!recentPanelContentEl) return;
+
+    var history = getRecentHistory();
+
+    // Show empty state if no history
+    if (!history.length) {
+      renderRecentEmptyState();
+      return;
+    }
+
+    recentPanelContentEl.innerHTML = '';
+
+    // Create list container
+    var listEl = document.createElement('div');
+    listEl.className = 'recent-list';
+
+    // Render each recent entry
+    history.forEach(function(entry) {
+      var card = renderRecentCard(entry);
+      if (card) {
+        listEl.appendChild(card);
+      }
+    });
+
+    recentPanelContentEl.appendChild(listEl);
+
+    // Add footer reminder
+    var reminderWrap = document.createElement('div');
+    reminderWrap.className = 'recent-panel-reminder';
+
+    var reminderImg = document.createElement('img');
+    reminderImg.alt = 'Recents reminder image';
+    reminderImg.className = 'recent-panel-reminder-image';
+    applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image');
+    reminderWrap.appendChild(reminderImg);
+
+    var reminderMsg = document.createElement('p');
+    reminderMsg.className = 'recent-panel-reminder-text';
+    reminderMsg.dataset.messageKey = 'msg_recent_footer';
+    reminderMsg.textContent = '';
+    reminderWrap.appendChild(reminderMsg);
+
+    if (typeof window.getMessage === 'function') {
+      window.getMessage('msg_recent_footer', {}, false).then(function(text) {
+        if (typeof text === 'string') {
+          reminderMsg.textContent = text;
+        }
+      }).catch(function() {
+        // ignore
+      });
+    }
+
+    recentPanelContentEl.appendChild(reminderWrap);
+  }
+
+  /**
+   * Render a recent card
+   * @param {Object} entry - Recent history entry { id, post_key, title, timestamp }
+   * @returns {HTMLElement|null} Recent card element
+   */
+  function renderRecentCard(entry) {
+    if (!entry || !entry.id) return null;
+
+    // Try to find full post data in cache
+    var post = null;
+    if (cachedPosts) {
+      for (var i = 0; i < cachedPosts.length; i++) {
+        if (String(cachedPosts[i].id) === String(entry.id)) {
+          post = cachedPosts[i];
+          break;
+        }
+      }
+    }
+
+    var el = document.createElement('article');
+    el.className = 'recent-card';
+    el.dataset.id = String(entry.id);
+
+    // Get data from post or entry
+    var title = entry.title || (post && post.checkout_title) || '';
+    var mapCard = post && post.map_cards && post.map_cards.length ? post.map_cards[0] : null;
+    var thumbUrl = mapCard && mapCard.media_urls && mapCard.media_urls.length ? mapCard.media_urls[0] : '';
+    var venueName = mapCard ? mapCard.venue_name || '' : '';
+
+    // Format last opened time
+    var lastOpenedText = formatLastOpened(entry.timestamp);
+
+    // Build card HTML
+    var thumbHtml = thumbUrl
+      ? '<img class="post-card-thumb" loading="lazy" src="' + thumbUrl + '" alt="" />'
+      : '<div class="post-card-thumb post-card-thumb--empty"></div>';
+
+    // Check favorite status
+    var isFav = isFavorite(entry.id);
+
+    el.innerHTML = [
+      thumbHtml,
+      '<div class="post-card-meta">',
+        '<h3 class="post-card-title">' + escapeHtml(title) + '</h3>',
+        '<div class="post-card-info">',
+          venueName ? '<div class="post-card-info-row"><span class="post-card-badge">📍</span><span>' + escapeHtml(venueName) + '</span></div>' : '',
+          lastOpenedText ? '<p class="post-last-opened-label">' + escapeHtml(lastOpenedText) + '</p>' : '',
+        '</div>',
+      '</div>',
+      '<div class="post-card-actions">',
+        '<button class="post-card-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+          '<svg class="post-card-fav-icon' + (isFav ? ' post-card-fav-icon--active' : '') + '" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+        '</button>',
+      '</div>'
+    ].join('');
+
+    // Click handler
+    el.addEventListener('click', function(e) {
+      if (e.target.closest('.post-card-fav')) return;
+
+      // If we have full post data, open it
+      if (post) {
+        openPost(post, { fromRecent: true, originEl: el });
+      } else {
+        // Need to fetch the post
+        loadPostById(entry.id).then(function(fetchedPost) {
+          if (fetchedPost) {
+            openPost(fetchedPost, { fromRecent: true, originEl: el });
+          }
+        });
+      }
+    });
+
+    // Favorite toggle
+    var favBtn = el.querySelector('.post-card-fav');
+    if (favBtn) {
+      favBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleFavoriteById(entry.id, favBtn);
+      });
+    }
+
+    return el;
+  }
+
+  /**
+   * Format last opened timestamp
+   * @param {number} timestamp - Unix timestamp in ms
+   * @returns {string} Formatted string like "Last opened 5 minutes ago"
+   */
+  function formatLastOpened(timestamp) {
+    if (!timestamp) return '';
+
+    var diff = Date.now() - timestamp;
+    var mins = Math.floor(diff / 60000);
+    var ago;
+
+    if (mins < 60) {
+      ago = mins + ' minute' + (mins === 1 ? '' : 's');
+    } else if (mins < 1440) {
+      var hrs = Math.floor(mins / 60);
+      ago = hrs + ' hour' + (hrs === 1 ? '' : 's');
+    } else {
+      var days = Math.floor(mins / 1440);
+      ago = days + ' day' + (days === 1 ? '' : 's');
+    }
+
+    return 'Last opened ' + ago + ' ago';
+  }
+
+  /**
+   * Toggle favorite by ID (when full post data not available)
+   * @param {number|string} postId - Post ID
+   * @param {HTMLElement} btn - Favorite button element
+   */
+  function toggleFavoriteById(postId, btn) {
+    var isFav = btn.getAttribute('aria-pressed') === 'true';
+    var newFav = !isFav;
+
+    btn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
+
+    var icon = btn.querySelector('.post-card-fav-icon');
+    if (icon) {
+      if (newFav) {
+        icon.classList.add('post-card-fav-icon--active');
+      } else {
+        icon.classList.remove('post-card-fav-icon--active');
+      }
+    }
+
+    // Save to localStorage
+    saveFavorite(postId, newFav);
+
+    // Update other instances
+    document.querySelectorAll('[data-id="' + postId + '"] .post-card-fav').forEach(function(otherBtn) {
+      if (otherBtn === btn) return;
+      otherBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
+      var otherIcon = otherBtn.querySelector('.post-card-fav-icon');
+      if (otherIcon) {
+        if (newFav) {
+          otherIcon.classList.add('post-card-fav-icon--active');
+        } else {
+          otherIcon.classList.remove('post-card-fav-icon--active');
+        }
+      }
+    });
+  }
+
+  /**
+   * Load a single post by ID
+   * @param {number|string} postId - Post ID
+   * @returns {Promise<Object|null>} Post data or null
+   */
+  function loadPostById(postId) {
+    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId)
+      .then(function(response) {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then(function(data) {
+        if (data && data.success && data.posts && data.posts.length) {
+          return data.posts[0];
+        }
+        return null;
+      })
+      .catch(function() {
+        return null;
+      });
   }
 
   /* --------------------------------------------------------------------------

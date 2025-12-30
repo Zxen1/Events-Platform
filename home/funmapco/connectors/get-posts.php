@@ -77,6 +77,7 @@ try {
     $offset = isset($_GET['offset']) ? max(0, intval($_GET['offset'])) : 0;
     $subcategoryKey = isset($_GET['subcategory_key']) ? trim($_GET['subcategory_key']) : '';
     $visibility = isset($_GET['visibility']) ? trim($_GET['visibility']) : 'active';
+    $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     
     // Parse bounds for map viewport filtering (sw_lng,sw_lat,ne_lng,ne_lat)
     $bounds = null;
@@ -120,6 +121,13 @@ try {
         $where[] = 'p.subcategory_key = ?';
         $params[] = $subcategoryKey;
         $types .= 's';
+    }
+
+    // Single post by ID filter
+    if ($postId > 0) {
+        $where[] = 'p.id = ?';
+        $params[] = $postId;
+        $types .= 'i';
     }
 
     // Bounds filter (for map viewport)
