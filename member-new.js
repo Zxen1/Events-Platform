@@ -122,10 +122,12 @@ const MemberModule = (function() {
     var pendingProfileAvatarBlob = null;
 
     // Avatar (register + profile) - 4-tile picker
-    // - Register: 4 random site avatars (NO upload option)
-    // - Profile: self + upload + 2 random site avatars (when user has existing avatar)
+    // Avatar picker containers and component instances
+    // Uses AvatarPickerComponent from components-new.js
     var avatarGridRegister = null;
     var avatarGridProfile = null;
+    var avatarPickerRegister = null; // AvatarPickerComponent instance
+    var avatarPickerProfile = null;  // AvatarPickerComponent instance
     var activeAvatarTarget = null; // 'register' | 'profile' (used by cropper/file picker)
     // Register has no "self/upload" tile, so default to first site avatar.
     var avatarSelection = { register: 'site-0', profile: 'self' };
@@ -138,8 +140,7 @@ const MemberModule = (function() {
     var siteAvatarFilenames = [];  // all filenames in site avatars folder
     var siteAvatarChoices = [];    // 3 picked: [{ filename, url }]
 
-    // Avatar upload (uses AvatarCropperComponent from components-new.js)
-    var avatarFileInput = null;
+    // Note: Avatar upload is handled internally by AvatarPickerComponent/AvatarCropperComponent
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
@@ -263,12 +264,9 @@ const MemberModule = (function() {
         profileHideSwitch = document.getElementById('member-profile-hide-switch');
         profileDeleteBtn = document.getElementById('member-profile-delete-btn');
 
-        // Avatar UI
+        // Avatar UI (uses AvatarPickerComponent)
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
         avatarGridProfile = document.getElementById('member-avatar-grid-profile');
-        avatarFileInput = document.getElementById('member-avatar-file-input');
-
-        // Note: Avatar cropper is now handled by AvatarCropperComponent (components-new.js)
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
     }
 
@@ -553,26 +551,8 @@ const MemberModule = (function() {
             });
         }
 
-        // Avatar grid interactions (Register + Profile)
-        if (avatarGridRegister) {
-            avatarGridRegister.addEventListener('click', function(e) {
-                onAvatarGridClick('register', e);
-            });
-        }
-        if (avatarGridProfile) {
-            avatarGridProfile.addEventListener('click', function(e) {
-                onAvatarGridClick('profile', e);
-            });
-        }
-        if (avatarFileInput) {
-            avatarFileInput.addEventListener('change', function() {
-                var file = avatarFileInput.files && avatarFileInput.files[0];
-                if (!file) return;
-                openCropperForFile(file);
-            });
-        }
-        
-        // Note: Avatar cropper events are now handled by AvatarCropperComponent
+        // Note: Avatar picker interactions are handled by AvatarPickerComponent (renders in avatarGridRegister/Profile)
+        // Note: Avatar cropper events are handled by AvatarCropperComponent (called from AvatarPickerComponent)
         // Note: unsaved changes dialogs are controlled from components.
         
         // Map Lighting buttons
@@ -898,22 +878,7 @@ const MemberModule = (function() {
         });
     }
 
-    function cameraSvgMarkup() {
-        // No SVG markup allowed here; ImageAddTileComponent returns iconless markup in new site.
-        return ImageAddTileComponent.cameraSvgMarkup();
-    }
-
-    function getSelfTileSrc(target) {
-        if (target === 'register') {
-            return pendingRegisterAvatarPreviewUrl || '';
-        }
-        // profile
-        if (pendingProfileAvatarPreviewUrl) return pendingProfileAvatarPreviewUrl;
-        if (currentUser && currentUser.avatar) {
-            return resolveAvatarSrc(String(currentUser.avatar));
-        }
-        return '';
-    }
+    // Note: cameraSvgMarkup and getSelfTileSrc removed - now handled by AvatarPickerComponent
 
     function renderAvatarGrids() {
         renderAvatarGrid('register', avatarGridRegister);
@@ -929,212 +894,89 @@ const MemberModule = (function() {
             return;
         }
 
-        // Site choices:
-        // - Register: 4 random site avatars (no upload option)
-        // - Profile: if user already has an avatar, only show 2 random site avatars (plus an extra Upload tile)
+        // Use AvatarPickerComponent
+        if (!window.AvatarPickerComponent) {
+            console.error('[Member] AvatarPickerComponent not available');
+            return;
+        }
+
+        // Determine site avatar count
         var hasExistingProfileAvatar = (target === 'profile' && currentUser && currentUser.avatar);
-        var siteCount = (target === 'register') ? 4 : (hasExistingProfileAvatar ? 2 : 3);
+        var siteCount = (target === 'register') ? 4 : (hasExistingProfileAvatar ? 3 : 4);
         var choices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, siteCount) : [];
 
         // Default selection
         if (!avatarSelection[target]) {
-            avatarSelection[target] = (target === 'register') ? 'site-0' : 'self';
+            avatarSelection[target] = 'site-0';
         }
 
-        // Register: keep pendingRegisterSiteUrl in sync with the selected site avatar (required for submit).
-        if (target === 'register' && String(avatarSelection[target] || '').indexOf('site-') === 0) {
-            var selIdx = parseInt(String(avatarSelection[target]).split('-')[1] || '0', 10);
-            if (!isFinite(selIdx) || selIdx < 0) selIdx = 0;
-            var selChoice = choices[selIdx] || null;
-            var nextUrl = (selChoice && selChoice.url) ? String(selChoice.url) : '';
-            if (nextUrl) {
-                pendingRegisterSiteUrl = nextUrl;
-                pendingRegisterAvatarBlob = null;
-                pendingRegisterAvatarPreviewUrl = '';
+        // Build component
+        var picker = AvatarPickerComponent.build({
+            siteAvatars: choices,
+            currentAvatar: (target === 'profile' && currentUser) ? currentUser.avatar : '',
+            allowUpload: true, // Always allow upload
+            onSelect: function(result) {
+                handleAvatarPickerSelection(target, result);
             }
-        }
+        });
 
         container.innerHTML = '';
+        container.appendChild(picker.element);
 
-        // Register: no self/upload tile at all (pre-made avatars only)
-        // Profile: tile 0 is self (current avatar if exists, otherwise Add)
-        if (target !== 'register') {
-            (function() {
-                var btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'member-avatar-choice';
-                btn.dataset.choiceKey = 'self';
-                btn.setAttribute('aria-pressed', avatarSelection[target] === 'self' ? 'true' : 'false');
-                if (avatarSelection[target] === 'self') btn.classList.add('member-avatar-choice--selected');
-
-                var src = getSelfTileSrc(target);
-                if (src) {
-                    btn.innerHTML = '<img class="member-avatar-choice-image" src="' + src + '" alt="">';
-                } else {
-                    btn.innerHTML = '<div class="member-avatar-choice-add">' + cameraSvgMarkup() + '<div class="member-avatar-choice-add-text">Add</div></div>';
-                }
-
-                container.appendChild(btn);
-            })();
-        }
-
-        // Profile-only tile 1: Upload (only when user already has an avatar)
-        if (hasExistingProfileAvatar) {
-            var up = document.createElement('button');
-            up.type = 'button';
-            up.className = 'member-avatar-choice';
-            up.dataset.choiceKey = 'upload';
-            up.setAttribute('aria-pressed', avatarSelection[target] === 'upload' ? 'true' : 'false');
-            if (avatarSelection[target] === 'upload') up.classList.add('member-avatar-choice--selected');
-            up.innerHTML = '<div class="member-avatar-choice-add">' + cameraSvgMarkup() + '<div class="member-avatar-choice-add-text">Add</div></div>';
-            container.appendChild(up);
-        }
-
-        // Remaining tiles: site avatars
-        for (var i = 0; i < siteCount; i++) {
-            var c = choices[i] || null;
-            var key = 'site-' + i;
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'member-avatar-choice';
-            b.dataset.choiceKey = key;
-            b.dataset.siteIndex = String(i);
-            b.setAttribute('aria-pressed', avatarSelection[target] === key ? 'true' : 'false');
-            if (avatarSelection[target] === key) b.classList.add('member-avatar-choice--selected');
-            if (c && c.url) {
-                b.innerHTML = '<img class="member-avatar-choice-image" src="' + c.url + '" alt="">';
-            } else {
-                b.innerHTML = '<div class="member-avatar-choice-add"><div class="member-avatar-choice-add-text">...</div></div>';
-            }
-            container.appendChild(b);
-        }
-    }
-
-    function onAvatarGridClick(target, e) {
-        var btn = e.target && e.target.closest ? e.target.closest('.member-avatar-choice') : null;
-        if (!btn) return;
-        var key = btn.dataset.choiceKey || '';
-        if (!key) return;
-
-        // Second click on the selected tile opens crop editor
-        if (avatarSelection[target] === key) {
-            openCropperForAvatarChoice(target, key);
-            return;
-        }
-
-        // Otherwise just select it
-        selectAvatarChoice(target, key);
-    }
-
-    function selectAvatarChoice(target, key) {
-        avatarSelection[target] = key;
-
+        // Store picker reference for later access
         if (target === 'register') {
-            if (key.indexOf('site-') === 0) {
-                var idx = parseInt(key.split('-')[1] || '0', 10);
-                var c = siteAvatarChoices[idx];
-                pendingRegisterSiteUrl = c && c.url ? String(c.url) : '';
-                // Selecting site avatar overwrites any staged upload/crop
+            avatarPickerRegister = picker;
+        } else {
+            avatarPickerProfile = picker;
+        }
+    }
+
+    // Handle selection from AvatarPickerComponent
+    function handleAvatarPickerSelection(target, result) {
+        if (!result) return;
+
+        if (result.type === 'upload') {
+            // User uploaded a custom avatar (cropped blob)
+            if (target === 'register') {
+                pendingRegisterAvatarBlob = result.value;
+                pendingRegisterSiteUrl = '';
+                pendingRegisterAvatarPreviewUrl = result.previewUrl || '';
+                avatarSelection.register = 'self';
+            } else {
+                pendingProfileAvatarBlob = result.value;
+                pendingProfileSiteUrl = '';
+                pendingProfileAvatarPreviewUrl = result.previewUrl || '';
+                avatarSelection.profile = 'self';
+                // Update profile avatar preview
+                if (profileAvatar && pendingProfileAvatarPreviewUrl) {
+                    profileAvatar.src = pendingProfileAvatarPreviewUrl;
+                }
+                // Mark dirty so header Save lights up
+                updateHeaderSaveDiscardState();
+            }
+        } else if (result.type === 'site') {
+            // User selected a site avatar
+            if (target === 'register') {
+                pendingRegisterSiteUrl = result.previewUrl || result.value || '';
                 pendingRegisterAvatarBlob = null;
                 pendingRegisterAvatarPreviewUrl = '';
+                avatarSelection.register = 'site';
             } else {
-                // self/upload tile
-                pendingRegisterSiteUrl = '';
-            }
-        } else if (target === 'profile') {
-            if (key === 'upload') {
-                // Upload tile (always overwrites user's avatar when saved)
-                pendingProfileSiteUrl = '';
+                pendingProfileSiteUrl = result.previewUrl || result.value || '';
                 pendingProfileAvatarBlob = null;
                 pendingProfileAvatarPreviewUrl = '';
-            } else
-            if (key.indexOf('site-') === 0) {
-                var pIdx = parseInt(key.split('-')[1] || '0', 10);
-                var pC = siteAvatarChoices[pIdx];
-                pendingProfileSiteUrl = pC && pC.url ? String(pC.url) : '';
-                // Selecting site avatar overwrites any staged upload/crop
-                pendingProfileAvatarBlob = null;
-                pendingProfileAvatarPreviewUrl = '';
-            } else {
-                // self/upload tile (keep current avatar as-is unless user crops/uploads)
-                pendingProfileSiteUrl = '';
-            }
-            updateHeaderSaveDiscardState();
-        }
-
-        renderAvatarGrids();
-    }
-
-    function openCropperForAvatarChoice(target, key) {
-        activeAvatarTarget = target;
-
-        // Register flow: do not allow file uploads/cropping.
-        if (target === 'register') {
-            return;
-        }
-
-        if (target === 'profile' && key === 'upload') {
-            // Second-click on Upload tile opens file picker -> crop modal
-            openAvatarFilePicker();
-            return;
-        }
-
-        if (key === 'self') {
-            // If we already have a staged blob, reopen cropper with it
-            if (target === 'register' && pendingRegisterAvatarBlob) {
-                openCropperForBlob(pendingRegisterAvatarBlob, 'avatar.png');
-                return;
-            }
-            if (target === 'profile' && pendingProfileAvatarBlob) {
-                openCropperForBlob(pendingProfileAvatarBlob, 'avatar.png');
-                return;
-            }
-
-            // If profile has an existing avatar, open cropper on it; otherwise open file picker
-            if (target === 'profile' && currentUser && currentUser.avatar) {
-                var src = resolveAvatarSrc(String(currentUser.avatar));
-                if (src) {
-                    openCropperForUrl(src, 'avatar.png');
-                    return;
+                avatarSelection.profile = 'site';
+                // Update profile avatar preview
+                if (profileAvatar && pendingProfileSiteUrl) {
+                    profileAvatar.src = pendingProfileSiteUrl;
                 }
-            }
-
-            // No avatar yet -> pick a file
-            openAvatarFilePicker();
-            return;
-        }
-
-        if (key.indexOf('site-') === 0) {
-            var idx = parseInt(key.split('-')[1] || '0', 10);
-            var c = siteAvatarChoices[idx];
-            if (c && c.url) {
-                openCropperForUrl(c.url, 'avatar.png');
+                // Mark dirty so header Save lights up
+                updateHeaderSaveDiscardState();
             }
         }
     }
 
-    function openCropperForBlob(blob, filename) {
-        if (!blob) return;
-        filename = filename || 'avatar.png';
-        var file = new File([blob], filename, { type: blob.type || 'image/png' });
-        openCropperForFile(file);
-    }
-
-    function openCropperForUrl(url, filename) {
-        filename = filename || (url ? (String(url).split('/').pop() || 'avatar.png') : 'avatar.png');
-        // Fetch as blob first to avoid tainted canvas
-        fetch(url)
-            .then(function(r) { return r.blob(); })
-            .then(function(blob) {
-                openCropperForBlob(blob, filename);
-            })
-            .catch(function(err) {
-                console.warn('[Member] Failed to load avatar for cropping', err);
-                if (window.ToastComponent && ToastComponent.showError) {
-                    ToastComponent.showError('Could not load that avatar image.');
-                }
-            });
-    }
+    // Note: Old avatar grid click handlers removed - now handled by AvatarPickerComponent
 
     function squarePngFromImageBlob(blob, cb) {
         try {
@@ -1173,58 +1015,7 @@ const MemberModule = (function() {
         }
     }
 
-    function openAvatarFilePicker() {
-        if (!avatarFileInput) return;
-        avatarFileInput.value = '';
-        avatarFileInput.click();
-    }
-
-    function openCropperForFile(file) {
-        // Uses AvatarCropperComponent from components-new.js
-        if (!window.AvatarCropperComponent) {
-            console.error('[Member] AvatarCropperComponent not available');
-            return;
-        }
-        
-        AvatarCropperComponent.open(file, function(result) {
-            // result = { blob, previewUrl }
-            if (!result || !result.blob) return;
-            
-            handleCroppedAvatar(result.blob, result.previewUrl);
-        });
-    }
-
-    function handleCroppedAvatar(blob, previewUrl) {
-        // Do NOT upload immediately. Store blob and only upload on registration submit / header save.
-        if (activeAvatarTarget === 'register') {
-            pendingRegisterAvatarBlob = blob;
-            pendingRegisterSiteUrl = '';
-            avatarSelection.register = 'self';
-            pendingRegisterAvatarPreviewUrl = previewUrl || '';
-            renderAvatarGrids();
-            if (window.ToastComponent && ToastComponent.showSuccess) {
-                ToastComponent.showSuccess('Avatar selected');
-            } else {
-                showStatus('Avatar selected');
-            }
-        } else if (activeAvatarTarget === 'profile') {
-            pendingProfileAvatarBlob = blob;
-            pendingProfileSiteUrl = '';
-            avatarSelection.profile = 'self';
-            pendingProfileAvatarPreviewUrl = previewUrl || '';
-            if (profileAvatar && pendingProfileAvatarPreviewUrl) {
-                profileAvatar.src = pendingProfileAvatarPreviewUrl;
-            }
-            renderAvatarGrids();
-            // Mark dirty so header Save lights up
-            updateHeaderSaveDiscardState();
-            if (window.ToastComponent && ToastComponent.showSuccess) {
-                ToastComponent.showSuccess('Avatar ready to save');
-            } else {
-                showStatus('Avatar ready to save');
-            }
-        }
-    }
+    // Note: Avatar file picking and cropping now handled internally by AvatarPickerComponent
 
     function uploadAvatarBlob(blob) {
         var fd = new FormData();
@@ -1255,12 +1046,7 @@ const MemberModule = (function() {
             // Prefer filename-only storage (rules file)
             var avatarValue = (res && res.filename) ? String(res.filename) : String(res.url);
             setAvatarForTarget(avatarValue);
-            // Note: Cropper is now handled by AvatarCropperComponent which auto-closes on save
-            if (window.ToastComponent && ToastComponent.showSuccess) {
-                ToastComponent.showSuccess('Avatar uploaded');
-            } else {
-                showStatus('Avatar uploaded');
-            }
+            // No toast here - the general 'Saved' toast covers everything
         }).catch(function(err) {
             console.error('[Member] Avatar upload failed', err);
             var msg = (err && err.message) ? err.message : 'Avatar upload failed';
