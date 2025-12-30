@@ -2019,6 +2019,14 @@ const MemberModule = (function() {
         // Update header button
         App.emit('member:closed');
     }
+    
+    function refreshPanel() {
+        // Close and reopen the panel to reset ButtonAnchor slack
+        closePanel();
+        setTimeout(function() {
+            openPanel();
+        }, 50);
+    }
 
     /* --------------------------------------------------------------------------
        TAB SWITCHING
@@ -3956,12 +3964,7 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
-            
-            // Scroll panel body to top after login
-            try {
-                var panelBody = panel && panel.querySelector('.member-panel-body');
-                if (panelBody) panelBody.scrollTop = 0;
-            } catch (e) {}
+            refreshPanel();
             
             // Apply member map settings
             if (currentUser.map_lighting && window.MapModule && window.MapModule.setMapLighting) {
@@ -4170,12 +4173,7 @@ const MemberModule = (function() {
             
             storeCurrent(currentUser);
             render();
-            
-            // Scroll panel body to top after registration
-            try {
-                var panelBody = panel && panel.querySelector('.member-panel-body');
-                if (panelBody) panelBody.scrollTop = 0;
-            } catch (e) {}
+            refreshPanel();
             
             getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
                 if (message) {
@@ -4236,6 +4234,7 @@ const MemberModule = (function() {
         currentUser = null;
         storeCurrent(null);
         render();
+        refreshPanel();
         
         // Revert to admin/localStorage settings
         var lighting = localStorage.getItem('map_lighting') || 'day';
