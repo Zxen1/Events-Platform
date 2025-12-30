@@ -9,8 +9,8 @@ $action = preg_replace('/[^a-z0-9_\-]/i', '', $rawAction);
 $baseDir = __DIR__;
 
 $candidateDirs = [
-  $baseDir . '/../connectors',
-  $baseDir . '/home/funmapco/connectors'
+  $baseDir . '/home/funmapco/connectors',  // Development location (checked first)
+  $baseDir . '/../connectors'              // Production location (fallback)
 ];
 
 $connectorDir = null;

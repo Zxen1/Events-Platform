@@ -143,7 +143,7 @@ $insert->close();
 // If avatar_file is present, upload to Bunny now (final filename), then update member row
 if ($hasAvatarFile) {
   // Get avatar folder and Bunny Storage credentials from admin settings
-  $stmt = $mysqli->prepare("SELECT setting_key, setting_value FROM `funmapco_system`.`admin_settings` WHERE setting_key IN ('folder_avatars', 'storage_api_key', 'storage_zone_name')");
+  $stmt = $mysqli->prepare("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_avatars', 'storage_api_key', 'storage_zone_name')");
   if(!$stmt) { $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1'); fail(500,'Failed to get settings'); }
   $stmt->execute();
   $result = $stmt->get_result();
