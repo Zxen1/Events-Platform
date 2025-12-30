@@ -3555,22 +3555,26 @@ const AdminModule = (function() {
             if (entry && entry.type === 'simple') {
                 var code = entry.original;
                 if (!code || typeof code !== 'string' || !code.trim()) {
-                    throw new Error('[Admin] Missing currency setting value for ' + String(key));
+                    // No original value set - skip (don't throw, just log)
+                    console.warn('[Admin] Missing currency setting value for ' + String(key));
+                    return; // continue to next iteration
                 }
                 code = code.trim().toUpperCase();
                 // Look up the currency label from data
+                // Data format: { value: 'USD', label: 'US Dollar', filename: 'us.svg' }
                 var currencyData = window.CurrencyComponent ? CurrencyComponent.getData() : [];
                 var found = currencyData.find(function(item) {
-                    return item.value.substring(3) === code;
+                    return item.value === code;
                 });
                 var btnImg = menu.querySelector('.admin-currency-button-flag');
                 var btnText = menu.querySelector('.admin-currency-button-text');
                 if (found) {
-                    var countryCode = found.value.substring(0, 2);
-                    if (btnImg) btnImg.src = window.App.getImageUrl('currencies', countryCode + '.svg');
+                    // Use filename directly for flag image
+                    if (btnImg && found.filename) btnImg.src = window.App.getImageUrl('currencies', found.filename);
                     if (btnText) btnText.textContent = code + ' - ' + found.label;
                 } else {
-                    throw new Error('[Admin] Currency code not found in CurrencyComponent data: ' + code);
+                    // Don't throw - just log warning and leave as-is (data might not be loaded yet)
+                    console.warn('[Admin] Currency code not found in CurrencyComponent data: ' + code + '. Data count: ' + currencyData.length);
                 }
             }
         });
