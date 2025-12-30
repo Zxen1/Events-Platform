@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 30, 2025 at 09:54 PM
+-- Generation Time: Dec 30, 2025 at 10:44 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -275,7 +275,10 @@ ALTER TABLE `logs`
 -- Indexes for table `members`
 --
 ALTER TABLE `members`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_email` (`email`),
+  ADD UNIQUE KEY `idx_username_key` (`username_key`),
+  ADD KEY `idx_deleted_at` (`deleted_at`);
 
 --
 -- Indexes for table `moderation_log`
@@ -292,7 +295,11 @@ ALTER TABLE `posts`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_member_id` (`member_id`),
   ADD KEY `idx_subcategory_key` (`subcategory_key`),
-  ADD KEY `idx_status` (`visibility`,`moderation_status`);
+  ADD KEY `idx_status` (`visibility`,`moderation_status`),
+  ADD KEY `idx_deleted_at` (`deleted_at`),
+  ADD KEY `idx_payment_status` (`payment_status`),
+  ADD KEY `idx_created_at` (`created_at`),
+  ADD KEY `idx_active_posts` (`visibility`,`deleted_at`,`payment_status`);
 
 --
 -- Indexes for table `post_children`
@@ -310,7 +317,8 @@ ALTER TABLE `post_map_cards`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_post_id` (`post_id`),
   ADD KEY `idx_subcategory_key` (`subcategory_key`),
-  ADD KEY `idx_lat_lng` (`latitude`,`longitude`);
+  ADD KEY `idx_lat_lng` (`latitude`,`longitude`),
+  ADD KEY `idx_country_code` (`country_code`);
 
 --
 -- Indexes for table `post_media`
@@ -3156,7 +3164,10 @@ ALTER TABLE `addons`
 -- Indexes for table `admins`
 --
 ALTER TABLE `admins`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `idx_email` (`email`),
+  ADD UNIQUE KEY `idx_username_key` (`username_key`),
+  ADD KEY `idx_deleted_at` (`deleted_at`);
 
 --
 -- Indexes for table `admin_messages`
