@@ -39,7 +39,7 @@ if (!verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
 $id = intval($_GET['id'] ?? 0);
 if ($id <= 0) exit(json_encode(['error'=>'Invalid ID']));
 
-$result = $mysqli->query("SELECT file_name FROM media WHERE id=$id");
+$result = $mysqli->query("SELECT file_name FROM post_media WHERE id=$id");
 if ($row = $result->fetch_assoc()) {
   $fileName = basename($row['file_name']); // Security: strip any path components
   if (strpos($fileName, '..') !== false || strpos($fileName, '\\') !== false) {
@@ -48,7 +48,7 @@ if ($row = $result->fetch_assoc()) {
   $file = $UPLOAD_DIR . $fileName;
   if (file_exists($file)) unlink($file);
 }
-$mysqli->query("DELETE FROM media WHERE id=$id");
+$mysqli->query("DELETE FROM post_media WHERE id=$id");
 
 echo json_encode(['success'=>true]);
 

@@ -55,7 +55,7 @@ if (!move_uploaded_file($_FILES['file']['tmp_name'], $target)) {
 $url = $UPLOAD_URL . $filename;
 $size = $_FILES['file']['size'];
 
-$stmt = $mysqli->prepare("INSERT INTO media (member_id, post_id, file_name, file_url, file_size)
+$stmt = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size)
                           VALUES (?, ?, ?, ?, ?)");
 $stmt->bind_param('isssi', $member_id, $post_id, $filename, $url, $size);
 $stmt->execute();

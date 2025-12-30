@@ -35,6 +35,6 @@ if (!verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
   http_response_code(403); exit(json_encode(['error'=>'Forbidden']));
 }
 
-$result = $mysqli->query("SELECT id, member_id, post_id, file_name, file_url, file_size, uploaded_at FROM media ORDER BY id DESC LIMIT 100");
+$result = $mysqli->query("SELECT id, member_id, post_id, file_name, file_url, file_size, uploaded_at FROM post_media ORDER BY id DESC LIMIT 100");
 echo json_encode($result->fetch_all(MYSQLI_ASSOC));
 ?>
