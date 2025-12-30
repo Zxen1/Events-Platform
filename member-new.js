@@ -89,6 +89,7 @@ const MemberModule = (function() {
     var registerPasswordInput = null;
     var registerConfirmInput = null;
     var profileTabPanel = null;
+    var memberPanelBody = null;
     var profileAvatar = null;
     var profileName = null;
     var profileEmail = null;
@@ -208,6 +209,7 @@ const MemberModule = (function() {
         if (!panel) return;
         
         panelContent = panel.querySelector('.member-panel-content');
+        memberPanelBody = panel.querySelector('.member-panel-body');
         closeBtn = panel.querySelector('.member-panel-actions-icon-btn--close');
         tabButtons = panel.querySelectorAll('.member-tab-bar-button');
         tabPanels = panel.querySelectorAll('.member-tab-panel');
@@ -275,6 +277,20 @@ const MemberModule = (function() {
 
         // Note: Avatar cropper is now handled by AvatarCropperComponent (components-new.js)
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
+    }
+
+    function forceOffMemberButtonAnchors() {
+        try {
+            if (!memberPanelBody) return;
+            if (window.ButtonAnchorBottom && typeof ButtonAnchorBottom.attach === 'function') {
+                try { ButtonAnchorBottom.attach(memberPanelBody, {}).forceOff(); } catch (e0) {}
+            }
+            if (window.ButtonAnchorTop && typeof ButtonAnchorTop.attach === 'function') {
+                try { ButtonAnchorTop.attach(memberPanelBody, {}).forceOff(); } catch (e1) {}
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 
     function setProfileLoggedInBottomSpacer(isEnabled) {
@@ -4089,6 +4105,16 @@ const MemberModule = (function() {
     
     function render() {
         if (!authForm) return;
+        
+        // When auth mode flips (logged-in <-> logged-out), force anchors OFF so no slack leaks between modes.
+        // This prevents "short content shoved to footer" and "magnetize to header" behavior caused by leftover slack.
+        try {
+            var nextState = currentUser ? 'logged-in' : 'logged-out';
+            var prevState = authForm.dataset.state || '';
+            if (prevState && prevState !== nextState) {
+                forceOffMemberButtonAnchors();
+            }
+        } catch (e0) {}
         
         // Notify admin auth manager
         if (window.adminAuthManager) {
