@@ -7214,7 +7214,13 @@ const ButtonAnchorBottom = (function() {
         
         // Clicking: click-hold window + temporary slack ON.
         // This must arm BEFORE collapse-induced shrink so the button doesn't "fly away".
-        function holdClickSlack() {
+        function holdClickSlack(e) {
+            // Never expand slack when clicking tab buttons (let forceOff handle it).
+            try {
+                var t = e && e.target;
+                if (t && t.closest && t.closest('[role="tab"]')) return;
+            } catch (_eTab) {}
+            
             // Never show slack for containers that don't overflow.
             try {
                 var h = scrollEl.clientHeight || 0;
