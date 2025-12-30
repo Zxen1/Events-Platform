@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Dec 31, 2025 at 03:55 AM
+-- Generation Time: Dec 31, 2025 at 04:18 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -2542,7 +2542,9 @@ INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name
 (21, 'username', '[\"username\"]', 'Username', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', 21, '2025-12-30 16:30:08', '2025-12-30 16:55:05'),
 (22, 'password', '[\"password\"]', 'Password', NULL, 'Choose a password', 'Choose a password to protect your account.', 22, '2025-12-30 16:30:08', '2025-12-30 16:53:23'),
 (23, 'confirm-password', '[\"confirm-password\"]', 'Confirm Password', NULL, 'Type it again', 'Type the same password again to confirm.', 23, '2025-12-30 16:30:08', '2025-12-30 16:53:23'),
-(24, 'new-password', '[\"password\"]', 'New Password', NULL, 'Choose a new password', 'Only fill this in if you want to change your password.', 24, '2025-12-30 16:37:37', '2025-12-30 16:53:23');
+(24, 'new-password', '[\"password\"]', 'New Password', NULL, 'Choose a new password', 'Only fill this in if you want to change your password.', 24, '2025-12-30 16:37:37', '2025-12-30 16:53:23'),
+(25, 'avatar', '[]', 'Avatar', NULL, NULL, 'Choose an avatar from this menu or upload your own. Click on an avatar to open the crop tool. Choosing a new avatar overwrites your previous one.', 25, '2025-12-30 17:10:32', '2025-12-30 17:15:04'),
+(26, 'country', '[]', 'Country', NULL, NULL, 'This is a quick survey. Which country are you in right now? ', 26, '2025-12-30 17:10:32', '2025-12-30 17:17:52');
 
 -- --------------------------------------------------------
 
@@ -3400,7 +3402,7 @@ ALTER TABLE `fields`
 -- AUTO_INCREMENT for table `fieldsets`
 --
 ALTER TABLE `fieldsets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`
