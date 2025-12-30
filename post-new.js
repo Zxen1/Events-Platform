@@ -649,17 +649,410 @@ const PostModule = (function() {
   /**
    * Open a post (show detail view)
    * @param {Object} post - Post data
+   * @param {Object} options - { fromRecent: boolean, originEl: HTMLElement }
    */
-  function openPost(post) {
-    // TODO: Implement post detail view
-    console.log('[Post] openPost:', post);
+  function openPost(post, options) {
+    options = options || {};
+    var fromRecent = options.fromRecent || false;
+    var originEl = options.originEl || null;
 
     // Add to recent history
     addToRecentHistory(post);
 
+    // Determine container
+    var container = fromRecent ? recentPanelContentEl : postListEl;
+    if (!container) return;
+
+    // Close any existing open post
+    closeOpenPost(container);
+
+    // Find or create the target element
+    var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
+
+    // Build the detail view
+    var detail = buildPostDetail(post, target, fromRecent);
+
+    // Replace target with detail, or append if no target
+    if (target && target.parentElement) {
+      target.parentElement.replaceChild(detail, target);
+    } else {
+      container.insertBefore(detail, container.firstChild);
+    }
+
+    // Scroll to top
+    if (postPanelContentEl) {
+      postPanelContentEl.scrollTop = 0;
+    }
+
     // Emit event for map highlighting
     if (window.App && typeof App.emit === 'function') {
       App.emit('post:opened', { post: post });
+    }
+  }
+
+  /**
+   * Close any open post in a container
+   * @param {HTMLElement} container - Container element
+   */
+  function closeOpenPost(container) {
+    var openPost = container.querySelector('.post-open');
+    if (!openPost) return;
+
+    var postId = openPost.dataset.id;
+
+    // Find the original post data
+    var post = null;
+    if (cachedPosts) {
+      for (var i = 0; i < cachedPosts.length; i++) {
+        if (String(cachedPosts[i].id) === postId) {
+          post = cachedPosts[i];
+          break;
+        }
+      }
+    }
+
+    // Replace with card, or remove
+    if (post) {
+      var card = renderPostCard(post);
+      openPost.parentElement.replaceChild(card, openPost);
+    } else {
+      openPost.remove();
+    }
+
+    // Emit close event
+    if (window.App && typeof App.emit === 'function') {
+      App.emit('post:closed', { postId: postId });
+    }
+  }
+
+  /**
+   * Build the post detail view
+   * @param {Object} post - Post data
+   * @param {HTMLElement} existingCard - Existing card element (optional)
+   * @param {boolean} fromRecent - Whether opened from recent panel
+   * @returns {HTMLElement} Detail view element
+   */
+  function buildPostDetail(post, existingCard, fromRecent) {
+    var wrap = document.createElement('article');
+    wrap.className = 'post-open';
+    wrap.dataset.id = String(post.id);
+    wrap.dataset.postKey = post.post_key || '';
+
+    // Get first map card data
+    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+
+    // Get display data
+    var title = (mapCard && mapCard.title) || post.checkout_title || '';
+    var description = (mapCard && mapCard.description) || '';
+    var venueName = (mapCard && mapCard.venue_name) || '';
+    var addressLine = (mapCard && mapCard.address_line) || '';
+    var sessionSummary = (mapCard && mapCard.session_summary) || '';
+    var priceSummary = (mapCard && mapCard.price_summary) || '';
+    var email = (mapCard && mapCard.email) || '';
+    var phone = (mapCard && mapCard.phone) || '';
+    var websiteUrl = (mapCard && mapCard.website_url) || '';
+    var ticketsUrl = (mapCard && mapCard.tickets_url) || '';
+    var mediaUrls = (mapCard && mapCard.media_urls) || [];
+
+    // Get subcategory info
+    var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
+    var subInfo = getSubcategoryInfo(subcategoryKey);
+    var iconUrl = getSubcategoryIconUrl(subcategoryKey);
+
+    // Get thumbnail
+    var thumbUrl = mediaUrls.length ? mediaUrls[0] : '';
+
+    // Check favorite status
+    var isFav = isFavorite(post.id);
+
+    // Build header (sticky card)
+    var header = document.createElement('header');
+    header.className = 'post-open-header';
+
+    var thumbHtml = thumbUrl
+      ? '<img class="post-card-thumb" src="' + thumbUrl + '" alt="" />'
+      : '<div class="post-card-thumb post-card-thumb--empty"></div>';
+
+    var iconHtml = iconUrl
+      ? '<span class="post-card-subicon"><img class="post-card-subicon-image" src="' + iconUrl + '" alt="" /></span>'
+      : '';
+
+    var catLineText = subInfo.category && subInfo.subcategory
+      ? subInfo.category + ' &gt; ' + subInfo.subcategory
+      : subInfo.subcategory || subcategoryKey;
+
+    header.innerHTML = [
+      thumbHtml,
+      '<div class="post-card-meta">',
+        '<div class="post-card-catline">' + iconHtml + '<span>' + catLineText + '</span></div>',
+        '<h3 class="post-card-title">' + escapeHtml(title) + '</h3>',
+      '</div>',
+      '<div class="post-open-actions">',
+        '<button class="post-card-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+          '<svg class="post-card-fav-icon' + (isFav ? ' post-card-fav-icon--active' : '') + '" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+        '</button>',
+        '<button class="post-card-share" aria-label="Share post">',
+          '<svg class="post-card-share-icon" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>',
+        '</button>',
+      '</div>'
+    ].join('');
+
+    // Build body
+    var body = document.createElement('div');
+    body.className = 'post-open-body';
+
+    // Images section
+    var imagesHtml = '';
+    if (mediaUrls.length > 0) {
+      var heroImg = '<div class="post-open-image-box"><div class="post-open-image-track">';
+      heroImg += '<img class="post-open-image" src="' + mediaUrls[0] + '" alt="" loading="eager" />';
+      heroImg += '</div></div>';
+
+      var thumbs = '';
+      if (mediaUrls.length > 1) {
+        thumbs = '<div class="post-open-thumbnails">';
+        for (var i = 0; i < mediaUrls.length; i++) {
+          thumbs += '<img class="post-open-thumbnail' + (i === 0 ? ' post-open-thumbnail--active' : '') + '" src="' + mediaUrls[i] + '" data-index="' + i + '" alt="" />';
+        }
+        thumbs += '</div>';
+      }
+
+      imagesHtml = '<div class="post-open-images">' + heroImg + thumbs + '</div>';
+    }
+
+    // Details section
+    var detailsHtml = '<div class="post-open-details">';
+
+    // Venue/location
+    if (venueName || addressLine) {
+      detailsHtml += '<div class="post-open-detail-row">';
+      detailsHtml += '<span class="post-card-badge">📍</span>';
+      detailsHtml += '<div class="post-open-detail-content">';
+      if (venueName) detailsHtml += '<strong>' + escapeHtml(venueName) + '</strong>';
+      if (addressLine) detailsHtml += '<div>' + escapeHtml(addressLine) + '</div>';
+      detailsHtml += '</div></div>';
+    }
+
+    // Dates/sessions
+    if (sessionSummary) {
+      detailsHtml += '<div class="post-open-detail-row">';
+      detailsHtml += '<span class="post-card-badge">📅</span>';
+      detailsHtml += '<div class="post-open-detail-content">' + escapeHtml(sessionSummary) + '</div>';
+      detailsHtml += '</div>';
+    }
+
+    // Price
+    if (priceSummary) {
+      detailsHtml += '<div class="post-open-detail-row">';
+      detailsHtml += '<span class="post-card-badge">💰</span>';
+      detailsHtml += '<div class="post-open-detail-content">' + escapeHtml(priceSummary) + '</div>';
+      detailsHtml += '</div>';
+    }
+
+    // Contact info
+    if (phone) {
+      detailsHtml += '<div class="post-open-detail-row">';
+      detailsHtml += '<span class="post-card-badge">📞</span>';
+      detailsHtml += '<div class="post-open-detail-content"><a href="tel:' + escapeHtml(phone) + '">' + escapeHtml(phone) + '</a></div>';
+      detailsHtml += '</div>';
+    }
+    if (email) {
+      detailsHtml += '<div class="post-open-detail-row">';
+      detailsHtml += '<span class="post-card-badge">✉️</span>';
+      detailsHtml += '<div class="post-open-detail-content"><a href="mailto:' + escapeHtml(email) + '">' + escapeHtml(email) + '</a></div>';
+      detailsHtml += '</div>';
+    }
+
+    // Links
+    if (websiteUrl) {
+      detailsHtml += '<div class="post-open-detail-row">';
+      detailsHtml += '<span class="post-card-badge">🌐</span>';
+      detailsHtml += '<div class="post-open-detail-content"><a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener">Website</a></div>';
+      detailsHtml += '</div>';
+    }
+    if (ticketsUrl) {
+      detailsHtml += '<div class="post-open-detail-row">';
+      detailsHtml += '<span class="post-card-badge">🎟️</span>';
+      detailsHtml += '<div class="post-open-detail-content"><a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener">Get Tickets</a></div>';
+      detailsHtml += '</div>';
+    }
+
+    detailsHtml += '</div>';
+
+    // Description
+    var descHtml = '';
+    if (description) {
+      descHtml = '<div class="post-open-description">';
+      descHtml += '<div class="post-description-wrap"><div class="post-description">' + escapeHtml(description) + '</div></div>';
+      descHtml += '</div>';
+    }
+
+    // Posted by
+    var memberHtml = '<div class="post-member-avatar post-member-avatar--visible">';
+    memberHtml += '<span class="post-member-avatar-name">Posted by ' + escapeHtml(post.member_name || 'Anonymous') + '</span>';
+    memberHtml += '</div>';
+
+    body.innerHTML = imagesHtml + '<div class="post-open-body-main">' + detailsHtml + descHtml + memberHtml + '</div>';
+
+    // Assemble
+    wrap.appendChild(header);
+    wrap.appendChild(body);
+
+    // Event handlers
+    setupPostDetailEvents(wrap, post);
+
+    return wrap;
+  }
+
+  /**
+   * Set up event handlers for post detail view
+   * @param {HTMLElement} wrap - Detail view element
+   * @param {Object} post - Post data
+   */
+  function setupPostDetailEvents(wrap, post) {
+    // Header click to close
+    var header = wrap.querySelector('.post-open-header');
+    if (header) {
+      header.addEventListener('click', function(e) {
+        // Don't close if clicking buttons
+        if (e.target.closest('.post-card-fav') || e.target.closest('.post-card-share')) return;
+        closePost(post.id);
+      });
+    }
+
+    // Favorite button
+    var favBtn = wrap.querySelector('.post-card-fav');
+    if (favBtn) {
+      favBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        toggleFavorite(post, favBtn);
+      });
+    }
+
+    // Share button
+    var shareBtn = wrap.querySelector('.post-card-share');
+    if (shareBtn) {
+      shareBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sharePost(post);
+      });
+    }
+
+    // Thumbnail clicks
+    var thumbnails = wrap.querySelectorAll('.post-open-thumbnail');
+    var heroImg = wrap.querySelector('.post-open-image');
+    thumbnails.forEach(function(thumb) {
+      thumb.addEventListener('click', function() {
+        var index = parseInt(thumb.dataset.index, 10);
+        var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+        var mediaUrls = (mapCard && mapCard.media_urls) || [];
+        if (mediaUrls[index] && heroImg) {
+          heroImg.src = mediaUrls[index];
+          // Update active state
+          thumbnails.forEach(function(t) { t.classList.remove('post-open-thumbnail--active'); });
+          thumb.classList.add('post-open-thumbnail--active');
+        }
+      });
+    });
+  }
+
+  /**
+   * Close a post by ID
+   * @param {string|number} postId - Post ID
+   */
+  function closePost(postId) {
+    var openPost = document.querySelector('.post-open[data-id="' + postId + '"]');
+    if (!openPost) return;
+
+    var container = openPost.parentElement;
+
+    // Find the original post data
+    var post = null;
+    if (cachedPosts) {
+      for (var i = 0; i < cachedPosts.length; i++) {
+        if (String(cachedPosts[i].id) === String(postId)) {
+          post = cachedPosts[i];
+          break;
+        }
+      }
+    }
+
+    // Replace with card, or remove
+    if (post) {
+      var card = renderPostCard(post);
+      openPost.parentElement.replaceChild(card, openPost);
+    } else {
+      openPost.remove();
+    }
+
+    // Emit close event
+    if (window.App && typeof App.emit === 'function') {
+      App.emit('post:closed', { postId: String(postId) });
+    }
+  }
+
+  /**
+   * Share a post
+   * @param {Object} post - Post data
+   */
+  function sharePost(post) {
+    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    var title = (mapCard && mapCard.title) || post.checkout_title || '';
+    var url = window.location.origin + '/post/' + (post.post_key || post.id);
+
+    // Use Web Share API if available
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        url: url
+      }).catch(function() {
+        // Fallback to clipboard
+        copyToClipboard(url);
+      });
+    } else {
+      copyToClipboard(url);
+    }
+  }
+
+  /**
+   * Copy text to clipboard
+   * @param {string} text - Text to copy
+   */
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function() {
+        showToast('Link copied to clipboard');
+      }).catch(function() {
+        // Silent fail
+      });
+    } else {
+      // Fallback for older browsers
+      var textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Link copied to clipboard');
+      } catch (e) {
+        // Silent fail
+      }
+      document.body.removeChild(textarea);
+    }
+  }
+
+  /**
+   * Show a toast message
+   * @param {string} message - Message to display
+   */
+  function showToast(message) {
+    if (window.ToastComponent && typeof ToastComponent.show === 'function') {
+      ToastComponent.show(message);
+    } else {
+      // Fallback: use console
+      console.log('[Post] ' + message);
     }
   }
 
@@ -976,7 +1369,8 @@ const PostModule = (function() {
     init: init,
     loadPosts: loadPosts,
     refreshPosts: refreshPosts,
-    openPost: openPost
+    openPost: openPost,
+    closePost: closePost
   };
 
 })();

@@ -1165,6 +1165,54 @@
   display: flex;
 }
 
+/* ============================================================================
+   POST OPEN DETAIL ROWS
+   ============================================================================ */
+
+.post-open-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.post-open-detail-row:last-child {
+  border-bottom: none;
+}
+
+.post-open-detail-row .post-card-badge {
+  flex: 0 0 auto;
+  font-size: 16px;
+}
+
+.post-open-detail-content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.post-open-detail-content a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.post-open-detail-content a:hover {
+  text-decoration: underline;
+}
+
+/* Post open description */
+.post-open-description {
+  margin-top: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Thumbnail active state */
+.post-open-thumbnail--active {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
 .post-member-avatar-image {
   width: 50px;
   height: 50px;
