@@ -234,6 +234,7 @@
           <button type="button" id="admin-tab-map-btn" class="admin-tab-bar-button" data-tab="map" role="tab" aria-selected="false" aria-controls="admin-tab-map">Map</button>
           <button type="button" id="admin-tab-messages-btn" class="admin-tab-bar-button" data-tab="messages" role="tab" aria-selected="false" aria-controls="admin-tab-messages">Messages</button>
           <button type="button" id="admin-tab-checkout-btn" class="admin-tab-bar-button" data-tab="checkout" role="tab" aria-selected="false" aria-controls="admin-tab-checkout">Checkout</button>
+          <button type="button" id="admin-tab-moderation-btn" class="admin-tab-bar-button" data-tab="moderation" role="tab" aria-selected="false" aria-controls="admin-tab-moderation">Moderation</button>
         </div>
       </div>
       
@@ -664,6 +665,41 @@
             </div>
             <button type="button" class="admin-checkout-options-add">Add Tier</button>
           </div>
+        </section>
+        
+        <!-- Moderation Tab -->
+        <section id="admin-tab-moderation" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-moderation-btn">
+          
+          <!-- Pending Deletion Accordion -->
+          <div class="admin-moderation-accordion" id="admin-moderation-deletion">
+            <div class="admin-moderation-accordion-header">
+              <span class="admin-moderation-accordion-title">Pending Deletion</span>
+              <span class="admin-moderation-accordion-count" id="admin-moderation-deletion-count">0</span>
+              <span class="admin-moderation-accordion-arrow">▼</span>
+            </div>
+            <div class="admin-moderation-accordion-body">
+              <div class="admin-moderation-list" id="admin-moderation-deletion-list">
+                <!-- Populated by JavaScript -->
+              </div>
+              <p class="admin-moderation-empty" id="admin-moderation-deletion-empty">No accounts pending deletion.</p>
+            </div>
+          </div>
+          
+          <!-- Flagged Posts Accordion -->
+          <div class="admin-moderation-accordion" id="admin-moderation-flagged">
+            <div class="admin-moderation-accordion-header">
+              <span class="admin-moderation-accordion-title">Flagged Posts</span>
+              <span class="admin-moderation-accordion-count" id="admin-moderation-flagged-count">0</span>
+              <span class="admin-moderation-accordion-arrow">▼</span>
+            </div>
+            <div class="admin-moderation-accordion-body">
+              <div class="admin-moderation-list" id="admin-moderation-flagged-list">
+                <!-- Populated by JavaScript -->
+              </div>
+              <p class="admin-moderation-empty" id="admin-moderation-flagged-empty">No flagged posts.</p>
+            </div>
+          </div>
+          
         </section>
 
         <div class="panel-bottom-slack" aria-hidden="true"></div>

@@ -2680,3 +2680,203 @@
   opacity: 1;
   transform: translate(-50%, 0);
 }
+
+/* ============================================================================
+   MODERATION TAB
+   ============================================================================ */
+
+.admin-moderation-accordion {
+  width: 100%;
+  max-width: 420px;
+  margin: 12px auto;
+  background: #080808;
+  border-radius: 5px;
+  overflow: visible;
+}
+
+.admin-moderation-accordion-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: rgba(59, 130, 245, 0.15);
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  gap: 8px;
+}
+
+.admin-moderation-accordion-header:hover {
+  border-color: #3b82f5;
+}
+
+.admin-moderation-accordion-header--open {
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.admin-moderation-accordion-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.admin-moderation-accordion-count {
+  min-width: 24px;
+  height: 20px;
+  padding: 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-moderation-accordion-count--alert {
+  background: #dc2626;
+  color: #fff;
+}
+
+.admin-moderation-accordion-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.admin-moderation-accordion-arrow--open {
+  transform: rotate(180deg);
+}
+
+.admin-moderation-accordion-body {
+  display: none;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+}
+
+.admin-moderation-accordion-body--open {
+  display: block;
+}
+
+.admin-moderation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-moderation-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  padding: 12px;
+  margin: 0;
+}
+
+.admin-moderation-empty--hidden {
+  display: none;
+}
+
+/* Moderation Item Row */
+.admin-moderation-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+}
+
+.admin-moderation-item-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-moderation-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.admin-moderation-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-moderation-item-meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.admin-moderation-item-days {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.admin-moderation-item-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.admin-moderation-item-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.admin-moderation-item-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #3b82f5;
+}
+
+.admin-moderation-item-btn--reactivate:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.admin-moderation-item-btn--anonymize:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.admin-moderation-item-btn--view:hover {
+  background: rgba(59, 130, 245, 0.2);
+  border-color: #3b82f5;
+  color: #3b82f5;
+}

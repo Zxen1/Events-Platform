@@ -592,6 +592,8 @@ const AdminModule = (function() {
             initMapTab();
         } else if (tabName === 'checkout') {
             initCheckoutTab();
+        } else if (tabName === 'moderation') {
+            initModerationTab();
         }
     }
 
@@ -2373,6 +2375,288 @@ const AdminModule = (function() {
             input.addEventListener('input', function() {
                 updateField('checkout.' + key, input.value);
             });
+        });
+    }
+
+    /* --------------------------------------------------------------------------
+       MODERATION TAB
+       
+       Displays pending deletion accounts and flagged posts.
+       Admin can reactivate, anonymize, or take action on flagged content.
+       -------------------------------------------------------------------------- */
+    
+    var moderationTabContainer = null;
+    var moderationTabInitialized = false;
+    var moderationData = null;
+    
+    function initModerationTab() {
+        if (moderationTabInitialized) return;
+        
+        moderationTabContainer = document.getElementById('admin-tab-moderation');
+        if (!moderationTabContainer) return;
+        
+        attachModerationAccordionHandlers();
+        loadModerationData();
+        moderationTabInitialized = true;
+    }
+    
+    function attachModerationAccordionHandlers() {
+        if (!moderationTabContainer) return;
+        
+        moderationTabContainer.querySelectorAll('.admin-moderation-accordion').forEach(function(acc) {
+            var header = acc.querySelector('.admin-moderation-accordion-header');
+            if (!header) return;
+            header.addEventListener('click', function() {
+                acc.classList.toggle('admin-moderation-accordion--open');
+                syncModerationAccordionUi(acc);
+            });
+        });
+    }
+    
+    function syncModerationAccordionUi(acc) {
+        if (!acc) return;
+        var isOpen = acc.classList.contains('admin-moderation-accordion--open');
+        var header = acc.querySelector('.admin-moderation-accordion-header');
+        var arrow = acc.querySelector('.admin-moderation-accordion-arrow');
+        var body = acc.querySelector('.admin-moderation-accordion-body');
+        if (header) header.classList.toggle('admin-moderation-accordion-header--open', isOpen);
+        if (arrow) arrow.classList.toggle('admin-moderation-accordion-arrow--open', isOpen);
+        if (body) body.classList.toggle('admin-moderation-accordion-body--open', isOpen);
+    }
+    
+    function loadModerationData() {
+        fetch('/gateway.php?action=get-moderation-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                moderationData = data;
+                renderModerationData();
+            }
+        })
+        .catch(function(err) {
+            console.error('[Admin] Failed to load moderation data:', err);
+        });
+    }
+    
+    function renderModerationData() {
+        if (!moderationData || !moderationTabContainer) return;
+        
+        // Update counts
+        var deletionCount = moderationTabContainer.querySelector('#admin-moderation-deletion-count');
+        var flaggedCount = moderationTabContainer.querySelector('#admin-moderation-flagged-count');
+        
+        if (deletionCount) {
+            deletionCount.textContent = moderationData.pending_deletion_count || 0;
+            deletionCount.classList.toggle('admin-moderation-accordion-count--alert', moderationData.pending_deletion_count > 0);
+        }
+        if (flaggedCount) {
+            flaggedCount.textContent = moderationData.flagged_posts_count || 0;
+            flaggedCount.classList.toggle('admin-moderation-accordion-count--alert', moderationData.flagged_posts_count > 0);
+        }
+        
+        // Render pending deletion list
+        var deletionList = moderationTabContainer.querySelector('#admin-moderation-deletion-list');
+        var deletionEmpty = moderationTabContainer.querySelector('#admin-moderation-deletion-empty');
+        if (deletionList) {
+            deletionList.innerHTML = '';
+            if (moderationData.pending_deletion && moderationData.pending_deletion.length > 0) {
+                moderationData.pending_deletion.forEach(function(member) {
+                    deletionList.appendChild(createMemberItem(member));
+                });
+                if (deletionEmpty) deletionEmpty.classList.add('admin-moderation-empty--hidden');
+            } else {
+                if (deletionEmpty) deletionEmpty.classList.remove('admin-moderation-empty--hidden');
+            }
+        }
+        
+        // Render flagged posts list
+        var flaggedList = moderationTabContainer.querySelector('#admin-moderation-flagged-list');
+        var flaggedEmpty = moderationTabContainer.querySelector('#admin-moderation-flagged-empty');
+        if (flaggedList) {
+            flaggedList.innerHTML = '';
+            if (moderationData.flagged_posts && moderationData.flagged_posts.length > 0) {
+                moderationData.flagged_posts.forEach(function(post) {
+                    flaggedList.appendChild(createPostItem(post));
+                });
+                if (flaggedEmpty) flaggedEmpty.classList.add('admin-moderation-empty--hidden');
+            } else {
+                if (flaggedEmpty) flaggedEmpty.classList.remove('admin-moderation-empty--hidden');
+            }
+        }
+    }
+    
+    function createMemberItem(member) {
+        var item = document.createElement('div');
+        item.className = 'admin-moderation-item';
+        item.dataset.memberId = member.id;
+        
+        // Avatar
+        var avatar = document.createElement('img');
+        avatar.className = 'admin-moderation-item-avatar';
+        avatar.alt = '';
+        if (member.avatar_file && window.App && App.getImageUrl) {
+            avatar.src = App.getImageUrl('avatar', member.avatar_file);
+        } else {
+            avatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Ccircle cx="12" cy="8" r="4" fill="%23666"/%3E%3Cpath d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="%23666"/%3E%3C/svg%3E';
+        }
+        
+        // Info
+        var info = document.createElement('div');
+        info.className = 'admin-moderation-item-info';
+        
+        var name = document.createElement('span');
+        name.className = 'admin-moderation-item-name';
+        name.textContent = member.username || member.email;
+        
+        var meta = document.createElement('span');
+        meta.className = 'admin-moderation-item-meta';
+        meta.textContent = member.email;
+        
+        info.appendChild(name);
+        info.appendChild(meta);
+        
+        // Days remaining
+        var days = document.createElement('span');
+        days.className = 'admin-moderation-item-days';
+        days.textContent = member.days_remaining + 'd';
+        days.title = member.days_remaining + ' days remaining';
+        
+        // Actions
+        var actions = document.createElement('div');
+        actions.className = 'admin-moderation-item-actions';
+        
+        var reactivateBtn = document.createElement('button');
+        reactivateBtn.type = 'button';
+        reactivateBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--reactivate';
+        reactivateBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
+        reactivateBtn.title = 'Reactivate Account';
+        reactivateBtn.onclick = function() { handleModerationAction('reactivate_member', member.id); };
+        
+        var anonymizeBtn = document.createElement('button');
+        anonymizeBtn.type = 'button';
+        anonymizeBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--anonymize';
+        anonymizeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+        anonymizeBtn.title = 'Anonymize Account';
+        anonymizeBtn.onclick = function() { confirmAnonymize(member); };
+        
+        actions.appendChild(reactivateBtn);
+        actions.appendChild(anonymizeBtn);
+        
+        item.appendChild(avatar);
+        item.appendChild(info);
+        item.appendChild(days);
+        item.appendChild(actions);
+        
+        return item;
+    }
+    
+    function createPostItem(post) {
+        var item = document.createElement('div');
+        item.className = 'admin-moderation-item';
+        item.dataset.postId = post.id;
+        
+        // Flag icon instead of avatar
+        var icon = document.createElement('div');
+        icon.className = 'admin-moderation-item-avatar';
+        icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15" stroke="#ef4444" stroke-width="2"/></svg>';
+        icon.style.display = 'flex';
+        icon.style.alignItems = 'center';
+        icon.style.justifyContent = 'center';
+        
+        // Info
+        var info = document.createElement('div');
+        info.className = 'admin-moderation-item-info';
+        
+        var name = document.createElement('span');
+        name.className = 'admin-moderation-item-name';
+        name.textContent = post.title || 'Untitled Post';
+        
+        var meta = document.createElement('span');
+        meta.className = 'admin-moderation-item-meta';
+        meta.textContent = 'by ' + (post.member_name || 'Unknown');
+        
+        info.appendChild(name);
+        info.appendChild(meta);
+        
+        // Actions
+        var actions = document.createElement('div');
+        actions.className = 'admin-moderation-item-actions';
+        
+        var clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--reactivate';
+        clearBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+        clearBtn.title = 'Clear Flag';
+        clearBtn.onclick = function() { handleModerationAction('clear_post_flag', null, post.id); };
+        
+        var hideBtn = document.createElement('button');
+        hideBtn.type = 'button';
+        hideBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--anonymize';
+        hideBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        hideBtn.title = 'Hide Post';
+        hideBtn.onclick = function() { handleModerationAction('hide_post', null, post.id); };
+        
+        actions.appendChild(clearBtn);
+        actions.appendChild(hideBtn);
+        
+        item.appendChild(icon);
+        item.appendChild(info);
+        item.appendChild(actions);
+        
+        return item;
+    }
+    
+    function confirmAnonymize(member) {
+        var name = member.username || member.email;
+        if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+            ConfirmDialogComponent.show({
+                titleText: 'Anonymize Account',
+                messageText: 'Permanently anonymize "' + name + '"? This cannot be undone.',
+                confirmLabel: 'Anonymize',
+                cancelLabel: 'Cancel',
+                confirmClass: 'danger',
+                focusCancel: true
+            }).then(function(confirmed) {
+                if (confirmed) {
+                    handleModerationAction('anonymize_member', member.id);
+                }
+            });
+        }
+    }
+    
+    function handleModerationAction(action, memberId, postId) {
+        var body = { action: action };
+        if (memberId) body.member_id = memberId;
+        if (postId) body.post_id = postId;
+        
+        fetch('/gateway.php?action=moderation-action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // Reload moderation data
+                loadModerationData();
+                if (window.ToastComponent) {
+                    ToastComponent.showSuccess('Action completed.');
+                }
+            } else {
+                if (window.ToastComponent) {
+                    ToastComponent.showError(data.error || 'Action failed.');
+                }
+            }
+        })
+        .catch(function(err) {
+            console.error('[Admin] Moderation action failed:', err);
+            if (window.ToastComponent) {
+                ToastComponent.showError('Action failed.');
+            }
         });
     }
 
