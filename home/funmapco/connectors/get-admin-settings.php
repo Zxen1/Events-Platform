@@ -86,7 +86,7 @@ try {
     }
 
     // Check if admin_settings table exists
-    $stmt = $pdo->query("SHOW TABLES LIKE 'admin_settings'");
+    $stmt = $pdo->query("SHOW TABLES FROM `funmapco_system` LIKE 'admin_settings'");
     if ($stmt->rowCount() === 0) {
         // Table doesn't exist, return defaults
         echo json_encode([
@@ -183,7 +183,7 @@ try {
     
     // Fetch system-images from system_images table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SELECT `option_filename` FROM `system_images` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $stmt = $pdo->query("SELECT `option_filename` FROM `funmapco_system`.`system_images` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
         $systemImageRows = $stmt->fetchAll();
         
         $systemImagesBasket = [];
@@ -199,7 +199,7 @@ try {
     
     // Fetch category-icons from category_icons table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SELECT `option_filename` FROM `category_icons` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $stmt = $pdo->query("SELECT `option_filename` FROM `funmapco_system`.`category_icons` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
         $categoryIconRows = $stmt->fetchAll();
         
         $categoryIconsBasket = [];
@@ -220,7 +220,7 @@ try {
         
         // Fetch currencies
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `funmapco_system`.`currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $currencyRows = $stmt->fetchAll();
             $dropdownOptions['currency'] = [];
             foreach ($currencyRows as $row) {
@@ -240,7 +240,7 @@ try {
         
         // Fetch phone-prefixes
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `phone_prefixes` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `funmapco_system`.`phone_prefixes` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $phoneRows = $stmt->fetchAll();
             $dropdownOptions['phone-prefix'] = [];
             foreach ($phoneRows as $row) {
@@ -260,7 +260,7 @@ try {
 
         // Fetch countries (country code dropdown)
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `countries` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `funmapco_system`.`countries` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $countryRows = $stmt->fetchAll();
             $dropdownOptions['country'] = [];
             foreach ($countryRows as $row) {
@@ -280,7 +280,7 @@ try {
         
         // Fetch amenities
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `amenities` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `funmapco_system`.`amenities` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $amenityRows = $stmt->fetchAll();
             $dropdownOptions['amenity'] = [];
             foreach ($amenityRows as $row) {
@@ -307,19 +307,19 @@ try {
 
     // Fetch checkout_options
     try {
-        $stmt = $pdo->query("SHOW TABLES LIKE 'checkout_options'");
+        $stmt = $pdo->query("SHOW TABLES FROM `funmapco_system` LIKE 'checkout_options'");
         if ($stmt->rowCount() > 0) {
             // Check if admin_only column exists, then select accordingly
             $hasAdminOnly = false;
             try {
-                $colCheck = $pdo->query("SHOW COLUMNS FROM `checkout_options` LIKE 'admin_only'");
+                $colCheck = $pdo->query("SHOW COLUMNS FROM `funmapco_system`.`checkout_options` LIKE 'admin_only'");
                 $hasAdminOnly = $colCheck->rowCount() > 0;
             } catch (Exception $e) {
                 // Column doesn't exist, continue without it
             }
             
             $adminOnlySelect = $hasAdminOnly ? ', `admin_only`' : '';
-            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`' . $adminOnlySelect . ' FROM `checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
+            $stmt = $pdo->query('SELECT `id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_currency`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`' . $adminOnlySelect . ' FROM `funmapco_system`.`checkout_options` ORDER BY `sort_order` ASC, `id` ASC');
             $checkoutRows = $stmt->fetchAll();
             
             $checkoutOptions = [];
@@ -351,13 +351,13 @@ try {
     if ($includeMessages) {
         try {
             // Check if admin_messages table exists
-            $stmt = $pdo->query("SHOW TABLES LIKE 'admin_messages'");
+            $stmt = $pdo->query("SHOW TABLES FROM `funmapco_system` LIKE 'admin_messages'");
             if ($stmt->rowCount() > 0) {
                 // Fetch all admin messages grouped by container_key
                 // Use a simpler query first to check if layout_containers exists
                 $hasLayoutContainers = false;
                 try {
-                    $checkStmt = $pdo->query("SHOW TABLES LIKE 'layout_containers'");
+                    $checkStmt = $pdo->query("SHOW TABLES FROM `funmapco_system` LIKE 'layout_containers'");
                     $hasLayoutContainers = ($checkStmt->rowCount() > 0);
                 } catch (PDOException $e) {
                     // Table doesn't exist, skip JOIN
@@ -381,8 +381,8 @@ try {
                                 am.display_duration,
                                 lc.container_name,
                                 lc.icon_path as container_icon
-                            FROM admin_messages am
-                            LEFT JOIN layout_containers lc ON am.container_key = lc.container_key
+                            FROM `funmapco_system`.`admin_messages` am
+                            LEFT JOIN `funmapco_system`.`layout_containers` lc ON am.container_key = lc.container_key
                             WHERE am.is_active = 1
                             ORDER BY lc.sort_order ASC, am.id ASC";
                 } else {
@@ -404,7 +404,7 @@ try {
                                 display_duration,
                                 NULL as container_name,
                                 NULL as container_icon
-                            FROM admin_messages
+                            FROM `funmapco_system`.`admin_messages`
                             WHERE is_active = 1
                             ORDER BY id ASC";
                 }
