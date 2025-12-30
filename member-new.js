@@ -88,6 +88,7 @@ const MemberModule = (function() {
     var registerEmailInput = null;
     var registerPasswordInput = null;
     var registerConfirmInput = null;
+    var profileTabPanel = null;
     var profileAvatar = null;
     var profileName = null;
     var profileEmail = null;
@@ -244,6 +245,7 @@ const MemberModule = (function() {
         profileEmail = document.getElementById('member-profile-email');
         logoutBtn = document.getElementById('member-logout-btn');
         profileTabBtn = document.getElementById('member-tab-profile-btn');
+        profileTabPanel = document.getElementById('member-tab-profile');
 
         headerSaveBtn = panel.querySelector('#member-panel-save-btn');
         headerDiscardBtn = panel.querySelector('#member-panel-discard-btn');
@@ -273,6 +275,30 @@ const MemberModule = (function() {
 
         // Note: Avatar cropper is now handled by AvatarCropperComponent (components-new.js)
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
+    }
+
+    function setProfileLoggedInBottomSpacer(isEnabled) {
+        try {
+            if (!profileTabPanel) return;
+            var id = 'member-profile-loggedin-bottom-spacer';
+            var el = document.getElementById(id);
+            if (!isEnabled) {
+                if (el && el.parentNode) el.parentNode.removeChild(el);
+                return;
+            }
+            if (!el) {
+                el = document.createElement('div');
+                el.id = id;
+                el.setAttribute('aria-hidden', 'true');
+                // Minimal, explicit inline style (workaround requested by Paul).
+                el.style.height = '50px';
+                el.style.flex = '0 0 auto';
+                el.style.pointerEvents = 'none';
+                profileTabPanel.appendChild(el);
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 
     function bindEvents() {
@@ -4076,6 +4102,7 @@ const MemberModule = (function() {
         if (currentUser) {
             // Logged in state
             authForm.dataset.state = 'logged-in';
+            setProfileLoggedInBottomSpacer(true);
             
             // Hide login/register panels
             setAuthPanelState(loginPanel, false, loginInputs);
@@ -4139,6 +4166,7 @@ const MemberModule = (function() {
         } else {
             // Logged out state
             authForm.dataset.state = 'logged-out';
+            setProfileLoggedInBottomSpacer(false);
             
             // Update profile tab label
             if (profileTabBtn) {
