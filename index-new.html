@@ -893,39 +893,6 @@
           </div>
           <div id="member-create-form-wrapper" class="member-form-container" hidden>
             <div id="member-create-fields" class="member-create-fields" role="group" aria-live="polite"></div>
-
-            <!-- Inline auth gate for posting (shown when user tries to submit while logged out).
-                 Keep it inside the Create Post flow so drafts are not lost. -->
-            <div id="member-create-auth" class="member-auth member-create-auth" data-active="login" hidden>
-              <div class="member-auth-tabs" role="tablist" aria-label="Continue to submit">
-                <!-- NOTE: These are "subtabs" but must not be role="tab" because the slack system intentionally
-                     disables click-hold slack on [role="tab"] to avoid leaking slack between real tabs. -->
-                <button type="button" class="member-auth-tab member-auth-tab--selected" data-target="login" role="button" aria-pressed="true" aria-controls="member-create-auth-login">Log In</button>
-                <button type="button" class="member-auth-tab" data-target="register" role="button" aria-pressed="false" aria-controls="member-create-auth-register">Register</button>
-              </div>
-
-              <!-- Login -->
-              <form id="memberCreateAuthFormLogin" class="member-auth-form" autocomplete="off">
-                <section id="member-create-auth-login" class="member-auth-panel" role="tabpanel">
-                  <label class="member-auth-panel-label" for="memberCreateLoginEmail">Email</label>
-                  <input type="email" id="memberCreateLoginEmail" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
-                  <label class="member-auth-panel-label" for="memberCreateLoginPassword">Password</label>
-                  <input type="password" id="memberCreateLoginPassword" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
-                  <button type="submit" class="member-button-submit member-auth-submit" data-action="create-auth-login">Log In &amp; Submit</button>
-                </section>
-              </form>
-
-              <!-- Register -->
-              <form id="memberCreateAuthFormRegister" class="member-auth-form" autocomplete="off">
-                <section id="member-create-auth-register" class="member-auth-panel member-auth-panel--hidden" role="tabpanel" hidden>
-                  <div id="member-create-register-fieldsets" class="fieldset-container"></div>
-                  <div id="member-avatar-grid-create" aria-label="Avatar choices"></div>
-                  <div id="member-create-country-menu"></div>
-                  <input type="hidden" id="member-create-country" name="country" value="">
-                  <button type="submit" class="member-button-submit member-auth-submit" data-action="create-auth-register">Register &amp; Submit</button>
-                </section>
-              </form>
-            </div>
           </div>
         </section>
         

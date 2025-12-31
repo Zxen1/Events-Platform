@@ -146,6 +146,7 @@ const MemberModule = (function() {
     var siteAvatarChoices = [];    // 3 picked: [{ filename, url }]
 
     // Create Post inline auth gate (under the Create Post form)
+    // IMPORTANT: must be mounted/unmounted on demand (should not exist in DOM when logged in).
     var createAuthWrapper = null;
     var createAuthLoginTab = null;
     var createAuthRegisterTab = null;
@@ -304,22 +305,22 @@ const MemberModule = (function() {
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
         avatarGridProfile = document.getElementById('member-avatar-grid-profile');
 
-        // Create Post inline auth gate (under the create form)
-        createAuthWrapper = document.getElementById('member-create-auth');
-        createAuthLoginTab = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-tab[data-target="login"]') : null;
-        createAuthRegisterTab = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-tab[data-target="register"]') : null;
-        createAuthLoginPanel = document.getElementById('member-create-auth-login');
-        createAuthRegisterPanel = document.getElementById('member-create-auth-register');
-        createAuthLoginForm = document.getElementById('memberCreateAuthFormLogin');
-        createAuthRegisterForm = document.getElementById('memberCreateAuthFormRegister');
-        createAuthLoginEmailInput = document.getElementById('memberCreateLoginEmail');
-        createAuthLoginPasswordInput = document.getElementById('memberCreateLoginPassword');
-        createAuthLoginSubmitBtn = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-submit[data-action="create-auth-login"]') : null;
-        createAuthRegisterSubmitBtn = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-submit[data-action="create-auth-register"]') : null;
-        createAuthRegisterFieldsets = document.getElementById('member-create-register-fieldsets');
-        avatarGridCreate = document.getElementById('member-avatar-grid-create');
-        createCountryMenuContainer = document.getElementById('member-create-country-menu');
-        createCountryHiddenInput = document.getElementById('member-create-country');
+        // Create Post inline auth gate is mounted on demand (not in HTML).
+        createAuthWrapper = null;
+        createAuthLoginTab = null;
+        createAuthRegisterTab = null;
+        createAuthLoginPanel = null;
+        createAuthRegisterPanel = null;
+        createAuthLoginForm = null;
+        createAuthRegisterForm = null;
+        createAuthLoginEmailInput = null;
+        createAuthLoginPasswordInput = null;
+        createAuthLoginSubmitBtn = null;
+        createAuthRegisterSubmitBtn = null;
+        createAuthRegisterFieldsets = null;
+        avatarGridCreate = null;
+        createCountryMenuContainer = null;
+        createCountryHiddenInput = null;
 
         // Note: Avatar cropper is now handled by AvatarCropperComponent (components-new.js)
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
@@ -529,35 +530,8 @@ const MemberModule = (function() {
             });
         }
 
-        // Create Post inline auth gate (Login/Register subtabs + submit)
-        if (createAuthLoginTab) {
-            createAuthLoginTab.addEventListener('click', function() {
-                setCreateAuthPanel('login');
-            });
-        }
-        if (createAuthRegisterTab) {
-            createAuthRegisterTab.addEventListener('click', function() {
-                setCreateAuthPanel('register');
-            });
-        }
-        if (createAuthLoginForm) {
-            createAuthLoginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleCreateAuthLogin();
-            });
-        }
-        if (createAuthRegisterForm) {
-            createAuthRegisterForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleCreateAuthRegister();
-            });
-        }
-        if (createAuthWrapper) {
-            // Keep the inline auth submit buttons in sync with the create-form completeness.
-            // (Same disable/grey behavior as the normal Submit button.)
-            createAuthWrapper.addEventListener('input', function() { updateSubmitButtonState(); }, true);
-            createAuthWrapper.addEventListener('change', function() { updateSubmitButtonState(); }, true);
-        }
+        // Create Post inline auth gate is mounted on demand (after the create form is shown),
+        // so its events are attached inside ensureCreateAuthGateMounted().
         
         // Login button click
         var loginBtn = panel.querySelector('.member-auth-submit[data-action="login"]');
@@ -2861,13 +2835,13 @@ const MemberModule = (function() {
             adminSubmitBtn.disabled = !ready || !(loggedIn && currentUser && currentUser.isAdmin);
         }
 
-        // Logged-out users: show inline auth submit buttons instead (same disable/grey rules).
-        if (createAuthWrapper) {
-            // Only show once the create form exists/visible.
-            var showGate = (!loggedIn && formWrapper && formWrapper.hidden === false);
-            createAuthWrapper.hidden = !showGate;
-            if (showGate) createAuthWrapper.removeAttribute('inert');
-            else createAuthWrapper.setAttribute('inert', '');
+        // Logged-out users: mount/unmount inline auth submit UI on demand (no hidden subtree).
+        // Only mount once the create form exists/visible.
+        var showGate = (!loggedIn && formWrapper && formWrapper.hidden === false);
+        if (showGate) {
+            ensureCreateAuthGateMounted();
+        } else {
+            if (createAuthWrapper) unmountCreateAuthGate();
         }
 
         var active = createAuthWrapper ? String(createAuthWrapper.dataset.active || 'login') : 'login';
@@ -3879,6 +3853,189 @@ const MemberModule = (function() {
         updateSubmitButtonState();
     }
 
+    function unmountCreateAuthGate() {
+        try {
+            if (createAuthWrapper && createAuthWrapper.parentNode) {
+                createAuthWrapper.parentNode.removeChild(createAuthWrapper);
+            }
+        } catch (e0) {}
+        createAuthWrapper = null;
+        createAuthLoginTab = null;
+        createAuthRegisterTab = null;
+        createAuthLoginPanel = null;
+        createAuthRegisterPanel = null;
+        createAuthLoginForm = null;
+        createAuthRegisterForm = null;
+        createAuthLoginEmailInput = null;
+        createAuthLoginPasswordInput = null;
+        createAuthLoginSubmitBtn = null;
+        createAuthRegisterSubmitBtn = null;
+        createAuthRegisterFieldsets = null;
+        avatarGridCreate = null;
+        createCountryMenuContainer = null;
+        createCountryHiddenInput = null;
+        avatarPickerCreate = null;
+        createAuthRegisterRendered = false;
+        createAuthRegisterUsernameInput = null;
+        createAuthRegisterEmailInput = null;
+        createAuthRegisterPasswordInput = null;
+        createAuthRegisterConfirmInput = null;
+        pendingCreateAuthAvatarBlob = null;
+        pendingCreateAuthSiteUrl = '';
+        pendingCreateAuthAvatarPreviewUrl = '';
+        createAuthPendingSubmit = false;
+        createAuthPendingSubmitIsAdminFree = false;
+    }
+
+    function ensureCreateAuthGateMounted() {
+        if (createAuthWrapper) return true;
+        if (!formWrapper) return false;
+        if (!formFields) return false;
+        if (hasValidLoggedInUser()) return false;
+
+        // Build DOM
+        var wrap = document.createElement('div');
+        wrap.id = 'member-create-auth';
+        wrap.className = 'member-auth member-create-auth';
+        wrap.dataset.active = 'login';
+
+        var tabs = document.createElement('div');
+        tabs.className = 'member-auth-tabs';
+        tabs.setAttribute('role', 'group');
+        tabs.setAttribute('aria-label', 'Continue to submit');
+
+        var btnLogin = document.createElement('button');
+        btnLogin.type = 'button';
+        btnLogin.className = 'member-auth-tab member-auth-tab--selected';
+        btnLogin.dataset.target = 'login';
+        btnLogin.setAttribute('role', 'button');
+        btnLogin.setAttribute('aria-pressed', 'true');
+        btnLogin.textContent = 'Log In';
+
+        var btnRegister = document.createElement('button');
+        btnRegister.type = 'button';
+        btnRegister.className = 'member-auth-tab';
+        btnRegister.dataset.target = 'register';
+        btnRegister.setAttribute('role', 'button');
+        btnRegister.setAttribute('aria-pressed', 'false');
+        btnRegister.textContent = 'Register';
+
+        tabs.appendChild(btnLogin);
+        tabs.appendChild(btnRegister);
+        wrap.appendChild(tabs);
+
+        // Login form
+        var loginForm = document.createElement('form');
+        loginForm.className = 'member-auth-form';
+        loginForm.setAttribute('autocomplete', 'off');
+
+        var loginPanel = document.createElement('section');
+        loginPanel.className = 'member-auth-panel';
+
+        var loginLabelEmail = document.createElement('label');
+        loginLabelEmail.className = 'member-auth-panel-label';
+        loginLabelEmail.setAttribute('for', 'memberCreateLoginEmail');
+        loginLabelEmail.textContent = 'Email';
+
+        var loginEmail = document.createElement('input');
+        loginEmail.type = 'email';
+        loginEmail.id = 'memberCreateLoginEmail';
+        loginEmail.className = 'member-auth-panel-input';
+        loginEmail.name = 'loginEmail';
+        loginEmail.autocomplete = 'username';
+
+        var loginLabelPass = document.createElement('label');
+        loginLabelPass.className = 'member-auth-panel-label';
+        loginLabelPass.setAttribute('for', 'memberCreateLoginPassword');
+        loginLabelPass.textContent = 'Password';
+
+        var loginPass = document.createElement('input');
+        loginPass.type = 'password';
+        loginPass.id = 'memberCreateLoginPassword';
+        loginPass.className = 'member-auth-panel-input';
+        loginPass.name = 'loginPassword';
+        loginPass.autocomplete = 'current-password';
+
+        var loginSubmit = document.createElement('button');
+        loginSubmit.type = 'submit';
+        loginSubmit.className = 'member-button-submit member-auth-submit';
+        loginSubmit.dataset.action = 'create-auth-login';
+        loginSubmit.textContent = 'Log In & Submit';
+
+        loginPanel.appendChild(loginLabelEmail);
+        loginPanel.appendChild(loginEmail);
+        loginPanel.appendChild(loginLabelPass);
+        loginPanel.appendChild(loginPass);
+        loginPanel.appendChild(loginSubmit);
+        loginForm.appendChild(loginPanel);
+        wrap.appendChild(loginForm);
+
+        // Register form
+        var registerForm = document.createElement('form');
+        registerForm.className = 'member-auth-form';
+        registerForm.setAttribute('autocomplete', 'off');
+
+        var registerPanel = document.createElement('section');
+        registerPanel.className = 'member-auth-panel member-auth-panel--hidden';
+        registerPanel.hidden = true;
+
+        var fsContainer = document.createElement('div');
+        fsContainer.className = 'fieldset-container';
+
+        var avatarHost = document.createElement('div');
+        avatarHost.setAttribute('aria-label', 'Avatar choices');
+
+        var countryMenu = document.createElement('div');
+        var countryHidden = document.createElement('input');
+        countryHidden.type = 'hidden';
+        countryHidden.name = 'country';
+        countryHidden.value = '';
+
+        var registerSubmit = document.createElement('button');
+        registerSubmit.type = 'submit';
+        registerSubmit.className = 'member-button-submit member-auth-submit';
+        registerSubmit.dataset.action = 'create-auth-register';
+        registerSubmit.textContent = 'Register & Submit';
+
+        registerPanel.appendChild(fsContainer);
+        registerPanel.appendChild(avatarHost);
+        registerPanel.appendChild(countryMenu);
+        registerPanel.appendChild(countryHidden);
+        registerPanel.appendChild(registerSubmit);
+        registerForm.appendChild(registerPanel);
+        wrap.appendChild(registerForm);
+
+        // Insert at bottom of the create form wrapper (after fields)
+        formWrapper.appendChild(wrap);
+
+        // Wire refs
+        createAuthWrapper = wrap;
+        createAuthLoginTab = btnLogin;
+        createAuthRegisterTab = btnRegister;
+        createAuthLoginForm = loginForm;
+        createAuthRegisterForm = registerForm;
+        createAuthLoginPanel = loginPanel;
+        createAuthRegisterPanel = registerPanel;
+        createAuthLoginEmailInput = loginEmail;
+        createAuthLoginPasswordInput = loginPass;
+        createAuthLoginSubmitBtn = loginSubmit;
+        createAuthRegisterSubmitBtn = registerSubmit;
+        createAuthRegisterFieldsets = fsContainer;
+        avatarGridCreate = avatarHost;
+        createCountryMenuContainer = countryMenu;
+        createCountryHiddenInput = countryHidden;
+
+        // Events
+        createAuthLoginTab.addEventListener('click', function() { setCreateAuthPanel('login'); });
+        createAuthRegisterTab.addEventListener('click', function() { setCreateAuthPanel('register'); });
+        createAuthLoginForm.addEventListener('submit', function(e) { e.preventDefault(); handleCreateAuthLogin(); });
+        createAuthRegisterForm.addEventListener('submit', function(e) { e.preventDefault(); handleCreateAuthRegister(); });
+        createAuthWrapper.addEventListener('input', function() { updateSubmitButtonState(); }, true);
+        createAuthWrapper.addEventListener('change', function() { updateSubmitButtonState(); }, true);
+
+        return true;
+    }
+
     function isCreateAuthRegisterComplete() {
         if (!createAuthRegisterPanel) return false;
         // Component-owned validity: require ALL required fieldsets to be complete.
@@ -3893,21 +4050,16 @@ const MemberModule = (function() {
     }
 
     function showCreateAuthGate(isAdminFree) {
-        if (!createAuthWrapper) return;
+        if (!ensureCreateAuthGateMounted()) return;
         createAuthPendingSubmit = true;
         createAuthPendingSubmitIsAdminFree = !!isAdminFree;
-        createAuthWrapper.hidden = false;
-        createAuthWrapper.removeAttribute('inert');
         setCreateAuthPanel('login');
         try { createAuthWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e0) {}
     }
 
     function hideCreateAuthGate() {
-        if (!createAuthWrapper) return;
-        createAuthWrapper.hidden = true;
-        createAuthWrapper.setAttribute('inert', '');
-        createAuthPendingSubmit = false;
-        createAuthPendingSubmitIsAdminFree = false;
+        // Remove the gate entirely (no hidden auth subtree allowed).
+        unmountCreateAuthGate();
     }
 
     function ensureCreateAuthRegisterReady() {
@@ -4728,6 +4880,10 @@ const MemberModule = (function() {
         if (currentUser) {
             // Logged in state
             authForm.dataset.state = 'logged-in';
+
+            // Create Post inline auth must never be visible while logged in.
+            // (Login can happen via Profile tab too, so don't rely on updateSubmitButtonState being called.)
+            try { hideCreateAuthGate(); } catch (e00) {}
             
             // Hide login/register panels
             setAuthPanelState(loginPanel, false, loginInputs);
@@ -4785,6 +4941,9 @@ const MemberModule = (function() {
             if (profileTabBtn) profileTabBtn.textContent = 'Profile';
 
             updateHeaderSaveDiscardState();
+
+            // Also refresh create-tab submit visibility state after login.
+            try { updateSubmitButtonState(); } catch (e01) {}
             
         } else {
             // Logged out state
