@@ -2867,9 +2867,20 @@ const MemberModule = (function() {
                 updateSubmitButtonState();
                 
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    getMessage('msg_post_create_error', {}, false).then(function(msg) {
-                        if (msg) ToastComponent.showError(msg);
-                    });
+                    if (err && err.message_key) {
+                        getMessage(String(err.message_key), {}, false).then(function(msg) {
+                            if (msg) ToastComponent.showError(msg);
+                            else {
+                                getMessage('msg_post_create_error', {}, false).then(function(fallback) {
+                                    if (fallback) ToastComponent.showError(fallback);
+                                });
+                            }
+                        });
+                    } else {
+                        getMessage('msg_post_create_error', {}, false).then(function(msg) {
+                            if (msg) ToastComponent.showError(msg);
+                        });
+                    }
                 }
             });
     }
@@ -3040,6 +3051,12 @@ const MemberModule = (function() {
     function submitPostData(payload, isAdminFree) {
         return new Promise(function(resolve, reject) {
             // Backend expects JSON, not FormData
+            // Enforce a real member_id (posts.member_id is NOT NULL in the schema).
+            if (!currentUser || !currentUser.id || (parseInt(currentUser.id, 10) || 0) <= 0) {
+                var err = new Error('Missing member id');
+                err.message_key = 'msg_auth_login_empty';
+                return reject(err);
+            }
             var postData = {
                 subcategory_key: payload.subcategory,
                 member_id: currentUser ? currentUser.id : null,
@@ -4263,6 +4280,15 @@ const MemberModule = (function() {
             
             var parsed = JSON.parse(raw);
             if (parsed && typeof parsed === 'object' && parsed.email) {
+                // Session must include a usable numeric user id; otherwise treat as logged-out.
+                // This prevents "looks logged in" states that can't submit posts (member_id missing).
+                var idNum = parseInt(parsed.id, 10);
+                if (!isFinite(idNum) || idNum <= 0) {
+                    currentUser = null;
+                    try { localStorage.removeItem(CURRENT_KEY); } catch (e0) {}
+                    return;
+                }
+                parsed.id = idNum;
                 currentUser = parsed;
                 
                 // Notify admin auth if user is admin
