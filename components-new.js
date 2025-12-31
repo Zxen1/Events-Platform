@@ -3022,10 +3022,41 @@ const FieldsetBuilder = (function(){
                 case 'text-box':
                 case 'username':
                 case 'password':
-                case 'confirm-password':
                 case 'new-password': {
                     var inp = fieldset.querySelector('input.fieldset-input');
                     return inp ? strLenOk(inp.value, minLength, maxLength) : false;
+                }
+                case 'confirm-password': {
+                    var confirmInput = fieldset.querySelector('input.fieldset-input');
+                    if (!confirmInput) return false;
+                    // Must meet its own length constraints and must match the password field above it.
+                    if (!strLenOk(confirmInput.value, minLength, maxLength)) return false;
+
+                    // Find the nearest password/new-password fieldset above this one in DOM order.
+                    var pwFieldset = null;
+                    try {
+                        var prev = fieldset.previousElementSibling;
+                        while (prev) {
+                            if (prev.classList && prev.classList.contains('fieldset')) {
+                                var k = String(prev.dataset && prev.dataset.fieldsetKey ? prev.dataset.fieldsetKey : '').trim();
+                                if (k === 'password' || k === 'new-password') {
+                                    pwFieldset = prev;
+                                    break;
+                                }
+                            }
+                            prev = prev.previousElementSibling;
+                        }
+                        // Fallback: first matching fieldset in the same container
+                        if (!pwFieldset && fieldset.parentNode && fieldset.parentNode.querySelector) {
+                            pwFieldset = fieldset.parentNode.querySelector('.fieldset[data-fieldset-key="password"], .fieldset[data-fieldset-key="new-password"]');
+                        }
+                    } catch (e0) {}
+
+                    var pwInput = pwFieldset ? pwFieldset.querySelector('input.fieldset-input') : null;
+                    if (!pwInput) return false;
+
+                    // Identical means identical (no trimming differences).
+                    return String(confirmInput.value || '') === String(pwInput.value || '');
                 }
                 case 'description':
                 case 'text-area': {
@@ -3163,6 +3194,12 @@ const FieldsetBuilder = (function(){
         fieldset.addEventListener('input', updateCompleteFromDom, true);
         fieldset.addEventListener('change', updateCompleteFromDom, true);
         fieldset.addEventListener('blur', updateCompleteFromDom, true);
+
+        // Confirm-password depends on the password field above it, so it must revalidate when that field changes too.
+        if (key === 'confirm-password' && container && typeof container.addEventListener === 'function') {
+            try { container.addEventListener('input', updateCompleteFromDom, true); } catch (e3) {}
+            try { container.addEventListener('change', updateCompleteFromDom, true); } catch (e4) {}
+        }
 
         return fieldset;
     }
