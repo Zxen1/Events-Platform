@@ -2960,6 +2960,10 @@ const FieldsetBuilder = (function(){
                 if (!el) return false;
                 if (el.disabled) return false;
                 if (el.tagName === 'INPUT' && el.type === 'hidden') return false;
+                // During initial build, fieldsets are often validated before being inserted into the DOM.
+                // In that state, offsetParent/rects can be "invisible" even though the control will be visible.
+                // Be conservative: treat detached controls as visible so required fieldsets start incomplete (red).
+                if (el.isConnected === false) return true;
                 // Covers display:none, detached, etc.
                 if (el.offsetParent === null && el.getClientRects().length === 0) return false;
                 return true;
@@ -2968,9 +2972,11 @@ const FieldsetBuilder = (function(){
             function allVisibleControlsFilled(containerEl) {
                 var els = containerEl.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
                 if (!els || els.length === 0) return false;
+                var checkedCount = 0;
                 for (var i = 0; i < els.length; i++) {
                     var el = els[i];
                     if (!isVisibleControl(el)) continue;
+                    checkedCount++;
                     if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
                     if (el.type === 'checkbox' || el.type === 'radio') {
                         if (!el.checked) return false;
@@ -2979,7 +2985,8 @@ const FieldsetBuilder = (function(){
                     var val = String(el.value || '').trim();
                     if (!val) return false;
                 }
-                return true;
+                // If none were considered visible/required, do not allow a required fieldset to be "complete".
+                return checkedCount > 0;
             }
 
             switch (key) {
