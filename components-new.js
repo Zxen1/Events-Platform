@@ -4441,6 +4441,7 @@ const CountryComponent = (function(){
                 btnImg.style.display = 'none';
                 btnInput.value = '';
                 selectedCode = null;
+                try { menu.dataset.value = ''; } catch (e0) {}
                 return;
             }
             if (found) {
@@ -4454,6 +4455,7 @@ const CountryComponent = (function(){
                 }
                 btnInput.value = (found.value || '').toUpperCase() + ' - ' + (found.label || '');
                 selectedCode = code;
+                try { menu.dataset.value = String(code || '').toLowerCase(); } catch (e1) {}
             }
         }
         
@@ -4481,9 +4483,12 @@ const CountryComponent = (function(){
                 btnImg.style.display = 'block';
                 btnInput.value = displayText;
                 selectedCode = code;
+                try { menu.dataset.value = String(code || '').toLowerCase(); } catch (e2) {}
                 applyOpenState(false);
                 filterOptions('');
                 onSelect(code, item.label, item.filename);
+                // Let parent fieldsets/forms react (required/completion checks).
+                try { menu.dispatchEvent(new Event('change', { bubbles: true })); } catch (e3) {}
             };
             opts.appendChild(op);
             
@@ -4616,7 +4621,10 @@ const MemberAuthFieldsetsComponent = (function(){
     }
 
     // Wrap a host element (like AvatarPicker/Country menu) in a DB-driven fieldset label.
-    function wrapHostInFieldset(fieldsetKey, hostEl) {
+    function wrapHostInFieldset(fieldsetKey, hostEl, options) {
+        options = options || {};
+        var required = !!options.required;
+
         var fs = getFieldset(fieldsetKey) || {};
         var name = fs.fieldset_name || fs.name || fieldsetKey;
         var tooltip = fs.fieldset_tooltip || fs.tooltip || '';
@@ -4628,6 +4636,44 @@ const MemberAuthFieldsetsComponent = (function(){
             wrap.appendChild(FieldsetBuilder.buildLabel(String(name || ''), tooltip || '', null, null));
         }
         if (hostEl) wrap.appendChild(hostEl);
+
+        // Required + complete state for host-wrapped components (avatar, country).
+        try { wrap.dataset.required = required ? 'true' : 'false'; } catch (e0) {}
+        var requiredStar = wrap.querySelector('.fieldset-label-required');
+        if (requiredStar && !required) {
+            requiredStar.style.display = 'none';
+        }
+
+        function computeComplete() {
+            if (!required) return true;
+            if (fieldsetKey === 'country') {
+                var menu = wrap.querySelector('.fieldset-country-menu');
+                var code = menu && menu.dataset ? String(menu.dataset.value || '').trim() : '';
+                return !!code;
+            }
+            if (fieldsetKey === 'avatar') {
+                var host = hostEl || wrap.querySelector('.component-avatarpicker') || null;
+                // AvatarPicker writes dataset.complete on the host element we pass in.
+                var c = host && host.dataset ? String(host.dataset.complete || '') : '';
+                return c === 'true';
+            }
+            return false;
+        }
+
+        function setCompleteState(isComplete) {
+            var complete = !!isComplete;
+            try { wrap.dataset.complete = complete ? 'true' : 'false'; } catch (e1) {}
+            if (requiredStar && requiredStar.style.display !== 'none') {
+                requiredStar.classList.toggle('fieldset-label-required--complete', complete);
+            }
+            try { wrap.dispatchEvent(new CustomEvent('fieldset:validity-change', { bubbles: true })); } catch (e2) {}
+        }
+
+        // Initial state + react to internal changes from wrapped component.
+        setCompleteState(computeComplete());
+        wrap.addEventListener('change', function() { setCompleteState(computeComplete()); }, true);
+        wrap.addEventListener('input', function() { setCompleteState(computeComplete()); }, true);
+
         return wrap;
     }
 
@@ -4647,7 +4693,9 @@ const MemberAuthFieldsetsComponent = (function(){
             function addFieldset(fieldsetKey, patchInput) {
                 var fd = getFieldset(fieldsetKey);
                 if (!fd) return null;
-                var fieldset = FieldsetBuilder.buildFieldset(fd, {
+                // Registration rule: all auth fieldsets are required.
+                var fdReq = Object.assign({}, fd, { required: true, is_required: true });
+                var fieldset = FieldsetBuilder.buildFieldset(fdReq, {
                     idPrefix: 'memberRegister',
                     fieldIndex: 0,
                     container: containerEl
@@ -4665,7 +4713,7 @@ const MemberAuthFieldsetsComponent = (function(){
                 el.autocomplete = 'name';
             });
 
-            if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost));
+            if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost, { required: true }));
 
             var email = addFieldset('email', function(el) {
                 if (!el) return;
@@ -4688,7 +4736,7 @@ const MemberAuthFieldsetsComponent = (function(){
                 el.autocomplete = 'new-password';
             });
 
-            if (countryHost) containerEl.appendChild(wrapHostInFieldset('country', countryHost));
+            if (countryHost) containerEl.appendChild(wrapHostInFieldset('country', countryHost, { required: true }));
 
             return {
                 usernameInput: username ? username.input : null,
@@ -4726,7 +4774,7 @@ const MemberAuthFieldsetsComponent = (function(){
                 return { fieldset: fieldset, input: input || null };
             }
 
-            if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost));
+            if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost, { required: false }));
 
             var username = addFieldset('username', function(el) {
                 if (!el) return;
@@ -8415,6 +8463,13 @@ const AvatarPickerComponent = (function() {
                 var idx = parseInt(String(selectedKey).split('-')[1] || '0', 10);
                 if (isFinite(idx) && idx >= 0 && siteAvatars[idx]) selectedSite = siteAvatars[idx];
             }
+            var complete = !!(selectedSite || hasSelfAvatar());
+            // Expose selection state to parent wrappers (registration/profile fieldsets).
+            try {
+                hostEl.dataset.selectedKey = String(selectedKey || '');
+                hostEl.dataset.complete = complete ? 'true' : 'false';
+            } catch (e0) {}
+
             onChange({
                 selectedKey: selectedKey,
                 selfBlob: selfBlob,
@@ -8422,6 +8477,8 @@ const AvatarPickerComponent = (function() {
                 selfValue: selfValue,
                 selectedSite: selectedSite
             });
+            // Let parent fieldsets/forms react (required/completion checks).
+            try { hostEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
         }
 
         function hasSelfAvatar() {
