@@ -1296,12 +1296,23 @@ const MemberModule = (function() {
                   updateHeaderSaveDiscardState();
                   if (err && err.message_key) {
                       getMessage(String(err.message_key), {}, false).then(function(message) {
-                          var text = message || ('Missing message: ' + String(err.message_key));
-                          if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                              ToastComponent.showError(text);
-                          } else {
-                              showStatus(text, { error: true });
+                          if (message) {
+                              if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                  ToastComponent.showError(message);
+                              } else {
+                                  showStatus(message, { error: true });
+                              }
+                              return;
                           }
+                          // No hardcoded fallback: use a known generic register-failed message.
+                          getMessage('msg_auth_register_failed', {}, false).then(function(fallbackMsg) {
+                              if (!fallbackMsg) return;
+                              if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                  ToastComponent.showError(fallbackMsg);
+                              } else {
+                                  showStatus(fallbackMsg, { error: true });
+                              }
+                          });
                       });
                       return;
                   }
@@ -3866,12 +3877,23 @@ const MemberModule = (function() {
         
         function showFieldError(messageKey, placeholders, focusEl) {
             getMessage(messageKey, placeholders || {}, false).then(function(message) {
-                var text = message || ('Missing message: ' + messageKey);
-                if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                    ToastComponent.showError(text);
-                } else {
-                    showStatus(text, { error: true });
+                if (message) {
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(message);
+                    } else {
+                        showStatus(message, { error: true });
+                    }
+                    return;
                 }
+                // No hardcoded fallback: use a known generic register-failed message.
+                getMessage('msg_auth_register_failed', {}, false).then(function(fallbackMsg) {
+                    if (!fallbackMsg) return;
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                        ToastComponent.showError(fallbackMsg);
+                    } else {
+                        showStatus(fallbackMsg, { error: true });
+                    }
+                });
             });
             if (focusEl && typeof focusEl.focus === 'function') {
                 focusEl.focus();
@@ -3990,12 +4012,23 @@ const MemberModule = (function() {
                 var key = payload && payload.message_key ? String(payload.message_key) : '';
                 if (key) {
                     getMessage(key, {}, false).then(function(message) {
-                        var text = message || ('Missing message: ' + key);
-                        if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                            ToastComponent.showError(text);
-                        } else {
-                            showStatus(text, { error: true });
+                        if (message) {
+                            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                ToastComponent.showError(message);
+                            } else {
+                                showStatus(message, { error: true });
+                            }
+                            return;
                         }
+                        // No hardcoded fallback: use a known generic register-failed message.
+                        getMessage('msg_auth_register_failed', {}, false).then(function(fallbackMsg) {
+                            if (!fallbackMsg) return;
+                            if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
+                                ToastComponent.showError(fallbackMsg);
+                            } else {
+                                showStatus(fallbackMsg, { error: true });
+                            }
+                        });
                     });
                     return;
                 }
