@@ -561,7 +561,7 @@ const FieldsetBuilder = (function(){
         // Track whether the current value is confirmed from Google Places (required for "complete")
         try { inputElement.dataset.placesConfirmed = 'false'; } catch (e0) {}
 
-        function clearConfirmedLocation() {
+        function clearConfirmedLocation(emitChange) {
             try { inputElement.dataset.placesConfirmed = 'false'; } catch (e1) {}
             if (latInput) latInput.value = '';
             if (lngInput) lngInput.value = '';
@@ -569,7 +569,10 @@ const FieldsetBuilder = (function(){
                 statusElement.textContent = '';
                 statusElement.className = 'fieldset-location-status';
             }
-            try { inputElement.dispatchEvent(new Event('input', { bubbles: true })); } catch (e2) {}
+            if (emitChange) {
+                // Use a non-input event to avoid recursion with the input handler.
+                try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+            }
         }
 
         // Fetch suggestions using new API (same as map controls - no type restrictions)
@@ -633,14 +636,14 @@ const FieldsetBuilder = (function(){
                                 if (latInput) latInput.value = lat;
                                 if (lngInput) lngInput.value = lng;
                                 try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
-                                try { inputElement.dispatchEvent(new Event('input', { bubbles: true })); } catch (e4) {}
+                                try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e4) {}
                                 
                                 if (statusElement) {
                                     statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
                                     statusElement.className = 'fieldset-location-status success';
                                 }
                             } else {
-                                clearConfirmedLocation();
+                                clearConfirmedLocation(true);
                                 if (statusElement) {
                                     statusElement.textContent = 'No location data for this place';
                                     statusElement.className = 'fieldset-location-status error';
@@ -648,7 +651,7 @@ const FieldsetBuilder = (function(){
                             }
                         } catch (err) {
                             console.error('Place details error:', err);
-                            clearConfirmedLocation();
+                            clearConfirmedLocation(true);
                             if (statusElement) {
                                 statusElement.textContent = 'Error loading place details';
                                 statusElement.className = 'fieldset-location-status error';
@@ -668,7 +671,8 @@ const FieldsetBuilder = (function(){
         
         // If the user types, the location is no longer confirmed (must pick from Google again).
         inputElement.addEventListener('input', function() {
-            clearConfirmedLocation();
+            // Manual typing invalidates confirmation, but must not re-dispatch input (would recurse).
+            clearConfirmedLocation(false);
             clearTimeout(debounceTimer);
             var query = inputElement.value.trim();
             
@@ -2821,7 +2825,8 @@ const FieldsetBuilder = (function(){
 
                                         // Mark address as Places-confirmed (required for completion)
                                         try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
-                                        try { smartAddrInput.dispatchEvent(new Event('input', { bubbles: true })); } catch (e1) {}
+                                        // Use change so we don't trigger the address input handler.
+                                        try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                                         
                                         // Update status
                                         smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
@@ -2849,7 +2854,7 @@ const FieldsetBuilder = (function(){
                             try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e2) {}
                             smartLatInput.value = '';
                             smartLngInput.value = '';
-                            try { smartAddrInput.dispatchEvent(new Event('input', { bubbles: true })); } catch (e3) {}
+                            // No re-dispatch here; this handler is already running due to input.
                         }
                         clearTimeout(debounceTimer);
                         var query = inputEl.value.trim();
