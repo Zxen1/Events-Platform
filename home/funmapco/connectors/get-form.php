@@ -183,7 +183,11 @@ try {
         $fieldsetFields = $fieldset['fieldset_fields'] ?? [];
         
         // For single-field fieldsets, use the field's limits
-        // For multi-field fieldsets, try to match by fieldset_key or use first text field
+        // For multi-field fieldsets, use the FIRST sub-field (in order) that has usable limits.
+        // "Usable" here means:
+        // - it exists in the `fields` table lookup
+        // - it has min/max present (not both null)
+        // - and it is configured to show limits (`show_limit` = 1)
         $minLength = null;
         $maxLength = null;
         $showLimit = 1; // Default to showing limits
@@ -196,11 +200,32 @@ try {
                 $maxLength = $fieldLimitsLookup[$fieldKey]['max_length'];
                 $showLimit = $fieldLimitsLookup[$fieldKey]['show_limit'] ?? 1;
             }
-        } elseif ($fieldsetKey !== '' && isset($fieldLimitsLookup[$fieldsetKey])) {
-            // Try matching fieldset_key to a field_key (e.g., "title" fieldset -> "title" field)
-            $minLength = $fieldLimitsLookup[$fieldsetKey]['min_length'];
-            $maxLength = $fieldLimitsLookup[$fieldsetKey]['max_length'];
-            $showLimit = $fieldLimitsLookup[$fieldsetKey]['show_limit'] ?? 1;
+        } elseif (count($fieldsetFields) > 1) {
+            // Multi-field: pick the first sub-field with usable limits.
+            foreach ($fieldsetFields as $fieldKey) {
+                $fieldKey = is_string($fieldKey) ? trim($fieldKey) : '';
+                if ($fieldKey === '') continue;
+                if (!isset($fieldLimitsLookup[$fieldKey])) continue;
+                
+                $candidateMin = $fieldLimitsLookup[$fieldKey]['min_length'] ?? null;
+                $candidateMax = $fieldLimitsLookup[$fieldKey]['max_length'] ?? null;
+                $candidateShow = $fieldLimitsLookup[$fieldKey]['show_limit'] ?? 1;
+                
+                if ((int)$candidateShow !== 1) continue;
+                if ($candidateMin === null && $candidateMax === null) continue;
+                
+                $minLength = $candidateMin;
+                $maxLength = $candidateMax;
+                $showLimit = (int)$candidateShow;
+                break;
+            }
+            
+            // If still unset, allow the legacy "fieldset_key matches field_key" behavior as a last resort.
+            if ($minLength === null && $maxLength === null && $fieldsetKey !== '' && isset($fieldLimitsLookup[$fieldsetKey])) {
+                $minLength = $fieldLimitsLookup[$fieldsetKey]['min_length'];
+                $maxLength = $fieldLimitsLookup[$fieldsetKey]['max_length'];
+                $showLimit = $fieldLimitsLookup[$fieldsetKey]['show_limit'] ?? 1;
+            }
         }
         
         $fieldset['min_length'] = $minLength;
