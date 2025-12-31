@@ -2430,11 +2430,13 @@ const MemberModule = (function() {
         // Render terms agreement and submit buttons after checkout options
         renderTermsAndSubmitSection();
 
+        // Show the form wrapper FIRST so any dependent UI (like inline auth gate) can become interactive
+        // immediately (no "must click something first" sequencing bug).
+        if (formWrapper) formWrapper.hidden = false;
+
         // Keep submit state reactive: any change inside the form recalculates readiness.
         attachCreatePostValidationListeners();
         updateSubmitButtonState();
-        
-        if (formWrapper) formWrapper.hidden = false;
     }
     
     function renderAdditionalLocations(quantity, locationType, locationFieldsetData, mustRepeatFieldsets, autofillRepeatFieldsets) {
