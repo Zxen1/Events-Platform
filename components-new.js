@@ -2956,6 +2956,32 @@ const FieldsetBuilder = (function(){
             // Optional fieldsets are always complete.
             if (!requiredFlag) return true;
 
+            function isVisibleControl(el) {
+                if (!el) return false;
+                if (el.disabled) return false;
+                if (el.tagName === 'INPUT' && el.type === 'hidden') return false;
+                // Covers display:none, detached, etc.
+                if (el.offsetParent === null && el.getClientRects().length === 0) return false;
+                return true;
+            }
+
+            function allVisibleControlsFilled(containerEl) {
+                var els = containerEl.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
+                if (!els || els.length === 0) return false;
+                for (var i = 0; i < els.length; i++) {
+                    var el = els[i];
+                    if (!isVisibleControl(el)) continue;
+                    if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        if (!el.checked) return false;
+                        continue;
+                    }
+                    var val = String(el.value || '').trim();
+                    if (!val) return false;
+                }
+                return true;
+            }
+
             switch (key) {
                 case 'title':
                 case 'coupon':
@@ -3061,40 +3087,14 @@ const FieldsetBuilder = (function(){
                     return true;
                 }
                 case 'item-pricing': {
-                    var itemName = fieldset.querySelector('input.fieldset-input');
-                    if (!itemName || !String(itemName.value || '').trim()) return false;
-                    var blocks = fieldset.querySelectorAll('.fieldset-variant-block');
-                    if (!blocks || blocks.length === 0) return false;
-                    for (var i = 0; i < blocks.length; i++) {
-                        var b = blocks[i];
-                        var vIn = b.querySelector('input.fieldset-input');
-                        var currencyIn = b.querySelector('.fieldset-menu-button-input');
-                        var priceIn = b.querySelector('input.fieldset-input[inputmode="decimal"], input.fieldset-input');
-                        // Variant row has an input, price row has another; grab all and pick by placeholders.
-                        var inputs = b.querySelectorAll('input.fieldset-input');
-                        var variantVal = (inputs[0] && inputs[0].type === 'text') ? String(inputs[0].value || '').trim() : '';
-                        var priceVal = (inputs.length > 1) ? String(inputs[inputs.length - 1].value || '').trim() : '';
-                        if (!variantVal) return false;
-                        if (!currencyIn || !String(currencyIn.value || '').trim()) return false;
-                        if (!priceVal) return false;
-                    }
-                    return true;
+                    // Rule: all visible boxes in this pricing UI must be filled out.
+                    // Covers item name + each variant's name/currency/price.
+                    return allVisibleControlsFilled(fieldset);
                 }
                 case 'ticket-pricing': {
-                    // Required ticket pricing: all visible tier blocks must have tier name + currency + price.
-                    var tierBlocks = fieldset.querySelectorAll('.fieldset-tier-block');
-                    if (!tierBlocks || tierBlocks.length === 0) return false;
-                    for (var i = 0; i < tierBlocks.length; i++) {
-                        var tb = tierBlocks[i];
-                        var tierInputs = tb.querySelectorAll('input.fieldset-input');
-                        var tierName = tierInputs && tierInputs[0] ? String(tierInputs[0].value || '').trim() : '';
-                        var tierPrice = tierInputs && tierInputs[tierInputs.length - 1] ? String(tierInputs[tierInputs.length - 1].value || '').trim() : '';
-                        var currencyIn = tb.querySelector('.fieldset-menu-button-input');
-                        if (!tierName) return false;
-                        if (!currencyIn || !String(currencyIn.value || '').trim()) return false;
-                        if (!tierPrice) return false;
-                    }
-                    return true;
+                    // Rule: all visible boxes in this seating/tier pricing UI must be filled out.
+                    // Covers seating area name + tier name + currency + price.
+                    return allVisibleControlsFilled(fieldset);
                 }
                 default: {
                     // Fallback: require at least one non-hidden input to have a value and to be natively valid.
