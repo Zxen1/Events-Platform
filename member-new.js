@@ -282,11 +282,11 @@ const MemberModule = (function() {
     function forceOffMemberButtonAnchors() {
         try {
             if (!memberPanelBody) return;
-            if (window.ButtonAnchorBottom && typeof ButtonAnchorBottom.attach === 'function') {
-                try { ButtonAnchorBottom.attach(memberPanelBody, {}).forceOff(); } catch (e0) {}
+            if (window.BottomSlack && typeof BottomSlack.attach === 'function') {
+                try { BottomSlack.attach(memberPanelBody, {}).forceOff(); } catch (e0) {}
             }
-            if (window.ButtonAnchorTop && typeof ButtonAnchorTop.attach === 'function') {
-                try { ButtonAnchorTop.attach(memberPanelBody, {}).forceOff(); } catch (e1) {}
+            if (window.TopSlack && typeof TopSlack.attach === 'function') {
+                try { TopSlack.attach(memberPanelBody, {}).forceOff(); } catch (e1) {}
             }
         } catch (e) {
             // ignore

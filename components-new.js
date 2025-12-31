@@ -6850,13 +6850,13 @@ const WelcomeModalComponent = (function() {
 
 
 /* ============================================================================
-   BUTTON ANCHOR BOTTOM
+   BOTTOM SLACK
    Prevents "clicked button flies away" when collapsible content above closes.
    Self-contained: injects required slack CSS and creates the slack element if missing.
    ============================================================================ */
 
-const ButtonAnchorBottom = (function() {
-    var STYLE_ID = 'button-anchor-bottom-style';
+const BottomSlack = (function() {
+    var STYLE_ID = 'bottomSlackStyle';
     var attached = new WeakMap(); // scrollEl -> controller
     var registered = []; // [{ panelEl, scrollEl, controller }]
     var tabListenerInstalled = false;
@@ -6867,8 +6867,8 @@ const ButtonAnchorBottom = (function() {
             var style = document.createElement('style');
             style.id = STYLE_ID;
             style.textContent =
-                '.panel-bottom-slack{' +
-                'height:var(--panel-bottom-slack,0px);' +
+                '.bottomSlack{' +
+                'height:var(--bottomSlack,0px);' +
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
@@ -6882,11 +6882,11 @@ const ButtonAnchorBottom = (function() {
     
     function ensureSlackEl(scrollEl) {
         var slackEl = null;
-        try { slackEl = scrollEl.querySelector('.panel-bottom-slack'); } catch (e) { slackEl = null; }
+        try { slackEl = scrollEl.querySelector('.bottomSlack'); } catch (e) { slackEl = null; }
         if (slackEl) return slackEl;
         try {
             slackEl = document.createElement('div');
-            slackEl.className = 'panel-bottom-slack';
+            slackEl.className = 'bottomSlack';
             slackEl.setAttribute('aria-hidden', 'true');
             scrollEl.appendChild(slackEl);
         } catch (e2) {}
@@ -6918,7 +6918,7 @@ const ButtonAnchorBottom = (function() {
     
     function attach(scrollEl, opts) {
         if (!(scrollEl instanceof Element)) {
-            throw new Error('ButtonAnchorBottom.attach: scrollEl must be an Element');
+            throw new Error('BottomSlack.attach: scrollEl must be an Element');
         }
         
         var existing = null;
@@ -6963,7 +6963,7 @@ const ButtonAnchorBottom = (function() {
         function applySlackPx(px) {
             if (currentSlackPx === px) return;
             currentSlackPx = px;
-            scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
+            scrollEl.style.setProperty('--bottomSlack', String(px) + 'px');
             try { scrollEl.getBoundingClientRect(); } catch (e) {}
             fadeScrollbar();
         }
@@ -7173,7 +7173,7 @@ const ButtonAnchorBottom = (function() {
             try {
                 var t2 = e && e.target;
                 if (t2 && t2.closest) {
-                    var anchorDisabled = t2.closest('[data-anchor-bottom="false"]');
+                    var anchorDisabled = t2.closest('[data-bottomslack="false"]');
                     if (anchorDisabled) {
                         // This tab/panel doesn't want bottom anchor - collapse any existing slack and return.
                         applySlackPx(collapsedSlackPx);
@@ -7236,15 +7236,15 @@ const ButtonAnchorBottom = (function() {
 })();
 
 /* ============================================================================
-   BUTTON ANCHOR TOP
+   TOP SLACK
    Prevents "clicked button flies away" when collapsible content above changes near the TOP edge.
-   Opposite of ButtonAnchorBottom:
-   - Uses a TOP slack element + CSS var: --panel-top-slack
+   Opposite of BottomSlack:
+   - Uses a TOP slack element + CSS var: --topSlack
    - Blocks UPWARD scrolling while the top spacer is on-screen
    ============================================================================ */
 
-const ButtonAnchorTop = (function() {
-    var STYLE_ID = 'button-anchor-top-style';
+const TopSlack = (function() {
+    var STYLE_ID = 'topSlackStyle';
     var attached = new WeakMap(); // scrollEl -> controller
     var registered = []; // [{ panelEl, scrollEl, controller }]
     var tabListenerInstalled = false;
@@ -7255,8 +7255,8 @@ const ButtonAnchorTop = (function() {
             var style = document.createElement('style');
             style.id = STYLE_ID;
             style.textContent =
-                '.panel-top-slack{' +
-                'height:var(--panel-top-slack,0px);' +
+                '.topSlack{' +
+                'height:var(--topSlack,0px);' +
                 'flex:0 0 auto;' +
                 'pointer-events:none;' +
                 'transition:none;' +
@@ -7267,11 +7267,11 @@ const ButtonAnchorTop = (function() {
     
     function ensureSlackEl(scrollEl) {
         var slackEl = null;
-        try { slackEl = scrollEl.querySelector('.panel-top-slack'); } catch (e) { slackEl = null; }
+        try { slackEl = scrollEl.querySelector('.topSlack'); } catch (e) { slackEl = null; }
         if (slackEl) return slackEl;
         try {
             slackEl = document.createElement('div');
-            slackEl.className = 'panel-top-slack';
+            slackEl.className = 'topSlack';
             slackEl.setAttribute('aria-hidden', 'true');
             scrollEl.insertBefore(slackEl, scrollEl.firstChild);
         } catch (e2) {}
@@ -7303,7 +7303,7 @@ const ButtonAnchorTop = (function() {
     
     function attach(scrollEl, opts) {
         if (!(scrollEl instanceof Element)) {
-            throw new Error('ButtonAnchorTop.attach: scrollEl must be an Element');
+            throw new Error('TopSlack.attach: scrollEl must be an Element');
         }
         
         var existing = null;
@@ -7360,10 +7360,10 @@ const ButtonAnchorTop = (function() {
             internalAdjust = true;
             try {
                 if (px > oldPx) {
-                    scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
+                    scrollEl.style.setProperty('--topSlack', String(px) + 'px');
                     scrollEl.scrollTop = (scrollEl.scrollTop || 0) + (px - oldPx);
                 } else {
-                    scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
+                    scrollEl.style.setProperty('--topSlack', String(px) + 'px');
                     var next = (scrollEl.scrollTop || 0) - (oldPx - px);
                     scrollEl.scrollTop = next < 0 ? 0 : next;
                 }
@@ -7455,8 +7455,8 @@ const ButtonAnchorTop = (function() {
             
             // Check if the anchor element is within a tab/panel that has BOTTOM anchor disabled.
             try {
-                if (a.el.closest && a.el.closest('[data-anchor-bottom="false"]')) {
-                    return; // This tab/panel doesn't want bottom anchor adjustments.
+                if (a.el.closest && a.el.closest('[data-topslack="false"]')) {
+                    return; // This tab/panel doesn't want top anchor adjustments.
                 }
             } catch (_eAttr) {}
             
@@ -7989,7 +7989,7 @@ const AvatarCropperComponent = (function() {
    ============================================================================ */
 
 const AvatarPickerComponent = (function() {
-
+    
     // Host-integrated 4-tile picker:
     // - "self" tile (shows current/staged avatar; shows Add tile if empty)
     // - optional "upload" tile (second-click opens file picker)
@@ -8032,7 +8032,7 @@ const AvatarPickerComponent = (function() {
 
         var grid = document.createElement('div');
         grid.className = 'component-avatarpicker-grid';
-
+        
         var fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = 'image/*';
@@ -8115,9 +8115,9 @@ const AvatarPickerComponent = (function() {
 
         function openFilePicker() {
             if (!allowUpload) return;
-            fileInput.value = '';
-            fileInput.click();
-        }
+                    fileInput.value = '';
+                    fileInput.click();
+                }
 
         function blobFromUrl(url) {
             return fetch(url).then(function(r) { return r.blob(); });
@@ -8157,9 +8157,9 @@ const AvatarPickerComponent = (function() {
 
             function renderImgTile(btn, src) {
                 btn.innerHTML = '';
-                var img = document.createElement('img');
+            var img = document.createElement('img');
                 img.className = 'component-avatarpicker-tile-image';
-                img.alt = '';
+            img.alt = '';
                 img.src = src;
                 btn.appendChild(img);
             }
@@ -8341,7 +8341,7 @@ const AvatarPickerComponent = (function() {
             }
         };
     }
-
+    
     return {
         attach: attach
     };
@@ -8735,6 +8735,6 @@ window.ThreeButtonDialogComponent = ThreeButtonDialogComponent;
 window.ToastComponent = ToastComponent;
 window.WelcomeModalComponent = WelcomeModalComponent;
 window.ImageAddTileComponent = ImageAddTileComponent;
-window.ButtonAnchorBottom = ButtonAnchorBottom;
-window.ButtonAnchorTop = ButtonAnchorTop;
+window.BottomSlack = BottomSlack;
+window.TopSlack = TopSlack;
 

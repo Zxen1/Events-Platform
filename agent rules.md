@@ -302,16 +302,16 @@ $now = new DateTime('now', $utcMinus12);
 
 ### Source of truth
 1. **Components file**: Both components live in `components-new.js` and are exposed globally:
-   - `window.ButtonAnchorBottom`
-   - `window.ButtonAnchorTop`
+   - `window.BottomSlack`
+   - `window.TopSlack`
 2. **Usage pattern**: Both are attached to a **scroll container element** (the element that actually scrolls, e.g. a panel body).
 3. **Standalone behavior**: Each component injects its own minimal CSS and will create its required spacer element if missing (so it can be “dropped in”).
 
 ### How to attach BOTH together (recommended)
 1. **Pick the scroll container**: Attach to the element that has `overflow-y:auto` and is the scrollable area (example: `.admin-panel-body`).
 2. **Attach bottom + top** (same container):
-   - Call `ButtonAnchorBottom.attach(scrollEl, options)`
-   - Call `ButtonAnchorTop.attach(scrollEl, options)`
+   - Call `BottomSlack.attach(scrollEl, options)`
+   - Call `TopSlack.attach(scrollEl, options)`
 3. **Recommended options** (keep consistent across both):
    - `stopDelayMs: 180`
    - `clickHoldMs: 250`
@@ -319,11 +319,11 @@ $now = new DateTime('now', $utcMinus12);
 
 ### Required DOM / CSS (handled automatically, but documented)
 1. **Bottom spacer element** (created if missing):
-   - `<div class="panel-bottom-slack" aria-hidden="true"></div>`
-   - Controlled by CSS var: `--panel-bottom-slack`
+   - `<div class="bottomSlack" aria-hidden="true"></div>`
+   - Controlled by CSS var: `--bottomSlack`
 2. **Top spacer element** (created if missing):
-   - `<div class="panel-top-slack" aria-hidden="true"></div>`
-   - Controlled by CSS var: `--panel-top-slack`
+   - `<div class="topSlack" aria-hidden="true"></div>`
+   - Controlled by CSS var: `--topSlack`
 
 ### Tab / sub-tab switching
 1. Both components default to forcing slack OFF when switching any tab/sub-tab (`[role="tab"]`) within the panel scope.

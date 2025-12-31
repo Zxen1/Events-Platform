@@ -20,16 +20,16 @@
    ============================================================================ */
 
 /* ============================================================================
-   PANEL BOTTOM SLACK (Reusable bottom spacer)
+   BOTTOM SLACK (Reusable bottom spacer)
    ============================================================================
-   Use as the last child inside any scrollable panel/tab content:
-   <div class="panel-bottom-slack" aria-hidden="true"></div>
-   Default is 0px; the JS spacer system toggles this via: --panel-bottom-slack
+   Use as the last child inside any scrollable container:
+   <div class="bottomSlack" aria-hidden="true"></div>
+   Default is 0px; the Slack system toggles this via: --bottomSlack
    ============================================================================ */
 
-.panel-bottom-slack {
-  /* Default is 0. The Button Anchor Collapsible Spacer logic sets this variable as needed. */
-  height: var(--panel-bottom-slack, 0px);
+.bottomSlack {
+  /* Default is 0. The Slack system sets this variable as needed. */
+  height: var(--bottomSlack, 0px);
   flex: 0 0 auto;
   pointer-events: none;
   /* Do not animate height changes (avoids visible resize/flick). */
@@ -37,7 +37,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .panel-bottom-slack {
+  .bottomSlack {
     transition: none;
   }
 }

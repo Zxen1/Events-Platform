@@ -3,7 +3,7 @@
    ============================================================================
    
    Created: December 30, 2025
-   Purpose: Backup of working ButtonAnchorBottom and ButtonAnchorTop components.
+   Purpose: Backup of working BottomSlack and TopSlack components.
    
    NO DEPENDENCIES - These components are fully self-contained.
    They inject their own CSS and create their own DOM elements as needed.
@@ -11,12 +11,12 @@
    USAGE:
    1. Include this file in your HTML: <script src="button-anchor-backup.js"></script>
    2. Attach to scroll containers:
-      ButtonAnchorBottom.attach(scrollEl, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
-      ButtonAnchorTop.attach(scrollEl, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+      BottomSlack.attach(scrollEl, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+      TopSlack.attach(scrollEl, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
    
    WHAT THEY DO:
-   - ButtonAnchorBottom: Prevents "button flies away" when content ABOVE collapses
-   - ButtonAnchorTop: Prevents "button flies away" when content BELOW collapses (closes downward)
+   - BottomSlack: Prevents "button flies away" when content ABOVE collapses
+   - TopSlack: Prevents "button flies away" when content BELOW collapses (closes downward)
    
    ============================================================================ */
 
@@ -29,7 +29,7 @@
        Self-contained: injects required slack CSS and creates the slack element if missing.
        ======================================================================== */
 
-    var ButtonAnchorBottom = (function() {
+    var BottomSlack = (function() {
         var STYLE_ID = 'button-anchor-bottom-style';
         var attached = new WeakMap();
         var registered = [];
@@ -41,8 +41,8 @@
                 var style = document.createElement('style');
                 style.id = STYLE_ID;
                 style.textContent =
-                    '.panel-bottom-slack{' +
-                    'height:var(--panel-bottom-slack,0px);' +
+                    '.bottomSlack{' +
+                    'height:var(--bottomSlack,0px);' +
                     'flex:0 0 auto;' +
                     'pointer-events:none;' +
                     'transition:none;' +
@@ -53,11 +53,11 @@
         
         function ensureSlackEl(scrollEl) {
             var slackEl = null;
-            try { slackEl = scrollEl.querySelector('.panel-bottom-slack'); } catch (e) { slackEl = null; }
+            try { slackEl = scrollEl.querySelector('.bottomSlack'); } catch (e) { slackEl = null; }
             if (slackEl) return slackEl;
             try {
                 slackEl = document.createElement('div');
-                slackEl.className = 'panel-bottom-slack';
+                slackEl.className = 'bottomSlack';
                 slackEl.setAttribute('aria-hidden', 'true');
                 scrollEl.appendChild(slackEl);
             } catch (e2) {}
@@ -89,7 +89,7 @@
         
         function attach(scrollEl, opts) {
             if (!(scrollEl instanceof Element)) {
-                throw new Error('ButtonAnchorBottom.attach: scrollEl must be an Element');
+                throw new Error('BottomSlack.attach: scrollEl must be an Element');
             }
             
             var existing = null;
@@ -134,7 +134,7 @@
                 if (currentSlackPx === px) return;
                 currentSlackPx = px;
                 try {
-                    scrollEl.style.setProperty('--panel-bottom-slack', String(px) + 'px');
+                    scrollEl.style.setProperty('--bottomSlack', String(px) + 'px');
                 } catch (e0) {}
                 try { scrollEl.getBoundingClientRect(); } catch (e1) {}
                 fadeScrollbar();
@@ -312,12 +312,12 @@
     /* ========================================================================
        BUTTON ANCHOR TOP
        Prevents "clicked button flies away" when collapsible content above changes near the TOP edge.
-       Opposite of ButtonAnchorBottom:
-       - Uses a TOP slack element + CSS var: --panel-top-slack
+       Opposite of BottomSlack:
+       - Uses a TOP slack element + CSS var: --topSlack
        - Blocks UPWARD scrolling while the top spacer is on-screen
        ======================================================================== */
 
-    var ButtonAnchorTop = (function() {
+    var TopSlack = (function() {
         var STYLE_ID = 'button-anchor-top-style';
         var attached = new WeakMap();
         var registered = [];
@@ -329,8 +329,8 @@
                 var style = document.createElement('style');
                 style.id = STYLE_ID;
                 style.textContent =
-                    '.panel-top-slack{' +
-                    'height:var(--panel-top-slack,0px);' +
+                    '.topSlack{' +
+                    'height:var(--topSlack,0px);' +
                     'flex:0 0 auto;' +
                     'pointer-events:none;' +
                     'transition:none;' +
@@ -341,11 +341,11 @@
         
         function ensureSlackEl(scrollEl) {
             var slackEl = null;
-            try { slackEl = scrollEl.querySelector('.panel-top-slack'); } catch (e) { slackEl = null; }
+            try { slackEl = scrollEl.querySelector('.topSlack'); } catch (e) { slackEl = null; }
             if (slackEl) return slackEl;
             try {
                 slackEl = document.createElement('div');
-                slackEl.className = 'panel-top-slack';
+                slackEl.className = 'topSlack';
                 slackEl.setAttribute('aria-hidden', 'true');
                 scrollEl.insertBefore(slackEl, scrollEl.firstChild);
             } catch (e2) {}
@@ -377,7 +377,7 @@
         
         function attach(scrollEl, opts) {
             if (!(scrollEl instanceof Element)) {
-                throw new Error('ButtonAnchorTop.attach: scrollEl must be an Element');
+                throw new Error('TopSlack.attach: scrollEl must be an Element');
             }
             
             var existing = null;
@@ -432,10 +432,10 @@
                 internalAdjust = true;
                 try {
                     if (px > oldPx) {
-                        scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
+                        scrollEl.style.setProperty('--topSlack', String(px) + 'px');
                         scrollEl.scrollTop = (scrollEl.scrollTop || 0) + (px - oldPx);
                     } else {
-                        scrollEl.style.setProperty('--panel-top-slack', String(px) + 'px');
+                        scrollEl.style.setProperty('--topSlack', String(px) + 'px');
                         var next = (scrollEl.scrollTop || 0) - (oldPx - px);
                         scrollEl.scrollTop = next < 0 ? 0 : next;
                     }
@@ -689,8 +689,8 @@
     })();
 
     // Expose globally
-    window.ButtonAnchorBottom = ButtonAnchorBottom;
-    window.ButtonAnchorTop = ButtonAnchorTop;
+    window.BottomSlack = BottomSlack;
+    window.TopSlack = TopSlack;
 
 })();
 

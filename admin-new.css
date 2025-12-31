@@ -250,7 +250,7 @@
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 
-/* Bottom slack is provided by `.panel-bottom-slack` elements. */
+/* Bottom slack is provided by `.bottomSlack` elements. */
 
 /* Prevent flex children shrinking so bottom slack always creates real overflow/scroll. */
 .admin-panel-body > * {

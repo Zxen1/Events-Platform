@@ -407,7 +407,7 @@
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
 
-/* Bottom slack is provided by `.panel-bottom-slack` elements. */
+/* Bottom slack is provided by `.bottomSlack` elements. */
 
 /* IMPORTANT: panel bodies are flex columns; prevent children shrinking so bottom slack
    always creates real overflow/scroll (especially for short tabs like logged-in Profile). */
@@ -1406,7 +1406,7 @@
   font-size: 14px;
 }
 
-/* Spacing under content is handled by `.panel-bottom-slack` at the end of the panel body. */
+/* Spacing under content is handled by `.bottomSlack` at the end of the panel body. */
 
 /* ============================================================================
    UNSAVED PROMPT DIALOG

@@ -539,19 +539,19 @@ const App = (function() {
      WHEN TO DISABLE BOTTOM ANCHOR:
        Rarely needed. Only if a tab has no expandable content below clicks.
      -------------------------------------------------------------------------- */
-  var BUTTON_ANCHOR_CONFIG = {
+  var SLACK_CONFIG = {
     'admin-tab-moderation':  { top: false },
     'member-auth-login':     { top: false, bottom: false },
     'member-auth-profile':   { top: false }
   };
 
-  function applyButtonAnchorConfig() {
-    Object.keys(BUTTON_ANCHOR_CONFIG).forEach(function(id) {
+  function applySlackConfig() {
+    Object.keys(SLACK_CONFIG).forEach(function(id) {
       var el = document.getElementById(id);
       if (!el) return;
-      var cfg = BUTTON_ANCHOR_CONFIG[id];
-      if (cfg.top === false) el.setAttribute('data-anchor-top', 'false');
-      if (cfg.bottom === false) el.setAttribute('data-anchor-bottom', 'false');
+      var cfg = SLACK_CONFIG[id];
+      if (cfg.top === false) el.setAttribute('data-topslack', 'false');
+      if (cfg.bottom === false) el.setAttribute('data-bottomslack', 'false');
     });
   }
 
@@ -559,24 +559,24 @@ const App = (function() {
      BUTTON ANCHOR INIT
      Implemented as reusable components in `components-new.js`.
   */
-  function initButtonAnchors() {
+  function initSlack() {
     // Apply per-tab config first
-    applyButtonAnchorConfig();
+    applySlackConfig();
     
     var selectors = ['.filter-panel-body', '.admin-panel-body', '.member-panel-body'];
     selectors.forEach(function(sel) {
       document.querySelectorAll(sel).forEach(function(el) {
-        // Safety cleanup: if a top-anchor spacer was previously attached in an older session/build,
+        // Safety cleanup: if a top slack element was previously attached in an older session/build,
         // remove its injected element and clear its CSS var so it cannot cause 4000px "jump" effects.
         try {
-          el.style.setProperty('--panel-top-slack', '0px');
-          var topSlack = el.querySelector('.panel-top-slack');
+          el.style.setProperty('--topSlack', '0px');
+          var topSlack = el.querySelector('.topSlack');
           if (topSlack && topSlack.parentNode) topSlack.parentNode.removeChild(topSlack);
         } catch (e) {}
 
-        // Attach both anchors - they check data attributes internally
-        ButtonAnchorBottom.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
-        ButtonAnchorTop.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        // Attach both slack systems - they check data attributes internally
+        BottomSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
+        TopSlack.attach(el, { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 });
       });
     });
   }
@@ -608,8 +608,8 @@ const App = (function() {
       }
     });
 
-    // Anti-jank: Button Anchors (top & bottom, per-tab config)
-    initButtonAnchors();
+    // Anti-jank: Slack (top & bottom, per-tab config)
+    initSlack();
     
     // Global Escape key handler - closes modals, menus, panels in order of focus
     // Priority: Dialogs (capture phase) > Menus (MenuManager) > Panels (panelStack)
