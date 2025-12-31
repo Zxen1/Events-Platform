@@ -153,6 +153,10 @@ const MemberModule = (function() {
     var createAuthRegisterPanel = null;
     var createAuthLoginForm = null;
     var createAuthRegisterForm = null;
+    var createAuthLoginEmailInput = null;
+    var createAuthLoginPasswordInput = null;
+    var createAuthLoginSubmitBtn = null;
+    var createAuthRegisterSubmitBtn = null;
     var createAuthRegisterFieldsets = null;
     var avatarGridCreate = null;
     var avatarPickerCreate = null;
@@ -308,6 +312,10 @@ const MemberModule = (function() {
         createAuthRegisterPanel = document.getElementById('member-create-auth-register');
         createAuthLoginForm = document.getElementById('memberCreateAuthFormLogin');
         createAuthRegisterForm = document.getElementById('memberCreateAuthFormRegister');
+        createAuthLoginEmailInput = document.getElementById('memberCreateLoginEmail');
+        createAuthLoginPasswordInput = document.getElementById('memberCreateLoginPassword');
+        createAuthLoginSubmitBtn = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-submit[data-action="create-auth-login"]') : null;
+        createAuthRegisterSubmitBtn = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-submit[data-action="create-auth-register"]') : null;
         createAuthRegisterFieldsets = document.getElementById('member-create-register-fieldsets');
         avatarGridCreate = document.getElementById('member-avatar-grid-create');
         createCountryMenuContainer = document.getElementById('member-create-country-menu');
@@ -543,6 +551,12 @@ const MemberModule = (function() {
                 e.preventDefault();
                 handleCreateAuthRegister();
             });
+        }
+        if (createAuthWrapper) {
+            // Keep the inline auth submit buttons in sync with the create-form completeness.
+            // (Same disable/grey behavior as the normal Submit button.)
+            createAuthWrapper.addEventListener('input', function() { updateSubmitButtonState(); }, true);
+            createAuthWrapper.addEventListener('change', function() { updateSubmitButtonState(); }, true);
         }
         
         // Login button click
@@ -2832,11 +2846,40 @@ const MemberModule = (function() {
 
     function updateSubmitButtonState() {
         var ready = isCreatePostFormReadyForSubmit();
+        var loggedIn = hasValidLoggedInUser();
+
+        // Logged-in users: use the normal submit buttons.
         if (submitBtn) {
-            submitBtn.disabled = !ready;
+            submitBtn.hidden = !loggedIn;
+            submitBtn.disabled = !ready || !loggedIn;
         }
         if (adminSubmitBtn) {
-            adminSubmitBtn.disabled = !ready;
+            // Admin button only relevant when logged in as admin (never when logged out).
+            adminSubmitBtn.hidden = !(loggedIn && currentUser && currentUser.isAdmin);
+            adminSubmitBtn.disabled = !ready || !(loggedIn && currentUser && currentUser.isAdmin);
+        }
+
+        // Logged-out users: show inline auth submit buttons instead (same disable/grey rules).
+        if (createAuthWrapper) {
+            // Only show once the create form exists/visible.
+            var showGate = (!loggedIn && formWrapper && formWrapper.hidden === false);
+            createAuthWrapper.hidden = !showGate;
+            if (showGate) createAuthWrapper.removeAttribute('inert');
+            else createAuthWrapper.setAttribute('inert', '');
+        }
+
+        var active = createAuthWrapper ? String(createAuthWrapper.dataset.active || 'login') : 'login';
+        var isLoginActive = active !== 'register';
+        var isRegisterActive = active === 'register';
+
+        var loginFilled = !!(createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() && createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim());
+        if (createAuthLoginSubmitBtn) {
+            // Same core rule as submit: disabled until create-form is complete, plus login inputs must be present.
+            createAuthLoginSubmitBtn.disabled = loggedIn || !isLoginActive || !ready || !loginFilled;
+        }
+        if (createAuthRegisterSubmitBtn) {
+            // Same core rule as submit: disabled until create-form is complete, plus register fieldsets must be complete.
+            createAuthRegisterSubmitBtn.disabled = loggedIn || !isRegisterActive || !ready || !isCreateAuthRegisterComplete();
         }
     }
     
@@ -3813,8 +3856,9 @@ const MemberModule = (function() {
 
         if (createAuthLoginTab) createAuthLoginTab.classList.toggle('member-auth-tab--selected', isLogin);
         if (createAuthRegisterTab) createAuthRegisterTab.classList.toggle('member-auth-tab--selected', !isLogin);
-        if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
-        if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
+        // These are not role="tab" (to allow click-hold bottom slack), so use aria-pressed for toggle state.
+        if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-pressed', isLogin ? 'true' : 'false');
+        if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-pressed', !isLogin ? 'true' : 'false');
 
         if (createAuthLoginPanel) {
             createAuthLoginPanel.classList.toggle('member-auth-panel--hidden', !isLogin);
@@ -3830,6 +3874,20 @@ const MemberModule = (function() {
         if (!isLogin) {
             ensureCreateAuthRegisterReady();
         }
+        updateSubmitButtonState();
+    }
+
+    function isCreateAuthRegisterComplete() {
+        if (!createAuthRegisterPanel) return false;
+        // Component-owned validity: require ALL required fieldsets to be complete.
+        var req = createAuthRegisterPanel.querySelectorAll('.fieldset[data-required="true"][data-complete]');
+        if (!req || !req.length) return false;
+        for (var i = 0; i < req.length; i++) {
+            var fs = req[i];
+            if (!fs || !fs.dataset) continue;
+            if (String(fs.dataset.complete || '') !== 'true') return false;
+        }
+        return true;
     }
 
     function showCreateAuthGate(isAdminFree) {

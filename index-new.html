@@ -898,8 +898,10 @@
                  Keep it inside the Create Post flow so drafts are not lost. -->
             <div id="member-create-auth" class="member-auth member-create-auth" data-active="login" hidden>
               <div class="member-auth-tabs" role="tablist" aria-label="Continue to submit">
-                <button type="button" class="member-auth-tab member-auth-tab--selected" data-target="login" role="tab" aria-selected="true" aria-controls="member-create-auth-login">Log In</button>
-                <button type="button" class="member-auth-tab" data-target="register" role="tab" aria-selected="false" aria-controls="member-create-auth-register">Register</button>
+                <!-- NOTE: These are "subtabs" but must not be role="tab" because the slack system intentionally
+                     disables click-hold slack on [role="tab"] to avoid leaking slack between real tabs. -->
+                <button type="button" class="member-auth-tab member-auth-tab--selected" data-target="login" role="button" aria-pressed="true" aria-controls="member-create-auth-login">Log In</button>
+                <button type="button" class="member-auth-tab" data-target="register" role="button" aria-pressed="false" aria-controls="member-create-auth-register">Register</button>
               </div>
 
               <!-- Login -->
