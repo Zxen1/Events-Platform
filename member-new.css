@@ -132,9 +132,7 @@
 
 .member-auth-submit[data-action="register"] {
   width: 100%;
-  height: 44px;
-  min-height: 44px;
-  padding: 0 10px;
+  /* Use the same sizing/states as `.member-button-submit` (Create Post submit). */
 }
 
 .member-supporter-join-toggle {
@@ -691,33 +689,6 @@
   opacity: 0.6;
 }
 
-/* Disabled auth buttons should look disabled (same as create-post submit pattern). */
-.member-button-auth:disabled,
-.member-button-auth[aria-disabled="true"] {
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.member-button-auth:disabled:hover,
-.member-button-auth[aria-disabled="true"]:hover,
-.member-button-auth--disabled:hover {
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-  transform: none;
-}
-
-.member-button-auth:disabled:active,
-.member-button-auth[aria-disabled="true"]:active,
-.member-button-auth--disabled:active {
-  background: var(--btn-disabled);
-  border-color: var(--btn-disabled);
-  color: var(--button-disabled-text);
-  transform: none;
-}
 
 /* ============================================================================
    SUPPORT FUNMAP: PAYMENT BUTTONS

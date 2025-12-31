@@ -3518,7 +3518,6 @@ const MemberModule = (function() {
             var complete = isRegisterFormComplete();
             btn.disabled = !complete;
             btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
-            try { btn.classList.toggle('member-button-auth--disabled', !complete); } catch (e2) {}
         } catch (e) {
             // ignore
         }
