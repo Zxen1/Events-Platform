@@ -2201,6 +2201,14 @@ const MemberModule = (function() {
                     container: formFields,
                     defaultCurrency: getDefaultCurrencyForForms()
                 });
+
+                // Carry validation metadata onto the rendered DOM so submit-state can be computed
+                // without guessing: required flag + fieldset type are part of the form configuration.
+                try {
+                    fieldset.dataset.fieldsetType = String(field.type || '').trim();
+                    fieldset.dataset.fieldsetName = String(field.name || '').trim();
+                    fieldset.dataset.required = (field.required === true) ? 'true' : 'false';
+                } catch (e) {}
                 
                 // Add location quantity selector to location fieldset
                 if (isLocationFieldset) {
@@ -2338,6 +2346,10 @@ const MemberModule = (function() {
         
         // Render terms agreement and submit buttons after checkout options
         renderTermsAndSubmitSection();
+
+        // Keep submit state reactive: any change inside the form recalculates readiness.
+        attachCreatePostValidationListeners();
+        updateSubmitButtonState();
         
         if (formWrapper) formWrapper.hidden = false;
     }
@@ -2404,6 +2416,13 @@ const MemberModule = (function() {
                 defaultCurrency: getDefaultCurrencyForForms()
             });
             
+            try {
+                locationFieldsetClone.dataset.fieldsetType = String(locationFieldData.type || '').trim();
+                locationFieldsetClone.dataset.fieldsetName = String(locationFieldData.name || '').trim();
+                var locReq = !!(locationFieldsetData && (locationFieldsetData.required === true || locationFieldsetData.required === 1 || locationFieldsetData.required === '1' || locationFieldsetData.required === 'true'));
+                locationFieldsetClone.dataset.required = locReq ? 'true' : 'false';
+            } catch (e) {}
+            
             // Built fieldset for location
             locationSection.appendChild(locationFieldsetClone);
             
@@ -2421,6 +2440,13 @@ const MemberModule = (function() {
                     container: locationSection,
                     defaultCurrency: getDefaultCurrencyForForms()
                 });
+                
+                try {
+                    fieldset.dataset.fieldsetType = String((fieldData && fieldData.type) || '').trim();
+                    fieldset.dataset.fieldsetName = String((fieldData && fieldData.name) || '').trim();
+                    var req = !!(fieldData && (fieldData.required === true || fieldData.required === 1 || fieldData.required === '1' || fieldData.required === 'true'));
+                    fieldset.dataset.required = req ? 'true' : 'false';
+                } catch (e) {}
                 
                 locationSection.appendChild(fieldset);
 
@@ -2689,7 +2715,7 @@ const MemberModule = (function() {
         submitBtn.type = 'submit';
         submitBtn.className = 'member-button-submit';
         submitBtn.textContent = 'Submit';
-        submitBtn.disabled = !termsAgreed;
+        submitBtn.disabled = true;
         actionsWrapper.appendChild(submitBtn);
         
         // Admin submit button (hidden by default)
@@ -2697,7 +2723,7 @@ const MemberModule = (function() {
         adminSubmitBtn.type = 'button';
         adminSubmitBtn.className = 'member-button-admin-submit';
         adminSubmitBtn.textContent = 'Admin: Submit Free';
-        adminSubmitBtn.disabled = !termsAgreed;
+        adminSubmitBtn.disabled = true;
         adminSubmitBtn.hidden = true;
         
         // Show admin button if user is admin
@@ -2718,10 +2744,26 @@ const MemberModule = (function() {
             e.preventDefault();
             handleCreatePostSubmit(true);
         });
+
+        // Now that the submit buttons exist, compute their real enabled/disabled state.
+        updateSubmitButtonState();
     }
     
+    function isCreatePostFormReadyForSubmit() {
+        if (isSubmittingPost) return false;
+        if (!termsAgreed) return false;
+        if (!selectedCategory || !selectedSubcategory) return false;
+        if (!formFields) return false;
+        
+        // Validate required fieldsets using the same rules as submission.
+        var validation = validateAndCollectFormData();
+        if (validation && validation.errorKey) return false;
+        
+        return true;
+    }
+
     function updateSubmitButtonState() {
-        var ready = termsAgreed;
+        var ready = isCreatePostFormReadyForSubmit();
         if (submitBtn) {
             submitBtn.disabled = !ready;
         }
@@ -2782,8 +2824,7 @@ const MemberModule = (function() {
         submitPostData(validation.payload, isAdminFree)
             .then(function(result) {
                 isSubmittingPost = false;
-                if (submitBtn) submitBtn.disabled = !termsAgreed;
-                if (adminSubmitBtn) adminSubmitBtn.disabled = !termsAgreed;
+                updateSubmitButtonState();
                 
                 if (result && (result.success === true || result.success === 1 || result.success === '1')) {
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
@@ -2810,8 +2851,7 @@ const MemberModule = (function() {
             .catch(function(err) {
                 console.error('[Member] Post submission failed:', err);
                 isSubmittingPost = false;
-                if (submitBtn) submitBtn.disabled = !termsAgreed;
-                if (adminSubmitBtn) adminSubmitBtn.disabled = !termsAgreed;
+                updateSubmitButtonState();
                 
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                     getMessage('msg_post_create_error', {}, false).then(function(msg) {
@@ -2864,6 +2904,54 @@ const MemberModule = (function() {
         var baseType = fieldType.replace(/-locked$/, '').replace(/-hidden$/, '');
         
         switch (baseType) {
+            case 'sessions':
+                // Sessions fieldset: selected dates + their session times.
+                // Validity rule: if there are selected dates, ALL visible time inputs must be non-empty and in HH:MM.
+                // NOTE: We do not guess missing times; incomplete = empty (prevents submit enable).
+                var selected = el.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                var selectedDates = [];
+                selected.forEach(function(day) {
+                    var iso = day && day.dataset ? String(day.dataset.iso || '').trim() : '';
+                    if (iso) selectedDates.push(iso);
+                });
+                selectedDates.sort();
+                
+                // If no dates selected, treat as empty.
+                if (!selectedDates.length) {
+                    return [];
+                }
+                
+                var timeInputs = el.querySelectorAll('input.fieldset-time');
+                var allTimes = [];
+                var timeRe = /^(\d{2}):(\d{2})$/;
+                
+                for (var i = 0; i < timeInputs.length; i++) {
+                    var v = timeInputs[i] && typeof timeInputs[i].value === 'string' ? timeInputs[i].value.trim() : '';
+                    if (!v) {
+                        return [];
+                    }
+                    var m = v.match(timeRe);
+                    if (!m) {
+                        return [];
+                    }
+                    var hh = parseInt(m[1], 10);
+                    var mm = parseInt(m[2], 10);
+                    if (!(hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59)) {
+                        return [];
+                    }
+                    allTimes.push(v);
+                }
+                
+                // If dates are selected but there are no time inputs rendered, this is incomplete.
+                if (!allTimes.length) {
+                    return [];
+                }
+                
+                return {
+                    dates: selectedDates,
+                    times: allTimes
+                };
+
             case 'text':
             case 'text-short':
             case 'text-medium':
@@ -3136,6 +3224,7 @@ const MemberModule = (function() {
                 type: '',
                 min_length: 0,
                 max_length: 500,
+                required: false,
                 location_repeat: false,
                 must_repeat: false,
                 autofill_repeat: false
@@ -3161,6 +3250,7 @@ const MemberModule = (function() {
             type: '',
             min_length: 0,
             max_length: 500,
+            required: false,
             location_repeat: false,
             must_repeat: false,
             autofill_repeat: false
@@ -3230,6 +3320,21 @@ const MemberModule = (function() {
         }
         if (typeof field.max_length === 'number') {
             result.max_length = field.max_length;
+        }
+
+        // Preserve required flag from backend/formbuilder
+        if (typeof field.required === 'boolean') {
+            result.required = field.required;
+        } else if (field.required === 1 || field.required === '1') {
+            result.required = true;
+        } else if (field.required === 'true') {
+            result.required = true;
+        } else if (typeof field.is_required === 'boolean') {
+            result.required = field.is_required;
+        } else if (field.is_required === 1 || field.is_required === '1') {
+            result.required = true;
+        } else if (field.is_required === 'true') {
+            result.required = true;
         }
 
         // Preserve repeat flags if provided by backend/formbuilder
@@ -3609,6 +3714,32 @@ const MemberModule = (function() {
                 target.focus();
             });
         }
+    }
+
+    function attachCreatePostValidationListeners() {
+        if (!formFields) return;
+        if (attachCreatePostValidationListeners._attachedTo === formFields) return;
+        
+        // Detach from any previous form root (in case the panel was rebuilt).
+        if (attachCreatePostValidationListeners._attachedTo && attachCreatePostValidationListeners._handler) {
+            try {
+                attachCreatePostValidationListeners._attachedTo.removeEventListener('input', attachCreatePostValidationListeners._handler, true);
+                attachCreatePostValidationListeners._attachedTo.removeEventListener('change', attachCreatePostValidationListeners._handler, true);
+                attachCreatePostValidationListeners._attachedTo.removeEventListener('blur', attachCreatePostValidationListeners._handler, true);
+                attachCreatePostValidationListeners._attachedTo.removeEventListener('fieldset:sessions-change', attachCreatePostValidationListeners._handler, true);
+            } catch (e) {}
+        }
+        
+        attachCreatePostValidationListeners._attachedTo = formFields;
+        attachCreatePostValidationListeners._handler = function() {
+            updateSubmitButtonState();
+        };
+        
+        // Capture phase so we catch events from nested components reliably.
+        formFields.addEventListener('input', attachCreatePostValidationListeners._handler, true);
+        formFields.addEventListener('change', attachCreatePostValidationListeners._handler, true);
+        formFields.addEventListener('blur', attachCreatePostValidationListeners._handler, true);
+        formFields.addEventListener('fieldset:sessions-change', attachCreatePostValidationListeners._handler, true);
     }
 
     /* --------------------------------------------------------------------------
