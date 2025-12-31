@@ -2978,9 +2978,25 @@ const MemberModule = (function() {
                 return currBtn ? currBtn.dataset.currencyValue || '' : '';
                 
             case 'amenities':
-                var amenitiesData = el.dataset.selectedAmenities;
+                // New-site amenities are rendered as rows with Yes/No radios (no dataset payload).
+                // Return a stable array of answers so required validation works and backend can consume it.
                 try {
-                    return amenitiesData ? JSON.parse(amenitiesData) : [];
+                    var rows = el.querySelectorAll('.fieldset-amenity-row');
+                    if (!rows || rows.length === 0) return [];
+                    var out = [];
+                    for (var i = 0; i < rows.length; i++) {
+                        var row = rows[i];
+                        if (!row) return [];
+                        var nameEl = row.querySelector('.fieldset-amenity-name');
+                        var amenityName = nameEl ? String(nameEl.textContent || '').trim() : '';
+                        var checked = row.querySelector('input[type="radio"]:checked');
+                        if (!checked) return []; // incomplete
+                        out.push({
+                            amenity: amenityName,
+                            value: String(checked.value || '')
+                        });
+                    }
+                    return out;
                 } catch (e) {
                     return [];
                 }
