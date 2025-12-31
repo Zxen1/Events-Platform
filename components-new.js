@@ -1430,6 +1430,15 @@ const FieldsetBuilder = (function(){
                 }
                 
                 function renderImages() {
+                    // Prevent layout "flash" / jump while we rebuild the grid.
+                    // Re-rendering clears and re-adds nodes; locking the min-height keeps the page stable.
+                    try {
+                        var r = imagesContainer.getBoundingClientRect();
+                        if (r && r.height && r.height > 0) {
+                            imagesContainer.style.minHeight = Math.ceil(r.height) + 'px';
+                        }
+                    } catch (e0) {}
+
                     imagesContainer.innerHTML = '';
                     
                     // Show existing images
@@ -1617,6 +1626,15 @@ const FieldsetBuilder = (function(){
                             fileInput.click();
                         });
                         imagesContainer.appendChild(uploadBox);
+                    }
+
+                    // Release the height lock on the next frame once DOM is populated.
+                    try {
+                        requestAnimationFrame(function() {
+                            imagesContainer.style.minHeight = '';
+                        });
+                    } catch (e1) {
+                        try { imagesContainer.style.minHeight = ''; } catch (e2) {}
                     }
                 }
 
