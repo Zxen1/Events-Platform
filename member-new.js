@@ -2785,7 +2785,7 @@ const MemberModule = (function() {
                 if (submitBtn) submitBtn.disabled = !termsAgreed;
                 if (adminSubmitBtn) adminSubmitBtn.disabled = !termsAgreed;
                 
-                if (result.success) {
+                if (result && (result.success === true || result.success === 1 || result.success === '1')) {
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
                         getMessage('msg_post_create_success', {}, false).then(function(msg) {
                             if (msg) ToastComponent.showSuccess(msg);
@@ -2999,8 +2999,8 @@ const MemberModule = (function() {
         submitBtn = null;
         adminSubmitBtn = null;
         
-        // Re-render category picker
-        renderCategoryPicker();
+        // Re-render formpicker (category/subcategory dropdowns)
+        renderFormpicker(document.getElementById('member-formpicker-cats'));
     }
     
     /* --------------------------------------------------------------------------
