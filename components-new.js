@@ -5709,6 +5709,33 @@ const CheckoutOptionsComponent = (function(){
         var group = document.createElement('div');
         group.className = 'member-checkout-group';
         group.dataset.isEvent = isEvent ? 'true' : 'false';
+
+        // Make the checkout wrapper behave like a required fieldset:
+        // - No default selection
+        // - Incomplete (red) until user selects an option
+        try { containerEl.dataset.required = 'true'; } catch (e0) {}
+        try { containerEl.dataset.complete = 'false'; } catch (e1) {}
+        var requiredStar = containerEl ? containerEl.querySelector('.fieldset-label-required') : null;
+
+        function setCompleteState(isComplete) {
+            var complete = !!isComplete;
+            try { containerEl.dataset.complete = complete ? 'true' : 'false'; } catch (e2) {}
+            if (requiredStar && requiredStar.style.display !== 'none') {
+                requiredStar.classList.toggle('fieldset-label-required--complete', complete);
+            }
+            try {
+                containerEl.dispatchEvent(new CustomEvent('fieldset:validity-change', { bubbles: true }));
+            } catch (e3) {}
+        }
+
+        function computeComplete() {
+            // For events, if no radios are enabled (no dates yet), we are not complete.
+            if (isEvent) {
+                var anyEnabled = !!group.querySelector('input[type="radio"]:not(:disabled)');
+                if (!anyEnabled) return false;
+            }
+            return !!group.querySelector('input[type="radio"]:checked');
+        }
         
         if (!checkoutOptions || checkoutOptions.length === 0) {
             throw new Error('CheckoutOptionsComponent.create: checkoutOptions is empty');
@@ -5759,7 +5786,6 @@ const CheckoutOptionsComponent = (function(){
                 radio.value = String(option.id);
                 radio.id = baseId + '-checkout-' + optionIndex;
                 radio.dataset.optionId = String(option.id);
-                if (optionIndex === 0 && hasDates) radio.checked = true;
                 radio.required = true;
                 radio.disabled = !hasDates;
                 card.appendChild(radio);
@@ -5825,7 +5851,6 @@ const CheckoutOptionsComponent = (function(){
                 radio30.dataset.days = '30';
                 radio30.dataset.price = price30.toFixed(2);
                 radio30.required = true;
-                if (optionIndex === 0) radio30.checked = true;
                 var text30 = document.createElement('span');
                 text30.className = 'member-checkout-duration-text';
                 text30.textContent = buildLocationSummary(30, locationCount) + ' — ' + (price30 > 0 ? currency + ' ' + price30.toFixed(2) : 'Free');
@@ -5889,9 +5914,11 @@ const CheckoutOptionsComponent = (function(){
                 var days = e.target.dataset.days ? parseInt(e.target.dataset.days, 10) : calculatedDays;
                 var price = e.target.dataset.price ? parseFloat(e.target.dataset.price) : null;
                 onSelect(optionId, days, price);
+                setCompleteState(computeComplete());
             }
         });
         syncSelectedStyles();
+        setCompleteState(computeComplete());
         
         containerEl.appendChild(group);
         
@@ -5922,9 +5949,6 @@ const CheckoutOptionsComponent = (function(){
                         card.classList.remove('member-checkout-option--disabled');
                         if (radio) {
                             radio.disabled = false;
-                            if (idx === 0 && !group.querySelector('input[type="radio"]:checked')) {
-                                radio.checked = true;
-                            }
                         }
                         if (priceDisplay) {
                             priceDisplay.classList.remove('member-checkout-price-display--disabled');
@@ -5968,6 +5992,8 @@ const CheckoutOptionsComponent = (function(){
                         if (t365) t365.textContent = buildLocationSummary(365, locationCount) + ' — ' + (res365.total > 0 ? curr + ' ' + res365.total.toFixed(2) : 'Free');
                     });
                 }
+                syncSelectedStyles();
+                setCompleteState(computeComplete());
             },
             
             // Get selected option data
