@@ -2796,8 +2796,9 @@ const MemberModule = (function() {
                 } else {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         // Use server message if provided, otherwise use existing message key
-                        if (result.message) {
-                            ToastComponent.showError(result.message);
+                        var serverMsg = (result && (result.message || result.error)) ? String(result.message || result.error) : '';
+                        if (serverMsg) {
+                            ToastComponent.showError(serverMsg);
                         } else {
                             getMessage('msg_post_create_error', {}, false).then(function(msg) {
                                 if (msg) ToastComponent.showError(msg);
@@ -2974,7 +2975,22 @@ const MemberModule = (function() {
                 body: JSON.stringify(postData)
             })
             .then(function(response) {
-                return response.json();
+                return response.text().then(function(text) {
+                    var parsed = null;
+                    try {
+                        parsed = text ? JSON.parse(text) : null;
+                    } catch (e) {
+                        // Server responded with non-JSON (PHP error, HTML error page, etc.)
+                        var err = new Error('add-post returned non-JSON response (HTTP ' + response.status + ')');
+                        err.http_status = response.status;
+                        err.body = text;
+                        throw err;
+                    }
+                    if (parsed && typeof parsed === 'object') {
+                        parsed.http_status = response.status;
+                    }
+                    return parsed;
+                });
             })
             .then(function(data) {
                 resolve(data);
