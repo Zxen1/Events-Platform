@@ -60,12 +60,15 @@ if (!$viaGateway) {
   }
 }
 
-function fail_key(int $code, string $messageKey, array $placeholders = null): void
+function fail_key(int $code, string $messageKey, array $placeholders = null, array $debug = null): void
 {
   http_response_code($code);
   $payload = ['success' => false, 'message_key' => $messageKey];
   if ($placeholders !== null) {
     $payload['placeholders'] = $placeholders;
+  }
+  if ($debug !== null) {
+    $payload['debug'] = $debug;
   }
   echo json_encode($payload, JSON_UNESCAPED_SLASHES);
   exit;
@@ -82,7 +85,12 @@ function abort_with_error(mysqli $mysqli, int $code, string $message, bool &$tra
     $transactionActive = false;
   }
   // No hardcoded strings: return a message key for UI.
-  fail_key($code, 'msg_post_create_error');
+  $dbg = [
+    'stage' => $message,
+    'db_error' => $mysqli->error ?? '',
+    'db_errno' => $mysqli->errno ?? 0,
+  ];
+  fail_key($code, 'msg_post_create_error', null, $dbg);
 }
 
 function fetch_table_columns(mysqli $mysqli, string $table): array
@@ -450,7 +458,8 @@ foreach ($byLoc as $locNum => $entries) {
   $priceSumParam = $card['price_summary'];
 
   // Bind + insert map card
-  $stmtCard->bind_param('issssssssddssss', $postIdParam, $subKeyParam, $titleParam, $descParam, $emailParam, $phoneParam, $venueNameParam, $addrLineParam, $latParam, $lngParam, $websiteParam, $ticketsParam, $checkoutTitleParam, $sessSumParam, $priceSumParam);
+  // Types: i + 7 strings + 2 doubles + 5 strings = 15 params
+  $stmtCard->bind_param('isssssssddsssss', $postIdParam, $subKeyParam, $titleParam, $descParam, $emailParam, $phoneParam, $venueNameParam, $addrLineParam, $latParam, $lngParam, $websiteParam, $ticketsParam, $checkoutTitleParam, $sessSumParam, $priceSumParam);
   if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
   $mapCardId = $stmtCard->insert_id;
   $stmtCard->close();
