@@ -2635,6 +2635,10 @@ const FieldsetBuilder = (function(){
                         
                         sessionsContainer.appendChild(group);
                     });
+
+                    // Recompute required/completion state after the DOM has changed (new time inputs, removals, etc.)
+                    // This keeps the asterisk honest without requiring the user to click into a newly added input.
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
                 
                 // Calendar day click
