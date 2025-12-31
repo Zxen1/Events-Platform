@@ -1699,6 +1699,9 @@ const FieldsetBuilder = (function(){
                 fileInput.accept = 'image/*';
                 fileInput.multiple = true;
                 fileInput.style.display = 'none';
+                // Keep a stable reference to the selected files, because we clear fileInput.value after reading.
+                // This allows the create-post submit pipeline to read the actual File objects without drafts.
+                fileInput._imageFiles = [];
                 fileInput.addEventListener('change', function() {
                     var files = Array.from(this.files);
                     files.forEach(function(file) {
@@ -1714,6 +1717,7 @@ const FieldsetBuilder = (function(){
                             });
                         }
                     });
+                    try { fileInput._imageFiles = imageEntries.map(function(e){ return e && e.file ? e.file : null; }).filter(Boolean); } catch (e0) {}
                     updateImagesMeta();
                     renderImages();
                     this.value = '';

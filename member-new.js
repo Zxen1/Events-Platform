@@ -2922,7 +2922,9 @@ const MemberModule = (function() {
                 
                 if (result && (result.success === true || result.success === 1 || result.success === '1')) {
                     if (window.ToastComponent && typeof ToastComponent.showSuccess === 'function') {
-                        getMessage('msg_post_create_success', {}, false).then(function(msg) {
+                        // Prefer backend message key if provided (message system only).
+                        var key = (result && result.message_key) ? String(result.message_key) : 'msg_post_create_success';
+                        getMessage(key, {}, false).then(function(msg) {
                             if (msg) ToastComponent.showSuccess(msg);
                         });
                     }
@@ -2991,6 +2993,14 @@ const MemberModule = (function() {
             var fieldType = el.dataset.fieldsetType || '';
             var fieldName = el.dataset.fieldsetName || fieldsetKey;
             var required = el.dataset.required === 'true';
+            // Location grouping: main form = 1, additional locations have a wrapper with data-location-number.
+            var locationNumber = 1;
+            try {
+                var locWrap = el.closest ? el.closest('.member-additional-location[data-location-number]') : null;
+                if (locWrap && locWrap.dataset && locWrap.dataset.locationNumber) {
+                    locationNumber = parseInt(locWrap.dataset.locationNumber, 10) || 1;
+                }
+            } catch (e0) {}
             
             var value = extractFieldValue(el, fieldType);
             
@@ -3007,9 +3017,24 @@ const MemberModule = (function() {
                 key: fieldsetKey,
                 type: fieldType,
                 name: fieldName,
-                value: value
+                value: value,
+                location_number: locationNumber
             });
         }
+
+        // Checkout Options are rendered as a fieldset wrapper but were not DB-driven; include explicitly.
+        try {
+            var checkoutEl = formFields ? formFields.querySelector('.member-checkout-wrapper') : null;
+            if (checkoutEl) {
+                payload.fields.push({
+                    key: 'checkout',
+                    type: 'checkout',
+                    name: 'Checkout Options',
+                    value: extractFieldValue(checkoutEl, 'checkout'),
+                    location_number: 1
+                });
+            }
+        } catch (e1) {}
         
         return { payload: payload };
     }
@@ -3080,6 +3105,124 @@ const MemberModule = (function() {
                 if (fileInput && fileInput._imageFiles) return fileInput._imageFiles.slice();
                 if (fileInput && fileInput.files) return Array.from(fileInput.files);
                 return [];
+
+            case 'checkout':
+                try {
+                    // Capture the checked radio; store option_id + days + price when available.
+                    var checked = el.querySelector('input[type="radio"]:checked');
+                    if (!checked) return null;
+                    return {
+                        value: String(checked.value || ''),
+                        option_id: checked.dataset ? (checked.dataset.optionId || '') : '',
+                        days: checked.dataset && checked.dataset.days ? (parseInt(checked.dataset.days, 10) || null) : null,
+                        price: checked.dataset && checked.dataset.price ? (parseFloat(checked.dataset.price) || null) : null
+                    };
+                } catch (e0) {
+                    return null;
+                }
+
+            case 'address':
+            case 'city':
+                try {
+                    var addr = el.querySelector('input.fieldset-input');
+                    var lat = el.querySelector('input.fieldset-lat');
+                    var lng = el.querySelector('input.fieldset-lng');
+                    return {
+                        address_line: addr ? String(addr.value || '').trim() : '',
+                        latitude: lat ? String(lat.value || '').trim() : '',
+                        longitude: lng ? String(lng.value || '').trim() : ''
+                    };
+                } catch (e1) {
+                    return { address_line: '', latitude: '', longitude: '' };
+                }
+
+            case 'venue':
+                try {
+                    var inputs = el.querySelectorAll('input.fieldset-input');
+                    var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
+                    var venueAddr = inputs && inputs[1] ? String(inputs[1].value || '').trim() : '';
+                    var vLat = el.querySelector('input.fieldset-lat');
+                    var vLng = el.querySelector('input.fieldset-lng');
+                    return {
+                        venue_name: venueName,
+                        address_line: venueAddr,
+                        latitude: vLat ? String(vLat.value || '').trim() : '',
+                        longitude: vLng ? String(vLng.value || '').trim() : ''
+                    };
+                } catch (e2) {
+                    return { venue_name: '', address_line: '', latitude: '', longitude: '' };
+                }
+
+            case 'sessions':
+                try {
+                    var selectedDays = el.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                    var dates = [];
+                    selectedDays.forEach(function(d) {
+                        var iso = d.dataset.iso;
+                        if (iso) dates.push(String(iso));
+                    });
+                    dates.sort();
+                    var out = [];
+                    for (var i = 0; i < dates.length; i++) {
+                        var dateStr = dates[i];
+                        var times = [];
+                        el.querySelectorAll('input.fieldset-time[data-date="' + dateStr + '"]').forEach(function(t) {
+                            var v = String(t.value || '').trim();
+                            times.push(v);
+                        });
+                        out.push({ date: dateStr, times: times });
+                    }
+                    return out;
+                } catch (e3) {
+                    return [];
+                }
+
+            case 'ticket-pricing':
+                try {
+                    var seatingBlocks = el.querySelectorAll('.fieldset-seating-block');
+                    var seatOut = [];
+                    seatingBlocks.forEach(function(block) {
+                        var seatName = '';
+                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                        if (seatInput) seatName = String(seatInput.value || '').trim();
+                        var tiers = [];
+                        block.querySelectorAll('.fieldset-tier-block').forEach(function(tier) {
+                            var tierName = '';
+                            var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
+                            if (tierInput) tierName = String(tierInput.value || '').trim();
+                            var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
+                            var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            var priceInput = null;
+                            var inputs = tier.querySelectorAll('input.fieldset-input');
+                            if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
+                            var price = priceInput ? String(priceInput.value || '').trim() : '';
+                            tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                        });
+                        seatOut.push({ seating_area: seatName, tiers: tiers });
+                    });
+                    return seatOut;
+                } catch (e4) {
+                    return [];
+                }
+
+            case 'item-pricing':
+                try {
+                    var itemNameInput = el.querySelector('input.fieldset-input');
+                    var itemName = itemNameInput ? String(itemNameInput.value || '').trim() : '';
+                    var variants = [];
+                    el.querySelectorAll('.fieldset-variant-block').forEach(function(block) {
+                        var vInputs = block.querySelectorAll('input.fieldset-input');
+                        var variantName = vInputs && vInputs[0] ? String(vInputs[0].value || '').trim() : '';
+                        var priceInput = vInputs && vInputs.length ? vInputs[vInputs.length - 1] : null;
+                        var price = priceInput ? String(priceInput.value || '').trim() : '';
+                        var currencyInput = block.querySelector('input.component-currencycompact-menu-button-input');
+                        var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                        variants.push({ variant_name: variantName, currency: curr, price: price });
+                    });
+                    return { item_name: itemName, variants: variants };
+                } catch (e5) {
+                    return { item_name: '', variants: [] };
+                }
                 
             case 'currency':
                 var currBtn = el.querySelector('button[data-currency-value]');
@@ -3140,20 +3283,41 @@ const MemberModule = (function() {
     
     function submitPostData(payload, isAdminFree) {
         return new Promise(function(resolve, reject) {
-            // Backend expects JSON, not FormData
+            // Submit as multipart so we can include image files and keep the whole publish flow server-side.
+            // This avoids "draft" uploads and prevents unused Bunny files.
             var postData = {
                 subcategory_key: payload.subcategory,
                 member_id: currentUser ? currentUser.id : null,
                 member_name: currentUser ? (currentUser.username || currentUser.name || '') : '',
                 member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',
                 skip_payment: isAdminFree,
+                loc_qty: window._memberLocationQuantity || 1,
                 fields: payload.fields
             };
-            
+
+            var fd = new FormData();
+            fd.set('payload', JSON.stringify(postData));
+
+            // Attach image files (if any) from the Images fieldset (stored as fileInput._imageFiles).
+            try {
+                var imagesFs = formFields ? formFields.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]') : null;
+                var fileInput = imagesFs ? imagesFs.querySelector('input[type="file"]') : null;
+                var metaInput = imagesFs ? imagesFs.querySelector('input.fieldset-images-meta') : null;
+                var files = [];
+                if (fileInput && Array.isArray(fileInput._imageFiles)) {
+                    files = fileInput._imageFiles.slice();
+                }
+                files.forEach(function(file) {
+                    if (file) fd.append('images[]', file, file.name || 'image');
+                });
+                if (metaInput) {
+                    fd.set('images_meta', String(metaInput.value || '[]'));
+                }
+            } catch (e0) {}
+
             fetch('/gateway.php?action=add-post', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(postData)
+                body: fd
             })
             .then(function(response) {
                 return response.text().then(function(text) {
