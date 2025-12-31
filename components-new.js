@@ -5839,6 +5839,17 @@ const CheckoutOptionsComponent = (function(){
             }
             return !!group.querySelector('input[type="radio"]:checked');
         }
+
+        function getEventDaysForRadio(radioEl) {
+            if (!radioEl) return null;
+            var card = radioEl.closest ? radioEl.closest('.member-checkout-option') : null;
+            if (!card) return null;
+            var flagfall = parseFloat(card.dataset.flagfall) || 0;
+            var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
+            var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
+            var res = computeEventTotal(flagfall, basicRate, discountRate, eventVenueDays, locationCount, surchargePercent);
+            return res && res.hasDates ? res.primaryDays : null;
+        }
         
         if (!checkoutOptions || checkoutOptions.length === 0) {
             throw new Error('CheckoutOptionsComponent.create: checkoutOptions is empty');
@@ -6014,7 +6025,12 @@ const CheckoutOptionsComponent = (function(){
             if (e.target.type === 'radio') {
                 syncSelectedStyles();
                 var optionId = e.target.dataset.optionId;
-                var days = e.target.dataset.days ? parseInt(e.target.dataset.days, 10) : calculatedDays;
+                var days = null;
+                if (e.target.dataset && e.target.dataset.days) {
+                    days = parseInt(e.target.dataset.days, 10);
+                } else if (isEvent) {
+                    days = getEventDaysForRadio(e.target);
+                }
                 var price = e.target.dataset.price ? parseFloat(e.target.dataset.price) : null;
                 onSelect(optionId, days, price);
                 setCompleteState(computeComplete());
@@ -6052,6 +6068,14 @@ const CheckoutOptionsComponent = (function(){
                         card.classList.remove('member-checkout-option--disabled');
                         if (radio) {
                             radio.disabled = false;
+                            // Store computed days so selection handler can read it without globals.
+                            try {
+                                var flagfall = parseFloat(card.dataset.flagfall) || 0;
+                                var basicRate = card.dataset.basicRate !== '' ? parseFloat(card.dataset.basicRate) : null;
+                                var discountRate = card.dataset.discountRate !== '' ? parseFloat(card.dataset.discountRate) : null;
+                                var res = computeEventTotal(flagfall, basicRate, discountRate, eventVenueDays, locationCount, surchargePercent);
+                                radio.dataset.days = (res && res.hasDates) ? String(res.primaryDays || '') : '';
+                            } catch (e0) {}
                         }
                         if (priceDisplay) {
                             priceDisplay.classList.remove('member-checkout-price-display--disabled');
@@ -6067,6 +6091,7 @@ const CheckoutOptionsComponent = (function(){
                         if (radio) {
                             radio.disabled = true;
                             radio.checked = false;
+                            try { delete radio.dataset.days; } catch (e1) {}
                         }
                         if (priceDisplay) {
                                 priceDisplay.classList.add('member-checkout-price-display--disabled');
