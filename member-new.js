@@ -2842,10 +2842,17 @@ const MemberModule = (function() {
                     resetCreatePostForm();
                 } else {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
-                        // Use server message if provided, otherwise use existing message key
-                        var serverMsg = (result && (result.message || result.error)) ? String(result.message || result.error) : '';
-                        if (serverMsg) {
-                            ToastComponent.showError(serverMsg);
+                        // Prefer message system keys from backend (no hardcoded server strings).
+                        if (result && result.message_key) {
+                            var ph = (result.placeholders && typeof result.placeholders === 'object') ? result.placeholders : {};
+                            getMessage(String(result.message_key), ph, false).then(function(msg) {
+                                if (msg) ToastComponent.showError(msg);
+                                else {
+                                    getMessage('msg_post_create_error', {}, false).then(function(fallback) {
+                                        if (fallback) ToastComponent.showError(fallback);
+                                    });
+                                }
+                            });
                         } else {
                             getMessage('msg_post_create_error', {}, false).then(function(msg) {
                                 if (msg) ToastComponent.showError(msg);

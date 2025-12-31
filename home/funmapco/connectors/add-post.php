@@ -60,9 +60,19 @@ if (!$viaGateway) {
   }
 }
 
+function fail_key(int $code, string $messageKey, array $placeholders = null): void
+{
+  http_response_code($code);
+  $payload = ['success' => false, 'message_key' => $messageKey];
+  if ($placeholders !== null) {
+    $payload['placeholders'] = $placeholders;
+  }
+  echo json_encode($payload, JSON_UNESCAPED_SLASHES);
+  exit;
+}
+
 if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
-  http_response_code(500);
-  exit(json_encode(['success'=>false,'error'=>'Database connection unavailable.']));
+  fail_key(500, 'msg_post_create_error');
 }
 
 function abort_with_error(mysqli $mysqli, int $code, string $message, bool &$transactionActive): void
@@ -71,9 +81,8 @@ function abort_with_error(mysqli $mysqli, int $code, string $message, bool &$tra
     $mysqli->rollback();
     $transactionActive = false;
   }
-  http_response_code($code);
-  echo json_encode(['success'=>false,'error'=>$message]);
-  exit;
+  // No hardcoded strings: return a message key for UI.
+  fail_key($code, 'msg_post_create_error');
 }
 
 function fetch_table_columns(mysqli $mysqli, string $table): array
@@ -148,8 +157,7 @@ function bind_statement_params(mysqli_stmt $stmt, string $types, &...$params): b
 $rawInput = file_get_contents('php://input');
 $data = json_decode($rawInput, true);
 if (!$data || !is_array($data)) {
-  http_response_code(400);
-  exit(json_encode(['success'=>false,'error'=>'Invalid data']));
+  fail_key(400, 'msg_post_create_error');
 }
 
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
@@ -169,10 +177,14 @@ $skipPayment = $isAdmin && !empty($data['skip_payment']);
 
 // IMPORTANT: posts are keyed by subcategory_key, NOT numeric subcategory_id.
 // subcategory_id may exist in the system DB for admin organization, but must NOT be required here.
-if ($subcategoryKey === '' || $memberId <= 0 || $memberName === '') {
-  http_response_code(400);
-  exit(json_encode(['success'=>false,'error'=>'Missing required listing details.']));
+if ($subcategoryKey === '') {
+  fail_key(400, 'msg_post_create_no_category');
 }
+// member_id is required by the posts schema (NOT NULL).
+if ($memberId === null || $memberId <= 0) {
+  fail_key(400, 'msg_post_create_error');
+}
+// member_name is optional (DB allows NULL); do not block post creation on it.
 
 $transactionActive = false;
 
