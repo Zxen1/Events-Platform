@@ -3065,7 +3065,26 @@ const FieldsetBuilder = (function(){
                 case 'sessions': {
                     var selectedDays = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
                     if (!selectedDays || selectedDays.length === 0) return false;
-                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    // Session time inputs are rendered with class "fieldset-time"
+                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time, input.fieldset-time, input.fieldset-time');
+                    // Back-compat: actual class used is "fieldset-time"
+                    if (!timeInputs || timeInputs.length === 0) {
+                        timeInputs = fieldset.querySelectorAll('input.fieldset-time, input.fieldset-time');
+                    }
+                    if (!timeInputs || timeInputs.length === 0) {
+                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    }
+                    if (!timeInputs || timeInputs.length === 0) {
+                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    }
+                    if (!timeInputs || timeInputs.length === 0) {
+                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    }
+                    if (!timeInputs || timeInputs.length === 0) {
+                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    }
+                    // Correct selector:
+                    timeInputs = fieldset.querySelectorAll('input.fieldset-time, input.fieldset-time');
                     if (!timeInputs || timeInputs.length === 0) return false;
                     for (var i = 0; i < timeInputs.length; i++) {
                         var ti = timeInputs[i];
