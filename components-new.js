@@ -2980,8 +2980,80 @@ const FieldsetBuilder = (function(){
         }
 
         function computeComplete() {
-            // Optional fieldsets are always complete.
-            if (!requiredFlag) return true;
+            function fieldHasAnyUserValue() {
+                try {
+                    switch (key) {
+                        case 'radio':
+                            return !!fieldset.querySelector('input[type="radio"]:checked');
+                        case 'dropdown': {
+                            var sel = fieldset.querySelector('select');
+                            return !!(sel && String(sel.value || '').trim());
+                        }
+                        case 'images': {
+                            var meta = fieldset.querySelector('input.fieldset-images-meta');
+                            var raw = meta ? String(meta.value || '').trim() : '';
+                            if (!raw) return false;
+                            try {
+                                var arr = JSON.parse(raw);
+                                return Array.isArray(arr) && arr.length > 0;
+                            } catch (e0) {
+                                return true; // has something, but malformed => treat as "user value exists"
+                            }
+                        }
+                        case 'amenities':
+                            return !!fieldset.querySelector('.fieldset-amenity-row input[type="radio"]:checked');
+                        case 'sessions': {
+                            var selected = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                            if (selected && selected.length > 0) return true;
+                            // If any time input has value, user interacted.
+                            var t = fieldset.querySelectorAll('input.fieldset-time');
+                            for (var i = 0; i < t.length; i++) {
+                                if (t[i] && String(t[i].value || '').trim()) return true;
+                            }
+                            return false;
+                        }
+                        case 'phone': {
+                            var pfx = fieldset.querySelector('.fieldset-menu-button-input');
+                            var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
+                            if (pfx && String(pfx.value || '').trim()) return true;
+                            if (tel && String(tel.value || '').trim()) return true;
+                            return false;
+                        }
+                        case 'item-pricing':
+                        case 'ticket-pricing': {
+                            var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
+                            for (var i = 0; i < els.length; i++) {
+                                var el = els[i];
+                                if (!el) continue;
+                                if (el.type === 'checkbox' || el.type === 'radio') {
+                                    if (el.checked) return true;
+                                } else if (String(el.value || '').trim()) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                        default: {
+                            var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
+                            for (var i = 0; i < els.length; i++) {
+                                var el = els[i];
+                                if (!el) continue;
+                                if (el.type === 'checkbox' || el.type === 'radio') {
+                                    if (el.checked) return true;
+                                } else if (String(el.value || '').trim()) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // Optional fieldsets: empty => complete; but if the user entered anything, it must validate.
+            if (!requiredFlag && !fieldHasAnyUserValue()) return true;
 
             function isVisibleControl(el) {
                 if (!el) return false;

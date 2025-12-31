@@ -2756,8 +2756,8 @@ const MemberModule = (function() {
         if (!selectedCategory || !selectedSubcategory) return false;
         if (!formFields) return false;
 
-        // Component-owned validity: only submit when every required fieldset reports complete.
-        var fieldsetEls = formFields.querySelectorAll('.fieldset[data-required="true"]');
+        // Component-owned validity: do not submit if ANY fieldset is incomplete (required or optional-but-invalid).
+        var fieldsetEls = formFields.querySelectorAll('.fieldset[data-complete]');
         for (var i = 0; i < fieldsetEls.length; i++) {
             var fs = fieldsetEls[i];
             if (!fs || !fs.dataset) continue;
