@@ -145,6 +145,30 @@ const MemberModule = (function() {
     var siteAvatarFilenames = [];  // all filenames in site avatars folder
     var siteAvatarChoices = [];    // 3 picked: [{ filename, url }]
 
+    // Create Post inline auth gate (under the Create Post form)
+    var createAuthWrapper = null;
+    var createAuthLoginTab = null;
+    var createAuthRegisterTab = null;
+    var createAuthLoginPanel = null;
+    var createAuthRegisterPanel = null;
+    var createAuthLoginForm = null;
+    var createAuthRegisterForm = null;
+    var createAuthRegisterFieldsets = null;
+    var avatarGridCreate = null;
+    var avatarPickerCreate = null;
+    var createCountryMenuContainer = null;
+    var createCountryHiddenInput = null;
+    var createAuthRegisterRendered = false;
+    var createAuthRegisterUsernameInput = null;
+    var createAuthRegisterEmailInput = null;
+    var createAuthRegisterPasswordInput = null;
+    var createAuthRegisterConfirmInput = null;
+    var pendingCreateAuthAvatarBlob = null;
+    var pendingCreateAuthSiteUrl = '';
+    var pendingCreateAuthAvatarPreviewUrl = '';
+    var createAuthPendingSubmit = false;
+    var createAuthPendingSubmitIsAdminFree = false;
+
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
     // Create post elements
@@ -214,13 +238,14 @@ const MemberModule = (function() {
         tabButtons = panel.querySelectorAll('.member-tab-bar-button');
         tabPanels = panel.querySelectorAll('.member-tab-panel');
         
-        // Auth elements
-        authForm = panel.querySelector('.member-auth');
+        // Auth elements (Profile tab only). NOTE: Create Post also contains a .member-auth (inline gate),
+        // so scope this to the profile tab to avoid ambiguous selectors.
+        authForm = document.querySelector('#member-tab-profile .member-auth');
         loginFormEl = document.getElementById('memberAuthFormLogin');
         registerFormEl = document.getElementById('memberAuthFormRegister');
-        authTabs = panel.querySelector('.member-auth-tabs');
-        loginTab = panel.querySelector('.member-auth-tab[data-target="login"]');
-        registerTab = panel.querySelector('.member-auth-tab[data-target="register"]');
+        authTabs = authForm ? authForm.querySelector('.member-auth-tabs') : null;
+        loginTab = authForm ? authForm.querySelector('.member-auth-tab[data-target="login"]') : null;
+        registerTab = authForm ? authForm.querySelector('.member-auth-tab[data-target="register"]') : null;
         loginPanel = document.getElementById('member-auth-login');
         registerPanel = document.getElementById('member-auth-register');
         profilePanel = document.getElementById('member-auth-profile');
@@ -274,6 +299,19 @@ const MemberModule = (function() {
         // Avatar UI
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
         avatarGridProfile = document.getElementById('member-avatar-grid-profile');
+
+        // Create Post inline auth gate (under the create form)
+        createAuthWrapper = document.getElementById('member-create-auth');
+        createAuthLoginTab = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-tab[data-target="login"]') : null;
+        createAuthRegisterTab = createAuthWrapper ? createAuthWrapper.querySelector('.member-auth-tab[data-target="register"]') : null;
+        createAuthLoginPanel = document.getElementById('member-create-auth-login');
+        createAuthRegisterPanel = document.getElementById('member-create-auth-register');
+        createAuthLoginForm = document.getElementById('memberCreateAuthFormLogin');
+        createAuthRegisterForm = document.getElementById('memberCreateAuthFormRegister');
+        createAuthRegisterFieldsets = document.getElementById('member-create-register-fieldsets');
+        avatarGridCreate = document.getElementById('member-avatar-grid-create');
+        createCountryMenuContainer = document.getElementById('member-create-country-menu');
+        createCountryHiddenInput = document.getElementById('member-create-country');
 
         // Note: Avatar cropper is now handled by AvatarCropperComponent (components-new.js)
         // Note: we do NOT wire #member-unsaved-prompt directly; dialogs are controlled from components.
@@ -480,6 +518,30 @@ const MemberModule = (function() {
             registerForm.addEventListener('submit', function(e) {
                 e.preventDefault();
                 handleRegister();
+            });
+        }
+
+        // Create Post inline auth gate (Login/Register subtabs + submit)
+        if (createAuthLoginTab) {
+            createAuthLoginTab.addEventListener('click', function() {
+                setCreateAuthPanel('login');
+            });
+        }
+        if (createAuthRegisterTab) {
+            createAuthRegisterTab.addEventListener('click', function() {
+                setCreateAuthPanel('register');
+            });
+        }
+        if (createAuthLoginForm) {
+            createAuthLoginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleCreateAuthLogin();
+            });
+        }
+        if (createAuthRegisterForm) {
+            createAuthRegisterForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleCreateAuthRegister();
             });
         }
         
@@ -2786,6 +2848,13 @@ const MemberModule = (function() {
     
     function handleCreatePostSubmit(isAdminFree) {
         if (isSubmittingPost) return;
+
+        // Posting requires a real member session (posts.member_id is NOT NULL).
+        // When logged out, show inline Login/Register under the form so drafts are not lost.
+        if (!hasValidLoggedInUser()) {
+            showCreateAuthGate(isAdminFree);
+            return;
+        }
         
         // Validate terms agreed
         if (!termsAgreed) {
@@ -3051,12 +3120,6 @@ const MemberModule = (function() {
     function submitPostData(payload, isAdminFree) {
         return new Promise(function(resolve, reject) {
             // Backend expects JSON, not FormData
-            // Enforce a real member_id (posts.member_id is NOT NULL in the schema).
-            if (!currentUser || !currentUser.id || (parseInt(currentUser.id, 10) || 0) <= 0) {
-                var err = new Error('Missing member id');
-                err.message_key = 'msg_auth_login_empty';
-                return reject(err);
-            }
             var postData = {
                 subcategory_key: payload.subcategory,
                 member_id: currentUser ? currentUser.id : null,
@@ -3732,6 +3795,241 @@ const MemberModule = (function() {
         } catch (e) {
             // ignore
         }
+    }
+
+    /* --------------------------------------------------------------------------
+       CREATE POST INLINE AUTH GATE (Login/Register under create form)
+       -------------------------------------------------------------------------- */
+
+    function hasValidLoggedInUser() {
+        var idNum = currentUser ? parseInt(currentUser.id, 10) : 0;
+        return !!(currentUser && isFinite(idNum) && idNum > 0);
+    }
+
+    function setCreateAuthPanel(target) {
+        if (!createAuthWrapper) return;
+        target = (target === 'register') ? 'register' : 'login';
+        var isLogin = target === 'login';
+
+        if (createAuthLoginTab) createAuthLoginTab.classList.toggle('member-auth-tab--selected', isLogin);
+        if (createAuthRegisterTab) createAuthRegisterTab.classList.toggle('member-auth-tab--selected', !isLogin);
+        if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+        if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
+
+        if (createAuthLoginPanel) {
+            createAuthLoginPanel.classList.toggle('member-auth-panel--hidden', !isLogin);
+            createAuthLoginPanel.hidden = !isLogin;
+        }
+        if (createAuthRegisterPanel) {
+            createAuthRegisterPanel.classList.toggle('member-auth-panel--hidden', isLogin);
+            createAuthRegisterPanel.hidden = isLogin;
+        }
+
+        createAuthWrapper.dataset.active = target;
+
+        if (!isLogin) {
+            ensureCreateAuthRegisterReady();
+        }
+    }
+
+    function showCreateAuthGate(isAdminFree) {
+        if (!createAuthWrapper) return;
+        createAuthPendingSubmit = true;
+        createAuthPendingSubmitIsAdminFree = !!isAdminFree;
+        createAuthWrapper.hidden = false;
+        createAuthWrapper.removeAttribute('inert');
+        setCreateAuthPanel('login');
+        try { createAuthWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e0) {}
+    }
+
+    function hideCreateAuthGate() {
+        if (!createAuthWrapper) return;
+        createAuthWrapper.hidden = true;
+        createAuthWrapper.setAttribute('inert', '');
+        createAuthPendingSubmit = false;
+        createAuthPendingSubmitIsAdminFree = false;
+    }
+
+    function ensureCreateAuthRegisterReady() {
+        if (createAuthRegisterRendered) return Promise.resolve(true);
+        if (!createAuthRegisterFieldsets) return Promise.resolve(false);
+        if (!window.MemberAuthFieldsetsComponent || typeof MemberAuthFieldsetsComponent.renderRegister !== 'function') return Promise.resolve(false);
+        if (!window.CountryComponent || typeof CountryComponent.loadFromDatabase !== 'function') return Promise.resolve(false);
+
+        // Ensure avatar options are available for the avatar picker.
+        ensureAvatarChoicesReady();
+
+        return MemberAuthFieldsetsComponent.renderRegister(createAuthRegisterFieldsets, {
+            avatarHost: avatarGridCreate,
+            countryHost: createCountryMenuContainer
+        }).then(function(refs) {
+            createAuthRegisterRendered = true;
+            createAuthRegisterUsernameInput = refs ? refs.usernameInput : null;
+            createAuthRegisterEmailInput = refs ? refs.emailInput : null;
+            createAuthRegisterPasswordInput = refs ? refs.passwordInput : null;
+            createAuthRegisterConfirmInput = refs ? refs.confirmInput : null;
+
+            // Country menu (no default; must be selected)
+            try {
+                CountryComponent.loadFromDatabase().then(function() {
+                    if (!createCountryMenuContainer || !createCountryHiddenInput) return;
+                    createCountryMenuContainer.innerHTML = '';
+                    var inst = CountryComponent.buildMenu({
+                        initialValue: (createCountryHiddenInput.value || '').toLowerCase() || null,
+                        onSelect: function(code) {
+                            createCountryHiddenInput.value = String(code || '').toLowerCase();
+                        }
+                    });
+                    if (inst && inst.element) createCountryMenuContainer.appendChild(inst.element);
+                });
+            } catch (e1) {}
+
+            // Avatar picker (separate staged state from supporter register)
+            try {
+                if (avatarGridCreate && window.AvatarPickerComponent && typeof AvatarPickerComponent.attach === 'function') {
+                    var choices = Array.isArray(siteAvatarChoices) ? siteAvatarChoices.slice(0, 3) : [];
+                    if (avatarPickerCreate && typeof avatarPickerCreate.destroy === 'function') {
+                        avatarPickerCreate.destroy();
+                    }
+                    avatarPickerCreate = AvatarPickerComponent.attach(avatarGridCreate, {
+                        siteAvatars: choices,
+                        allowUpload: true,
+                        resolveSrc: resolveAvatarSrc,
+                        selfValue: '',
+                        onChange: function(state) {
+                            pendingCreateAuthAvatarPreviewUrl = state && state.selfPreviewUrl ? String(state.selfPreviewUrl) : '';
+                            if (!state) return;
+                            if (state.selectedKey && String(state.selectedKey).indexOf('site-') === 0) {
+                                pendingCreateAuthSiteUrl = (state.selectedSite && state.selectedSite.url) ? String(state.selectedSite.url) : '';
+                                pendingCreateAuthAvatarBlob = null;
+                                pendingCreateAuthAvatarPreviewUrl = '';
+                                return;
+                            }
+                            pendingCreateAuthSiteUrl = '';
+                            pendingCreateAuthAvatarBlob = state.selfBlob || null;
+                        }
+                    });
+                    if (!pendingCreateAuthAvatarBlob && !pendingCreateAuthSiteUrl && choices[0] && choices[0].url) {
+                        pendingCreateAuthSiteUrl = String(choices[0].url);
+                        if (avatarPickerCreate && typeof avatarPickerCreate.setSelectedKey === 'function') {
+                            avatarPickerCreate.setSelectedKey('site-0');
+                        }
+                    }
+                }
+            } catch (e2) {}
+
+            return true;
+        });
+    }
+
+    function handleCreateAuthLogin() {
+        var emailInput = document.getElementById('memberCreateLoginEmail');
+        var passwordInput = document.getElementById('memberCreateLoginPassword');
+        var username = emailInput ? String(emailInput.value || '').trim() : '';
+        var password = passwordInput ? String(passwordInput.value || '') : '';
+        if (!username || !password) return;
+
+        verifyLogin(username, password).then(function(result) {
+            if (!result || result.success !== true) {
+                getMessage('msg_auth_login_incorrect', {}, false).then(function(message) {
+                    if (message && window.ToastComponent) ToastComponent.showError(message);
+                });
+                return;
+            }
+            var payload = result.user || {};
+            payload.role = result.role;
+            currentUser = buildUserObject(payload, username);
+            syncLocalProfilePrefsFromUser(currentUser);
+            storeCurrent(currentUser);
+            render();
+
+            var shouldSubmit = createAuthPendingSubmit;
+            var isAdminFree = createAuthPendingSubmitIsAdminFree;
+            hideCreateAuthGate();
+            updateSubmitButtonState();
+
+            if (shouldSubmit) {
+                // Resume the original submit attempt without losing draft.
+                setTimeout(function() {
+                    handleCreatePostSubmit(isAdminFree);
+                }, 0);
+            }
+        });
+    }
+
+    function handleCreateAuthRegister() {
+        // Ensure register UI is present
+        ensureCreateAuthRegisterReady().then(function() {
+            var nameInput = createAuthRegisterUsernameInput;
+            var emailInput = createAuthRegisterEmailInput;
+            var passwordInput = createAuthRegisterPasswordInput;
+            var confirmInput = createAuthRegisterConfirmInput;
+
+            if (!nameInput || !emailInput || !passwordInput || !confirmInput) return;
+
+            var name = String(nameInput.value || '').trim();
+            var email = String(emailInput.value || '').trim();
+            var password = String(passwordInput.value || '');
+            var confirm = String(confirmInput.value || '');
+            var countryCode = createCountryHiddenInput ? String(createCountryHiddenInput.value || '').trim() : '';
+
+            if (!name || !email || !password || !confirm || !countryCode) return;
+            if (!pendingCreateAuthAvatarBlob && !pendingCreateAuthSiteUrl) return;
+            if (password !== confirm) return;
+
+            function prepareAvatarBlob() {
+                if (pendingCreateAuthAvatarBlob) return Promise.resolve(pendingCreateAuthAvatarBlob);
+                if (pendingCreateAuthSiteUrl) {
+                    return fetch(String(pendingCreateAuthSiteUrl))
+                        .then(function(r) { return r.blob(); })
+                        .then(function(blob) {
+                            return new Promise(function(resolve) {
+                                squarePngFromImageBlob(blob, function(out) { resolve(out); });
+                            });
+                        });
+                }
+                return Promise.resolve(null);
+            }
+
+            prepareAvatarBlob().then(function(avatarBlob) {
+                var formData = new FormData();
+                formData.set('username', name);
+                formData.set('email', email);
+                formData.set('password', password);
+                formData.set('confirm', confirm);
+                formData.set('country', countryCode);
+                if (avatarBlob) formData.append('avatar_file', avatarBlob, 'avatar.png');
+
+                return fetch('/gateway.php?action=add-member', { method: 'POST', body: formData }).then(function(r) { return r.text(); });
+            }).then(function(text) {
+                var payload = null;
+                try { payload = JSON.parse(text); } catch (e) { payload = null; }
+                if (!payload || payload.success === false || payload.error) {
+                    var key = payload && payload.message_key ? String(payload.message_key) : 'msg_post_create_error';
+                    getMessage(key, {}, false).then(function(msg) {
+                        if (msg && window.ToastComponent) ToastComponent.showError(msg);
+                    });
+                    return;
+                }
+
+                // Logged in after registration
+                payload.role = 'member';
+                currentUser = buildUserObject(payload, email);
+                storeCurrent(currentUser);
+                render();
+
+                var shouldSubmit = createAuthPendingSubmit;
+                var isAdminFree = createAuthPendingSubmitIsAdminFree;
+                hideCreateAuthGate();
+                updateSubmitButtonState();
+
+                if (shouldSubmit) {
+                    setTimeout(function() {
+                        handleCreatePostSubmit(isAdminFree);
+                    }, 0);
+                }
+            });
+        });
     }
 
     function setAuthPanelState(panelEl, isActive, inputs) {
