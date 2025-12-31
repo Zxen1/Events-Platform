@@ -3490,6 +3490,38 @@ const MemberModule = (function() {
 
     var authFieldsetsReady = false;
     var authFieldsetsPromise = null;
+    var registerValidityListenerAttached = false;
+
+    function findFirstIncompleteRegisterFieldset() {
+        if (!registerFieldsetsContainer) return null;
+        var required = registerFieldsetsContainer.querySelectorAll('.fieldset[data-required="true"]');
+        if (!required || required.length === 0) return null;
+        for (var i = 0; i < required.length; i++) {
+            var fs = required[i];
+            if (!fs || !fs.dataset) continue;
+            if (String(fs.dataset.complete || '') !== 'true') return fs;
+        }
+        return null;
+    }
+
+    function isRegisterFormComplete() {
+        // Registration rule: all fieldsets in this section are required and must be complete.
+        var incomplete = findFirstIncompleteRegisterFieldset();
+        return !incomplete;
+    }
+
+    function updateRegisterSubmitButtonState() {
+        try {
+            if (!registerPanel) return;
+            var btn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
+            if (!btn) return;
+            var complete = isRegisterFormComplete();
+            btn.disabled = !complete;
+            btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
+        } catch (e) {
+            // ignore
+        }
+    }
 
     function renderRegisterFieldsets() {
         if (!registerPanel || !registerFieldsetsContainer) return;
@@ -3510,6 +3542,18 @@ const MemberModule = (function() {
             try {
                 registerInputs = Array.from(registerPanel.querySelectorAll('input, textarea, select'));
             } catch (e) {}
+
+            // Registration submit button is disabled until all required fieldsets are complete.
+            // Drive state purely from component-owned dataset flags + events.
+            if (!registerValidityListenerAttached) {
+                try {
+                    registerFieldsetsContainer.addEventListener('fieldset:validity-change', function() {
+                        updateRegisterSubmitButtonState();
+                    });
+                    registerValidityListenerAttached = true;
+                } catch (e2) {}
+            }
+            updateRegisterSubmitButtonState();
         });
     }
 
@@ -3783,6 +3827,21 @@ const MemberModule = (function() {
     }
 
     function handleRegister() {
+        // Hard block register submit until all required registration fieldsets are complete
+        // (also prevents Enter-key submit from bypassing the disabled button).
+        if (!isRegisterFormComplete()) {
+            var first = findFirstIncompleteRegisterFieldset();
+            if (first) {
+                var focusEl = first.querySelector('input:not([type="hidden"]), select, textarea, button');
+                if (focusEl && typeof focusEl.focus === 'function') {
+                    focusEl.focus();
+                    if (typeof focusEl.select === 'function') focusEl.select();
+                }
+            }
+            updateRegisterSubmitButtonState();
+            return;
+        }
+
         var nameInput = registerUsernameInput || document.getElementById('member-register-name');
         var emailInput = registerEmailInput || document.getElementById('member-register-email');
         var passwordInput = registerPasswordInput || document.getElementById('member-register-password');
