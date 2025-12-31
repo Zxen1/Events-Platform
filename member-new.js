@@ -2954,12 +2954,23 @@ const MemberModule = (function() {
                 return dateInput ? dateInput.value.trim() : '';
                 
             case 'images':
-                var fileInput = el.querySelector('input[type="file"]');
-                if (fileInput && fileInput._imageFiles) {
-                    return fileInput._imageFiles.slice();
-                } else if (fileInput && fileInput.files) {
-                    return Array.from(fileInput.files);
+                // New-site Images fieldset stores selection/crop metadata in a hidden JSON input.
+                // The create-post flow submits JSON (not multipart), so we validate against the meta payload.
+                var meta = el.querySelector('input.fieldset-images-meta');
+                if (meta) {
+                    var raw = String(meta.value || '').trim();
+                    if (!raw) return [];
+                    try {
+                        var arr = JSON.parse(raw);
+                        return Array.isArray(arr) ? arr : [];
+                    } catch (e) {
+                        return [];
+                    }
                 }
+                // Legacy fallback: file input based extraction.
+                var fileInput = el.querySelector('input[type="file"]');
+                if (fileInput && fileInput._imageFiles) return fileInput._imageFiles.slice();
+                if (fileInput && fileInput.files) return Array.from(fileInput.files);
                 return [];
                 
             case 'currency':
