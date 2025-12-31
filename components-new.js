@@ -558,6 +558,20 @@ const FieldsetBuilder = (function(){
             parent.appendChild(dropdown);
         }
         
+        // Track whether the current value is confirmed from Google Places (required for "complete")
+        try { inputElement.dataset.placesConfirmed = 'false'; } catch (e0) {}
+
+        function clearConfirmedLocation() {
+            try { inputElement.dataset.placesConfirmed = 'false'; } catch (e1) {}
+            if (latInput) latInput.value = '';
+            if (lngInput) lngInput.value = '';
+            if (statusElement) {
+                statusElement.textContent = '';
+                statusElement.className = 'fieldset-location-status';
+            }
+            try { inputElement.dispatchEvent(new Event('input', { bubbles: true })); } catch (e2) {}
+        }
+
         // Fetch suggestions using new API (same as map controls - no type restrictions)
         var debounceTimer = null;
         async function fetchSuggestions(query) {
@@ -618,12 +632,15 @@ const FieldsetBuilder = (function(){
                                 
                                 if (latInput) latInput.value = lat;
                                 if (lngInput) lngInput.value = lng;
+                                try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
+                                try { inputElement.dispatchEvent(new Event('input', { bubbles: true })); } catch (e4) {}
                                 
                                 if (statusElement) {
                                     statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
                                     statusElement.className = 'fieldset-location-status success';
                                 }
                             } else {
+                                clearConfirmedLocation();
                                 if (statusElement) {
                                     statusElement.textContent = 'No location data for this place';
                                     statusElement.className = 'fieldset-location-status error';
@@ -631,6 +648,7 @@ const FieldsetBuilder = (function(){
                             }
                         } catch (err) {
                             console.error('Place details error:', err);
+                            clearConfirmedLocation();
                             if (statusElement) {
                                 statusElement.textContent = 'Error loading place details';
                                 statusElement.className = 'fieldset-location-status error';
@@ -648,8 +666,9 @@ const FieldsetBuilder = (function(){
             }
         }
         
-        // Input event handler with debounce
+        // If the user types, the location is no longer confirmed (must pick from Google again).
         inputElement.addEventListener('input', function() {
+            clearConfirmedLocation();
             clearTimeout(debounceTimer);
             var query = inputElement.value.trim();
             
@@ -1308,6 +1327,12 @@ const FieldsetBuilder = (function(){
                             };
                         });
                         imagesMetaInput.value = JSON.stringify(payload);
+
+                        // Notify FieldsetBuilder validity system (required asterisk + dataset.complete).
+                        // The hidden input value changes programmatically, so we must emit an event.
+                        try {
+                            imagesMetaInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        } catch (e2) {}
                     } catch (e) {
                         // If JSON fails, we want the error visible (no silent fallback)
                         throw e;
@@ -2665,6 +2690,9 @@ const FieldsetBuilder = (function(){
                 smartAddrInput.placeholder = 'Search or type address...';
                 smartAddrInput.style.marginBottom = '4px';
                 fieldset.appendChild(smartAddrInput);
+
+                // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
+                try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e0) {}
                 
                 // Status indicator
                 var smartStatus = document.createElement('div');
@@ -2776,10 +2804,8 @@ const FieldsetBuilder = (function(){
                                             if (isEstablishment && venueName) {
                                                 smartVenueInput.value = venueName;
                                             }
-                                            // Address: fill only if empty
-                                            if (!smartAddrInput.value.trim()) {
-                                                smartAddrInput.value = address;
-                                            }
+                                            // Address: ALWAYS use the Google-confirmed formatted address.
+                                            smartAddrInput.value = address;
                                         } else {
                                             // User searched in address box
                                             // Address: strip to just address (in case Google added extra)
@@ -2792,6 +2818,10 @@ const FieldsetBuilder = (function(){
                                         
                                         inputEl.value = isVenueBox ? (isEstablishment ? venueName : address) : address;
                                         dropdown.style.display = 'none';
+
+                                        // Mark address as Places-confirmed (required for completion)
+                                        try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
+                                        try { smartAddrInput.dispatchEvent(new Event('input', { bubbles: true })); } catch (e1) {}
                                         
                                         // Update status
                                         smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
@@ -2813,6 +2843,14 @@ const FieldsetBuilder = (function(){
                     
                     // Input event handler with debounce
                     inputEl.addEventListener('input', function() {
+                        // Manual typing invalidates Places confirmation for the address field.
+                        // Venue name can be typed freely, but the address must be confirmed via Google.
+                        if (!isVenueBox) {
+                            try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e2) {}
+                            smartLatInput.value = '';
+                            smartLngInput.value = '';
+                            try { smartAddrInput.dispatchEvent(new Event('input', { bubbles: true })); } catch (e3) {}
+                        }
                         clearTimeout(debounceTimer);
                         var query = inputEl.value.trim();
                         
@@ -2961,13 +2999,29 @@ const FieldsetBuilder = (function(){
                 }
                 case 'address':
                 case 'city':
-                case 'venue':
                 case 'location': {
+                    // Address/City must be Google Places confirmed (not manual typing).
                     var addr = fieldset.querySelector('input.fieldset-input');
                     var lat = fieldset.querySelector('input.fieldset-lat');
                     var lng = fieldset.querySelector('input.fieldset-lng');
                     if (!addr || !lat || !lng) return false;
                     if (!strLenOk(addr.value, minLength, maxLength)) return false;
+                    if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
+                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
+                }
+                case 'venue': {
+                    // Venue requires:
+                    // - Venue Name: any non-empty text (user-typed allowed)
+                    // - Address: Google Places confirmed (lat/lng set)
+                    var inputs = fieldset.querySelectorAll('input.fieldset-input');
+                    var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
+                    var addr = inputs && inputs[1] ? inputs[1] : null;
+                    var lat = fieldset.querySelector('input.fieldset-lat');
+                    var lng = fieldset.querySelector('input.fieldset-lng');
+                    if (!venueName) return false;
+                    if (!addr || !lat || !lng) return false;
+                    if (!strLenOk(String(addr.value || ''), minLength, maxLength)) return false;
+                    if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
                     return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
                 }
                 case 'sessions': {
