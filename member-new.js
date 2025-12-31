@@ -2874,12 +2874,12 @@ const MemberModule = (function() {
 
         var loginFilled = !!(createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() && createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim());
         if (createAuthLoginSubmitBtn) {
-            // Same core rule as submit: disabled until create-form is complete, plus login inputs must be present.
-            createAuthLoginSubmitBtn.disabled = loggedIn || !isLoginActive || !ready || !loginFilled;
+            // Auth must work in any order: do NOT require the create form to be complete first.
+            createAuthLoginSubmitBtn.disabled = loggedIn || !isLoginActive || !loginFilled;
         }
         if (createAuthRegisterSubmitBtn) {
-            // Same core rule as submit: disabled until create-form is complete, plus register fieldsets must be complete.
-            createAuthRegisterSubmitBtn.disabled = loggedIn || !isRegisterActive || !ready || !isCreateAuthRegisterComplete();
+            // Auth must work in any order: do NOT require the create form to be complete first.
+            createAuthRegisterSubmitBtn.disabled = loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete();
         }
     }
     
