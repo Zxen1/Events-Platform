@@ -288,6 +288,10 @@
     margin-left: 3px;
 }
 
+.fieldset-label-required--complete {
+    color: #fff;
+}
+
 .fieldset-label-tooltip {
     width: 16px;
     height: 16px;

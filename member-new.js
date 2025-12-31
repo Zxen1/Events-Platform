@@ -2764,11 +2764,49 @@ const MemberModule = (function() {
 
     function updateSubmitButtonState() {
         var ready = isCreatePostFormReadyForSubmit();
+        updateFieldsetRequiredAsterisks();
         if (submitBtn) {
             submitBtn.disabled = !ready;
         }
         if (adminSubmitBtn) {
             adminSubmitBtn.disabled = !ready;
+        }
+    }
+
+    function isFieldsetCompleteForIndicator(fieldsetEl) {
+        if (!fieldsetEl || !fieldsetEl.dataset) return true;
+
+        var required = String(fieldsetEl.dataset.required || '') === 'true';
+        if (!required) return true;
+
+        // Use the same extraction + empty rules as submit validation.
+        var fieldType = String(fieldsetEl.dataset.fieldsetType || '');
+        var value = extractFieldValue(fieldsetEl, fieldType);
+        if (isEmptyValue(value, fieldType)) return false;
+
+        // Also respect native validity if present (e.g., setCustomValidity).
+        var inputs = fieldsetEl.querySelectorAll('input:not([type="hidden"]), select, textarea');
+        for (var i = 0; i < inputs.length; i++) {
+            var el = inputs[i];
+            if (!el) continue;
+            if (typeof el.checkValidity === 'function' && !el.checkValidity()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function updateFieldsetRequiredAsterisks() {
+        if (!formFields) return;
+        var all = formFields.querySelectorAll('.fieldset');
+        for (var i = 0; i < all.length; i++) {
+            var fs = all[i];
+            if (!fs) continue;
+            var star = fs.querySelector('.fieldset-label-required');
+            if (!star) continue;
+            var ok = isFieldsetCompleteForIndicator(fs);
+            star.classList.toggle('fieldset-label-required--complete', ok);
         }
     }
     
