@@ -3169,8 +3169,10 @@ const MemberModule = (function() {
                 fieldsetKey: '',
                 key: '',
                 type: '',
-                min_length: 0,
-                max_length: 500,
+                // min/max are DB-driven; do not hardcode defaults here.
+                // For multi-field fieldsets, these are often null and should remain null.
+                min_length: null,
+                max_length: null,
                 required: false,
                 location_repeat: false,
                 must_repeat: false,
@@ -3195,8 +3197,10 @@ const MemberModule = (function() {
             fieldsetKey: '',
             key: '',
             type: '',
-            min_length: 0,
-            max_length: 500,
+            // min/max are DB-driven; do not hardcode defaults here.
+            // For multi-field fieldsets, these are often null and should remain null.
+            min_length: null,
+            max_length: null,
             required: false,
             location_repeat: false,
             must_repeat: false,
