@@ -3066,33 +3066,45 @@ const FieldsetBuilder = (function(){
                     var selectedDays = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
                     if (!selectedDays || selectedDays.length === 0) return false;
                     // Session time inputs are rendered with class "fieldset-time"
-                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time, input.fieldset-time, input.fieldset-time');
-                    // Back-compat: actual class used is "fieldset-time"
-                    if (!timeInputs || timeInputs.length === 0) {
-                        timeInputs = fieldset.querySelectorAll('input.fieldset-time, input.fieldset-time');
-                    }
-                    if (!timeInputs || timeInputs.length === 0) {
-                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
-                    }
-                    if (!timeInputs || timeInputs.length === 0) {
-                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
-                    }
-                    if (!timeInputs || timeInputs.length === 0) {
-                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
-                    }
-                    if (!timeInputs || timeInputs.length === 0) {
-                        timeInputs = fieldset.querySelectorAll('input.fieldset-time');
-                    }
-                    // Correct selector:
-                    timeInputs = fieldset.querySelectorAll('input.fieldset-time, input.fieldset-time');
+                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time');
                     if (!timeInputs || timeInputs.length === 0) return false;
+                    
+                    function isSessionTimeComplete(v) {
+                        var s = (typeof v === 'string') ? v.trim() : String(v || '').trim();
+                        if (!s) return false;
+                        
+                        // Accept "H" or "HH" (treated as HH:00 in the UI on blur)
+                        var m1 = s.match(/^(\d{1,2})$/);
+                        if (m1) {
+                            var hh1 = parseInt(m1[1], 10);
+                            return (hh1 >= 0 && hh1 <= 23);
+                        }
+                        
+                        // Accept "H:MM" or "HH:MM"
+                        var m2 = s.match(/^(\d{1,2}):(\d{2})$/);
+                        if (m2) {
+                            var hh2 = parseInt(m2[1], 10);
+                            var mm2 = parseInt(m2[2], 10);
+                            return (hh2 >= 0 && hh2 <= 23 && mm2 >= 0 && mm2 <= 59);
+                        }
+                        
+                        // Accept "HHMM" (4 digits) as complete (UI will normalize on blur)
+                        var m3 = s.match(/^(\d{2})(\d{2})$/);
+                        if (m3) {
+                            var hh3 = parseInt(m3[1], 10);
+                            var mm3 = parseInt(m3[2], 10);
+                            return (hh3 >= 0 && hh3 <= 23 && mm3 >= 0 && mm3 <= 59);
+                        }
+                        
+                        return false;
+                    }
+                    
                     for (var i = 0; i < timeInputs.length; i++) {
                         var ti = timeInputs[i];
                         if (!ti) return false;
                         // Only require boxes the user can actually see/interact with.
                         if (!isVisibleControl(ti)) continue;
-                        var tv = ti.value;
-                        if (!isTimeHHMM(tv)) return false;
+                        if (!isSessionTimeComplete(ti.value)) return false;
                     }
                     return true;
                 }
