@@ -2208,6 +2208,8 @@ const MemberModule = (function() {
                     fieldset.dataset.fieldsetType = String(field.type || '').trim();
                     fieldset.dataset.fieldsetName = String(field.name || '').trim();
                     fieldset.dataset.required = (field.required === true) ? 'true' : 'false';
+                    fieldset.dataset.minLength = (field.min_length !== undefined && field.min_length !== null) ? String(field.min_length) : '';
+                    fieldset.dataset.maxLength = (field.max_length !== undefined && field.max_length !== null) ? String(field.max_length) : '';
                 } catch (e) {}
                 
                 // Add location quantity selector to location fieldset
@@ -2421,6 +2423,8 @@ const MemberModule = (function() {
                 locationFieldsetClone.dataset.fieldsetName = String(locationFieldData.name || '').trim();
                 var locReq = !!(locationFieldsetData && (locationFieldsetData.required === true || locationFieldsetData.required === 1 || locationFieldsetData.required === '1' || locationFieldsetData.required === 'true'));
                 locationFieldsetClone.dataset.required = locReq ? 'true' : 'false';
+                locationFieldsetClone.dataset.minLength = (locationFieldData.min_length !== undefined && locationFieldData.min_length !== null) ? String(locationFieldData.min_length) : '';
+                locationFieldsetClone.dataset.maxLength = (locationFieldData.max_length !== undefined && locationFieldData.max_length !== null) ? String(locationFieldData.max_length) : '';
             } catch (e) {}
             
             // Built fieldset for location
@@ -2446,6 +2450,8 @@ const MemberModule = (function() {
                     fieldset.dataset.fieldsetName = String((fieldData && fieldData.name) || '').trim();
                     var req = !!(fieldData && (fieldData.required === true || fieldData.required === 1 || fieldData.required === '1' || fieldData.required === 'true'));
                     fieldset.dataset.required = req ? 'true' : 'false';
+                    fieldset.dataset.minLength = (fieldData && fieldData.min_length !== undefined && fieldData.min_length !== null) ? String(fieldData.min_length) : '';
+                    fieldset.dataset.maxLength = (fieldData && fieldData.max_length !== undefined && fieldData.max_length !== null) ? String(fieldData.max_length) : '';
                 } catch (e) {}
                 
                 locationSection.appendChild(fieldset);
@@ -2784,6 +2790,17 @@ const MemberModule = (function() {
         var value = extractFieldValue(fieldsetEl, fieldType);
         if (isEmptyValue(value, fieldType)) return false;
 
+        // Enforce configured min/max character counts (when provided).
+        var minLen = parseInt(String(fieldsetEl.dataset.minLength || '').trim(), 10);
+        var maxLen = parseInt(String(fieldsetEl.dataset.maxLength || '').trim(), 10);
+        if (!isFinite(minLen)) minLen = 0;
+        if (!isFinite(maxLen)) maxLen = 0;
+        if (typeof value === 'string') {
+            var L = value.trim().length;
+            if (minLen > 0 && L < minLen) return false;
+            if (maxLen > 0 && L > maxLen) return false;
+        }
+
         // Also respect native validity if present (e.g., setCustomValidity).
         var inputs = fieldsetEl.querySelectorAll('input:not([type="hidden"]), select, textarea');
         for (var i = 0; i < inputs.length; i++) {
@@ -2915,6 +2932,10 @@ const MemberModule = (function() {
             var fieldType = el.dataset.fieldsetType || '';
             var fieldName = el.dataset.fieldsetName || fieldsetKey;
             var required = el.dataset.required === 'true';
+            var minLen = parseInt(String(el.dataset.minLength || '').trim(), 10);
+            var maxLen = parseInt(String(el.dataset.maxLength || '').trim(), 10);
+            if (!isFinite(minLen)) minLen = 0;
+            if (!isFinite(maxLen)) maxLen = 0;
             
             var value = extractFieldValue(el, fieldType);
             
@@ -2925,6 +2946,42 @@ const MemberModule = (function() {
                     errorPlaceholders: { field: fieldName },
                     focusElement: findFocusableInFieldset(el, fieldType)
                 };
+            }
+
+            // Validate min/max lengths when configured (applies to any non-empty string value).
+            if (typeof value === 'string') {
+                var vTrim = value.trim();
+                if (vTrim !== '') {
+                    if (minLen > 0 && vTrim.length < minLen) {
+                        return {
+                            errorKey: 'msg_post_validation_required',
+                            errorPlaceholders: { field: fieldName },
+                            focusElement: findFocusableInFieldset(el, fieldType)
+                        };
+                    }
+                    if (maxLen > 0 && vTrim.length > maxLen) {
+                        return {
+                            errorKey: 'msg_post_validation_required',
+                            errorPlaceholders: { field: fieldName },
+                            focusElement: findFocusableInFieldset(el, fieldType)
+                        };
+                    }
+                }
+            }
+
+            // Respect HTML validity when components provide it (email/url/etc).
+            // If any input inside the fieldset is invalid, treat the fieldset as incomplete.
+            var inputs = el.querySelectorAll('input:not([type="hidden"]), select, textarea');
+            for (var j = 0; j < inputs.length; j++) {
+                var inp = inputs[j];
+                if (!inp) continue;
+                if (typeof inp.checkValidity === 'function' && !inp.checkValidity()) {
+                    return {
+                        errorKey: 'msg_post_validation_required',
+                        errorPlaceholders: { field: fieldName },
+                        focusElement: inp
+                    };
+                }
             }
             
             payload.fields.push({
