@@ -2928,6 +2928,8 @@ const MemberModule = (function() {
                     }
                     // Reset form
                     resetCreatePostForm();
+                    // Land on My Posts after successful post.
+                    try { requestTabSwitch('myposts'); } catch (e0) {}
                 } else {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         // Prefer message system keys from backend (no hardcoded server strings).
@@ -3883,8 +3885,6 @@ const MemberModule = (function() {
         pendingCreateAuthAvatarBlob = null;
         pendingCreateAuthSiteUrl = '';
         pendingCreateAuthAvatarPreviewUrl = '';
-        createAuthPendingSubmit = false;
-        createAuthPendingSubmitIsAdminFree = false;
     }
 
     function ensureCreateAuthGateMounted() {
@@ -4164,8 +4164,19 @@ const MemberModule = (function() {
 
             var shouldSubmit = createAuthPendingSubmit;
             var isAdminFree = createAuthPendingSubmitIsAdminFree;
+            // Disarm immediately so a later auth cannot "surprise-submit".
+            createAuthPendingSubmit = false;
+            createAuthPendingSubmitIsAdminFree = false;
             hideCreateAuthGate();
             updateSubmitButtonState();
+
+            // Toast: login success (message system)
+            try {
+                var displayName = currentUser.name || currentUser.email || currentUser.username;
+                getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
+                    if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                });
+            } catch (e0) {}
 
             if (shouldSubmit) {
                 // Resume the original submit attempt without losing draft.
@@ -4246,8 +4257,18 @@ const MemberModule = (function() {
 
                 var shouldSubmit = createAuthPendingSubmit;
                 var isAdminFree = createAuthPendingSubmitIsAdminFree;
+                // Disarm immediately so a later auth cannot "surprise-submit".
+                createAuthPendingSubmit = false;
+                createAuthPendingSubmitIsAdminFree = false;
                 hideCreateAuthGate();
                 updateSubmitButtonState();
+
+                // Toast: registration success (message system)
+                try {
+                    getMessage('msg_auth_register_success', { name: name }, false).then(function(message) {
+                        if (message && window.ToastComponent) ToastComponent.showSuccess(message);
+                    });
+                } catch (e0) {}
 
                 if (shouldSubmit) {
                     setTimeout(function() {
