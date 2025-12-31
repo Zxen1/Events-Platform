@@ -2876,12 +2876,12 @@ const MemberModule = (function() {
 
         var loginFilled = !!(createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() && createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim());
         if (createAuthLoginSubmitBtn) {
-            // Auth must work in any order: do NOT require the create form to be complete first.
-            createAuthLoginSubmitBtn.disabled = loggedIn || !isLoginActive || !loginFilled;
+            // Three-button rule: this is a submit action, so it must stay disabled until the post form is complete.
+            createAuthLoginSubmitBtn.disabled = loggedIn || !isLoginActive || !loginFilled || !ready;
         }
         if (createAuthRegisterSubmitBtn) {
-            // Auth must work in any order: do NOT require the create form to be complete first.
-            createAuthRegisterSubmitBtn.disabled = loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete();
+            // Three-button rule: this is a submit action, so it must stay disabled until the post form is complete.
+            createAuthRegisterSubmitBtn.disabled = loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete() || !ready;
         }
     }
     
@@ -3989,8 +3989,15 @@ const MemberModule = (function() {
         var password = passwordInput ? String(passwordInput.value || '') : '';
         if (!username || !password) return;
 
+        // Three-button rule: "Log In & Submit" is always a submit action.
+        createAuthPendingSubmit = true;
+        createAuthPendingSubmitIsAdminFree = false;
+
         verifyLogin(username, password).then(function(result) {
             if (!result || result.success !== true) {
+                // Never leave a pending submit armed if auth fails.
+                createAuthPendingSubmit = false;
+                createAuthPendingSubmitIsAdminFree = false;
                 getMessage('msg_auth_login_incorrect', {}, false).then(function(message) {
                     if (message && window.ToastComponent) ToastComponent.showError(message);
                 });
@@ -4037,6 +4044,10 @@ const MemberModule = (function() {
             if (!pendingCreateAuthAvatarBlob && !pendingCreateAuthSiteUrl) return;
             if (password !== confirm) return;
 
+            // Three-button rule: "Register & Submit" is always a submit action.
+            createAuthPendingSubmit = true;
+            createAuthPendingSubmitIsAdminFree = false;
+
             function prepareAvatarBlob() {
                 if (pendingCreateAuthAvatarBlob) return Promise.resolve(pendingCreateAuthAvatarBlob);
                 if (pendingCreateAuthSiteUrl) {
@@ -4065,6 +4076,9 @@ const MemberModule = (function() {
                 var payload = null;
                 try { payload = JSON.parse(text); } catch (e) { payload = null; }
                 if (!payload || payload.success === false || payload.error) {
+                    // Never leave a pending submit armed if auth fails.
+                    createAuthPendingSubmit = false;
+                    createAuthPendingSubmitIsAdminFree = false;
                     var key = payload && payload.message_key ? String(payload.message_key) : 'msg_post_create_error';
                     getMessage(key, {}, false).then(function(msg) {
                         if (msg && window.ToastComponent) ToastComponent.showError(msg);
