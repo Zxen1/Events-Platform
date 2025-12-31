@@ -2204,13 +2204,7 @@ const MemberModule = (function() {
 
                 // Carry validation metadata onto the rendered DOM so submit-state can be computed
                 // without guessing: required flag + fieldset type are part of the form configuration.
-                try {
-                    fieldset.dataset.fieldsetType = String(field.type || '').trim();
-                    fieldset.dataset.fieldsetName = String(field.name || '').trim();
-                    fieldset.dataset.required = (field.required === true) ? 'true' : 'false';
-                    fieldset.dataset.minLength = (field.min_length !== undefined && field.min_length !== null) ? String(field.min_length) : '';
-                    fieldset.dataset.maxLength = (field.max_length !== undefined && field.max_length !== null) ? String(field.max_length) : '';
-                } catch (e) {}
+                // Fieldset validity UI is component-owned (FieldsetBuilder sets dataset flags + required star state).
                 
                 // Add location quantity selector to location fieldset
                 if (isLocationFieldset) {
@@ -2419,12 +2413,7 @@ const MemberModule = (function() {
             });
             
             try {
-                locationFieldsetClone.dataset.fieldsetType = String(locationFieldData.type || '').trim();
-                locationFieldsetClone.dataset.fieldsetName = String(locationFieldData.name || '').trim();
-                var locReq = !!(locationFieldsetData && (locationFieldsetData.required === true || locationFieldsetData.required === 1 || locationFieldsetData.required === '1' || locationFieldsetData.required === 'true'));
-                locationFieldsetClone.dataset.required = locReq ? 'true' : 'false';
-                locationFieldsetClone.dataset.minLength = (locationFieldData.min_length !== undefined && locationFieldData.min_length !== null) ? String(locationFieldData.min_length) : '';
-                locationFieldsetClone.dataset.maxLength = (locationFieldData.max_length !== undefined && locationFieldData.max_length !== null) ? String(locationFieldData.max_length) : '';
+                // Fieldset validity UI is component-owned (FieldsetBuilder sets dataset flags + required star state).
             } catch (e) {}
             
             // Built fieldset for location
@@ -2446,12 +2435,7 @@ const MemberModule = (function() {
                 });
                 
                 try {
-                    fieldset.dataset.fieldsetType = String((fieldData && fieldData.type) || '').trim();
-                    fieldset.dataset.fieldsetName = String((fieldData && fieldData.name) || '').trim();
-                    var req = !!(fieldData && (fieldData.required === true || fieldData.required === 1 || fieldData.required === '1' || fieldData.required === 'true'));
-                    fieldset.dataset.required = req ? 'true' : 'false';
-                    fieldset.dataset.minLength = (fieldData && fieldData.min_length !== undefined && fieldData.min_length !== null) ? String(fieldData.min_length) : '';
-                    fieldset.dataset.maxLength = (fieldData && fieldData.max_length !== undefined && fieldData.max_length !== null) ? String(fieldData.max_length) : '';
+                    // Fieldset validity UI is component-owned (FieldsetBuilder sets dataset flags + required star state).
                 } catch (e) {}
                 
                 locationSection.appendChild(fieldset);
@@ -2760,70 +2744,26 @@ const MemberModule = (function() {
         if (!termsAgreed) return false;
         if (!selectedCategory || !selectedSubcategory) return false;
         if (!formFields) return false;
-        
-        // Validate required fieldsets using the same rules as submission.
-        var validation = validateAndCollectFormData();
-        if (validation && validation.errorKey) return false;
-        
+
+        // Component-owned validity: only submit when every required fieldset reports complete.
+        var fieldsetEls = formFields.querySelectorAll('.fieldset[data-required="true"]');
+        for (var i = 0; i < fieldsetEls.length; i++) {
+            var fs = fieldsetEls[i];
+            if (!fs || !fs.dataset) continue;
+            if (String(fs.dataset.complete || '') !== 'true') {
+                return false;
+            }
+        }
         return true;
     }
 
     function updateSubmitButtonState() {
         var ready = isCreatePostFormReadyForSubmit();
-        updateFieldsetRequiredAsterisks();
         if (submitBtn) {
             submitBtn.disabled = !ready;
         }
         if (adminSubmitBtn) {
             adminSubmitBtn.disabled = !ready;
-        }
-    }
-
-    function isFieldsetCompleteForIndicator(fieldsetEl) {
-        if (!fieldsetEl || !fieldsetEl.dataset) return true;
-
-        var required = String(fieldsetEl.dataset.required || '') === 'true';
-        if (!required) return true;
-
-        // Use the same extraction + empty rules as submit validation.
-        var fieldType = String(fieldsetEl.dataset.fieldsetType || '');
-        var value = extractFieldValue(fieldsetEl, fieldType);
-        if (isEmptyValue(value, fieldType)) return false;
-
-        // Enforce configured min/max character counts (when provided).
-        var minLen = parseInt(String(fieldsetEl.dataset.minLength || '').trim(), 10);
-        var maxLen = parseInt(String(fieldsetEl.dataset.maxLength || '').trim(), 10);
-        if (!isFinite(minLen)) minLen = 0;
-        if (!isFinite(maxLen)) maxLen = 0;
-        if (typeof value === 'string') {
-            var L = value.trim().length;
-            if (minLen > 0 && L < minLen) return false;
-            if (maxLen > 0 && L > maxLen) return false;
-        }
-
-        // Also respect native validity if present (e.g., setCustomValidity).
-        var inputs = fieldsetEl.querySelectorAll('input:not([type="hidden"]), select, textarea');
-        for (var i = 0; i < inputs.length; i++) {
-            var el = inputs[i];
-            if (!el) continue;
-            if (typeof el.checkValidity === 'function' && !el.checkValidity()) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    function updateFieldsetRequiredAsterisks() {
-        if (!formFields) return;
-        var all = formFields.querySelectorAll('.fieldset');
-        for (var i = 0; i < all.length; i++) {
-            var fs = all[i];
-            if (!fs) continue;
-            var star = fs.querySelector('.fieldset-label-required');
-            if (!star) continue;
-            var ok = isFieldsetCompleteForIndicator(fs);
-            star.classList.toggle('fieldset-label-required--complete', ok);
         }
     }
     
@@ -2932,10 +2872,6 @@ const MemberModule = (function() {
             var fieldType = el.dataset.fieldsetType || '';
             var fieldName = el.dataset.fieldsetName || fieldsetKey;
             var required = el.dataset.required === 'true';
-            var minLen = parseInt(String(el.dataset.minLength || '').trim(), 10);
-            var maxLen = parseInt(String(el.dataset.maxLength || '').trim(), 10);
-            if (!isFinite(minLen)) minLen = 0;
-            if (!isFinite(maxLen)) maxLen = 0;
             
             var value = extractFieldValue(el, fieldType);
             
@@ -2946,42 +2882,6 @@ const MemberModule = (function() {
                     errorPlaceholders: { field: fieldName },
                     focusElement: findFocusableInFieldset(el, fieldType)
                 };
-            }
-
-            // Validate min/max lengths when configured (applies to any non-empty string value).
-            if (typeof value === 'string') {
-                var vTrim = value.trim();
-                if (vTrim !== '') {
-                    if (minLen > 0 && vTrim.length < minLen) {
-                        return {
-                            errorKey: 'msg_post_validation_required',
-                            errorPlaceholders: { field: fieldName },
-                            focusElement: findFocusableInFieldset(el, fieldType)
-                        };
-                    }
-                    if (maxLen > 0 && vTrim.length > maxLen) {
-                        return {
-                            errorKey: 'msg_post_validation_required',
-                            errorPlaceholders: { field: fieldName },
-                            focusElement: findFocusableInFieldset(el, fieldType)
-                        };
-                    }
-                }
-            }
-
-            // Respect HTML validity when components provide it (email/url/etc).
-            // If any input inside the fieldset is invalid, treat the fieldset as incomplete.
-            var inputs = el.querySelectorAll('input:not([type="hidden"]), select, textarea');
-            for (var j = 0; j < inputs.length; j++) {
-                var inp = inputs[j];
-                if (!inp) continue;
-                if (typeof inp.checkValidity === 'function' && !inp.checkValidity()) {
-                    return {
-                        errorKey: 'msg_post_validation_required',
-                        errorPlaceholders: { field: fieldName },
-                        focusElement: inp
-                    };
-                }
             }
             
             payload.fields.push({
@@ -2999,54 +2899,6 @@ const MemberModule = (function() {
         var baseType = fieldType.replace(/-locked$/, '').replace(/-hidden$/, '');
         
         switch (baseType) {
-            case 'sessions':
-                // Sessions fieldset: selected dates + their session times.
-                // Validity rule: if there are selected dates, ALL visible time inputs must be non-empty and in HH:MM.
-                // NOTE: We do not guess missing times; incomplete = empty (prevents submit enable).
-                var selected = el.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
-                var selectedDates = [];
-                selected.forEach(function(day) {
-                    var iso = day && day.dataset ? String(day.dataset.iso || '').trim() : '';
-                    if (iso) selectedDates.push(iso);
-                });
-                selectedDates.sort();
-                
-                // If no dates selected, treat as empty.
-                if (!selectedDates.length) {
-                    return [];
-                }
-                
-                var timeInputs = el.querySelectorAll('input.fieldset-time');
-                var allTimes = [];
-                var timeRe = /^(\d{2}):(\d{2})$/;
-                
-                for (var i = 0; i < timeInputs.length; i++) {
-                    var v = timeInputs[i] && typeof timeInputs[i].value === 'string' ? timeInputs[i].value.trim() : '';
-                    if (!v) {
-                        return [];
-                    }
-                    var m = v.match(timeRe);
-                    if (!m) {
-                        return [];
-                    }
-                    var hh = parseInt(m[1], 10);
-                    var mm = parseInt(m[2], 10);
-                    if (!(hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59)) {
-                        return [];
-                    }
-                    allTimes.push(v);
-                }
-                
-                // If dates are selected but there are no time inputs rendered, this is incomplete.
-                if (!allTimes.length) {
-                    return [];
-                }
-                
-                return {
-                    dates: selectedDates,
-                    times: allTimes
-                };
-
             case 'text':
             case 'text-short':
             case 'text-medium':

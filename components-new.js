@@ -1050,6 +1050,12 @@ const FieldsetBuilder = (function(){
         if (typeof key === 'string' && key.trim() !== '') {
             fieldset.dataset.fieldsetKey = key;
         }
+        // Expose canonical type/name for any callers that serialize fieldsets (member/admin).
+        // This must be component-owned so all consumers behave identically.
+        try {
+            fieldset.dataset.fieldsetType = (typeof key === 'string') ? String(key).trim() : '';
+            fieldset.dataset.fieldsetName = (typeof name === 'string') ? String(name).trim() : '';
+        } catch (e) {}
         
         // Get tooltip: check customTooltip first (editable fieldsets), then tooltip, then fieldset_tooltip
         var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip;
@@ -2844,7 +2850,222 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(input);
                 fieldset.appendChild(validation.charCount);
         }
-        
+
+        // ---------------------------------------------------------------------
+        // REQUIRED + COMPLETE STATE (component-owned)
+        //
+        // - FieldsetBuilder is the single source of truth for fieldset validity UI,
+        //   so Admin form preview and Member Create Post behave identically.
+        // - Member/Admin code should only read dataset flags; it must not re-implement
+        //   per-field rules (min/max, email/url, complex nested fieldsets, etc).
+        // ---------------------------------------------------------------------
+
+        function normalizeRequiredFlag(v) {
+            if (v === true || v === 1 || v === '1' || v === 'true') return true;
+            return false;
+        }
+
+        var requiredFlag = normalizeRequiredFlag(fieldData.required || fieldData.is_required);
+        try {
+            fieldset.dataset.required = requiredFlag ? 'true' : 'false';
+        } catch (e) {}
+
+        var requiredStar = fieldset.querySelector('.fieldset-label-required');
+        if (requiredStar) {
+            // If not required, hide the star entirely (no "complete" state needed).
+            if (!requiredFlag) {
+                requiredStar.style.display = 'none';
+            }
+        }
+
+        function setCompleteState(isComplete) {
+            var complete = !!isComplete;
+            try {
+                fieldset.dataset.complete = complete ? 'true' : 'false';
+            } catch (e) {}
+            if (requiredStar && requiredStar.style.display !== 'none') {
+                requiredStar.classList.toggle('fieldset-label-required--complete', complete);
+            }
+            try {
+                fieldset.dispatchEvent(new CustomEvent('fieldset:validity-change', { bubbles: true }));
+            } catch (e2) {}
+        }
+
+        function strLenOk(v, minL, maxL) {
+            var s = (typeof v === 'string') ? v.trim() : '';
+            if (!s) return false;
+            var L = s.length;
+            if (typeof minL === 'number' && isFinite(minL) && minL > 0 && L < minL) return false;
+            if (typeof maxL === 'number' && isFinite(maxL) && maxL > 0 && L > maxL) return false;
+            return true;
+        }
+
+        function isTimeHHMM(v) {
+            var s = (typeof v === 'string') ? v.trim() : '';
+            var m = s.match(/^(\d{2}):(\d{2})$/);
+            if (!m) return false;
+            var hh = parseInt(m[1], 10);
+            var mm = parseInt(m[2], 10);
+            return (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59);
+        }
+
+        function computeComplete() {
+            // Optional fieldsets are always complete.
+            if (!requiredFlag) return true;
+
+            switch (key) {
+                case 'title':
+                case 'coupon':
+                case 'text-box':
+                case 'username':
+                case 'password':
+                case 'confirm-password':
+                case 'new-password': {
+                    var inp = fieldset.querySelector('input.fieldset-input');
+                    return inp ? strLenOk(inp.value, minLength, maxLength) : false;
+                }
+                case 'description':
+                case 'text-area': {
+                    var ta = fieldset.querySelector('textarea');
+                    return ta ? strLenOk(ta.value, minLength, maxLength) : false;
+                }
+                case 'email': {
+                    var e = fieldset.querySelector('input.fieldset-input');
+                    if (!e) return false;
+                    if (!strLenOk(e.value, minLength, maxLength)) return false;
+                    return isValidEmail(e.value);
+                }
+                case 'website-url':
+                case 'tickets-url': {
+                    var u = fieldset.querySelector('input.fieldset-input');
+                    if (!u) return false;
+                    if (!strLenOk(u.value, minLength, maxLength)) return false;
+                    return isValidUrl(u.value);
+                }
+                case 'dropdown': {
+                    var sel = fieldset.querySelector('select');
+                    var v = sel ? String(sel.value || '').trim() : '';
+                    return !!v;
+                }
+                case 'radio': {
+                    var checked = fieldset.querySelector('input[type="radio"]:checked');
+                    return !!checked;
+                }
+                case 'phone': {
+                    var prefixInput = fieldset.querySelector('.fieldset-menu-button-input');
+                    var phoneInput = fieldset.querySelector('input[type="tel"].fieldset-input');
+                    if (!prefixInput || !phoneInput) return false;
+                    var pfx = String(prefixInput.value || '').trim();
+                    if (!pfx) return false;
+                    return strLenOk(phoneInput.value, minLength, maxLength);
+                }
+                case 'address':
+                case 'city':
+                case 'venue':
+                case 'location': {
+                    var addr = fieldset.querySelector('input.fieldset-input');
+                    var lat = fieldset.querySelector('input.fieldset-lat');
+                    var lng = fieldset.querySelector('input.fieldset-lng');
+                    if (!addr || !lat || !lng) return false;
+                    if (!strLenOk(addr.value, minLength, maxLength)) return false;
+                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
+                }
+                case 'sessions': {
+                    var selectedDays = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                    if (!selectedDays || selectedDays.length === 0) return false;
+                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    if (!timeInputs || timeInputs.length === 0) return false;
+                    for (var i = 0; i < timeInputs.length; i++) {
+                        var tv = timeInputs[i] ? timeInputs[i].value : '';
+                        if (!isTimeHHMM(tv)) return false;
+                    }
+                    return true;
+                }
+                case 'images': {
+                    var meta = fieldset.querySelector('input.fieldset-images-meta');
+                    var raw = meta ? String(meta.value || '').trim() : '';
+                    if (!raw) return false;
+                    try {
+                        var arr = JSON.parse(raw);
+                        return Array.isArray(arr) && arr.length > 0;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+                case 'amenities': {
+                    // Required amenities: every row needs Yes/No selected.
+                    var rows = fieldset.querySelectorAll('.fieldset-amenity-row');
+                    if (!rows || rows.length === 0) return false;
+                    for (var i = 0; i < rows.length; i++) {
+                        if (!rows[i].querySelector('input[type="radio"]:checked')) return false;
+                    }
+                    return true;
+                }
+                case 'item-pricing': {
+                    var itemName = fieldset.querySelector('input.fieldset-input');
+                    if (!itemName || !String(itemName.value || '').trim()) return false;
+                    var blocks = fieldset.querySelectorAll('.fieldset-variant-block');
+                    if (!blocks || blocks.length === 0) return false;
+                    for (var i = 0; i < blocks.length; i++) {
+                        var b = blocks[i];
+                        var vIn = b.querySelector('input.fieldset-input');
+                        var currencyIn = b.querySelector('.fieldset-menu-button-input');
+                        var priceIn = b.querySelector('input.fieldset-input[inputmode="decimal"], input.fieldset-input');
+                        // Variant row has an input, price row has another; grab all and pick by placeholders.
+                        var inputs = b.querySelectorAll('input.fieldset-input');
+                        var variantVal = (inputs[0] && inputs[0].type === 'text') ? String(inputs[0].value || '').trim() : '';
+                        var priceVal = (inputs.length > 1) ? String(inputs[inputs.length - 1].value || '').trim() : '';
+                        if (!variantVal) return false;
+                        if (!currencyIn || !String(currencyIn.value || '').trim()) return false;
+                        if (!priceVal) return false;
+                    }
+                    return true;
+                }
+                case 'ticket-pricing': {
+                    // Required ticket pricing: all visible tier blocks must have tier name + currency + price.
+                    var tierBlocks = fieldset.querySelectorAll('.fieldset-tier-block');
+                    if (!tierBlocks || tierBlocks.length === 0) return false;
+                    for (var i = 0; i < tierBlocks.length; i++) {
+                        var tb = tierBlocks[i];
+                        var tierInputs = tb.querySelectorAll('input.fieldset-input');
+                        var tierName = tierInputs && tierInputs[0] ? String(tierInputs[0].value || '').trim() : '';
+                        var tierPrice = tierInputs && tierInputs[tierInputs.length - 1] ? String(tierInputs[tierInputs.length - 1].value || '').trim() : '';
+                        var currencyIn = tb.querySelector('.fieldset-menu-button-input');
+                        if (!tierName) return false;
+                        if (!currencyIn || !String(currencyIn.value || '').trim()) return false;
+                        if (!tierPrice) return false;
+                    }
+                    return true;
+                }
+                default: {
+                    // Fallback: require at least one non-hidden input to have a value and to be natively valid.
+                    var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
+                    if (!els || els.length === 0) return false;
+                    for (var i = 0; i < els.length; i++) {
+                        var el = els[i];
+                        if (!el) continue;
+                        if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
+                        var val = (el.type === 'checkbox') ? (el.checked ? '1' : '') : String(el.value || '').trim();
+                        if (!val) return false;
+                    }
+                    return true;
+                }
+            }
+        }
+
+        function updateCompleteFromDom() {
+            // Only show "complete" for required fieldsets.
+            setCompleteState(computeComplete());
+        }
+
+        // Initial state
+        updateCompleteFromDom();
+
+        // Recalculate on any interaction inside this fieldset.
+        fieldset.addEventListener('input', updateCompleteFromDom, true);
+        fieldset.addEventListener('change', updateCompleteFromDom, true);
+        fieldset.addEventListener('blur', updateCompleteFromDom, true);
+
         return fieldset;
     }
     
