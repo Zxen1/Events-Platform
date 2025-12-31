@@ -3061,7 +3061,11 @@ const FieldsetBuilder = (function(){
                     var timeInputs = fieldset.querySelectorAll('input.fieldset-time');
                     if (!timeInputs || timeInputs.length === 0) return false;
                     for (var i = 0; i < timeInputs.length; i++) {
-                        var tv = timeInputs[i] ? timeInputs[i].value : '';
+                        var ti = timeInputs[i];
+                        if (!ti) return false;
+                        // Only require boxes the user can actually see/interact with.
+                        if (!isVisibleControl(ti)) continue;
+                        var tv = ti.value;
                         if (!isTimeHHMM(tv)) return false;
                     }
                     return true;
