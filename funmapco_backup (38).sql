@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 01, 2026 at 09:26 PM
+-- Generation Time: Jan 01, 2026 at 10:43 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -159,7 +159,8 @@ CREATE TABLE `post_children` (
   `session_time` time DEFAULT NULL,
   `seating_area` varchar(100) DEFAULT NULL,
   `pricing_tier` varchar(100) DEFAULT NULL,
-  `variant_name` varchar(100) DEFAULT NULL,
+  `item_name` varchar(200) DEFAULT NULL,
+  `item_variant` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
   `currency` varchar(10) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -184,9 +185,11 @@ CREATE TABLE `post_map_cards` (
   `custom_dropdown` varchar(255) DEFAULT NULL,
   `custom_radio` varchar(255) DEFAULT NULL,
   `public_email` varchar(255) DEFAULT NULL,
+  `phone_prefix` varchar(20) DEFAULT NULL,
   `phone` varchar(50) DEFAULT NULL,
   `venue_name` varchar(255) DEFAULT NULL,
   `address_line` varchar(500) DEFAULT NULL,
+  `city` varchar(200) DEFAULT NULL,
   `latitude` decimal(10,7) NOT NULL,
   `longitude` decimal(10,7) NOT NULL,
   `country_code` varchar(2) DEFAULT NULL,
@@ -925,7 +928,8 @@ CREATE TABLE `post_children` (
 ,`session_time` time
 ,`seating_area` varchar(100)
 ,`pricing_tier` varchar(100)
-,`variant_name` varchar(100)
+,`item_name` varchar(200)
+,`item_variant` varchar(100)
 ,`price` decimal(10,2)
 ,`currency` varchar(10)
 ,`created_at` datetime
@@ -949,9 +953,11 @@ CREATE TABLE `post_map_cards` (
 ,`custom_dropdown` varchar(255)
 ,`custom_radio` varchar(255)
 ,`public_email` varchar(255)
+,`phone_prefix` varchar(20)
 ,`phone` varchar(50)
 ,`venue_name` varchar(255)
 ,`address_line` varchar(500)
+,`city` varchar(200)
 ,`latitude` decimal(10,7)
 ,`longitude` decimal(10,7)
 ,`country_code` varchar(2)
@@ -1091,7 +1097,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `admins`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`account_email` AS `account_email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recent` AS `recent`, `a`.`country` AS `country`, `a`.`hidden` AS `hidden`, `a`.`deleted_at` AS `deleted_at`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`account_email` AS `account_email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recent` AS `recent`, `a`.`country` AS `country`, `a`.`hidden` AS `hidden`, `a`.`deleted_at` AS `deleted_at`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
 
 -- --------------------------------------------------------
 
@@ -1208,7 +1214,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `fieldsets`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `fieldsets`  AS SELECT `fs`.`id` AS `id`, `fs`.`fieldset_name` AS `fieldset_name`, `fs`.`fieldset_key` AS `fieldset_key`, `fs`.`fieldset_type` AS `fieldset_type`, `fs`.`sort_order` AS `sort_order`, `fs`.`fieldset_fields` AS `fieldset_fields`, `fs`.`fieldset_options` AS `fieldset_options`, `fs`.`fieldset_placeholder` AS `fieldset_placeholder`, `fs`.`fieldset_tooltip` AS `fieldset_tooltip`, `fs`.`created_at` AS `created_at`, `fs`.`updated_at` AS `updated_at` FROM `funmapco_system`.`fieldsets` AS `fs` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `fieldsets`  AS SELECT `fs`.`id` AS `id`, `fs`.`fieldset_name` AS `fieldset_name`, `fs`.`fieldset_key` AS `fieldset_key`, `fs`.`fieldset_type` AS `fieldset_type`, `fs`.`sort_order` AS `sort_order`, `fs`.`fieldset_fields` AS `fieldset_fields`, `fs`.`fieldset_options` AS `fieldset_options`, `fs`.`fieldset_placeholder` AS `fieldset_placeholder`, `fs`.`fieldset_tooltip` AS `fieldset_tooltip`, `fs`.`created_at` AS `created_at`, `fs`.`updated_at` AS `updated_at` FROM `funmapco_system`.`fieldsets` AS `fs` ;
 
 -- --------------------------------------------------------
 
@@ -1253,7 +1259,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `members`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`account_email` AS `account_email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recent` AS `recent`, `m`.`country` AS `country`, `m`.`hidden` AS `hidden`, `m`.`deleted_at` AS `deleted_at`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`account_email` AS `account_email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recent` AS `recent`, `m`.`country` AS `country`, `m`.`hidden` AS `hidden`, `m`.`deleted_at` AS `deleted_at`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
 
 -- --------------------------------------------------------
 
@@ -1298,7 +1304,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `post_children`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `post_children`  AS SELECT `funmapco_content`.`post_children`.`id` AS `id`, `funmapco_content`.`post_children`.`map_card_id` AS `map_card_id`, `funmapco_content`.`post_children`.`session_date` AS `session_date`, `funmapco_content`.`post_children`.`session_time` AS `session_time`, `funmapco_content`.`post_children`.`seating_area` AS `seating_area`, `funmapco_content`.`post_children`.`pricing_tier` AS `pricing_tier`, `funmapco_content`.`post_children`.`variant_name` AS `variant_name`, `funmapco_content`.`post_children`.`price` AS `price`, `funmapco_content`.`post_children`.`currency` AS `currency`, `funmapco_content`.`post_children`.`created_at` AS `created_at`, `funmapco_content`.`post_children`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_children` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fukdn7p2l7`@`localhost` SQL SECURITY DEFINER VIEW `post_children`  AS SELECT `pc`.`id` AS `id`, `pc`.`map_card_id` AS `map_card_id`, `pc`.`session_date` AS `session_date`, `pc`.`session_time` AS `session_time`, `pc`.`seating_area` AS `seating_area`, `pc`.`pricing_tier` AS `pricing_tier`, `pc`.`item_name` AS `item_name`, `pc`.`item_variant` AS `item_variant`, `pc`.`price` AS `price`, `pc`.`currency` AS `currency`, `pc`.`created_at` AS `created_at`, `pc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_children` AS `pc` ;
 
 -- --------------------------------------------------------
 
@@ -1307,7 +1313,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `post_map_cards`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `post_map_cards`  AS SELECT `pmc`.`id` AS `id`, `pmc`.`post_id` AS `post_id`, `pmc`.`subcategory_key` AS `subcategory_key`, `pmc`.`title` AS `title`, `pmc`.`description` AS `description`, `pmc`.`custom_text` AS `custom_text`, `pmc`.`custom_textarea` AS `custom_textarea`, `pmc`.`custom_dropdown` AS `custom_dropdown`, `pmc`.`custom_radio` AS `custom_radio`, `pmc`.`public_email` AS `public_email`, `pmc`.`phone` AS `phone`, `pmc`.`venue_name` AS `venue_name`, `pmc`.`address_line` AS `address_line`, `pmc`.`latitude` AS `latitude`, `pmc`.`longitude` AS `longitude`, `pmc`.`country_code` AS `country_code`, `pmc`.`amenities` AS `amenities`, `pmc`.`website_url` AS `website_url`, `pmc`.`tickets_url` AS `tickets_url`, `pmc`.`coupon_code` AS `coupon_code`, `pmc`.`checkout_title` AS `checkout_title`, `pmc`.`session_summary` AS `session_summary`, `pmc`.`price_summary` AS `price_summary`, `pmc`.`created_at` AS `created_at`, `pmc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_map_cards` AS `pmc` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fukdn7p2l7`@`localhost` SQL SECURITY DEFINER VIEW `post_map_cards`  AS SELECT `pmc`.`id` AS `id`, `pmc`.`post_id` AS `post_id`, `pmc`.`subcategory_key` AS `subcategory_key`, `pmc`.`title` AS `title`, `pmc`.`description` AS `description`, `pmc`.`custom_text` AS `custom_text`, `pmc`.`custom_textarea` AS `custom_textarea`, `pmc`.`custom_dropdown` AS `custom_dropdown`, `pmc`.`custom_radio` AS `custom_radio`, `pmc`.`public_email` AS `public_email`, `pmc`.`phone_prefix` AS `phone_prefix`, `pmc`.`phone` AS `phone`, `pmc`.`venue_name` AS `venue_name`, `pmc`.`address_line` AS `address_line`, `pmc`.`city` AS `city`, `pmc`.`latitude` AS `latitude`, `pmc`.`longitude` AS `longitude`, `pmc`.`country_code` AS `country_code`, `pmc`.`amenities` AS `amenities`, `pmc`.`website_url` AS `website_url`, `pmc`.`tickets_url` AS `tickets_url`, `pmc`.`coupon_code` AS `coupon_code`, `pmc`.`checkout_title` AS `checkout_title`, `pmc`.`session_summary` AS `session_summary`, `pmc`.`price_summary` AS `price_summary`, `pmc`.`created_at` AS `created_at`, `pmc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_map_cards` AS `pmc` ;
 
 -- --------------------------------------------------------
 

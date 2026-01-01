@@ -369,11 +369,14 @@ foreach ($byLoc as $locNum => $entries) {
     'custom_dropdown' => null,
     'custom_radio' => null,
     'public_email' => null,
+    'phone_prefix' => null,
     'phone' => null,
     'venue_name' => null,
     'address_line' => null,
+    'city' => null,
     'latitude' => null,
     'longitude' => null,
+    'country_code' => null,
     'website_url' => null,
     'tickets_url' => null,
     'amenities' => null,
@@ -418,7 +421,14 @@ foreach ($byLoc as $locNum => $entries) {
     if ($baseType === 'custom_dropdown' && is_string($val)) $card['custom_dropdown'] = trim($val);
     if ($baseType === 'custom_radio' && is_string($val)) $card['custom_radio'] = trim($val);
     if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
-    if ($baseType === 'phone' && is_string($val)) $card['phone'] = trim($val);
+    if ($baseType === 'phone' && is_array($val)) {
+      $pfx = isset($val['phone_prefix']) ? trim((string)$val['phone_prefix']) : '';
+      $num = isset($val['phone']) ? trim((string)$val['phone']) : '';
+      if ($pfx !== '' && $num !== '') {
+        $card['phone_prefix'] = $pfx;
+        $card['phone'] = $num;
+      }
+    }
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
@@ -432,12 +442,21 @@ foreach ($byLoc as $locNum => $entries) {
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : null;
       $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : null;
       $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : null;
+      $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
+      $cc = preg_replace('/[^A-Z]/', '', $cc);
+      $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : null;
       continue;
     }
     if (($baseType === 'address' || $baseType === 'city') && is_array($val)) {
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : $card['address_line'];
       $card['latitude'] = isset($val['latitude']) ? (float)$val['latitude'] : $card['latitude'];
       $card['longitude'] = isset($val['longitude']) ? (float)$val['longitude'] : $card['longitude'];
+      $cc = isset($val['country_code']) ? strtoupper(trim((string)$val['country_code'])) : '';
+      $cc = preg_replace('/[^A-Z]/', '', $cc);
+      $card['country_code'] = (is_string($cc) && strlen($cc) === 2) ? $cc : $card['country_code'];
+      if ($baseType === 'city') {
+        $card['city'] = $card['address_line'];
+      }
       continue;
     }
   }
@@ -478,8 +497,8 @@ foreach ($byLoc as $locNum => $entries) {
   }
   if ($priceCount > 0) $card['price_summary'] = 'Prices: ' . $priceCount;
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone, venue_name, address_line, latitude, longitude, country_code, amenities, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -491,11 +510,14 @@ foreach ($byLoc as $locNum => $entries) {
   $customDropdownParam = $card['custom_dropdown'];
   $customRadioParam = $card['custom_radio'];
   $emailParam = $card['public_email'];
+  $phonePrefixParam = $card['phone_prefix'];
   $phoneParam = $card['phone'];
   $venueNameParam = $card['venue_name'];
   $addrLineParam = $card['address_line'];
+  $cityParam = $card['city'];
   $latParam = (float)$card['latitude'];
   $lngParam = (float)$card['longitude'];
+  $countryCodeParam = $card['country_code'];
   $amenitiesParam = $card['amenities'];
   $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
@@ -510,14 +532,14 @@ foreach ($byLoc as $locNum => $entries) {
   // s (title)
   // s (description)
   // ssss (custom_*)
-  // ss (public_email, phone)
-  // ss (venue_name, address_line)
+  // sss (public_email, phone_prefix, phone)
+  // sss (venue_name, address_line, city)
   // dd (lat,lng)
-  // s (amenities)
+  // ss (country_code, amenities)
   // ss (website_url, tickets_url)
   // sss (checkout_title, session_summary, price_summary)
   $stmtCard->bind_param(
-    'issssssssssssddssssss',
+    'isssssssssssssssddsssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -527,11 +549,14 @@ foreach ($byLoc as $locNum => $entries) {
     $customDropdownParam,
     $customRadioParam,
     $emailParam,
+    $phonePrefixParam,
     $phoneParam,
     $venueNameParam,
     $addrLineParam,
+    $cityParam,
     $latParam,
     $lngParam,
+    $countryCodeParam,
     $amenitiesParam,
     $websiteParam,
     $ticketsParam,

@@ -3226,7 +3226,6 @@ const MemberModule = (function() {
             case 'account_email':
             case 'public_email':
             case 'url':
-            case 'phone':
                 var input = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');
                 return input ? input.value.trim() : '';
                 
@@ -3249,6 +3248,20 @@ const MemberModule = (function() {
             case 'custom_radio':
                 var checked = el.querySelector('input[type="radio"]:checked');
                 return checked ? checked.value : '';
+
+            case 'phone':
+                // Store atomically (DB has phone_prefix + phone).
+                // No fallbacks: if either part is missing, return empty so required validation blocks submit.
+                try {
+                    var pfxInput = el.querySelector('.fieldset-menu-button-input');
+                    var telInput = el.querySelector('input[type="tel"].fieldset-input');
+                    var pfx = pfxInput ? String(pfxInput.value || '').trim() : '';
+                    var num = telInput ? String(telInput.value || '').trim() : '';
+                    if (!pfx || !num) return '';
+                    return { phone_prefix: pfx, phone: num };
+                } catch (eP) {
+                    return '';
+                }
 
             case 'custom_text':
                 var txt = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');
@@ -3308,13 +3321,15 @@ const MemberModule = (function() {
                     var addr = el.querySelector('input.fieldset-input');
                     var lat = el.querySelector('input.fieldset-lat');
                     var lng = el.querySelector('input.fieldset-lng');
+                    var cc = el.querySelector('input.fieldset-country');
                     return {
                         address_line: addr ? String(addr.value || '').trim() : '',
                         latitude: lat ? String(lat.value || '').trim() : '',
-                        longitude: lng ? String(lng.value || '').trim() : ''
+                        longitude: lng ? String(lng.value || '').trim() : '',
+                        country_code: cc ? String(cc.value || '').trim() : ''
                     };
                 } catch (e1) {
-                    return { address_line: '', latitude: '', longitude: '' };
+                    return { address_line: '', latitude: '', longitude: '', country_code: '' };
                 }
 
             case 'venue':
@@ -3324,14 +3339,16 @@ const MemberModule = (function() {
                     var venueAddr = inputs && inputs[1] ? String(inputs[1].value || '').trim() : '';
                     var vLat = el.querySelector('input.fieldset-lat');
                     var vLng = el.querySelector('input.fieldset-lng');
+                    var vCc = el.querySelector('input.fieldset-country');
                     return {
                         venue_name: venueName,
                         address_line: venueAddr,
                         latitude: vLat ? String(vLat.value || '').trim() : '',
-                        longitude: vLng ? String(vLng.value || '').trim() : ''
+                        longitude: vLng ? String(vLng.value || '').trim() : '',
+                        country_code: vCc ? String(vCc.value || '').trim() : ''
                     };
                 } catch (e2) {
-                    return { venue_name: '', address_line: '', latitude: '', longitude: '' };
+                    return { venue_name: '', address_line: '', latitude: '', longitude: '', country_code: '' };
                 }
 
             case 'sessions':

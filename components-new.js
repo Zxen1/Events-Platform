@@ -516,7 +516,8 @@ const FieldsetBuilder = (function(){
     
     // Google Places Autocomplete helper - Uses new API (AutocompleteSuggestion)
     // type: 'address' | 'establishment' | '(cities)'
-    function initGooglePlaces(inputElement, type, latInput, lngInput, statusElement) {
+    // countryInput: hidden <input> to receive 2-letter country code (e.g. "AU")
+    function initGooglePlaces(inputElement, type, latInput, lngInput, countryInput, statusElement) {
         if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
             console.warn('Google Places API not loaded');
             if (statusElement) {
@@ -565,6 +566,7 @@ const FieldsetBuilder = (function(){
             try { inputElement.dataset.placesConfirmed = 'false'; } catch (e1) {}
             if (latInput) latInput.value = '';
             if (lngInput) lngInput.value = '';
+            if (countryInput) countryInput.value = '';
             if (statusElement) {
                 statusElement.textContent = '';
                 statusElement.className = 'fieldset-location-status';
@@ -573,6 +575,25 @@ const FieldsetBuilder = (function(){
                 // Use a non-input event to avoid recursion with the input handler.
                 try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
             }
+        }
+
+        function extractCountryCode(place) {
+            // New Places API may expose `addressComponents` entries like:
+            // { shortText, longText, types: [...] }
+            try {
+                var comps = place && place.addressComponents ? place.addressComponents : null;
+                if (!Array.isArray(comps)) return '';
+                for (var i = 0; i < comps.length; i++) {
+                    var c = comps[i];
+                    if (!c) continue;
+                    var types = c.types;
+                    if (!Array.isArray(types) || types.indexOf('country') === -1) continue;
+                    var raw = (c.shortText || c.short_name || c.short || c.longText || c.long_name || '');
+                    var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+                    if (code.length === 2) return code;
+                }
+            } catch (e) {}
+            return '';
         }
 
         // Fetch suggestions using new API (same as map controls - no type restrictions)
@@ -624,17 +645,19 @@ const FieldsetBuilder = (function(){
                     item.addEventListener('click', async function() {
                         try {
                             var place = prediction.toPlace();
-                            await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress'] });
+                            await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'addressComponents'] });
                             
                             if (place.location) {
                                 var lat = place.location.lat();
                                 var lng = place.location.lng();
+                                var cc = extractCountryCode(place);
                                 
                                 inputElement.value = place.displayName || place.formattedAddress || mainText;
                                 dropdown.style.display = 'none';
                                 
                                 if (latInput) latInput.value = lat;
                                 if (lngInput) lngInput.value = lng;
+                                if (countryInput) countryInput.value = cc;
                                 try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
                                 try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e4) {}
                                 
@@ -1251,14 +1274,18 @@ const FieldsetBuilder = (function(){
                 var addrLngInput = document.createElement('input');
                 addrLngInput.type = 'hidden';
                 addrLngInput.className = 'fieldset-lng';
+                var addrCountryInput = document.createElement('input');
+                addrCountryInput.type = 'hidden';
+                addrCountryInput.className = 'fieldset-country';
                 fieldset.appendChild(addrLatInput);
                 fieldset.appendChild(addrLngInput);
+                fieldset.appendChild(addrCountryInput);
                 // Status indicator
                 var addrStatus = document.createElement('div');
                 addrStatus.className = 'fieldset-location-status';
                 fieldset.appendChild(addrStatus);
                 // Init Google Places
-                initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrStatus);
+                initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus);
                 break;
                 
             case 'city':
@@ -1275,14 +1302,18 @@ const FieldsetBuilder = (function(){
                 var cityLngInput = document.createElement('input');
                 cityLngInput.type = 'hidden';
                 cityLngInput.className = 'fieldset-lng';
+                var cityCountryInput = document.createElement('input');
+                cityCountryInput.type = 'hidden';
+                cityCountryInput.className = 'fieldset-country';
                 fieldset.appendChild(cityLatInput);
                 fieldset.appendChild(cityLngInput);
+                fieldset.appendChild(cityCountryInput);
                 // Status indicator
                 var cityStatus = document.createElement('div');
                 cityStatus.className = 'fieldset-location-status';
                 fieldset.appendChild(cityStatus);
                 // Init Google Places (cities only)
-                initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityStatus);
+                initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityCountryInput, cityStatus);
                 break;
                 
             case 'website-url':
@@ -2704,6 +2735,9 @@ const FieldsetBuilder = (function(){
                 var smartLngInput = document.createElement('input');
                 smartLngInput.type = 'hidden';
                 smartLngInput.className = 'fieldset-lng';
+                var smartCountryInput = document.createElement('input');
+                smartCountryInput.type = 'hidden';
+                smartCountryInput.className = 'fieldset-country';
                 
                 // Venue name row
                 var smartVenueSub = document.createElement('div');
@@ -2739,6 +2773,7 @@ const FieldsetBuilder = (function(){
                 
                 fieldset.appendChild(smartLatInput);
                 fieldset.appendChild(smartLngInput);
+                fieldset.appendChild(smartCountryInput);
                 
                 // Smart autofill function - only fills empty boxes - Uses new API
                 function initSmartVenueAutocomplete(inputEl, otherInputEl, isVenueBox) {
@@ -2821,7 +2856,7 @@ const FieldsetBuilder = (function(){
                                 item.addEventListener('click', async function() {
                                     try {
                                         var place = prediction.toPlace();
-                                        await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'types'] });
+                                        await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'types', 'addressComponents'] });
                                         
                                         if (!place.location) return;
                                         
@@ -2835,6 +2870,21 @@ const FieldsetBuilder = (function(){
                                         // Always update lat/lng
                                         smartLatInput.value = lat;
                                         smartLngInput.value = lng;
+                                        
+                                        // Country code (2-letter)
+                                        try {
+                                            var cc = '';
+                                            if (Array.isArray(place.addressComponents)) {
+                                                place.addressComponents.forEach(function(c) {
+                                                    if (!c || !Array.isArray(c.types)) return;
+                                                    if (c.types.indexOf('country') === -1) return;
+                                                    var raw = c.shortText || c.short_name || c.short || c.longText || c.long_name || '';
+                                                    var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+                                                    if (code.length === 2) cc = code;
+                                                });
+                                            }
+                                            smartCountryInput.value = cc;
+                                        } catch (eCC) {}
                                         
                                         if (isVenueBox) {
                                             // User searched in venue box
