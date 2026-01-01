@@ -2100,12 +2100,17 @@ const FieldsetBuilder = (function(){
 
                 function syncAllTicketCurrencies() {
                     ticketCurrencyMenus.forEach(function(menu) {
-                        var img = menu.querySelector('.fieldset-menu-button-image');
-                        var input = menu.querySelector('.fieldset-menu-button-input');
-                        if (ticketCurrencyState.flag) {
+                        var img =
+                            menu.querySelector('.component-currencycompact-menu-button-image') ||
+                            menu.querySelector('.fieldset-menu-button-image');
+                        var input =
+                            menu.querySelector('.component-currencycompact-menu-button-input') ||
+                            menu.querySelector('.fieldset-menu-button-input');
+                        if (img && ticketCurrencyState.flag) {
                             img.src = window.App.getImageUrl('currencies', ticketCurrencyState.flag + '.svg');
+                            img.style.display = 'block';
                         }
-                        input.value = ticketCurrencyState.code || '';
+                        if (input) input.value = ticketCurrencyState.code || '';
                     });
                 }
 
@@ -2784,12 +2789,17 @@ const FieldsetBuilder = (function(){
 
                 function spSyncAllTicketCurrencies() {
                     spTicketCurrencyMenus.forEach(function(menu) {
-                        var img = menu.querySelector('.fieldset-menu-button-image');
-                        var input = menu.querySelector('.fieldset-menu-button-input');
-                        if (spTicketCurrencyState.flag) {
+                        var img =
+                            menu.querySelector('.component-currencycompact-menu-button-image') ||
+                            menu.querySelector('.fieldset-menu-button-image');
+                        var input =
+                            menu.querySelector('.component-currencycompact-menu-button-input') ||
+                            menu.querySelector('.fieldset-menu-button-input');
+                        if (img && spTicketCurrencyState.flag) {
                             img.src = window.App.getImageUrl('currencies', spTicketCurrencyState.flag + '.svg');
+                            img.style.display = 'block';
                         }
-                        input.value = spTicketCurrencyState.code || '';
+                        if (input) input.value = spTicketCurrencyState.code || '';
                     });
                 }
                 function spBuildTicketCurrencyMenu() {
@@ -3067,6 +3077,11 @@ const FieldsetBuilder = (function(){
                 spPricingGroupsWrap.className = 'fieldset-sessionpricing-pricing-groups';
                 spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover');
 
+                // Scroll container INSIDE the popover shell so the shell padding area never scrolls.
+                // This prevents content bleeding "behind" the sticky header.
+                var spTicketGroupScroll = document.createElement('div');
+                spTicketGroupScroll.className = 'fieldset-sessionpricing-ticketgroup-scroll';
+
                 // Top action: Create New Ticket Group
                 var spTicketGroupCreate = document.createElement('button');
                 spTicketGroupCreate.type = 'button';
@@ -3085,11 +3100,13 @@ const FieldsetBuilder = (function(){
                     spSetGroupEditorOpen(k, true);
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 });
-                spPricingGroupsWrap.appendChild(spTicketGroupCreate);
+                spTicketGroupScroll.appendChild(spTicketGroupCreate);
 
                 spTicketGroupList = document.createElement('div');
                 spTicketGroupList.className = 'fieldset-sessionpricing-ticketgroup-list';
-                spPricingGroupsWrap.appendChild(spTicketGroupList);
+                spTicketGroupScroll.appendChild(spTicketGroupList);
+
+                spPricingGroupsWrap.appendChild(spTicketGroupScroll);
 
                 fieldset.appendChild(spPricingGroupsWrap);
 
@@ -3252,6 +3269,7 @@ const FieldsetBuilder = (function(){
                     spActivePicker.timeInput.dataset.ticketGroupKey = groupKey;
                     var letterEl = spActivePicker.ticketBtn.querySelector('.fieldset-sessionpricing-ticketgroup-letter');
                     if (letterEl) letterEl.textContent = groupKey;
+                    try { spActivePicker.ticketBtn.setAttribute('aria-label', 'Ticket Group ' + String(groupKey || '')); } catch (eAria) {}
 
                     // Highlight the selected group in the picker menu (so selection is obvious)
                     try {
@@ -3326,7 +3344,7 @@ const FieldsetBuilder = (function(){
                     try {
                         var fsRect = fieldset.getBoundingClientRect();
                         var rowRect = anchorRowEl.getBoundingClientRect();
-                        var top = (rowRect.bottom - fsRect.top) + 8;
+                        var top = (rowRect.bottom - fsRect.top) + 10;
                         if (top < 0) top = 0;
                         spPricingGroupsWrap.style.top = top + 'px';
                     } catch (eTop) {}
@@ -3364,7 +3382,6 @@ const FieldsetBuilder = (function(){
                     selectBtn.textContent = 'Ticket Group ' + key;
                     selectBtn.addEventListener('click', function() {
                         spAssignGroupToActive(key);
-                        spCloseTicketMenu();
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     header.appendChild(selectBtn);
@@ -3373,6 +3390,8 @@ const FieldsetBuilder = (function(){
                     editBtn.type = 'button';
                     editBtn.className = 'fieldset-sessionpricing-ticketgroup-edit';
                     editBtn.textContent = '✎';
+                    editBtn.title = 'Edit Ticket Group';
+                    editBtn.setAttribute('aria-label', 'Edit Ticket Group');
                     editBtn.addEventListener('click', function(e) {
                         try { e.stopPropagation(); } catch (e0) {}
                         if (spOpenGroupKey && spOpenGroupKey !== key) {
@@ -3445,6 +3464,7 @@ const FieldsetBuilder = (function(){
                     applyBtn.type = 'button';
                     applyBtn.className = 'fieldset-sessionpricing-ticketgroup-apply';
                     applyBtn.textContent = 'Apply';
+                    applyBtn.setAttribute('aria-label', 'Apply Ticket Group Changes');
                     applyBtn.addEventListener('click', function() {
                         spOpenGroupSnapshot = null;
                         spOpenGroupKey = null;
@@ -3457,6 +3477,7 @@ const FieldsetBuilder = (function(){
                     cancelBtn.type = 'button';
                     cancelBtn.className = 'fieldset-sessionpricing-ticketgroup-cancel';
                     cancelBtn.textContent = 'Cancel';
+                    cancelBtn.setAttribute('aria-label', 'Cancel Ticket Group Changes');
                     cancelBtn.addEventListener('click', function() {
                         if (spOpenGroupKey === key && spOpenGroupSnapshot) {
                             spReplaceEditorFromPricing(editor, spOpenGroupSnapshot);

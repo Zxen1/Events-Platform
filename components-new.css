@@ -310,7 +310,7 @@
 }
 
 .fieldset-sublabel {
-    font-size: 11px;
+    font-size: 13px;
     color: #fff;
     margin-bottom: 6px;
 }
@@ -853,6 +853,7 @@
 
 .fieldset-sessionpricing-ticketgroup-button--open {
     border-color: #3b82f5;
+    background: #3b82f5;
 }
 
 .fieldset-sessionpricing-ticketgroup-icon {
@@ -875,17 +876,14 @@
 /* Appearance - SessionPricing Ticket Group Popover (Formbuilder-like) */
 .fieldset-sessionpricing-ticketgroup-popover {
     width: 100%;
-    margin-top: 8px;
+    margin-top: 0;
     background: #222; /* match .fieldset-menu-options */
     border: 1px solid #3b82f5;
     border-radius: 4px;
     padding: 10px;
     box-sizing: border-box;
     max-height: 600px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
+    overflow: hidden; /* scrolling lives in inner container to prevent bleed-through in the padding area */
     position: absolute; /* pop-up overlay, not accordion */
     left: 0;
     right: 0;
@@ -894,6 +892,15 @@
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
+}
+
+.fieldset-sessionpricing-ticketgroup-scroll {
+    max-height: 580px; /* 600px popover - 20px vertical padding */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+    overscroll-behavior: contain; /* prevent scroll chaining to outer panel/page */
 }
 
 .fieldset-sessionpricing-ticketgroup-popover--open {
@@ -946,8 +953,10 @@
 /* Sticky active group header inside scrollable popover */
 .fieldset-sessionpricing-ticketgroup-header--sticky {
     position: sticky;
-    top: 10px;
+    top: 0;
     z-index: calc(var(--layer-menu, 85) + 1);
+    background: #3b82f5;
+    border-color: #3b82f5;
 }
 
 .fieldset-sessionpricing-ticketgroup-select {
@@ -1064,8 +1073,8 @@
     mask-repeat: no-repeat;
     -webkit-mask-position: center;
     mask-position: center;
-    -webkit-mask-image: var(--ui-icon-discard);
-    mask-image: var(--ui-icon-discard);
+    -webkit-mask-image: var(--ui-icon-clear);
+    mask-image: var(--ui-icon-clear);
 }
 
 /* Appearance - SessionPricing Calendar */
