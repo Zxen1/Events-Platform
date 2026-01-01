@@ -1092,6 +1092,59 @@
     margin-bottom: 10px;
 }
 
+/* Date picker pop-up (mirrors filter calendar container behavior) */
+.fieldset-sessionpricing-datepicker-popover {
+    position: absolute;
+    left: 0;
+    right: 0;
+    margin-top: 10px;
+    background: #222;
+    border: 1px solid #3b82f5;
+    border-radius: 4px;
+    display: none;
+    overflow: hidden;
+    z-index: var(--layer-menu, 85);
+}
+
+.fieldset-sessionpricing-datepicker-popover--open {
+    display: block;
+}
+
+.fieldset-sessionpricing-datepicker-body {
+    padding: 10px;
+}
+
+.fieldset-sessionpricing-datepicker-actions {
+    padding: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #333;
+}
+
+.fieldset-sessionpricing-datepicker-ok,
+.fieldset-sessionpricing-datepicker-cancel {
+    height: 36px;
+    padding: 0 10px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.fieldset-sessionpricing-datepicker-ok:hover,
+.fieldset-sessionpricing-datepicker-cancel:hover {
+    background: #3b82f5;
+    border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-sessions-date--picker:hover {
+    border-color: #3b82f5;
+    cursor: pointer;
+}
+
 .fieldset-sessionpricing-calendar-scroll {
     width: 100%;
     overflow-x: auto;

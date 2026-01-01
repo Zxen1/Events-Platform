@@ -2740,6 +2740,7 @@ const FieldsetBuilder = (function(){
                 var spTicketGroupList = null; // container element for group list inside popover
                 var spTicketMenuOpen = false;
                 var spTicketMenuDocHandler = null;
+                var spTicketMenuWinHandler = null;
                 var spActivePicker = null; // { dateStr, idx, timeInput, ticketBtn, rowEl }
 
                 var spOpenGroupKey = null;
@@ -3057,11 +3058,54 @@ const FieldsetBuilder = (function(){
                 var spMarker = document.createElement('div');
                 spMarker.className = 'fieldset-sessionpricing-calendar-today-marker';
                 spCalContainer.appendChild(spMarker);
-                fieldset.appendChild(spCalContainer);
+
+                // Date picker pop-up (mirrors filter daterange behavior: OK / Cancel / click-away)
+                var spDatePickerOpen = false;
+                var spDateDraft = null; // Set of iso strings while popover is open
+                var spDatePickerDocHandler = null;
+
+                var spDatePickerPopover = document.createElement('div');
+                spDatePickerPopover.className = 'fieldset-sessionpricing-datepicker-popover';
+
+                var spDatePickerBody = document.createElement('div');
+                spDatePickerBody.className = 'fieldset-sessionpricing-datepicker-body';
+                spDatePickerBody.appendChild(spCalContainer);
+
+                var spDatePickerActions = document.createElement('div');
+                spDatePickerActions.className = 'fieldset-sessionpricing-datepicker-actions';
+
+                var spDatePickerCancel = document.createElement('button');
+                spDatePickerCancel.type = 'button';
+                spDatePickerCancel.className = 'fieldset-sessionpricing-datepicker-cancel';
+                spDatePickerCancel.textContent = 'Cancel';
+
+                var spDatePickerOk = document.createElement('button');
+                spDatePickerOk.type = 'button';
+                spDatePickerOk.className = 'fieldset-sessionpricing-datepicker-ok';
+                spDatePickerOk.textContent = 'OK';
+
+                spDatePickerActions.appendChild(spDatePickerOk);
+                spDatePickerActions.appendChild(spDatePickerCancel);
+
+                spDatePickerPopover.appendChild(spDatePickerBody);
+                spDatePickerPopover.appendChild(spDatePickerActions);
+                fieldset.appendChild(spDatePickerPopover);
 
                 var spSessionsContainer = document.createElement('div');
                 spSessionsContainer.className = 'fieldset-sessionpricing-sessions-container';
                 fieldset.appendChild(spSessionsContainer);
+
+                // Date selector row (shown even before any dates are selected)
+                var spDatePickerRow = document.createElement('div');
+                spDatePickerRow.className = 'fieldset-sessionpricing-sessions-row fieldset-sessionpricing-sessions-row--picker';
+                var spDatePickerBox = document.createElement('div');
+                spDatePickerBox.className = 'fieldset-sessionpricing-sessions-date fieldset-sessionpricing-sessions-date--picker';
+                spDatePickerBox.setAttribute('role', 'button');
+                spDatePickerBox.setAttribute('tabindex', '0');
+                spDatePickerBox.setAttribute('aria-haspopup', 'dialog');
+                spDatePickerBox.setAttribute('aria-expanded', 'false');
+                spDatePickerBox.textContent = 'Select Dates';
+                spDatePickerRow.appendChild(spDatePickerBox);
 
                 var spPricingGroupsWrap = document.createElement('div');
                 spPricingGroupsWrap.className = 'fieldset-sessionpricing-pricing-groups';
@@ -3117,6 +3161,108 @@ const FieldsetBuilder = (function(){
                 spCalScroll.addEventListener('wheel', function(e) {
                     e.preventDefault();
                     spCalScroll.scrollLeft += (e.deltaY || e.deltaX) * 0.3;
+                });
+
+                function spApplyDraftToCalendar() {
+                    try {
+                        var days = spCalendar.querySelectorAll('.fieldset-sessionpricing-calendar-day[data-iso]');
+                        days.forEach(function(day) {
+                            var iso = String(day.dataset.iso || '');
+                            day.classList.toggle('fieldset-sessionpricing-calendar-day--selected', !!(spDateDraft && spDateDraft.has(iso)));
+                        });
+                    } catch (e0) {}
+                }
+
+                function spCloseDatePicker() {
+                    if (!spDatePickerOpen) return;
+                    spDatePickerOpen = false;
+                    spDatePickerPopover.classList.remove('fieldset-sessionpricing-datepicker-popover--open');
+                    spDatePickerBox.setAttribute('aria-expanded', 'false');
+                    spDateDraft = null;
+                    if (spDatePickerDocHandler) {
+                        try { document.removeEventListener('click', spDatePickerDocHandler, true); } catch (e1) {}
+                        spDatePickerDocHandler = null;
+                    }
+                }
+
+                function spOpenDatePicker(anchorEl) {
+                    if (!anchorEl) return;
+                    if (spDatePickerOpen) return;
+                    spDatePickerOpen = true;
+                    spDateDraft = new Set(Object.keys(spSessionData || {}));
+                    spApplyDraftToCalendar();
+
+                    // Position popover below the clicked date box
+                    try {
+                        if (fieldset && fieldset.style) fieldset.style.position = 'relative';
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var r = anchorEl.getBoundingClientRect();
+                        var top = (r.bottom - fsRect.top) + 10;
+                        if (top < 0) top = 0;
+                        spDatePickerPopover.style.top = top + 'px';
+                    } catch (eTop) {}
+
+                    spDatePickerPopover.classList.add('fieldset-sessionpricing-datepicker-popover--open');
+                    spDatePickerBox.setAttribute('aria-expanded', 'true');
+
+                    // Scroll to today month when opening (like filter)
+                    try { if (spTodayMonthEl) spCalScroll.scrollLeft = spTodayMonthEl.offsetLeft; } catch (eScroll) {}
+
+                    // Close when clicking outside (treat as cancel, like filter)
+                    spDatePickerDocHandler = function(ev) {
+                        try {
+                            if (!spDatePickerPopover.contains(ev.target) && !spDatePickerBox.contains(ev.target)) {
+                                spCloseDatePicker();
+                            }
+                        } catch (e2) {}
+                    };
+                    try { document.addEventListener('click', spDatePickerDocHandler, true); } catch (e3) {}
+                }
+
+                // Open date picker on click/enter/space
+                spDatePickerBox.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    if (spDatePickerOpen) spCloseDatePicker();
+                    else spOpenDatePicker(spDatePickerBox);
+                });
+                spDatePickerBox.addEventListener('keydown', function(e) {
+                    if (!e) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (spDatePickerOpen) spCloseDatePicker();
+                        else spOpenDatePicker(spDatePickerBox);
+                    }
+                });
+
+                spDatePickerCancel.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    spCloseDatePicker();
+                });
+
+                spDatePickerOk.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    if (!spDateDraft) { spCloseDatePicker(); return; }
+
+                    var draftKeys = Array.from(spDateDraft).sort();
+                    var currentKeys = Object.keys(spSessionData).sort();
+
+                    // Remove deselected dates
+                    currentKeys.forEach(function(k) {
+                        if (!spDateDraft.has(k)) delete spSessionData[k];
+                    });
+
+                    // Add newly selected dates
+                    draftKeys.forEach(function(k) {
+                        if (!spSessionData[k]) {
+                            spEnsureDefaultGroup();
+                            var autofillVal = spGetAutofillForSlot(k, 0);
+                            spSessionData[k] = { times: [autofillVal], edited: [false], groups: ['A'] };
+                        }
+                    });
+
+                    spRenderSessions();
+                    try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e1) {}
+                    spCloseDatePicker();
                 });
 
                 var spGodSetForSlot = {};
@@ -3209,8 +3355,23 @@ const FieldsetBuilder = (function(){
                             tiersContainer.appendChild(tierBlock);
                             var tierNameInput = tierBlock.querySelector('.fieldset-row input.fieldset-input');
                             if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
-                            var currInput = tierBlock.querySelector('input.component-currencycompact-menu-button-input');
-                            if (currInput) currInput.value = String((tierObj && tierObj.currency) || '');
+                            // IMPORTANT: do not clear the currency input directly (that causes "flag + Search").
+                            // Only set currency when we actually have a saved value, and do it via the component API.
+                            var curr = String((tierObj && tierObj.currency) || '').trim();
+                            if (curr) {
+                                try {
+                                    var menuEl = tierBlock.querySelector('.component-currencycompact-menu');
+                                    if (menuEl) {
+                                        for (var mi = 0; mi < spTicketCurrencyMenus.length; mi++) {
+                                            var mo = spTicketCurrencyMenus[mi];
+                                            if (mo && mo.element === menuEl && typeof mo.setValue === 'function') {
+                                                mo.setValue(curr);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } catch (eCur) {}
+                            }
                             var inputs = tierBlock.querySelectorAll('input.fieldset-input');
                             var priceInput = inputs && inputs.length ? inputs[inputs.length - 1] : null;
                             if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
@@ -3309,10 +3470,14 @@ const FieldsetBuilder = (function(){
                         }
                     } catch (eCls) {}
                     spActivePicker = null;
-                    spCloseAllGroupEditors();
                     if (spTicketMenuDocHandler) {
                         try { document.removeEventListener('click', spTicketMenuDocHandler, true); } catch (e) {}
                         spTicketMenuDocHandler = null;
+                    }
+                    if (spTicketMenuWinHandler) {
+                        try { window.removeEventListener('resize', spTicketMenuWinHandler, true); } catch (e1) {}
+                        try { window.removeEventListener('scroll', spTicketMenuWinHandler, true); } catch (e2) {}
+                        spTicketMenuWinHandler = null;
                     }
                 }
 
@@ -3331,21 +3496,32 @@ const FieldsetBuilder = (function(){
                     }
                     spAssignGroupToActive(currentKey);
 
-                    // Pop-up positioning (absolute overlay inside this fieldset)
+                    // Auto-open the editor for the currently selected group when the menu opens.
                     try {
-                        if (fieldset && fieldset.style) fieldset.style.position = 'relative';
-                    } catch (ePos) {}
+                        spEnsureTicketGroup(currentKey);
+                        spCloseAllGroupEditors();
+                        spOpenGroupKey = currentKey;
+                        var grpEl0 = spTicketGroups[currentKey];
+                        var editorEl0 = grpEl0 ? grpEl0.querySelector('.fieldset-sessionpricing-pricing-editor') : null;
+                        spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
+                        spSetGroupEditorOpen(currentKey, true);
+                    } catch (eAutoOpen) {}
+
+                    // Pop-up positioning as FIXED overlay (prevents scroll-height changes -> no "jump away")
                     try {
-                        if (spPricingGroupsWrap.parentNode !== fieldset) {
-                            fieldset.appendChild(spPricingGroupsWrap);
+                        if (spPricingGroupsWrap.parentNode !== document.body) {
+                            document.body.appendChild(spPricingGroupsWrap);
                         }
                     } catch (eApp) {}
                     try {
                         var fsRect = fieldset.getBoundingClientRect();
                         var rowRect = anchorRowEl.getBoundingClientRect();
-                        var top = (rowRect.bottom - fsRect.top) + 10;
-                        if (top < 0) top = 0;
+                        var top = rowRect.bottom + 10;
+                        spPricingGroupsWrap.style.position = 'fixed';
+                        spPricingGroupsWrap.style.left = fsRect.left + 'px';
+                        spPricingGroupsWrap.style.width = fsRect.width + 'px';
                         spPricingGroupsWrap.style.top = top + 'px';
+                        spPricingGroupsWrap.style.right = '';
                     } catch (eTop) {}
 
                     spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover--open');
@@ -3360,6 +3536,11 @@ const FieldsetBuilder = (function(){
                         } catch (e) {}
                     };
                     try { document.addEventListener('click', spTicketMenuDocHandler, true); } catch (e1) {}
+
+                    // Close on window scroll/resize (popover is anchored to a row inside a scrolling panel)
+                    spTicketMenuWinHandler = function() { spCloseTicketMenu(); };
+                    try { window.addEventListener('resize', spTicketMenuWinHandler, true); } catch (e2) {}
+                    try { window.addEventListener('scroll', spTicketMenuWinHandler, true); } catch (e3) {}
                 }
 
                 function spEnsureTicketGroup(groupKey) {
@@ -3519,7 +3700,23 @@ const FieldsetBuilder = (function(){
                     // Close the ticket menu before rerendering (prevents stale anchors)
                     spCloseTicketMenu();
                     spSessionsContainer.innerHTML = '';
+                    // Always show the date selector row first
+                    spSessionsContainer.appendChild(spDatePickerRow);
                     var sortedDates = Object.keys(spSessionData).sort();
+                    // Update the date selector box text
+                    if (sortedDates.length === 0) {
+                        spDatePickerBox.textContent = 'Select Dates';
+                    } else {
+                        try {
+                            var d0 = new Date(sortedDates[0] + 'T00:00:00');
+                            var wd0 = d0.toLocaleDateString('en-AU', { weekday: 'short' });
+                            var dm0 = d0.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+                            var yy0 = d0.toLocaleDateString('en-AU', { year: 'numeric' });
+                            spDatePickerBox.textContent = (wd0 + ' ' + dm0 + ', ' + yy0).replace(/\s+/g, ' ').trim();
+                        } catch (eFmt0) {
+                            spDatePickerBox.textContent = sortedDates[0];
+                        }
+                    }
                     sortedDates.forEach(function(dateStr) {
                         var data = spSessionData[dateStr];
                         var group = document.createElement('div');
@@ -3539,6 +3736,15 @@ const FieldsetBuilder = (function(){
                                 } catch (eFmt) {
                                     dateDisplay.textContent = d.toDateString();
                                 }
+                                // Clicking any date box opens the date picker pop-up
+                                try {
+                                    dateDisplay.setAttribute('role', 'button');
+                                    dateDisplay.setAttribute('tabindex', '0');
+                                    dateDisplay.addEventListener('click', function(ev) {
+                                        try { ev.preventDefault(); ev.stopPropagation(); } catch (e0) {}
+                                        spOpenDatePicker(dateDisplay);
+                                    });
+                                } catch (ePick) {}
                                 row.appendChild(dateDisplay);
                             } else {
                                 var spacer = document.createElement('div');
@@ -3696,20 +3902,18 @@ const FieldsetBuilder = (function(){
                     var day = e.target;
                     if (day.classList.contains('fieldset-sessionpricing-calendar-day') && !day.classList.contains('fieldset-sessionpricing-calendar-day--empty')) {
                         var iso = day.dataset.iso;
-                        if (spSessionData[iso]) {
-                            delete spSessionData[iso];
-                            day.classList.remove('fieldset-sessionpricing-calendar-day--selected');
-                        } else {
-                            spEnsureDefaultGroup();
-                            var autofillVal = spGetAutofillForSlot(iso, 0);
-                            spSessionData[iso] = { times: [autofillVal], edited: [false], groups: ['A'] };
-                            day.classList.add('fieldset-sessionpricing-calendar-day--selected');
-                        }
-                        spRenderSessions();
-                        try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e1) {}
+                        if (!spDatePickerOpen || !spDateDraft) return;
+                        try {
+                            // No selecting past dates
+                            if (day.classList.contains('fieldset-sessionpricing-calendar-day--past')) return;
+                            if (spDateDraft.has(iso)) spDateDraft.delete(iso);
+                            else spDateDraft.add(iso);
+                            spApplyDraftToCalendar();
+                        } catch (e2) {}
                     }
                 });
 
+                // Initial UI state
                 // Initial UI state
                 spRenderSessions();
 
