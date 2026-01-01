@@ -1,52 +1,39 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- Ticket icon: two tickets + star + perforation (matches reference style) -->
-  <g fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Back ticket (tilted) -->
-    <g transform="translate(-1.2,-3) rotate(-20 12 12)" opacity="1">
-      <path d="M7 10H17
-               Q19 10 19 12
-               V13
-               Q16.8 15 19 17
-               V18
-               Q19 20 17 20
-               H7
-               Q5 20 5 18
-               V17
-               Q7.2 15 5 13
-               V12
-               Q5 10 7 10Z"/>
-      <line x1="12" y1="11.2" x2="15.8" y2="18.8" stroke-dasharray="2 2"/>
-    </g>
+  <!-- Wide rounded rectangle, 4 centered semicircle bites (one per edge), centered star -->
+  <path fill="#fff" fill-rule="evenodd" d="
+    M6 7h12a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z
 
-    <!-- Front ticket -->
-    <path d="M6.5 9.5H18
-             Q20 9.5 20 11.5
-             V12.7
-             Q17.7 15 20 17.3
-             V18.5
-             Q20 20.5 18 20.5
-             H6.5
-             Q4.5 20.5 4.5 18.5
-             V17.3
-             Q6.8 15 4.5 12.7
-             V11.5
-             Q4.5 9.5 6.5 9.5Z"/>
+    M12 7
+    m-1.6 0
+    a1.6 1.6 0 1 0 3.2 0
+    a1.6 1.6 0 1 0-3.2 0
 
-    <!-- Perforation -->
-    <line x1="14.2" y1="10.8" x2="14.2" y2="19.2" stroke-dasharray="2 2"/>
+    M12 17
+    m-1.6 0
+    a1.6 1.6 0 1 0 3.2 0
+    a1.6 1.6 0 1 0-3.2 0
 
-    <!-- Star -->
-    <path d="M9.4 12.6
-             L10.1 14.3
-             L11.9 14.4
-             L10.5 15.5
-             L11 17.2
-             L9.4 16.2
-             L7.8 17.2
-             L8.3 15.5
-             L6.9 14.4
-             L8.7 14.3
-             Z"/>
-  </g>
+    M4 12
+    m-1.6 0
+    a1.6 1.6 0 1 0 3.2 0
+    a1.6 1.6 0 1 0-3.2 0
+
+    M20 12
+    m-1.6 0
+    a1.6 1.6 0 1 0 3.2 0
+    a1.6 1.6 0 1 0-3.2 0
+
+    M12 9.2
+    l1.05 2.13
+    l2.35 0.34
+    l-1.70 1.66
+    l0.40 2.34
+    l-2.10-1.10
+    l-2.10 1.10
+    l0.40-2.34
+    l-1.70-1.66
+    l2.35-0.34
+    z
+  "/>
 </svg>
 
