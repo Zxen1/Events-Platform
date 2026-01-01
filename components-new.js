@@ -3265,14 +3265,28 @@ const FieldsetBuilder = (function(){
                     spEnsureDefaultGroup();
                     spActivePicker = pickerObj;
 
-                    // Move popover directly under the clicked row
-                    try { anchorRowEl.parentNode.insertBefore(spPricingGroupsWrap, anchorRowEl.nextSibling); } catch (e) {}
-
                     // Ensure active row has a group assigned
                     var currentKey = '';
                     try { currentKey = String(pickerObj.timeInput.dataset.ticketGroupKey || '').trim(); } catch (e0) { currentKey = ''; }
                     if (!currentKey) currentKey = 'A';
                     spAssignGroupToActive(currentKey);
+
+                    // Pop-up positioning (absolute overlay inside this fieldset)
+                    try {
+                        if (fieldset && fieldset.style) fieldset.style.position = 'relative';
+                    } catch (ePos) {}
+                    try {
+                        if (spPricingGroupsWrap.parentNode !== fieldset) {
+                            fieldset.appendChild(spPricingGroupsWrap);
+                        }
+                    } catch (eApp) {}
+                    try {
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var rowRect = anchorRowEl.getBoundingClientRect();
+                        var top = (rowRect.bottom - fsRect.top) + 8;
+                        if (top < 0) top = 0;
+                        spPricingGroupsWrap.style.top = top + 'px';
+                    } catch (eTop) {}
 
                     spPricingGroupsWrap.style.display = '';
                     spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover--open');
@@ -3546,8 +3560,6 @@ const FieldsetBuilder = (function(){
                             ticketBtn.type = 'button';
                             ticketBtn.className = 'fieldset-sessionpricing-ticketgroup-button';
                             ticketBtn.title = 'Ticket Group';
-                            ticketBtn.style.padding = '10px';
-                            ticketBtn.style.boxSizing = 'border-box';
 
                             var iconUrl = spGetSystemTicketIconUrl();
                             if (iconUrl) {
