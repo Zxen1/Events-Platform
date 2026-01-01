@@ -3091,6 +3091,7 @@ const FieldsetBuilder = (function(){
 
                 spDatePickerPopover.appendChild(spDatePickerBody);
                 spDatePickerPopover.appendChild(spDatePickerActions);
+                // Attach inside the fieldset so it naturally scrolls with the panel (same model as the session picker originally).
                 fieldset.appendChild(spDatePickerPopover);
 
                 var spSessionsContainer = document.createElement('div');
@@ -3556,52 +3557,7 @@ const FieldsetBuilder = (function(){
                         try { window.removeEventListener('resize', spTicketMenuWinHandler, true); } catch (e1) {}
                         spTicketMenuWinHandler = null;
                     }
-                    if (spTicketMenuScrollEl && spTicketMenuScrollEl.removeEventListener) {
-                        try { spTicketMenuScrollEl.removeEventListener('scroll', spTicketMenuWinHandlerScroll, { passive: true }); } catch (e2) {}
-                        try { spTicketMenuScrollEl.removeEventListener('scroll', spTicketMenuWinHandlerScroll, true); } catch (e3) {}
-                    }
                     spTicketMenuScrollEl = null;
-                }
-
-                function spFindScrollParent(el) {
-                    try {
-                        var node = el;
-                        while (node && node !== document.body) {
-                            var style = window.getComputedStyle ? window.getComputedStyle(node) : null;
-                            if (style) {
-                                var oy = style.overflowY || style.overflow || '';
-                                if (oy === 'auto' || oy === 'scroll') return node;
-                            }
-                            node = node.parentElement;
-                        }
-                    } catch (e) {}
-                    return null;
-                }
-
-                function spTicketMenuWinHandlerScroll() {
-                    try {
-                        if (!spTicketMenuOpen || !spActivePicker || !spActivePicker.rowEl) return;
-                        var rowRect = spActivePicker.rowEl.getBoundingClientRect();
-
-                        // Anchor to the panel scroll container (not the full page) so width/position matches the UI panel.
-                        var anchorEl =
-                            (spActivePicker.rowEl.closest && (spActivePicker.rowEl.closest('.member-panel-body') || spActivePicker.rowEl.closest('.admin-panel-body'))) ||
-                            spTicketMenuScrollEl ||
-                            fieldset;
-                        var anchorRect = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
-                        if (!anchorRect) anchorRect = fieldset.getBoundingClientRect();
-
-                        spPricingGroupsWrap.style.left = anchorRect.left + 'px';
-                        spPricingGroupsWrap.style.width = anchorRect.width + 'px';
-
-                        // Prefer below the row. Clamp so it doesn't fly off-screen.
-                        var top = rowRect.bottom + 10;
-                        var popH = spPricingGroupsWrap.offsetHeight || 0;
-                        var maxTop = (window.innerHeight || 0) ? (window.innerHeight - popH - 10) : top;
-                        if (isFinite(maxTop) && maxTop > 0 && top > maxTop) top = Math.max(10, maxTop);
-                        if (top < 10) top = 10;
-                        spPricingGroupsWrap.style.top = top + 'px';
-                    } catch (e0) {}
                 }
 
                 function spOpenTicketMenu(anchorRowEl, pickerObj) {
@@ -3630,16 +3586,21 @@ const FieldsetBuilder = (function(){
                         spSetGroupEditorOpen(currentKey, true);
                     } catch (eAutoOpen) {}
 
-                    // Pop-up positioning as FIXED overlay (prevents scroll-height changes -> no "jump away")
+                    // Pop-up positioning inside the fieldset (same model as session picker)
                     try {
-                        if (spPricingGroupsWrap.parentNode !== document.body) {
-                            document.body.appendChild(spPricingGroupsWrap);
+                        if (fieldset && fieldset.style) fieldset.style.position = 'relative';
+                    } catch (ePos) {}
+                    try {
+                        if (spPricingGroupsWrap.parentNode !== fieldset) {
+                            fieldset.appendChild(spPricingGroupsWrap);
                         }
                     } catch (eApp) {}
                     try {
-                        spPricingGroupsWrap.style.position = 'fixed';
-                        spPricingGroupsWrap.style.right = '';
-                        spTicketMenuWinHandlerScroll();
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var rowRect = anchorRowEl.getBoundingClientRect();
+                        var top = (rowRect.bottom - fsRect.top) + 10;
+                        if (top < 0) top = 0;
+                        spPricingGroupsWrap.style.top = top + 'px';
                     } catch (eTop) {}
 
                     spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover--open');
@@ -3657,16 +3618,6 @@ const FieldsetBuilder = (function(){
                         } catch (e) {}
                     };
                     try { document.addEventListener('click', spTicketMenuDocHandler, true); } catch (e1) {}
-
-                    // Keep popover open on resize: re-position it.
-                    spTicketMenuWinHandler = function() { spTicketMenuWinHandlerScroll(); };
-                    try { window.addEventListener('resize', spTicketMenuWinHandler, true); } catch (e2) {}
-
-                    // Keep popover open while the member panel scrolls by attaching to the nearest scroll parent.
-                    spTicketMenuScrollEl = spFindScrollParent(anchorRowEl);
-                    if (spTicketMenuScrollEl && spTicketMenuScrollEl.addEventListener) {
-                        try { spTicketMenuScrollEl.addEventListener('scroll', spTicketMenuWinHandlerScroll, { passive: true }); } catch (e3) {}
-                    }
                 }
 
                 function spEnsureTicketGroup(groupKey) {
