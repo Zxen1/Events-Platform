@@ -275,6 +275,7 @@
     display: flex;
     align-items: center;
     margin-bottom: 6px;
+    position: relative;
 }
 
 .fieldset-label-text {
@@ -1411,14 +1412,13 @@
     color: #fff;
 }
 
-/* States - Tooltip */
-.fieldset-label-tooltip:hover::after {
-    content: attr(data-tooltip);
-    /* Anchor to the tooltip icon (previous fixed positioning pushed it off-screen) */
+/* States - Tooltip (panel width) */
+.fieldset-label-tooltipbox {
+    display: none;
     position: absolute;
     top: calc(100% + 10px);
-    left: 50%;
-    transform: translateX(-50%);
+    left: 10px;
+    right: 10px;
     background: #000;
     border: 1px solid #777;
     border-radius: 4px;
@@ -1427,11 +1427,15 @@
     font-style: normal;
     color: #fff;
     width: auto;
-    max-width: calc(100vw - 20px);
     /* Preserve intentional line breaks (used to separate tooltip body from char-limit note) */
     white-space: pre-line;
     z-index: var(--layer-menu, 85);
     line-height: 1.4;
+}
+
+.fieldset-label-tooltip:hover + .fieldset-label-tooltipbox,
+.fieldset-label-tooltipbox:hover {
+    display: block;
 }
 
 /* Appearance - Fieldset Calendar (for Sessions) */

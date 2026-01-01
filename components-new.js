@@ -787,8 +787,13 @@ const FieldsetBuilder = (function(){
             var tip = document.createElement('span');
             tip.className = 'fieldset-label-tooltip';
             tip.textContent = 'i';
-            tip.setAttribute('data-tooltip', tooltipText);
             label.appendChild(tip);
+
+            // Full-width tooltip box (panel-width), toggled via CSS
+            var tipBox = document.createElement('div');
+            tipBox.className = 'fieldset-label-tooltipbox';
+            tipBox.textContent = tooltipText;
+            label.appendChild(tipBox);
         }
         return label;
     }
