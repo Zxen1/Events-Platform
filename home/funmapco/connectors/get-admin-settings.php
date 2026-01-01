@@ -162,6 +162,7 @@ try {
         'icon_lighting_dawn', 'icon_lighting_day', 'icon_lighting_dusk', 'icon_lighting_night',
         'icon_save', 'icon_discard', 'icon_close', 'icon_clear', 'icon_favourites',
         'icon_add_image',
+        'icon_ticket',
         // Post/Recents panels (empty-state / reminder illustrations)
         'post_panel_empty_image', 'recent_panel_footer_image'
     ];

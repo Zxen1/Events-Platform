@@ -2818,6 +2818,7 @@ const AdminModule = (function() {
         initImagePicker('adminIconClosePicker', 'icon_close');
         initImagePicker('adminIconClearPicker', 'icon_clear');
         initImagePicker('adminIconAddImagePicker', 'icon_add_image');
+        initImagePicker('adminIconTicketPicker', 'icon_ticket');
         initImagePicker('adminIconFavouritesPicker', 'icon_favourites');
         initImagePicker('adminPostPanelEmptyImagePicker', 'post_panel_empty_image', 'folder_post_system_images');
         initImagePicker('adminRecentPanelEmptyImagePicker', 'recent_panel_footer_image', 'folder_recent_system_images');
