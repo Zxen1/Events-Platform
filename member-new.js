@@ -2787,8 +2787,8 @@ const MemberModule = (function() {
         actionsWrapper.appendChild(adminSubmitBtn);
         formFields.appendChild(actionsWrapper);
         // Hover popover listing all missing items (no toasts; button stays truly disabled)
-        attachMissingPopoverToButton(submitBtn, function() { return getCreatePostMissingList(); });
-        attachMissingPopoverToButton(adminSubmitBtn, function() { return getCreatePostMissingList(); });
+        attachMissingPopoverToButton(submitBtn, function() { return getCreatePostMissingList({ mode: null }); });
+        attachMissingPopoverToButton(adminSubmitBtn, function() { return getCreatePostMissingList({ mode: null }); });
         
         // Attach click handlers for submit buttons
         submitBtn.addEventListener('click', function(e) {
@@ -2833,7 +2833,9 @@ const MemberModule = (function() {
         return { key: 'msg_post_create_error', placeholders: {} };
     }
 
-    function getCreatePostMissingList() {
+    function getCreatePostMissingList(options) {
+        options = options || {};
+        var mode = options.mode || null; // 'login' | 'register' | null
         var out = [];
         if (isSubmittingPost) return out;
         if (!selectedCategory || !selectedSubcategory) out.push('Category / Subcategory');
@@ -2856,6 +2858,34 @@ const MemberModule = (function() {
         
         // Terms appear near the bottom of the form, just before the submit buttons.
         if (!termsAgreed) out.push('Terms and Conditions');
+
+        // Auth fields (login/register) appear AFTER Terms when those panels are in the submit flow.
+        if (mode === 'login') {
+            try {
+                if (createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() === '') {
+                    var lbl = createAuthLoginPanel ? createAuthLoginPanel.querySelector('label[for="memberCreateLoginEmail"]') : null;
+                    var txt = lbl ? String(lbl.textContent || '').trim() : '';
+                    out.push(txt || 'Email');
+                }
+                if (createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim() === '') {
+                    var lbl2 = createAuthLoginPanel ? createAuthLoginPanel.querySelector('label[for="memberCreateLoginPassword"]') : null;
+                    var txt2 = lbl2 ? String(lbl2.textContent || '').trim() : '';
+                    out.push(txt2 || 'Password');
+                }
+            } catch (e1) {}
+        } else if (mode === 'register') {
+            try {
+                if (createAuthRegisterPanel) {
+                    var req = createAuthRegisterPanel.querySelectorAll('.fieldset[data-required="true"][data-complete="false"]');
+                    for (var j = 0; j < req.length; j++) {
+                        var fs2 = req[j];
+                        if (!fs2 || !fs2.dataset) continue;
+                        var nm = String(fs2.dataset.fieldsetName || fs2.dataset.fieldsetKey || '').trim();
+                        if (nm) out.push(nm);
+                    }
+                }
+            } catch (e2) {}
+        }
 
         // Dedupe (stable order)
         var seen = {};
@@ -4340,8 +4370,8 @@ const MemberModule = (function() {
         createAuthWrapper.addEventListener('change', function() { updateSubmitButtonState(); }, true);
 
         // Hover popover listing all missing items (no toasts; button stays truly disabled)
-        attachMissingPopoverToButton(createAuthLoginSubmitBtn, function() { return getCreatePostMissingList(); });
-        attachMissingPopoverToButton(createAuthRegisterSubmitBtn, function() { return getCreatePostMissingList(); });
+        attachMissingPopoverToButton(createAuthLoginSubmitBtn, function() { return getCreatePostMissingList({ mode: 'login' }); });
+        attachMissingPopoverToButton(createAuthRegisterSubmitBtn, function() { return getCreatePostMissingList({ mode: 'register' }); });
 
         return true;
     }
