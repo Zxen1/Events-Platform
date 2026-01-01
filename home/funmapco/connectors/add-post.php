@@ -488,17 +488,38 @@ foreach ($byLoc as $locNum => $entries) {
   if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
     $sessionsForSummary = $sessionPricing['sessions'];
   }
-  if (is_array($sessionsForSummary) && count($sessionsForSummary) > 0) {
-    $card['session_summary'] = 'Sessions: ' . count($sessionsForSummary);
+  // Count actual session times (not just dates)
+  $sessionTimeCount = 0;
+  if (is_array($sessionsForSummary)) {
+    foreach ($sessionsForSummary as $s0) {
+      if (!is_array($s0)) continue;
+      $times0 = $s0['times'] ?? [];
+      if (!is_array($times0)) continue;
+      $sessionTimeCount += count($times0);
+    }
+  }
+  if ($sessionTimeCount > 0) {
+    $card['session_summary'] = 'Sessions: ' . $sessionTimeCount;
   }
 
   // price_summary (simple)
   $priceCount = 0;
+  // For merged session_pricing, pricing is keyed by group: pricing_groups[groupKey] = [ { seating_area, tiers } ... ]
   $ticketPricingForSummary = $ticketPricing;
-  if (is_array($sessionPricing) && isset($sessionPricing['ticket_pricing']) && is_array($sessionPricing['ticket_pricing'])) {
-    $ticketPricingForSummary = $sessionPricing['ticket_pricing'];
+  $pricingGroupsForSummary = null;
+  if (is_array($sessionPricing) && isset($sessionPricing['pricing_groups']) && is_array($sessionPricing['pricing_groups'])) {
+    $pricingGroupsForSummary = $sessionPricing['pricing_groups'];
   }
-  if (is_array($ticketPricingForSummary)) {
+  if (is_array($pricingGroupsForSummary)) {
+    foreach ($pricingGroupsForSummary as $gk => $seats) {
+      if (!is_array($seats)) continue;
+      foreach ($seats as $seat) {
+        if (!is_array($seat)) continue;
+        $tiers = $seat['tiers'] ?? [];
+        if (is_array($tiers)) $priceCount += count($tiers);
+      }
+    }
+  } else if (is_array($ticketPricingForSummary)) {
     foreach ($ticketPricingForSummary as $seat) {
       if (!is_array($seat)) continue;
       $tiers = $seat['tiers'] ?? [];
@@ -593,16 +614,15 @@ foreach ($byLoc as $locNum => $entries) {
   $ticketPricingToWrite = $ticketPricing;
   $writeSessionPricingToNewTables = false;
 
+  $pricingGroupsToWrite = null;
   if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
     $sessionsToWrite = $sessionPricing['sessions'];
-    $ticketPricingToWrite = (isset($sessionPricing['ticket_pricing']) && is_array($sessionPricing['ticket_pricing'])) ? $sessionPricing['ticket_pricing'] : [];
+    $pricingGroupsToWrite = (isset($sessionPricing['pricing_groups']) && is_array($sessionPricing['pricing_groups'])) ? $sessionPricing['pricing_groups'] : [];
     $writeSessionPricingToNewTables = true;
   }
 
   if ($writeSessionPricingToNewTables) {
-    // Option C (simplified): one pricing group for this map card
-    $ticketGroupKey = 'G1';
-
+    // Write sessions with their per-time-slot ticket_group_key
     if (is_array($sessionsToWrite)) {
       $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at)
         VALUES (?, ?, ?, ?, NOW(), NOW())");
@@ -612,8 +632,10 @@ foreach ($byLoc as $locNum => $entries) {
           $date = isset($s['date']) ? (string)$s['date'] : '';
           $times = isset($s['times']) && is_array($s['times']) ? $s['times'] : [];
           foreach ($times as $t) {
-            $time = is_string($t) ? trim($t) : '';
-            if ($date === '' || $time === '') continue;
+            if (!is_array($t)) continue;
+            $time = isset($t['time']) ? trim((string)$t['time']) : '';
+            $ticketGroupKey = isset($t['ticket_group_key']) ? trim((string)$t['ticket_group_key']) : '';
+            if ($date === '' || $time === '' || $ticketGroupKey === '') continue;
             $stmtSess->bind_param('isss', $mapCardId, $date, $time, $ticketGroupKey);
             if (!$stmtSess->execute()) { $stmtSess->close(); abort_with_error($mysqli, 500, 'Insert post_sessions', $transactionActive); }
           }
@@ -622,22 +644,28 @@ foreach ($byLoc as $locNum => $entries) {
       }
     }
 
-    if (is_array($ticketPricingToWrite)) {
+    // Write pricing rows for each pricing group
+    if (is_array($pricingGroupsToWrite)) {
       $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, seating_area, pricing_tier, price, currency, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
       if ($stmtPrice) {
-        foreach ($ticketPricingToWrite as $seat) {
-          if (!is_array($seat)) continue;
-          $seatName = isset($seat['seating_area']) ? (string)$seat['seating_area'] : '';
-          $tiers = isset($seat['tiers']) && is_array($seat['tiers']) ? $seat['tiers'] : [];
-          foreach ($tiers as $tier) {
-            if (!is_array($tier)) continue;
-            $tierName = isset($tier['pricing_tier']) ? (string)$tier['pricing_tier'] : '';
-            $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
-            $amt = normalize_price_amount($tier['price'] ?? null);
-            if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
-            $stmtPrice->bind_param('isssss', $mapCardId, $ticketGroupKey, $seatName, $tierName, $amt, $curr);
-            if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
+        foreach ($pricingGroupsToWrite as $groupKeyRaw => $seats) {
+          $ticketGroupKey = trim((string)$groupKeyRaw);
+          if ($ticketGroupKey === '') continue;
+          if (!is_array($seats)) continue;
+          foreach ($seats as $seat) {
+            if (!is_array($seat)) continue;
+            $seatName = isset($seat['seating_area']) ? (string)$seat['seating_area'] : '';
+            $tiers = isset($seat['tiers']) && is_array($seat['tiers']) ? $seat['tiers'] : [];
+            foreach ($tiers as $tier) {
+              if (!is_array($tier)) continue;
+              $tierName = isset($tier['pricing_tier']) ? (string)$tier['pricing_tier'] : '';
+              $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
+              $amt = normalize_price_amount($tier['price'] ?? null);
+              if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
+              $stmtPrice->bind_param('isssss', $mapCardId, $ticketGroupKey, $seatName, $tierName, $amt, $curr);
+              if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
+            }
           }
         }
         $stmtPrice->close();

@@ -2628,7 +2628,12 @@ const MemberModule = (function() {
 
             function getMaxSelectedIso(fieldsetEl) {
                 if (!fieldsetEl) return null;
-                var days = fieldsetEl.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                var isSessionPricing = false;
+                try { isSessionPricing = String(fieldsetEl.dataset.fieldsetKey || '') === 'session_pricing'; } catch (e0) { isSessionPricing = false; }
+                var selector = isSessionPricing
+                    ? '.fieldset-sessionpricing-calendar-day--selected[data-iso]'
+                    : '.fieldset-calendar-day.selected[data-iso]';
+                var days = fieldsetEl.querySelectorAll(selector);
                 var latest = null;
                 days.forEach(function(el) {
                     var iso = el.dataset.iso;
@@ -3378,8 +3383,8 @@ const MemberModule = (function() {
 
             case 'session_pricing':
                 try {
-                    // Sessions portion (same as `sessions`)
-                    var selectedDays2 = el.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                    // Sessions portion (like `sessions`) but each time includes ticket_group_key
+                    var selectedDays2 = el.querySelectorAll('.fieldset-sessionpricing-calendar-day--selected[data-iso]');
                     var dates2 = [];
                     selectedDays2.forEach(function(d) {
                         var iso = d.dataset.iso;
@@ -3390,43 +3395,55 @@ const MemberModule = (function() {
                     for (var i2 = 0; i2 < dates2.length; i2++) {
                         var dateStr2 = dates2[i2];
                         var times2 = [];
-                        el.querySelectorAll('input.fieldset-time[data-date="' + dateStr2 + '"]').forEach(function(t) {
+                        el.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input[data-date="' + dateStr2 + '"]').forEach(function(t) {
+                            if (!t) return;
                             var v = String(t.value || '').trim();
-                            times2.push(v);
+                            var tgk = t.dataset ? String(t.dataset.ticketGroupKey || '').trim() : '';
+                            times2.push({ time: v, ticket_group_key: tgk });
                         });
                         sessionsOut.push({ date: dateStr2, times: times2 });
                     }
 
-                    // Ticket pricing portion (same extraction as `ticket-pricing`)
-                    var pricingRoot = el.querySelector('.fieldset-session-pricing-root') || el;
-                    var seatingBlocks2 = pricingRoot.querySelectorAll('.fieldset-seating-block');
-                    var seatOut2 = [];
-                    seatingBlocks2.forEach(function(block) {
-                        var seatName = '';
-                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
-                        if (seatInput) seatName = String(seatInput.value || '').trim();
-                        var tiers = [];
-                        block.querySelectorAll('.fieldset-tier-block').forEach(function(tier) {
-                            var tierName = '';
-                            var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
-                            if (tierInput) tierName = String(tierInput.value || '').trim();
-                            var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
-                            var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
-                            var priceInput = null;
-                            var inputs = tier.querySelectorAll('input.fieldset-input');
-                            if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
-                            var price = priceInput ? String(priceInput.value || '').trim() : '';
-                            tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                    // Ticket pricing groups: { [ticket_group_key]: [ { seating_area, tiers:[...] } ] }
+                    var pricingGroups = {};
+                    var groupsWrap = el.querySelector('.fieldset-sessionpricing-pricing-groups');
+                    if (groupsWrap) {
+                        groupsWrap.querySelectorAll('.fieldset-sessionpricing-pricing-group').forEach(function(groupEl) {
+                            if (!groupEl) return;
+                            var gk = groupEl.dataset ? String(groupEl.dataset.ticketGroupKey || '').trim() : '';
+                            if (!gk) return;
+                            var editorEl = groupEl.querySelector('.fieldset-sessionpricing-pricing-editor') || groupEl;
+                            var seatingBlocks2 = editorEl.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
+                            var seatOut2 = [];
+                            seatingBlocks2.forEach(function(block) {
+                                var seatName = '';
+                                var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                                if (seatInput) seatName = String(seatInput.value || '').trim();
+                                var tiers = [];
+                                block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
+                                    var tierName = '';
+                                    var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
+                                    if (tierInput) tierName = String(tierInput.value || '').trim();
+                                    var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
+                                    var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                    var priceInput = null;
+                                    var inputs = tier.querySelectorAll('input.fieldset-input');
+                                    if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
+                                    var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                    tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                                });
+                                seatOut2.push({ seating_area: seatName, tiers: tiers });
+                            });
+                            pricingGroups[gk] = seatOut2;
                         });
-                        seatOut2.push({ seating_area: seatName, tiers: tiers });
-                    });
+                    }
 
                     return {
                         sessions: sessionsOut,
-                        ticket_pricing: seatOut2
+                        pricing_groups: pricingGroups
                     };
                 } catch (e33) {
-                    return { sessions: [], ticket_pricing: [] };
+                    return { sessions: [], pricing_groups: {} };
                 }
 
             case 'ticket-pricing':
