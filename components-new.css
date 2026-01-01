@@ -888,14 +888,15 @@
     left: 0;
     right: 0;
     z-index: var(--layer-menu, 85);
-    display: block;
+    display: flex;
+    flex-direction: column;
     visibility: hidden;
     opacity: 0;
     pointer-events: none;
 }
 
 .fieldset-sessionpricing-ticketgroup-scroll {
-    max-height: 600px;
+    flex: 1 1 auto;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
@@ -905,6 +906,34 @@
 .fieldset-sessionpricing-ticketgroup-content {
     padding: 10px;
     box-sizing: border-box;
+}
+
+.fieldset-sessionpricing-ticketgroup-footer {
+    flex: 0 0 auto;
+    padding: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #333;
+    background: #222;
+}
+
+.fieldset-sessionpricing-ticketgroup-footer-ok,
+.fieldset-sessionpricing-ticketgroup-footer-cancel {
+    height: 36px;
+    padding: 0 10px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.fieldset-sessionpricing-ticketgroup-footer-ok:hover,
+.fieldset-sessionpricing-ticketgroup-footer-cancel:hover {
+    background: #3b82f5;
+    border-color: #3b82f5;
 }
 
 .fieldset-sessionpricing-ticketgroup-popover--open {
@@ -998,6 +1027,32 @@
     border-radius: 0;
     color: #fff;
     cursor: pointer;
+}
+
+.fieldset-sessionpricing-ticketgroup-add,
+.fieldset-sessionpricing-ticketgroup-remove {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.fieldset-sessionpricing-ticketgroup-add:hover,
+.fieldset-sessionpricing-ticketgroup-remove:hover {
+    border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-ticketgroup-name {
+    margin-bottom: 10px;
 }
 
 .fieldset-sessionpricing-ticketgroup-editorwrap {
