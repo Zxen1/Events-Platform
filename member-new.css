@@ -908,6 +908,12 @@
   cursor: not-allowed;
 }
 
+/* Use aria-disabled so we can still capture clicks and show a toast explaining what's missing */
+.member-button-submit[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .member-button-admin-submit {
   background: #22c55e;
   border: 1px solid #22c55e;

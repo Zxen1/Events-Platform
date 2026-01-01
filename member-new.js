@@ -543,7 +543,9 @@ const MemberModule = (function() {
                     if (!t || !t.closest) return;
                     var btn = t.closest('button');
                     if (!btn) return;
-                    if (!btn.disabled) return;
+                    // We use aria-disabled (not disabled attr) so clicks still fire and we can show a toast.
+                    var isAriaDisabled = String(btn.getAttribute('aria-disabled') || '') === 'true';
+                    if (!isAriaDisabled) return;
                     
                     var action = btn.getAttribute('data-action') || '';
                     var isSubmitLike =
@@ -2832,7 +2834,7 @@ const MemberModule = (function() {
         submitBtn.type = 'submit';
         submitBtn.className = 'member-button-submit';
         submitBtn.textContent = 'Submit';
-        submitBtn.disabled = true;
+        submitBtn.setAttribute('aria-disabled', 'true');
         actionsWrapper.appendChild(submitBtn);
         
         // Admin submit button (hidden by default)
@@ -2840,7 +2842,7 @@ const MemberModule = (function() {
         adminSubmitBtn.type = 'button';
         adminSubmitBtn.className = 'member-button-admin-submit';
         adminSubmitBtn.textContent = 'Admin: Submit Free';
-        adminSubmitBtn.disabled = true;
+        adminSubmitBtn.setAttribute('aria-disabled', 'true');
         adminSubmitBtn.hidden = true;
         
         // Show admin button if user is admin
@@ -2919,12 +2921,14 @@ const MemberModule = (function() {
         // Logged-in users: use the normal submit buttons.
         if (submitBtn) {
             submitBtn.hidden = !loggedIn;
-            submitBtn.disabled = !ready || !loggedIn;
+            var submitAriaDisabled = (!ready || !loggedIn);
+            submitBtn.setAttribute('aria-disabled', submitAriaDisabled ? 'true' : 'false');
         }
         if (adminSubmitBtn) {
             // Admin button only relevant when logged in as admin (never when logged out).
             adminSubmitBtn.hidden = !(loggedIn && currentUser && currentUser.isAdmin);
-            adminSubmitBtn.disabled = !ready || !(loggedIn && currentUser && currentUser.isAdmin);
+            var adminAriaDisabled = (!ready || !(loggedIn && currentUser && currentUser.isAdmin));
+            adminSubmitBtn.setAttribute('aria-disabled', adminAriaDisabled ? 'true' : 'false');
         }
 
         // Logged-out users: mount/unmount inline auth submit UI on demand (no hidden subtree).
@@ -2943,11 +2947,13 @@ const MemberModule = (function() {
         var loginFilled = !!(createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() && createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim());
         if (createAuthLoginSubmitBtn) {
             // Three-button rule: this is a submit action, so it must stay disabled until the post form is complete.
-            createAuthLoginSubmitBtn.disabled = loggedIn || !isLoginActive || !loginFilled || !ready;
+            var loginAriaDisabled = (loggedIn || !isLoginActive || !loginFilled || !ready);
+            createAuthLoginSubmitBtn.setAttribute('aria-disabled', loginAriaDisabled ? 'true' : 'false');
         }
         if (createAuthRegisterSubmitBtn) {
             // Three-button rule: this is a submit action, so it must stay disabled until the post form is complete.
-            createAuthRegisterSubmitBtn.disabled = loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete() || !ready;
+            var regAriaDisabled = (loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete() || !ready);
+            createAuthRegisterSubmitBtn.setAttribute('aria-disabled', regAriaDisabled ? 'true' : 'false');
         }
 
         // Update hint text (message system only)
@@ -3034,8 +3040,8 @@ const MemberModule = (function() {
         
         // Start submission
         isSubmittingPost = true;
-        if (submitBtn) submitBtn.disabled = true;
-        if (adminSubmitBtn) adminSubmitBtn.disabled = true;
+        if (submitBtn) submitBtn.setAttribute('aria-disabled', 'true');
+        if (adminSubmitBtn) adminSubmitBtn.setAttribute('aria-disabled', 'true');
         
         // Submit the post
         submitPostData(validation.payload, isAdminFree)
@@ -3949,7 +3955,6 @@ const MemberModule = (function() {
             var btn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
             if (!btn) return;
             var complete = isRegisterFormComplete();
-            btn.disabled = !complete;
             btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
         } catch (e) {
             // ignore
@@ -4579,7 +4584,7 @@ const MemberModule = (function() {
         // Enable/disable submit button
         var submitBtn = panelEl.querySelector('.member-auth-submit');
         if (submitBtn) {
-            submitBtn.disabled = !isActive;
+            submitBtn.setAttribute('aria-disabled', isActive ? 'false' : 'true');
         }
         
         // Show/hide panel
