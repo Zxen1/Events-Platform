@@ -1043,6 +1043,21 @@
     font-size: 13px;
 }
 
+.fieldset-sessionpricing-ticketgroup-delete {
+    height: 36px;
+    padding: 0 10px;
+    background: transparent;
+    border: 1px solid #f87171;
+    border-radius: 4px;
+    color: #f87171;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.fieldset-sessionpricing-ticketgroup-delete:hover {
+    background: rgba(248, 113, 113, 0.15);
+}
+
 /* Apply/Cancel hover/active should be website blue */
 .fieldset-sessionpricing-ticketgroup-apply:hover,
 .fieldset-sessionpricing-ticketgroup-cancel:hover {
@@ -1051,8 +1066,7 @@
 }
 
 /* Header icon buttons (edit + delete) */
-.fieldset-sessionpricing-ticketgroup-edit,
-.fieldset-sessionpricing-ticketgroup-deleteicon {
+.fieldset-sessionpricing-ticketgroup-edit {
     width: 36px;
     min-width: 36px;
     max-width: 36px;
@@ -1065,20 +1079,6 @@
     border-radius: 0;
     cursor: pointer;
     padding: 0;
-}
-
-.fieldset-sessionpricing-ticketgroup-deleteicon-icon {
-    width: 22px;
-    height: 22px;
-    background-color: #fff;
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-image: var(--ui-icon-clear);
-    mask-image: var(--ui-icon-clear);
 }
 
 /* Appearance - SessionPricing Calendar */

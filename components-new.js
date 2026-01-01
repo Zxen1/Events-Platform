@@ -3106,6 +3106,57 @@ const FieldsetBuilder = (function(){
                 spDatePickerBox.setAttribute('aria-expanded', 'false');
                 spDatePickerBox.textContent = 'Select Dates';
                 spDatePickerRow.appendChild(spDatePickerBox);
+                
+                // Make the initial row match real session rows: include disabled controls until dates exist.
+                var spPickerTimeWrap = document.createElement('div');
+                spPickerTimeWrap.className = 'fieldset-sessionpricing-sessions-time';
+                var spPickerTimeInput = document.createElement('input');
+                spPickerTimeInput.type = 'text';
+                spPickerTimeInput.className = 'fieldset-sessionpricing-sessions-time-input';
+                spPickerTimeInput.placeholder = 'HH:MM';
+                spPickerTimeInput.maxLength = 5;
+                spPickerTimeInput.disabled = true;
+                spPickerTimeWrap.appendChild(spPickerTimeInput);
+                spDatePickerRow.appendChild(spPickerTimeWrap);
+                
+                var spPickerAddBtn = document.createElement('button');
+                spPickerAddBtn.type = 'button';
+                spPickerAddBtn.className = 'fieldset-sessionpricing-sessions-add';
+                spPickerAddBtn.textContent = '+';
+                spPickerAddBtn.disabled = true;
+                spPickerAddBtn.style.opacity = '0.3';
+                spPickerAddBtn.style.cursor = 'not-allowed';
+                spDatePickerRow.appendChild(spPickerAddBtn);
+                
+                var spPickerRemoveBtn = document.createElement('button');
+                spPickerRemoveBtn.type = 'button';
+                spPickerRemoveBtn.className = 'fieldset-sessionpricing-sessions-remove';
+                spPickerRemoveBtn.textContent = '−';
+                spPickerRemoveBtn.disabled = true;
+                spPickerRemoveBtn.style.opacity = '0.3';
+                spPickerRemoveBtn.style.cursor = 'not-allowed';
+                spDatePickerRow.appendChild(spPickerRemoveBtn);
+
+                var spPickerTicketBtn = document.createElement('button');
+                spPickerTicketBtn.type = 'button';
+                spPickerTicketBtn.className = 'fieldset-sessionpricing-ticketgroup-button';
+                spPickerTicketBtn.title = 'Ticket Group';
+                spPickerTicketBtn.disabled = true;
+                spPickerTicketBtn.style.opacity = '0.3';
+                spPickerTicketBtn.style.cursor = 'not-allowed';
+                var spPickerIconUrl = spGetSystemTicketIconUrl();
+                if (spPickerIconUrl) {
+                    var spPImg = document.createElement('img');
+                    spPImg.className = 'fieldset-sessionpricing-ticketgroup-icon';
+                    spPImg.alt = '';
+                    spPImg.src = spPickerIconUrl;
+                    spPickerTicketBtn.appendChild(spPImg);
+                }
+                var spPLetter = document.createElement('div');
+                spPLetter.className = 'fieldset-sessionpricing-ticketgroup-letter';
+                spPLetter.textContent = 'A';
+                spPickerTicketBtn.appendChild(spPLetter);
+                spDatePickerRow.appendChild(spPickerTicketBtn);
 
                 var spPricingGroupsWrap = document.createElement('div');
                 spPricingGroupsWrap.className = 'fieldset-sessionpricing-pricing-groups';
@@ -3192,12 +3243,16 @@ const FieldsetBuilder = (function(){
                     spDateDraft = new Set(Object.keys(spSessionData || {}));
                     spApplyDraftToCalendar();
 
-                    // Position popover below the clicked date box
+                    // Position popover ABOVE the session row (10px gap)
                     try {
                         if (fieldset && fieldset.style) fieldset.style.position = 'relative';
                         var fsRect = fieldset.getBoundingClientRect();
                         var r = anchorEl.getBoundingClientRect();
-                        var top = (r.bottom - fsRect.top) + 10;
+                        // Temporarily open so we can measure height.
+                        spDatePickerPopover.classList.add('fieldset-sessionpricing-datepicker-popover--open');
+                        var popH = spDatePickerPopover.offsetHeight || 0;
+                        spDatePickerPopover.classList.remove('fieldset-sessionpricing-datepicker-popover--open');
+                        var top = (r.top - fsRect.top) - popH - 10;
                         if (top < 0) top = 0;
                         spDatePickerPopover.style.top = top + 'px';
                     } catch (eTop) {}
@@ -3537,8 +3592,17 @@ const FieldsetBuilder = (function(){
                     };
                     try { document.addEventListener('click', spTicketMenuDocHandler, true); } catch (e1) {}
 
-                    // Close on window scroll/resize (popover is anchored to a row inside a scrolling panel)
-                    spTicketMenuWinHandler = function() { spCloseTicketMenu(); };
+                    // Keep popover open on scroll: re-position it instead of closing.
+                    spTicketMenuWinHandler = function() {
+                        try {
+                            if (!spTicketMenuOpen || !spActivePicker || !spActivePicker.rowEl) return;
+                            var fsRect = fieldset.getBoundingClientRect();
+                            var rowRect = spActivePicker.rowEl.getBoundingClientRect();
+                            spPricingGroupsWrap.style.left = fsRect.left + 'px';
+                            spPricingGroupsWrap.style.width = fsRect.width + 'px';
+                            spPricingGroupsWrap.style.top = (rowRect.bottom + 10) + 'px';
+                        } catch (e0) {}
+                    };
                     try { window.addEventListener('resize', spTicketMenuWinHandler, true); } catch (e2) {}
                     try { window.addEventListener('scroll', spTicketMenuWinHandler, true); } catch (e3) {}
                 }
@@ -3590,60 +3654,7 @@ const FieldsetBuilder = (function(){
                     });
                     header.appendChild(editBtn);
 
-                    // Delete icon button (panel-header style) with confirmation
-                    var delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.className = 'fieldset-sessionpricing-ticketgroup-deleteicon';
-                    delBtn.title = 'Delete Ticket Group';
-                    delBtn.setAttribute('aria-label', 'Delete Ticket Group');
-                    delBtn.innerHTML = '<span class="fieldset-sessionpricing-ticketgroup-deleteicon-icon" aria-hidden="true"></span>';
-                    delBtn.addEventListener('click', async function(e) {
-                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                        try {
-                            if (typeof ConfirmDialogComponent === 'undefined' || !ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
-                                console.error('[session_pricing] ConfirmDialogComponent not available');
-                                return;
-                            }
-                        } catch (eCheck) { return; }
-
-                        var confirmed = false;
-                        try {
-                            confirmed = await ConfirmDialogComponent.show({
-                                titleText: 'Delete Ticket Group',
-                                messageText: 'Are you sure?',
-                                confirmLabel: 'Delete',
-                                confirmClass: 'danger',
-                                focusCancel: true
-                            });
-                        } catch (eDlg) {
-                            confirmed = false;
-                        }
-                        if (!confirmed) return;
-
-                        try { group.remove(); } catch (e1) {}
-                        delete spTicketGroups[key];
-                        spOpenGroupKey = null;
-                        spOpenGroupSnapshot = null;
-
-                        // Clear any session times using this group (back to "unassigned" '?')
-                        Object.keys(spSessionData).forEach(function(ds) {
-                            var data = spSessionData[ds];
-                            if (!data || !Array.isArray(data.groups)) return;
-                            for (var i = 0; i < data.groups.length; i++) {
-                                if (String(data.groups[i] || '') === key) data.groups[i] = '';
-                            }
-                        });
-                        spUpdateAllTicketButtonsFromData();
-                        try {
-                            if (spActivePicker && spActivePicker.timeInput) {
-                                var cur = String(spActivePicker.timeInput.dataset.ticketGroupKey || '').trim();
-                                if (cur === key) cur = '';
-                                spAssignGroupToActive(cur);
-                            }
-                        } catch (e3) {}
-                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
-                    });
-                    header.appendChild(delBtn);
+                    // Delete icon removed (too close to "close window" affordance). Delete lives in bottom actions.
 
                     group.appendChild(header);
 
@@ -3671,6 +3682,59 @@ const FieldsetBuilder = (function(){
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     actions.appendChild(applyBtn);
+
+                    var deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'fieldset-sessionpricing-ticketgroup-delete';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.setAttribute('aria-label', 'Delete Ticket Group');
+                    deleteBtn.addEventListener('click', async function(e) {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        try {
+                            if (typeof ConfirmDialogComponent === 'undefined' || !ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                                console.error('[session_pricing] ConfirmDialogComponent not available');
+                                return;
+                            }
+                        } catch (eCheck) { return; }
+
+                        var confirmed = false;
+                        try {
+                            confirmed = await ConfirmDialogComponent.show({
+                                titleText: 'Delete Ticket Group',
+                                messageText: 'Are you sure?',
+                                confirmLabel: 'Delete',
+                                confirmClass: 'danger',
+                                focusCancel: true
+                            });
+                        } catch (eDlg) {
+                            confirmed = false;
+                        }
+                        if (!confirmed) return;
+
+                        try { group.remove(); } catch (e1) {}
+                        delete spTicketGroups[key];
+                        spOpenGroupKey = null;
+                        spOpenGroupSnapshot = null;
+
+                        Object.keys(spSessionData).forEach(function(ds) {
+                            var data = spSessionData[ds];
+                            if (!data || !Array.isArray(data.groups)) return;
+                            for (var i = 0; i < data.groups.length; i++) {
+                                if (String(data.groups[i] || '') === key) data.groups[i] = '';
+                            }
+                        });
+                        spUpdateAllTicketButtonsFromData();
+                        try {
+                            if (spActivePicker && spActivePicker.timeInput) {
+                                var cur = String(spActivePicker.timeInput.dataset.ticketGroupKey || '').trim();
+                                if (cur === key) cur = '';
+                                spAssignGroupToActive(cur);
+                            }
+                        } catch (e3) {}
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                        spSetGroupEditorOpen(key, false);
+                    });
+                    actions.appendChild(deleteBtn);
 
                     var cancelBtn = document.createElement('button');
                     cancelBtn.type = 'button';
@@ -3706,6 +3770,15 @@ const FieldsetBuilder = (function(){
                     // Update the date selector box text
                     if (sortedDates.length === 0) {
                         spDatePickerBox.textContent = 'Select Dates';
+                        // Disable the placeholder row controls until at least one date exists
+                        try {
+                            spPickerTimeInput.disabled = true;
+                            spPickerAddBtn.disabled = true;
+                            spPickerRemoveBtn.disabled = true;
+                            spPickerTicketBtn.disabled = true;
+                            spPickerTimeInput.style.opacity = '0.3';
+                            spPickerTicketBtn.style.opacity = '0.3';
+                        } catch (e0) {}
                     } else {
                         try {
                             var d0 = new Date(sortedDates[0] + 'T00:00:00');
@@ -3716,6 +3789,15 @@ const FieldsetBuilder = (function(){
                         } catch (eFmt0) {
                             spDatePickerBox.textContent = sortedDates[0];
                         }
+                        // Enable the placeholder row controls once dates exist (visual parity)
+                        try {
+                            spPickerTimeInput.disabled = false;
+                            spPickerAddBtn.disabled = false;
+                            spPickerRemoveBtn.disabled = false;
+                            spPickerTicketBtn.disabled = false;
+                            spPickerTimeInput.style.opacity = '1';
+                            spPickerTicketBtn.style.opacity = '1';
+                        } catch (e1) {}
                     }
                     sortedDates.forEach(function(dateStr) {
                         var data = spSessionData[dateStr];
