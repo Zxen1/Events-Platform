@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 01, 2026 at 11:49 PM
+-- Generation Time: Jan 02, 2026 at 12:26 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -801,7 +801,7 @@ CREATE TABLE `fieldsets` (
 ,`fieldset_fields` longtext
 ,`fieldset_options` longtext
 ,`fieldset_placeholder` text
-,`fieldset_tooltip` varchar(500)
+,`fieldset_tooltip` text
 ,`created_at` timestamp
 ,`updated_at` timestamp
 );
@@ -2682,7 +2682,7 @@ CREATE TABLE `fieldsets` (
   `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
   `fieldset_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_options`)),
   `fieldset_placeholder` text DEFAULT NULL,
-  `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
+  `fieldset_tooltip` text DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -2711,6 +2711,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (18, 'Amenities', 'amenities', 'subcategory', 14, '[\"amenities\"]', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', '2025-12-14 19:13:31', '2026-01-01 08:41:37'),
 (19, 'Ticket Pricing', 'ticket-pricing', 'subcategory', 15, '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
 (20, 'Sessions', 'sessions', 'subcategory', 16, '[\"session-date\", \"session-time\"]', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times (24hr clock) for your event.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
+(21, 'Session Pricing', 'session_pricing', 'subcategory', 17, '[\"session-date\",\"session-time\",\"seating-area\",\"pricing-tier\",\"currency\",\"ticket-price\"]', NULL, 'eg. Sessions with pricing', '1. Click all the session dates on the calendar for your event. This will create a table with one session time per date. \n<p>\n2. Type the 24 hour starting time for each session. You can add or remove session times for each session date with the + and - buttons. \n<p>\n3. The first session time will contain Ticket Pricing details. Seating Area, Pricing Tier, Currency and Price. This will branch to give you ticket prices like this:\n<br>\nStalls Adult USD 10.00\n<br>\nStalls Pensioner USD 8.00 \n<br>\nStalls Child USD 6.00\n<br>\nBalcony Adult USD 10.00\n<br>\nBalcony Pensioner USD 8.00 \n<br>\nBalcony Child USD 6.00\n<p>\n4. The starting time you enter for the session time will be auto-repeated for each first session time. Same goes for the second session time etc. You can edit these if they are not the same starting times for each session date. \n<p>\n5. The ticket pricing details you enter for the first session will be auto-repeated for each session time. You can edit ticket prices if they are not the same for each session.\n<p>\n6. This system was designed to let you fill out massive amounts of information in seconds. It is strongly recommended that you follow these steps in the correct order so you don\'t override the automation, otherwise you may find yourself filling out hundreds of fields manually.', '2026-01-01 12:54:10', '2026-01-01 13:26:12'),
 (27, 'Public Email', 'public_email', 'subcategory', 3, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2026-01-01 07:54:19', '2026-01-01 08:41:37'),
 (100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2025-10-29 19:03:05', '2026-01-01 09:23:54'),
 (101, 'Username', 'username', 'auth', NULL, '[\"username\"]', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
@@ -3576,7 +3577,7 @@ ALTER TABLE `fields`
 -- AUTO_INCREMENT for table `fieldsets`
 --
 ALTER TABLE `fieldsets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`
