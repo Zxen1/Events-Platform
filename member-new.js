@@ -179,7 +179,6 @@ const MemberModule = (function() {
     // Create post elements
     var submitBtn = null;
     var adminSubmitBtn = null;
-    var submitHintEl = null;
     var termsAgreed = false;
     
     // Terms modal elements
@@ -533,65 +532,6 @@ const MemberModule = (function() {
 
         // Create Post inline auth gate is mounted on demand (after the create form is shown),
         // so its events are attached inside ensureCreateAuthGateMounted().
-        
-        // Disabled submit buttons do not fire click events. Capture clicks so we can show a message-system toast
-        // explaining what is blocking submission (post readiness, or auth fields).
-        if (memberPanelBody) {
-            memberPanelBody.addEventListener('click', function(e) {
-                try {
-                    var t = e && e.target;
-                    if (!t || !t.closest) return;
-                    var btn = t.closest('button');
-                    if (!btn) return;
-                    // We use aria-disabled (not disabled attr) so clicks still fire and we can show a toast.
-                    var isAriaDisabled = String(btn.getAttribute('aria-disabled') || '') === 'true';
-                    if (!isAriaDisabled) return;
-                    
-                    var action = btn.getAttribute('data-action') || '';
-                    var isSubmitLike =
-                        btn.classList.contains('member-button-submit') ||
-                        btn.classList.contains('member-button-admin-submit') ||
-                        action === 'create-auth-login' ||
-                        action === 'create-auth-register';
-                    if (!isSubmitLike) return;
-                    
-                    var key = null;
-                    var placeholders = {};
-                    
-                    var postReady = false;
-                    try { postReady = isCreatePostFormReadyForSubmit(); } catch (e0) { postReady = false; }
-                    
-                    if (!postReady) {
-                        var r = getCreatePostDisabledReason();
-                        if (r && r.key) {
-                            key = r.key;
-                            placeholders = r.placeholders || {};
-                        }
-                    } else {
-                        if (action === 'create-auth-login') {
-                            var loginFilled = !!(createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() &&
-                                createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim());
-                            if (!loginFilled) key = 'msg_auth_login_empty';
-                        } else if (action === 'create-auth-register') {
-                            if (!isCreateAuthRegisterComplete()) key = 'msg_auth_register_empty';
-                        }
-                    }
-                    
-                    if (!key) key = 'msg_post_create_error';
-                    
-                    if (window.ToastComponent && typeof ToastComponent.showError === 'function' && typeof window.getMessage === 'function') {
-                        window.getMessage(String(key), placeholders, false).then(function(msg) {
-                            if (msg) ToastComponent.showError(msg);
-                        });
-                    }
-                    
-                    try { e.preventDefault(); } catch (e1) {}
-                    try { e.stopPropagation(); } catch (e2) {}
-                } catch (err) {
-                    // ignore
-                }
-            }, true);
-        }
         
         // Login button click
         var loginBtn = panel.querySelector('.member-auth-submit[data-action="login"]');
@@ -2819,12 +2759,6 @@ const MemberModule = (function() {
         termsWrapper.appendChild(checkboxWrapper);
         formFields.appendChild(termsWrapper);
         
-        // Submit hint (tells user why submit is still disabled; message system only)
-        submitHintEl = document.createElement('div');
-        submitHintEl.className = 'member-create-placeholder';
-        submitHintEl.hidden = true;
-        formFields.appendChild(submitHintEl);
-
         // Submit buttons container
         var actionsWrapper = document.createElement('div');
         actionsWrapper.className = 'member-create-actions';
@@ -2834,7 +2768,7 @@ const MemberModule = (function() {
         submitBtn.type = 'submit';
         submitBtn.className = 'member-button-submit';
         submitBtn.textContent = 'Submit';
-        submitBtn.setAttribute('aria-disabled', 'true');
+        submitBtn.disabled = true;
         actionsWrapper.appendChild(submitBtn);
         
         // Admin submit button (hidden by default)
@@ -2842,7 +2776,7 @@ const MemberModule = (function() {
         adminSubmitBtn.type = 'button';
         adminSubmitBtn.className = 'member-button-admin-submit';
         adminSubmitBtn.textContent = 'Admin: Submit Free';
-        adminSubmitBtn.setAttribute('aria-disabled', 'true');
+        adminSubmitBtn.disabled = true;
         adminSubmitBtn.hidden = true;
         
         // Show admin button if user is admin
@@ -2852,6 +2786,11 @@ const MemberModule = (function() {
         
         actionsWrapper.appendChild(adminSubmitBtn);
         formFields.appendChild(actionsWrapper);
+        
+        // Hover popover listing all missing items (no toasts; button stays truly disabled)
+        attachMissingPopover(actionsWrapper, function() {
+            return getCreatePostMissingList();
+        });
         
         // Attach click handlers for submit buttons
         submitBtn.addEventListener('click', function(e) {
@@ -2896,6 +2835,115 @@ const MemberModule = (function() {
         return { key: 'msg_post_create_error', placeholders: {} };
     }
 
+    function getCreatePostMissingList() {
+        var out = [];
+        if (isSubmittingPost) return out;
+        if (!termsAgreed) out.push('Terms and Conditions');
+        if (!selectedCategory || !selectedSubcategory) out.push('Category / Subcategory');
+        if (!formFields) return out;
+
+        // Incomplete/invalid fieldsets (required or optional-but-invalid)
+        var fieldsets = formFields.querySelectorAll('.fieldset[data-complete="false"]');
+        for (var i = 0; i < fieldsets.length; i++) {
+            var fs = fieldsets[i];
+            if (!fs || !fs.dataset) continue;
+            var name = String(fs.dataset.fieldsetName || fs.dataset.fieldsetKey || '').trim();
+            if (name) out.push(name);
+        }
+
+        // Checkout is a component that doesn't live on .fieldset[data-complete]; include explicitly.
+        try {
+            var checkoutGroup = formFields.querySelector('.member-checkout-group[data-complete="false"]');
+            if (checkoutGroup) out.push('Checkout Options');
+        } catch (e0) {}
+
+        // Dedupe (stable order)
+        var seen = {};
+        var uniq = [];
+        out.forEach(function(v) {
+            var k = String(v || '').trim();
+            if (!k) return;
+            if (seen[k]) return;
+            seen[k] = true;
+            uniq.push(k);
+        });
+        return uniq;
+    }
+
+    function attachMissingPopover(anchorEl, getItemsFn) {
+        if (!anchorEl) return;
+        if (anchorEl._missingPopoverAttached) return;
+        anchorEl._missingPopoverAttached = true;
+
+        anchorEl.style.position = anchorEl.style.position || 'relative';
+
+        var pop = document.createElement('div');
+        pop.className = 'member-missing-popover';
+        pop.hidden = true;
+
+        var title = document.createElement('div');
+        title.className = 'member-missing-popover-title';
+        title.textContent = 'Missing';
+        pop.appendChild(title);
+
+        var list = document.createElement('div');
+        list.className = 'member-missing-popover-list';
+        pop.appendChild(list);
+
+        anchorEl.appendChild(pop);
+
+        function renderItems(items) {
+            list.innerHTML = '';
+            if (!items || !items.length) return;
+            items.forEach(function(item) {
+                var row = document.createElement('div');
+                row.className = 'member-missing-popover-item';
+                row.textContent = String(item);
+                list.appendChild(row);
+            });
+        }
+
+        function isAnySubmitDisabled() {
+            try {
+                var btns = anchorEl.querySelectorAll('button.member-button-submit, button.member-button-admin-submit, button.member-auth-submit');
+                for (var i = 0; i < btns.length; i++) {
+                    if (btns[i] && btns[i].disabled) return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+
+        function show() {
+            if (!isAnySubmitDisabled()) return;
+            var items = [];
+            try { items = (typeof getItemsFn === 'function') ? (getItemsFn() || []) : []; } catch (e0) { items = []; }
+            if (!items || items.length === 0) return;
+            renderItems(items);
+            pop.hidden = false;
+        }
+        function hide() {
+            pop.hidden = true;
+        }
+
+        anchorEl.addEventListener('mouseenter', function() { show(); });
+        anchorEl.addEventListener('mouseleave', function(e) {
+            // Only hide when fully leaving the anchor (including popover)
+            var rt = e && e.relatedTarget;
+            if (rt && pop.contains(rt)) return;
+            hide();
+        });
+        pop.addEventListener('mouseleave', function() { hide(); });
+
+        // Tap/click anywhere else closes it (non-persistent)
+        document.addEventListener('pointerdown', function(e) {
+            if (pop.hidden) return;
+            var t = e && e.target;
+            if (!t) return;
+            if (anchorEl.contains(t)) return;
+            hide();
+        }, true);
+    }
+
     function isCreatePostFormReadyForSubmit() {
         if (isSubmittingPost) return false;
         if (!termsAgreed) return false;
@@ -2921,14 +2969,12 @@ const MemberModule = (function() {
         // Logged-in users: use the normal submit buttons.
         if (submitBtn) {
             submitBtn.hidden = !loggedIn;
-            var submitAriaDisabled = (!ready || !loggedIn);
-            submitBtn.setAttribute('aria-disabled', submitAriaDisabled ? 'true' : 'false');
+            submitBtn.disabled = (!ready || !loggedIn);
         }
         if (adminSubmitBtn) {
             // Admin button only relevant when logged in as admin (never when logged out).
             adminSubmitBtn.hidden = !(loggedIn && currentUser && currentUser.isAdmin);
-            var adminAriaDisabled = (!ready || !(loggedIn && currentUser && currentUser.isAdmin));
-            adminSubmitBtn.setAttribute('aria-disabled', adminAriaDisabled ? 'true' : 'false');
+            adminSubmitBtn.disabled = (!ready || !(loggedIn && currentUser && currentUser.isAdmin));
         }
 
         // Logged-out users: mount/unmount inline auth submit UI on demand (no hidden subtree).
@@ -2947,45 +2993,12 @@ const MemberModule = (function() {
         var loginFilled = !!(createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() && createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim());
         if (createAuthLoginSubmitBtn) {
             // Three-button rule: this is a submit action, so it must stay disabled until the post form is complete.
-            var loginAriaDisabled = (loggedIn || !isLoginActive || !loginFilled || !ready);
-            createAuthLoginSubmitBtn.setAttribute('aria-disabled', loginAriaDisabled ? 'true' : 'false');
+            createAuthLoginSubmitBtn.disabled = (loggedIn || !isLoginActive || !loginFilled || !ready);
         }
         if (createAuthRegisterSubmitBtn) {
             // Three-button rule: this is a submit action, so it must stay disabled until the post form is complete.
-            var regAriaDisabled = (loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete() || !ready);
-            createAuthRegisterSubmitBtn.setAttribute('aria-disabled', regAriaDisabled ? 'true' : 'false');
+            createAuthRegisterSubmitBtn.disabled = (loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete() || !ready);
         }
-
-        // Update hint text (message system only)
-        try {
-            if (submitHintEl) {
-                if (ready) {
-                    submitHintEl.textContent = '';
-                    submitHintEl.hidden = true;
-                } else {
-                    var reason = getCreatePostDisabledReason();
-                    if (!reason || !reason.key) {
-                        submitHintEl.textContent = '';
-                        submitHintEl.hidden = true;
-                    } else if (typeof window.getMessage === 'function') {
-                        window.getMessage(String(reason.key), reason.placeholders || {}, false).then(function(msg) {
-                            // Only show if still not ready (avoid stale async writes).
-                            if (isCreatePostFormReadyForSubmit()) return;
-                            if (msg) {
-                                submitHintEl.textContent = msg;
-                                submitHintEl.hidden = false;
-                            } else {
-                                submitHintEl.textContent = '';
-                                submitHintEl.hidden = true;
-                            }
-                        }).catch(function() {
-                            submitHintEl.textContent = '';
-                            submitHintEl.hidden = true;
-                        });
-                    }
-                }
-            }
-        } catch (e0) {}
     }
     
     /* --------------------------------------------------------------------------
@@ -3040,8 +3053,8 @@ const MemberModule = (function() {
         
         // Start submission
         isSubmittingPost = true;
-        if (submitBtn) submitBtn.setAttribute('aria-disabled', 'true');
-        if (adminSubmitBtn) adminSubmitBtn.setAttribute('aria-disabled', 'true');
+        if (submitBtn) submitBtn.disabled = true;
+        if (adminSubmitBtn) adminSubmitBtn.disabled = true;
         
         // Submit the post
         submitPostData(validation.payload, isAdminFree)
@@ -3955,7 +3968,7 @@ const MemberModule = (function() {
             var btn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
             if (!btn) return;
             var complete = isRegisterFormComplete();
-            btn.setAttribute('aria-disabled', complete ? 'false' : 'true');
+            btn.disabled = !complete;
         } catch (e) {
             // ignore
         }
@@ -4325,6 +4338,11 @@ const MemberModule = (function() {
         createAuthWrapper.addEventListener('input', function() { updateSubmitButtonState(); }, true);
         createAuthWrapper.addEventListener('change', function() { updateSubmitButtonState(); }, true);
 
+        // Hover popover listing all missing items (no toasts; button stays truly disabled)
+        attachMissingPopover(createAuthWrapper, function() {
+            return getCreatePostMissingList();
+        });
+
         return true;
     }
 
@@ -4584,7 +4602,7 @@ const MemberModule = (function() {
         // Enable/disable submit button
         var submitBtn = panelEl.querySelector('.member-auth-submit');
         if (submitBtn) {
-            submitBtn.setAttribute('aria-disabled', isActive ? 'false' : 'true');
+            submitBtn.disabled = !isActive;
         }
         
         // Show/hide panel

@@ -908,10 +908,40 @@
   cursor: not-allowed;
 }
 
-/* Use aria-disabled so we can still capture clicks and show a toast explaining what's missing */
-.member-button-submit[aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Missing-list popover (shown on hover over disabled submit area) */
+.member-missing-popover {
+  position: absolute;
+  right: 0;
+  bottom: 42px;
+  min-width: 220px;
+  max-width: 320px;
+  background: rgba(20, 20, 20, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  padding: 10px 10px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+}
+
+.member-missing-popover-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 8px;
+}
+
+.member-missing-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.member-missing-popover-item {
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .member-button-admin-submit {
