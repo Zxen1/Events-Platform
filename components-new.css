@@ -853,7 +853,8 @@
 
 .fieldset-sessionpricing-ticketgroup-button--open {
     border-color: #3b82f5;
-    background: #3b82f5;
+    /* Use the same "active blue" as Member buttons (e.g. Update Profile menu button), but keep border/hover blue unchanged */
+    background: var(--btn-selected, #3b82f6);
 }
 
 .fieldset-sessionpricing-ticketgroup-icon {
@@ -988,7 +989,7 @@
     position: sticky;
     top: 10px;
     z-index: calc(var(--layer-menu, 85) + 1);
-    background: #3b82f5;
+    background: var(--btn-selected, #3b82f6);
     border-color: #3b82f5;
 }
 
@@ -1005,7 +1006,7 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-header--selected {
-    background: #3b82f5;
+    background: var(--btn-selected, #3b82f6);
     border-color: #3b82f5;
 }
 
@@ -1096,7 +1097,7 @@
 
 /* Blue bordered editor container that visually extends the header */
 .fieldset-sessionpricing-pricing-group--open .fieldset-sessionpricing-ticketgroup-header {
-    background: #3b82f5;
+    background: var(--btn-selected, #3b82f6);
     border-color: #3b82f5;
     border-radius: 4px 4px 0 0;
     border-bottom: none;
