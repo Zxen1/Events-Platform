@@ -3440,7 +3440,6 @@ const FieldsetBuilder = (function(){
                                 var dateDisplay = document.createElement('div');
                                 dateDisplay.className = 'fieldset-sessionpricing-sessions-date';
                                 var d = new Date(dateStr + 'T00:00:00');
-                                // Format exactly: "Fri 2 Jan, 2026" (no comma after weekday)
                                 try {
                                     var wd = d.toLocaleDateString('en-AU', { weekday: 'short' });
                                     var dm = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });

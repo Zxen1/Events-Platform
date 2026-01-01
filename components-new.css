@@ -795,10 +795,6 @@
     font-size: 13px;
     display: flex;
     align-items: center;
-    min-width: 170px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .fieldset-sessionpricing-sessions-date-spacer {
@@ -807,7 +803,8 @@
 }
 
 .fieldset-sessionpricing-sessions-time {
-    flex: 0 0 80px;
+    /* HH:MM with 10px left/right padding inside the input */
+    flex: 0 0 70px;
 }
 
 /* Appearance - SessionPricing Buttons */
@@ -833,6 +830,7 @@
 
 /* Appearance - SessionPricing Ticket Group Button (icon + letter) */
 .fieldset-sessionpricing-ticketgroup-button {
+    flex: 0 0 auto;
     height: 36px;
     display: flex;
     align-items: center;
@@ -845,6 +843,7 @@
     box-sizing: border-box;
     padding: 0 10px; /* site-wide padding rule (matches .fieldset-menu-button) */
     gap: 10px;
+    min-width: 70px;
 }
 
 .fieldset-sessionpricing-ticketgroup-icon {
