@@ -976,7 +976,7 @@
     display: flex;
     align-items: center;
     gap: 0;
-    padding: 0 0 0 10px;
+    padding: 0 10px 0 10px;
     box-sizing: border-box;
     background: #222;
     border: 1px solid #333;
@@ -1027,6 +1027,7 @@
     border-radius: 0;
     color: #fff;
     cursor: pointer;
+    margin-left: 10px;
 }
 
 .fieldset-sessionpricing-ticketgroup-add,
@@ -1038,21 +1039,51 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    /* Plain buttons: no border, no background color (except a 30x30 click effect) */
     background: transparent;
-    border: 1px solid #333;
-    border-radius: 4px;
+    border: none;
+    border-radius: 5px;
     color: #fff;
     cursor: pointer;
     font-size: 18px;
+    padding: 0;
+    position: relative;
 }
 
 .fieldset-sessionpricing-ticketgroup-add:hover,
 .fieldset-sessionpricing-ticketgroup-remove:hover {
-    border-color: #3b82f5;
+    background: transparent;
 }
 
-.fieldset-sessionpricing-ticketgroup-name {
-    margin-bottom: 10px;
+.fieldset-sessionpricing-ticketgroup-add:active::after,
+.fieldset-sessionpricing-ticketgroup-remove:active::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 30px;
+    height: 30px;
+    background: #3b82f5;
+    border-radius: 5px;
+    z-index: -1;
+}
+
+.fieldset-sessionpricing-ticketgroup-add {
+    margin-left: 10px;
+}
+
+.fieldset-sessionpricing-ticketgroup-remove {
+    margin-left: 10px;
+}
+
+.fieldset-sessionpricing-ticketgroup-add:disabled,
+.fieldset-sessionpricing-ticketgroup-remove:disabled {
+    cursor: not-allowed;
+}
+
+.fieldset-sessionpricing-ticketgroup-add:disabled,
+.fieldset-sessionpricing-ticketgroup-remove:disabled {
+    opacity: 0.3;
 }
 
 .fieldset-sessionpricing-ticketgroup-editorwrap {

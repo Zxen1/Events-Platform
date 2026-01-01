@@ -2745,7 +2745,7 @@ const FieldsetBuilder = (function(){
                 var spActivePicker = null; // { dateStr, idx, timeInput, ticketBtn, rowEl }
 
                 var spOpenGroupKey = null;
-                var spOpenGroupSnapshot = null; // { pricing: [...], name: '...' }
+                var spOpenGroupSnapshot = null; // pricing snapshot array
 
                 function spGetSystemTicketIconUrl() {
                     try {
@@ -3449,12 +3449,6 @@ const FieldsetBuilder = (function(){
                     if (!wrap) return;
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-pricing-group--open', !!isOpen);
-                    if (isOpen) {
-                        try {
-                            var nameInput = wrap.querySelector('input.fieldset-sessionpricing-ticketgroup-name-input');
-                            if (nameInput) nameInput.value = String(g.dataset.ticketGroupName || '');
-                        } catch (eName0) {}
-                    }
 
                     // Keep the active group's header sticky inside the scrollable popover so the user
                     // always knows which group is being edited.
@@ -3580,12 +3574,7 @@ const FieldsetBuilder = (function(){
                             var g = spTicketGroups[String(spOpenGroupKey || '')];
                             if (g) {
                                 var editorEl = g.querySelector('.fieldset-sessionpricing-pricing-editor');
-                                if (editorEl) spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot.pricing || []);
-                                g.dataset.ticketGroupName = String(spOpenGroupSnapshot.name || ('Ticket Group ' + spOpenGroupKey));
-                                var nameInput = g.querySelector('input.fieldset-sessionpricing-ticketgroup-name-input');
-                                if (nameInput) nameInput.value = g.dataset.ticketGroupName;
-                                var selectBtn = g.querySelector('.fieldset-sessionpricing-ticketgroup-select');
-                                if (selectBtn) selectBtn.textContent = g.dataset.ticketGroupName;
+                                if (editorEl) spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot || []);
                             }
                         }
                     } catch (e1) {}
@@ -3615,15 +3604,7 @@ const FieldsetBuilder = (function(){
                         spOpenGroupKey = currentKey;
                         var grpEl0 = spTicketGroups[currentKey];
                         var editorEl0 = grpEl0 ? grpEl0.querySelector('.fieldset-sessionpricing-pricing-editor') : null;
-                        spOpenGroupSnapshot = {
-                            pricing: spExtractPricingFromEditor(editorEl0),
-                            name: (function() {
-                                try {
-                                    var g0 = spTicketGroups[currentKey];
-                                    return g0 ? String(g0.dataset.ticketGroupName || '') : '';
-                                } catch (eN) { return ''; }
-                            })()
-                        };
+                        spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
                         spSetGroupEditorOpen(currentKey, true);
                     } catch (eAutoOpen) {}
 
@@ -3669,7 +3650,6 @@ const FieldsetBuilder = (function(){
                     var group = document.createElement('div');
                     group.className = 'fieldset-sessionpricing-pricing-group';
                     group.dataset.ticketGroupKey = key;
-                    group.dataset.ticketGroupName = 'Ticket Group ' + key;
 
                     // Header row: select group + edit pencil
                     var header = document.createElement('div');
@@ -3678,7 +3658,7 @@ const FieldsetBuilder = (function(){
                     var selectBtn = document.createElement('button');
                     selectBtn.type = 'button';
                     selectBtn.className = 'fieldset-sessionpricing-ticketgroup-select';
-                    selectBtn.textContent = group.dataset.ticketGroupName;
+                    selectBtn.textContent = 'Ticket Group ' + key;
                     selectBtn.addEventListener('click', function() {
                         // Selecting a group closes any open edit panels (only one editing context at a time)
                         spCloseAllGroupEditors();
@@ -3701,7 +3681,7 @@ const FieldsetBuilder = (function(){
                         var isOpen = group.classList.contains('fieldset-sessionpricing-pricing-group--open');
                         if (!isOpen) {
                             var editorEl0 = group.querySelector('.fieldset-sessionpricing-pricing-editor');
-                            spOpenGroupSnapshot = { pricing: spExtractPricingFromEditor(editorEl0), name: String(group.dataset.ticketGroupName || '') };
+                            spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
                             spOpenGroupKey = key;
                         } else {
                             spOpenGroupSnapshot = null;
@@ -3726,7 +3706,7 @@ const FieldsetBuilder = (function(){
                         spAssignGroupToActive(newKey);
                         spCloseAllGroupEditors();
                         spOpenGroupKey = newKey;
-                        spOpenGroupSnapshot = { pricing: [], name: 'Ticket Group ' + newKey };
+                        spOpenGroupSnapshot = [];
                         spSetGroupEditorOpen(newKey, true);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                     });
@@ -3792,25 +3772,6 @@ const FieldsetBuilder = (function(){
                     var editorWrap = document.createElement('div');
                     editorWrap.className = 'fieldset-sessionpricing-ticketgroup-editorwrap';
                     editorWrap.style.display = 'none';
-
-                    // Ticket Group Name input (top of edit panel)
-                    var nameWrap = document.createElement('div');
-                    nameWrap.className = 'fieldset-sessionpricing-ticketgroup-name';
-                    var nameLabel = document.createElement('div');
-                    nameLabel.className = 'fieldset-sublabel';
-                    nameLabel.textContent = 'Ticket Group Name';
-                    var nameInput = document.createElement('input');
-                    nameInput.type = 'text';
-                    nameInput.className = 'fieldset-input fieldset-sessionpricing-ticketgroup-name-input';
-                    nameInput.value = group.dataset.ticketGroupName;
-                    nameInput.addEventListener('input', function() {
-                        group.dataset.ticketGroupName = String(this.value || '').trim();
-                        selectBtn.textContent = group.dataset.ticketGroupName || ('Ticket Group ' + key);
-                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
-                    });
-                    nameWrap.appendChild(nameLabel);
-                    nameWrap.appendChild(nameInput);
-                    editorWrap.appendChild(nameWrap);
 
                     var editor = document.createElement('div');
                     editor.className = 'fieldset-sessionpricing-pricing-editor';
