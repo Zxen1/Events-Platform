@@ -53,6 +53,33 @@ header('Content-Type: application/json');
 
 $viaGateway = defined('FUNMAP_GATEWAY_ACTIVE') && FUNMAP_GATEWAY_ACTIVE === true;
 
+// Ensure we always return JSON, even on fatal errors (prevents opaque {} / empty 500 responses).
+ob_start();
+register_shutdown_function(function() {
+  $err = error_get_last();
+  if (!$err) return;
+  $type = $err['type'] ?? 0;
+  // Fatal-ish types
+  $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+  if (!in_array($type, $fatalTypes, true)) return;
+  while (ob_get_level() > 0) { @ob_end_clean(); }
+  if (!headers_sent()) {
+    header('Content-Type: application/json; charset=utf-8');
+  }
+  http_response_code(500);
+  echo json_encode([
+    'success' => false,
+    'message_key' => 'msg_post_create_error',
+    'debug' => [
+      'stage' => 'fatal',
+      'type' => $type,
+      'message' => (string)($err['message'] ?? ''),
+      'file' => (string)($err['file'] ?? ''),
+      'line' => (int)($err['line'] ?? 0),
+    ],
+  ], JSON_UNESCAPED_SLASHES);
+});
+
 if (!$viaGateway) {
   if (!function_exists('verify_api_key') || !verify_api_key($_SERVER['HTTP_X_API_KEY'] ?? '')) {
     http_response_code(403);
@@ -534,6 +561,10 @@ foreach ($byLoc as $locNum => $entries) {
 $uploadedPaths = [];
 $mediaIds = [];
 if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
+  // If curl is missing, we'd fatal. Fail cleanly with debug info.
+  if (!function_exists('curl_init')) {
+    abort_with_error($mysqli, 500, 'bunny_curl_missing', $transactionActive);
+  }
   $settings = load_bunny_settings($mysqli);
   $folder = rtrim((string)$settings['folder_post_images'], '/');
   $storageApiKey = (string)$settings['storage_api_key'];
