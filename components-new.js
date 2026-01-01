@@ -2843,12 +2843,6 @@ const FieldsetBuilder = (function(){
                     tierCol.appendChild(tierInput);
                     tierRow.appendChild(tierCol);
 
-                    var actions = document.createElement('div');
-                    actions.style.display = 'flex';
-                    actions.style.gap = '10px';
-                    actions.style.alignItems = 'flex-end';
-                    actions.style.marginLeft = '10px';
-
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
                     addBtn.className = 'fieldset-sessionpricing-pricing-add';
@@ -2858,7 +2852,7 @@ const FieldsetBuilder = (function(){
                         spUpdateTierButtons(tiersContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    actions.appendChild(addBtn);
+                    tierRow.appendChild(addBtn);
 
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
@@ -2869,16 +2863,13 @@ const FieldsetBuilder = (function(){
                         spUpdateTierButtons(tiersContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    actions.appendChild(removeBtn);
-                    tierRow.appendChild(actions);
+                    tierRow.appendChild(removeBtn);
 
                     applyFieldsetRowItemClasses(tierRow);
                     block.appendChild(tierRow);
 
                     var priceRow = document.createElement('div');
                     priceRow.className = 'fieldset-row';
-                    priceRow.style.marginBottom = '10px';
-                    priceRow.style.marginLeft = '20px';
                     priceRow.style.marginRight = '92px';
 
                     var currencyCol = document.createElement('div');
@@ -2923,6 +2914,8 @@ const FieldsetBuilder = (function(){
                     var block = document.createElement('div');
                     block.className = 'fieldset-sessionpricing-pricing-seating-block';
                     block.style.marginBottom = '20px';
+                    block.style.paddingBottom = '10px';
+                    block.style.borderBottom = '1px solid #333';
 
                     var seatRow = document.createElement('div');
                     seatRow.className = 'fieldset-row';
@@ -2934,17 +2927,12 @@ const FieldsetBuilder = (function(){
                     seatSub.className = 'fieldset-sublabel';
                     seatSub.textContent = 'Seating Area';
                     var seatInput = document.createElement('input');
+                    seatInput.type = 'text';
                     seatInput.className = 'fieldset-input';
-                    seatInput.placeholder = 'eg. Stalls';
+                    seatInput.placeholder = 'eg. Orchestra';
                     seatCol.appendChild(seatSub);
                     seatCol.appendChild(seatInput);
                     seatRow.appendChild(seatCol);
-
-                    var actions = document.createElement('div');
-                    actions.style.display = 'flex';
-                    actions.style.gap = '10px';
-                    actions.style.alignItems = 'flex-end';
-                    actions.style.marginLeft = '10px';
 
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
@@ -2955,7 +2943,7 @@ const FieldsetBuilder = (function(){
                         spUpdateSeatingAreaButtons(seatingAreasContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    actions.appendChild(addBtn);
+                    seatRow.appendChild(addBtn);
 
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
@@ -2966,8 +2954,7 @@ const FieldsetBuilder = (function(){
                         spUpdateSeatingAreaButtons(seatingAreasContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    actions.appendChild(removeBtn);
-                    seatRow.appendChild(actions);
+                    seatRow.appendChild(removeBtn);
 
                     applyFieldsetRowItemClasses(seatRow);
                     block.appendChild(seatRow);
@@ -3244,6 +3231,36 @@ const FieldsetBuilder = (function(){
                     spActivePicker.timeInput.dataset.ticketGroupKey = groupKey;
                     var letterEl = spActivePicker.ticketBtn.querySelector('.fieldset-sessionpricing-ticketgroup-letter');
                     if (letterEl) letterEl.textContent = groupKey;
+
+                    // Highlight the selected group in the picker menu (so selection is obvious)
+                    try {
+                        Object.keys(spTicketGroups).forEach(function(k) {
+                            var g = spTicketGroups[k];
+                            if (!g) return;
+                            var header = g.querySelector('.fieldset-sessionpricing-ticketgroup-header');
+                            if (!header) return;
+                            header.classList.toggle('fieldset-sessionpricing-ticketgroup-header--selected', String(k) === String(groupKey));
+                        });
+                    } catch (eSel) {}
+                }
+
+                function spUpdateAllTicketButtonsFromData() {
+                    try {
+                        var inputs = spSessionsContainer.querySelectorAll('.fieldset-sessionpricing-sessions-time-input');
+                        inputs.forEach(function(input) {
+                            var d = String(input.dataset.date || '');
+                            var i = parseInt(String(input.dataset.idx || '0'), 10);
+                            if (!d || !spSessionData[d] || !Array.isArray(spSessionData[d].groups)) return;
+                            var g = String(spSessionData[d].groups[i] || 'A');
+                            input.dataset.ticketGroupKey = g;
+                            var row = input.closest('.fieldset-sessionpricing-sessions-row');
+                            if (!row) return;
+                            var btn = row.querySelector('.fieldset-sessionpricing-ticketgroup-button');
+                            if (!btn) return;
+                            var letterEl = btn.querySelector('.fieldset-sessionpricing-ticketgroup-letter');
+                            if (letterEl) letterEl.textContent = g;
+                        });
+                    } catch (eUp) {}
                 }
 
                 function spCloseTicketMenu() {
@@ -3319,7 +3336,6 @@ const FieldsetBuilder = (function(){
                     selectBtn.textContent = 'Ticket Group ' + key;
                     selectBtn.addEventListener('click', function() {
                         spAssignGroupToActive(key);
-                        spCloseTicketMenu();
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     header.appendChild(selectBtn);
@@ -3396,7 +3412,8 @@ const FieldsetBuilder = (function(){
                                 if (String(data.groups[i] || '') === key) data.groups[i] = fallbackKey;
                             }
                         });
-                        spRenderSessions();
+                        spUpdateAllTicketButtonsFromData();
+                        spAssignGroupToActive(fallbackKey);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                     });
                     actions.appendChild(deleteBtn);

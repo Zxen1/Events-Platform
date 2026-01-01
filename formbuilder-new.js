@@ -1845,41 +1845,6 @@
                 notifyChange();
                 return;
             }
-            
-            // If Events is selected, check if sessions fieldset exists and add it automatically if not
-            var sessionsFieldsetExists = false;
-            allFieldWrappers.forEach(function(wrapper) {
-                var fsId = wrapper.getAttribute('data-fieldset-id');
-                var fieldset = fieldsets.find(function(fs) {
-                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
-                });
-                if (fieldset) {
-                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
-                    if (fieldsetKeyLower === 'sessions') {
-                        sessionsFieldsetExists = true;
-                    }
-                }
-            });
-            
-            // If sessions fieldset doesn't exist, add it automatically
-            if (!sessionsFieldsetExists) {
-                var sessionsFieldset = fieldsets.find(function(fs) {
-                    var fsKey = fs.key || fs.fieldset_key || fs.id;
-                    return String(fsKey).toLowerCase() === 'sessions';
-                });
-                
-                if (sessionsFieldset) {
-                    var result = createFieldElement(sessionsFieldset, true, sessionsFieldset);
-                    fieldsContainer.appendChild(result.wrapper);
-                    addedFieldsets[result.fsId] = true;
-                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
-                    if (menuOpt) {
-                        menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
-                    }
-                    notifyChange();
-                }
-            }
         }
         
         venueInput.addEventListener('change', function(e) {

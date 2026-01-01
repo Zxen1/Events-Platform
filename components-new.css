@@ -775,13 +775,13 @@
 .fieldset-sessionpricing-sessions-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .fieldset-sessionpricing-sessions-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .fieldset-sessionpricing-sessions-date {
@@ -830,11 +830,12 @@
 
 /* Appearance - SessionPricing Ticket Group Button (icon + letter) */
 .fieldset-sessionpricing-ticketgroup-button {
-    flex: 0 0 auto;
+    flex: 0 0 70px;
+    width: 70px;
     height: 36px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     background: transparent;
     border: 1px solid #333;
     border-radius: 5px;
@@ -843,7 +844,6 @@
     box-sizing: border-box;
     padding: 0 10px; /* site-wide padding rule (matches .fieldset-menu-button) */
     gap: 10px;
-    min-width: 70px;
 }
 
 .fieldset-sessionpricing-ticketgroup-icon {
@@ -868,8 +868,8 @@
     width: 100%;
     margin-top: 8px;
     background: #222; /* match .fieldset-menu-options */
-    border: 1px solid #3b82f5;
-    border-radius: 0 0 5px 5px; /* match dropdown menu */
+    border: 1px solid #333;
+    border-radius: 4px;
     padding: 10px;
     box-sizing: border-box;
     max-height: 600px;
@@ -879,6 +879,7 @@
     scrollbar-color: #888 transparent;
     position: absolute; /* pop-up overlay, not accordion */
     left: 0;
+    right: 0;
     z-index: var(--layer-menu, 85);
     display: block;
     visibility: hidden;
@@ -901,7 +902,7 @@
     padding: 0 10px;
     background: #222;
     border: 1px solid #333;
-    border-radius: 5px;
+    border-radius: 4px;
     color: #fff;
     font-size: 13px;
     cursor: pointer;
@@ -920,12 +921,12 @@
     height: 36px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 0 10px;
+    gap: 0;
+    padding: 0 0 0 10px;
     box-sizing: border-box;
     background: #222;
     border: 1px solid #333;
-    border-radius: 5px;
+    border-radius: 4px;
 }
 
 .fieldset-sessionpricing-ticketgroup-select {
@@ -936,6 +937,17 @@
     font-size: 13px;
     text-align: left;
     cursor: pointer;
+    height: 36px;
+    padding: 0 10px 0 0;
+}
+
+.fieldset-sessionpricing-ticketgroup-header:hover {
+    background: #2a2a2a;
+}
+
+.fieldset-sessionpricing-ticketgroup-header--selected {
+    background: #2e3a72;
+    border-color: #3b82f5;
 }
 
 .fieldset-sessionpricing-ticketgroup-edit {
@@ -947,18 +959,22 @@
     align-items: center;
     justify-content: center;
     background: transparent;
-    border: 1px solid #333;
-    border-radius: 5px;
+    border: none;
+    border-radius: 0;
     color: #fff;
     cursor: pointer;
 }
 
+.fieldset-sessionpricing-ticketgroup-edit:hover {
+    background: #2a2a2a;
+}
+
 .fieldset-sessionpricing-ticketgroup-editorwrap {
     margin-top: 8px;
-    padding: 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
 }
 
 .fieldset-sessionpricing-ticketgroup-actions {
@@ -974,7 +990,7 @@
     padding: 0 10px;
     background: transparent;
     border: 1px solid #333;
-    border-radius: 5px;
+    border-radius: 4px;
     color: #fff;
     cursor: pointer;
     font-size: 13px;
