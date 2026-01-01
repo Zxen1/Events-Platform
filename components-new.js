@@ -3074,7 +3074,6 @@ const FieldsetBuilder = (function(){
                 var spPricingGroupsWrap = document.createElement('div');
                 spPricingGroupsWrap.className = 'fieldset-sessionpricing-pricing-groups';
                 spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover');
-                spPricingGroupsWrap.style.display = 'none';
 
                 // Top action: Create New Ticket Group
                 var spTicketGroupCreate = document.createElement('button');
@@ -3251,7 +3250,6 @@ const FieldsetBuilder = (function(){
                     if (!spTicketMenuOpen) return;
                     spTicketMenuOpen = false;
                     spPricingGroupsWrap.classList.remove('fieldset-sessionpricing-ticketgroup-popover--open');
-                    spPricingGroupsWrap.style.display = 'none';
                     spActivePicker = null;
                     spCloseAllGroupEditors();
                     if (spTicketMenuDocHandler) {
@@ -3288,7 +3286,6 @@ const FieldsetBuilder = (function(){
                         spPricingGroupsWrap.style.top = top + 'px';
                     } catch (eTop) {}
 
-                    spPricingGroupsWrap.style.display = '';
                     spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover--open');
                     spTicketMenuOpen = true;
 
@@ -3443,7 +3440,15 @@ const FieldsetBuilder = (function(){
                                 var dateDisplay = document.createElement('div');
                                 dateDisplay.className = 'fieldset-sessionpricing-sessions-date';
                                 var d = new Date(dateStr + 'T00:00:00');
-                                dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                // Format exactly: "Fri 2 Jan, 2026" (no comma after weekday)
+                                try {
+                                    var wd = d.toLocaleDateString('en-AU', { weekday: 'short' });
+                                    var dm = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+                                    var yy = d.toLocaleDateString('en-AU', { year: 'numeric' });
+                                    dateDisplay.textContent = (wd + ' ' + dm + ', ' + yy).replace(/\s+/g, ' ').trim();
+                                } catch (eFmt) {
+                                    dateDisplay.textContent = d.toDateString();
+                                }
                                 row.appendChild(dateDisplay);
                             } else {
                                 var spacer = document.createElement('div');
