@@ -2786,11 +2786,9 @@ const MemberModule = (function() {
         
         actionsWrapper.appendChild(adminSubmitBtn);
         formFields.appendChild(actionsWrapper);
-        
         // Hover popover listing all missing items (no toasts; button stays truly disabled)
-        attachMissingPopover(actionsWrapper, function() {
-            return getCreatePostMissingList();
-        });
+        attachMissingPopoverToButton(submitBtn, function() { return getCreatePostMissingList(); });
+        attachMissingPopoverToButton(adminSubmitBtn, function() { return getCreatePostMissingList(); });
         
         // Attach click handlers for submit buttons
         submitBtn.addEventListener('click', function(e) {
@@ -2838,24 +2836,26 @@ const MemberModule = (function() {
     function getCreatePostMissingList() {
         var out = [];
         if (isSubmittingPost) return out;
-        if (!termsAgreed) out.push('Terms and Conditions');
         if (!selectedCategory || !selectedSubcategory) out.push('Category / Subcategory');
         if (!formFields) return out;
 
-        // Incomplete/invalid fieldsets (required or optional-but-invalid)
-        var fieldsets = formFields.querySelectorAll('.fieldset[data-complete="false"]');
+        // Incomplete/invalid items in on-screen order (DOM order).
+        // - Fieldsets own their own completeness via data-complete
+        // - Checkout uses .member-checkout-group[data-complete]
+        var fieldsets = formFields.querySelectorAll('.fieldset[data-complete="false"], .member-checkout-group[data-complete="false"]');
         for (var i = 0; i < fieldsets.length; i++) {
             var fs = fieldsets[i];
             if (!fs || !fs.dataset) continue;
+            if (fs.classList.contains('member-checkout-group')) {
+                out.push('Checkout Options');
+                continue;
+            }
             var name = String(fs.dataset.fieldsetName || fs.dataset.fieldsetKey || '').trim();
             if (name) out.push(name);
         }
-
-        // Checkout is a component that doesn't live on .fieldset[data-complete]; include explicitly.
-        try {
-            var checkoutGroup = formFields.querySelector('.member-checkout-group[data-complete="false"]');
-            if (checkoutGroup) out.push('Checkout Options');
-        } catch (e0) {}
+        
+        // Terms appear near the bottom of the form, just before the submit buttons.
+        if (!termsAgreed) out.push('Terms and Conditions');
 
         // Dedupe (stable order)
         var seen = {};
@@ -2870,13 +2870,19 @@ const MemberModule = (function() {
         return uniq;
     }
 
-    function attachMissingPopover(anchorEl, getItemsFn) {
-        if (!anchorEl) return;
-        if (anchorEl._missingPopoverAttached) return;
-        anchorEl._missingPopoverAttached = true;
-
-        anchorEl.style.position = anchorEl.style.position || 'relative';
-
+    function attachMissingPopoverToButton(btnEl, getItemsFn) {
+        if (!btnEl) return;
+        if (btnEl._missingPopoverAttached) return;
+        btnEl._missingPopoverAttached = true;
+        
+        // Anchor popover in the nearest container so it appears next to the button.
+        var anchorEl = btnEl.parentElement || btnEl;
+        try {
+            if (anchorEl && anchorEl.style && !anchorEl.style.position) {
+                anchorEl.style.position = 'relative';
+            }
+        } catch (e0) {}
+        
         var pop = document.createElement('div');
         pop.className = 'member-missing-popover';
         pop.hidden = true;
@@ -2903,18 +2909,13 @@ const MemberModule = (function() {
             });
         }
 
-        function isAnySubmitDisabled() {
-            try {
-                var btns = anchorEl.querySelectorAll('button.member-button-submit, button.member-button-admin-submit, button.member-auth-submit');
-                for (var i = 0; i < btns.length; i++) {
-                    if (btns[i] && btns[i].disabled) return true;
-                }
-            } catch (e) {}
-            return false;
-        }
-
         function show() {
-            if (!isAnySubmitDisabled()) return;
+            // Never show for hidden/non-rendered buttons (prevents any premature triggers).
+            try {
+                if (btnEl.hidden) return;
+                if (btnEl.offsetParent === null) return; // display:none or detached
+            } catch (e0) {}
+            if (!btnEl.disabled) return;
             var items = [];
             try { items = (typeof getItemsFn === 'function') ? (getItemsFn() || []) : []; } catch (e0) { items = []; }
             if (!items || items.length === 0) return;
@@ -2924,10 +2925,10 @@ const MemberModule = (function() {
         function hide() {
             pop.hidden = true;
         }
-
-        anchorEl.addEventListener('mouseenter', function() { show(); });
-        anchorEl.addEventListener('mouseleave', function(e) {
-            // Only hide when fully leaving the anchor (including popover)
+        
+        // Trigger ONLY when hovering directly over the button.
+        btnEl.addEventListener('mouseenter', function() { show(); });
+        btnEl.addEventListener('mouseleave', function(e) {
             var rt = e && e.relatedTarget;
             if (rt && pop.contains(rt)) return;
             hide();
@@ -2939,7 +2940,7 @@ const MemberModule = (function() {
             if (pop.hidden) return;
             var t = e && e.target;
             if (!t) return;
-            if (anchorEl.contains(t)) return;
+            if (btnEl.contains(t) || pop.contains(t)) return;
             hide();
         }, true);
     }
@@ -4339,9 +4340,8 @@ const MemberModule = (function() {
         createAuthWrapper.addEventListener('change', function() { updateSubmitButtonState(); }, true);
 
         // Hover popover listing all missing items (no toasts; button stays truly disabled)
-        attachMissingPopover(createAuthWrapper, function() {
-            return getCreatePostMissingList();
-        });
+        attachMissingPopoverToButton(createAuthLoginSubmitBtn, function() { return getCreatePostMissingList(); });
+        attachMissingPopoverToButton(createAuthRegisterSubmitBtn, function() { return getCreatePostMissingList(); });
 
         return true;
     }
