@@ -2722,32 +2722,46 @@ const FieldsetBuilder = (function(){
                 break;
 
             case 'session_pricing':
-                // Slot-based session times + ticket pricing groups (legacy Event Details behavior).
+                // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
 
-                // Track selected dates: { 'YYYY-MM-DD': { times: ['19:00', ...], edited: [true,false...] } }
+                // Track selected dates:
+                // { 'YYYY-MM-DD': { times: ['19:00', ...], edited: [true,false...], groups: ['A','A',...] } }
                 var spSessionData = {};
 
-                // Slot pricing state: slot 0 is always group G1; later slots default to same-as-above.
-                var spSlotState = []; // [{ sameAsAbove, groupKey }]
-                var spNextGroupNum = 2;
+                // Ticket-group popover state
+                var spTicketGroups = {}; // { A: groupEl, B: groupEl, ... } (groupEl has .fieldset-sessionpricing-pricing-group)
+                var spTicketGroupList = null; // container element for group list inside popover
+                var spTicketMenuOpen = false;
+                var spTicketMenuDocHandler = null;
+                var spActivePicker = null; // { dateStr, idx, timeInput, ticketBtn, rowEl }
 
-                function spEnsureSlot(idx) {
-                    while (spSlotState.length <= idx) {
-                        var i = spSlotState.length;
-                        if (i === 0) spSlotState.push({ sameAsAbove: false, groupKey: 'G1' });
-                        else spSlotState.push({ sameAsAbove: true, groupKey: 'G1' });
+                var spOpenGroupKey = null;
+                var spOpenGroupSnapshot = null;
+
+                function spGetSystemTicketIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_ticket ? String(sys.icon_ticket || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
                     }
                 }
-                function spAllocateGroupKey() {
-                    var k = 'G' + spNextGroupNum;
-                    spNextGroupNum++;
-                    return k;
+
+                function spFirstUnusedLetter() {
+                    for (var i = 0; i < 26; i++) {
+                        var key = String.fromCharCode(65 + i);
+                        if (!spTicketGroups[key]) return key;
+                    }
+                    // Extremely rare: beyond Z
+                    return 'G' + (Object.keys(spTicketGroups).length + 1);
                 }
-                function spEffectiveGroupKeyForSlot(idx) {
-                    spEnsureSlot(idx);
-                    if (idx === 0) return spSlotState[0].groupKey;
-                    return spSlotState[idx].sameAsAbove ? spSlotState[0].groupKey : spSlotState[idx].groupKey;
+
+                function spEnsureDefaultGroup() {
+                    if (!spTicketGroups['A']) spEnsureTicketGroup('A');
                 }
 
                 // Shared currency state across all pricing editors in this fieldset
@@ -3059,6 +3073,33 @@ const FieldsetBuilder = (function(){
 
                 var spPricingGroupsWrap = document.createElement('div');
                 spPricingGroupsWrap.className = 'fieldset-sessionpricing-pricing-groups';
+                spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover');
+                spPricingGroupsWrap.style.display = 'none';
+
+                // Top action: Create New Ticket Group
+                var spTicketGroupCreate = document.createElement('button');
+                spTicketGroupCreate.type = 'button';
+                spTicketGroupCreate.className = 'fieldset-sessionpricing-ticketgroup-create';
+                spTicketGroupCreate.textContent = 'Create New Ticket Group';
+                spTicketGroupCreate.addEventListener('click', function() {
+                    var k = spFirstUnusedLetter();
+                    spEnsureTicketGroup(k);
+                    if (spActivePicker) {
+                        spAssignGroupToActive(k);
+                    }
+                    // Open the editor for the new group
+                    spCloseAllGroupEditors();
+                    spOpenGroupKey = k;
+                    spOpenGroupSnapshot = [];
+                    spSetGroupEditorOpen(k, true);
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                });
+                spPricingGroupsWrap.appendChild(spTicketGroupCreate);
+
+                spTicketGroupList = document.createElement('div');
+                spTicketGroupList.className = 'fieldset-sessionpricing-ticketgroup-list';
+                spPricingGroupsWrap.appendChild(spTicketGroupList);
+
                 fieldset.appendChild(spPricingGroupsWrap);
 
                 setTimeout(function() {
@@ -3143,54 +3184,238 @@ const FieldsetBuilder = (function(){
                     }
                 }
 
-                function spEnsurePricingGroup(groupKey, labelText) {
-                    var existing = spPricingGroupsWrap.querySelector('.fieldset-sessionpricing-pricing-group[data-ticket-group-key="' + groupKey + '"]');
-                    if (existing) return existing;
-                    var group = document.createElement('div');
-                    group.className = 'fieldset-sessionpricing-pricing-group';
-                    group.dataset.ticketGroupKey = groupKey;
-                    var title = document.createElement('div');
-                    title.className = 'fieldset-sublabel';
-                    title.style.marginTop = '14px';
-                    title.textContent = labelText;
-                    group.appendChild(title);
-                    var editor = document.createElement('div');
-                    editor.className = 'fieldset-sessionpricing-pricing-editor';
-                    group.appendChild(editor);
+                function spReplaceEditorFromPricing(editorEl, pricingArr) {
+                    if (!editorEl) return;
+                    editorEl.innerHTML = '';
                     var seatingAreasContainer = document.createElement('div');
                     seatingAreasContainer.className = 'fieldset-sessionpricing-pricing-seatingareas-container';
-                    editor.appendChild(seatingAreasContainer);
-                    seatingAreasContainer.appendChild(spCreateSeatingAreaBlock(seatingAreasContainer));
+                    editorEl.appendChild(seatingAreasContainer);
+                    var seats = Array.isArray(pricingArr) ? pricingArr : [];
+                    if (seats.length === 0) seats = [{}];
+                    seats.forEach(function(seat) {
+                        var block = spCreateSeatingAreaBlock(seatingAreasContainer);
+                        seatingAreasContainer.appendChild(block);
+                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                        if (seatInput) seatInput.value = String((seat && seat.seating_area) || '');
+                        var tiersContainer = block.querySelector('.fieldset-sessionpricing-pricing-tiers-container');
+                        if (tiersContainer) tiersContainer.innerHTML = '';
+                        var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
+                        if (tiers.length === 0) tiers = [{}];
+                        tiers.forEach(function(tierObj) {
+                            var tierBlock = spCreatePricingTierBlock(tiersContainer);
+                            tiersContainer.appendChild(tierBlock);
+                            var tierNameInput = tierBlock.querySelector('.fieldset-row input.fieldset-input');
+                            if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
+                            var currInput = tierBlock.querySelector('input.component-currencycompact-menu-button-input');
+                            if (currInput) currInput.value = String((tierObj && tierObj.currency) || '');
+                            var inputs = tierBlock.querySelectorAll('input.fieldset-input');
+                            var priceInput = inputs && inputs.length ? inputs[inputs.length - 1] : null;
+                            if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
+                        });
+                        spUpdateTierButtons(tiersContainer);
+                    });
                     spUpdateSeatingAreaButtons(seatingAreasContainer);
-                    spPricingGroupsWrap.appendChild(group);
+                }
+
+                function spSetGroupEditorOpen(groupKey, isOpen) {
+                    var g = spTicketGroups[String(groupKey || '')];
+                    if (!g) return;
+                    var wrap = g.querySelector('.fieldset-sessionpricing-ticketgroup-editorwrap');
+                    if (!wrap) return;
+                    wrap.style.display = isOpen ? '' : 'none';
+                    g.classList.toggle('fieldset-sessionpricing-pricing-group--open', !!isOpen);
+                }
+
+                function spCloseAllGroupEditors() {
+                    Object.keys(spTicketGroups).forEach(function(k) {
+                        spSetGroupEditorOpen(k, false);
+                    });
+                    spOpenGroupKey = null;
+                    spOpenGroupSnapshot = null;
+                }
+
+                function spAssignGroupToActive(groupKey) {
+                    if (!spActivePicker || !spActivePicker.timeInput || !spActivePicker.ticketBtn) return;
+                    var dateStr = spActivePicker.dateStr;
+                    var idx = spActivePicker.idx;
+                    var data = spSessionData[dateStr];
+                    if (!data) return;
+                    if (!Array.isArray(data.groups)) data.groups = [];
+                    data.groups[idx] = groupKey;
+                    spActivePicker.timeInput.dataset.ticketGroupKey = groupKey;
+                    var letterEl = spActivePicker.ticketBtn.querySelector('.fieldset-sessionpricing-ticketgroup-letter');
+                    if (letterEl) letterEl.textContent = groupKey;
+                }
+
+                function spCloseTicketMenu() {
+                    if (!spTicketMenuOpen) return;
+                    spTicketMenuOpen = false;
+                    spPricingGroupsWrap.classList.remove('fieldset-sessionpricing-ticketgroup-popover--open');
+                    spPricingGroupsWrap.style.display = 'none';
+                    spActivePicker = null;
+                    spCloseAllGroupEditors();
+                    if (spTicketMenuDocHandler) {
+                        try { document.removeEventListener('click', spTicketMenuDocHandler, true); } catch (e) {}
+                        spTicketMenuDocHandler = null;
+                    }
+                }
+
+                function spOpenTicketMenu(anchorRowEl, pickerObj) {
+                    if (!anchorRowEl || !pickerObj) return;
+                    spEnsureDefaultGroup();
+                    spActivePicker = pickerObj;
+
+                    // Move popover directly under the clicked row
+                    try { anchorRowEl.parentNode.insertBefore(spPricingGroupsWrap, anchorRowEl.nextSibling); } catch (e) {}
+
+                    // Ensure active row has a group assigned
+                    var currentKey = '';
+                    try { currentKey = String(pickerObj.timeInput.dataset.ticketGroupKey || '').trim(); } catch (e0) { currentKey = ''; }
+                    if (!currentKey) currentKey = 'A';
+                    spAssignGroupToActive(currentKey);
+
+                    spPricingGroupsWrap.style.display = '';
+                    spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover--open');
+                    spTicketMenuOpen = true;
+
+                    // Close when clicking outside (Formbuilder-style)
+                    spTicketMenuDocHandler = function(ev) {
+                        try {
+                            if (!spPricingGroupsWrap.contains(ev.target) && !(pickerObj.ticketBtn && pickerObj.ticketBtn.contains(ev.target))) {
+                                spCloseTicketMenu();
+                            }
+                        } catch (e) {}
+                    };
+                    try { document.addEventListener('click', spTicketMenuDocHandler, true); } catch (e1) {}
+                }
+
+                function spEnsureTicketGroup(groupKey) {
+                    var key = String(groupKey || '').trim();
+                    if (!key) return null;
+                    if (spTicketGroups[key]) return spTicketGroups[key];
+
+                    var group = document.createElement('div');
+                    group.className = 'fieldset-sessionpricing-pricing-group';
+                    group.dataset.ticketGroupKey = key;
+
+                    // Header row: select group + edit pencil
+                    var header = document.createElement('div');
+                    header.className = 'fieldset-sessionpricing-ticketgroup-header';
+
+                    var selectBtn = document.createElement('button');
+                    selectBtn.type = 'button';
+                    selectBtn.className = 'fieldset-sessionpricing-ticketgroup-select';
+                    selectBtn.textContent = 'Ticket Group ' + key;
+                    selectBtn.addEventListener('click', function() {
+                        spAssignGroupToActive(key);
+                        spCloseTicketMenu();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    header.appendChild(selectBtn);
+
+                    var editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'fieldset-sessionpricing-ticketgroup-edit';
+                    editBtn.textContent = '✎';
+                    editBtn.addEventListener('click', function(e) {
+                        try { e.stopPropagation(); } catch (e0) {}
+                        if (spOpenGroupKey && spOpenGroupKey !== key) {
+                            spCloseAllGroupEditors();
+                        }
+                        var isOpen = group.classList.contains('fieldset-sessionpricing-pricing-group--open');
+                        if (!isOpen) {
+                            var editorEl0 = group.querySelector('.fieldset-sessionpricing-pricing-editor');
+                            spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
+                            spOpenGroupKey = key;
+                        } else {
+                            spOpenGroupSnapshot = null;
+                            spOpenGroupKey = null;
+                        }
+                        spSetGroupEditorOpen(key, !isOpen);
+                    });
+                    header.appendChild(editBtn);
+
+                    group.appendChild(header);
+
+                    var editorWrap = document.createElement('div');
+                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-editorwrap';
+                    editorWrap.style.display = 'none';
+
+                    var editor = document.createElement('div');
+                    editor.className = 'fieldset-sessionpricing-pricing-editor';
+                    editorWrap.appendChild(editor);
+                    spReplaceEditorFromPricing(editor, []);
+
+                    var actions = document.createElement('div');
+                    actions.className = 'fieldset-sessionpricing-ticketgroup-actions';
+
+                    var applyBtn = document.createElement('button');
+                    applyBtn.type = 'button';
+                    applyBtn.className = 'fieldset-sessionpricing-ticketgroup-apply';
+                    applyBtn.textContent = 'Apply';
+                    applyBtn.addEventListener('click', function() {
+                        spOpenGroupSnapshot = null;
+                        spOpenGroupKey = null;
+                        spSetGroupEditorOpen(key, false);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    actions.appendChild(applyBtn);
+
+                    var deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'fieldset-sessionpricing-ticketgroup-delete';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.addEventListener('click', function() {
+                        try { group.remove(); } catch (e0) {}
+                        delete spTicketGroups[key];
+                        spOpenGroupKey = null;
+                        spOpenGroupSnapshot = null;
+
+                        // Reassign any session times using this group to A (or the first remaining)
+                        var fallbackKey = 'A';
+                        if (!spTicketGroups[fallbackKey]) {
+                            var keys = Object.keys(spTicketGroups).sort();
+                            fallbackKey = keys.length ? keys[0] : 'A';
+                            if (!spTicketGroups[fallbackKey]) spEnsureTicketGroup(fallbackKey);
+                        }
+                        Object.keys(spSessionData).forEach(function(ds) {
+                            var data = spSessionData[ds];
+                            if (!data || !Array.isArray(data.groups)) return;
+                            for (var i = 0; i < data.groups.length; i++) {
+                                if (String(data.groups[i] || '') === key) data.groups[i] = fallbackKey;
+                            }
+                        });
+                        spRenderSessions();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                    });
+                    actions.appendChild(deleteBtn);
+
+                    var cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.className = 'fieldset-sessionpricing-ticketgroup-cancel';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.addEventListener('click', function() {
+                        if (spOpenGroupKey === key && spOpenGroupSnapshot) {
+                            spReplaceEditorFromPricing(editor, spOpenGroupSnapshot);
+                        }
+                        spOpenGroupSnapshot = null;
+                        spOpenGroupKey = null;
+                        spSetGroupEditorOpen(key, false);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    actions.appendChild(cancelBtn);
+
+                    editorWrap.appendChild(actions);
+                    group.appendChild(editorWrap);
+
+                    spTicketGroups[key] = group;
+                    if (spTicketGroupList) spTicketGroupList.appendChild(group);
                     return group;
                 }
 
-                function spRenderPricingGroups() {
-                    spEnsureSlot(0);
-                    spEnsurePricingGroup(spSlotState[0].groupKey, 'Ticket Pricing');
-                    for (var i = 1; i < spSlotState.length; i++) {
-                        spEnsureSlot(i);
-                        if (!spSlotState[i].sameAsAbove) {
-                            var k = spSlotState[i].groupKey;
-                            if (!k || k === spSlotState[0].groupKey) spSlotState[i].groupKey = spAllocateGroupKey();
-                            spEnsurePricingGroup(spSlotState[i].groupKey, 'Ticket Pricing (Session Time ' + (i + 1) + ')');
-                        }
-                    }
-                    // Visibility: show base + any custom group; hide groups not referenced by current slot state.
-                    var allGroups = spPricingGroupsWrap.querySelectorAll('.fieldset-sessionpricing-pricing-group');
-                    allGroups.forEach(function(g) {
-                        var key = String(g.dataset.ticketGroupKey || '');
-                        if (key === spSlotState[0].groupKey) { g.style.display = ''; return; }
-                        var needed = false;
-                        for (var i = 1; i < spSlotState.length; i++) {
-                            if (!spSlotState[i].sameAsAbove && spSlotState[i].groupKey === key) needed = true;
-                        }
-                        g.style.display = needed ? '' : 'none';
-                    });
-                }
-
                 function spRenderSessions() {
+                    // Close the ticket menu before rerendering (prevents stale anchors)
+                    spCloseTicketMenu();
                     spSessionsContainer.innerHTML = '';
                     var sortedDates = Object.keys(spSessionData).sort();
                     sortedDates.forEach(function(dateStr) {
@@ -3198,7 +3423,6 @@ const FieldsetBuilder = (function(){
                         var group = document.createElement('div');
                         group.className = 'fieldset-sessionpricing-sessions-group';
                         data.times.forEach(function(timeVal, idx) {
-                            spEnsureSlot(idx);
                             var row = document.createElement('div');
                             row.className = 'fieldset-sessionpricing-sessions-row';
                             if (idx === 0) {
@@ -3222,7 +3446,10 @@ const FieldsetBuilder = (function(){
                             timeInput.value = timeVal;
                             timeInput.dataset.date = dateStr;
                             timeInput.dataset.idx = idx;
-                            timeInput.dataset.ticketGroupKey = spEffectiveGroupKeyForSlot(idx);
+                            if (!Array.isArray(data.groups)) data.groups = [];
+                            spEnsureDefaultGroup();
+                            if (!data.groups[idx]) data.groups[idx] = 'A';
+                            timeInput.dataset.ticketGroupKey = String(data.groups[idx] || 'A');
                             timeInput.addEventListener('focus', function() {
                                 var input = this;
                                 setTimeout(function() { input.select(); }, 0);
@@ -3269,100 +3496,6 @@ const FieldsetBuilder = (function(){
                             timeWrapper.appendChild(timeInput);
                             row.appendChild(timeWrapper);
 
-                            if (idx > 0) {
-                                var sameWrap = document.createElement('div');
-                                sameWrap.className = 'fieldset-sessionpricing-sameasabove-toggle';
-                                sameWrap.style.display = 'flex';
-                                sameWrap.style.gap = '8px';
-                                sameWrap.style.alignItems = 'center';
-                                sameWrap.style.marginLeft = '8px';
-
-                                var yes = document.createElement('input');
-                                yes.type = 'radio';
-                                yes.name = 'spSamePricingSlot' + idx;
-                                yes.value = '1';
-                                yes.checked = spSlotState[idx].sameAsAbove === true;
-                                var yesLbl = document.createElement('label');
-                                yesLbl.style.display = 'flex';
-                                yesLbl.style.gap = '4px';
-                                yesLbl.style.alignItems = 'center';
-                                yesLbl.appendChild(yes);
-                                yesLbl.appendChild(document.createTextNode('Same as above'));
-
-                                var no = document.createElement('input');
-                                no.type = 'radio';
-                                no.name = 'spSamePricingSlot' + idx;
-                                no.value = '0';
-                                no.checked = spSlotState[idx].sameAsAbove !== true;
-                                var noLbl = document.createElement('label');
-                                noLbl.style.display = 'flex';
-                                noLbl.style.gap = '4px';
-                                noLbl.style.alignItems = 'center';
-                                noLbl.appendChild(no);
-                                noLbl.appendChild(document.createTextNode('Custom'));
-
-                                function applyChoice(isSame) {
-                                    spEnsureSlot(idx);
-                                    if (isSame) {
-                                        spSlotState[idx].sameAsAbove = true;
-                                        spSlotState[idx].groupKey = spSlotState[0].groupKey;
-                                    } else {
-                                        spSlotState[idx].sameAsAbove = false;
-                                        if (!spSlotState[idx].groupKey || spSlotState[idx].groupKey === spSlotState[0].groupKey) {
-                                            // Seed pricing from base group before switching, to match user expectation.
-                                            try {
-                                                var baseEditor = spPricingGroupsWrap.querySelector('.fieldset-sessionpricing-pricing-group[data-ticket-group-key="' + spSlotState[0].groupKey + '"] .fieldset-sessionpricing-pricing-editor');
-                                                var basePricing = spExtractPricingFromEditor(baseEditor);
-                                                spSlotState[idx].groupKey = spAllocateGroupKey();
-                                                spRenderPricingGroups();
-                                                var newEditor = spPricingGroupsWrap.querySelector('.fieldset-sessionpricing-pricing-group[data-ticket-group-key="' + spSlotState[idx].groupKey + '"] .fieldset-sessionpricing-pricing-editor');
-                                                // Rebuild its content by copying values (best-effort)
-                                                if (newEditor && Array.isArray(basePricing) && basePricing.length) {
-                                                    newEditor.innerHTML = '';
-                                                    var seatingAreasContainer = document.createElement('div');
-                                                    seatingAreasContainer.className = 'fieldset-sessionpricing-pricing-seatingareas-container';
-                                                    newEditor.appendChild(seatingAreasContainer);
-                                                    basePricing.forEach(function(seat) {
-                                                        var block = spCreateSeatingAreaBlock(seatingAreasContainer);
-                                                        seatingAreasContainer.appendChild(block);
-                                                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
-                                                        if (seatInput) seatInput.value = String((seat && seat.seating_area) || '');
-                                                        var tiersContainer = block.querySelector('.fieldset-sessionpricing-pricing-tiers-container');
-                                                        if (tiersContainer) tiersContainer.innerHTML = '';
-                                                        var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
-                                                        if (tiers.length === 0) tiers = [{}];
-                                                        tiers.forEach(function(tierObj) {
-                                                            var tierBlock = spCreatePricingTierBlock(tiersContainer);
-                                                            tiersContainer.appendChild(tierBlock);
-                                                            var tierNameInput = tierBlock.querySelector('.fieldset-row input.fieldset-input');
-                                                            if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
-                                                            var currInput = tierBlock.querySelector('input.component-currencycompact-menu-button-input');
-                                                            if (currInput) currInput.value = String((tierObj && tierObj.currency) || '');
-                                                            var inputs = tierBlock.querySelectorAll('input.fieldset-input');
-                                                            var priceInput = inputs && inputs.length ? inputs[inputs.length - 1] : null;
-                                                            if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
-                                                        });
-                                                        spUpdateTierButtons(tiersContainer);
-                                                    });
-                                                    spUpdateSeatingAreaButtons(seatingAreasContainer);
-                                                }
-                                            } catch (e0) {
-                                                spSlotState[idx].groupKey = spAllocateGroupKey();
-                                            }
-                                        }
-                                    }
-                                    spRenderPricingGroups();
-                                    spRenderSessions();
-                                }
-
-                                yes.addEventListener('change', function() { if (this.checked) applyChoice(true); });
-                                no.addEventListener('change', function() { if (this.checked) applyChoice(false); });
-
-                                sameWrap.appendChild(yesLbl);
-                                sameWrap.appendChild(noLbl);
-                                row.appendChild(sameWrap);
-                            }
-
                             var spMaxTimesPerDate = 10;
                             var addBtn = document.createElement('button');
                             addBtn.type = 'button';
@@ -3376,11 +3509,12 @@ const FieldsetBuilder = (function(){
                                 (function(dateStr, idx) {
                                     addBtn.addEventListener('click', function() {
                                         var newSlotIdx = idx + 1;
-                                        spEnsureSlot(newSlotIdx);
                                         var autofillVal = spGetAutofillForSlot(dateStr, newSlotIdx);
                                         spSessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
                                         spSessionData[dateStr].edited.splice(newSlotIdx, 0, false);
-                                        spRenderPricingGroups();
+                                        if (!Array.isArray(spSessionData[dateStr].groups)) spSessionData[dateStr].groups = [];
+                                        var inheritKey = spSessionData[dateStr].groups[idx] || 'A';
+                                        spSessionData[dateStr].groups.splice(newSlotIdx, 0, inheritKey);
                                         spRenderSessions();
                                     });
                                 })(dateStr, idx);
@@ -3400,11 +3534,46 @@ const FieldsetBuilder = (function(){
                                     removeBtn.addEventListener('click', function() {
                                         spSessionData[dateStr].times.splice(idx, 1);
                                         spSessionData[dateStr].edited.splice(idx, 1);
+                                        if (Array.isArray(spSessionData[dateStr].groups)) spSessionData[dateStr].groups.splice(idx, 1);
                                         spRenderSessions();
                                     });
                                 })(dateStr, idx);
                             }
                             row.appendChild(removeBtn);
+
+                            // Ticket group button (icon + letter)
+                            var ticketBtn = document.createElement('button');
+                            ticketBtn.type = 'button';
+                            ticketBtn.className = 'fieldset-sessionpricing-ticketgroup-button';
+                            ticketBtn.title = 'Ticket Group';
+                            ticketBtn.style.padding = '10px';
+                            ticketBtn.style.boxSizing = 'border-box';
+
+                            var iconUrl = spGetSystemTicketIconUrl();
+                            if (iconUrl) {
+                                var img = document.createElement('img');
+                                img.className = 'fieldset-sessionpricing-ticketgroup-icon';
+                                img.alt = '';
+                                img.src = iconUrl;
+                                ticketBtn.appendChild(img);
+                            }
+                            var letter = document.createElement('div');
+                            letter.className = 'fieldset-sessionpricing-ticketgroup-letter';
+                            letter.textContent = String(data.groups[idx] || 'A');
+                            ticketBtn.appendChild(letter);
+
+                            (function(dateStr, idx, timeInput, ticketBtn, rowEl) {
+                                ticketBtn.addEventListener('click', function(e) {
+                                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                                    var picker = { dateStr: dateStr, idx: idx, timeInput: timeInput, ticketBtn: ticketBtn, rowEl: rowEl };
+                                    if (spTicketMenuOpen && spActivePicker && spActivePicker.ticketBtn === ticketBtn) {
+                                        spCloseTicketMenu();
+                                        return;
+                                    }
+                                    spOpenTicketMenu(rowEl, picker);
+                                });
+                            })(dateStr, idx, timeInput, ticketBtn, row);
+                            row.appendChild(ticketBtn);
 
                             group.appendChild(row);
                         });
@@ -3421,20 +3590,18 @@ const FieldsetBuilder = (function(){
                             delete spSessionData[iso];
                             day.classList.remove('fieldset-sessionpricing-calendar-day--selected');
                         } else {
-                            spEnsureSlot(0);
+                            spEnsureDefaultGroup();
                             var autofillVal = spGetAutofillForSlot(iso, 0);
-                            spSessionData[iso] = { times: [autofillVal], edited: [false] };
+                            spSessionData[iso] = { times: [autofillVal], edited: [false], groups: ['A'] };
                             day.classList.add('fieldset-sessionpricing-calendar-day--selected');
                         }
-                        spRenderPricingGroups();
                         spRenderSessions();
                         try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e1) {}
                     }
                 });
 
                 // Initial UI state
-                spEnsureSlot(0);
-                spRenderPricingGroups();
+                spEnsureDefaultGroup();
                 spRenderSessions();
 
                 break;
@@ -4018,22 +4185,49 @@ const FieldsetBuilder = (function(){
                         if (!isTimeHHMM(ti2.value)) return false;
                     }
 
-                    // Ticket pricing groups must be complete for every VISIBLE pricing editor (G1 always visible).
+                    // Ticket pricing groups must be complete for every group referenced by any session time,
+                    // regardless of whether the popover is currently open/visible.
                     var groupsWrap = fieldset.querySelector('.fieldset-sessionpricing-pricing-groups');
                     if (!groupsWrap) return false;
                     var groups = groupsWrap.querySelectorAll('.fieldset-sessionpricing-pricing-group');
                     if (!groups || groups.length === 0) return false;
-                    var anyVisibleGroup = false;
-                    for (var g = 0; g < groups.length; g++) {
-                        var grp = groups[g];
-                        if (!grp) continue;
-                        // Only enforce visible groups (hidden custom groups should not block completion)
-                        if (!isVisibleControl(grp)) continue;
-                        anyVisibleGroup = true;
-                        var editor = grp.querySelector('.fieldset-sessionpricing-pricing-editor') || grp;
-                        if (!allVisibleControlsFilled(editor)) return false;
+
+                    function allControlsFilledNoVisibility(containerEl) {
+                        var els = containerEl.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
+                        if (!els || els.length === 0) return false;
+                        for (var i = 0; i < els.length; i++) {
+                            var el = els[i];
+                            if (!el) return false;
+                            if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
+                            if (el.type === 'checkbox' || el.type === 'radio') {
+                                if (!el.checked) return false;
+                                continue;
+                            }
+                            var val = String(el.value || '').trim();
+                            if (!val) return false;
+                        }
+                        return true;
                     }
-                    return anyVisibleGroup;
+
+                    var referenced = {};
+                    for (var tgi = 0; tgi < timeInputs2.length; tgi++) {
+                        var ti3 = timeInputs2[tgi];
+                        if (!ti3 || !isVisibleControl(ti3)) continue;
+                        var gk = ti3.dataset ? String(ti3.dataset.ticketGroupKey || '').trim() : '';
+                        if (!gk) return false; // every visible time must have a group
+                        referenced[gk] = true;
+                    }
+                    var refKeys = Object.keys(referenced);
+                    if (refKeys.length === 0) return false;
+
+                    for (var rk = 0; rk < refKeys.length; rk++) {
+                        var key = refKeys[rk];
+                        var grpEl = groupsWrap.querySelector('.fieldset-sessionpricing-pricing-group[data-ticket-group-key="' + key + '"]');
+                        if (!grpEl) return false;
+                        var editor = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor') || grpEl;
+                        if (!allControlsFilledNoVisibility(editor)) return false;
+                    }
+                    return true;
                 }
                 case 'images': {
                     var meta = fieldset.querySelector('input.fieldset-images-meta');
@@ -10100,4 +10294,5 @@ window.WelcomeModalComponent = WelcomeModalComponent;
 window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
+
 

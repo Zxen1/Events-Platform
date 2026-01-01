@@ -827,6 +827,151 @@
     flex: 0 0 36px;
 }
 
+/* Appearance - SessionPricing Ticket Group Button (icon + letter) */
+.fieldset-sessionpricing-ticketgroup-button {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+    position: relative;
+    box-sizing: border-box;
+    padding: 10px; /* site-wide padding rule */
+}
+
+.fieldset-sessionpricing-ticketgroup-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* never stretch the SVG */
+}
+
+.fieldset-sessionpricing-ticketgroup-letter {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    pointer-events: none;
+}
+
+/* Appearance - SessionPricing Ticket Group Popover (Formbuilder-like) */
+.fieldset-sessionpricing-ticketgroup-popover {
+    width: 100%;
+    margin-top: 8px;
+    background: #062038;
+    border: 1px solid #3b82f5;
+    border-radius: 5px;
+    padding: 10px;
+    box-sizing: border-box;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.fieldset-sessionpricing-ticketgroup-create {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 10px;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.fieldset-sessionpricing-ticketgroup-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fieldset-sessionpricing-ticketgroup-header {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 5px;
+}
+
+.fieldset-sessionpricing-ticketgroup-select {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.fieldset-sessionpricing-ticketgroup-edit {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #222;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.fieldset-sessionpricing-ticketgroup-editorwrap {
+    margin-top: 8px;
+    padding: 10px;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 5px;
+}
+
+.fieldset-sessionpricing-ticketgroup-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.fieldset-sessionpricing-ticketgroup-apply,
+.fieldset-sessionpricing-ticketgroup-delete,
+.fieldset-sessionpricing-ticketgroup-cancel {
+    height: 36px;
+    padding: 0 10px;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.fieldset-sessionpricing-ticketgroup-delete {
+    border-color: #f87171;
+    color: #f87171;
+}
+
 /* Appearance - SessionPricing Calendar */
 .fieldset-sessionpricing-calendar-container {
     width: 100%;
