@@ -3746,7 +3746,7 @@ const FieldsetBuilder = (function(){
                         spOpenGroupKey = null;
                         spOpenGroupSnapshot = null;
 
-                        // Reassign any session times using this group back to A (base group)
+                        // Allow gaps. Any session times using the deleted group fall back to A.
                         Object.keys(spSessionData).forEach(function(ds) {
                             var data = spSessionData[ds];
                             if (!data || !Array.isArray(data.groups)) return;
@@ -3872,11 +3872,72 @@ const FieldsetBuilder = (function(){
                                 if (v.length >= 2) v = v.substring(0, 2) + ':' + v.substring(2, 4);
                                 this.value = v;
                             });
+                            function spTimeToMinutes(timeStr) {
+                                var t = String(timeStr || '').trim();
+                                if (!t) return null;
+                                var m = t.match(/^(\d{1,2}):(\d{2})$/);
+                                if (!m) return null;
+                                var hh = parseInt(m[1], 10);
+                                var mm = parseInt(m[2], 10);
+                                if (isNaN(hh) || isNaN(mm)) return null;
+                                if (hh < 0 || hh > 23) return null;
+                                if (mm < 0 || mm > 59) return null;
+                                return (hh * 60) + mm;
+                            }
+                            function spSortTimesForDate(dateKey) {
+                                try {
+                                    var ds = String(dateKey || '');
+                                    var d = spSessionData[ds];
+                                    if (!d || !Array.isArray(d.times)) return false;
+                                    if (!Array.isArray(d.edited)) d.edited = [];
+                                    if (!Array.isArray(d.groups)) d.groups = [];
+
+                                    var items = d.times.map(function(tv, i) {
+                                        return {
+                                            i: i,
+                                            time: String(tv || ''),
+                                            edited: !!d.edited[i],
+                                            group: String(d.groups[i] || 'A')
+                                        };
+                                    });
+
+                                    // Stable sort: valid times first (ascending), blanks/invalid last, preserve relative order for ties.
+                                    items.sort(function(a, b) {
+                                        var am = spTimeToMinutes(a.time);
+                                        var bm = spTimeToMinutes(b.time);
+                                        var aValid = (am !== null);
+                                        var bValid = (bm !== null);
+                                        if (aValid && bValid) {
+                                            if (am < bm) return -1;
+                                            if (am > bm) return 1;
+                                            return a.i - b.i;
+                                        }
+                                        if (aValid && !bValid) return -1;
+                                        if (!aValid && bValid) return 1;
+                                        return a.i - b.i;
+                                    });
+
+                                    var changed = false;
+                                    for (var k = 0; k < items.length; k++) {
+                                        if (items[k].i !== k) { changed = true; break; }
+                                    }
+                                    if (!changed) return false;
+
+                                    d.times = items.map(function(it) { return it.time; });
+                                    d.edited = items.map(function(it) { return it.edited; });
+                                    d.groups = items.map(function(it) { return it.group; });
+                                    return true;
+                                } catch (eSort) {
+                                    return false;
+                                }
+                            }
                             (function(dateStr, idx) {
                                 timeInput.addEventListener('blur', function() {
                                     var raw = String(this.value || '').replace(/[^0-9]/g, '');
                                     if (raw === '') {
                                         spSessionData[dateStr].times[idx] = '';
+                                        // Sort after user finishes editing (blur), even if clearing, so blanks drift to the end.
+                                        if (spSortTimesForDate(dateStr)) spRenderSessions();
                                         try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                                         return;
                                     }
@@ -3893,15 +3954,22 @@ const FieldsetBuilder = (function(){
                                         spSessionData[dateStr].times[idx] = newTime;
                                         spSessionData[dateStr].edited[idx] = true;
                                         spAutofillTimes(dateStr, idx, newTime);
-                                        spSessionsContainer.querySelectorAll('.fieldset-sessionpricing-sessions-time-input').forEach(function(input) {
-                                            var d0 = input.dataset.date;
-                                            var i0 = parseInt(input.dataset.idx, 10);
-                                            if (d0 && spSessionData[d0] && spSessionData[d0].times[i0] !== undefined) input.value = spSessionData[d0].times[i0];
-                                        });
+                                        // Sort only after the user finishes typing (blur), and keep group/edited aligned with the time.
+                                        if (spSortTimesForDate(dateStr)) {
+                                            spRenderSessions();
+                                        } else {
+                                            // Still sync any autofill results without rerendering if order didn't change.
+                                            spSessionsContainer.querySelectorAll('.fieldset-sessionpricing-sessions-time-input').forEach(function(input) {
+                                                var d0 = input.dataset.date;
+                                                var i0 = parseInt(input.dataset.idx, 10);
+                                                if (d0 && spSessionData[d0] && spSessionData[d0].times[i0] !== undefined) input.value = spSessionData[d0].times[i0];
+                                            });
+                                        }
                                         try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                                     } else {
                                         this.value = '';
                                         spSessionData[dateStr].times[idx] = '';
+                                        if (spSortTimesForDate(dateStr)) spRenderSessions();
                                         try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                                     }
                                 });

@@ -986,7 +986,7 @@
 /* Sticky active group header inside scrollable popover */
 .fieldset-sessionpricing-ticketgroup-header--sticky {
     position: sticky;
-    top: 0;
+    top: 10px;
     z-index: calc(var(--layer-menu, 85) + 1);
     background: #3b82f5;
     border-color: #3b82f5;
