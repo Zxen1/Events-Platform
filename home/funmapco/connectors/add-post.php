@@ -388,6 +388,7 @@ foreach ($byLoc as $locNum => $entries) {
   $ticketPricing = [];
   $itemPricing = null;
   $checkout = null;
+  $sessionPricing = null;
 
   foreach ($entries as $e) {
     $type = isset($e['type']) ? (string)$e['type'] : '';
@@ -398,6 +399,10 @@ foreach ($byLoc as $locNum => $entries) {
 
     if ($key === 'checkout' || $baseType === 'checkout') {
       $checkout = $val;
+      continue;
+    }
+    if ($baseType === 'session_pricing') {
+      $sessionPricing = is_array($val) ? $val : null;
       continue;
     }
     if ($baseType === 'sessions') {
@@ -479,14 +484,22 @@ foreach ($byLoc as $locNum => $entries) {
   }
 
   // session_summary (simple)
-  if (is_array($sessions) && count($sessions) > 0) {
-    $card['session_summary'] = 'Sessions: ' . count($sessions);
+  $sessionsForSummary = $sessions;
+  if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
+    $sessionsForSummary = $sessionPricing['sessions'];
+  }
+  if (is_array($sessionsForSummary) && count($sessionsForSummary) > 0) {
+    $card['session_summary'] = 'Sessions: ' . count($sessionsForSummary);
   }
 
   // price_summary (simple)
   $priceCount = 0;
-  if (is_array($ticketPricing)) {
-    foreach ($ticketPricing as $seat) {
+  $ticketPricingForSummary = $ticketPricing;
+  if (is_array($sessionPricing) && isset($sessionPricing['ticket_pricing']) && is_array($sessionPricing['ticket_pricing'])) {
+    $ticketPricingForSummary = $sessionPricing['ticket_pricing'];
+  }
+  if (is_array($ticketPricingForSummary)) {
+    foreach ($ticketPricingForSummary as $seat) {
       if (!is_array($seat)) continue;
       $tiers = $seat['tiers'] ?? [];
       if (is_array($tiers)) $priceCount += count($tiers);
@@ -572,46 +585,105 @@ foreach ($byLoc as $locNum => $entries) {
     $primaryTitle = (string) $titleParam;
   }
 
-  // Insert children: sessions
-  if (is_array($sessions)) {
-    $stmtChild = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
-      VALUES (?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NOW(), NOW())");
-    if ($stmtChild) {
-      foreach ($sessions as $s) {
-        if (!is_array($s)) continue;
-        $date = isset($s['date']) ? (string)$s['date'] : '';
-        $times = isset($s['times']) && is_array($s['times']) ? $s['times'] : [];
-        foreach ($times as $t) {
-          $time = is_string($t) ? trim($t) : '';
-          if ($date === '' || $time === '') continue;
-          $stmtChild->bind_param('iss', $mapCardId, $date, $time);
-          if (!$stmtChild->execute()) { $stmtChild->close(); abort_with_error($mysqli, 500, 'Insert child sessions', $transactionActive); }
-        }
-      }
-      $stmtChild->close();
-    }
+  // Insert sessions + ticket pricing
+  // - Legacy `sessions` / `ticket-pricing` still supported
+  // - New merged `session_pricing` is preferred and writes into dedicated tables
+
+  $sessionsToWrite = $sessions;
+  $ticketPricingToWrite = $ticketPricing;
+  $writeSessionPricingToNewTables = false;
+
+  if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
+    $sessionsToWrite = $sessionPricing['sessions'];
+    $ticketPricingToWrite = (isset($sessionPricing['ticket_pricing']) && is_array($sessionPricing['ticket_pricing'])) ? $sessionPricing['ticket_pricing'] : [];
+    $writeSessionPricingToNewTables = true;
   }
 
-  // Insert children: ticket pricing
-  if (is_array($ticketPricing)) {
-    $stmtPrice = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
-      VALUES (?, NULL, NULL, ?, ?, NULL, NULL, ?, ?, NOW(), NOW())");
-    if ($stmtPrice) {
-      foreach ($ticketPricing as $seat) {
-        if (!is_array($seat)) continue;
-        $seatName = isset($seat['seating_area']) ? (string)$seat['seating_area'] : '';
-        $tiers = isset($seat['tiers']) && is_array($seat['tiers']) ? $seat['tiers'] : [];
-        foreach ($tiers as $tier) {
-          if (!is_array($tier)) continue;
-          $tierName = isset($tier['pricing_tier']) ? (string)$tier['pricing_tier'] : '';
-          $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
-          $amt = normalize_price_amount($tier['price'] ?? null);
-          if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
-          $stmtPrice->bind_param('issss', $mapCardId, $seatName, $tierName, $amt, $curr);
-          if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert child pricing', $transactionActive); }
+  if ($writeSessionPricingToNewTables) {
+    // Option C (simplified): one pricing group for this map card
+    $ticketGroupKey = 'G1';
+
+    if (is_array($sessionsToWrite)) {
+      $stmtSess = $mysqli->prepare("INSERT INTO post_sessions (map_card_id, session_date, session_time, ticket_group_key, created_at, updated_at)
+        VALUES (?, ?, ?, ?, NOW(), NOW())");
+      if ($stmtSess) {
+        foreach ($sessionsToWrite as $s) {
+          if (!is_array($s)) continue;
+          $date = isset($s['date']) ? (string)$s['date'] : '';
+          $times = isset($s['times']) && is_array($s['times']) ? $s['times'] : [];
+          foreach ($times as $t) {
+            $time = is_string($t) ? trim($t) : '';
+            if ($date === '' || $time === '') continue;
+            $stmtSess->bind_param('isss', $mapCardId, $date, $time, $ticketGroupKey);
+            if (!$stmtSess->execute()) { $stmtSess->close(); abort_with_error($mysqli, 500, 'Insert post_sessions', $transactionActive); }
+          }
         }
+        $stmtSess->close();
       }
-      $stmtPrice->close();
+    }
+
+    if (is_array($ticketPricingToWrite)) {
+      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, seating_area, pricing_tier, price, currency, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
+      if ($stmtPrice) {
+        foreach ($ticketPricingToWrite as $seat) {
+          if (!is_array($seat)) continue;
+          $seatName = isset($seat['seating_area']) ? (string)$seat['seating_area'] : '';
+          $tiers = isset($seat['tiers']) && is_array($seat['tiers']) ? $seat['tiers'] : [];
+          foreach ($tiers as $tier) {
+            if (!is_array($tier)) continue;
+            $tierName = isset($tier['pricing_tier']) ? (string)$tier['pricing_tier'] : '';
+            $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
+            $amt = normalize_price_amount($tier['price'] ?? null);
+            if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
+            $stmtPrice->bind_param('isssss', $mapCardId, $ticketGroupKey, $seatName, $tierName, $amt, $curr);
+            if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
+          }
+        }
+        $stmtPrice->close();
+      }
+    }
+  } else {
+    // Legacy: write into post_children (temporary compatibility)
+    if (is_array($sessionsToWrite)) {
+      $stmtChild = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
+        VALUES (?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NOW(), NOW())");
+      if ($stmtChild) {
+        foreach ($sessionsToWrite as $s) {
+          if (!is_array($s)) continue;
+          $date = isset($s['date']) ? (string)$s['date'] : '';
+          $times = isset($s['times']) && is_array($s['times']) ? $s['times'] : [];
+          foreach ($times as $t) {
+            $time = is_string($t) ? trim($t) : '';
+            if ($date === '' || $time === '') continue;
+            $stmtChild->bind_param('iss', $mapCardId, $date, $time);
+            if (!$stmtChild->execute()) { $stmtChild->close(); abort_with_error($mysqli, 500, 'Insert child sessions', $transactionActive); }
+          }
+        }
+        $stmtChild->close();
+      }
+    }
+
+    if (is_array($ticketPricingToWrite)) {
+      $stmtPrice = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
+        VALUES (?, NULL, NULL, ?, ?, NULL, NULL, ?, ?, NOW(), NOW())");
+      if ($stmtPrice) {
+        foreach ($ticketPricingToWrite as $seat) {
+          if (!is_array($seat)) continue;
+          $seatName = isset($seat['seating_area']) ? (string)$seat['seating_area'] : '';
+          $tiers = isset($seat['tiers']) && is_array($seat['tiers']) ? $seat['tiers'] : [];
+          foreach ($tiers as $tier) {
+            if (!is_array($tier)) continue;
+            $tierName = isset($tier['pricing_tier']) ? (string)$tier['pricing_tier'] : '';
+            $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
+            $amt = normalize_price_amount($tier['price'] ?? null);
+            if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
+            $stmtPrice->bind_param('issss', $mapCardId, $seatName, $tierName, $amt, $curr);
+            if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert child pricing', $transactionActive); }
+          }
+        }
+        $stmtPrice->close();
+      }
     }
   }
 
@@ -623,7 +695,7 @@ foreach ($byLoc as $locNum => $entries) {
       $itemName = isset($itemPricing['item_name']) ? trim((string)$itemPricing['item_name']) : '';
       foreach ($itemPricing['variants'] as $v) {
         if (!is_array($v)) continue;
-        $vn = isset($v['variant_name']) ? (string)$v['variant_name'] : '';
+        $vn = isset($v['item_variant']) ? (string)$v['item_variant'] : (isset($v['variant_name']) ? (string)$v['variant_name'] : '');
         $curr = isset($v['currency']) ? normalize_currency($v['currency']) : '';
         $amt = normalize_price_amount($v['price'] ?? null);
         if ($vn === '' || $curr === '' || $amt === null) continue;

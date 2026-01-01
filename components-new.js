@@ -2720,6 +2720,660 @@ const FieldsetBuilder = (function(){
                 });
                 
                 break;
+
+            case 'session_pricing':
+                // Combined UI: Sessions (calendar + times) + Ticket Pricing (seating/tier)
+                // This fieldset intentionally renders BOTH blocks so members fill everything in one place.
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+
+                // -----------------------------
+                // Sessions (copied behavior from `sessions`)
+                // -----------------------------
+
+                // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
+                var spSessionData = {};
+
+                var spToday = new Date();
+                spToday.setHours(0, 0, 0, 0);
+                var spTodayIso = spToday.getFullYear() + '-' + String(spToday.getMonth() + 1).padStart(2, '0') + '-' + String(spToday.getDate()).padStart(2, '0');
+
+                var spMinDate = new Date(spToday.getFullYear(), spToday.getMonth(), 1);
+                var spMaxDate = new Date(spToday.getFullYear(), spToday.getMonth() + 24, 1);
+
+                var spTodayMonthEl = null;
+                var spTodayMonthIndex = 0;
+                var spTotalMonths = 0;
+                var spWeekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+                function spToISODate(d) {
+                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                }
+
+                function spGetDayOfWeek(dateStr) {
+                    var d = new Date(dateStr + 'T00:00:00');
+                    return d.getDay();
+                }
+
+                // Calendar container
+                var spCalContainer = document.createElement('div');
+                spCalContainer.className = 'fieldset-calendar-container';
+
+                var spCalScroll = document.createElement('div');
+                spCalScroll.className = 'fieldset-calendar-scroll';
+
+                var spCalendar = document.createElement('div');
+                spCalendar.className = 'fieldset-calendar';
+
+                // Build months
+                var spCurrent = new Date(spMinDate.getFullYear(), spMinDate.getMonth(), 1);
+                var spMonthIdx = 0;
+                while (spCurrent <= spMaxDate) {
+                    var spMonthEl = document.createElement('div');
+                    spMonthEl.className = 'fieldset-calendar-month';
+
+                    var spHeader = document.createElement('div');
+                    spHeader.className = 'fieldset-calendar-header';
+                    spHeader.textContent = spCurrent.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+                    spMonthEl.appendChild(spHeader);
+
+                    var spGrid = document.createElement('div');
+                    spGrid.className = 'fieldset-calendar-grid';
+
+                    spWeekdayNames.forEach(function(wd) {
+                        var w = document.createElement('div');
+                        w.className = 'fieldset-calendar-weekday';
+                        w.textContent = wd;
+                        spGrid.appendChild(w);
+                    });
+
+                    var spFirstDay = new Date(spCurrent.getFullYear(), spCurrent.getMonth(), 1);
+                    var spStartDow = spFirstDay.getDay();
+                    var spDaysInMonth = new Date(spCurrent.getFullYear(), spCurrent.getMonth() + 1, 0).getDate();
+
+                    for (var spi = 0; spi < 42; spi++) {
+                        var spCell = document.createElement('div');
+                        spCell.className = 'fieldset-calendar-day';
+                        var spDayNum = spi - spStartDow + 1;
+
+                        if (spi < spStartDow || spDayNum > spDaysInMonth) {
+                            spCell.classList.add('empty');
+                        } else {
+                            spCell.textContent = spDayNum;
+                            var spDateObj = new Date(spCurrent.getFullYear(), spCurrent.getMonth(), spDayNum);
+                            spDateObj.setHours(0, 0, 0, 0);
+                            var spIso = spToISODate(spDateObj);
+                            spCell.dataset.iso = spIso;
+
+                            if (spDateObj < spToday) {
+                                spCell.classList.add('past');
+                            } else {
+                                spCell.classList.add('future');
+                            }
+
+                            if (spIso === spTodayIso) {
+                                spCell.classList.add('today');
+                                spTodayMonthEl = spMonthEl;
+                                spTodayMonthIndex = spMonthIdx;
+                            }
+                        }
+                        spGrid.appendChild(spCell);
+                    }
+
+                    spMonthEl.appendChild(spGrid);
+                    spCalendar.appendChild(spMonthEl);
+                    spCurrent.setMonth(spCurrent.getMonth() + 1);
+                    spMonthIdx++;
+                }
+                spTotalMonths = spMonthIdx;
+
+                spCalScroll.appendChild(spCalendar);
+                spCalContainer.appendChild(spCalScroll);
+
+                // Today marker
+                var spMarker = document.createElement('div');
+                spMarker.className = 'fieldset-calendar-today-marker';
+                spCalContainer.appendChild(spMarker);
+
+                fieldset.appendChild(spCalContainer);
+
+                // Sessions container (below calendar)
+                var spSessionsContainer = document.createElement('div');
+                spSessionsContainer.className = 'fieldset-sessions';
+                fieldset.appendChild(spSessionsContainer);
+
+                // Position marker dynamically based on today's month index
+                setTimeout(function() {
+                    if (spTodayMonthEl) {
+                        spCalScroll.scrollLeft = spTodayMonthEl.offsetLeft;
+                    }
+                    var markerFraction = (spTodayMonthIndex + 0.5) / spTotalMonths;
+                    var markerPos = markerFraction * (spCalContainer.clientWidth - 8);
+                    spMarker.style.left = markerPos + 'px';
+                }, 0);
+
+                // Marker click - scroll to today
+                spMarker.addEventListener('click', function() {
+                    if (spTodayMonthEl) {
+                        spCalScroll.scrollTo({ left: spTodayMonthEl.offsetLeft, behavior: 'smooth' });
+                    }
+                });
+
+                // Horizontal wheel scroll (reduced sensitivity)
+                spCalScroll.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    spCalScroll.scrollLeft += (e.deltaY || e.deltaX) * 0.3;
+                });
+
+                // Track which slot indices have had their "god" time set
+                var spGodSetForSlot = {};
+
+                function spAutofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                    var sortedDates = Object.keys(spSessionData).sort();
+                    var changedDow = spGetDayOfWeek(changedDateStr);
+
+                    if (!spGodSetForSlot[changedSlotIdx]) {
+                        spGodSetForSlot[changedSlotIdx] = true;
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            var data = spSessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                data.times[changedSlotIdx] = newTime;
+                            }
+                        }
+                    } else {
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            if (spGetDayOfWeek(dateStr) !== changedDow) continue;
+                            var data = spSessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                data.times[changedSlotIdx] = newTime;
+                            }
+                        }
+                    }
+                }
+
+                function spGetAutofillForSlot(dateStr, slotIdx) {
+                    var dow = spGetDayOfWeek(dateStr);
+                    var sortedDates = Object.keys(spSessionData).sort();
+
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (spGetDayOfWeek(d) === dow && spSessionData[d].times.length > slotIdx && spSessionData[d].times[slotIdx]) {
+                            return spSessionData[d].times[slotIdx];
+                        }
+                    }
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (spSessionData[d].times.length > slotIdx && spSessionData[d].times[slotIdx]) {
+                            return spSessionData[d].times[slotIdx];
+                        }
+                    }
+                    return '';
+                }
+
+                function spRenderSessions() {
+                    spSessionsContainer.innerHTML = '';
+                    var sortedDates = Object.keys(spSessionData).sort();
+
+                    sortedDates.forEach(function(dateStr) {
+                        var data = spSessionData[dateStr];
+                        var group = document.createElement('div');
+                        group.className = 'fieldset-session-group';
+
+                        data.times.forEach(function(timeVal, idx) {
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-session-row';
+
+                            if (idx === 0) {
+                                var dateDisplay = document.createElement('div');
+                                dateDisplay.className = 'fieldset-session-date';
+                                var d = new Date(dateStr + 'T00:00:00');
+                                dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                row.appendChild(dateDisplay);
+                            } else {
+                                var spacer = document.createElement('div');
+                                spacer.className = 'fieldset-session-date-spacer';
+                                row.appendChild(spacer);
+                            }
+
+                            var timeWrapper = document.createElement('div');
+                            timeWrapper.className = 'fieldset-session-time';
+                            var timeInput = document.createElement('input');
+                            timeInput.type = 'text';
+                            timeInput.className = 'fieldset-time';
+                            timeInput.placeholder = 'HH:MM';
+                            timeInput.maxLength = 5;
+                            timeInput.value = timeVal;
+                            timeInput.dataset.date = dateStr;
+                            timeInput.dataset.idx = idx;
+
+                            timeInput.addEventListener('focus', function() {
+                                var input = this;
+                                setTimeout(function() { input.select(); }, 0);
+                            });
+
+                            timeInput.addEventListener('input', function() {
+                                var v = this.value.replace(/[^0-9]/g, '');
+                                if (v.length >= 2) {
+                                    v = v.substring(0, 2) + ':' + v.substring(2, 4);
+                                }
+                                this.value = v;
+                            });
+
+                            (function(dateStr, idx) {
+                                timeInput.addEventListener('blur', function() {
+                                    var raw = this.value.replace(/[^0-9]/g, '');
+                                    if (raw === '') {
+                                        spSessionData[dateStr].times[idx] = '';
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                                        return;
+                                    }
+
+                                    var hh, mm;
+                                    if (raw.length === 1) {
+                                        hh = '0' + raw;
+                                        mm = '00';
+                                    } else if (raw.length === 2) {
+                                        hh = raw;
+                                        mm = '00';
+                                    } else if (raw.length === 3) {
+                                        hh = raw.substring(0, 2);
+                                        mm = raw.substring(2) + '0';
+                                    } else {
+                                        hh = raw.substring(0, 2);
+                                        mm = raw.substring(2, 4);
+                                    }
+
+                                    var newTime = hh + ':' + mm;
+                                    var hours = parseInt(hh, 10);
+                                    var mins = parseInt(mm, 10);
+                                    if (hours <= 23 && mins <= 59) {
+                                        this.value = newTime;
+                                        spSessionData[dateStr].times[idx] = newTime;
+                                        spSessionData[dateStr].edited[idx] = true;
+                                        spAutofillTimes(dateStr, idx, newTime);
+                                        spSessionsContainer.querySelectorAll('.fieldset-time').forEach(function(input) {
+                                            var d = input.dataset.date;
+                                            var i = parseInt(input.dataset.idx, 10);
+                                            if (d && spSessionData[d] && spSessionData[d].times[i] !== undefined) {
+                                                input.value = spSessionData[d].times[i];
+                                            }
+                                        });
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                    } else {
+                                        this.value = '';
+                                        spSessionData[dateStr].times[idx] = '';
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                                    }
+                                });
+                            })(dateStr, idx);
+
+                            timeWrapper.appendChild(timeInput);
+                            row.appendChild(timeWrapper);
+
+                            var spMaxTimesPerDate = 10;
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-session-add';
+                            addBtn.textContent = '+';
+                            if (data.times.length >= spMaxTimesPerDate) {
+                                addBtn.disabled = true;
+                                addBtn.style.opacity = '0.3';
+                                addBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    addBtn.addEventListener('click', function() {
+                                        var newSlotIdx = idx + 1;
+                                        var autofillVal = spGetAutofillForSlot(dateStr, newSlotIdx);
+                                        spSessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                        spSessionData[dateStr].edited.splice(newSlotIdx, 0, false);
+                                        spRenderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(addBtn);
+
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-session-remove';
+                            removeBtn.textContent = '−';
+                            if (data.times.length === 1) {
+                                removeBtn.disabled = true;
+                                removeBtn.style.opacity = '0.3';
+                                removeBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    removeBtn.addEventListener('click', function() {
+                                        spSessionData[dateStr].times.splice(idx, 1);
+                                        spSessionData[dateStr].edited.splice(idx, 1);
+                                        spRenderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(removeBtn);
+
+                            group.appendChild(row);
+                        });
+
+                        spSessionsContainer.appendChild(group);
+                    });
+
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                }
+
+                spCalendar.addEventListener('click', function(e) {
+                    var day = e.target;
+                    if (day.classList.contains('fieldset-calendar-day') && !day.classList.contains('empty')) {
+                        var iso = day.dataset.iso;
+                        if (spSessionData[iso]) {
+                            delete spSessionData[iso];
+                            day.classList.remove('selected');
+                        } else {
+                            var autofillVal = spGetAutofillForSlot(iso, 0);
+                            spSessionData[iso] = { times: [autofillVal], edited: [false] };
+                            day.classList.add('selected');
+                        }
+                        spRenderSessions();
+                        try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
+                    }
+                });
+
+                // -----------------------------
+                // Ticket Pricing (copied behavior from `ticket-pricing`)
+                // -----------------------------
+                var pricingTitle = document.createElement('div');
+                pricingTitle.className = 'fieldset-sublabel';
+                pricingTitle.style.marginTop = '14px';
+                pricingTitle.textContent = 'Ticket Pricing';
+                fieldset.appendChild(pricingTitle);
+
+                var spPricingRoot = document.createElement('div');
+                spPricingRoot.className = 'fieldset-session-pricing-root';
+                fieldset.appendChild(spPricingRoot);
+
+                var spSeatingAreasContainer = document.createElement('div');
+                spSeatingAreasContainer.className = 'fieldset-seating-areas-container';
+                spPricingRoot.appendChild(spSeatingAreasContainer);
+
+                var spInitialCurrencyCode = defaultCurrency || null;
+                var spInitialCurrency = null;
+                if (spInitialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var spFound = CurrencyComponent.getData().find(function(item) {
+                        return item.value === spInitialCurrencyCode;
+                    });
+                    if (spFound) {
+                        var spCountryCode = spFound.filename ? spFound.filename.replace('.svg', '') : null;
+                        spInitialCurrency = { flag: spCountryCode, code: spInitialCurrencyCode };
+                    }
+                }
+                var spTicketCurrencyState = spInitialCurrency || { flag: null, code: null };
+                var spTicketCurrencyMenus = [];
+
+                function spSyncAllTicketCurrencies() {
+                    spTicketCurrencyMenus.forEach(function(menu) {
+                        var img = menu.querySelector('.fieldset-menu-button-image');
+                        var input = menu.querySelector('.fieldset-menu-button-input');
+                        if (spTicketCurrencyState.flag) {
+                            img.src = window.App.getImageUrl('currencies', spTicketCurrencyState.flag + '.svg');
+                        }
+                        input.value = spTicketCurrencyState.code || '';
+                    });
+                }
+
+                function spBuildTicketCurrencyMenu() {
+                    if (typeof CurrencyComponent === 'undefined') {
+                        console.error('[FieldsetBuilder] CurrencyComponent not available');
+                        return document.createElement('div');
+                    }
+                    var result = CurrencyComponent.buildCompactMenu({
+                        initialValue: spTicketCurrencyState.code,
+                        onSelect: function(value, label, countryCode) {
+                            spTicketCurrencyState.flag = countryCode;
+                            spTicketCurrencyState.code = value;
+                            spSyncAllTicketCurrencies();
+                        }
+                    });
+                    spTicketCurrencyMenus.push(result.element);
+                    return result.element;
+                }
+
+                function spAttachMoneyInputBehavior(inputEl) {
+                    if (!inputEl) return;
+                    inputEl.addEventListener('input', function() {
+                        // Allow digits and one dot
+                        var raw = String(this.value || '');
+                        raw = raw.replace(/[^0-9.]/g, '');
+                        var parts = raw.split('.');
+                        if (parts.length > 2) {
+                            raw = parts[0] + '.' + parts.slice(1).join('');
+                        }
+                        this.value = raw;
+                    });
+                    inputEl.addEventListener('blur', function() {
+                        var v = String(this.value || '').trim();
+                        if (v === '') return;
+                        var num = parseFloat(v);
+                        if (isNaN(num)) {
+                            this.value = '';
+                            return;
+                        }
+                        this.value = num.toFixed(2);
+                    });
+                }
+
+                function spCreatePricingTierBlock(tiersContainer) {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-tier-block';
+                    block.style.marginBottom = '10px';
+                    block.style.marginLeft = '20px';
+
+                    var tierRow = document.createElement('div');
+                    tierRow.className = 'fieldset-row';
+                    tierRow.style.marginBottom = '10px';
+
+                    var tierCol = document.createElement('div');
+                    tierCol.style.flex = '1';
+                    var tierSub = document.createElement('div');
+                    tierSub.className = 'fieldset-sublabel';
+                    tierSub.textContent = 'Pricing Tier';
+                    var tierInput = document.createElement('input');
+                    tierInput.className = 'fieldset-input';
+                    tierInput.placeholder = 'eg. Adult';
+                    tierCol.appendChild(tierSub);
+                    tierCol.appendChild(tierInput);
+                    tierRow.appendChild(tierCol);
+
+                    var actions = document.createElement('div');
+                    actions.style.display = 'flex';
+                    actions.style.gap = '10px';
+                    actions.style.alignItems = 'flex-end';
+                    actions.style.marginLeft = '10px';
+
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        tiersContainer.appendChild(spCreatePricingTierBlock(tiersContainer));
+                        spUpdateTierButtons(tiersContainer);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    actions.appendChild(addBtn);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        spUpdateTierButtons(tiersContainer);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    actions.appendChild(removeBtn);
+                    tierRow.appendChild(actions);
+
+                    applyFieldsetRowItemClasses(tierRow);
+                    block.appendChild(tierRow);
+
+                    var priceRow = document.createElement('div');
+                    priceRow.className = 'fieldset-row';
+                    priceRow.style.marginBottom = '10px';
+                    priceRow.style.marginLeft = '20px';
+                    priceRow.style.marginRight = '92px';
+
+                    var currencyCol = document.createElement('div');
+                    currencyCol.style.flex = '0 0 100px';
+                    var currencySub = document.createElement('div');
+                    currencySub.className = 'fieldset-sublabel';
+                    currencySub.textContent = 'Currency';
+                    currencyCol.appendChild(currencySub);
+                    var currencyMenu = spBuildTicketCurrencyMenu();
+                    priceRow.appendChild(currencyCol);
+                    currencyCol.appendChild(currencyMenu);
+
+                    var priceCol = document.createElement('div');
+                    priceCol.style.flex = '1';
+                    var priceSub = document.createElement('div');
+                    priceSub.className = 'fieldset-sublabel';
+                    priceSub.textContent = 'Price';
+                    var priceInput = document.createElement('input');
+                    priceInput.className = 'fieldset-input';
+                    priceInput.placeholder = '0.00';
+                    spAttachMoneyInputBehavior(priceInput);
+                    priceCol.appendChild(priceSub);
+                    priceCol.appendChild(priceInput);
+                    priceRow.appendChild(priceCol);
+
+                    applyFieldsetRowItemClasses(priceRow);
+                    block.appendChild(priceRow);
+
+                    return block;
+                }
+
+                function spUpdateTierButtons(tiersContainer) {
+                    var blocks = tiersContainer.querySelectorAll('.fieldset-tier-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+
+                function spCreateSeatingAreaBlock() {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-seating-block';
+                    block.style.marginBottom = '20px';
+
+                    var seatRow = document.createElement('div');
+                    seatRow.className = 'fieldset-row';
+                    seatRow.style.marginBottom = '10px';
+
+                    var seatCol = document.createElement('div');
+                    seatCol.style.flex = '1';
+                    var seatSub = document.createElement('div');
+                    seatSub.className = 'fieldset-sublabel';
+                    seatSub.textContent = 'Seating Area';
+                    var seatInput = document.createElement('input');
+                    seatInput.className = 'fieldset-input';
+                    seatInput.placeholder = 'eg. Stalls';
+                    seatCol.appendChild(seatSub);
+                    seatCol.appendChild(seatInput);
+                    seatRow.appendChild(seatCol);
+
+                    var actions = document.createElement('div');
+                    actions.style.display = 'flex';
+                    actions.style.gap = '10px';
+                    actions.style.alignItems = 'flex-end';
+                    actions.style.marginLeft = '10px';
+
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        spSeatingAreasContainer.appendChild(spCreateSeatingAreaBlock());
+                        spUpdateSeatingAreaButtons();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    actions.appendChild(addBtn);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        spUpdateSeatingAreaButtons();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    actions.appendChild(removeBtn);
+
+                    seatRow.appendChild(actions);
+                    applyFieldsetRowItemClasses(seatRow);
+                    block.appendChild(seatRow);
+
+                    var tiersContainer = document.createElement('div');
+                    tiersContainer.className = 'fieldset-tiers-container';
+                    tiersContainer.appendChild(spCreatePricingTierBlock(tiersContainer));
+                    spUpdateTierButtons(tiersContainer);
+                    block.appendChild(tiersContainer);
+
+                    return block;
+                }
+
+                function spUpdateSeatingAreaButtons() {
+                    var blocks = spSeatingAreasContainer.querySelectorAll('.fieldset-seating-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+
+                spSeatingAreasContainer.appendChild(spCreateSeatingAreaBlock());
+                spUpdateSeatingAreaButtons();
+
+                break;
                 
             case 'venue':
                 // SMART VENUE FIELDSET
@@ -3069,6 +3723,25 @@ const FieldsetBuilder = (function(){
                             }
                             return false;
                         }
+                        case 'session_pricing': {
+                            var selected2 = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                            if (selected2 && selected2.length > 0) return true;
+                            var t2 = fieldset.querySelectorAll('input.fieldset-time');
+                            for (var i2 = 0; i2 < t2.length; i2++) {
+                                if (t2[i2] && String(t2[i2].value || '').trim()) return true;
+                            }
+                            var pricingInputs = fieldset.querySelectorAll('.fieldset-session-pricing-root input:not([type="hidden"]), .fieldset-session-pricing-root select, .fieldset-session-pricing-root textarea');
+                            for (var p0 = 0; p0 < pricingInputs.length; p0++) {
+                                var el0 = pricingInputs[p0];
+                                if (!el0) continue;
+                                if (el0.type === 'checkbox' || el0.type === 'radio') {
+                                    if (el0.checked) return true;
+                                } else if (String(el0.value || '').trim()) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
                         case 'phone': {
                             var pfx = fieldset.querySelector('.fieldset-menu-button-input');
                             var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
@@ -3267,6 +3940,24 @@ const FieldsetBuilder = (function(){
                         if (!isTimeHHMM(ti.value)) return false;
                     }
                     return true;
+                }
+                case 'session_pricing': {
+                    var selectedDays2 = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                    if (!selectedDays2 || selectedDays2.length === 0) return false;
+
+                    var timeInputs2 = fieldset.querySelectorAll('input.fieldset-time');
+                    if (!timeInputs2 || timeInputs2.length === 0) return false;
+                    for (var i2 = 0; i2 < timeInputs2.length; i2++) {
+                        var ti2 = timeInputs2[i2];
+                        if (!ti2) return false;
+                        if (!isVisibleControl(ti2)) continue;
+                        if (!isTimeHHMM(ti2.value)) return false;
+                    }
+
+                    // Ticket pricing section must be complete (all visible controls filled)
+                    var pricingRoot = fieldset.querySelector('.fieldset-session-pricing-root');
+                    if (!pricingRoot) return false;
+                    return allVisibleControlsFilled(pricingRoot);
                 }
                 case 'images': {
                     var meta = fieldset.querySelector('input.fieldset-images-meta');
