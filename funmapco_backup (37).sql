@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 01, 2026 at 08:24 PM
+-- Generation Time: Jan 01, 2026 at 09:26 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -190,6 +190,7 @@ CREATE TABLE `post_map_cards` (
   `latitude` decimal(10,7) NOT NULL,
   `longitude` decimal(10,7) NOT NULL,
   `country_code` varchar(2) DEFAULT NULL,
+  `amenities` text DEFAULT NULL,
   `website_url` varchar(500) DEFAULT NULL,
   `tickets_url` varchar(500) DEFAULT NULL,
   `coupon_code` varchar(100) DEFAULT NULL,
@@ -954,6 +955,7 @@ CREATE TABLE `post_map_cards` (
 ,`latitude` decimal(10,7)
 ,`longitude` decimal(10,7)
 ,`country_code` varchar(2)
+,`amenities` text
 ,`website_url` varchar(500)
 ,`tickets_url` varchar(500)
 ,`coupon_code` varchar(100)
@@ -1305,7 +1307,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `post_map_cards`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `post_map_cards`  AS SELECT `pmc`.`id` AS `id`, `pmc`.`post_id` AS `post_id`, `pmc`.`subcategory_key` AS `subcategory_key`, `pmc`.`title` AS `title`, `pmc`.`description` AS `description`, `pmc`.`custom_text` AS `custom_text`, `pmc`.`custom_textarea` AS `custom_textarea`, `pmc`.`custom_dropdown` AS `custom_dropdown`, `pmc`.`custom_radio` AS `custom_radio`, `pmc`.`public_email` AS `public_email`, `pmc`.`phone` AS `phone`, `pmc`.`venue_name` AS `venue_name`, `pmc`.`address_line` AS `address_line`, `pmc`.`latitude` AS `latitude`, `pmc`.`longitude` AS `longitude`, `pmc`.`country_code` AS `country_code`, `pmc`.`website_url` AS `website_url`, `pmc`.`tickets_url` AS `tickets_url`, `pmc`.`coupon_code` AS `coupon_code`, `pmc`.`checkout_title` AS `checkout_title`, `pmc`.`session_summary` AS `session_summary`, `pmc`.`price_summary` AS `price_summary`, `pmc`.`created_at` AS `created_at`, `pmc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_map_cards` AS `pmc` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `post_map_cards`  AS SELECT `pmc`.`id` AS `id`, `pmc`.`post_id` AS `post_id`, `pmc`.`subcategory_key` AS `subcategory_key`, `pmc`.`title` AS `title`, `pmc`.`description` AS `description`, `pmc`.`custom_text` AS `custom_text`, `pmc`.`custom_textarea` AS `custom_textarea`, `pmc`.`custom_dropdown` AS `custom_dropdown`, `pmc`.`custom_radio` AS `custom_radio`, `pmc`.`public_email` AS `public_email`, `pmc`.`phone` AS `phone`, `pmc`.`venue_name` AS `venue_name`, `pmc`.`address_line` AS `address_line`, `pmc`.`latitude` AS `latitude`, `pmc`.`longitude` AS `longitude`, `pmc`.`country_code` AS `country_code`, `pmc`.`amenities` AS `amenities`, `pmc`.`website_url` AS `website_url`, `pmc`.`tickets_url` AS `tickets_url`, `pmc`.`coupon_code` AS `coupon_code`, `pmc`.`checkout_title` AS `checkout_title`, `pmc`.`session_summary` AS `session_summary`, `pmc`.`price_summary` AS `price_summary`, `pmc`.`created_at` AS `created_at`, `pmc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_map_cards` AS `pmc` ;
 
 -- --------------------------------------------------------
 
@@ -2569,10 +2571,10 @@ CREATE TABLE `fieldsets` (
 INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`, `sort_order`, `fieldset_fields`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
 (1, 'Title', 'title', 'subcategory', 1, '[\"title\"]', NULL, 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
 (2, 'Description', 'description', 'subcategory', 2, '[\"description\"]', NULL, 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(3, 'Text Box (editable)', 'text-box', 'subcategory', 50, '[\"text-box\"]', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
-(4, 'Text Area (editable)', 'text-area', 'subcategory', 50, '[\"text-area\"]', NULL, 'eg. Sing along!', 'Write more stuff here.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
-(5, 'Dropdown (editable)', 'dropdown', 'subcategory', 50, '[\"dropdown\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
-(6, 'Radio Toggle (editable)', 'radio', 'subcategory', 50, '[\"radio\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(3, 'Custom Text', 'custom_text', 'subcategory', 50, '[\"text-box\"]', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-10-29 19:03:05', '2026-01-01 10:25:11'),
+(4, 'Custom TextArea', 'custom_textarea', 'subcategory', 50, '[\"text-area\"]', NULL, 'eg. Sing along!', 'Write more stuff here.', '2025-10-29 19:03:05', '2026-01-01 10:25:34'),
+(5, 'Custom Dropdown', 'custom_dropdown', 'subcategory', 50, '[\"dropdown\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', '2025-10-29 19:03:05', '2026-01-01 10:25:46'),
+(6, 'Custom Radio', 'custom_radio', 'subcategory', 50, '[\"radio\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-10-29 19:03:05', '2026-01-01 10:25:56'),
 (8, 'Phone', 'phone', 'subcategory', 4, '[\"phone-prefix\", \"phone\"]', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (9, 'Address', 'address', 'subcategory', 6, '[\"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (10, 'Website (URL)', 'website-url', 'subcategory', 8, '[\"website\"]', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
@@ -2590,7 +2592,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2025-10-29 19:03:05', '2026-01-01 09:23:54'),
 (101, 'Username', 'username', 'auth', NULL, '[\"username\"]', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
 (102, 'Password', 'password', 'auth', NULL, '[\"password\"]', NULL, 'Choose a password', 'Choose a password to protect your account.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
-(103, 'Confirm Password', 'confirm-password', 'auth', NULL, '[\"confirm-password\"]', NULL, 'Type it again', 'Type the same password again to confirm.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
+(103, 'Confirm Password', 'confirm-password', 'auth', NULL, '[\"confirm-password\"]', NULL, 'Repeat your password', 'Type the same password again to confirm.', '2025-12-30 16:30:08', '2026-01-01 10:24:19'),
 (104, 'New Password', 'new-password', 'auth', NULL, '[\"password\"]', NULL, 'Choose a new password', 'Only fill this in if you want to change your password.', '2025-12-30 16:37:37', '2026-01-01 08:41:37'),
 (105, 'Avatar', 'avatar', 'auth', NULL, '[]', NULL, NULL, 'Choose an avatar from this menu or upload your own. Click on an avatar to open the crop tool. Choosing a new avatar overwrites your previous one.', '2025-12-30 17:10:32', '2026-01-01 08:41:37'),
 (106, 'Country', 'country', 'auth', NULL, '[]', NULL, NULL, 'This is a quick survey. Which country are you in right now? ', '2025-12-30 17:10:32', '2026-01-01 08:41:37');

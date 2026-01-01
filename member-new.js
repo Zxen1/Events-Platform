@@ -2824,8 +2824,8 @@ const MemberModule = (function() {
 
             // Choose the most appropriate existing message key.
             var msgKey = 'msg_post_validation_required';
-            if (baseType === 'dropdown') msgKey = 'msg_post_validation_select';
-            if (baseType === 'radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
+            if (baseType === 'custom_dropdown') msgKey = 'msg_post_validation_select';
+            if (baseType === 'custom_radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
             if (baseType === 'images') msgKey = 'msg_post_validation_file_required';
             if (baseType === 'ticket-pricing' || baseType === 'item-pricing') msgKey = 'msg_post_validation_pricing';
             if (baseType === 'address' || baseType === 'city' || baseType === 'venue') msgKey = 'msg_post_validation_location';
@@ -3230,7 +3230,7 @@ const MemberModule = (function() {
                 var input = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');
                 return input ? input.value.trim() : '';
                 
-            case 'text-area':
+            case 'custom_textarea':
             case 'description':
                 var textarea = el.querySelector('textarea');
                 return textarea ? textarea.value.trim() : '';
@@ -3239,16 +3239,20 @@ const MemberModule = (function() {
                 var numInput = el.querySelector('input[type="number"], input[type="text"]');
                 return numInput ? numInput.value.trim() : '';
                 
-            case 'dropdown':
+            case 'custom_dropdown':
                 var menuBtn = el.querySelector('button.form-preview-select');
                 var select = el.querySelector('select');
                 if (menuBtn) return menuBtn.dataset.value || '';
                 if (select) return select.value || '';
                 return '';
                 
-            case 'radio':
+            case 'custom_radio':
                 var checked = el.querySelector('input[type="radio"]:checked');
                 return checked ? checked.value : '';
+
+            case 'custom_text':
+                var txt = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');
+                return txt ? txt.value.trim() : '';
                 
             case 'checkbox':
                 var cb = el.querySelector('input[type="checkbox"]');

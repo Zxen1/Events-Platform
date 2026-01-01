@@ -1107,6 +1107,7 @@ const FieldsetBuilder = (function(){
         }
         
         // Build based on fieldset type
+        // CRITICAL: No fallbacks. Fieldset keys must match DB-defined keys exactly.
         switch (key) {
             case 'password':
             case 'confirm-password':
@@ -1153,8 +1154,8 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(descValidation.charCount);
                 break;
                 
-            case 'text-box':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
+            case 'custom_text': // post_map_cards.custom_text
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var textBoxInput = document.createElement('input');
                 textBoxInput.type = 'text';
                 textBoxInput.className = 'fieldset-input';
@@ -1164,8 +1165,8 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(textBoxValidation.charCount);
                 break;
                 
-            case 'text-area':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
+            case 'custom_textarea': // post_map_cards.custom_textarea
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var editableTextarea = document.createElement('textarea');
                 editableTextarea.className = 'fieldset-textarea';
                 applyPlaceholder(editableTextarea, placeholder);
@@ -1174,8 +1175,8 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(textareaValidation.charCount);
                 break;
                 
-            case 'dropdown':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
+            case 'custom_dropdown': // post_map_cards.custom_dropdown
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var select = document.createElement('select');
                 select.className = 'fieldset-select';
                 select.innerHTML = '<option value="">Select an option...</option>';
@@ -1190,8 +1191,8 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(select);
                 break;
                 
-            case 'radio':
-                fieldset.appendChild(buildLabel(name + ' (editable)', tooltip, minLength, maxLength));
+            case 'custom_radio': // post_map_cards.custom_radio
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var radioGroup = document.createElement('div');
                 radioGroup.className = 'fieldset-radio-group';
                 if (Array.isArray(fieldOptions)) {
@@ -2989,9 +2990,9 @@ const FieldsetBuilder = (function(){
             function fieldHasAnyUserValue() {
                 try {
                     switch (key) {
-                        case 'radio':
+                        case 'custom_radio':
                             return !!fieldset.querySelector('input[type="radio"]:checked');
-                        case 'dropdown': {
+                        case 'custom_dropdown': {
                             var sel = fieldset.querySelector('select');
                             return !!(sel && String(sel.value || '').trim());
                         }
@@ -3097,7 +3098,7 @@ const FieldsetBuilder = (function(){
             switch (key) {
                 case 'title':
                 case 'coupon':
-                case 'text-box':
+                case 'custom_text':
                 case 'username':
                 case 'password':
                 case 'new-password': {
@@ -3137,7 +3138,8 @@ const FieldsetBuilder = (function(){
                     return String(confirmInput.value || '') === String(pwInput.value || '');
                 }
                 case 'description':
-                case 'text-area': {
+                case 'custom_textarea':
+                {
                     var ta = fieldset.querySelector('textarea');
                     return ta ? strLenOk(ta.value, minLength, maxLength) : false;
                 }
@@ -3156,12 +3158,12 @@ const FieldsetBuilder = (function(){
                     if (!strLenOk(u.value, minLength, maxLength)) return false;
                     return isValidUrl(u.value);
                 }
-                case 'dropdown': {
+                case 'custom_dropdown': {
                     var sel = fieldset.querySelector('select');
                     var v = sel ? String(sel.value || '').trim() : '';
                     return !!v;
                 }
-                case 'radio': {
+                case 'custom_radio': {
                     var checked = fieldset.querySelector('input[type="radio"]:checked');
                     return !!checked;
                 }

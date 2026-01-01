@@ -364,6 +364,10 @@ foreach ($byLoc as $locNum => $entries) {
   $card = [
     'title' => '',
     'description' => null,
+    'custom_text' => null,
+    'custom_textarea' => null,
+    'custom_dropdown' => null,
+    'custom_radio' => null,
     'public_email' => null,
     'phone' => null,
     'venue_name' => null,
@@ -372,6 +376,7 @@ foreach ($byLoc as $locNum => $entries) {
     'longitude' => null,
     'website_url' => null,
     'tickets_url' => null,
+    'amenities' => null,
     'checkout_title' => null,
     'session_summary' => null,
     'price_summary' => null,
@@ -407,12 +412,21 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Map common fieldsets to map card columns.
     if ($key === 'title' && is_string($val)) $card['title'] = trim($val);
-    if (($key === 'description' || $baseType === 'description' || $baseType === 'text-area') && is_string($val)) $card['description'] = trim($val);
+    if (($key === 'description' || $baseType === 'description') && is_string($val)) $card['description'] = trim($val);
+    if ($baseType === 'custom_text' && is_string($val)) $card['custom_text'] = trim($val);
+    if ($baseType === 'custom_textarea' && is_string($val)) $card['custom_textarea'] = trim($val);
+    if ($baseType === 'custom_dropdown' && is_string($val)) $card['custom_dropdown'] = trim($val);
+    if ($baseType === 'custom_radio' && is_string($val)) $card['custom_radio'] = trim($val);
     // Listing/public email only. Do NOT treat account/auth email fieldsets as listing contact.
     if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
     if ($baseType === 'phone' && is_string($val)) $card['phone'] = trim($val);
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
+    if ($baseType === 'amenities' && is_array($val)) {
+      // Store as JSON for flexibility; column is TEXT.
+      $card['amenities'] = json_encode($val, JSON_UNESCAPED_UNICODE);
+      continue;
+    }
 
     if ($baseType === 'venue' && is_array($val)) {
       $card['venue_name'] = isset($val['venue_name']) ? trim((string)$val['venue_name']) : null;
@@ -465,20 +479,25 @@ foreach ($byLoc as $locNum => $entries) {
   }
   if ($priceCount > 0) $card['price_summary'] = 'Prices: ' . $priceCount;
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, public_email, phone, venue_name, address_line, latitude, longitude, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone, venue_name, address_line, latitude, longitude, country_code, amenities, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
   $subKeyParam = $subcategoryKey;
   $titleParam = $card['title'];
   $descParam = $card['description'];
+  $customTextParam = $card['custom_text'];
+  $customTextareaParam = $card['custom_textarea'];
+  $customDropdownParam = $card['custom_dropdown'];
+  $customRadioParam = $card['custom_radio'];
   $emailParam = $card['public_email'];
   $phoneParam = $card['phone'];
   $venueNameParam = $card['venue_name'];
   $addrLineParam = $card['address_line'];
   $latParam = (float)$card['latitude'];
   $lngParam = (float)$card['longitude'];
+  $amenitiesParam = $card['amenities'];
   $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
   $checkoutTitleParam = $card['checkout_title'];
@@ -486,8 +505,41 @@ foreach ($byLoc as $locNum => $entries) {
   $priceSumParam = $card['price_summary'];
 
   // Bind + insert map card
-  // Types: i + 7 strings + 2 doubles + 5 strings = 15 params
-  $stmtCard->bind_param('isssssssddsssss', $postIdParam, $subKeyParam, $titleParam, $descParam, $emailParam, $phoneParam, $venueNameParam, $addrLineParam, $latParam, $lngParam, $websiteParam, $ticketsParam, $checkoutTitleParam, $sessSumParam, $priceSumParam);
+  // Types:
+  // i (post_id)
+  // s (subcategory_key)
+  // s (title)
+  // s (description)
+  // ssss (custom_*)
+  // ss (public_email, phone)
+  // ss (venue_name, address_line)
+  // dd (lat,lng)
+  // s (amenities)
+  // ss (website_url, tickets_url)
+  // sss (checkout_title, session_summary, price_summary)
+  $stmtCard->bind_param(
+    'issssssssssssddssssss',
+    $postIdParam,
+    $subKeyParam,
+    $titleParam,
+    $descParam,
+    $customTextParam,
+    $customTextareaParam,
+    $customDropdownParam,
+    $customRadioParam,
+    $emailParam,
+    $phoneParam,
+    $venueNameParam,
+    $addrLineParam,
+    $latParam,
+    $lngParam,
+    $amenitiesParam,
+    $websiteParam,
+    $ticketsParam,
+    $checkoutTitleParam,
+    $sessSumParam,
+    $priceSumParam
+  );
   if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
   $mapCardId = $stmtCard->insert_id;
   $stmtCard->close();
