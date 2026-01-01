@@ -2096,24 +2096,14 @@ const FieldsetBuilder = (function(){
                     }
                 }
                 var ticketCurrencyState = initialCurrency || { flag: null, code: null };
-                var ticketCurrencyMenus = [];
+                var ticketCurrencyMenus = []; // [{ element, setValue }]
 
                 function syncAllTicketCurrencies() {
-                    ticketCurrencyMenus.forEach(function(menu) {
-                        var img =
-                            menu.querySelector('.component-currencycompact-menu-button-image') ||
-                            menu.querySelector('.fieldset-menu-button-image');
-                        var input =
-                            menu.querySelector('.component-currencycompact-menu-button-input') ||
-                            menu.querySelector('.fieldset-menu-button-input');
-                        if (img && ticketCurrencyState.flag && ticketCurrencyState.code) {
-                            img.src = window.App.getImageUrl('currencies', ticketCurrencyState.flag + '.svg');
-                            img.style.display = 'block';
-                        } else if (img) {
-                            img.src = '';
-                            img.style.display = 'none';
-                        }
-                        if (input) input.value = ticketCurrencyState.code || '';
+                    ticketCurrencyMenus.forEach(function(menuObj) {
+                        try {
+                            if (!menuObj || typeof menuObj.setValue !== 'function') return;
+                            menuObj.setValue(ticketCurrencyState.code || null);
+                        } catch (e0) {}
                     });
                 }
 
@@ -2130,7 +2120,7 @@ const FieldsetBuilder = (function(){
                             syncAllTicketCurrencies();
                         }
                     });
-                    ticketCurrencyMenus.push(result.element);
+                    ticketCurrencyMenus.push(result);
                     return result.element;
                 }
                 
@@ -2178,7 +2168,10 @@ const FieldsetBuilder = (function(){
                         block.remove();
                         // Remove from tracked menus
                         var blockMenu = block.querySelector('.component-currencycompact-menu');
-                        var idx = ticketCurrencyMenus.indexOf(blockMenu);
+                        var idx = -1;
+                        for (var mi = 0; mi < ticketCurrencyMenus.length; mi++) {
+                            if (ticketCurrencyMenus[mi] && ticketCurrencyMenus[mi].element === blockMenu) { idx = mi; break; }
+                        }
                         if (idx > -1) ticketCurrencyMenus.splice(idx, 1);
                         updateTierButtons(tiersContainer);
                     });
@@ -2789,24 +2782,14 @@ const FieldsetBuilder = (function(){
                     }
                 }
                 var spTicketCurrencyState = spInitialCurrency || { flag: null, code: null };
-                var spTicketCurrencyMenus = [];
+                var spTicketCurrencyMenus = []; // [{ element, setValue }]
 
                 function spSyncAllTicketCurrencies() {
-                    spTicketCurrencyMenus.forEach(function(menu) {
-                        var img =
-                            menu.querySelector('.component-currencycompact-menu-button-image') ||
-                            menu.querySelector('.fieldset-menu-button-image');
-                        var input =
-                            menu.querySelector('.component-currencycompact-menu-button-input') ||
-                            menu.querySelector('.fieldset-menu-button-input');
-                        if (img && spTicketCurrencyState.flag && spTicketCurrencyState.code) {
-                            img.src = window.App.getImageUrl('currencies', spTicketCurrencyState.flag + '.svg');
-                            img.style.display = 'block';
-                        } else if (img) {
-                            img.src = '';
-                            img.style.display = 'none';
-                        }
-                        if (input) input.value = spTicketCurrencyState.code || '';
+                    spTicketCurrencyMenus.forEach(function(menuObj) {
+                        try {
+                            if (!menuObj || typeof menuObj.setValue !== 'function') return;
+                            menuObj.setValue(spTicketCurrencyState.code || null);
+                        } catch (e0) {}
                     });
                 }
                 function spBuildTicketCurrencyMenu() {
@@ -2822,7 +2805,7 @@ const FieldsetBuilder = (function(){
                             spSyncAllTicketCurrencies();
                         }
                     });
-                    spTicketCurrencyMenus.push(result.element);
+                    spTicketCurrencyMenus.push(result);
                     return result.element;
                 }
                 function spAttachMoneyInputBehavior(inputEl) {
@@ -4795,14 +4778,6 @@ const CurrencyComponent = (function(){
 
         // Find and set value
         function setValue(code) {
-            // No selection: show Search placeholder and no flag
-            if (!code) {
-                selectedCode = null;
-                btnInput.value = '';
-                btnImg.src = '';
-                btnImg.style.display = 'none';
-                return;
-            }
             var found = currencyData.find(function(item) {
                 return item.value === code;
             });
@@ -4817,12 +4792,6 @@ const CurrencyComponent = (function(){
                 }
                 btnInput.value = found.value;
                 selectedCode = code;
-            } else {
-                // If code doesn't exist in data, treat as no selection
-                selectedCode = null;
-                btnInput.value = '';
-                btnImg.src = '';
-                btnImg.style.display = 'none';
             }
         }
 
