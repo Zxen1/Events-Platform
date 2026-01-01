@@ -3581,11 +3581,26 @@ const FieldsetBuilder = (function(){
                 function spTicketMenuWinHandlerScroll() {
                     try {
                         if (!spTicketMenuOpen || !spActivePicker || !spActivePicker.rowEl) return;
-                        var fsRect = fieldset.getBoundingClientRect();
                         var rowRect = spActivePicker.rowEl.getBoundingClientRect();
-                        spPricingGroupsWrap.style.left = fsRect.left + 'px';
-                        spPricingGroupsWrap.style.width = fsRect.width + 'px';
-                        spPricingGroupsWrap.style.top = (rowRect.bottom + 10) + 'px';
+
+                        // Anchor to the panel scroll container (not the full page) so width/position matches the UI panel.
+                        var anchorEl =
+                            (spActivePicker.rowEl.closest && (spActivePicker.rowEl.closest('.member-panel-body') || spActivePicker.rowEl.closest('.admin-panel-body'))) ||
+                            spTicketMenuScrollEl ||
+                            fieldset;
+                        var anchorRect = anchorEl && anchorEl.getBoundingClientRect ? anchorEl.getBoundingClientRect() : null;
+                        if (!anchorRect) anchorRect = fieldset.getBoundingClientRect();
+
+                        spPricingGroupsWrap.style.left = anchorRect.left + 'px';
+                        spPricingGroupsWrap.style.width = anchorRect.width + 'px';
+
+                        // Prefer below the row. Clamp so it doesn't fly off-screen.
+                        var top = rowRect.bottom + 10;
+                        var popH = spPricingGroupsWrap.offsetHeight || 0;
+                        var maxTop = (window.innerHeight || 0) ? (window.innerHeight - popH - 10) : top;
+                        if (isFinite(maxTop) && maxTop > 0 && top > maxTop) top = Math.max(10, maxTop);
+                        if (top < 10) top = 10;
+                        spPricingGroupsWrap.style.top = top + 'px';
                     } catch (e0) {}
                 }
 
