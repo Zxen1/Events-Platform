@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 01, 2026 at 07:46 PM
+-- Generation Time: Jan 01, 2026 at 08:24 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -69,7 +69,7 @@ CREATE TABLE `members` (
   `id` int(11) NOT NULL,
   `username` varchar(255) DEFAULT NULL,
   `username_key` varchar(255) DEFAULT NULL,
-  `email` varchar(255) NOT NULL,
+  `account_email` varchar(255) NOT NULL,
   `avatar_file` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
@@ -88,7 +88,7 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
+INSERT INTO `members` (`id`, `username`, `username_key`, `account_email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
 (1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21'),
 (2, 'Test', 'test', 'test@funmap.com', '0-avatar.png', '$2y$10$HGrZ8HMv6aPzQVGgXUN1yu6iWyGJwlvg2QtaXvK0G530OCLgvJFlu', 'dawn', 'standard', NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 04:51:12', '2025-12-30 18:17:06'),
 (3, 'Test2', 'test2', 'test2@funmap.com', '3-avatar.png', '$2y$10$ZduCC1xwBOB.cg3xsWTIN.9WeHuoSUzMpcwHu4ckATtO.SqWjzdRS', 'day', 'standard', NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 13:49:07', '2025-12-30 14:03:37'),
@@ -287,7 +287,7 @@ ALTER TABLE `logs`
 --
 ALTER TABLE `members`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `idx_email` (`email`),
+  ADD UNIQUE KEY `idx_account_email` (`account_email`),
   ADD UNIQUE KEY `idx_username_key` (`username_key`),
   ADD KEY `idx_deleted_at` (`deleted_at`);
 
@@ -487,7 +487,7 @@ CREATE TABLE `admins` (
 `id` int(11)
 ,`username` varchar(255)
 ,`username_key` varchar(255)
-,`email` varchar(255)
+,`account_email` varchar(255)
 ,`avatar_file` varchar(255)
 ,`password_hash` varchar(255)
 ,`map_lighting` varchar(20)
@@ -824,7 +824,7 @@ CREATE TABLE `members` (
 `id` int(11)
 ,`username` varchar(255)
 ,`username_key` varchar(255)
-,`email` varchar(255)
+,`account_email` varchar(255)
 ,`avatar_file` varchar(255)
 ,`password_hash` varchar(255)
 ,`map_lighting` varchar(20)
@@ -1089,7 +1089,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `admins`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`email` AS `email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recent` AS `recent`, `a`.`country` AS `country`, `a`.`hidden` AS `hidden`, `a`.`deleted_at` AS `deleted_at`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `admins`  AS SELECT `a`.`id` AS `id`, `a`.`username` AS `username`, `a`.`username_key` AS `username_key`, `a`.`account_email` AS `account_email`, `a`.`avatar_file` AS `avatar_file`, `a`.`password_hash` AS `password_hash`, `a`.`map_lighting` AS `map_lighting`, `a`.`map_style` AS `map_style`, `a`.`favorites` AS `favorites`, `a`.`recent` AS `recent`, `a`.`country` AS `country`, `a`.`hidden` AS `hidden`, `a`.`deleted_at` AS `deleted_at`, `a`.`backup_json` AS `backup_json`, `a`.`created_at` AS `created_at`, `a`.`updated_at` AS `updated_at` FROM `funmapco_system`.`admins` AS `a` ;
 
 -- --------------------------------------------------------
 
@@ -1251,7 +1251,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `members`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`email` AS `email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recent` AS `recent`, `m`.`country` AS `country`, `m`.`hidden` AS `hidden`, `m`.`deleted_at` AS `deleted_at`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `members`  AS SELECT `m`.`id` AS `id`, `m`.`username` AS `username`, `m`.`username_key` AS `username_key`, `m`.`account_email` AS `account_email`, `m`.`avatar_file` AS `avatar_file`, `m`.`password_hash` AS `password_hash`, `m`.`map_lighting` AS `map_lighting`, `m`.`map_style` AS `map_style`, `m`.`favorites` AS `favorites`, `m`.`recent` AS `recent`, `m`.`country` AS `country`, `m`.`hidden` AS `hidden`, `m`.`deleted_at` AS `deleted_at`, `m`.`backup_json` AS `backup_json`, `m`.`created_at` AS `created_at`, `m`.`updated_at` AS `updated_at` FROM `funmapco_content`.`members` AS `m` ;
 
 -- --------------------------------------------------------
 
@@ -1385,7 +1385,7 @@ CREATE TABLE `admins` (
   `id` int(11) NOT NULL,
   `username` varchar(255) DEFAULT NULL,
   `username_key` varchar(255) DEFAULT NULL,
-  `email` varchar(255) NOT NULL,
+  `account_email` varchar(255) NOT NULL,
   `avatar_file` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
@@ -1404,7 +1404,7 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `username_key`, `email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
+INSERT INTO `admins` (`id`, `username`, `username_key`, `account_email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
 (1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'night', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-10-22 01:00:41', '2025-12-31 08:05:16');
 
 -- --------------------------------------------------------
@@ -2587,7 +2587,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (19, 'Ticket Pricing', 'ticket-pricing', 'subcategory', 15, '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
 (20, 'Sessions', 'sessions', 'subcategory', 16, '[\"session-date\", \"session-time\"]', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times (24hr clock) for your event.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
 (27, 'Public Email', 'public_email', 'subcategory', 3, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2026-01-01 07:54:19', '2026-01-01 08:41:37'),
-(100, 'Email', 'email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2025-10-29 19:03:05', '2026-01-01 09:23:54'),
 (101, 'Username', 'username', 'auth', NULL, '[\"username\"]', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
 (102, 'Password', 'password', 'auth', NULL, '[\"password\"]', NULL, 'Choose a password', 'Choose a password to protect your account.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
 (103, 'Confirm Password', 'confirm-password', 'auth', NULL, '[\"confirm-password\"]', NULL, 'Type it again', 'Type the same password again to confirm.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
@@ -3223,7 +3223,7 @@ ALTER TABLE `addons`
 --
 ALTER TABLE `admins`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `idx_email` (`email`),
+  ADD UNIQUE KEY `idx_account_email` (`account_email`),
   ADD UNIQUE KEY `idx_username_key` (`username_key`),
   ADD KEY `idx_deleted_at` (`deleted_at`);
 
