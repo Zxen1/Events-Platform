@@ -63,6 +63,7 @@ const MemberModule = (function() {
     var closeBtn = null;
     var tabButtons = null;
     var tabPanels = null;
+    var myPostsPanel = null;
     
     // Auth elements
     var authForm = null;
@@ -242,6 +243,7 @@ const MemberModule = (function() {
         closeBtn = panel.querySelector('.member-panel-actions-icon-btn--close');
         tabButtons = panel.querySelectorAll('.member-tab-bar-button');
         tabPanels = panel.querySelectorAll('.member-tab-panel');
+        myPostsPanel = document.getElementById('member-tab-myposts');
         
         // Auth elements (Profile tab only). NOTE: Create Post also contains a .member-auth (inline gate),
         // so scope this to the profile tab to avoid ambiguous selectors.
@@ -5307,6 +5309,8 @@ const MemberModule = (function() {
 
             // Also refresh create-tab submit visibility state after login.
             try { updateSubmitButtonState(); } catch (e01) {}
+            // My Posts tab must not show stale logged-out UI after login.
+            try { refreshAuthDependentTabs(); } catch (e02) {}
             
         } else {
             // Logged out state
@@ -5360,12 +5364,27 @@ const MemberModule = (function() {
             updateHeaderAvatar(null);
 
             updateHeaderSaveDiscardState();
+            // Create Post + My Posts must not show stale logged-in UI after logout.
+            try { refreshAuthDependentTabs(); } catch (e03) {}
         }
         
         // Update App state
         App.setState('user', currentUser);
         App.setState('isAdmin', currentUser ? currentUser.isAdmin === true : false);
         App.emit('member:stateChanged', { user: currentUser });
+    }
+
+    function refreshAuthDependentTabs() {
+        // Create Post:
+        // - Ensure we don't leave stale inline auth UI or stale submit buttons around when auth changes.
+        try { unmountCreateAuthGate(); } catch (e0) {}
+        try { updateSubmitButtonState(); } catch (e1) {}
+
+        // My Posts:
+        // - Until the full My Posts UI is implemented, ensure it never shows stale content from the prior auth state.
+        if (myPostsPanel) {
+            myPostsPanel.innerHTML = '';
+        }
     }
 
     function clearInputs(inputs) {
