@@ -2741,6 +2741,7 @@ const FieldsetBuilder = (function(){
                 var spTicketMenuOpen = false;
                 var spTicketMenuDocHandler = null;
                 var spTicketMenuWinHandler = null;
+                var spTicketMenuScrollEl = null;
                 var spActivePicker = null; // { dateStr, idx, timeInput, ticketBtn, rowEl }
 
                 var spOpenGroupKey = null;
@@ -3292,12 +3293,21 @@ const FieldsetBuilder = (function(){
                 // Open date picker on click/enter/space
                 spDatePickerBox.addEventListener('click', function(e) {
                     try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    // Toggle close when clicking the same anchor again
+                    if (spDatePickerOpen && spDatePickerAnchorEl === spDatePickerBox) {
+                        spCloseDatePicker();
+                        return;
+                    }
                     spOpenDatePicker(spDatePickerBox);
                 });
                 spDatePickerBox.addEventListener('keydown', function(e) {
                     if (!e) return;
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
+                        if (spDatePickerOpen && spDatePickerAnchorEl === spDatePickerBox) {
+                            spCloseDatePicker();
+                            return;
+                        }
                         spOpenDatePicker(spDatePickerBox);
                     }
                 });
@@ -3544,9 +3554,39 @@ const FieldsetBuilder = (function(){
                     }
                     if (spTicketMenuWinHandler) {
                         try { window.removeEventListener('resize', spTicketMenuWinHandler, true); } catch (e1) {}
-                        try { window.removeEventListener('scroll', spTicketMenuWinHandler, true); } catch (e2) {}
                         spTicketMenuWinHandler = null;
                     }
+                    if (spTicketMenuScrollEl && spTicketMenuScrollEl.removeEventListener) {
+                        try { spTicketMenuScrollEl.removeEventListener('scroll', spTicketMenuWinHandlerScroll, { passive: true }); } catch (e2) {}
+                        try { spTicketMenuScrollEl.removeEventListener('scroll', spTicketMenuWinHandlerScroll, true); } catch (e3) {}
+                    }
+                    spTicketMenuScrollEl = null;
+                }
+
+                function spFindScrollParent(el) {
+                    try {
+                        var node = el;
+                        while (node && node !== document.body) {
+                            var style = window.getComputedStyle ? window.getComputedStyle(node) : null;
+                            if (style) {
+                                var oy = style.overflowY || style.overflow || '';
+                                if (oy === 'auto' || oy === 'scroll') return node;
+                            }
+                            node = node.parentElement;
+                        }
+                    } catch (e) {}
+                    return null;
+                }
+
+                function spTicketMenuWinHandlerScroll() {
+                    try {
+                        if (!spTicketMenuOpen || !spActivePicker || !spActivePicker.rowEl) return;
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var rowRect = spActivePicker.rowEl.getBoundingClientRect();
+                        spPricingGroupsWrap.style.left = fsRect.left + 'px';
+                        spPricingGroupsWrap.style.width = fsRect.width + 'px';
+                        spPricingGroupsWrap.style.top = (rowRect.bottom + 10) + 'px';
+                    } catch (e0) {}
                 }
 
                 function spOpenTicketMenu(anchorRowEl, pickerObj) {
@@ -3582,14 +3622,9 @@ const FieldsetBuilder = (function(){
                         }
                     } catch (eApp) {}
                     try {
-                        var fsRect = fieldset.getBoundingClientRect();
-                        var rowRect = anchorRowEl.getBoundingClientRect();
-                        var top = rowRect.bottom + 10;
                         spPricingGroupsWrap.style.position = 'fixed';
-                        spPricingGroupsWrap.style.left = fsRect.left + 'px';
-                        spPricingGroupsWrap.style.width = fsRect.width + 'px';
-                        spPricingGroupsWrap.style.top = top + 'px';
                         spPricingGroupsWrap.style.right = '';
+                        spTicketMenuWinHandlerScroll();
                     } catch (eTop) {}
 
                     spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover--open');
@@ -3598,6 +3633,9 @@ const FieldsetBuilder = (function(){
                     // Close when clicking outside (Formbuilder-style)
                     spTicketMenuDocHandler = function(ev) {
                         try {
+                            // If a confirm dialog is open, don't treat clicks inside it as "outside" the ticket-group menu.
+                            var confirmOverlay = document.querySelector('.component-confirm-dialog-overlay--visible');
+                            if (confirmOverlay && confirmOverlay.contains(ev.target)) return;
                             if (!spPricingGroupsWrap.contains(ev.target) && !(pickerObj.ticketBtn && pickerObj.ticketBtn.contains(ev.target))) {
                                 spCloseTicketMenu();
                             }
@@ -3605,19 +3643,15 @@ const FieldsetBuilder = (function(){
                     };
                     try { document.addEventListener('click', spTicketMenuDocHandler, true); } catch (e1) {}
 
-                    // Keep popover open on scroll: re-position it instead of closing.
-                    spTicketMenuWinHandler = function() {
-                        try {
-                            if (!spTicketMenuOpen || !spActivePicker || !spActivePicker.rowEl) return;
-                            var fsRect = fieldset.getBoundingClientRect();
-                            var rowRect = spActivePicker.rowEl.getBoundingClientRect();
-                            spPricingGroupsWrap.style.left = fsRect.left + 'px';
-                            spPricingGroupsWrap.style.width = fsRect.width + 'px';
-                            spPricingGroupsWrap.style.top = (rowRect.bottom + 10) + 'px';
-                        } catch (e0) {}
-                    };
+                    // Keep popover open on resize: re-position it.
+                    spTicketMenuWinHandler = function() { spTicketMenuWinHandlerScroll(); };
                     try { window.addEventListener('resize', spTicketMenuWinHandler, true); } catch (e2) {}
-                    try { window.addEventListener('scroll', spTicketMenuWinHandler, true); } catch (e3) {}
+
+                    // Keep popover open while the member panel scrolls by attaching to the nearest scroll parent.
+                    spTicketMenuScrollEl = spFindScrollParent(anchorRowEl);
+                    if (spTicketMenuScrollEl && spTicketMenuScrollEl.addEventListener) {
+                        try { spTicketMenuScrollEl.addEventListener('scroll', spTicketMenuWinHandlerScroll, { passive: true }); } catch (e3) {}
+                    }
                 }
 
                 function spEnsureTicketGroup(groupKey) {
@@ -3638,6 +3672,8 @@ const FieldsetBuilder = (function(){
                     selectBtn.className = 'fieldset-sessionpricing-ticketgroup-select';
                     selectBtn.textContent = 'Ticket Group ' + key;
                     selectBtn.addEventListener('click', function() {
+                        // Selecting a group closes any open edit panels (only one editing context at a time)
+                        spCloseAllGroupEditors();
                         spAssignGroupToActive(key);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
@@ -3682,19 +3718,6 @@ const FieldsetBuilder = (function(){
 
                     var actions = document.createElement('div');
                     actions.className = 'fieldset-sessionpricing-ticketgroup-actions';
-
-                    var applyBtn = document.createElement('button');
-                    applyBtn.type = 'button';
-                    applyBtn.className = 'fieldset-sessionpricing-ticketgroup-apply';
-                    applyBtn.textContent = 'Apply';
-                    applyBtn.setAttribute('aria-label', 'Apply Ticket Group Changes');
-                    applyBtn.addEventListener('click', function() {
-                        spOpenGroupSnapshot = null;
-                        spOpenGroupKey = null;
-                        spSetGroupEditorOpen(key, false);
-                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
-                    });
-                    actions.appendChild(applyBtn);
 
                     var deleteBtn = document.createElement('button');
                     deleteBtn.type = 'button';
@@ -3748,6 +3771,19 @@ const FieldsetBuilder = (function(){
                         spSetGroupEditorOpen(key, false);
                     });
                     actions.appendChild(deleteBtn);
+
+                    var applyBtn = document.createElement('button');
+                    applyBtn.type = 'button';
+                    applyBtn.className = 'fieldset-sessionpricing-ticketgroup-apply';
+                    applyBtn.textContent = 'OK';
+                    applyBtn.setAttribute('aria-label', 'OK Ticket Group Changes');
+                    applyBtn.addEventListener('click', function() {
+                        spOpenGroupSnapshot = null;
+                        spOpenGroupKey = null;
+                        spSetGroupEditorOpen(key, false);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    actions.appendChild(applyBtn);
 
                     var cancelBtn = document.createElement('button');
                     cancelBtn.type = 'button';
