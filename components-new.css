@@ -847,6 +847,14 @@
     gap: 10px;
 }
 
+.fieldset-sessionpricing-ticketgroup-button:hover {
+    border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-ticketgroup-button--open {
+    border-color: #3b82f5;
+}
+
 .fieldset-sessionpricing-ticketgroup-icon {
     width: 24px;
     height: 24px;
@@ -869,7 +877,7 @@
     width: 100%;
     margin-top: 8px;
     background: #222; /* match .fieldset-menu-options */
-    border: 1px solid #333;
+    border: 1px solid #3b82f5;
     border-radius: 4px;
     padding: 10px;
     box-sizing: border-box;
@@ -910,6 +918,11 @@
     margin-bottom: 10px;
 }
 
+.fieldset-sessionpricing-ticketgroup-create:hover {
+    background: #3b82f5;
+    border-color: #3b82f5;
+}
+
 .fieldset-sessionpricing-ticketgroup-list {
     width: 100%;
     display: flex;
@@ -930,6 +943,13 @@
     border-radius: 4px;
 }
 
+/* Sticky active group header inside scrollable popover */
+.fieldset-sessionpricing-ticketgroup-header--sticky {
+    position: sticky;
+    top: 10px;
+    z-index: calc(var(--layer-menu, 85) + 1);
+}
+
 .fieldset-sessionpricing-ticketgroup-select {
     flex: 1;
     background: transparent;
@@ -942,12 +962,13 @@
     padding: 0 10px 0 0;
 }
 
-.fieldset-sessionpricing-ticketgroup-header:hover {
-    background: #2a2a2a;
+.fieldset-sessionpricing-ticketgroup-header--selected {
+    background: #3b82f5;
+    border-color: #3b82f5;
 }
 
-.fieldset-sessionpricing-ticketgroup-header--selected {
-    background: #2e3a72;
+.fieldset-sessionpricing-ticketgroup-header:hover {
+    background: #3b82f5;
     border-color: #3b82f5;
 }
 
@@ -966,10 +987,6 @@
     cursor: pointer;
 }
 
-.fieldset-sessionpricing-ticketgroup-edit:hover {
-    background: #2a2a2a;
-}
-
 .fieldset-sessionpricing-ticketgroup-editorwrap {
     margin-top: 8px;
     padding: 0;
@@ -978,14 +995,30 @@
     border-radius: 0;
 }
 
+/* Blue bordered editor container that visually extends the header */
+.fieldset-sessionpricing-pricing-group--open .fieldset-sessionpricing-ticketgroup-header {
+    background: #3b82f5;
+    border-color: #3b82f5;
+    border-radius: 4px 4px 0 0;
+    border-bottom: none;
+}
+
+.fieldset-sessionpricing-pricing-group--open .fieldset-sessionpricing-ticketgroup-editorwrap {
+    margin-top: 0;
+    padding: 10px;
+    border: 1px solid #3b82f5;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+}
+
 .fieldset-sessionpricing-ticketgroup-actions {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    justify-content: flex-end;
 }
 
 .fieldset-sessionpricing-ticketgroup-apply,
-.fieldset-sessionpricing-ticketgroup-delete,
 .fieldset-sessionpricing-ticketgroup-cancel {
     height: 36px;
     padding: 0 10px;
@@ -997,9 +1030,42 @@
     font-size: 13px;
 }
 
-.fieldset-sessionpricing-ticketgroup-delete {
-    border-color: #f87171;
-    color: #f87171;
+/* Apply/Cancel hover/active should be website blue */
+.fieldset-sessionpricing-ticketgroup-apply:hover,
+.fieldset-sessionpricing-ticketgroup-cancel:hover {
+    background: #3b82f5;
+    border-color: #3b82f5;
+}
+
+/* Header icon buttons (edit + delete) */
+.fieldset-sessionpricing-ticketgroup-edit,
+.fieldset-sessionpricing-ticketgroup-deleteicon {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+    padding: 0;
+}
+
+.fieldset-sessionpricing-ticketgroup-deleteicon-icon {
+    width: 22px;
+    height: 22px;
+    background-color: #fff;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-image: var(--ui-icon-discard);
+    mask-image: var(--ui-icon-discard);
 }
 
 /* Appearance - SessionPricing Calendar */

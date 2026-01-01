@@ -3215,6 +3215,22 @@ const FieldsetBuilder = (function(){
                     if (!wrap) return;
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-pricing-group--open', !!isOpen);
+
+                    // Keep the active group's header sticky inside the scrollable popover so the user
+                    // always knows which group is being edited.
+                    try {
+                        Object.keys(spTicketGroups).forEach(function(k) {
+                            var gg = spTicketGroups[k];
+                            if (!gg) return;
+                            var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-header');
+                            if (!hh) return;
+                            hh.classList.remove('fieldset-sessionpricing-ticketgroup-header--sticky');
+                        });
+                        if (isOpen) {
+                            var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-header');
+                            if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-header--sticky');
+                        }
+                    } catch (eSticky) {}
                 }
 
                 function spCloseAllGroupEditors() {
@@ -3272,6 +3288,11 @@ const FieldsetBuilder = (function(){
                     if (!spTicketMenuOpen) return;
                     spTicketMenuOpen = false;
                     spPricingGroupsWrap.classList.remove('fieldset-sessionpricing-ticketgroup-popover--open');
+                    try {
+                        if (spActivePicker && spActivePicker.ticketBtn) {
+                            spActivePicker.ticketBtn.classList.remove('fieldset-sessionpricing-ticketgroup-button--open');
+                        }
+                    } catch (eCls) {}
                     spActivePicker = null;
                     spCloseAllGroupEditors();
                     if (spTicketMenuDocHandler) {
@@ -3282,8 +3303,10 @@ const FieldsetBuilder = (function(){
 
                 function spOpenTicketMenu(anchorRowEl, pickerObj) {
                     if (!anchorRowEl || !pickerObj) return;
+                    spCloseTicketMenu();
                     spEnsureDefaultGroup();
                     spActivePicker = pickerObj;
+                    try { if (pickerObj.ticketBtn) pickerObj.ticketBtn.classList.add('fieldset-sessionpricing-ticketgroup-button--open'); } catch (eCls2) {}
 
                     // Ensure active row has a group assigned
                     var currentKey = '';
@@ -3341,6 +3364,7 @@ const FieldsetBuilder = (function(){
                     selectBtn.textContent = 'Ticket Group ' + key;
                     selectBtn.addEventListener('click', function() {
                         spAssignGroupToActive(key);
+                        spCloseTicketMenu();
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     header.appendChild(selectBtn);
@@ -3367,6 +3391,42 @@ const FieldsetBuilder = (function(){
                     });
                     header.appendChild(editBtn);
 
+                    // Delete icon button (panel-header style) with confirmation
+                    var delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.className = 'fieldset-sessionpricing-ticketgroup-deleteicon';
+                    delBtn.title = 'Delete Ticket Group';
+                    delBtn.setAttribute('aria-label', 'Delete Ticket Group');
+                    delBtn.innerHTML = '<span class="fieldset-sessionpricing-ticketgroup-deleteicon-icon" aria-hidden="true"></span>';
+                    delBtn.addEventListener('click', function(e) {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        if (!window.confirm('Are you sure?')) return;
+
+                        try { group.remove(); } catch (e1) {}
+                        delete spTicketGroups[key];
+                        spOpenGroupKey = null;
+                        spOpenGroupSnapshot = null;
+
+                        // Reassign any session times using this group to A (or the first remaining)
+                        var fallbackKey = 'A';
+                        if (!spTicketGroups[fallbackKey]) {
+                            var keys = Object.keys(spTicketGroups).sort();
+                            fallbackKey = keys.length ? keys[0] : 'A';
+                            if (!spTicketGroups[fallbackKey]) spEnsureTicketGroup(fallbackKey);
+                        }
+                        Object.keys(spSessionData).forEach(function(ds) {
+                            var data = spSessionData[ds];
+                            if (!data || !Array.isArray(data.groups)) return;
+                            for (var i = 0; i < data.groups.length; i++) {
+                                if (String(data.groups[i] || '') === key) data.groups[i] = fallbackKey;
+                            }
+                        });
+                        spUpdateAllTicketButtonsFromData();
+                        spAssignGroupToActive(fallbackKey);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                    });
+                    header.appendChild(delBtn);
+
                     group.appendChild(header);
 
                     var editorWrap = document.createElement('div');
@@ -3392,36 +3452,6 @@ const FieldsetBuilder = (function(){
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     actions.appendChild(applyBtn);
-
-                    var deleteBtn = document.createElement('button');
-                    deleteBtn.type = 'button';
-                    deleteBtn.className = 'fieldset-sessionpricing-ticketgroup-delete';
-                    deleteBtn.textContent = 'Delete';
-                    deleteBtn.addEventListener('click', function() {
-                        try { group.remove(); } catch (e0) {}
-                        delete spTicketGroups[key];
-                        spOpenGroupKey = null;
-                        spOpenGroupSnapshot = null;
-
-                        // Reassign any session times using this group to A (or the first remaining)
-                        var fallbackKey = 'A';
-                        if (!spTicketGroups[fallbackKey]) {
-                            var keys = Object.keys(spTicketGroups).sort();
-                            fallbackKey = keys.length ? keys[0] : 'A';
-                            if (!spTicketGroups[fallbackKey]) spEnsureTicketGroup(fallbackKey);
-                        }
-                        Object.keys(spSessionData).forEach(function(ds) {
-                            var data = spSessionData[ds];
-                            if (!data || !Array.isArray(data.groups)) return;
-                            for (var i = 0; i < data.groups.length; i++) {
-                                if (String(data.groups[i] || '') === key) data.groups[i] = fallbackKey;
-                            }
-                        });
-                        spUpdateAllTicketButtonsFromData();
-                        spAssignGroupToActive(fallbackKey);
-                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
-                    });
-                    actions.appendChild(deleteBtn);
 
                     var cancelBtn = document.createElement('button');
                     cancelBtn.type = 'button';
