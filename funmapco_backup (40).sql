@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 01, 2026 at 11:45 PM
+-- Generation Time: Jan 01, 2026 at 11:49 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -254,7 +254,7 @@ CREATE TABLE `post_sessions` (
   `map_card_id` int(11) NOT NULL,
   `session_date` date DEFAULT NULL,
   `session_time` time DEFAULT NULL,
-  `pricing_group_key` varchar(50) DEFAULT NULL,
+  `ticket_group_key` varchar(50) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -268,7 +268,7 @@ CREATE TABLE `post_sessions` (
 CREATE TABLE `post_ticket_pricing` (
   `id` int(11) NOT NULL,
   `map_card_id` int(11) NOT NULL,
-  `pricing_group_key` varchar(50) NOT NULL,
+  `ticket_group_key` varchar(50) NOT NULL,
   `seating_area` varchar(100) DEFAULT NULL,
   `pricing_tier` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
@@ -392,17 +392,17 @@ ALTER TABLE `post_sessions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
   ADD KEY `idx_session_date` (`session_date`),
-  ADD KEY `idx_pricing_group_key` (`pricing_group_key`);
+  ADD KEY `idx_ticket_group_key` (`ticket_group_key`);
 
 --
 -- Indexes for table `post_ticket_pricing`
 --
 ALTER TABLE `post_ticket_pricing`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uniq_group_line` (`map_card_id`,`pricing_group_key`,`seating_area`,`pricing_tier`,`price`,`currency`),
+  ADD UNIQUE KEY `uniq_group_line` (`map_card_id`,`ticket_group_key`,`seating_area`,`pricing_tier`,`price`,`currency`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
-  ADD KEY `idx_group_key` (`pricing_group_key`),
-  ADD KEY `idx_price_currency` (`price`,`currency`);
+  ADD KEY `idx_price_currency` (`price`,`currency`),
+  ADD KEY `idx_ticket_group_key` (`ticket_group_key`);
 
 --
 -- Indexes for table `transactions`
@@ -1087,7 +1087,7 @@ CREATE TABLE `post_sessions` (
 ,`map_card_id` int(11)
 ,`session_date` date
 ,`session_time` time
-,`pricing_group_key` varchar(50)
+,`ticket_group_key` varchar(50)
 ,`created_at` datetime
 ,`updated_at` datetime
 );
@@ -1101,7 +1101,7 @@ CREATE TABLE `post_sessions` (
 CREATE TABLE `post_ticket_pricing` (
 `id` int(11)
 ,`map_card_id` int(11)
-,`pricing_group_key` varchar(50)
+,`ticket_group_key` varchar(50)
 ,`seating_area` varchar(100)
 ,`pricing_tier` varchar(100)
 ,`price` decimal(10,2)
@@ -1439,7 +1439,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `post_sessions`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fukdn7p2l7`@`localhost` SQL SECURITY DEFINER VIEW `post_sessions`  AS SELECT `ps`.`id` AS `id`, `ps`.`map_card_id` AS `map_card_id`, `ps`.`session_date` AS `session_date`, `ps`.`session_time` AS `session_time`, `ps`.`pricing_group_key` AS `pricing_group_key`, `ps`.`created_at` AS `created_at`, `ps`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_sessions` AS `ps` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fukdn7p2l7`@`localhost` SQL SECURITY DEFINER VIEW `post_sessions`  AS SELECT `ps`.`id` AS `id`, `ps`.`map_card_id` AS `map_card_id`, `ps`.`session_date` AS `session_date`, `ps`.`session_time` AS `session_time`, `ps`.`ticket_group_key` AS `ticket_group_key`, `ps`.`created_at` AS `created_at`, `ps`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_sessions` AS `ps` ;
 
 -- --------------------------------------------------------
 
@@ -1448,7 +1448,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fukdn7p2l7`@`localhost` SQL SECURITY D
 --
 DROP TABLE IF EXISTS `post_ticket_pricing`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fukdn7p2l7`@`localhost` SQL SECURITY DEFINER VIEW `post_ticket_pricing`  AS SELECT `ptp`.`id` AS `id`, `ptp`.`map_card_id` AS `map_card_id`, `ptp`.`pricing_group_key` AS `pricing_group_key`, `ptp`.`seating_area` AS `seating_area`, `ptp`.`pricing_tier` AS `pricing_tier`, `ptp`.`price` AS `price`, `ptp`.`currency` AS `currency`, `ptp`.`created_at` AS `created_at`, `ptp`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_ticket_pricing` AS `ptp` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fukdn7p2l7`@`localhost` SQL SECURITY DEFINER VIEW `post_ticket_pricing`  AS SELECT `ptp`.`id` AS `id`, `ptp`.`map_card_id` AS `map_card_id`, `ptp`.`ticket_group_key` AS `ticket_group_key`, `ptp`.`seating_area` AS `seating_area`, `ptp`.`pricing_tier` AS `pricing_tier`, `ptp`.`price` AS `price`, `ptp`.`currency` AS `currency`, `ptp`.`created_at` AS `created_at`, `ptp`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_ticket_pricing` AS `ptp` ;
 
 -- --------------------------------------------------------
 
