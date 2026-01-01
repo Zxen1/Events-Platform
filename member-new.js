@@ -179,6 +179,7 @@ const MemberModule = (function() {
     // Create post elements
     var submitBtn = null;
     var adminSubmitBtn = null;
+    var submitHintEl = null;
     var termsAgreed = false;
     
     // Terms modal elements
@@ -2759,6 +2760,12 @@ const MemberModule = (function() {
         termsWrapper.appendChild(checkboxWrapper);
         formFields.appendChild(termsWrapper);
         
+        // Submit hint (tells user why submit is still disabled; message system only)
+        submitHintEl = document.createElement('div');
+        submitHintEl.className = 'member-create-placeholder';
+        submitHintEl.hidden = true;
+        formFields.appendChild(submitHintEl);
+
         // Submit buttons container
         var actionsWrapper = document.createElement('div');
         actionsWrapper.className = 'member-create-actions';
@@ -2802,6 +2809,34 @@ const MemberModule = (function() {
         updateSubmitButtonState();
     }
     
+    function getCreatePostDisabledReason() {
+        // Returns { key, placeholders } or null if no reason.
+        if (isSubmittingPost) return null;
+        if (!termsAgreed) return { key: 'msg_post_terms_required', placeholders: {} };
+        if (!selectedCategory || !selectedSubcategory) return { key: 'msg_post_create_no_category', placeholders: {} };
+        if (!formFields) return { key: 'msg_post_create_error', placeholders: {} };
+
+        var fieldsetEls = formFields.querySelectorAll('.fieldset[data-complete="false"]');
+        for (var i = 0; i < fieldsetEls.length; i++) {
+            var fs = fieldsetEls[i];
+            if (!fs || !fs.dataset) continue;
+            var name = String(fs.dataset.fieldsetName || fs.dataset.fieldsetKey || '').trim() || 'Field';
+            var type = String(fs.dataset.fieldsetType || '').trim();
+            var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
+
+            // Choose the most appropriate existing message key.
+            var msgKey = 'msg_post_validation_required';
+            if (baseType === 'dropdown') msgKey = 'msg_post_validation_select';
+            if (baseType === 'radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
+            if (baseType === 'images') msgKey = 'msg_post_validation_file_required';
+            if (baseType === 'ticket-pricing' || baseType === 'item-pricing') msgKey = 'msg_post_validation_pricing';
+            if (baseType === 'address' || baseType === 'city' || baseType === 'venue') msgKey = 'msg_post_validation_location';
+
+            return { key: msgKey, placeholders: { field: name } };
+        }
+        return { key: 'msg_post_create_error', placeholders: {} };
+    }
+
     function isCreatePostFormReadyForSubmit() {
         if (isSubmittingPost) return false;
         if (!termsAgreed) return false;
@@ -2857,6 +2892,37 @@ const MemberModule = (function() {
             // Three-button rule: this is a submit action, so it must stay disabled until the post form is complete.
             createAuthRegisterSubmitBtn.disabled = loggedIn || !isRegisterActive || !isCreateAuthRegisterComplete() || !ready;
         }
+
+        // Update hint text (message system only)
+        try {
+            if (submitHintEl) {
+                if (ready) {
+                    submitHintEl.textContent = '';
+                    submitHintEl.hidden = true;
+                } else {
+                    var reason = getCreatePostDisabledReason();
+                    if (!reason || !reason.key) {
+                        submitHintEl.textContent = '';
+                        submitHintEl.hidden = true;
+                    } else if (typeof window.getMessage === 'function') {
+                        window.getMessage(String(reason.key), reason.placeholders || {}, false).then(function(msg) {
+                            // Only show if still not ready (avoid stale async writes).
+                            if (isCreatePostFormReadyForSubmit()) return;
+                            if (msg) {
+                                submitHintEl.textContent = msg;
+                                submitHintEl.hidden = false;
+                            } else {
+                                submitHintEl.textContent = '';
+                                submitHintEl.hidden = true;
+                            }
+                        }).catch(function() {
+                            submitHintEl.textContent = '';
+                            submitHintEl.hidden = true;
+                        });
+                    }
+                }
+            }
+        } catch (e0) {}
     }
     
     /* --------------------------------------------------------------------------
