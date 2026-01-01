@@ -1206,6 +1206,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'email':
+            case 'public_email':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
@@ -3139,7 +3140,8 @@ const FieldsetBuilder = (function(){
                     var ta = fieldset.querySelector('textarea');
                     return ta ? strLenOk(ta.value, minLength, maxLength) : false;
                 }
-                case 'email': {
+                case 'email':
+                case 'public_email': {
                     var e = fieldset.querySelector('input.fieldset-input');
                     if (!e) return false;
                     if (!strLenOk(e.value, minLength, maxLength)) return false;

@@ -3221,6 +3221,7 @@ const MemberModule = (function() {
             case 'text-medium':
             case 'text-long':
             case 'email':
+            case 'public_email':
             case 'url':
             case 'phone':
                 var input = el.querySelector('input[type="text"], input[type="email"], input[type="url"], input[type="tel"]');

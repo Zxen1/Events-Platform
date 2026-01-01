@@ -364,7 +364,7 @@ foreach ($byLoc as $locNum => $entries) {
   $card = [
     'title' => '',
     'description' => null,
-    'email' => null,
+    'public_email' => null,
     'phone' => null,
     'venue_name' => null,
     'address_line' => null,
@@ -408,7 +408,8 @@ foreach ($byLoc as $locNum => $entries) {
     // Map common fieldsets to map card columns.
     if ($key === 'title' && is_string($val)) $card['title'] = trim($val);
     if (($key === 'description' || $baseType === 'description' || $baseType === 'text-area') && is_string($val)) $card['description'] = trim($val);
-    if ($baseType === 'email' && is_string($val)) $card['email'] = trim($val);
+    // Listing/public email only. Do NOT treat account/auth email fieldsets as listing contact.
+    if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
     if ($baseType === 'phone' && is_string($val)) $card['phone'] = trim($val);
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
@@ -464,7 +465,7 @@ foreach ($byLoc as $locNum => $entries) {
   }
   if ($priceCount > 0) $card['price_summary'] = 'Prices: ' . $priceCount;
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, email, phone, venue_name, address_line, latitude, longitude, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, public_email, phone, venue_name, address_line, latitude, longitude, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
@@ -472,7 +473,7 @@ foreach ($byLoc as $locNum => $entries) {
   $subKeyParam = $subcategoryKey;
   $titleParam = $card['title'];
   $descParam = $card['description'];
-  $emailParam = $card['email'];
+  $emailParam = $card['public_email'];
   $phoneParam = $card['phone'];
   $venueNameParam = $card['venue_name'];
   $addrLineParam = $card['address_line'];
