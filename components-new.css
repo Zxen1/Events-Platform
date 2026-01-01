@@ -880,7 +880,7 @@
     background: #222; /* match .fieldset-menu-options */
     border: 1px solid #3b82f5;
     border-radius: 4px;
-    padding: 10px;
+    padding: 0;
     box-sizing: border-box;
     max-height: 600px;
     overflow: hidden; /* scrolling lives in inner container to prevent bleed-through in the padding area */
@@ -895,12 +895,16 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-scroll {
-    max-height: 580px; /* 600px popover - 20px vertical padding */
+    max-height: 600px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
-    overscroll-behavior: contain; /* prevent scroll chaining to outer panel/page */
+}
+
+.fieldset-sessionpricing-ticketgroup-content {
+    padding: 10px;
+    box-sizing: border-box;
 }
 
 .fieldset-sessionpricing-ticketgroup-popover--open {

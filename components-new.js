@@ -2106,9 +2106,12 @@ const FieldsetBuilder = (function(){
                         var input =
                             menu.querySelector('.component-currencycompact-menu-button-input') ||
                             menu.querySelector('.fieldset-menu-button-input');
-                        if (img && ticketCurrencyState.flag) {
+                        if (img && ticketCurrencyState.flag && ticketCurrencyState.code) {
                             img.src = window.App.getImageUrl('currencies', ticketCurrencyState.flag + '.svg');
                             img.style.display = 'block';
+                        } else if (img) {
+                            img.src = '';
+                            img.style.display = 'none';
                         }
                         if (input) input.value = ticketCurrencyState.code || '';
                     });
@@ -2796,9 +2799,12 @@ const FieldsetBuilder = (function(){
                         var input =
                             menu.querySelector('.component-currencycompact-menu-button-input') ||
                             menu.querySelector('.fieldset-menu-button-input');
-                        if (img && spTicketCurrencyState.flag) {
+                        if (img && spTicketCurrencyState.flag && spTicketCurrencyState.code) {
                             img.src = window.App.getImageUrl('currencies', spTicketCurrencyState.flag + '.svg');
                             img.style.display = 'block';
+                        } else if (img) {
+                            img.src = '';
+                            img.style.display = 'none';
                         }
                         if (input) input.value = spTicketCurrencyState.code || '';
                     });
@@ -3083,6 +3089,10 @@ const FieldsetBuilder = (function(){
                 var spTicketGroupScroll = document.createElement('div');
                 spTicketGroupScroll.className = 'fieldset-sessionpricing-ticketgroup-scroll';
 
+                // Inner padded content so the scrollbar stays flush to the popover edge.
+                var spTicketGroupContent = document.createElement('div');
+                spTicketGroupContent.className = 'fieldset-sessionpricing-ticketgroup-content';
+
                 // Top action: Create New Ticket Group
                 var spTicketGroupCreate = document.createElement('button');
                 spTicketGroupCreate.type = 'button';
@@ -3101,12 +3111,13 @@ const FieldsetBuilder = (function(){
                     spSetGroupEditorOpen(k, true);
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 });
-                spTicketGroupScroll.appendChild(spTicketGroupCreate);
+                spTicketGroupContent.appendChild(spTicketGroupCreate);
 
                 spTicketGroupList = document.createElement('div');
                 spTicketGroupList.className = 'fieldset-sessionpricing-ticketgroup-list';
-                spTicketGroupScroll.appendChild(spTicketGroupList);
+                spTicketGroupContent.appendChild(spTicketGroupList);
 
+                spTicketGroupScroll.appendChild(spTicketGroupContent);
                 spPricingGroupsWrap.appendChild(spTicketGroupScroll);
 
                 fieldset.appendChild(spPricingGroupsWrap);
@@ -4784,6 +4795,14 @@ const CurrencyComponent = (function(){
 
         // Find and set value
         function setValue(code) {
+            // No selection: show Search placeholder and no flag
+            if (!code) {
+                selectedCode = null;
+                btnInput.value = '';
+                btnImg.src = '';
+                btnImg.style.display = 'none';
+                return;
+            }
             var found = currencyData.find(function(item) {
                 return item.value === code;
             });
@@ -4798,6 +4817,12 @@ const CurrencyComponent = (function(){
                 }
                 btnInput.value = found.value;
                 selectedCode = code;
+            } else {
+                // If code doesn't exist in data, treat as no selection
+                selectedCode = null;
+                btnInput.value = '';
+                btnImg.src = '';
+                btnImg.style.display = 'none';
             }
         }
 
