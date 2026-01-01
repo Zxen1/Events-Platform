@@ -1085,7 +1085,15 @@
         container.innerHTML = '';
         
         // Store reference data (not for change tracking - just data needed to build UI)
-        loadedFieldsets = formData.fieldsets;
+        // Only subcategory fieldsets should be selectable in Form Builder.
+        // Auth fieldsets (username/password/etc) are still returned by get-form for other UI,
+        // but must not appear as subcategory options here.
+        loadedFieldsets = Array.isArray(formData.fieldsets) ? formData.fieldsets.filter(function(fs) {
+            if (!fs) return false;
+            var t = (fs.fieldset_type || fs.fieldsetType || '').toString().trim().toLowerCase();
+            if (!t) return true; // backward compat (before fieldset_type existed)
+            return t === 'subcategory';
+        }) : [];
         loadedCurrencies = formData.currencies;
         loadedCategoryIconPaths = formData.categoryIconPaths;
         loadedSubcategoryIconPaths = formData.subcategoryIconPaths;

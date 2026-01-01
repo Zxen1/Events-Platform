@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 01, 2026 at 06:55 PM
+-- Generation Time: Jan 01, 2026 at 07:46 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -725,13 +725,14 @@ CREATE TABLE `fields` (
 --
 CREATE TABLE `fieldsets` (
 `id` int(11)
-,`fieldset_key` varchar(255)
-,`fieldset_fields` longtext
 ,`fieldset_name` varchar(255)
+,`fieldset_key` varchar(255)
+,`fieldset_type` enum('subcategory','auth')
+,`sort_order` int(10) unsigned
+,`fieldset_fields` longtext
 ,`fieldset_options` longtext
 ,`fieldset_placeholder` text
 ,`fieldset_tooltip` varchar(500)
-,`sort_order` int(10) unsigned
 ,`created_at` timestamp
 ,`updated_at` timestamp
 );
@@ -1205,7 +1206,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `fieldsets`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `fieldsets`  AS SELECT `funmapco_system`.`fieldsets`.`id` AS `id`, `funmapco_system`.`fieldsets`.`fieldset_key` AS `fieldset_key`, `funmapco_system`.`fieldsets`.`fieldset_fields` AS `fieldset_fields`, `funmapco_system`.`fieldsets`.`fieldset_name` AS `fieldset_name`, `funmapco_system`.`fieldsets`.`fieldset_options` AS `fieldset_options`, `funmapco_system`.`fieldsets`.`fieldset_placeholder` AS `fieldset_placeholder`, `funmapco_system`.`fieldsets`.`fieldset_tooltip` AS `fieldset_tooltip`, `funmapco_system`.`fieldsets`.`sort_order` AS `sort_order`, `funmapco_system`.`fieldsets`.`created_at` AS `created_at`, `funmapco_system`.`fieldsets`.`updated_at` AS `updated_at` FROM `funmapco_system`.`fieldsets` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_fuwlycusz7`@`localhost` SQL SECURITY DEFINER VIEW `fieldsets`  AS SELECT `fs`.`id` AS `id`, `fs`.`fieldset_name` AS `fieldset_name`, `fs`.`fieldset_key` AS `fieldset_key`, `fs`.`fieldset_type` AS `fieldset_type`, `fs`.`sort_order` AS `sort_order`, `fs`.`fieldset_fields` AS `fieldset_fields`, `fs`.`fieldset_options` AS `fieldset_options`, `fs`.`fieldset_placeholder` AS `fieldset_placeholder`, `fs`.`fieldset_tooltip` AS `fieldset_tooltip`, `fs`.`created_at` AS `created_at`, `fs`.`updated_at` AS `updated_at` FROM `funmapco_system`.`fieldsets` AS `fs` ;
 
 -- --------------------------------------------------------
 
@@ -2549,13 +2550,14 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length
 
 CREATE TABLE `fieldsets` (
   `id` int(11) NOT NULL,
-  `fieldset_key` varchar(255) DEFAULT NULL,
-  `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
   `fieldset_name` varchar(255) NOT NULL,
+  `fieldset_key` varchar(255) DEFAULT NULL,
+  `fieldset_type` enum('subcategory','auth') NOT NULL DEFAULT 'subcategory',
+  `sort_order` int(10) UNSIGNED DEFAULT 0,
+  `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
   `fieldset_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_options`)),
   `fieldset_placeholder` text DEFAULT NULL,
   `fieldset_tooltip` varchar(500) DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
-  `sort_order` int(10) UNSIGNED DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -2564,34 +2566,34 @@ CREATE TABLE `fieldsets` (
 -- Dumping data for table `fieldsets`
 --
 
-INSERT INTO `fieldsets` (`id`, `fieldset_key`, `fieldset_fields`, `fieldset_name`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 'title', '[\"title\"]', 'Title', NULL, 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', 1, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(2, 'description', '[\"description\"]', 'Description', NULL, 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', 2, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(3, 'text-box', '[\"text-box\"]', 'Text Box (editable)', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', 100, '2025-10-29 19:03:05', '2025-12-06 19:54:22'),
-(4, 'text-area', '[\"text-area\"]', 'Text Area (editable)', NULL, 'eg. Sing along!', 'Write more stuff here.', 100, '2025-10-29 19:03:05', '2025-12-06 19:54:42'),
-(5, 'dropdown', '[\"dropdown\"]', 'Dropdown (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', 100, '2025-10-29 19:03:05', '2025-12-07 11:26:39'),
-(6, 'radio', '[\"radio\"]', 'Radio Toggle (editable)', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', 100, '2025-10-29 19:03:05', '2025-12-07 11:26:45'),
-(7, 'email', '[\"email\"]', 'Email', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 7, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(8, 'phone', '[\"phone-prefix\", \"phone\"]', 'Phone', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', 8, '2025-10-29 19:03:05', '2025-12-07 16:17:25'),
-(9, 'address', '[\"address-line\", \"latitude\", \"longitude\", \"country-code\"]', 'Address', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', 9, '2025-10-29 19:03:05', '2025-12-20 18:38:23'),
-(10, 'website-url', '[\"website\"]', 'Website (URL)', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', 10, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(11, 'tickets-url', '[\"website\"]', 'Tickets (URL)', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', 11, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(12, 'images', '[\"images\"]', 'Images', NULL, 'images', 'At least one image is required. Maximum ten images. Click on any image to use the crop tool. Square images will be shown everywhere on this website except in the image viewer of your post.', 12, '2025-10-29 19:03:05', '2025-12-31 12:17:44'),
-(13, 'coupon', '[\"text-box\"]', 'Coupon', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', 13, '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
-(14, 'item-pricing', '[\"item-name\", \"item-variant\", \"currency\", \"item-price\"]', 'Item Pricing', NULL, 'eg. T-Shirt - Large Red - $29.95', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', 14, '2025-10-29 19:03:05', '2025-12-14 22:41:43'),
-(15, 'venue-ticketing', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', 'Event Details', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', 16, '2025-10-29 19:03:05', '2025-12-14 16:12:06'),
-(16, 'city', '[\"city\", \"latitude\", \"longitude\", \"country-code\"]', 'City', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', 9, '2025-12-14 15:49:27', '2025-12-20 18:38:23'),
-(17, 'venue', '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"country-code\"]', 'Venue', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', 9, '2025-12-14 18:30:38', '2025-12-20 18:38:23'),
-(18, 'amenities', '[\"amenities\"]', 'Amenities', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', 17, '2025-12-14 19:13:31', '2025-12-14 19:13:31'),
-(19, 'ticket-pricing', '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', 'Ticket Pricing', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', 19, '2025-12-14 22:26:00', '2025-12-14 22:41:43'),
-(20, 'sessions', '[\"session-date\", \"session-time\"]', 'Sessions', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times (24hr clock) for your event.', 20, '2025-12-14 22:26:00', '2025-12-31 12:11:50'),
-(21, 'username', '[\"username\"]', 'Username', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', 21, '2025-12-30 16:30:08', '2025-12-30 16:55:05'),
-(22, 'password', '[\"password\"]', 'Password', NULL, 'Choose a password', 'Choose a password to protect your account.', 22, '2025-12-30 16:30:08', '2025-12-30 16:53:23'),
-(23, 'confirm-password', '[\"confirm-password\"]', 'Confirm Password', NULL, 'Type it again', 'Type the same password again to confirm.', 23, '2025-12-30 16:30:08', '2025-12-30 16:53:23'),
-(24, 'new-password', '[\"password\"]', 'New Password', NULL, 'Choose a new password', 'Only fill this in if you want to change your password.', 24, '2025-12-30 16:37:37', '2025-12-30 16:53:23'),
-(25, 'avatar', '[]', 'Avatar', NULL, NULL, 'Choose an avatar from this menu or upload your own. Click on an avatar to open the crop tool. Choosing a new avatar overwrites your previous one.', 25, '2025-12-30 17:10:32', '2025-12-30 17:15:04'),
-(26, 'country', '[]', 'Country', NULL, NULL, 'This is a quick survey. Which country are you in right now? ', 26, '2025-12-30 17:10:32', '2025-12-30 17:17:52'),
-(27, 'public_email', '[\"email\"]', 'Public Email', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', 7, '2026-01-01 07:54:19', '2026-01-01 07:54:19');
+INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`, `sort_order`, `fieldset_fields`, `fieldset_options`, `fieldset_placeholder`, `fieldset_tooltip`, `created_at`, `updated_at`) VALUES
+(1, 'Title', 'title', 'subcategory', 1, '[\"title\"]', NULL, 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing. Make it catchy and informative.', '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(2, 'Description', 'description', 'subcategory', 2, '[\"description\"]', NULL, 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing. Include key information that helps visitors understand what you\'re offering.', '2025-10-29 19:03:05', '2025-12-06 17:08:19'),
+(3, 'Text Box (editable)', 'text-box', 'subcategory', 50, '[\"text-box\"]', NULL, 'eg. Diamonds and Pearls', 'Write stuff here.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(4, 'Text Area (editable)', 'text-area', 'subcategory', 50, '[\"text-area\"]', NULL, 'eg. Sing along!', 'Write more stuff here.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(5, 'Dropdown (editable)', 'dropdown', 'subcategory', 50, '[\"dropdown\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(6, 'Radio Toggle (editable)', 'radio', 'subcategory', 50, '[\"radio\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(8, 'Phone', 'phone', 'subcategory', 4, '[\"phone-prefix\", \"phone\"]', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(9, 'Address', 'address', 'subcategory', 6, '[\"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(10, 'Website (URL)', 'website-url', 'subcategory', 8, '[\"website\"]', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(11, 'Tickets (URL)', 'tickets-url', 'subcategory', 9, '[\"website\"]', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(12, 'Images', 'images', 'subcategory', 10, '[\"images\"]', NULL, 'images', 'At least one image is required. Maximum ten images. Click on any image to use the crop tool. Square images will be shown everywhere on this website except in the image viewer of your post.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(13, 'Coupon', 'coupon', 'subcategory', 11, '[\"text-box\"]', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(14, 'Item Pricing', 'item-pricing', 'subcategory', 12, '[\"item-name\", \"item-variant\", \"currency\", \"item-price\"]', NULL, 'eg. T-Shirt - Large Red - $29.95', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(15, 'Event Details', 'venue-ticketing', 'subcategory', 13, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(16, 'City', 'city', 'subcategory', 5, '[\"city\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', '2025-12-14 15:49:27', '2026-01-01 08:41:37'),
+(17, 'Venue', 'venue', 'subcategory', 7, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', '2025-12-14 18:30:38', '2026-01-01 08:41:37'),
+(18, 'Amenities', 'amenities', 'subcategory', 14, '[\"amenities\"]', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', '2025-12-14 19:13:31', '2026-01-01 08:41:37'),
+(19, 'Ticket Pricing', 'ticket-pricing', 'subcategory', 15, '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
+(20, 'Sessions', 'sessions', 'subcategory', 16, '[\"session-date\", \"session-time\"]', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times (24hr clock) for your event.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
+(27, 'Public Email', 'public_email', 'subcategory', 3, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2026-01-01 07:54:19', '2026-01-01 08:41:37'),
+(100, 'Email', 'email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(101, 'Username', 'username', 'auth', NULL, '[\"username\"]', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
+(102, 'Password', 'password', 'auth', NULL, '[\"password\"]', NULL, 'Choose a password', 'Choose a password to protect your account.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
+(103, 'Confirm Password', 'confirm-password', 'auth', NULL, '[\"confirm-password\"]', NULL, 'Type it again', 'Type the same password again to confirm.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
+(104, 'New Password', 'new-password', 'auth', NULL, '[\"password\"]', NULL, 'Choose a new password', 'Only fill this in if you want to change your password.', '2025-12-30 16:37:37', '2026-01-01 08:41:37'),
+(105, 'Avatar', 'avatar', 'auth', NULL, '[]', NULL, NULL, 'Choose an avatar from this menu or upload your own. Click on an avatar to open the crop tool. Choosing a new avatar overwrites your previous one.', '2025-12-30 17:10:32', '2026-01-01 08:41:37'),
+(106, 'Country', 'country', 'auth', NULL, '[]', NULL, NULL, 'This is a quick survey. Which country are you in right now? ', '2025-12-30 17:10:32', '2026-01-01 08:41:37');
 
 -- --------------------------------------------------------
 
@@ -3449,7 +3451,7 @@ ALTER TABLE `fields`
 -- AUTO_INCREMENT for table `fieldsets`
 --
 ALTER TABLE `fieldsets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`

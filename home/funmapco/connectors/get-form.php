@@ -588,6 +588,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     $hasKey = in_array('fieldset_key', $columns, true);
     $hasName = in_array('fieldset_name', $columns, true);
     $hasSortOrder = in_array('sort_order', $columns, true);
+    $hasFieldsetType = in_array('fieldset_type', $columns, true);
     $hasPlaceholder = in_array('fieldset_placeholder', $columns, true);
     if (!$hasPlaceholder) {
         http_response_code(500);
@@ -611,6 +612,9 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
             $selectColumns[] = '`fieldset_key`';
         }
     }
+    if ($hasFieldsetType) {
+        $selectColumns[] = '`fieldset_type`';
+    }
     if ($hasName) {
         if (in_array('fieldset_name', $columns, true)) {
             $selectColumns[] = '`fieldset_name`';
@@ -629,7 +633,8 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
     }
     if ($hasSortOrder) {
         $selectColumns[] = '`sort_order`';
-        $orderBy = ' ORDER BY `sort_order` ASC';
+        // Keep NULL sort_order values (e.g. auth-only fieldsets) at the bottom.
+        $orderBy = ' ORDER BY (`sort_order` IS NULL) ASC, `sort_order` ASC';
     } elseif ($hasName) {
         if (in_array('fieldset_name', $columns, true)) {
             $orderBy = ' ORDER BY `fieldset_name` ASC';
@@ -718,6 +723,9 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
             $entry['key'] = (string) $row['fieldset_key'];
         } else {
             $entry['key'] = $rawKey;
+        }
+        if ($hasFieldsetType && isset($row['fieldset_type'])) {
+            $entry['fieldset_type'] = (string) $row['fieldset_type'];
         }
         if ($hasName && isset($row['fieldset_name'])) {
             $entry['fieldset_name'] = (string) $row['fieldset_name'];
