@@ -3245,12 +3245,20 @@ const FieldsetBuilder = (function(){
 
                 function spOpenDatePicker(anchorEl) {
                     if (!anchorEl) return;
-                    if (spDatePickerOpen) return;
-                    spDatePickerOpen = true;
-                    spDateDraft = new Set(Object.keys(spSessionData || {}));
-                    spApplyDraftToCalendar();
-                    spDatePickerAnchorEl = anchorEl;
-                    try { anchorEl.classList.add('fieldset-sessionpricing-sessions-date--open'); } catch (eOpen) {}
+                    // If already open, just re-anchor/reposition (do not close).
+                    if (spDatePickerOpen) {
+                        try {
+                            if (spDatePickerAnchorEl) spDatePickerAnchorEl.classList.remove('fieldset-sessionpricing-sessions-date--open');
+                        } catch (e0) {}
+                        spDatePickerAnchorEl = anchorEl;
+                        try { anchorEl.classList.add('fieldset-sessionpricing-sessions-date--open'); } catch (eOpen1) {}
+                    } else {
+                        spDatePickerOpen = true;
+                        spDateDraft = new Set(Object.keys(spSessionData || {}));
+                        spApplyDraftToCalendar();
+                        spDatePickerAnchorEl = anchorEl;
+                        try { anchorEl.classList.add('fieldset-sessionpricing-sessions-date--open'); } catch (eOpen2) {}
+                    }
 
                     // Position popover BELOW the clicked date box (10px gap)
                     try {
@@ -3271,6 +3279,8 @@ const FieldsetBuilder = (function(){
                     // Close when clicking outside (treat as cancel, like filter)
                     spDatePickerDocHandler = function(ev) {
                         try {
+                            // Clicking any session date box should NOT close the picker.
+                            if (ev.target && ev.target.closest && ev.target.closest('.fieldset-sessionpricing-sessions-date')) return;
                             if (!spDatePickerPopover.contains(ev.target) && !(spDatePickerAnchorEl && spDatePickerAnchorEl.contains(ev.target))) {
                                 spCloseDatePicker();
                             }
@@ -3282,15 +3292,13 @@ const FieldsetBuilder = (function(){
                 // Open date picker on click/enter/space
                 spDatePickerBox.addEventListener('click', function(e) {
                     try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                    if (spDatePickerOpen) spCloseDatePicker();
-                    else spOpenDatePicker(spDatePickerBox);
+                    spOpenDatePicker(spDatePickerBox);
                 });
                 spDatePickerBox.addEventListener('keydown', function(e) {
                     if (!e) return;
                     if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        if (spDatePickerOpen) spCloseDatePicker();
-                        else spOpenDatePicker(spDatePickerBox);
+                        spOpenDatePicker(spDatePickerBox);
                     }
                 });
 
