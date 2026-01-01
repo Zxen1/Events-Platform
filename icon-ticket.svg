@@ -1,6 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-  <!-- Simple ticket: rectangle with symmetric bites + perforation -->
-  <path fill="#fff" d="M7 6h10a2 2 0 0 1 2 2v1.3a2.2 2.2 0 0 0 0 4.4V16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-2.3a2.2 2.2 0 0 0 0-4.4V8a2 2 0 0 1 2-2z"/>
-  <path fill="#111" d="M11.5 8.2h1v1.4h-1V8.2zm0 2.5h1v1.4h-1v-1.4zm0 2.5h1v1.4h-1v-1.4z"/>
+  <!-- Simple ticket: short wide rectangle with 2 centered bites (no perforation) -->
+  <path fill="#fff" fill-rule="evenodd" d="
+    M6 8h12a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z
+    M4 10.6a1.4 1.4 0 1 0 0 2.8a1.4 1.4 0 1 0 0-2.8z
+    M20 10.6a1.4 1.4 0 1 0 0 2.8a1.4 1.4 0 1 0 0-2.8z
+  "/>
 </svg>
 
