@@ -534,6 +534,63 @@ const MemberModule = (function() {
         // Create Post inline auth gate is mounted on demand (after the create form is shown),
         // so its events are attached inside ensureCreateAuthGateMounted().
         
+        // Disabled submit buttons do not fire click events. Capture clicks so we can show a message-system toast
+        // explaining what is blocking submission (post readiness, or auth fields).
+        if (memberPanelBody) {
+            memberPanelBody.addEventListener('click', function(e) {
+                try {
+                    var t = e && e.target;
+                    if (!t || !t.closest) return;
+                    var btn = t.closest('button');
+                    if (!btn) return;
+                    if (!btn.disabled) return;
+                    
+                    var action = btn.getAttribute('data-action') || '';
+                    var isSubmitLike =
+                        btn.classList.contains('member-button-submit') ||
+                        btn.classList.contains('member-button-admin-submit') ||
+                        action === 'create-auth-login' ||
+                        action === 'create-auth-register';
+                    if (!isSubmitLike) return;
+                    
+                    var key = null;
+                    var placeholders = {};
+                    
+                    var postReady = false;
+                    try { postReady = isCreatePostFormReadyForSubmit(); } catch (e0) { postReady = false; }
+                    
+                    if (!postReady) {
+                        var r = getCreatePostDisabledReason();
+                        if (r && r.key) {
+                            key = r.key;
+                            placeholders = r.placeholders || {};
+                        }
+                    } else {
+                        if (action === 'create-auth-login') {
+                            var loginFilled = !!(createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() &&
+                                createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim());
+                            if (!loginFilled) key = 'msg_auth_login_empty';
+                        } else if (action === 'create-auth-register') {
+                            if (!isCreateAuthRegisterComplete()) key = 'msg_auth_register_empty';
+                        }
+                    }
+                    
+                    if (!key) key = 'msg_post_create_error';
+                    
+                    if (window.ToastComponent && typeof ToastComponent.showError === 'function' && typeof window.getMessage === 'function') {
+                        window.getMessage(String(key), placeholders, false).then(function(msg) {
+                            if (msg) ToastComponent.showError(msg);
+                        });
+                    }
+                    
+                    try { e.preventDefault(); } catch (e1) {}
+                    try { e.stopPropagation(); } catch (e2) {}
+                } catch (err) {
+                    // ignore
+                }
+            }, true);
+        }
+        
         // Login button click
         var loginBtn = panel.querySelector('.member-auth-submit[data-action="login"]');
         if (loginBtn) {
