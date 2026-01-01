@@ -35,14 +35,14 @@ function fail($code, $msg) {
 
 $input = json_decode(file_get_contents('php://input'), true);
 $id = isset($input['id']) ? intval($input['id']) : 0;
-$email = isset($input['email']) ? trim($input['email']) : '';
+$accountEmail = isset($input['account_email']) ? trim($input['account_email']) : '';
 
-if ($id <= 0 || $email === '') {
-  fail(400, 'Missing id/email');
+if ($id <= 0 || $accountEmail === '') {
+  fail(400, 'Missing id/account_email');
 }
 
 // Verify email matches id before proceeding
-$check = $mysqli->prepare('SELECT email FROM `members` WHERE id = ?');
+$check = $mysqli->prepare('SELECT account_email FROM `members` WHERE id = ?');
 if (!$check) fail(500, 'Prepare failed');
 $check->bind_param('i', $id);
 if (!$check->execute()) { $check->close(); fail(500, 'Query failed'); }
@@ -50,7 +50,7 @@ $res = $check->get_result();
 $row = $res ? $res->fetch_assoc() : null;
 $check->close();
 
-if (!$row || strtolower($row['email']) !== strtolower($email)) {
+if (!$row || strtolower($row['account_email']) !== strtolower($accountEmail)) {
   fail(400, 'Invalid credentials');
 }
 

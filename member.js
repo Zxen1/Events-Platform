@@ -354,7 +354,7 @@
         return {
           id: typeof parsed.id === 'number' ? parsed.id : null,
           username: typeof parsed.username === 'string' ? parsed.username : '',
-          email: typeof parsed.email === 'string' ? parsed.email : '',
+          account_email: typeof parsed.account_email === 'string' ? parsed.account_email : '',
           name: typeof parsed.name === 'string' ? parsed.name : '',
           type: parsed.type === 'admin' ? 'admin' : 'member'
         };
@@ -1746,8 +1746,8 @@
       };
       if(currentMember){
         payload.member_id = typeof currentMember.id === 'number' ? currentMember.id : 0;
-        payload.member_name = currentMember.name || currentMember.username || currentMember.email || '';
-        payload.member_email = currentMember.email || '';
+        payload.member_name = currentMember.name || currentMember.username || currentMember.account_email || '';
+        payload.member_email = currentMember.account_email || '';
         payload.member_username = currentMember.username || '';
         payload.member_type = currentMember.type || 'member';
       }

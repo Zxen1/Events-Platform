@@ -27004,7 +27004,7 @@ const adminAuthManager = (()=>{
       const emailNormalized = trimmed ? trimmed.toLowerCase() : 'admin';
       return {
         name: 'Administrator',
-        email: trimmed || 'admin',
+        account_email: trimmed || 'admin',
         emailNormalized,
         username: trimmed || 'admin',
         avatar: '',
@@ -28729,7 +28729,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function normalizeUser(user){
     if(!user || typeof user !== 'object') return null;
-    const emailRaw = typeof user.email === 'string' ? user.email.trim() : '';
+    const emailRaw = typeof user.account_email === 'string' ? user.account_email.trim() : '';
     const normalized = typeof user.emailNormalized === 'string' && user.emailNormalized.trim()
       ? user.emailNormalized.trim().toLowerCase()
       : emailRaw.toLowerCase();
@@ -28738,7 +28738,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = usernameRaw || normalized;
     return {
       name: typeof user.name === 'string' ? user.name.trim() : '',
-      email: emailRaw,
+      account_email: emailRaw,
       emailNormalized: normalized,
       username,
       password: typeof user.password === 'string' ? user.password : '',
@@ -28816,7 +28816,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const payload = {
           type: storedType,
           username: typeof user.username === 'string' ? user.username : '',
-          email: typeof user.email === 'string' ? user.email : '',
+          account_email: typeof user.account_email === 'string' ? user.account_email : '',
           name: typeof user.name === 'string' ? user.name : '',
           avatar: typeof user.avatar === 'string' ? user.avatar : ''
         };
@@ -28847,7 +28847,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const typeLower = rawType.toLowerCase();
       const type = typeLower === 'admin' ? 'admin' : (rawType || 'member');
       const username = typeof parsed.username === 'string' ? parsed.username : '';
-      const emailRaw = typeof parsed.email === 'string' ? parsed.email : username;
+      const emailRaw = typeof parsed.account_email === 'string' ? parsed.account_email : username;
       const storedNormalizedEmail = typeof parsed.emailNormalized === 'string'
         ? parsed.emailNormalized.trim().toLowerCase()
         : '';
@@ -28870,7 +28870,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return {
           id: storedId,
           name: parsed.name || 'Administrator',
-          email: emailRaw,
+          account_email: emailRaw,
           emailNormalized: normalized || 'admin',
           username: username || emailRaw || 'admin',
           avatar: parsed.avatar || '',
@@ -28891,7 +28891,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return {
         id: storedId,
         name: parsed.name || '',
-        email: emailRaw,
+        account_email: emailRaw,
         emailNormalized: normalized || emailRaw.toLowerCase(),
         username: username || normalized || emailRaw,
         avatar: parsed.avatar || '',
@@ -28924,7 +28924,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!user) return createPlaceholder('');
     const raw = user.avatar ? String(user.avatar).trim() : '';
     if(raw) return raw;
-    return createPlaceholder(user.name || user.email || 'U');
+    return createPlaceholder(user.name || user.account_email || 'U');
   }
 
   function ensureMemberAvatarImage(){
@@ -28949,7 +28949,7 @@ document.addEventListener('DOMContentLoaded', () => {
     img.onerror = null;
     img.removeAttribute('data-fallback-applied');
     if(user){
-      const descriptor = user.name || user.email || 'Member';
+      const descriptor = user.name || user.account_email || 'Member';
       img.dataset.fallbackApplied = '';
       img.onerror = () => {
         if(img.dataset.fallbackApplied === '1') return;
@@ -29072,7 +29072,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function render(){
     if(window.adminAuthManager){
       if(currentUser && currentUser.isAdmin){
-        const identity = currentUser.username || currentUser.email || 'admin';
+        const identity = currentUser.username || currentUser.account_email || 'admin';
         window.adminAuthManager.setAuthenticated(true, identity);
       } else {
         window.adminAuthManager.setAuthenticated(false);
@@ -29091,7 +29091,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profilePanel.removeAttribute('inert');
       }
       if(profileAvatar){
-        const descriptor = currentUser.name || currentUser.email || 'Member';
+        const descriptor = currentUser.name || currentUser.account_email || 'Member';
         profileAvatar.dataset.fallbackApplied = '';
         profileAvatar.onerror = () => {
           if(profileAvatar.dataset.fallbackApplied === '1') return;
@@ -29104,7 +29104,7 @@ document.addEventListener('DOMContentLoaded', () => {
         profileAvatar.alt = `${descriptor}'s avatar`;
       }
       if(profileName) profileName.textContent = currentUser.name || 'Member';
-      if(profileEmail) profileEmail.textContent = currentUser.email || '';
+      if(profileEmail) profileEmail.textContent = currentUser.account_email || '';
       if(tabsWrap) tabsWrap.setAttribute('aria-hidden','true');
       updateMemberButton(currentUser);
       lastAction = 'login';
@@ -29171,7 +29171,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload = verification && verification.user && typeof verification.user === 'object'
       ? verification.user
       : {};
-    const payloadEmailRaw = typeof payload.email === 'string' ? payload.email.trim() : '';
+    const payloadEmailRaw = typeof payload.account_email === 'string' ? payload.account_email.trim() : '';
     const email = payloadEmailRaw || usernameRaw;
     const normalizedEmail = typeof email === 'string' && email ? email.toLowerCase() : '';
     const payloadUsername = typeof payload.username === 'string' ? payload.username.trim() : '';
@@ -29231,7 +29231,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentUser = {
       id: payloadId,
       name: payloadName,
-      email,
+      account_email: email,
       emailNormalized: normalizedEmail || usernameRaw.toLowerCase(),
       username,
       avatar: payloadAvatar,
@@ -29241,18 +29241,18 @@ document.addEventListener('DOMContentLoaded', () => {
       isAdmin
     };
     if(!currentUser.emailNormalized){
-      if(typeof currentUser.email === 'string' && currentUser.email){
-        currentUser.emailNormalized = currentUser.email.toLowerCase();
+      if(typeof currentUser.account_email === 'string' && currentUser.account_email){
+        currentUser.emailNormalized = currentUser.account_email.toLowerCase();
       } else {
         currentUser.emailNormalized = usernameLower;
       }
     }
     if(!currentUser.username){
-      currentUser.username = currentUser.email || usernameRaw;
+      currentUser.username = currentUser.account_email || usernameRaw;
     }
     storeCurrent(currentUser);
     render();
-    const displayName = currentUser.name || currentUser.email || currentUser.username;
+    const displayName = currentUser.name || currentUser.account_email || currentUser.username;
     await showStatus('msg_auth_login_success', { placeholders: { name: displayName } });
   }
 
@@ -29304,11 +29304,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const normalized = emailRaw.toLowerCase();
     const formData = new FormData();
-    formData.set('display_name', name);
-    formData.set('email', emailRaw);
+    formData.set('username', name);
+    formData.set('account_email', emailRaw);
     formData.set('password', password);
     formData.set('confirm', passwordConfirm);
-    formData.set('avatar_url', avatar);
+    // Backend expects avatar_file (either a chosen filename value or an uploaded file)
+    formData.set('avatar_file', avatar);
     let response;
     try{
       response = await fetch('/gateway.php?action=add-member', {
@@ -29353,14 +29354,14 @@ document.addEventListener('DOMContentLoaded', () => {
       ? (payload.member || payload.user || payload.data || payload.payload || null)
       : null;
     const resolvedMember = memberData && typeof memberData === 'object' ? memberData : {};
-    const memberNameRaw = typeof resolvedMember.display_name === 'string' && resolvedMember.display_name.trim()
-      ? resolvedMember.display_name.trim()
+    const memberNameRaw = typeof resolvedMember.username === 'string' && resolvedMember.username.trim()
+      ? resolvedMember.username.trim()
       : (typeof resolvedMember.name === 'string' && resolvedMember.name.trim() ? resolvedMember.name.trim() : name);
-    const memberEmailRaw = typeof resolvedMember.email === 'string' && resolvedMember.email.trim()
-      ? resolvedMember.email.trim()
+    const memberEmailRaw = typeof resolvedMember.account_email === 'string' && resolvedMember.account_email.trim()
+      ? resolvedMember.account_email.trim()
       : emailRaw;
-    const memberAvatarRaw = typeof resolvedMember.avatar_url === 'string' && resolvedMember.avatar_url.trim()
-      ? resolvedMember.avatar_url.trim()
+    const memberAvatarRaw = typeof resolvedMember.avatar_file === 'string' && resolvedMember.avatar_file.trim()
+      ? resolvedMember.avatar_file.trim()
       : (typeof resolvedMember.avatar === 'string' && resolvedMember.avatar.trim()
         ? resolvedMember.avatar.trim()
         : avatar);
@@ -29372,7 +29373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const finalNormalized = finalEmail ? finalEmail.toLowerCase() : normalized;
     currentUser = {
       name: memberNameRaw || name,
-      email: finalEmail,
+      account_email: finalEmail,
       emailNormalized: finalNormalized,
       username: memberUsernameRaw || finalEmail || finalNormalized,
       avatar: memberAvatarRaw || '',
@@ -29385,7 +29386,7 @@ document.addEventListener('DOMContentLoaded', () => {
       clearInputs(registerInputs);
     }
     render();
-    const displayName = currentUser.name || currentUser.email;
+    const displayName = currentUser.name || currentUser.account_email;
     await showStatus('msg_auth_register_success', { placeholders: { name: displayName } });
   }
 

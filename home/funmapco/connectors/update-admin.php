@@ -40,13 +40,13 @@ $input = json_decode($raw, true);
 if (!is_array($input)) fail(400,'Invalid JSON');
 
 $id = isset($input['id']) ? (int)$input['id'] : 0;
-$email = isset($input['email']) ? trim((string)$input['email']) : '';
-if ($id <= 0 || $email === '') fail(400,'Missing id/email');
+$accountEmail = isset($input['account_email']) ? trim((string)$input['account_email']) : '';
+if ($id <= 0 || $accountEmail === '') fail(400,'Missing id/account_email');
 
 // Load admin by id+email (basic guard)
-$stmt = $mysqli->prepare('SELECT id, email, username, password_hash FROM admins WHERE id=? AND email=? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT id, account_email, username, password_hash FROM admins WHERE id=? AND account_email=? LIMIT 1');
 if (!$stmt) fail(500,'Prepare failed');
-$stmt->bind_param('is', $id, $email);
+$stmt->bind_param('is', $id, $accountEmail);
 if(!$stmt->execute()){ $stmt->close(); fail(500,'Query failed'); }
 $res = $stmt->get_result();
 $row = $res ? $res->fetch_assoc() : null;
@@ -126,10 +126,10 @@ if (count($updates) === 0) {
   ok(['changed' => false]);
 }
 
-$sql = 'UPDATE admins SET ' . implode(', ', $updates) . ' WHERE id=? AND email=? LIMIT 1';
+$sql = 'UPDATE admins SET ' . implode(', ', $updates) . ' WHERE id=? AND account_email=? LIMIT 1';
 $types .= 'is';
 $vals[] = $id;
-$vals[] = $email;
+$vals[] = $accountEmail;
 
 $upd = $mysqli->prepare($sql);
 if (!$upd) fail(500,'Update prepare failed');

@@ -61,12 +61,12 @@ switch ($action) {
     
     // Anonymize: clear personal data but keep the row
     $anonUsername = 'Former Member';
-    $anonEmail = 'deleted_' . $memberId . '@anonymized.local';
+    $anonAccountEmail = 'deleted_' . $memberId . '@anonymized.local';
     
     $stmt = $mysqli->prepare('
       UPDATE `members` 
       SET username = ?, 
-          email = ?, 
+          account_email = ?, 
           avatar_file = NULL,
           password_hash = "",
           favorites = NULL,
@@ -76,7 +76,7 @@ switch ($action) {
       WHERE id = ?
     ');
     if (!$stmt) fail(500, 'Prepare failed');
-    $stmt->bind_param('ssi', $anonUsername, $anonEmail, $memberId);
+    $stmt->bind_param('ssi', $anonUsername, $anonAccountEmail, $memberId);
     if (!$stmt->execute()) { $stmt->close(); fail(500, 'Update failed'); }
     $affected = $stmt->affected_rows;
     $stmt->close();

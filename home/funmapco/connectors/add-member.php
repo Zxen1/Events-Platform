@@ -53,7 +53,7 @@ function ok($data=[]){echo json_encode(array_merge(['success'=>true],$data));exi
 if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');
 
 $username = trim($_POST['username'] ?? '');
-$email = trim($_POST['email'] ?? '');
+$email = trim($_POST['account_email'] ?? '');
 $pass = $_POST['password'] ?? '';
 $conf = $_POST['confirm'] ?? '';
 $avatar = trim($_POST['avatar_file'] ?? '');
@@ -77,11 +77,11 @@ if($country==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Coun
 $hash = password_hash($pass, PASSWORD_BCRYPT);
 if(!$hash) fail(500,'Hash failed');
 
-// Prevent duplicates (email only) across BOTH members and admins.
+// Prevent duplicates (account_email only) across BOTH members and admins.
 $emailLower = strtolower($email);
 
 // Email duplicate?
-$stmt = $mysqli->prepare('SELECT id FROM members WHERE LOWER(email)=? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT id FROM members WHERE LOWER(account_email)=? LIMIT 1');
 if(!$stmt) fail(500,'Prepare failed (check query)');
 $stmt->bind_param('s',$emailLower);
 $stmt->execute();
@@ -89,7 +89,7 @@ $stmt->store_result();
 if($stmt->num_rows>0){$stmt->close();fail_key(409,'msg_auth_register_email_taken');}
 $stmt->close();
 
-$stmt = $mysqli->prepare('SELECT id FROM admins WHERE LOWER(email)=? LIMIT 1');
+$stmt = $mysqli->prepare('SELECT id FROM admins WHERE LOWER(account_email)=? LIMIT 1');
 if(!$stmt) fail(500,'Prepare failed (check query)');
 $stmt->bind_param('s',$emailLower);
 $stmt->execute();
@@ -133,7 +133,7 @@ while (true) {
 }
 
 // Store username as the public username, and store username_key
-$insert = $mysqli->prepare('INSERT INTO members (email,password_hash,username,avatar_file,username_key,country,created_at) VALUES (?,?,?,?,?,?,NOW())');
+$insert = $mysqli->prepare('INSERT INTO members (account_email,password_hash,username,avatar_file,username_key,country,created_at) VALUES (?,?,?,?,?,?,NOW())');
 if(!$insert) fail(500,'Insert prepare failed');
 $insert->bind_param('ssssss',$email,$hash,$username,$avatar,$candidateKey,$country);
 if(!$insert->execute()){ $insert->close(); fail(500,'Database insert failed'); }
@@ -216,8 +216,8 @@ if ($hasAvatarFile) {
     $up->close();
   }
 
-  ok(['id'=>$id,'username'=>$username,'email'=>$email,'avatar_file'=>$avatarFile,'username_key'=>$candidateKey]);
+  ok(['id'=>$id,'username'=>$username,'account_email'=>$email,'avatar_file'=>$avatarFile,'username_key'=>$candidateKey]);
 }
 
-ok(['id'=>$id,'username'=>$username,'email'=>$email,'avatar_file'=>$avatar,'username_key'=>$candidateKey]);
+ok(['id'=>$id,'username'=>$username,'account_email'=>$email,'avatar_file'=>$avatar,'username_key'=>$candidateKey]);
 ?>

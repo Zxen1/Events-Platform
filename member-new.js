@@ -760,11 +760,11 @@ const MemberModule = (function() {
     function saveMemberSetting(key, value) {
         if (!currentUser) return;
         
-        // Guard: Only save if we have a valid member id (positive integer) and email
+        // Guard: Only save if we have a valid member id (positive integer) and account_email
         // (prevents 400 errors from stale localStorage sessions without id, or id=0)
         var memberId = parseInt(currentUser.id, 10);
-        if (!memberId || memberId <= 0 || !currentUser.email) {
-            console.warn('[Member] Cannot save setting - missing or invalid id/email in session');
+        if (!memberId || memberId <= 0 || !currentUser.account_email) {
+            console.warn('[Member] Cannot save setting - missing or invalid id/account_email in session');
             return;
         }
         
@@ -774,7 +774,7 @@ const MemberModule = (function() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: currentUser.id,
-                email: currentUser.email,
+                account_email: currentUser.account_email,
                 [key]: value
             })
         }).then(function(response) {
@@ -1227,11 +1227,11 @@ const MemberModule = (function() {
     function handleProfileSave(onSuccessNext) {
         if (!currentUser) return;
         
-        // Guard: session must have valid id (positive integer) and email to save
+        // Guard: session must have valid id (positive integer) and account_email to save
         // (stale localStorage sessions may be missing these fields, or id=0 is invalid)
         var memberId = parseInt(currentUser.id, 10);
-        if (!memberId || memberId <= 0 || !currentUser.email) {
-            console.warn('[Member] Cannot save profile - invalid/missing id or email, needs re-login');
+        if (!memberId || memberId <= 0 || !currentUser.account_email) {
+            console.warn('[Member] Cannot save profile - invalid/missing id or account_email, needs re-login');
             getMessage('msg_auth_session_expired', {}, false).then(function(message) {
                 if (message) {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
@@ -1276,7 +1276,7 @@ const MemberModule = (function() {
             return;
         }
         
-        var payload = { id: currentUser.id, email: currentUser.email };
+        var payload = { id: currentUser.id, account_email: currentUser.account_email };
         if (name && name !== profileOriginalName) payload.username = name;
         if (pw || confirm) { payload.password = pw; payload.confirm = confirm; }
         // avatar_file (filename) will be set after uploading pendingProfileAvatarBlob (if any) OR from pendingAvatarUrl
@@ -1541,14 +1541,14 @@ const MemberModule = (function() {
     }
     
     function saveProfileHiddenState(hidden) {
-        if (!currentUser || !currentUser.id || !currentUser.email) return;
+        if (!currentUser || !currentUser.id || !currentUser.account_email) return;
         
         fetch('/gateway.php?action=edit-member', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: currentUser.id,
-                email: currentUser.email,
+                account_email: currentUser.account_email,
                 hidden: hidden ? 1 : 0
             })
         })
@@ -1592,7 +1592,7 @@ const MemberModule = (function() {
             }
             
             // No active posts - proceed with confirmation
-            var displayName = currentUser.name || currentUser.username || currentUser.email || 'your account';
+            var displayName = currentUser.name || currentUser.username || currentUser.account_email || 'your account';
             
             getMessage('msg_confirm_delete_account', { name: displayName }, false).then(function(message) {
                 var text = message;
@@ -1620,14 +1620,14 @@ const MemberModule = (function() {
     }
     
     function performDeleteAccount() {
-        if (!currentUser || !currentUser.id || !currentUser.email) return;
+        if (!currentUser || !currentUser.id || !currentUser.account_email) return;
         
         fetch('/gateway.php?action=delete-member', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 id: currentUser.id,
-                email: currentUser.email
+                account_email: currentUser.account_email
             })
         })
         .then(function(res) { return res.json(); })
@@ -3221,6 +3221,7 @@ const MemberModule = (function() {
             case 'text-medium':
             case 'text-long':
             case 'email':
+            case 'account_email':
             case 'public_email':
             case 'url':
             case 'phone':
@@ -4513,7 +4514,7 @@ const MemberModule = (function() {
 
             // Toast: login success (message system)
             try {
-                var displayName = currentUser.name || currentUser.email || currentUser.username;
+                var displayName = currentUser.name || currentUser.account_email || currentUser.username;
                 getMessage('msg_auth_login_success', { name: displayName }, false).then(function(message) {
                     if (message && window.ToastComponent) ToastComponent.showSuccess(message);
                 });
@@ -4569,7 +4570,7 @@ const MemberModule = (function() {
             prepareAvatarBlob().then(function(avatarBlob) {
                 var formData = new FormData();
                 formData.set('username', name);
-                formData.set('email', email);
+                formData.set('account_email', email);
                 formData.set('password', password);
                 formData.set('confirm', confirm);
                 formData.set('country', countryCode);
@@ -4747,7 +4748,7 @@ const MemberModule = (function() {
             initMapLightingButtons();
             initMapStyleButtons();
             
-            var displayName = currentUser.name || currentUser.email || currentUser.username;
+            var displayName = currentUser.name || currentUser.account_email || currentUser.username;
             
             // Check if account was reactivated (soft-deleted member logging back in)
             if (result.reactivated === true) {
@@ -4921,7 +4922,7 @@ const MemberModule = (function() {
             // Send registration request
             var formData = new FormData();
             formData.set('username', name);
-            formData.set('email', email);
+            formData.set('account_email', email);
             formData.set('password', password);
             formData.set('confirm', confirm);
             if (supporterCountryHiddenInput && String(supporterCountryHiddenInput.value || '').trim() !== '') {
@@ -5105,10 +5106,10 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     function buildUserObject(payload, loginEmail) {
-        var emailRaw = typeof payload.email === 'string' ? payload.email.trim() : '';
+        var emailRaw = typeof payload.account_email === 'string' ? payload.account_email.trim() : '';
         var email = emailRaw || loginEmail || '';
         if (!email) {
-            throw new Error('[Member] buildUserObject: email is required (payload.email or loginEmail).');
+            throw new Error('[Member] buildUserObject: account_email is required (payload.account_email or loginEmail).');
         }
         var normalized = email.toLowerCase();
         var username = payload.username || email;
@@ -5126,7 +5127,7 @@ const MemberModule = (function() {
         return {
             id: payload.id || payload.user_id || null,
             name: payload.username || payload.name || '',
-            email: email,
+            account_email: email,
             emailNormalized: normalized,
             username: username,
             avatar: payload.avatar || payload.avatar_file || '',
@@ -5165,7 +5166,7 @@ const MemberModule = (function() {
             if (!raw) return;
             
             var parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object' && parsed.email) {
+            if (parsed && typeof parsed === 'object' && parsed.account_email) {
                 // Session must include a usable numeric user id; otherwise treat as logged-out.
                 // This prevents "looks logged in" states that can't submit posts (member_id missing).
                 var idNum = parseInt(parsed.id, 10);
@@ -5179,7 +5180,7 @@ const MemberModule = (function() {
                 
                 // Notify admin auth if user is admin
                 if (currentUser.isAdmin && window.adminAuthManager) {
-                    window.adminAuthManager.setAuthenticated(true, currentUser.username || currentUser.email);
+                    window.adminAuthManager.setAuthenticated(true, currentUser.username || currentUser.account_email);
                 }
             }
         } catch (e) {
@@ -5233,7 +5234,7 @@ const MemberModule = (function() {
         // Notify admin auth manager
         if (window.adminAuthManager) {
             if (currentUser && currentUser.isAdmin) {
-                window.adminAuthManager.setAuthenticated(true, currentUser.username || currentUser.email || 'admin');
+                window.adminAuthManager.setAuthenticated(true, currentUser.username || currentUser.account_email || 'admin');
             } else {
                 window.adminAuthManager.setAuthenticated(false);
             }
@@ -5268,13 +5269,13 @@ const MemberModule = (function() {
             
             // Update profile display
             if (profileAvatar) {
-                var descriptor = currentUser.name || currentUser.email || 'Member';
+                var descriptor = currentUser.name || currentUser.account_email || 'Member';
                 profileAvatar.onerror = null;
                 setImgOrHide(profileAvatar, getAvatarSource(currentUser));
                 profileAvatar.alt = descriptor + "'s avatar";
             }
             if (profileName) profileName.textContent = currentUser.name || 'Member';
-            if (profileEmail) profileEmail.textContent = currentUser.email || '';
+            if (profileEmail) profileEmail.textContent = currentUser.account_email || '';
             
             // Profile edit defaults
             profileOriginalName = currentUser.name || '';
@@ -5507,7 +5508,7 @@ window.MemberModule = MemberModule;
             var raw = localStorage.getItem(CURRENT_KEY);
             if (!raw) return null;
             var user = JSON.parse(raw);
-            if (!user || typeof user !== 'object' || !user.email) return null;
+            if (!user || typeof user !== 'object' || !user.account_email) return null;
             return user;
         } catch (e) {
             return null;

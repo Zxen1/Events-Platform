@@ -2521,11 +2521,11 @@ const AdminModule = (function() {
         
         var name = document.createElement('span');
         name.className = 'admin-moderation-item-name';
-        name.textContent = member.username || member.email;
+        name.textContent = member.username || member.account_email;
         
         var meta = document.createElement('span');
         meta.className = 'admin-moderation-item-meta';
-        meta.textContent = member.email;
+        meta.textContent = member.account_email;
         
         info.appendChild(name);
         info.appendChild(meta);
@@ -2622,7 +2622,7 @@ const AdminModule = (function() {
     }
     
     function confirmAnonymize(member) {
-        var name = member.username || member.email;
+        var name = member.username || member.account_email;
         if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
             ConfirmDialogComponent.show({
                 titleText: 'Anonymize Account',

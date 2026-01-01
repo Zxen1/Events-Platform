@@ -61,7 +61,7 @@ if ($mysqli->connect_error) {
 // Get accounts pending deletion (deleted_at is set)
 $pendingDeletion = [];
 $stmt = $mysqli->prepare('
-  SELECT id, username, email, avatar_file, deleted_at 
+  SELECT id, username, account_email, avatar_file, deleted_at 
   FROM `members` 
   WHERE deleted_at IS NOT NULL 
   ORDER BY deleted_at ASC
@@ -88,7 +88,7 @@ if ($stmt->execute()) {
       $pendingDeletion[] = [
         'id' => (int)$row['id'],
         'username' => $row['username'],
-        'email' => $row['email'],
+        'account_email' => $row['account_email'],
         'avatar_file' => $row['avatar_file'],
         'deleted_at' => $row['deleted_at'],
         'days_remaining' => $daysRemaining

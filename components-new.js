@@ -1206,6 +1206,7 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'email':
+            case 'account_email':
             case 'public_email':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var emailInput = document.createElement('input');
@@ -3141,6 +3142,7 @@ const FieldsetBuilder = (function(){
                     return ta ? strLenOk(ta.value, minLength, maxLength) : false;
                 }
                 case 'email':
+                case 'account_email':
                 case 'public_email': {
                     var e = fieldset.querySelector('input.fieldset-input');
                     if (!e) return false;
@@ -4830,7 +4832,7 @@ const MemberAuthFieldsetsComponent = (function(){
 
             if (avatarHost) containerEl.appendChild(wrapHostInFieldset('avatar', avatarHost, { required: true }));
 
-            var email = addFieldset('email', function(el) {
+            var email = addFieldset('account_email', function(el) {
                 if (!el) return;
                 el.id = 'member-register-email';
                 el.name = 'registerEmail';
