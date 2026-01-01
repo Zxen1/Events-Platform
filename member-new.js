@@ -4273,7 +4273,7 @@ const MemberModule = (function() {
         var loginLabelEmail = document.createElement('label');
         loginLabelEmail.className = 'member-auth-panel-label';
         loginLabelEmail.setAttribute('for', 'memberCreateLoginEmail');
-        loginLabelEmail.textContent = 'Email';
+        loginLabelEmail.textContent = 'Account Email';
 
         var loginEmail = document.createElement('input');
         loginEmail.type = 'email';
