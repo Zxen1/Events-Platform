@@ -417,7 +417,6 @@ foreach ($byLoc as $locNum => $entries) {
     if ($baseType === 'custom_textarea' && is_string($val)) $card['custom_textarea'] = trim($val);
     if ($baseType === 'custom_dropdown' && is_string($val)) $card['custom_dropdown'] = trim($val);
     if ($baseType === 'custom_radio' && is_string($val)) $card['custom_radio'] = trim($val);
-    // Listing/public email only. Do NOT treat account/auth email fieldsets as listing contact.
     if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
     if ($baseType === 'phone' && is_string($val)) $card['phone'] = trim($val);
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
@@ -550,8 +549,8 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Insert children: sessions
   if (is_array($sessions)) {
-    $stmtChild = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, variant_name, price, currency, created_at, updated_at)
-      VALUES (?, ?, ?, NULL, NULL, NULL, NULL, NULL, NOW(), NOW())");
+    $stmtChild = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
+      VALUES (?, ?, ?, NULL, NULL, NULL, NULL, NULL, NULL, NOW(), NOW())");
     if ($stmtChild) {
       foreach ($sessions as $s) {
         if (!is_array($s)) continue;
@@ -570,8 +569,8 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Insert children: ticket pricing
   if (is_array($ticketPricing)) {
-    $stmtPrice = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, variant_name, price, currency, created_at, updated_at)
-      VALUES (?, NULL, NULL, ?, ?, NULL, ?, ?, NOW(), NOW())");
+    $stmtPrice = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
+      VALUES (?, NULL, NULL, ?, ?, NULL, NULL, ?, ?, NOW(), NOW())");
     if ($stmtPrice) {
       foreach ($ticketPricing as $seat) {
         if (!is_array($seat)) continue;
@@ -593,16 +592,17 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Insert children: item pricing
   if (is_array($itemPricing) && isset($itemPricing['variants']) && is_array($itemPricing['variants'])) {
-    $stmtItem = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, variant_name, price, currency, created_at, updated_at)
-      VALUES (?, NULL, NULL, NULL, NULL, ?, ?, ?, NOW(), NOW())");
+    $stmtItem = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
+      VALUES (?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, NOW(), NOW())");
     if ($stmtItem) {
+      $itemName = isset($itemPricing['item_name']) ? trim((string)$itemPricing['item_name']) : '';
       foreach ($itemPricing['variants'] as $v) {
         if (!is_array($v)) continue;
         $vn = isset($v['variant_name']) ? (string)$v['variant_name'] : '';
         $curr = isset($v['currency']) ? normalize_currency($v['currency']) : '';
         $amt = normalize_price_amount($v['price'] ?? null);
         if ($vn === '' || $curr === '' || $amt === null) continue;
-        $stmtItem->bind_param('isss', $mapCardId, $vn, $amt, $curr);
+        $stmtItem->bind_param('issss', $mapCardId, $itemName, $vn, $amt, $curr);
         if (!$stmtItem->execute()) { $stmtItem->close(); abort_with_error($mysqli, 500, 'Insert child item pricing', $transactionActive); }
       }
       $stmtItem->close();
