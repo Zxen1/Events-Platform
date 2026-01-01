@@ -3063,6 +3063,7 @@ const FieldsetBuilder = (function(){
                 var spDatePickerOpen = false;
                 var spDateDraft = null; // Set of iso strings while popover is open
                 var spDatePickerDocHandler = null;
+                var spDatePickerAnchorEl = null;
 
                 var spDatePickerPopover = document.createElement('div');
                 spDatePickerPopover.className = 'fieldset-sessionpricing-datepicker-popover';
@@ -3229,6 +3230,12 @@ const FieldsetBuilder = (function(){
                     spDatePickerOpen = false;
                     spDatePickerPopover.classList.remove('fieldset-sessionpricing-datepicker-popover--open');
                     spDatePickerBox.setAttribute('aria-expanded', 'false');
+                    try {
+                        if (spDatePickerAnchorEl) {
+                            spDatePickerAnchorEl.classList.remove('fieldset-sessionpricing-sessions-date--open');
+                        }
+                    } catch (e0) {}
+                    spDatePickerAnchorEl = null;
                     spDateDraft = null;
                     if (spDatePickerDocHandler) {
                         try { document.removeEventListener('click', spDatePickerDocHandler, true); } catch (e1) {}
@@ -3242,17 +3249,15 @@ const FieldsetBuilder = (function(){
                     spDatePickerOpen = true;
                     spDateDraft = new Set(Object.keys(spSessionData || {}));
                     spApplyDraftToCalendar();
+                    spDatePickerAnchorEl = anchorEl;
+                    try { anchorEl.classList.add('fieldset-sessionpricing-sessions-date--open'); } catch (eOpen) {}
 
-                    // Position popover ABOVE the session row (10px gap)
+                    // Position popover BELOW the clicked date box (10px gap)
                     try {
                         if (fieldset && fieldset.style) fieldset.style.position = 'relative';
                         var fsRect = fieldset.getBoundingClientRect();
                         var r = anchorEl.getBoundingClientRect();
-                        // Temporarily open so we can measure height.
-                        spDatePickerPopover.classList.add('fieldset-sessionpricing-datepicker-popover--open');
-                        var popH = spDatePickerPopover.offsetHeight || 0;
-                        spDatePickerPopover.classList.remove('fieldset-sessionpricing-datepicker-popover--open');
-                        var top = (r.top - fsRect.top) - popH - 10;
+                        var top = (r.bottom - fsRect.top) + 10;
                         if (top < 0) top = 0;
                         spDatePickerPopover.style.top = top + 'px';
                     } catch (eTop) {}
@@ -3266,7 +3271,7 @@ const FieldsetBuilder = (function(){
                     // Close when clicking outside (treat as cancel, like filter)
                     spDatePickerDocHandler = function(ev) {
                         try {
-                            if (!spDatePickerPopover.contains(ev.target) && !spDatePickerBox.contains(ev.target)) {
+                            if (!spDatePickerPopover.contains(ev.target) && !(spDatePickerAnchorEl && spDatePickerAnchorEl.contains(ev.target))) {
                                 spCloseDatePicker();
                             }
                         } catch (e2) {}
@@ -3764,11 +3769,11 @@ const FieldsetBuilder = (function(){
                     // Close the ticket menu before rerendering (prevents stale anchors)
                     spCloseTicketMenu();
                     spSessionsContainer.innerHTML = '';
-                    // Always show the date selector row first
-                    spSessionsContainer.appendChild(spDatePickerRow);
                     var sortedDates = Object.keys(spSessionData).sort();
                     // Update the date selector box text
                     if (sortedDates.length === 0) {
+                        // Only show the date selector row when there are no dates yet.
+                        spSessionsContainer.appendChild(spDatePickerRow);
                         spDatePickerBox.textContent = 'Select Dates';
                         // Disable the placeholder row controls until at least one date exists
                         try {
@@ -3789,15 +3794,6 @@ const FieldsetBuilder = (function(){
                         } catch (eFmt0) {
                             spDatePickerBox.textContent = sortedDates[0];
                         }
-                        // Enable the placeholder row controls once dates exist (visual parity)
-                        try {
-                            spPickerTimeInput.disabled = false;
-                            spPickerAddBtn.disabled = false;
-                            spPickerRemoveBtn.disabled = false;
-                            spPickerTicketBtn.disabled = false;
-                            spPickerTimeInput.style.opacity = '1';
-                            spPickerTicketBtn.style.opacity = '1';
-                        } catch (e1) {}
                     }
                     sortedDates.forEach(function(dateStr) {
                         var data = spSessionData[dateStr];

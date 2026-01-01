@@ -1145,6 +1145,17 @@
     cursor: pointer;
 }
 
+/* Any session date box should follow the site menu contract: hover blue, active/open stays blue */
+.fieldset-sessionpricing-sessions-date:hover {
+    border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-sessions-date--open {
+    background: #3b82f5;
+    border-color: #3b82f5;
+    color: #fff;
+}
+
 .fieldset-sessionpricing-calendar-scroll {
     width: 100%;
     overflow-x: auto;
