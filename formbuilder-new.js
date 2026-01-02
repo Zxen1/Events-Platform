@@ -2387,7 +2387,16 @@
             // Check field type
             var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.fieldset_key || fieldsetDef.key;
             var needsAmenities = fieldType === 'amenities';
-            var needsOptions = fieldType === 'dropdown' || fieldType === 'radio' || fieldType === 'select';
+            // CRITICAL: No fallbacks in the member/admin renderers, but Form Builder must still
+            // recognize option-based fieldsets so the editor UI is available.
+            // Canonical keys are now custom_dropdown/custom_radio.
+            var needsOptions = (
+                fieldType === 'custom_dropdown' ||
+                fieldType === 'custom_radio' ||
+                fieldType === 'dropdown' ||
+                fieldType === 'radio' ||
+                fieldType === 'select'
+            );
             
             // Declare variables that will be used in checkModifiedState
             var selectedAmenities = fieldData.selectedAmenities;
