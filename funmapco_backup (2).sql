@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 12:55 AM
+-- Generation Time: Jan 03, 2026 at 01:16 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -149,20 +149,16 @@ INSERT INTO `posts` (`id`, `post_key`, `member_id`, `member_name`, `subcategory_
 -- --------------------------------------------------------
 
 --
--- Table structure for table `post_children`
+-- Table structure for table `post_item_pricing`
 --
 
-CREATE TABLE `post_children` (
+CREATE TABLE `post_item_pricing` (
   `id` int(11) NOT NULL,
   `map_card_id` int(11) NOT NULL,
-  `session_date` date DEFAULT NULL,
-  `session_time` time DEFAULT NULL,
-  `seating_area` varchar(100) DEFAULT NULL,
-  `pricing_tier` varchar(100) DEFAULT NULL,
   `item_name` varchar(200) DEFAULT NULL,
   `item_variant` varchar(100) DEFAULT NULL,
-  `price` decimal(10,2) DEFAULT NULL,
-  `currency` varchar(10) DEFAULT NULL,
+  `item_price` decimal(10,2) DEFAULT NULL,
+  `item_currency` varchar(10) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -351,13 +347,12 @@ ALTER TABLE `posts`
   ADD KEY `idx_active_posts` (`visibility`,`deleted_at`,`payment_status`);
 
 --
--- Indexes for table `post_children`
+-- Indexes for table `post_item_pricing`
 --
-ALTER TABLE `post_children`
+ALTER TABLE `post_item_pricing`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
-  ADD KEY `session_date` (`session_date`),
-  ADD KEY `price` (`price`);
+  ADD KEY `price` (`item_price`);
 
 --
 -- Indexes for table `post_map_cards`
@@ -447,9 +442,9 @@ ALTER TABLE `posts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
--- AUTO_INCREMENT for table `post_children`
+-- AUTO_INCREMENT for table `post_item_pricing`
 --
-ALTER TABLE `post_children`
+ALTER TABLE `post_item_pricing`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
@@ -499,9 +494,9 @@ ALTER TABLE `posts`
   ADD CONSTRAINT `fk_posts_member` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON UPDATE CASCADE;
 
 --
--- Constraints for table `post_children`
+-- Constraints for table `post_item_pricing`
 --
-ALTER TABLE `post_children`
+ALTER TABLE `post_item_pricing`
   ADD CONSTRAINT `fk_post_children_map_card` FOREIGN KEY (`map_card_id`) REFERENCES `post_map_cards` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
@@ -983,27 +978,6 @@ CREATE TABLE `posts` (
 -- --------------------------------------------------------
 
 --
--- Stand-in structure for view `post_children`
--- (See below for the actual view)
---
-CREATE TABLE `post_children` (
-`id` int(11)
-,`map_card_id` int(11)
-,`session_date` date
-,`session_time` time
-,`seating_area` varchar(100)
-,`pricing_tier` varchar(100)
-,`item_name` varchar(200)
-,`item_variant` varchar(100)
-,`price` decimal(10,2)
-,`currency` varchar(10)
-,`created_at` datetime
-,`updated_at` datetime
-);
-
--- --------------------------------------------------------
-
---
 -- Stand-in structure for view `post_map_cards`
 -- (See below for the actual view)
 --
@@ -1395,15 +1369,6 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP TABLE IF EXISTS `posts`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `posts`  AS SELECT `funmapco_content`.`posts`.`id` AS `id`, `funmapco_content`.`posts`.`post_key` AS `post_key`, `funmapco_content`.`posts`.`member_id` AS `member_id`, `funmapco_content`.`posts`.`member_name` AS `member_name`, `funmapco_content`.`posts`.`subcategory_key` AS `subcategory_key`, `funmapco_content`.`posts`.`loc_qty` AS `loc_qty`, `funmapco_content`.`posts`.`visibility` AS `visibility`, `funmapco_content`.`posts`.`moderation_status` AS `moderation_status`, `funmapco_content`.`posts`.`flag_reason` AS `flag_reason`, `funmapco_content`.`posts`.`checkout_title` AS `checkout_title`, `funmapco_content`.`posts`.`payment_status` AS `payment_status`, `funmapco_content`.`posts`.`expires_at` AS `expires_at`, `funmapco_content`.`posts`.`deleted_at` AS `deleted_at`, `funmapco_content`.`posts`.`created_at` AS `created_at`, `funmapco_content`.`posts`.`updated_at` AS `updated_at` FROM `funmapco_content`.`posts` ;
-
--- --------------------------------------------------------
-
---
--- Structure for view `post_children`
---
-DROP TABLE IF EXISTS `post_children`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `post_children`  AS SELECT `pc`.`id` AS `id`, `pc`.`map_card_id` AS `map_card_id`, `pc`.`session_date` AS `session_date`, `pc`.`session_time` AS `session_time`, `pc`.`seating_area` AS `seating_area`, `pc`.`pricing_tier` AS `pricing_tier`, `pc`.`item_name` AS `item_name`, `pc`.`item_variant` AS `item_variant`, `pc`.`price` AS `price`, `pc`.`currency` AS `currency`, `pc`.`created_at` AS `created_at`, `pc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_children` AS `pc` ;
 
 -- --------------------------------------------------------
 
@@ -2005,10 +1970,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_logic`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`, `created_at`, `updated_at`) VALUES
-(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2026-01-02 22:47:53'),
-(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2026-01-02 22:47:53'),
-(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2026-01-02 22:47:53'),
-(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2026-01-02 22:47:53');
+(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2026-01-03 01:01:33'),
+(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2026-01-03 01:01:33'),
+(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2026-01-03 01:01:33'),
+(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2026-01-03 01:01:33');
 
 -- --------------------------------------------------------
 
@@ -3212,8 +3177,8 @@ CREATE TABLE `subcategories` (
 --
 
 INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_name`, `subcategory_key`, `fieldset_ids`, `fieldset_name`, `required`, `fieldset_mods`, `location_repeat`, `must_repeat`, `autofill_repeat`, `checkout_surcharge`, `sort_order`, `hidden`, `icon_path`, `color_hex`, `subcategory_type`, `subcategory_type_logic`, `location_type`, `created_at`, `updated_at`) VALUES
-(101, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,27,8,10,11,12,17,18,21', 'Title, Description, Public Email, Phone, Website (URL), Tickets (URL), Images, Venue, Amenities, Session Pricing', '1,1,0,0,0,0,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Kid Friendly\"]}}', '0,0,1,1,1,1,0,1,1,1', '0,0,0,0,0,0,0,1,1,1', '0,0,0,0,0,0,0,0,1,0', NULL, '1', 0, 'whats-on-blue.svg', '#E74C3C', 'Events', 'Sessions Menu shows dates/times. Date-driven pricing based on final session date. Listing expires after final session ends (searchable via expired filter for 12 months). Venue menu + Sessions menu.', 'Venue', '2025-10-29 12:32:47', '2026-01-02 11:47:53'),
-(102, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,27,8,10,11,12,17,18,21', 'Title, Description, Public Email, Phone, Website (URL), Tickets (URL), Images, Venue, Amenities, Session Pricing', '1,1,0,0,0,0,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Kid Friendly\"]}}', '0,0,1,1,1,1,0,1,1,1', '0,0,0,0,0,0,0,1,1,1', '0,0,0,0,0,0,0,0,1,0', NULL, '2', 0, 'whats-on-green.svg', '#E74C3C', 'Events', NULL, 'Venue', '2025-10-29 12:32:47', '2026-01-02 13:54:52'),
+(101, 1, 'What\'s On', 'Live Gigs', 'live-gigs', '1,2,27,8,10,11,12,17,18,21,14', 'Title, Description, Public Email, Phone, Website (URL), Tickets (URL), Images, Venue, Amenities, Session Pricing, Item Pricing', '1,1,0,0,0,0,1,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Kid Friendly\"]}}', '0,0,1,1,1,1,0,1,1,1,0', '0,0,0,0,0,0,0,1,1,1,0', '0,0,0,0,0,0,0,0,1,0,0', NULL, '1', 0, 'whats-on-blue.svg', '#E74C3C', 'Events', 'Sessions Menu shows dates/times. Date-driven pricing based on final session date. Listing expires after final session ends (searchable via expired filter for 12 months). Venue menu + Sessions menu.', 'Venue', '2025-10-29 12:32:47', '2026-01-02 14:01:33'),
+(102, 1, 'What\'s On', 'Screenings', 'screenings', '1,2,27,8,10,11,12,17,18,21,14', 'Title, Description, Public Email, Phone, Website (URL), Tickets (URL), Images, Venue, Amenities, Session Pricing, Item Pricing', '1,1,0,0,0,0,1,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Kid Friendly\"]}}', '0,0,1,1,1,1,0,1,1,1,0', '0,0,0,0,0,0,0,1,1,1,0', '0,0,0,0,0,0,0,0,1,0,0', NULL, '2', 0, 'whats-on-green.svg', '#E74C3C', 'Events', NULL, 'Venue', '2025-10-29 12:32:47', '2026-01-02 14:00:34'),
 (103, 1, 'What\'s On', 'Live Theatre', 'live-theatre', '1,2,27,8,10,11,12,17,18,21', 'Title, Description, Public Email, Phone, Website (URL), Tickets (URL), Images, Venue, Amenities, Session Pricing', '1,1,0,0,0,0,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Kid Friendly\"]}}', '0,0,1,1,1,1,0,1,1,1', '0,0,0,0,0,0,0,1,1,1', '0,0,0,0,0,0,0,0,1,0', NULL, '3', 0, 'whats-on-yellow.svg', '#E74C3C', 'Events', NULL, 'Venue', '2025-10-29 12:32:47', '2026-01-02 13:54:52'),
 (104, 1, 'What\'s On', 'Artwork', 'artwork', '1,2,27,8,10,11,12,17,18,21', 'Title, Description, Public Email, Phone, Website (URL), Tickets (URL), Images, Venue, Amenities, Session Pricing', '1,1,0,0,0,0,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Kid Friendly\"]}}', '0,0,1,1,1,1,0,1,1,1', '0,0,0,0,0,0,0,1,1,1', '0,0,0,0,0,0,0,0,1,0', NULL, '4', 0, 'whats-on-purple.svg', '#E74C3C', 'Events', NULL, 'Venue', '2025-10-29 12:32:47', '2026-01-02 13:54:52'),
 (105, 1, 'What\'s On', 'Live Sport', 'live-sport', '1,2,27,8,10,11,12,17,18,21', 'Title, Description, Public Email, Phone, Website (URL), Tickets (URL), Images, Venue, Amenities, Session Pricing', '1,1,0,0,0,0,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Kid Friendly\"]}}', '0,0,1,1,1,1,0,1,1,1', '0,0,0,0,0,0,0,1,1,1', '0,0,0,0,0,0,0,0,1,0', NULL, '5', 0, 'whats-on-orange.svg', '#E74C3C', 'Events', NULL, 'Venue', '2025-10-29 12:32:47', '2026-01-02 13:54:52'),
