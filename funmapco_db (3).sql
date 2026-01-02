@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 03:33 AM
+-- Generation Time: Jan 03, 2026 at 04:23 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1848,7 +1848,7 @@ CREATE TABLE `post_item_pricing` (
   `id` int(11) NOT NULL,
   `map_card_id` int(11) NOT NULL,
   `item_name` varchar(200) DEFAULT NULL,
-  `item_variant` varchar(100) DEFAULT NULL,
+  `item_variants` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`item_variants`)),
   `item_price` decimal(10,2) DEFAULT NULL,
   `currency` varchar(10) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),

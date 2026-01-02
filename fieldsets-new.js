@@ -1421,7 +1421,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(itemNameSub);
                 var itemNameInput = document.createElement('input');
                 itemNameInput.type = 'text';
-                itemNameInput.className = 'fieldset-input';
+                itemNameInput.className = 'fieldset-input fieldset-item-name';
                 itemNameInput.placeholder = 'eg. T-Shirt';
                 itemNameInput.style.marginBottom = '10px';
                 fieldset.appendChild(itemNameInput);
@@ -1452,6 +1452,7 @@ const FieldsetBuilder = (function(){
                             // Currency selected for entire item
                         }
                     });
+                    result.element.classList.add('fieldset-item-currency');
                     itemCurrencyCol.appendChild(result.element);
                 }
                 itemPriceRow.appendChild(itemCurrencyCol);
@@ -1464,7 +1465,7 @@ const FieldsetBuilder = (function(){
                 itemPriceSub.textContent = 'Item Price';
                 var itemPriceInput = document.createElement('input');
                 itemPriceInput.type = 'text';
-                itemPriceInput.className = 'fieldset-input';
+                itemPriceInput.className = 'fieldset-input fieldset-item-price';
                 itemPriceInput.placeholder = '0.00';
                 attachMoneyInputBehavior(itemPriceInput);
                 itemPriceCol.appendChild(itemPriceSub);
@@ -1477,7 +1478,7 @@ const FieldsetBuilder = (function(){
                 // Variants section label (single label at top)
                 var variantsSectionLabel = document.createElement('div');
                 variantsSectionLabel.className = 'fieldset-sublabel';
-                variantsSectionLabel.textContent = 'Variants';
+                variantsSectionLabel.textContent = 'Item Variants';
                 variantsSectionLabel.style.marginTop = '10px';
                 fieldset.appendChild(variantsSectionLabel);
                 
@@ -1497,9 +1498,11 @@ const FieldsetBuilder = (function(){
                     
                     var variantCol = document.createElement('div');
                     variantCol.style.flex = '1';
+                    variantCol.style.display = 'flex';
+                    variantCol.style.alignItems = 'center';
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
-                    variantInput.className = 'fieldset-input';
+                    variantInput.className = 'fieldset-input fieldset-item-variant';
                     variantInput.placeholder = 'eg. Large Red';
                     variantCol.appendChild(variantInput);
                     variantRow.appendChild(variantCol);
