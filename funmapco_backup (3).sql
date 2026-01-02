@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 01:16 AM
+-- Generation Time: Jan 03, 2026 at 01:18 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -978,6 +978,23 @@ CREATE TABLE `posts` (
 -- --------------------------------------------------------
 
 --
+-- Stand-in structure for view `post_children`
+-- (See below for the actual view)
+--
+CREATE TABLE `post_children` (
+`id` int(11)
+,`map_card_id` int(11)
+,`item_name` varchar(200)
+,`item_variant` varchar(100)
+,`item_price` decimal(10,2)
+,`item_currency` varchar(10)
+,`created_at` datetime
+,`updated_at` datetime
+);
+
+-- --------------------------------------------------------
+
+--
 -- Stand-in structure for view `post_map_cards`
 -- (See below for the actual view)
 --
@@ -1369,6 +1386,15 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP TABLE IF EXISTS `posts`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `posts`  AS SELECT `funmapco_content`.`posts`.`id` AS `id`, `funmapco_content`.`posts`.`post_key` AS `post_key`, `funmapco_content`.`posts`.`member_id` AS `member_id`, `funmapco_content`.`posts`.`member_name` AS `member_name`, `funmapco_content`.`posts`.`subcategory_key` AS `subcategory_key`, `funmapco_content`.`posts`.`loc_qty` AS `loc_qty`, `funmapco_content`.`posts`.`visibility` AS `visibility`, `funmapco_content`.`posts`.`moderation_status` AS `moderation_status`, `funmapco_content`.`posts`.`flag_reason` AS `flag_reason`, `funmapco_content`.`posts`.`checkout_title` AS `checkout_title`, `funmapco_content`.`posts`.`payment_status` AS `payment_status`, `funmapco_content`.`posts`.`expires_at` AS `expires_at`, `funmapco_content`.`posts`.`deleted_at` AS `deleted_at`, `funmapco_content`.`posts`.`created_at` AS `created_at`, `funmapco_content`.`posts`.`updated_at` AS `updated_at` FROM `funmapco_content`.`posts` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `post_children`
+--
+DROP TABLE IF EXISTS `post_children`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_futgs607nq`@`localhost` SQL SECURITY DEFINER VIEW `post_children`  AS SELECT `pc`.`id` AS `id`, `pc`.`map_card_id` AS `map_card_id`, `pc`.`item_name` AS `item_name`, `pc`.`item_variant` AS `item_variant`, `pc`.`item_price` AS `item_price`, `pc`.`item_currency` AS `item_currency`, `pc`.`created_at` AS `created_at`, `pc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_item_pricing` AS `pc` ;
 
 -- --------------------------------------------------------
 
