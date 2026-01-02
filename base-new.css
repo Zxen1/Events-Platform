@@ -63,6 +63,12 @@
   --secondary: #000000;
   --accent: #5C6FB1;
   --active: #2E3A72;
+  
+  /* Colors - WebsiteBlue (single source of truth; names describe usage, not UI state) */
+  --website-blue: #3b82f5;
+  --website-blue-border: var(--website-blue);
+  --website-blue-hover-fill: var(--website-blue);
+  --website-blue-active-fill: #3b82f599;
 
   /* Colors - background */
   --background: rgba(0,0,0,1);

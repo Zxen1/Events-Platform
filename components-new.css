@@ -848,12 +848,12 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-button:hover {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-button--open {
-    border-color: #3b82f5;
-    background: #3b82f599; /* 60% opacity */
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .fieldset-sessionpricing-ticketgroup-icon {
@@ -878,7 +878,7 @@
     width: 100%;
     margin-top: 0;
     background: #222; /* match .fieldset-menu-options */
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
     border-radius: 4px;
     padding: 0;
     box-sizing: border-box;
@@ -932,8 +932,8 @@
 
 .fieldset-sessionpricing-ticketgroup-footer-ok:hover,
 .fieldset-sessionpricing-ticketgroup-footer-cancel:hover {
-    background: #3b82f5; /* 100% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-popover--open {
@@ -959,8 +959,8 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-create:hover {
-    background: #3b82f5; /* 100% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-list {
@@ -988,8 +988,8 @@
     position: sticky;
     top: 10px;
     z-index: calc(var(--layer-menu, 85) + 1);
-    background: #3b82f599; /* 60% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-select {
@@ -1005,18 +1005,18 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-header--selected {
-    background: #3b82f599; /* 60% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-header:hover {
-    background: #3b82f5; /* 100% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-header--selected:hover,
 .fieldset-sessionpricing-ticketgroup-header--sticky:hover {
-    background: #3b82f599; /* 60% opacity */
+    background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .fieldset-sessionpricing-ticketgroup-edit {
@@ -1068,7 +1068,7 @@
     top: 3px;
     width: 30px;
     height: 30px;
-    background: #3b82f599; /* 60% opacity */
+    background: var(--website-blue-active-fill, #3b82f599);
     border-radius: 5px;
     z-index: -1;
 }
@@ -1101,8 +1101,8 @@
 
 /* Blue bordered editor container that visually extends the header */
 .fieldset-sessionpricing-pricing-group--open .fieldset-sessionpricing-ticketgroup-header {
-    background: #3b82f599; /* 60% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
     border-radius: 4px 4px 0 0;
     border-bottom: none;
 }
@@ -1110,7 +1110,7 @@
 .fieldset-sessionpricing-pricing-group--open .fieldset-sessionpricing-ticketgroup-editorwrap {
     margin-top: 0;
     padding: 10px;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
     border-top: none;
     border-radius: 0 0 4px 4px;
 }
@@ -1153,8 +1153,8 @@
 /* Apply/Cancel hover/active should be website blue */
 .fieldset-sessionpricing-ticketgroup-apply:hover,
 .fieldset-sessionpricing-ticketgroup-cancel:hover {
-    background: #3b82f5;
-    border-color: #3b82f5;
+    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 /* Header icon buttons (edit + delete) */
@@ -1191,7 +1191,7 @@
     right: 0;
     margin-top: 0;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
     border-radius: 4px;
     display: none;
     overflow: hidden;
@@ -1228,23 +1228,23 @@
 
 .fieldset-sessionpricing-datepicker-ok:hover,
 .fieldset-sessionpricing-datepicker-cancel:hover {
-    background: #3b82f5; /* 100% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-sessions-date--picker:hover {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
     cursor: pointer;
 }
 
 /* Any session date box should follow the site menu contract: hover blue, active/open stays blue */
 .fieldset-sessionpricing-sessions-date:hover {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-sessions-date--open {
-    background: #3b82f599; /* 60% opacity */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
     color: #fff;
 }
 
@@ -1335,16 +1335,16 @@
 }
 
 .fieldset-sessionpricing-calendar-day:not(.fieldset-sessionpricing-calendar-day--selected):not(.fieldset-sessionpricing-calendar-day--empty):hover {
-    background: #3b82f5; /* 100% opacity */
+    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-calendar-day:not(.fieldset-sessionpricing-calendar-day--selected):not(.fieldset-sessionpricing-calendar-day--empty):active {
-    background: #3b82f599; /* 60% opacity */
+    background: var(--website-blue-active-fill, #3b82f599);
     color: #fff;
 }
 
 .fieldset-sessionpricing-calendar-day--selected {
-    background: #3b82f599; /* 60% opacity */
+    background: var(--website-blue-active-fill, #3b82f599);
     color: #fff;
 }
 
@@ -1598,14 +1598,14 @@
 
 .fieldset-sessionpricing-sessions-time-input:focus {
     outline: none;
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 /* States - SessionPricing Buttons */
 .fieldset-sessionpricing-sessions-add:hover,
 .fieldset-sessionpricing-pricing-add:hover {
-    border-color: #3b82f5;
-    color: #3b82f5;
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-sessions-remove:hover,
@@ -1616,31 +1616,31 @@
 
 .fieldset-sessionpricing-sessions-add:active,
 .fieldset-sessionpricing-pricing-add:active {
-    background: #3b82f599; /* #3b82f5 @ 0.6 */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
     color: #fff;
 }
 
 .fieldset-sessionpricing-ticketgroup-button:active {
-    background: #3b82f599; /* #3b82f5 @ 0.6 */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-footer-ok:active,
 .fieldset-sessionpricing-ticketgroup-footer-cancel:active {
-    background: #3b82f599; /* #3b82f5 @ 0.6 */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-create:active {
-    background: #3b82f599; /* #3b82f5 @ 0.6 */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-datepicker-ok:active,
 .fieldset-sessionpricing-datepicker-cancel:active {
-    background: #3b82f599; /* #3b82f5 @ 0.6 */
-    border-color: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 /* States - Location */
