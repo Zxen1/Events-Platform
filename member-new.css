@@ -1093,7 +1093,8 @@
 }
 
 .member-auth-tab:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
+  /* Keep grey fill; only highlight the border on hover */
+  background: var(--btn);
   border-color: var(--website-blue-border, #3b82f5);
 }
 
@@ -1102,9 +1103,17 @@
 }
 
 .member-auth-tab--selected {
-  background: var(--website-blue-active-fill, #3b82f599);
+  /* Active tab should look like inactive (grey fill), but keep the blue border */
+  background: var(--btn);
   border-color: var(--website-blue-border, #3b82f5);
   color: var(--button-text);
+}
+
+/* Main login submit button (non-tab) should be WebsiteBlue by default */
+.member-auth-submit[data-action="login"] {
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: #ffffff;
 }
 
 .member-auth-tab:focus-visible {

@@ -2385,7 +2385,10 @@
             syncFieldWrapperUi(fieldWrapper);
             
             // Check field type
-            var fieldType = fieldsetDef.type || fieldsetDef.fieldset_type || fieldsetDef.fieldset_key || fieldsetDef.key;
+            // CRITICAL: fieldset key is the source of truth (not input_type / not a generic "type").
+            // If we prioritize a generic type first, option/amenities editors can disappear even when
+            // the fieldset is actually "amenities" or "custom_*".
+            var fieldType = fieldsetDef.fieldset_key || fieldsetDef.key || fieldsetDef.type || fieldsetDef.fieldset_type;
             var needsAmenities = fieldType === 'amenities';
             // CRITICAL: No fallbacks in the member/admin renderers, but Form Builder must still
             // recognize option-based fieldsets so the editor UI is available.
