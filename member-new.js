@@ -3360,7 +3360,7 @@ const MemberModule = (function() {
                 case 'session_pricing':
                 try {
                     // Sessions portion: each time includes ticket_group_key
-                    var selectedDays2 = el.querySelectorAll('.fieldset-sessionpricing-calendar-day--selected[data-iso]');
+                    var selectedDays2 = el.querySelectorAll('.fieldset-sessionpricing-session-field-label--selected[data-iso]');
                     var dates2 = [];
                     selectedDays2.forEach(function(d) {
                         var iso = d.dataset.iso;
@@ -3371,7 +3371,7 @@ const MemberModule = (function() {
                     for (var i2 = 0; i2 < dates2.length; i2++) {
                         var dateStr2 = dates2[i2];
                         var times2 = [];
-                        el.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input[data-date="' + dateStr2 + '"]').forEach(function(t) {
+                        el.querySelectorAll('input.fieldset-sessionpricing-session-field-time-input[data-date="' + dateStr2 + '"]').forEach(function(t) {
                             if (!t) return;
                             var v = String(t.value || '').trim();
                             var tgk = t.dataset ? String(t.dataset.ticketGroupKey || '').trim() : '';
@@ -3382,9 +3382,9 @@ const MemberModule = (function() {
 
                     // Ticket pricing groups: { [ticket_group_key]: [ { seating_area, tiers:[...] } ] }
                     var pricingGroups = {};
-                    var groupsWrap = el.querySelector('.fieldset-sessionpricing-pricing-groups');
+                    var groupsWrap = el.querySelector('.fieldset-sessionpricing-ticketgroups-container');
                     if (groupsWrap) {
-                        groupsWrap.querySelectorAll('.fieldset-sessionpricing-pricing-group').forEach(function(groupEl) {
+                        groupsWrap.querySelectorAll('.fieldset-sessionpricing-ticketgroup-item').forEach(function(groupEl) {
                             if (!groupEl) return;
                             var gk = groupEl.dataset ? String(groupEl.dataset.ticketGroupKey || '').trim() : '';
                             if (!gk) return;
