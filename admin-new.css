@@ -1105,8 +1105,8 @@
 }
 
 .admin-map-controls-starting-geocoder--hidden {
-  display: none !important;
-  visibility: hidden !important;
+  display: none;
+  visibility: hidden;
 }
 
 /* Google Places geocoder wrapper */
