@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 01:18 AM
+-- Generation Time: Jan 03, 2026 at 01:27 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -158,7 +158,7 @@ CREATE TABLE `post_item_pricing` (
   `item_name` varchar(200) DEFAULT NULL,
   `item_variant` varchar(100) DEFAULT NULL,
   `item_price` decimal(10,2) DEFAULT NULL,
-  `item_currency` varchar(10) DEFAULT NULL,
+  `currency` varchar(10) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -987,7 +987,7 @@ CREATE TABLE `post_children` (
 ,`item_name` varchar(200)
 ,`item_variant` varchar(100)
 ,`item_price` decimal(10,2)
-,`item_currency` varchar(10)
+,`currency` varchar(10)
 ,`created_at` datetime
 ,`updated_at` datetime
 );
@@ -1394,7 +1394,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `post_children`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_futgs607nq`@`localhost` SQL SECURITY DEFINER VIEW `post_children`  AS SELECT `pc`.`id` AS `id`, `pc`.`map_card_id` AS `map_card_id`, `pc`.`item_name` AS `item_name`, `pc`.`item_variant` AS `item_variant`, `pc`.`item_price` AS `item_price`, `pc`.`item_currency` AS `item_currency`, `pc`.`created_at` AS `created_at`, `pc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_item_pricing` AS `pc` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`cpses_futgs607nq`@`localhost` SQL SECURITY DEFINER VIEW `post_children`  AS SELECT `pc`.`id` AS `id`, `pc`.`map_card_id` AS `map_card_id`, `pc`.`item_name` AS `item_name`, `pc`.`item_variant` AS `item_variant`, `pc`.`item_price` AS `item_price`, `pc`.`currency` AS `currency`, `pc`.`created_at` AS `created_at`, `pc`.`updated_at` AS `updated_at` FROM `funmapco_content`.`post_item_pricing` AS `pc` ;
 
 -- --------------------------------------------------------
 
