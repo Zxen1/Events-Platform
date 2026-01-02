@@ -1665,32 +1665,6 @@
             });
         }
         
-        // Update sessions fieldset gray-out state based on subcategory type
-        function updateSessionsFieldset(subcategoryType) {
-            if (!fieldsetOpts) return;
-            var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
-            
-            allOptions.forEach(function(opt) {
-                var fsId = opt.getAttribute('data-fieldset-id');
-                var fieldset = fieldsets.find(function(fs) {
-                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
-                });
-                if (!fieldset) return;
-                
-                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
-                var isSessions = fieldsetKeyLower === 'sessions';
-                
-                if (isSessions) {
-                    if (subcategoryType === 'Events') {
-                        opt.classList.remove('formbuilder-fieldset-menu-option--disabled-location-type');
-                    } else {
-                        opt.classList.add('formbuilder-fieldset-menu-option--disabled-location-type');
-                    }
-                }
-            });
-        }
-        
         function manageLocationTypeFieldsets(selectedType) {
             if (!selectedType) {
                 // No location type selected:
@@ -1814,39 +1788,6 @@
             }
         }
         
-        // Manage sessions fieldset based on subcategory type (Events vs General)
-        function manageSessionsFieldset(isEvents) {
-            // Update gray-out state in menu
-            updateSessionsFieldset(isEvents ? 'Events' : 'General');
-            
-            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
-            
-            // If General is selected, remove sessions fieldset if it exists
-            if (!isEvents) {
-                allFieldWrappers.forEach(function(wrapper) {
-                    var fsId = wrapper.getAttribute('data-fieldset-id');
-                    var fieldset = fieldsets.find(function(fs) {
-                        return (fs.id || fs.key || fs.fieldset_key) == fsId;
-                    });
-                    if (!fieldset) return;
-                    
-                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
-                    
-                    if (fieldsetKeyLower === 'sessions') {
-                        wrapper.remove();
-                        addedFieldsets[fsId] = false;
-                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                        if (menuOpt) {
-                            menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
-                        }
-                    }
-                });
-                notifyChange();
-                return;
-            }
-        }
-        
         venueInput.addEventListener('change', function(e) {
             e.stopPropagation();
             if (venueInput.checked) {
@@ -1945,7 +1886,6 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'Events';
-                manageSessionsFieldset(true); // Add sessions fieldset for Events
                 notifyChange();
             }
         });
@@ -1989,7 +1929,6 @@
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'General';
                 // Keep existing location_type - don't set to null
-                manageSessionsFieldset(false); // Remove sessions fieldset for General
                 notifyChange();
             }
         });
@@ -2772,9 +2711,8 @@
         }
         
         // Populate fieldset options - NO FALLBACKS
-        // All fieldsets appear in menu, but location fieldsets and sessions are grayed out when not selectable
+        // All fieldsets appear in menu, but location fieldsets are grayed out when not selectable
         var selectedLocationType = subFeeData.location_type;
-        var currentSubcategoryType = subFeeData.subcategory_type;
         fieldsets.forEach(function(fs) {
             var fsId = fs.id || fs.key || fs.name;
             var fieldsetKey = fs.key || fs.fieldset_key || fs.id;
@@ -2783,7 +2721,6 @@
             var isVenue = fieldsetKeyLower === 'venue';
             var isCity = fieldsetKeyLower === 'city';
             var isAddress = fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location';
-            var isSessions = fieldsetKeyLower === 'sessions';
 
             // Do not show location fieldsets in the menu at all.
             // Location fieldset is dictated by Location Type and auto-added/maintained by the system.
@@ -2796,14 +2733,9 @@
             opt.textContent = fs.name || fs.key || 'Unnamed';
             opt.setAttribute('data-fieldset-id', fsId);
             
-            // Apply initial gray-out state for sessions (only available for Events)
-            if (isSessions && currentSubcategoryType !== 'Events') {
-                opt.classList.add('formbuilder-fieldset-menu-option--disabled-location-type');
-            }
-            
             opt.onclick = function(e) {
                 e.stopPropagation();
-                // Check for both "already added" disabled AND location type/sessions disabled
+                // Check for both "already added" disabled AND location type disabled
                 if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled') || opt.classList.contains('formbuilder-fieldset-menu-option--disabled-location-type')) return;
                 
                 var result = createFieldElement(fs, true, fs);
@@ -2824,9 +2756,6 @@
             updateLocationTypeFieldsets(null);
         }
         
-        // Apply initial sessions fieldset gray-out state
-        updateSessionsFieldset(currentSubcategoryType);
-        
         // Load existing fields from database FIRST
         var subFieldsMap = cat.subFields || {};
         var existingFields = subFieldsMap[subName] || [];
@@ -2846,14 +2775,6 @@
         // AFTER loading existing fields, manage location type fieldset (will only add if missing)
         if (initialLocationType) {
             manageLocationTypeFieldsets(initialLocationType);
-        }
-        
-        // Also manage sessions fieldset based on current subcategory type
-        var currentSubcategoryType = subFeeData.subcategory_type;
-        if (currentSubcategoryType === 'Events') {
-            manageSessionsFieldset(true);
-        } else {
-            manageSessionsFieldset(false);
         }
         
         function setFieldsetMenuOpen(isOpen) {
