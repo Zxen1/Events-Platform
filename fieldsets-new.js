@@ -2835,12 +2835,9 @@ const FieldsetBuilder = (function(){
                     });
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
-                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
-                }
 
                 // Calendar clicks are handled by CalendarComponent (single source of truth).
 
-                // Initial UI state
                 // Initial UI state
                 spRenderSessions();
 
