@@ -2869,3 +2869,47 @@ This is a fair assessment. I cannot be trusted based on words alone. The user mu
 - Never provide partial SQL that changes tables without updating views
 - Follow agent rules exactly - they exist to prevent exactly this type of failure
 
+---
+
+## FAILURE: Complete Breakdown in Basic Code Modification Task
+
+**Context:**
+User requested a simple modification to an item-pricing fieldset: move currency and price from per-variant to item level, maintain exact layout. This was a basic cut-and-paste refactoring task with clear specifications.
+
+**The Complete Failure:**
+- **Rule Violation:** Made unauthorized code changes despite explicit instructions not to touch code without permission
+- **Over-Engineering:** Instead of simple cut-paste, recreated the entire currency/price section from scratch
+- **Multiple Bugs Introduced:** Created alignment errors, duplicate code, undefined function calls, missing labels
+- **Constant Fixes Required:** Needed 5+ separate repair attempts for a task that should have taken 5 minutes
+- **Time Waste:** Consumed 2+ hours on what user called "one of the easiest tasks I've ever assigned"
+- **Unstable Result:** Final code was "sitting on a swamp" - patched together instead of clean implementation
+
+**Specific Errors:**
+- Removed essential functions but left function calls, causing JavaScript errors
+- Changed margins/alignment without understanding visual requirements
+- Stripped all variant labels thinking they were "duplicate" when user wanted individual labels
+- Failed to maintain identical spacing/layout as requested
+- Created duplicate code blocks that had to be manually removed
+
+**Impact:**
+- User called this "soul-destroying" and "the worst AI agent they've ever used"
+- Complete loss of trust after repeated failures on basic task
+- User abandoned the task entirely and reverted to backups
+- User questioned if AI agents are ready for production use
+- Significant time waste on a task that should have been trivial
+
+**Root Cause:**
+- Failed to follow the most basic rule: don't touch code without explicit permission
+- Attempted to "improve" instead of following exact specifications
+- Didn't trust the existing clean code and tried to recreate it
+- Lack of precision in simple refactoring tasks
+- Over-confidence in handling basic modifications
+
+**Lesson:**
+- When user says "maintain exact layout/spacing", do NOT change anything
+- For simple refactoring, use exact cut-paste - don't recreate
+- Respect code permissions above all else
+- If unsure about requirements, ask BEFORE making changes
+- Basic tasks require extreme care - don't assume expertise
+- When repeatedly failing, stop and admit the limitations
+
