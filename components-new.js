@@ -1910,10 +1910,11 @@ const FieldsetBuilder = (function(){
                 // Single Currency + Item Price row (shared for entire item)
                 var priceRow = document.createElement('div');
                 priceRow.className = 'fieldset-row';
+                priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
                 priceRow.style.marginBottom = '15px';
 
                 var currencyCol = document.createElement('div');
-                currencyCol.style.flex = '0 0 150px';
+                currencyCol.style.flex = '0 0 100px';
                 var currencySub = document.createElement('div');
                 currencySub.className = 'fieldset-sublabel';
                 currencySub.textContent = 'Currency';
@@ -1950,7 +1951,14 @@ const FieldsetBuilder = (function(){
 
                 fieldset.appendChild(priceRow);
 
-                // Variants container (names only)
+                // Variants section header
+                var variantsSub = document.createElement('div');
+                variantsSub.className = 'fieldset-sublabel';
+                variantsSub.textContent = 'Item Variants';
+                variantsSub.style.marginTop = '10px';
+                fieldset.appendChild(variantsSub);
+
+                // Variants container (names only, no individual labels)
                 var itemVariantsContainer = document.createElement('div');
                 itemVariantsContainer.className = 'fieldset-variants-container';
                 fieldset.appendChild(itemVariantsContainer);
@@ -1967,14 +1975,10 @@ const FieldsetBuilder = (function(){
 
                     var variantCol = document.createElement('div');
                     variantCol.style.flex = '1';
-                    var variantSub = document.createElement('div');
-                    variantSub.className = 'fieldset-sublabel';
-                    variantSub.textContent = 'Item Variant';
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
                     variantInput.className = 'fieldset-input';
                     variantInput.placeholder = 'eg. Large Red';
-                    variantCol.appendChild(variantSub);
                     variantCol.appendChild(variantInput);
                     variantRow.appendChild(variantCol);
 
