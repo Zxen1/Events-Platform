@@ -606,7 +606,7 @@ const FieldsetBuilder = (function(){
                 if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
                 if (child.classList.contains('component-currencycompact-menu')) child.classList.add('fieldset-row-item--currency-compact');
                 if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
-                if (child.classList.contains('fieldset-pricing-add') || child.classList.contains('fieldset-pricing-remove')) {
+                if (child.classList.contains('fieldset-sessionpricing-pricing-add') || child.classList.contains('fieldset-sessionpricing-pricing-remove')) {
                     child.classList.add('fieldset-row-item--no-flex');
                 }
             });
@@ -1510,7 +1510,7 @@ const FieldsetBuilder = (function(){
                     // + button
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
-                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.className = 'fieldset-item-add';
                     addBtn.textContent = '+';
                     addBtn.addEventListener('click', function() {
                         itemVariantsContainer.appendChild(createItemVariantBlock());
@@ -1521,7 +1521,7 @@ const FieldsetBuilder = (function(){
                     // - button
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.className = 'fieldset-item-remove';
                     removeBtn.textContent = '−';
                     removeBtn.addEventListener('click', function() {
                         block.remove();
@@ -1539,8 +1539,8 @@ const FieldsetBuilder = (function(){
                     var blocks = itemVariantsContainer.querySelectorAll('.fieldset-variant-block');
                     var atMax = blocks.length >= 10;
                     blocks.forEach(function(block) {
-                        var addBtn = block.querySelector('.fieldset-pricing-add');
-                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        var addBtn = block.querySelector('.fieldset-item-add');
+                        var removeBtn = block.querySelector('.fieldset-item-remove');
                         if (atMax) {
                             addBtn.style.opacity = '0.3';
                             addBtn.style.cursor = 'not-allowed';
@@ -1567,659 +1567,6 @@ const FieldsetBuilder = (function(){
                 updateItemVariantButtons();
                 break;
                 
-            case 'ticket-pricing':
-                // Seating Areas container with nested Pricing Tiers
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
-                
-                var seatingAreasContainer = document.createElement('div');
-                seatingAreasContainer.className = 'fieldset-seating-areas-container';
-                fieldset.appendChild(seatingAreasContainer);
-                
-                // Track shared currency state
-                // Use defaultCurrency if provided, otherwise null (user must select)
-                var initialCurrencyCode = defaultCurrency || null;
-                var initialCurrency = null;
-                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
-                    var found = CurrencyComponent.getData().find(function(item) {
-                        return item.value === initialCurrencyCode;
-                    });
-                    if (found) {
-                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
-                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
-                    }
-                }
-                var ticketCurrencyState = initialCurrency || { flag: null, code: null };
-                var ticketCurrencyMenus = []; // [{ element, setValue }]
-
-                function syncAllTicketCurrencies() {
-                    ticketCurrencyMenus.forEach(function(menuObj) {
-                        try {
-                            if (!menuObj || typeof menuObj.setValue !== 'function') return;
-                            menuObj.setValue(ticketCurrencyState.code || null);
-                        } catch (e0) {}
-                    });
-                }
-
-                function buildTicketCurrencyMenu() {
-                    if (typeof CurrencyComponent === 'undefined') {
-                        console.error('[FieldsetBuilder] CurrencyComponent not available');
-                        return document.createElement('div');
-                    }
-                    var result = CurrencyComponent.buildCompactMenu({
-                        initialValue: ticketCurrencyState.code,
-                        onSelect: function(value, label, countryCode) {
-                            ticketCurrencyState.flag = countryCode;
-                            ticketCurrencyState.code = value;
-                            syncAllTicketCurrencies();
-                        }
-                    });
-                    ticketCurrencyMenus.push(result);
-                    return result.element;
-                }
-                
-                function createPricingTierBlock(tiersContainer) {
-                    var block = document.createElement('div');
-                    block.className = 'fieldset-tier-block';
-                    block.style.marginBottom = '10px';
-                    block.style.marginLeft = '20px';
-                    
-                    // Row 1: Tier name + +/- buttons
-                    var tierRow = document.createElement('div');
-                    tierRow.className = 'fieldset-row';
-                    tierRow.style.marginBottom = '10px';
-                    
-                    var tierCol = document.createElement('div');
-                    tierCol.style.flex = '1';
-                    var tierSub = document.createElement('div');
-                    tierSub.className = 'fieldset-sublabel';
-                    tierSub.textContent = 'Pricing Tier';
-                    var tierInput = document.createElement('input');
-                    tierInput.type = 'text';
-                    tierInput.className = 'fieldset-input';
-                    tierInput.placeholder = 'eg. Adult';
-                    tierCol.appendChild(tierSub);
-                    tierCol.appendChild(tierInput);
-                    tierRow.appendChild(tierCol);
-                    
-                    // + button
-                    var addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.className = 'fieldset-pricing-add';
-                    addBtn.textContent = '+';
-                    addBtn.addEventListener('click', function() {
-                        tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
-                        updateTierButtons(tiersContainer);
-                    });
-                    tierRow.appendChild(addBtn);
-                    
-                    // - button
-                    var removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'fieldset-pricing-remove';
-                    removeBtn.textContent = '−';
-                    removeBtn.addEventListener('click', function() {
-                        block.remove();
-                        // Remove from tracked menus
-                        var blockMenu = block.querySelector('.component-currencycompact-menu');
-                        var idx = -1;
-                        for (var mi = 0; mi < ticketCurrencyMenus.length; mi++) {
-                            if (ticketCurrencyMenus[mi] && ticketCurrencyMenus[mi].element === blockMenu) { idx = mi; break; }
-                        }
-                        if (idx > -1) ticketCurrencyMenus.splice(idx, 1);
-                        updateTierButtons(tiersContainer);
-                    });
-                    tierRow.appendChild(removeBtn);
-                    applyFieldsetRowItemClasses(tierRow);
-                    
-                    block.appendChild(tierRow);
-                    
-                    // Row 2: Currency + Price (cropped to align under tier)
-                    var priceRow = document.createElement('div');
-                    priceRow.className = 'fieldset-row';
-                    priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
-                    
-                    var currencyCol = document.createElement('div');
-                    currencyCol.style.flex = '0 0 100px';
-                    var currencySub = document.createElement('div');
-                    currencySub.className = 'fieldset-sublabel';
-                    currencySub.textContent = 'Currency';
-                    currencyCol.appendChild(currencySub);
-                    currencyCol.appendChild(buildTicketCurrencyMenu());
-                    priceRow.appendChild(currencyCol);
-                    
-                    var priceCol = document.createElement('div');
-                    priceCol.style.flex = '1';
-                    var priceSub = document.createElement('div');
-                    priceSub.className = 'fieldset-sublabel';
-                    priceSub.textContent = 'Price';
-                    var priceInput = document.createElement('input');
-                    priceInput.className = 'fieldset-input';
-                    priceInput.placeholder = '0.00';
-                    attachMoneyInputBehavior(priceInput);
-                    priceCol.appendChild(priceSub);
-                    priceCol.appendChild(priceInput);
-                    priceRow.appendChild(priceCol);
-                    applyFieldsetRowItemClasses(priceRow);
-                    
-                    block.appendChild(priceRow);
-                    
-                    return block;
-                }
-                
-                function updateTierButtons(tiersContainer) {
-                    var blocks = tiersContainer.querySelectorAll('.fieldset-tier-block');
-                    var atMax = blocks.length >= 10;
-                    blocks.forEach(function(block) {
-                        var addBtn = block.querySelector('.fieldset-pricing-add');
-                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
-                        // + button: grey out at cap
-                        if (atMax) {
-                            addBtn.style.opacity = '0.3';
-                            addBtn.style.cursor = 'not-allowed';
-                            addBtn.disabled = true;
-                        } else {
-                            addBtn.style.opacity = '1';
-                            addBtn.style.cursor = 'pointer';
-                            addBtn.disabled = false;
-                        }
-                        // - button: grey out when only 1
-                        if (blocks.length === 1) {
-                            removeBtn.style.opacity = '0.3';
-                            removeBtn.style.cursor = 'not-allowed';
-                            removeBtn.disabled = true;
-                        } else {
-                            removeBtn.style.opacity = '1';
-                            removeBtn.style.cursor = 'pointer';
-                            removeBtn.disabled = false;
-                        }
-                    });
-                }
-                
-                function createSeatingAreaBlock() {
-                    var block = document.createElement('div');
-                    block.className = 'fieldset-seating-block';
-                    block.style.marginBottom = '20px';
-                    block.style.paddingBottom = '10px';
-                    block.style.borderBottom = '1px solid #333';
-                    
-                    // Seating Area row
-                    var seatRow = document.createElement('div');
-                    seatRow.className = 'fieldset-row';
-                    seatRow.style.marginBottom = '10px';
-                    
-                    var seatCol = document.createElement('div');
-                    seatCol.style.flex = '1';
-                    var seatSub = document.createElement('div');
-                    seatSub.className = 'fieldset-sublabel';
-                    seatSub.textContent = 'Seating Area';
-                    var seatInput = document.createElement('input');
-                    seatInput.type = 'text';
-                    seatInput.className = 'fieldset-input';
-                    seatInput.placeholder = 'eg. Orchestra';
-                    seatCol.appendChild(seatSub);
-                    seatCol.appendChild(seatInput);
-                    seatRow.appendChild(seatCol);
-                    
-                    // + button for seating area
-                    var addBtn = document.createElement('button');
-                    addBtn.type = 'button';
-                    addBtn.className = 'fieldset-pricing-add';
-                    addBtn.textContent = '+';
-                    addBtn.addEventListener('click', function() {
-                        seatingAreasContainer.appendChild(createSeatingAreaBlock());
-                        updateSeatingAreaButtons();
-                    });
-                    seatRow.appendChild(addBtn);
-                    
-                    // - button for seating area
-                    var removeBtn = document.createElement('button');
-                    removeBtn.type = 'button';
-                    removeBtn.className = 'fieldset-pricing-remove';
-                    removeBtn.textContent = '−';
-                    removeBtn.addEventListener('click', function() {
-                        block.remove();
-                        updateSeatingAreaButtons();
-                    });
-                    seatRow.appendChild(removeBtn);
-                    applyFieldsetRowItemClasses(seatRow);
-                    
-                    block.appendChild(seatRow);
-                    
-                    // Pricing tiers container for this seating area
-                    var tiersContainer = document.createElement('div');
-                    tiersContainer.className = 'fieldset-tiers-container';
-                    tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
-                    updateTierButtons(tiersContainer);
-                    block.appendChild(tiersContainer);
-                    
-                    return block;
-                }
-                
-                function updateSeatingAreaButtons() {
-                    var blocks = seatingAreasContainer.querySelectorAll('.fieldset-seating-block');
-                    var atMax = blocks.length >= 10;
-                    blocks.forEach(function(block) {
-                        var addBtn = block.querySelector('.fieldset-pricing-add');
-                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
-                        // + button: grey out at cap
-                        if (atMax) {
-                            addBtn.style.opacity = '0.3';
-                            addBtn.style.cursor = 'not-allowed';
-                            addBtn.disabled = true;
-                        } else {
-                            addBtn.style.opacity = '1';
-                            addBtn.style.cursor = 'pointer';
-                            addBtn.disabled = false;
-                        }
-                        // - button: grey out when only 1
-                        if (blocks.length === 1) {
-                            removeBtn.style.opacity = '0.3';
-                            removeBtn.style.cursor = 'not-allowed';
-                            removeBtn.disabled = true;
-                        } else {
-                            removeBtn.style.opacity = '1';
-                            removeBtn.style.cursor = 'pointer';
-                            removeBtn.disabled = false;
-                        }
-                    });
-                }
-                
-                // Create first seating area
-                seatingAreasContainer.appendChild(createSeatingAreaBlock());
-                updateSeatingAreaButtons();
-                break;
-                
-            case 'sessions':
-                // Horizontal scrolling calendar + auto-generated session rows with autofill
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
-                
-                // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
-                var sessionData = {};
-                
-                var today = new Date();
-                today.setHours(0, 0, 0, 0);
-                var todayIso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-                
-                var minDate = new Date(today.getFullYear(), today.getMonth(), 1);
-                var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
-                
-                var todayMonthEl = null;
-                var todayMonthIndex = 0;
-                var totalMonths = 0;
-                var weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                
-                function toISODate(d) {
-                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                }
-                
-                function getDayOfWeek(dateStr) {
-                    var d = new Date(dateStr + 'T00:00:00');
-                    return d.getDay();
-                }
-                
-                // Calendar container
-                var calContainer = document.createElement('div');
-                calContainer.className = 'fieldset-calendar-container';
-                
-                var calScroll = document.createElement('div');
-                calScroll.className = 'fieldset-calendar-scroll';
-                
-                var calendar = document.createElement('div');
-                calendar.className = 'fieldset-calendar';
-                
-                // Build months
-                var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-                var monthIdx = 0;
-                while (current <= maxDate) {
-                    var monthEl = document.createElement('div');
-                    monthEl.className = 'fieldset-calendar-month';
-                    
-                    var header = document.createElement('div');
-                    header.className = 'fieldset-calendar-header';
-                    header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-                    monthEl.appendChild(header);
-                    
-                    var grid = document.createElement('div');
-                    grid.className = 'fieldset-calendar-grid';
-                    
-                    weekdayNames.forEach(function(wd) {
-                        var w = document.createElement('div');
-                        w.className = 'fieldset-calendar-weekday';
-                        w.textContent = wd;
-                        grid.appendChild(w);
-                    });
-                    
-                    var firstDay = new Date(current.getFullYear(), current.getMonth(), 1);
-                    var startDow = firstDay.getDay();
-                    var daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
-                    
-                    for (var i = 0; i < 42; i++) {
-                        var cell = document.createElement('div');
-                        cell.className = 'fieldset-calendar-day';
-                        var dayNum = i - startDow + 1;
-                        
-                        if (i < startDow || dayNum > daysInMonth) {
-                            cell.classList.add('empty');
-                        } else {
-                            cell.textContent = dayNum;
-                            var dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
-                            dateObj.setHours(0, 0, 0, 0);
-                            var iso = toISODate(dateObj);
-                            cell.dataset.iso = iso;
-                            
-                            if (dateObj < today) {
-                                cell.classList.add('past');
-                            } else {
-                                cell.classList.add('future');
-                            }
-                            
-                            if (iso === todayIso) {
-                                cell.classList.add('today');
-                                todayMonthEl = monthEl;
-                                todayMonthIndex = monthIdx;
-                            }
-                        }
-                        grid.appendChild(cell);
-                    }
-                    
-                    monthEl.appendChild(grid);
-                    calendar.appendChild(monthEl);
-                    current.setMonth(current.getMonth() + 1);
-                    monthIdx++;
-                }
-                totalMonths = monthIdx;
-                
-                calScroll.appendChild(calendar);
-                calContainer.appendChild(calScroll);
-                
-                // Today marker
-                var marker = document.createElement('div');
-                marker.className = 'fieldset-calendar-today-marker';
-                calContainer.appendChild(marker);
-                
-                fieldset.appendChild(calContainer);
-                
-                // Sessions container (below calendar)
-                var sessionsContainer = document.createElement('div');
-                sessionsContainer.className = 'fieldset-sessions';
-                fieldset.appendChild(sessionsContainer);
-                
-                // Position marker dynamically based on today's month index
-                setTimeout(function() {
-                    if (todayMonthEl) {
-                        calScroll.scrollLeft = todayMonthEl.offsetLeft;
-                    }
-                    var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
-                    var markerPos = markerFraction * (calContainer.clientWidth - 8);
-                    marker.style.left = markerPos + 'px';
-                }, 0);
-                
-                // Marker click - scroll to today
-                marker.addEventListener('click', function() {
-                    if (todayMonthEl) {
-                        calScroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
-                    }
-                });
-                
-                // Horizontal wheel scroll (reduced sensitivity)
-                calScroll.addEventListener('wheel', function(e) {
-                    e.preventDefault();
-                    calScroll.scrollLeft += (e.deltaY || e.deltaX) * 0.3;
-                });
-                
-                // Track which slot indices have had their "god" time set
-                // GOD = first edit fills ALL dates
-                // DEMIGOD = subsequent edits fill same weekday only
-                var godSetForSlot = {};
-                
-                function autofillTimes(changedDateStr, changedSlotIdx, newTime) {
-                    var sortedDates = Object.keys(sessionData).sort();
-                    var changedDow = getDayOfWeek(changedDateStr);
-                    
-                    if (!godSetForSlot[changedSlotIdx]) {
-                        // GOD MODE: first edit at this slot - fill ALL unedited slots
-                        godSetForSlot[changedSlotIdx] = true;
-                        
-                        for (var i = 0; i < sortedDates.length; i++) {
-                            var dateStr = sortedDates[i];
-                            if (dateStr === changedDateStr) continue;
-                            var data = sessionData[dateStr];
-                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
-                                data.times[changedSlotIdx] = newTime;
-                            }
-                        }
-                    } else {
-                        // DEMIGOD MODE: fill only same weekday unedited slots
-                        for (var i = 0; i < sortedDates.length; i++) {
-                            var dateStr = sortedDates[i];
-                            if (dateStr === changedDateStr) continue;
-                            if (getDayOfWeek(dateStr) !== changedDow) continue;
-                            var data = sessionData[dateStr];
-                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
-                                data.times[changedSlotIdx] = newTime;
-                            }
-                        }
-                    }
-                }
-                
-                // Get autofill value for a new time slot (worship the demigod - same weekday first)
-                function getAutofillForSlot(dateStr, slotIdx) {
-                    var dow = getDayOfWeek(dateStr);
-                    var sortedDates = Object.keys(sessionData).sort();
-                    
-                    // Priority 1: Same weekday with a value at this slot (worship the demigod)
-                    for (var i = 0; i < sortedDates.length; i++) {
-                        var d = sortedDates[i];
-                        if (d === dateStr) continue;
-                        if (getDayOfWeek(d) === dow && sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
-                            return sessionData[d].times[slotIdx];
-                        }
-                    }
-                    
-                    // Priority 2: Any date with a value at this slot (worship the god if no demigod)
-                    for (var i = 0; i < sortedDates.length; i++) {
-                        var d = sortedDates[i];
-                        if (d === dateStr) continue;
-                        if (sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
-                            return sessionData[d].times[slotIdx];
-                        }
-                    }
-                    
-                    return '';
-                }
-                
-                // Render session rows
-                function renderSessions() {
-                    sessionsContainer.innerHTML = '';
-                    
-                    var sortedDates = Object.keys(sessionData).sort();
-                    
-                    sortedDates.forEach(function(dateStr) {
-                        var data = sessionData[dateStr];
-                        var group = document.createElement('div');
-                        group.className = 'fieldset-session-group';
-                        
-                        data.times.forEach(function(timeVal, idx) {
-                            var row = document.createElement('div');
-                            row.className = 'fieldset-session-row';
-                            
-                            if (idx === 0) {
-                                var dateDisplay = document.createElement('div');
-                                dateDisplay.className = 'fieldset-session-date';
-                                var d = new Date(dateStr + 'T00:00:00');
-                                dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-                                row.appendChild(dateDisplay);
-                            } else {
-                                var spacer = document.createElement('div');
-                                spacer.className = 'fieldset-session-date-spacer';
-                                row.appendChild(spacer);
-                            }
-                            
-                            var timeWrapper = document.createElement('div');
-                            timeWrapper.className = 'fieldset-session-time';
-                            var timeInput = document.createElement('input');
-                            timeInput.type = 'text';
-                            timeInput.className = 'fieldset-time';
-                            timeInput.placeholder = 'HH:MM';
-                            timeInput.maxLength = 5;
-                            timeInput.value = timeVal;
-                            timeInput.dataset.date = dateStr;
-                            timeInput.dataset.idx = idx;
-                            
-                            // Select all on focus for easy overwrite
-                            timeInput.addEventListener('focus', function() {
-                                var input = this;
-                                setTimeout(function() { input.select(); }, 0);
-                            });
-                            
-                            // Auto-format time input (add colon after 2 digits)
-                            timeInput.addEventListener('input', function() {
-                                var v = this.value.replace(/[^0-9]/g, '');
-                                if (v.length >= 2) {
-                                    v = v.substring(0, 2) + ':' + v.substring(2, 4);
-                                }
-                                this.value = v;
-                            });
-                            
-                            (function(dateStr, idx) {
-                                timeInput.addEventListener('blur', function() {
-                                    var raw = this.value.replace(/[^0-9]/g, ''); // digits only
-                                    if (raw === '') {
-                                        sessionData[dateStr].times[idx] = '';
-                                        // Notify fieldset completion logic after blur cleanup.
-                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
-                                        return;
-                                    }
-                                    
-                                    var hh, mm;
-                                    if (raw.length === 1) {
-                                        // "9" → "09:00"
-                                        hh = '0' + raw;
-                                        mm = '00';
-                                    } else if (raw.length === 2) {
-                                        // "19" → "19:00"
-                                        hh = raw;
-                                        mm = '00';
-                                    } else if (raw.length === 3) {
-                                        // "193" → "19:30"
-                                        hh = raw.substring(0, 2);
-                                        mm = raw.substring(2) + '0';
-                                    } else {
-                                        // "1930" → "19:30"
-                                        hh = raw.substring(0, 2);
-                                        mm = raw.substring(2, 4);
-                                    }
-                                    
-                                    var newTime = hh + ':' + mm;
-                                    
-                                    // Validate hours 00-23 and minutes 00-59
-                                    var hours = parseInt(hh, 10);
-                                    var mins = parseInt(mm, 10);
-                                    if (hours <= 23 && mins <= 59) {
-                                        this.value = newTime;
-                                        sessionData[dateStr].times[idx] = newTime;
-                                        sessionData[dateStr].edited[idx] = true;
-                                        autofillTimes(dateStr, idx, newTime);
-                                        // Update other visible time inputs without full re-render
-                                        sessionsContainer.querySelectorAll('.fieldset-time').forEach(function(input) {
-                                            var d = input.dataset.date;
-                                            var i = parseInt(input.dataset.idx, 10);
-                                            if (d && sessionData[d] && sessionData[d].times[i] !== undefined) {
-                                                input.value = sessionData[d].times[i];
-                                            }
-                                        });
-                                        // Notify fieldset completion logic after normalization.
-                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
-                                    } else {
-                                        // Invalid time - reset input
-                                        this.value = '';
-                                        sessionData[dateStr].times[idx] = '';
-                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
-                                    }
-                                });
-                            })(dateStr, idx);
-                            
-                            timeWrapper.appendChild(timeInput);
-                            row.appendChild(timeWrapper);
-                            
-                            // + button (always visible, greyed out at max 10)
-                            var maxTimesPerDate = 10;
-                            var addBtn = document.createElement('button');
-                            addBtn.type = 'button';
-                            addBtn.className = 'fieldset-session-add';
-                            addBtn.textContent = '+';
-                            if (data.times.length >= maxTimesPerDate) {
-                                addBtn.disabled = true;
-                                addBtn.style.opacity = '0.3';
-                                addBtn.style.cursor = 'not-allowed';
-                            } else {
-                                (function(dateStr, idx) {
-                                    addBtn.addEventListener('click', function() {
-                                        var newSlotIdx = idx + 1;
-                                        var autofillVal = getAutofillForSlot(dateStr, newSlotIdx);
-                                        sessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
-                                        sessionData[dateStr].edited.splice(newSlotIdx, 0, false);
-                                        renderSessions();
-                                    });
-                                })(dateStr, idx);
-                            }
-                            row.appendChild(addBtn);
-                            
-                            // - button (always visible, greyed out if only 1 time)
-                            var removeBtn = document.createElement('button');
-                            removeBtn.type = 'button';
-                            removeBtn.className = 'fieldset-session-remove';
-                            removeBtn.textContent = '−';
-                            if (data.times.length === 1) {
-                                removeBtn.disabled = true;
-                                removeBtn.style.opacity = '0.3';
-                                removeBtn.style.cursor = 'not-allowed';
-                            } else {
-                                (function(dateStr, idx) {
-                                    removeBtn.addEventListener('click', function() {
-                                        sessionData[dateStr].times.splice(idx, 1);
-                                        sessionData[dateStr].edited.splice(idx, 1);
-                                        renderSessions();
-                                    });
-                                })(dateStr, idx);
-                            }
-                            row.appendChild(removeBtn);
-                            
-                            group.appendChild(row);
-                        });
-                        
-                        sessionsContainer.appendChild(group);
-                    });
-
-                    // Recompute required/completion state after the DOM has changed (new time inputs, removals, etc.)
-                    // This keeps the asterisk honest without requiring the user to click into a newly added input.
-                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
-                }
-                
-                // Calendar day click
-                calendar.addEventListener('click', function(e) {
-                    var day = e.target;
-                    if (day.classList.contains('fieldset-calendar-day') && !day.classList.contains('empty')) {
-                        var iso = day.dataset.iso;
-                        if (sessionData[iso]) {
-                            delete sessionData[iso];
-                            day.classList.remove('selected');
-                        } else {
-                            // New date - autofill first time slot
-                            var autofillVal = getAutofillForSlot(iso, 0);
-                            sessionData[iso] = { times: [autofillVal], edited: [false] };
-                            day.classList.add('selected');
-                        }
-                        renderSessions();
-                        // Notify listeners (member checkout pricing needs final session date per location)
-                        try {
-                            fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true }));
-                        } catch (e) {}
-                    }
-                });
-                
-                break;
-
             case 'session_pricing':
                 // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
@@ -2320,7 +1667,7 @@ const FieldsetBuilder = (function(){
                     });
                 }
 
-                // --- Pricing editor builders (same visual as ticket-pricing) ---
+                // --- Pricing editor builders ---
                 function spCreatePricingTierBlock(tiersContainer) {
                     var block = document.createElement('div');
                     block.className = 'fieldset-sessionpricing-pricing-tier-block';
@@ -3835,16 +3182,6 @@ const FieldsetBuilder = (function(){
                         }
                         case 'amenities':
                             return !!fieldset.querySelector('.fieldset-amenity-row input[type="radio"]:checked');
-                        case 'sessions': {
-                            var selected = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
-                            if (selected && selected.length > 0) return true;
-                            // If any time input has value, user interacted.
-                            var t = fieldset.querySelectorAll('input.fieldset-time');
-                            for (var i = 0; i < t.length; i++) {
-                                if (t[i] && String(t[i].value || '').trim()) return true;
-                            }
-                            return false;
-                        }
                         case 'session_pricing': {
                             var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                             if (selected2 && selected2.length > 0) return true;
@@ -3871,8 +3208,7 @@ const FieldsetBuilder = (function(){
                             if (tel && String(tel.value || '').trim()) return true;
                             return false;
                         }
-                        case 'item-pricing':
-                        case 'ticket-pricing': {
+                        case 'item-pricing': {
                             var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
                             for (var i = 0; i < els.length; i++) {
                                 var el = els[i];
@@ -4047,22 +3383,6 @@ const FieldsetBuilder = (function(){
                     if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
                     return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
                 }
-                case 'sessions': {
-                    var selectedDays = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
-                    if (!selectedDays || selectedDays.length === 0) return false;
-                    // Session time inputs are rendered with class "fieldset-time"
-                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time');
-                    if (!timeInputs || timeInputs.length === 0) return false;
-                    for (var i = 0; i < timeInputs.length; i++) {
-                        var ti = timeInputs[i];
-                        if (!ti) return false;
-                        // Only require boxes the user can actually see/interact with.
-                        if (!isVisibleControl(ti)) continue;
-                        // A time box is only "complete" when it's fully formed (HH:MM).
-                        if (!isTimeHHMM(ti.value)) return false;
-                    }
-                    return true;
-                }
                 case 'session_pricing': {
                     var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                     if (!selectedDays2 || selectedDays2.length === 0) return false;
@@ -4141,11 +3461,6 @@ const FieldsetBuilder = (function(){
                 case 'item-pricing': {
                     // Rule: all visible boxes in this pricing UI must be filled out.
                     // Covers item name + each variant's name/currency/price.
-                    return allVisibleControlsFilled(fieldset);
-                }
-                case 'ticket-pricing': {
-                    // Rule: all visible boxes in this seating/tier pricing UI must be filled out.
-                    // Covers seating area name + tier name + currency + price.
                     return allVisibleControlsFilled(fieldset);
                 }
                 default: {

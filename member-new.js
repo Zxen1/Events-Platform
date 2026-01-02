@@ -2646,15 +2646,15 @@ const MemberModule = (function() {
             var result = [];
 
             // Location 1 sessions are in the main form (not inside .member-additional-location)
-            // Prefer merged session_pricing, otherwise fall back to sessions (both are valid fieldsets).
-            var mainSessions = formFields.querySelector('.fieldset[data-fieldset-key="session_pricing"], .fieldset[data-fieldset-key="sessions"]');
+            // Use session_pricing fieldset.
+            var mainSessions = formFields.querySelector('.fieldset[data-fieldset-key="session_pricing"]');
             var mainIso = getMaxSelectedIso(mainSessions);
             result.push(mainIso ? daysToIso(mainIso) : 0);
 
             // Locations 2+ are inside .member-additional-location sections
             for (var i = 2; i <= qty; i++) {
                 var section = formFields.querySelector('.member-additional-location[data-location-number="' + i + '"]');
-                var fs = section ? section.querySelector('.fieldset[data-fieldset-key="session_pricing"], .fieldset[data-fieldset-key="sessions"]') : null;
+                var fs = section ? section.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
                 var iso = getMaxSelectedIso(fs);
                 result.push(iso ? daysToIso(iso) : 0);
             }
@@ -2833,7 +2833,7 @@ const MemberModule = (function() {
             if (baseType === 'custom_dropdown') msgKey = 'msg_post_validation_select';
             if (baseType === 'custom_radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
             if (baseType === 'images') msgKey = 'msg_post_validation_file_required';
-            if (baseType === 'ticket-pricing' || baseType === 'item-pricing' || baseType === 'session_pricing') msgKey = 'msg_post_validation_pricing';
+            if (baseType === 'item-pricing' || baseType === 'session_pricing') msgKey = 'msg_post_validation_pricing';
             if (baseType === 'address' || baseType === 'city' || baseType === 'venue') msgKey = 'msg_post_validation_location';
 
             return { key: msgKey, placeholders: { field: name } };
@@ -3357,33 +3357,9 @@ const MemberModule = (function() {
                     return { venue_name: '', address_line: '', latitude: '', longitude: '', country_code: '' };
                 }
 
-            case 'sessions':
+                case 'session_pricing':
                 try {
-                    var selectedDays = el.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
-                    var dates = [];
-                    selectedDays.forEach(function(d) {
-                        var iso = d.dataset.iso;
-                        if (iso) dates.push(String(iso));
-                    });
-                    dates.sort();
-                    var out = [];
-                    for (var i = 0; i < dates.length; i++) {
-                        var dateStr = dates[i];
-                        var times = [];
-                        el.querySelectorAll('input.fieldset-time[data-date="' + dateStr + '"]').forEach(function(t) {
-                            var v = String(t.value || '').trim();
-                            times.push(v);
-                        });
-                        out.push({ date: dateStr, times: times });
-                    }
-                    return out;
-                } catch (e3) {
-                    return [];
-                }
-
-            case 'session_pricing':
-                try {
-                    // Sessions portion (like `sessions`) but each time includes ticket_group_key
+                    // Sessions portion: each time includes ticket_group_key
                     var selectedDays2 = el.querySelectorAll('.fieldset-sessionpricing-calendar-day--selected[data-iso]');
                     var dates2 = [];
                     selectedDays2.forEach(function(d) {
@@ -3444,34 +3420,6 @@ const MemberModule = (function() {
                     };
                 } catch (e33) {
                     return { sessions: [], pricing_groups: {} };
-                }
-
-            case 'ticket-pricing':
-                try {
-                    var seatingBlocks = el.querySelectorAll('.fieldset-seating-block');
-                    var seatOut = [];
-                    seatingBlocks.forEach(function(block) {
-                        var seatName = '';
-                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
-                        if (seatInput) seatName = String(seatInput.value || '').trim();
-                        var tiers = [];
-                        block.querySelectorAll('.fieldset-tier-block').forEach(function(tier) {
-                            var tierName = '';
-                            var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
-                            if (tierInput) tierName = String(tierInput.value || '').trim();
-                            var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
-                            var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
-                            var priceInput = null;
-                            var inputs = tier.querySelectorAll('input.fieldset-input');
-                            if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
-                            var price = priceInput ? String(priceInput.value || '').trim() : '';
-                            tiers.push({ pricing_tier: tierName, currency: curr, price: price });
-                        });
-                        seatOut.push({ seating_area: seatName, tiers: tiers });
-                    });
-                    return seatOut;
-                } catch (e4) {
-                    return [];
                 }
 
             case 'item-pricing':

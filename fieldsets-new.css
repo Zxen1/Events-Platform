@@ -472,52 +472,7 @@
     cursor: pointer;
 }
 
-/* Appearance - Sessions */
-.fieldset-sessions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.fieldset-session-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.fieldset-session-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.fieldset-session-date {
-    flex: 1;
-    height: 36px;
-    padding: 0 10px;
-    background: #333;
-    border: 1px solid #333;
-    border-radius: 5px;
-    color: #fff;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-}
-
-.fieldset-session-date-spacer {
-    flex: 1;
-    height: 36px;
-}
-
-.fieldset-session-time {
-    flex: 0 0 100px;
-}
-
-/* ============================================================================
-   FIELDSET - SessionPricing (session_pricing)
-   - Uses strict naming: fieldset-sessionpricing-...
-   - Mirrors the existing Sessions + Calendar + Pricing button styling
-   ============================================================================ */
+/* Appearance - SessionPricing (session_pricing) */
 
 /* Appearance - SessionPricing Time Input */
 .fieldset-sessionpricing-sessions-time-input {
@@ -584,6 +539,24 @@
 .fieldset-sessionpricing-sessions-remove,
 .fieldset-sessionpricing-pricing-add,
 .fieldset-sessionpricing-pricing-remove {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 5px;
+    color: #666;
+    cursor: pointer;
+    font-size: 18px;
+    flex: 0 0 36px;
+}
+
+.fieldset-item-add,
+.fieldset-item-remove {
     width: 36px;
     min-width: 36px;
     max-width: 36px;
@@ -1013,26 +986,6 @@
     color: #fff;
 }
 
-.fieldset-session-add,
-.fieldset-session-remove,
-.fieldset-pricing-add,
-.fieldset-pricing-remove {
-    width: 36px;
-    min-width: 36px;
-    max-width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: 1px solid #333;
-    border-radius: 5px;
-    color: #666;
-    cursor: pointer;
-    font-size: 18px;
-    flex: 0 0 36px;
-}
-
 /* Appearance - Location */
 .fieldset-location-status {
     font-size: 11px;
@@ -1228,19 +1181,6 @@
     border-color: var(--website-blue-border, #3b82f5);
 }
 
-/* States - Session Buttons */
-.fieldset-session-add:hover,
-.fieldset-pricing-add:hover {
-    border-color: var(--website-blue-border, #3b82f5);
-    color: var(--website-blue-border, #3b82f5);
-}
-
-.fieldset-session-remove:hover,
-.fieldset-pricing-remove:hover {
-    border-color: #f87171;
-    color: #f87171;
-}
-
 /* States - SessionPricing Time Input */
 .fieldset-sessionpricing-sessions-time-input:hover {
     border-color: #555;
@@ -1251,7 +1191,7 @@
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
-/* States - SessionPricing Buttons */
+/* States - Session pricing Buttons */
 .fieldset-sessionpricing-sessions-add:hover,
 .fieldset-sessionpricing-pricing-add:hover {
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
@@ -1266,6 +1206,24 @@
 
 .fieldset-sessionpricing-sessions-add:active,
 .fieldset-sessionpricing-pricing-add:active {
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    color: #fff;
+}
+
+/* States - Item pricing Buttons */
+.fieldset-item-add:hover {
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+}
+
+.fieldset-item-remove:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
+
+.fieldset-item-add:active,
+.fieldset-item-remove:active {
     background: var(--website-blue-active-fill, #3b82f599);
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
     color: #fff;
@@ -1350,132 +1308,6 @@
 .fieldset-label-tooltip:hover + .fieldset-label-tooltipbox,
 .fieldset-label-tooltipbox:hover {
     display: block;
-}
-
-/* Appearance - Fieldset Calendar (for Sessions) */
-.fieldset-calendar-container {
-    width: 100%;
-    overflow: hidden;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
-    position: relative;
-    margin-bottom: 10px;
-}
-
-.fieldset-calendar-scroll {
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: #888 #222;
-}
-
-.fieldset-calendar-scroll::-webkit-scrollbar {
-    height: 8px;
-    background: #222;
-}
-
-.fieldset-calendar-scroll::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.fieldset-calendar-scroll::-webkit-scrollbar-thumb:hover {
-    background: #aaa;
-}
-
-.fieldset-calendar {
-    display: flex;
-    width: max-content;
-}
-
-.fieldset-calendar-month {
-    flex: 0 0 auto;
-    width: 250px;
-}
-
-.fieldset-calendar-month:not(:first-child) {
-    border-left: 1px solid #1a1a1a;
-}
-
-.fieldset-calendar-header {
-    height: 34px;
-    line-height: 34px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: bold;
-    background: #2e3a72;
-}
-
-.fieldset-calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-}
-
-.fieldset-calendar-weekday,
-.fieldset-calendar-day {
-    height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-}
-
-.fieldset-calendar-weekday {
-    font-weight: bold;
-}
-
-.fieldset-calendar-day {
-    cursor: pointer;
-}
-
-.fieldset-calendar-day.empty {
-    cursor: default;
-    background: #222;
-}
-
-.fieldset-calendar-day.past {
-    background: #1a1a1a;
-    color: #808080;
-}
-
-.fieldset-calendar-day.future {
-    background: #222;
-}
-
-.fieldset-calendar-day.today {
-    color: #ff0000;
-    font-weight: bold;
-}
-
-.fieldset-calendar-day:not(.selected):not(.empty):hover {
-    background: #333;
-}
-
-.fieldset-calendar-day:not(.selected):not(.empty):active {
-    background: #2e3a72;
-    color: #fff;
-}
-
-.fieldset-calendar-day.selected {
-    background: #2e3a72;
-    color: #fff;
-}
-
-.fieldset-calendar-day.selected.today {
-    color: #ff0000;
-}
-
-.fieldset-calendar-today-marker {
-    position: absolute;
-    bottom: 0;
-    width: 8px;
-    height: 8px;
-    background: #ff0000;
-    border-radius: 50%;
-    cursor: pointer;
-    z-index: 10;
 }
 
 /* Compact Currency/Phone Prefix (for Item/Ticket Pricing and Phone fields) */
