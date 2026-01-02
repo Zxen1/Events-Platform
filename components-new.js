@@ -1892,53 +1892,9 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'item-pricing':
-                // Item Name (full width), then variants with currency + price
+                // Item Name, Currency, Item Price (full width), then list of variants
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
 
-                // Track shared currency state for item pricing
-                // Use defaultCurrency if provided, otherwise null (user must select)
-                var initialCurrencyCode = defaultCurrency || null;
-                var initialCurrency = null;
-                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
-                    var found = CurrencyComponent.getData().find(function(item) {
-                        return item.value === initialCurrencyCode;
-                    });
-                    if (found) {
-                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
-                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
-                    }
-                }
-                var itemCurrencyState = initialCurrency || { flag: null, code: null };
-                var itemCurrencyMenus = [];
-
-                function syncAllItemCurrencies() {
-                    itemCurrencyMenus.forEach(function(menu) {
-                        var img = menu.querySelector('.fieldset-menu-button-image');
-                        var input = menu.querySelector('.fieldset-menu-button-input');
-                        if (itemCurrencyState.flag) {
-                            img.src = window.App.getImageUrl('currencies', itemCurrencyState.flag + '.svg');
-                        }
-                        input.value = itemCurrencyState.code || '';
-                    });
-                }
-
-                function buildItemCurrencyMenu() {
-                    if (typeof CurrencyComponent === 'undefined') {
-                        console.error('[FieldsetBuilder] CurrencyComponent not available');
-                        return document.createElement('div');
-                    }
-                    var result = CurrencyComponent.buildCompactMenu({
-                        initialValue: itemCurrencyState.code,
-                        onSelect: function(value, label, countryCode) {
-                            itemCurrencyState.flag = countryCode;
-                            itemCurrencyState.code = value;
-                            syncAllItemCurrencies();
-                        }
-                    });
-                    itemCurrencyMenus.push(result.element);
-                    return result.element;
-                }
-                
                 // Item Name (single, no +/-)
                 var itemNameSub = document.createElement('div');
                 itemNameSub.className = 'fieldset-sublabel';
@@ -1951,6 +1907,61 @@ const FieldsetBuilder = (function(){
                 itemNameInput.style.marginBottom = '10px';
                 fieldset.appendChild(itemNameInput);
                 
+                // Currency + Item Price row
+                var itemPriceRow = document.createElement('div');
+                itemPriceRow.className = 'fieldset-row';
+                itemPriceRow.style.marginBottom = '10px';
+                
+                // Currency column (fixed width 100px)
+                var itemCurrencyCol = document.createElement('div');
+                itemCurrencyCol.style.flex = '0 0 100px';
+                var itemCurrencySub = document.createElement('div');
+                itemCurrencySub.className = 'fieldset-sublabel';
+                itemCurrencySub.textContent = 'Currency';
+                itemCurrencyCol.appendChild(itemCurrencySub);
+                
+                // Build currency menu for item
+                var initialCurrencyCode = defaultCurrency || null;
+                if (typeof CurrencyComponent === 'undefined') {
+                    console.error('[FieldsetBuilder] CurrencyComponent not available');
+                    var placeholderMenu = document.createElement('div');
+                    itemCurrencyCol.appendChild(placeholderMenu);
+                } else {
+                    var result = CurrencyComponent.buildCompactMenu({
+                        initialValue: initialCurrencyCode,
+                        onSelect: function(value, label, countryCode) {
+                            // Currency selected for entire item
+                        }
+                    });
+                    itemCurrencyCol.appendChild(result.element);
+                }
+                itemPriceRow.appendChild(itemCurrencyCol);
+                
+                // Item Price column (flexible width)
+                var itemPriceCol = document.createElement('div');
+                itemPriceCol.style.flex = '1';
+                var itemPriceSub = document.createElement('div');
+                itemPriceSub.className = 'fieldset-sublabel';
+                itemPriceSub.textContent = 'Item Price';
+                var itemPriceInput = document.createElement('input');
+                itemPriceInput.type = 'text';
+                itemPriceInput.className = 'fieldset-input';
+                itemPriceInput.placeholder = '0.00';
+                attachMoneyInputBehavior(itemPriceInput);
+                itemPriceCol.appendChild(itemPriceSub);
+                itemPriceCol.appendChild(itemPriceInput);
+                itemPriceRow.appendChild(itemPriceCol);
+                applyFieldsetRowItemClasses(itemPriceRow);
+                
+                fieldset.appendChild(itemPriceRow);
+                
+                // Variants section label (single label at top)
+                var variantsSectionLabel = document.createElement('div');
+                variantsSectionLabel.className = 'fieldset-sublabel';
+                variantsSectionLabel.textContent = 'Variants';
+                variantsSectionLabel.style.marginTop = '10px';
+                fieldset.appendChild(variantsSectionLabel);
+                
                 // Variants container
                 var itemVariantsContainer = document.createElement('div');
                 itemVariantsContainer.className = 'fieldset-variants-container';
@@ -1960,23 +1971,17 @@ const FieldsetBuilder = (function(){
                     var block = document.createElement('div');
                     block.className = 'fieldset-variant-block';
                     block.style.marginBottom = '10px';
-                    block.style.marginLeft = '20px';
                     
-                    // Row 1: Variant input + +/- buttons
+                    // Variant input + +/- buttons (no indentation)
                     var variantRow = document.createElement('div');
                     variantRow.className = 'fieldset-row';
-                    variantRow.style.marginBottom = '10px';
                     
                     var variantCol = document.createElement('div');
                     variantCol.style.flex = '1';
-                    var variantSub = document.createElement('div');
-                    variantSub.className = 'fieldset-sublabel';
-                    variantSub.textContent = 'Item Variant';
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
                     variantInput.className = 'fieldset-input';
                     variantInput.placeholder = 'eg. Large Red';
-                    variantCol.appendChild(variantSub);
                     variantCol.appendChild(variantInput);
                     variantRow.appendChild(variantCol);
                     
@@ -1998,46 +2003,12 @@ const FieldsetBuilder = (function(){
                     removeBtn.textContent = '−';
                     removeBtn.addEventListener('click', function() {
                         block.remove();
-                        // Remove from tracked menus
-                        var blockMenu = block.querySelector('.component-currencycompact-menu');
-                        var idx = itemCurrencyMenus.indexOf(blockMenu);
-                        if (idx > -1) itemCurrencyMenus.splice(idx, 1);
                         updateItemVariantButtons();
                     });
                     variantRow.appendChild(removeBtn);
                     applyFieldsetRowItemClasses(variantRow);
                     
                     block.appendChild(variantRow);
-                    
-                    // Row 2: Currency + Price (cropped to align under variant)
-                    var priceRow = document.createElement('div');
-                    priceRow.className = 'fieldset-row';
-                    priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
-                    
-                    var currencyCol = document.createElement('div');
-                    currencyCol.style.flex = '0 0 100px';
-                    var currencySub = document.createElement('div');
-                    currencySub.className = 'fieldset-sublabel';
-                    currencySub.textContent = 'Currency';
-                    currencyCol.appendChild(currencySub);
-                    currencyCol.appendChild(buildItemCurrencyMenu());
-                    priceRow.appendChild(currencyCol);
-                    
-                    var priceCol = document.createElement('div');
-                    priceCol.style.flex = '1';
-                    var priceSub = document.createElement('div');
-                    priceSub.className = 'fieldset-sublabel';
-                    priceSub.textContent = 'Price';
-                    var priceInput = document.createElement('input');
-                    priceInput.className = 'fieldset-input';
-                    priceInput.placeholder = '0.00';
-                    attachMoneyInputBehavior(priceInput);
-                    priceCol.appendChild(priceSub);
-                    priceCol.appendChild(priceInput);
-                    priceRow.appendChild(priceCol);
-                    applyFieldsetRowItemClasses(priceRow);
-                    
-                    block.appendChild(priceRow);
                     
                     return block;
                 }
