@@ -1567,27 +1567,31 @@ const FieldsetBuilder = (function(){
                 updateItemVariantButtons();
                 break;
                 
-            case 'session_pricing':
-                // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
+            case 'ticket-pricing':
+                // Seating Areas container with nested Pricing Tiers
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                var seatingAreasContainer = document.createElement('div');
+                seatingAreasContainer.className = 'fieldset-seating-areas-container';
+                fieldset.appendChild(seatingAreasContainer);
+                
+                // Track shared currency state
+                // Use defaultCurrency if provided, otherwise null (user must select)
+                var initialCurrencyCode = defaultCurrency || null;
+                var initialCurrency = null;
+                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var found = CurrencyComponent.getData().find(function(item) {
+                        return item.value === initialCurrencyCode;
+                    });
+                    if (found) {
+                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
+                    }
+                }
+                var ticketCurrencyState = initialCurrency || { flag: null, code: null };
+                var ticketCurrencyMenus = []; // [{ element, setValue }]
 
-                // Track selected dates:
-                // { 'YYYY-MM-DD': { times: ['19:00', ...], edited: [true,false...], groups: ['','B',...] } }
-                var spSessionData = {};
-
-                // Ticket-group popover state
-                var spTicketGroups = {}; // { A: groupEl, B: groupEl, ... } (groupEl has .fieldset-sessionpricing-pricing-group)
-                var spTicketGroupList = null; // container element for group list inside popover
-                var spTicketMenuOpen = false;
-                var spTicketMenuDocHandler = null;
-                var spTicketMenuWinHandler = null;
-                var spTicketMenuScrollEl = null;
-                var spActivePicker = null; // { dateStr, idx, timeInput, ticketBtn, rowEl }
-
-                var spOpenGroupKey = null;
-                var spOpenGroupSnapshot = null; // pricing snapshot array
-
-                function spGetSystemTicketIconUrl() {
+                function syncAllTicketCurrencies() {
                     ticketCurrencyMenus.forEach(function(menuObj) {
                         try {
                             if (!menuObj || typeof menuObj.setValue !== 'function') return;
@@ -1825,7 +1829,18 @@ const FieldsetBuilder = (function(){
                 updateSeatingAreaButtons();
                 break;
                 
-            case 'venue':
+            case 'sessions':
+                // Horizontal scrolling calendar + auto-generated session rows with autofill
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
+                var sessionData = {};
+                
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                var todayIso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                
+                var minDate = new Date(today.getFullYear(), today.getMonth(), 1);
                 var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
                 
                 var todayMonthEl = null;
@@ -2201,6 +2216,12 @@ const FieldsetBuilder = (function(){
                             fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true }));
                         } catch (e) {}
                     }
+                });
+                
+                break;
+
+            case 'session_pricing':
+                // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
 
                 // Track selected dates:
@@ -3474,7 +3495,8 @@ const FieldsetBuilder = (function(){
                 // Initial UI state
                 spRenderSessions();
 
-
+                break;
+                
             case 'venue':
                 // SMART VENUE FIELDSET
                 // - Both inputs have Google Places (unrestricted)
@@ -3813,6 +3835,16 @@ const FieldsetBuilder = (function(){
                         }
                         case 'amenities':
                             return !!fieldset.querySelector('.fieldset-amenity-row input[type="radio"]:checked');
+                        case 'sessions': {
+                            var selected = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                            if (selected && selected.length > 0) return true;
+                            // If any time input has value, user interacted.
+                            var t = fieldset.querySelectorAll('input.fieldset-time');
+                            for (var i = 0; i < t.length; i++) {
+                                if (t[i] && String(t[i].value || '').trim()) return true;
+                            }
+                            return false;
+                        }
                         case 'session_pricing': {
                             var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                             if (selected2 && selected2.length > 0) return true;
@@ -3839,7 +3871,8 @@ const FieldsetBuilder = (function(){
                             if (tel && String(tel.value || '').trim()) return true;
                             return false;
                         }
-                        case 'item-pricing': {
+                        case 'item-pricing':
+                        case 'ticket-pricing': {
                             var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
                             for (var i = 0; i < els.length; i++) {
                                 var el = els[i];
@@ -4014,6 +4047,22 @@ const FieldsetBuilder = (function(){
                     if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
                     return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
                 }
+                case 'sessions': {
+                    var selectedDays = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                    if (!selectedDays || selectedDays.length === 0) return false;
+                    // Session time inputs are rendered with class "fieldset-time"
+                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    if (!timeInputs || timeInputs.length === 0) return false;
+                    for (var i = 0; i < timeInputs.length; i++) {
+                        var ti = timeInputs[i];
+                        if (!ti) return false;
+                        // Only require boxes the user can actually see/interact with.
+                        if (!isVisibleControl(ti)) continue;
+                        // A time box is only "complete" when it's fully formed (HH:MM).
+                        if (!isTimeHHMM(ti.value)) return false;
+                    }
+                    return true;
+                }
                 case 'session_pricing': {
                     var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                     if (!selectedDays2 || selectedDays2.length === 0) return false;
@@ -4092,6 +4141,11 @@ const FieldsetBuilder = (function(){
                 case 'item-pricing': {
                     // Rule: all visible boxes in this pricing UI must be filled out.
                     // Covers item name + each variant's name/currency/price.
+                    return allVisibleControlsFilled(fieldset);
+                }
+                case 'ticket-pricing': {
+                    // Rule: all visible boxes in this seating/tier pricing UI must be filled out.
+                    // Covers seating area name + tier name + currency + price.
                     return allVisibleControlsFilled(fieldset);
                 }
                 default: {
