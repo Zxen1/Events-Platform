@@ -133,7 +133,7 @@
 
 /* States */
 .component-switch-slider--on {
-    background: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .component-switch-slider--on::before {
@@ -180,7 +180,7 @@
 }
 
 .component-small-switch-slider--on {
-    background: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .component-small-switch-slider--on::before {
@@ -227,7 +227,7 @@
 }
 
 .component-large-switch-slider--on {
-    background: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .component-large-switch-slider--on::before {
@@ -252,7 +252,7 @@
 .fieldset-header {
     font-size: 14px;
     font-weight: bold;
-    color: #3b82f5;
+    color: var(--website-blue-border, #3b82f5);
     margin-bottom: 16px;
     padding-bottom: 8px;
     border-bottom: 1px solid #333;
@@ -446,7 +446,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -522,7 +522,7 @@
 
 .fieldset-select option:checked,
 .fieldset-select option:focus {
-    background: #3b82f5;
+    background: var(--website-blue-active-fill, #3b82f599);
     color: #fff;
 }
 
@@ -543,7 +543,7 @@
 .fieldset-radio-input {
     width: 18px;
     height: 18px;
-    accent-color: #3b82f5;
+    accent-color: var(--website-blue-border, #3b82f5);
     cursor: pointer;
 }
 
@@ -1445,13 +1445,13 @@
 
 .fieldset-amenity-option-input {
     cursor: pointer;
-    accent-color: #3b82f5;
+    accent-color: var(--website-blue-border, #3b82f5);
 }
 
 /* Appearance - Google Places */
 .pac-container {
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
     font-size: 13px;
@@ -1475,7 +1475,7 @@
 }
 
 .pac-matched {
-    color: #3b82f5;
+    color: var(--website-blue-border, #3b82f5);
 }
 
 .pac-icon {
@@ -1489,7 +1489,7 @@
 
 .fieldset-input:focus {
     outline: none;
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 .fieldset-input--invalid {
@@ -1516,7 +1516,7 @@
 
 .fieldset-textarea:focus {
     outline: none;
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 .fieldset-textarea.fieldset-input--invalid {
@@ -1533,7 +1533,7 @@
 }
 
 .fieldset-menu-button--open {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -1548,7 +1548,7 @@
 
 .fieldset-menu-option:hover,
 .fieldset-menu-option.menu-option--highlighted {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 /* States - Select */
@@ -1558,12 +1558,12 @@
 
 .fieldset-select:focus {
     outline: none;
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 /* States - Images Upload */
 .fieldset-images:hover {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 /* States - Date and Time */
@@ -1575,14 +1575,14 @@
 .fieldset-date:focus,
 .fieldset-time:focus {
     outline: none;
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 /* States - Session Buttons */
 .fieldset-session-add:hover,
 .fieldset-pricing-add:hover {
-    border-color: #3b82f5;
-    color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
+    color: var(--website-blue-border, #3b82f5);
 }
 
 .fieldset-session-remove:hover,
@@ -1667,12 +1667,12 @@
 
 /* States - Google Places */
 .pac-item:hover {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
     color: #fff;
 }
 
 .pac-item-selected {
-    background: #3b82f599; /* #3b82f5 @ 0.6 */
+    background: var(--website-blue-active-fill, #3b82f599);
     color: #fff;
 }
 
@@ -1849,7 +1849,7 @@
     width: 250px;
     left: 0;
     right: auto;
-    border-top: 1px solid #3b82f5;
+    border-top: 1px solid var(--website-blue-border, #3b82f5);
     border-radius: 5px;
     z-index: var(--layer-menu, 85);
 }
@@ -1974,7 +1974,7 @@
 }
 
 .calendar-ok {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
     color: #fff;
 }
 
@@ -2112,7 +2112,7 @@
     left: 0;
     width: 250px;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
@@ -2303,7 +2303,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -2320,7 +2320,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -2416,7 +2416,7 @@
 .fieldset-currency-button--open,
 .component-currencyfull-menu-button--open,
 .admin-language-button--open {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 .component-currencyfull-menu-button--open,
@@ -2443,7 +2443,7 @@
 .component-currencyfull-menu-option.menu-option--highlighted,
 .admin-language-option:hover,
 .admin-language-option.menu-option--highlighted {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 
@@ -2517,7 +2517,7 @@
     left: 0;
     width: 250px;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
@@ -2570,7 +2570,7 @@
 }
 
 .component-currencycompact-menu-button--open {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 .component-currencycompact-menu-button-arrow--open {
@@ -2583,7 +2583,7 @@
 
 .component-currencycompact-menu-option:hover,
 .component-currencycompact-menu-option.menu-option--highlighted {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 
@@ -2718,13 +2718,13 @@
 }
 
 .phoneprefix-option:focus-visible {
-    outline: 2px solid #3b82f5;
+    outline: 2px solid var(--website-blue-border, #3b82f5);
     outline-offset: -2px;
 }
 
 .phoneprefix-input:focus {
     outline: none;
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 
@@ -2792,7 +2792,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -2852,7 +2852,7 @@
 }
 
 .component-iconpicker-button--open {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -2872,7 +2872,7 @@
 }
 
 .component-iconpicker-option:hover {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 
@@ -2940,7 +2940,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -3000,7 +3000,7 @@
 }
 
 .component-systemimagepicker-button--open {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -3020,7 +3020,7 @@
 }
 
 .component-systemimagepicker-option:hover {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 
@@ -3077,7 +3077,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid #3b82f5;
+    border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -3149,7 +3149,7 @@
 }
 
 .component-amenitiespicker-button--open {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -3163,7 +3163,7 @@
 }
 
 .component-amenitiespicker-option:hover {
-    background: #3b82f5;
+    background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 
@@ -3638,7 +3638,7 @@
 .map-mapcontrol-geocoder-input:focus,
 .welcome-mapcontrol-geocoder-input:focus {
     outline: none;
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
 }
 
 .filter-mapcontrol-geocoder-dropdown-item:hover {
@@ -3680,7 +3680,7 @@
 .user-location-marker-dot {
     width: 16px;
     height: 16px;
-    background-color: #3b82f5;
+    background-color: var(--website-blue-hover-fill, #3b82f5);
     border: 2px solid #ffffff;
     border-radius: 50%;
     box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
@@ -3766,7 +3766,7 @@
 .filter-mapcontrol-geolocate--active,
 .map-mapcontrol-geolocate--active,
 .welcome-mapcontrol-geolocate--active {
-    color: #3b82f5;
+    color: var(--website-blue-border, #3b82f5);
 }
 
 
@@ -3900,13 +3900,13 @@
 
 /* States - Option Card */
 .member-checkout-option:hover {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     background: rgba(59, 130, 245, 0.05);
     color: #fff;
 }
 
 .member-checkout-option--selected {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     /* Match selected duration button intensity */
     background: rgba(59, 130, 245, 0.15);
     color: #fff;
@@ -3932,12 +3932,12 @@
 
 /* States - Duration Option */
 .member-checkout-duration-option:hover {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     color: #fff;
 }
 
 .member-checkout-duration-option--selected {
-    border-color: #3b82f5;
+    border-color: var(--website-blue-border, #3b82f5);
     background: rgba(59, 130, 245, 0.15);
     color: #fff;
 }

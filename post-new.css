@@ -1209,8 +1209,8 @@
 
 /* Thumbnail active state */
 .post-open-thumbnail--active {
-  border-color: #3b82f5;
-  box-shadow: 0 0 0 2px #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
+  box-shadow: 0 0 0 2px var(--website-blue-border, #3b82f5);
 }
 
 .post-member-avatar-image {

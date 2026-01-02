@@ -267,14 +267,14 @@ body.filters-active .button--header-filter{
 }
 .button--header-access.active .header-btn-icon,
 .button--header-access[aria-pressed="true"] .header-btn-icon{
-  background-color:#3b82f5 !important;
+  background-color:var(--website-blue-active-fill, #3b82f599) !important;
 }
 .button--header-access.active:hover .header-btn-icon,
 .button--header-access[aria-pressed="true"]:hover .header-btn-icon{
   background-color:#60a5fa !important;
 }
 .button--header-access.fullscreen-btn.is-fullscreen .header-btn-icon{
-  background-color:#3b82f5 !important;
+  background-color:var(--website-blue-active-fill, #3b82f599) !important;
   -webkit-mask-image:url('assets/system-images/icon-fullscreen-exit.svg');
   mask-image:url('assets/system-images/icon-fullscreen-exit.svg');
 }
@@ -293,7 +293,7 @@ body.filters-active .button--header-filter{
 }
 .button--header-access.active .member-avatar,
 .button--header-access[aria-pressed="true"] .member-avatar{
-  border-color:#3b82f5 !important;
+  border-color:var(--website-blue-border, #3b82f5) !important;
 }
 .button--header-access.active:hover .member-avatar,
 .button--header-access[aria-pressed="true"]:hover .member-avatar{
@@ -552,8 +552,8 @@ Access buttons (member, admin, fullscreen)
 
 Active state - panel is open
 .header-access-button[aria-pressed="true"] .header-access-button-image {
-  background-color: #3b82f5;
-  border-color: #3b82f5;
+  background-color: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .header-access-button[aria-pressed="true"]:hover .header-access-button-image {
@@ -563,7 +563,7 @@ Active state - panel is open
 
 Fullscreen active state
 .header-access-button.is-fullscreen .header-access-button-image {
-  background-color: #3b82f5;
+  background-color: var(--website-blue-active-fill, #3b82f599);
 }
 
 .header-access-button.is-fullscreen:hover .header-access-button-image {

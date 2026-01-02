@@ -550,7 +550,7 @@
 .member-lighting-button:hover,
 .member-style-button:hover {
   background: rgba(0, 0, 0, 0.2);
-  color: #3b82f5;
+  color: var(--website-blue-border, #3b82f5);
 }
 
 .member-lighting-button--active,
@@ -558,7 +558,7 @@
 .member-style-button--active,
 .member-style-button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.2);
-  color: #3b82f5;
+  color: var(--website-blue-border, #3b82f5);
 }
 
 .member-lighting-button-icon {
@@ -664,8 +664,8 @@
 }
 
 .member-button-auth:hover {
-  background: var(--btn-selected);
-  border-color: var(--btn-selected);
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
   color: var(--button-hover-text);
 }
 
@@ -748,8 +748,8 @@
 }
 
 .member-tab-bar-button:hover {
-  background: var(--btn-selected);
-  border-color: var(--btn-selected);
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
   color: var(--button-active-text);
 }
 
@@ -758,8 +758,8 @@
 }
 
 .member-tab-bar-button--selected {
-  background: var(--btn-selected);
-  border-color: var(--btn-selected);
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
   box-shadow: none;
   color: var(--button-active-text);
 }
@@ -996,7 +996,7 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #3b82f5;
+  accent-color: var(--website-blue-border, #3b82f5);
   flex-shrink: 0;
 }
 
@@ -1005,7 +1005,7 @@
 }
 
 .member-terms-agreement-link {
-  color: #3b82f5;
+  color: var(--website-blue-border, #3b82f5);
   text-decoration: underline;
   cursor: pointer;
 }
@@ -1093,8 +1093,8 @@
 }
 
 .member-auth-tab:hover {
-  background: var(--btn-selected);
-  border-color: var(--btn-selected);
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .member-auth-tab:active {
@@ -1102,9 +1102,8 @@
 }
 
 .member-auth-tab--selected {
-  /* Match tab button behavior: active state uses the same styling as hover */
-  background: var(--btn-selected);
-  border-color: var(--btn-selected);
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
   color: var(--button-text);
 }
 
@@ -1239,7 +1238,7 @@
 }
 
 .member-profile-drawer:hover {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .member-profile-drawer-header {
@@ -1316,13 +1315,13 @@
 }
 
 .member-profile-more-btn:hover {
-  border-color: #3b82f5;
-  color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue-border, #3b82f5);
 }
 
 .member-profile-more-btn[aria-expanded="true"] {
-  border-color: #3b82f5;
-  color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue-border, #3b82f5);
 }
 
 /* More menu dropdown */
@@ -1333,7 +1332,7 @@
   width: 180px;
   margin-top: 4px;
   background: #111;
-  border: 1px solid #3b82f5;
+  border: 1px solid var(--website-blue-border, #3b82f5);
   border-radius: 5px;
   padding: 5px 0;
   z-index: var(--layer-menu, 85);
@@ -1390,7 +1389,7 @@
 }
 
 .member-profile-more-switch[aria-checked="true"] {
-  background: #3b82f599; /* #3b82f5 @ 0.6 */
+  background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .member-profile-more-switch[aria-checked="true"]::after {
@@ -1532,12 +1531,12 @@
 }
 
 .member-formpicker-menu-button:hover {
-  border-color: #3b82f5;
-  background: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 .member-formpicker-menu-button--open {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -1582,7 +1581,7 @@
   left: 0;
   width: 100%;
   background: #222;
-  border: 1px solid #3b82f5;
+  border: 1px solid var(--website-blue-border, #3b82f5);
   border-top: none;
   border-radius: 0 0 5px 5px;
   max-height: 300px;
@@ -1609,7 +1608,7 @@
 }
 
 .member-formpicker-menu-option:hover {
-  background: #3b82f5;
+  background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 .member-formpicker-menu-option-image {

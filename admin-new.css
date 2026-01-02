@@ -952,7 +952,7 @@
 .admin-lighting-button:hover,
 .admin-style-button:hover {
   background: rgba(0, 0, 0, 0.2);
-  color: #3b82f5;
+  color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-lighting-button--active,
@@ -960,7 +960,7 @@
 .admin-style-button--active,
 .admin-style-button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.2);
-  color: #3b82f5;
+  color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-lighting-button-icon {
@@ -1745,7 +1745,7 @@
 }
 
 .admin-checkout-accordion-header:hover {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 
@@ -1846,8 +1846,8 @@
 }
 
 .admin-checkout-accordion-editpanel-more:hover {
-  border-color: #3b82f5;
-  color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue-border, #3b82f5);
 }
 
 
@@ -1857,7 +1857,7 @@
   right: 0;
   width: 180px;
   background: #111;
-  border: 1px solid #3b82f5;
+  border: 1px solid var(--website-blue-border, #3b82f5);
   border-radius: 5px;
   padding: 5px 0;
   display: none;
@@ -1908,7 +1908,7 @@
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on {
-  background: #3b82f599; /* #3b82f5 @ 0.6 */
+  background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on::after {
@@ -1941,7 +1941,7 @@
 
 .admin-checkout-accordion-editpanel-input:focus {
   outline: none;
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-checkout-accordion-editpanel-textarea {
@@ -1958,7 +1958,7 @@
 
 .admin-checkout-accordion-editpanel-textarea:focus {
   outline: none;
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-checkout-accordion-editpanel-checkbox {
@@ -1974,7 +1974,7 @@
 .admin-checkout-option-sidebar {
   width: 16px;
   height: 16px;
-  accent-color: #3b82f5;
+  accent-color: var(--website-blue-border, #3b82f5);
   cursor: pointer;
 }
 
@@ -2258,7 +2258,7 @@
 }
 
 .admin-settings-imagemanager-accordion-header:hover {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-settings-imagemanager-accordion-header-text {
@@ -2360,7 +2360,7 @@
 
 .admin-settings-field-input:focus {
   outline: none;
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-settings-field-input::placeholder {
@@ -2422,7 +2422,7 @@
 }
 
 .admin-settings-toggle-slider--on {
-  background: #3b82f599; /* #3b82f5 @ 0.6 */
+  background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .admin-settings-toggle-slider--on::before {
@@ -2455,7 +2455,7 @@
 }
 
 .admin-messages-accordion-header:hover {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-messages-accordion-header--open,
@@ -2464,7 +2464,7 @@
 }
 
 .admin-messages-accordion-header--editing {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
   border-bottom: none;
 }
 
@@ -2533,7 +2533,7 @@
 
 .admin-messages-accordion-header-editarea:hover,
 .admin-messages-accordion-header-editarea--editing {
-  color: #3b82f5;
+  color: var(--website-blue-border, #3b82f5);
 }
 
 /* Edit Panel */
@@ -2541,7 +2541,7 @@
   display: none;
   padding: 10px;
   background: #0c4070;
-  border: 1px solid #3b82f5;
+  border: 1px solid var(--website-blue-border, #3b82f5);
   border-top: none;
   border-radius: 0 0 5px 5px;
 }
@@ -2572,7 +2572,7 @@
 .admin-messages-accordion-editpanel-input:hover,
 .admin-messages-accordion-editpanel-input:focus {
   outline: none;
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 /* Content area (for messages list) */
@@ -2731,7 +2731,7 @@
 }
 
 .admin-moderation-accordion-header:hover {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-moderation-accordion-header--open {
@@ -2884,7 +2884,7 @@
 
 .admin-moderation-item-btn:hover {
   background: rgba(255, 255, 255, 0.15);
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .admin-moderation-item-btn--reactivate:hover {
@@ -2901,6 +2901,6 @@
 
 .admin-moderation-item-btn--view:hover {
   background: rgba(59, 130, 245, 0.2);
-  border-color: #3b82f5;
-  color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue-border, #3b82f5);
 }

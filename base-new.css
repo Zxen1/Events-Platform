@@ -65,9 +65,9 @@
   --active: #2E3A72;
   
   /* Colors - WebsiteBlue (single source of truth; names describe usage, not UI state) */
-  --website-blue: #3b82f5;
-  --website-blue-border: var(--website-blue);
-  --website-blue-hover-fill: var(--website-blue);
+  --website-blue: #3b82f599;
+  --website-blue-border: #3b82f5;
+  --website-blue-hover-fill: #3b82f5;
   --website-blue-active-fill: #3b82f599;
 
   /* Colors - background */
@@ -93,14 +93,15 @@
   --btn: #333333;
   --btn-hover: #4d4d4d;
   --btn-active: #1a1a1a;
-  --btn-selected: #3b82f5;
+  /* Selected/toggled fill should use WebsiteBlue (active fill) */
+  --btn-selected: var(--website-blue-active-fill, #3b82f599);
   --btn-selected-hover: #60a5fa;
   --btn-selected-active: #2563eb;
   --btn-disabled: #bbbbbb;
 
   /* Colors - borders */
   --border: rgba(173,173,173,0.31);
-  --border-hover: #3b82f5;
+  --border-hover: var(--website-blue-border, #3b82f5);
   --border-active: rgba(255,200,0,0.45);
 
   /* Colors - dropdowns */
@@ -128,7 +129,7 @@
 
   /* Colors - special */
   --filter-active-color: #cc6600;
-  --category-switch-active: #3b82f5;
+  --category-switch-active: var(--website-blue-active-fill, #3b82f599);
   --keyword-bg: #FFFFFF;
   --date-range-bg: rgba(74,74,74,0.9);
   --date-range-text: rgba(255,255,255,1);

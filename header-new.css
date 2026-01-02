@@ -73,14 +73,14 @@
 }
 
 .header-filter-button:hover {
-  background: #3b82f5;
-  border-color: #3b82f5;
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .header-filter-button--active,
 .header-filter-button[aria-expanded="true"] {
-  background: #3b82f5;
-  border-color: #3b82f5;
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 
@@ -147,13 +147,13 @@
 }
 
 .header-modeswitch-button:hover {
-  background: #3b82f5;
+  background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 /* Active mode - blue background, white text */
 .header-modeswitch-button--active,
 .header-modeswitch-button[aria-pressed="true"] {
-  background: var(--btn-selected, #3b82f5);
+  background: var(--website-blue-active-fill, var(--website-blue, #3b82f599));
   color: var(--button-active-text, #fff);
 }
 
@@ -257,7 +257,7 @@
 
 /* Active access button icon (must come AFTER base icon styles to win cascade) */
 .header-access-button-icon.header-access-button-icon--active {
-  background-color: var(--website-color, #3b82f5);
+  background-color: var(--website-blue-active-fill, #3b82f599);
 }
 
 /* Lighter blue on hover when active (matches live site feel) */
@@ -281,7 +281,7 @@
 }
 
 .header-access-button-icon--fullscreen-exit {
-  background-color: #3b82f5;
+  background-color: var(--website-blue-active-fill, #3b82f599);
   -webkit-mask-image: var(--header-icon-fullscreen-exit);
   mask-image: var(--header-icon-fullscreen-exit);
 }
@@ -302,7 +302,7 @@
 
 /* Avatar glow when panel is open */
 .header-access-button-avatar--active {
-  border-color: #3b82f5;
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .header-access-button-avatar--active:hover {
