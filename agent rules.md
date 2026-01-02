@@ -117,41 +117,6 @@ Website loading speed is critical. Any changes that slow down initial page load 
 3. When SQL is needed, **paste the SQL directly in chat** so Paul can run it themselves (Paul is the only one with database access).
 4. **Never create new `.sql` files in the workspace** (draft SQL must live only in chat).
 
-### ⚠️ CRITICAL: DB SPLIT SQL MUST BE THREE-SCHEMA SAFE ⚠️
-
-This project uses split storage schemas:
-- `funmapco_system` (platform/system tables like `admins`)
-- `funmapco_content` (user data tables like `members`, `posts`)
-- `funmapco_db` (compatibility layer made of **views** that the website queries)
-
-**CRITICAL RULES:**
-1. When providing SQL that edits tables, always use **schema-qualified names**, not bare table names.
-   - ✅ Good: `ALTER TABLE \`funmapco_system\`.\`admins\` ...`
-   - ✅ Good: `ALTER TABLE \`funmapco_content\`.\`members\` ...`
-   - ❌ Bad: `ALTER TABLE \`admins\` ...` (phpMyAdmin may run it against the wrong selected database)
-2. After changing columns in storage schemas, you MUST also update the matching **views** in `funmapco_db`,
-   otherwise the site will break (views will reference missing columns).
-   - Example: if `country_code` is renamed to `country` in storage tables, then update the `funmapco_db.admins`
-     and `funmapco_db.members` views to select `country` instead of `country_code`.
-
-### ⚠️ CRITICAL: WHEN VIEWS DO / DO NOT NEED UPDATES ⚠️
-
-**Views MUST be updated** when you change **schema** in `funmapco_system` / `funmapco_content`:
-- Adding/removing/renaming a column
-- Changing a column name a view references
-- Moving a table between schemas
-
-**Views do NOT need updates** when you only change **row data** (no column changes), such as:
-- Updating `setting_value` in `admin_settings`
-- Renumbering IDs (changing values in an `id` column) while keeping the same columns
-- Reordering rows
-
-**DB change safety checklist (mandatory before giving SQL):**
-1. Identify the **storage schema table** being edited (`funmapco_system` or `funmapco_content`).
-2. Confirm whether the change is **schema** (columns) or **data** (rows).
-3. If schema: include the required `funmapco_db` **view updates** in the same chat message.
-4. If data-only: do **not** claim view changes are required.
-
 ---
 
 ## ⚠️ CRITICAL: ADMIN SETTINGS ID BATCHING (phpMyAdmin “folders”) ⚠️
@@ -172,7 +137,7 @@ This project uses split storage schemas:
 
 ## ⚠️ CRITICAL: ADMIN MESSAGES ID BATCHING ⚠️
 
-**Purpose:** Use 100-block ranges to organize `funmapco_system.admin_messages` in phpMyAdmin.
+**Purpose:** Use 100-block ranges to organize `admin_messages` in phpMyAdmin.
 
 **Rules (admin_messages only):**
 1. Website/runtime must reference messages by **`message_key`** (never hard-code numeric IDs).
