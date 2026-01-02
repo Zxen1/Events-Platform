@@ -1907,11 +1907,11 @@ const FieldsetBuilder = (function(){
                 itemNameInput.style.marginBottom = '10px';
                 fieldset.appendChild(itemNameInput);
 
-                // Single Currency + Item Price row (shared for entire item)
+                // Single Currency + Item Price row (moved from per-variant to item level)
                 var priceRow = document.createElement('div');
                 priceRow.className = 'fieldset-row';
+                priceRow.style.marginLeft = '20px'; // Align with variant blocks
                 priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
-                priceRow.style.marginBottom = '15px';
 
                 var currencyCol = document.createElement('div');
                 currencyCol.style.flex = '0 0 100px';
@@ -1919,20 +1919,7 @@ const FieldsetBuilder = (function(){
                 currencySub.className = 'fieldset-sublabel';
                 currencySub.textContent = 'Currency';
                 currencyCol.appendChild(currencySub);
-
-                // Build currency menu (unchanged)
-                if (typeof CurrencyComponent === 'undefined') {
-                    console.error('[FieldsetBuilder] CurrencyComponent not available');
-                    currencyCol.appendChild(document.createTextNode('Currency component unavailable'));
-                } else {
-                    var currencyMenu = CurrencyComponent.buildCompactMenu({
-                        initialValue: defaultCurrency || null,
-                        onSelect: function(value, label, countryCode) {
-                            // Single currency for entire item
-                        }
-                    });
-                    currencyCol.appendChild(currencyMenu.element);
-                }
+                currencyCol.appendChild(buildItemCurrencyMenu());
                 priceRow.appendChild(currencyCol);
 
                 var priceCol = document.createElement('div');
@@ -1951,14 +1938,7 @@ const FieldsetBuilder = (function(){
 
                 fieldset.appendChild(priceRow);
 
-                // Variants section header
-                var variantsSub = document.createElement('div');
-                variantsSub.className = 'fieldset-sublabel';
-                variantsSub.textContent = 'Item Variants';
-                variantsSub.style.marginTop = '10px';
-                fieldset.appendChild(variantsSub);
-
-                // Variants container (names only, no individual labels)
+                // Variants container (names only)
                 var itemVariantsContainer = document.createElement('div');
                 itemVariantsContainer.className = 'fieldset-variants-container';
                 fieldset.appendChild(itemVariantsContainer);
