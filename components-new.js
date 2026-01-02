@@ -1919,7 +1919,19 @@ const FieldsetBuilder = (function(){
                 currencySub.className = 'fieldset-sublabel';
                 currencySub.textContent = 'Currency';
                 currencyCol.appendChild(currencySub);
-                currencyCol.appendChild(buildItemCurrencyMenu());
+                // Build currency menu for single item pricing
+                if (typeof CurrencyComponent === 'undefined') {
+                    console.error('[FieldsetBuilder] CurrencyComponent not available');
+                    currencyCol.appendChild(document.createTextNode('Currency component unavailable'));
+                } else {
+                    var currencyMenu = CurrencyComponent.buildCompactMenu({
+                        initialValue: defaultCurrency || null,
+                        onSelect: function(value, label, countryCode) {
+                            // Single currency for entire item
+                        }
+                    });
+                    currencyCol.appendChild(currencyMenu.element);
+                }
                 priceRow.appendChild(currencyCol);
 
                 var priceCol = document.createElement('div');
