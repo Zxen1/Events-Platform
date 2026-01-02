@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 04:23 AM
+-- Generation Time: Jan 03, 2026 at 05:55 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1265,12 +1265,9 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (12, 'Images', 'images', 'subcategory', 10, '[\"images\"]', NULL, 'images', 'At least one image is required. Maximum ten images. Click on any image to use the crop tool. Square images will be shown everywhere on this website except in the image viewer of your post.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (13, 'Coupon', 'coupon', 'subcategory', 11, '[\"text-box\"]', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (14, 'Item Pricing', 'item-pricing', 'subcategory', 12, '[\"item-name\", \"item-variant\", \"currency\", \"item-price\"]', NULL, 'eg. T-Shirt - Large Red - $29.95', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
-(15, 'Event Details', 'venue-ticketing', 'subcategory', 13, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"session-date\", \"session-time\", \"seating-area\", \"pricing-tier\", \"ticket-price\", \"currency\"]', NULL, 'eg.VenueSessionPricing', 'Set up venue sessions with dates, times, seating areas, and pricing tiers. This is for events with multiple sessions or ticket types.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (16, 'City', 'city', 'subcategory', 5, '[\"city\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', '2025-12-14 15:49:27', '2026-01-01 08:41:37'),
 (17, 'Venue', 'venue', 'subcategory', 7, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', '2025-12-14 18:30:38', '2026-01-01 08:41:37'),
 (18, 'Amenities', 'amenities', 'subcategory', 14, '[\"amenities\"]', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', '2025-12-14 19:13:31', '2026-01-01 08:41:37'),
-(19, 'Ticket Pricing', 'ticket-pricing', 'subcategory', 15, '[\"seating-area\", \"pricing-tier\", \"currency\", \"ticket-price\"]', NULL, 'eg. Orchestra - Adult - $50', 'Add ticket pricing by seating area and pricing tier. Each row is one price point.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
-(20, 'Sessions', 'sessions', 'subcategory', 16, '[\"session-date\", \"session-time\"]', NULL, 'eg. 2025-01-15 7:00 PM', 'Add session dates and times (24hr clock) for your event.', '2025-12-14 22:26:00', '2026-01-01 08:41:37'),
 (21, 'Session Pricing', 'session_pricing', 'subcategory', 17, '[\"session-date\",\"session-time\",\"seating-area\",\"pricing-tier\",\"currency\",\"ticket-price\"]', NULL, 'eg. Sessions with pricing', '1. Click the first date box and select all the session dates on the calendar for your event. This will create a table with one session time per date. \n\n2. Type the 24 hour starting time for each session. You can add or remove session times for each session date with the + and - buttons. Starting Times are auto-repeated for every session when you start, but automation will stop when you edit them.\n\n3. Click the Ticket Pricing button for the first session time. Create the Seating Areas, Pricing Tiers, Currency and Prices for this session. eg.\n\nStalls Adult USD 10.00\nStalls Pensioner USD 8.00 \nStalls Child USD 6.00\nBalcony Adult USD 12.00\nBalcony Pensioner USD 10.00 \nBalcony Child USD 8.00\n\n4. Ticket Group A has now been created. If a session has different prices from A (eg. matinee or special event), you can add a new Ticket Group (B, C, D) for it. Select the one you want for each session or click the pencil tool to edit that group.\n\nThis system was designed to let you fill out massive amounts of information in seconds.', '2026-01-01 12:54:10', '2026-01-02 08:04:04'),
 (27, 'Public Email', 'public_email', 'subcategory', 3, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2026-01-01 07:54:19', '2026-01-01 08:41:37'),
 (100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2025-10-29 19:03:05', '2026-01-01 09:23:54'),
@@ -2504,7 +2501,7 @@ ALTER TABLE `fields`
 -- AUTO_INCREMENT for table `fieldsets`
 --
 ALTER TABLE `fieldsets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
 
 --
 -- AUTO_INCREMENT for table `layout_containers`
