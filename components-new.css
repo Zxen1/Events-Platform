@@ -1672,7 +1672,7 @@
 }
 
 .pac-item-selected {
-    background: #3b82f5;
+    background: #3b82f599; /* #3b82f5 @ 0.6 */
     color: #fff;
 }
 
@@ -1687,7 +1687,7 @@
     border: 1px solid #777;
     border-radius: 4px;
     padding: 10px;
-    font-size: 12px;
+    font-size: 13px;
     font-style: normal;
     color: #fff;
     width: auto;

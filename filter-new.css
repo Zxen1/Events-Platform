@@ -703,7 +703,7 @@
 }
 
 .filter-categoryfilter-accordion-header-toggle.on {
-  background: #3b82f5;
+  background: #3b82f599; /* #3b82f5 @ 0.6 */
 }
 
 .filter-categoryfilter-accordion-header-toggle.on::after {
@@ -767,7 +767,7 @@
 }
 
 .filter-categoryfilter-accordion-option-toggle.on {
-  background: #3b82f5;
+  background: #3b82f599; /* #3b82f5 @ 0.6 */
 }
 
 .filter-categoryfilter-accordion-option-toggle.on::after {

@@ -248,7 +248,7 @@
 }
 
 .formbuilder-accordion-editpanel-more-switch.on {
-  background: #3b82f5;
+  background: #3b82f599; /* #3b82f5 @ 0.6 */
 }
 
 .formbuilder-accordion-editpanel-more-switch.on::after {
@@ -1055,7 +1055,7 @@
 }
 
 .formbuilder-field-switch.on {
-  background: #3b82f5;
+  background: #3b82f599; /* #3b82f5 @ 0.6 */
 }
 
 .formbuilder-field-switch.on::after {

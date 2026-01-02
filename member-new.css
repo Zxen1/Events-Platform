@@ -1116,7 +1116,7 @@
 .member-auth-panel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .member-auth-panel--hidden {
@@ -1160,9 +1160,10 @@
 /* Support FunMap custom amount input uses its own class: .member-supporterpayment-input */
 
 .member-auth-submit {
-  align-self: flex-start;
-  /* Match Admin pattern: bottom action rows include their own vertical spacing */
-  margin-bottom: 10px;
+  width: 100%;
+  align-self: stretch;
+  /* Spacing is controlled by the panel gap (10px) */
+  margin-bottom: 0;
 }
 
 .member-profile-edit {
@@ -1389,7 +1390,7 @@
 }
 
 .member-profile-more-switch[aria-checked="true"] {
-  background: #3b82f5;
+  background: #3b82f599; /* #3b82f5 @ 0.6 */
 }
 
 .member-profile-more-switch[aria-checked="true"]::after {

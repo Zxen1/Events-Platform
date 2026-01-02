@@ -1908,7 +1908,7 @@
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on {
-  background: #3b82f5;
+  background: #3b82f599; /* #3b82f5 @ 0.6 */
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on::after {
@@ -2422,7 +2422,7 @@
 }
 
 .admin-settings-toggle-slider--on {
-  background: #3b82f5;
+  background: #3b82f599; /* #3b82f5 @ 0.6 */
 }
 
 .admin-settings-toggle-slider--on::before {
