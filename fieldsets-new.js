@@ -1,0 +1,4209 @@
+/* ============================================================================
+   FIELDSETS.JS - Form Field Builder
+   ============================================================================
+   
+   Form building system used across admin and member panels.
+   
+   ============================================================================ */
+
+/* ============================================================================
+   FIELDSET BUILDER
+   Source: fieldset-test.html
+   ============================================================================ */
+
+const FieldsetBuilder = (function(){
+    var dropdownOptions = {};
+    var fieldsets = [];
+    var dataLoaded = false;
+    var loadPromise = null;
+    
+    // Load data from various tables (currencies, phone_prefixes, amenities, etc.) from database
+    function loadFromDatabase() {
+        if (loadPromise) return loadPromise;
+        loadPromise = fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.dropdown_options) {
+                    // Set dropdown options data and propagate to CurrencyComponent and PhonePrefixComponent
+                    setPicklist(res.dropdown_options);
+                }
+                dataLoaded = true;
+                return { dropdown_options: dropdownOptions, fieldsets: fieldsets };
+            });
+        return loadPromise;
+    }
+    
+    // Google Places Autocomplete helper - Uses new API (AutocompleteSuggestion)
+    // type: 'address' | 'establishment' | '(cities)'
+    // countryInput: hidden <input> to receive 2-letter country code (e.g. "AU")
+    function initGooglePlaces(inputElement, type, latInput, lngInput, countryInput, statusElement) {
+        if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+            console.warn('Google Places API not loaded');
+            if (statusElement) {
+                statusElement.textContent = 'Location search unavailable';
+                statusElement.className = 'fieldset-location-status error';
+            }
+            return null;
+        }
+        
+        // Check if new API is available
+        if (!google.maps.places.AutocompleteSuggestion) {
+            console.warn('Google Places AutocompleteSuggestion API not available');
+            if (statusElement) {
+                statusElement.textContent = 'Location search unavailable';
+                statusElement.className = 'fieldset-location-status error';
+            }
+            return null;
+        }
+        
+        // Create dropdown for suggestions
+        var dropdown = document.createElement('div');
+        dropdown.className = 'fieldset-location-dropdown';
+        dropdown.style.display = 'none';
+        dropdown.style.position = 'absolute';
+        dropdown.style.zIndex = '1000';
+        dropdown.style.backgroundColor = '#fff';
+        dropdown.style.border = '1px solid #ccc';
+        dropdown.style.borderRadius = '4px';
+        dropdown.style.maxHeight = '200px';
+        dropdown.style.overflowY = 'auto';
+        dropdown.style.width = '100%';
+        dropdown.style.marginTop = '2px';
+        dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+        
+        // Insert dropdown after input element
+        var parent = inputElement.parentNode;
+        if (parent) {
+            parent.style.position = 'relative';
+            parent.appendChild(dropdown);
+        }
+        
+        // Track whether the current value is confirmed from Google Places (required for "complete")
+        try { inputElement.dataset.placesConfirmed = 'false'; } catch (e0) {}
+
+        function clearConfirmedLocation(emitChange) {
+            try { inputElement.dataset.placesConfirmed = 'false'; } catch (e1) {}
+            if (latInput) latInput.value = '';
+            if (lngInput) lngInput.value = '';
+            if (countryInput) countryInput.value = '';
+            if (statusElement) {
+                statusElement.textContent = '';
+                statusElement.className = 'fieldset-location-status';
+            }
+            if (emitChange) {
+                // Use a non-input event to avoid recursion with the input handler.
+                try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+            }
+        }
+
+        function extractCountryCode(place) {
+            // New Places API may expose `addressComponents` entries like:
+            // { shortText, longText, types: [...] }
+            try {
+                var comps = place && place.addressComponents ? place.addressComponents : null;
+                if (!Array.isArray(comps)) return '';
+                for (var i = 0; i < comps.length; i++) {
+                    var c = comps[i];
+                    if (!c) continue;
+                    var types = c.types;
+                    if (!Array.isArray(types) || types.indexOf('country') === -1) continue;
+                    var raw = (c.shortText || c.short_name || c.short || c.longText || c.long_name || '');
+                    var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+                    if (code.length === 2) return code;
+                }
+            } catch (e) {}
+            return '';
+        }
+
+        // Fetch suggestions using new API (same as map controls - no type restrictions)
+        var debounceTimer = null;
+        async function fetchSuggestions(query) {
+            if (!query || query.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            try {
+                // Use same API call as map controls (no type restrictions)
+                var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                    input: query
+                });
+                
+                dropdown.innerHTML = '';
+                
+                if (!response || !response.suggestions || response.suggestions.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                
+                response.suggestions.forEach(function(suggestion) {
+                    var prediction = suggestion.placePrediction;
+                    if (!prediction) return;
+                    
+                    var item = document.createElement('div');
+                    item.className = 'fieldset-location-dropdown-item';
+                    item.style.padding = '8px 12px';
+                    item.style.cursor = 'pointer';
+                    item.style.borderBottom = '1px solid #eee';
+                    
+                    var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
+                    var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
+                    
+                    item.innerHTML = 
+                        '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
+                        (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
+                    
+                    // Hover effect
+                    item.addEventListener('mouseenter', function() {
+                        item.style.backgroundColor = '#f5f5f5';
+                    });
+                    item.addEventListener('mouseleave', function() {
+                        item.style.backgroundColor = 'transparent';
+                    });
+                    
+                    item.addEventListener('click', async function() {
+                        try {
+                            var place = prediction.toPlace();
+                            await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'addressComponents'] });
+                            
+                            if (place.location) {
+                                var lat = place.location.lat();
+                                var lng = place.location.lng();
+                                var cc = extractCountryCode(place);
+                                
+                                inputElement.value = place.displayName || place.formattedAddress || mainText;
+                                dropdown.style.display = 'none';
+                                
+                                if (latInput) latInput.value = lat;
+                                if (lngInput) lngInput.value = lng;
+                                if (countryInput) countryInput.value = cc;
+                                try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
+                                try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e4) {}
+                                
+                                if (statusElement) {
+                                    statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                                    statusElement.className = 'fieldset-location-status success';
+                                }
+                            } else {
+                                clearConfirmedLocation(true);
+                                if (statusElement) {
+                                    statusElement.textContent = 'No location data for this place';
+                                    statusElement.className = 'fieldset-location-status error';
+                                }
+                            }
+                        } catch (err) {
+                            console.error('Place details error:', err);
+                            clearConfirmedLocation(true);
+                            if (statusElement) {
+                                statusElement.textContent = 'Error loading place details';
+                                statusElement.className = 'fieldset-location-status error';
+                            }
+                        }
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.style.display = 'block';
+            } catch (err) {
+                console.error('Autocomplete error:', err);
+                dropdown.style.display = 'none';
+            }
+        }
+        
+        // If the user types, the location is no longer confirmed (must pick from Google again).
+        inputElement.addEventListener('input', function() {
+            // Manual typing invalidates confirmation, but must not re-dispatch input (would recurse).
+            clearConfirmedLocation(false);
+            clearTimeout(debounceTimer);
+            var query = inputElement.value.trim();
+            
+            if (query.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            debounceTimer = setTimeout(function() {
+                fetchSuggestions(query);
+            }, 300);
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!inputElement.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        // Return object with cleanup method
+        return {
+            destroy: function() {
+                if (dropdown && dropdown.parentNode) {
+                    dropdown.parentNode.removeChild(dropdown);
+                }
+            }
+        };
+    }
+    
+    // Build compact currency menu - uses CurrencyComponent
+    function buildCurrencyMenuCompact(container, defaultCurrency) {
+        if (typeof CurrencyComponent === 'undefined') {
+            console.error('[FieldsetBuilder] CurrencyComponent not available');
+            return document.createElement('div');
+        }
+        // Use defaultCurrency if provided (user must select if not provided)
+        var initialValue = defaultCurrency;
+        var result = CurrencyComponent.buildCompactMenu({
+            initialValue: initialValue,
+            container: container
+        });
+        return result.element;
+    }
+    
+    // Build phone prefix menu - uses PhonePrefixComponent
+    function buildPhonePrefixMenu(container) {
+        if (typeof PhonePrefixComponent === 'undefined') {
+            console.error('[FieldsetBuilder] PhonePrefixComponent not available');
+            return document.createElement('div');
+        }
+        // No default - user must select
+        var initialValue = null;
+        var result = PhonePrefixComponent.buildCompactMenu({
+            initialValue: initialValue,
+            container: container
+        });
+        return result.element;
+    }
+    
+    // Build label with required asterisk and tooltip
+    function buildLabel(name, tooltip, minLength, maxLength) {
+        var label = document.createElement('div');
+        label.className = 'fieldset-label';
+        label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">*</span>';
+        
+        // Build tooltip text with character limits appended
+        var tooltipText = tooltip;
+        var charLimitText = '';
+        
+        if (minLength !== null && minLength !== undefined && maxLength !== null && maxLength !== undefined) {
+            charLimitText = minLength + '-' + maxLength + ' characters';
+        } else if (maxLength !== null && maxLength !== undefined) {
+            charLimitText = 'Maximum ' + maxLength + ' characters';
+        } else if (minLength !== null && minLength !== undefined) {
+            charLimitText = 'Minimum ' + minLength + ' characters';
+        }
+        
+        if (charLimitText) {
+            if (tooltipText) {
+                // Match live-site style: visually separate tooltip body from char-limit note.
+                tooltipText = tooltipText + '\n──────────\n' + charLimitText;
+            } else {
+                tooltipText = charLimitText;
+            }
+        }
+        
+        if (tooltipText) {
+            var tip = document.createElement('span');
+            tip.className = 'fieldset-label-tooltip';
+            tip.textContent = 'i';
+            label.appendChild(tip);
+
+            // Full-width tooltip box (panel-width), toggled via CSS
+            var tipBox = document.createElement('div');
+            tipBox.className = 'fieldset-label-tooltipbox';
+            tipBox.textContent = tooltipText;
+            label.appendChild(tipBox);
+        }
+        return label;
+    }
+    
+    // Add validation with char limit and invalid state
+    function addInputValidation(input, minLength, maxLength, validationFn) {
+        var charCount = document.createElement('div');
+        charCount.className = 'fieldset-char-count';
+        charCount.style.display = 'none';
+        
+        var touched = false;
+        
+        // ENFORCE maxlength via HTML attribute (prevents most excessive input)
+        if (typeof maxLength === 'number' && isFinite(maxLength) && maxLength > 0) {
+            input.setAttribute('maxlength', String(maxLength));
+        }
+
+        // Handle paste events to truncate oversized content safely (prevents browser freeze from massive paste)
+        input.addEventListener('paste', function(e) {
+            if (typeof maxLength !== 'number' || !isFinite(maxLength) || maxLength <= 0) return;
+            if (!e) return;
+
+            var pastedText = '';
+            try {
+                if (e.clipboardData && typeof e.clipboardData.getData === 'function') {
+                    pastedText = e.clipboardData.getData('text') || '';
+                } else if (window.clipboardData && typeof window.clipboardData.getData === 'function') {
+                    pastedText = window.clipboardData.getData('text') || '';
+                }
+            } catch (err) {
+                pastedText = '';
+            }
+
+            if (!pastedText) return;
+
+            var currentValue = input.value || '';
+            var selStart = (typeof input.selectionStart === 'number') ? input.selectionStart : currentValue.length;
+            var selEnd = (typeof input.selectionEnd === 'number') ? input.selectionEnd : currentValue.length;
+            var before = currentValue.slice(0, selStart);
+            var after = currentValue.slice(selEnd);
+            var nextValue = before + pastedText + after;
+
+            if (nextValue.length > maxLength) {
+                e.preventDefault();
+                var availableSpace = maxLength - before.length - after.length;
+                var truncatedPaste = pastedText.slice(0, Math.max(0, availableSpace));
+                input.value = (before + truncatedPaste + after).slice(0, maxLength);
+                try {
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                } catch (err2) {}
+            }
+        });
+        
+        function updateCharCount() {
+            if (typeof maxLength !== 'number' || !isFinite(maxLength) || maxLength <= 0) {
+                charCount.style.display = 'none';
+                charCount.textContent = '';
+                charCount.className = 'fieldset-char-count';
+                return;
+            }
+
+            var len = (input.value || '').length;
+            var remaining = maxLength - len;
+
+            // Live-site behavior: show only when within 10 chars of max (or over).
+            if (remaining <= 10 || remaining < 0) {
+                charCount.style.display = 'block';
+                if (remaining < 0) {
+                    charCount.textContent = Math.abs(remaining) + ' over limit';
+                    charCount.className = 'fieldset-char-count fieldset-char-count--danger';
+                } else if (remaining === 0) {
+                    charCount.textContent = '0 remaining';
+                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+                } else {
+                    charCount.textContent = remaining + ' remaining';
+                    charCount.className = 'fieldset-char-count fieldset-char-count--warning';
+                }
+            } else {
+                charCount.style.display = 'none';
+                charCount.textContent = '';
+                charCount.className = 'fieldset-char-count';
+            }
+        }
+        
+        function validate() {
+            if (!touched) return;
+            var isValid = true;
+            var len = input.value.length;
+            
+            // Check min length (only if field has content)
+            if (len > 0 && minLength > 0 && len < minLength) {
+                isValid = false;
+            }
+            // Check max length
+            if (len > maxLength) {
+                isValid = false;
+            }
+            // Check custom validation
+            if (len > 0 && validationFn && !validationFn(input.value)) {
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                input.classList.add('fieldset-input--invalid');
+            } else {
+                input.classList.remove('fieldset-input--invalid');
+            }
+        }
+        
+        input.addEventListener('input', function() {
+            updateCharCount();
+            if (touched) validate();
+        });
+        
+        input.addEventListener('change', function() {
+            updateCharCount();
+        });
+        
+        input.addEventListener('blur', function() {
+            touched = true;
+            updateCharCount();
+            validate();
+        });
+        
+        // Initial render
+            updateCharCount();
+        
+        return { charCount: charCount };
+    }
+    
+    // Email validation regex
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+    
+    // URL validation (accepts with or without protocol)
+    function isValidUrl(url) {
+        return /^(https?:\/\/)?.+\..+/.test(url);
+    }
+    
+    // Phone digits-only filter
+    function makePhoneDigitsOnly(input) {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
+
+    // Money input behavior (prices): digits + one dot, max 2 decimals; format to 2 decimals on blur.
+    // Uses text input with inputMode=decimal to avoid browser 'number' quirks (e/E, locale issues).
+    function attachMoneyInputBehavior(input) {
+        if (!input) return;
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.autocomplete = 'off';
+
+        function sanitize(raw) {
+            var val = (raw || '').toString();
+            val = val.trim();
+
+            // Support comma decimal when no dot is present (e.g. "14,5" -> "14.5")
+            if (val.indexOf(',') !== -1 && val.indexOf('.') === -1) {
+                val = val.replace(/,/g, '.');
+            } else {
+                val = val.replace(/,/g, '');
+            }
+
+            // Keep only digits and dot
+            val = val.replace(/[^0-9.]/g, '');
+
+            // Only one dot
+            var firstDot = val.indexOf('.');
+            if (firstDot !== -1) {
+                var before = val.slice(0, firstDot + 1);
+                var after = val.slice(firstDot + 1).replace(/\./g, '');
+                // Max 2 decimals
+                after = after.slice(0, 2);
+                val = before + after;
+            }
+
+            return val;
+        }
+
+        input.addEventListener('keydown', function(e) {
+            if (!e) return;
+            var k = e.key;
+            // Allow navigation/control keys
+            if (
+                k === 'Backspace' || k === 'Delete' || k === 'Tab' || k === 'Enter' ||
+                k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown' ||
+                k === 'Home' || k === 'End' || k === 'Escape'
+            ) {
+                return;
+            }
+            // Allow Ctrl/Cmd shortcuts
+            if (e.ctrlKey || e.metaKey) return;
+            if (typeof k !== 'string' || k.length !== 1) return;
+
+            // Block anything not digit/dot
+            if (!(/[0-9.]/.test(k))) {
+                e.preventDefault();
+                return;
+            }
+            // Block second dot
+            if (k === '.' && this.value.indexOf('.') !== -1) {
+                e.preventDefault();
+                return;
+            }
+        });
+
+        input.addEventListener('input', function() {
+            var next = sanitize(this.value);
+            if (this.value !== next) {
+                this.value = next;
+            }
+            if (typeof this.setCustomValidity === 'function') {
+                this.setCustomValidity('');
+            }
+        });
+
+        input.addEventListener('blur', function() {
+            var cleaned = sanitize(this.value);
+            if (cleaned === '') {
+                this.value = '';
+                if (typeof this.setCustomValidity === 'function') {
+                    this.setCustomValidity('');
+                }
+                return;
+            }
+            var num = parseFloat(cleaned);
+            if (!isFinite(num)) {
+                if (typeof this.setCustomValidity === 'function') {
+                    this.setCustomValidity('Please enter a valid price.');
+                    if (typeof this.reportValidity === 'function') this.reportValidity();
+                }
+                return;
+            }
+            this.value = num.toFixed(2);
+        });
+    }
+    
+    // URL auto-prepend https://
+    function autoUrlProtocol(input) {
+        input.addEventListener('blur', function() {
+            var val = this.value.trim();
+            if (val && !val.match(/^https?:\/\//i)) {
+                this.value = 'https://' + val;
+            }
+        });
+    }
+    
+    // Set dropdown options data and propagate to external components
+    function setPicklist(data) {
+        dropdownOptions = data;
+        // Also set data in Currency and PhonePrefix components
+        if (data && data.currency && typeof CurrencyComponent !== 'undefined') {
+            CurrencyComponent.setData(data.currency);
+        }
+        if (data && data['phone-prefix'] && typeof PhonePrefixComponent !== 'undefined') {
+            PhonePrefixComponent.setData(data['phone-prefix']);
+        }
+        if (data && data.country && typeof CountryComponent !== 'undefined') {
+            CountryComponent.setData(data.country);
+        }
+    }
+    
+    /**
+     * Build a complete fieldset element based on field type
+     * @param {Object} fieldData - Field configuration from the form data
+     * @param {Object} options - Additional options
+     * @param {string} options.idPrefix - Prefix for element IDs (default 'fieldset')
+     * @param {number} options.fieldIndex - Index for unique radio group names
+     * @param {HTMLElement} options.container - Parent container (for closing menus)
+     * @returns {HTMLElement} Complete fieldset element
+     */
+    function buildFieldset(fieldData, options) {
+        if (!options) {
+            throw new Error('FieldsetBuilder.buildFieldset: options parameter is required');
+        }
+        var idPrefix = options.idPrefix;
+        var index = options.fieldIndex;
+        var container = options.container;
+        var defaultCurrency = options.defaultCurrency;
+        
+        function applyFieldsetRowItemClasses(rowEl) {
+            if (!rowEl) return;
+            Array.from(rowEl.children).forEach(function(child) {
+                if (!child || !child.classList) return;
+                child.classList.add('fieldset-row-item');
+                
+                if (child.classList.contains('fieldset-menu')) child.classList.add('fieldset-row-item--menu');
+                if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
+                if (child.classList.contains('component-currencycompact-menu')) child.classList.add('fieldset-row-item--currency-compact');
+                if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
+                if (child.classList.contains('fieldset-pricing-add') || child.classList.contains('fieldset-pricing-remove')) {
+                    child.classList.add('fieldset-row-item--no-flex');
+                }
+            });
+        }
+        
+        var fieldset = document.createElement('div');
+        fieldset.className = 'fieldset';
+        
+        var key = fieldData.fieldset_key || fieldData.key;
+        var name = fieldData.fieldset_name || fieldData.name;
+        if (typeof key === 'string' && key.trim() !== '') {
+            fieldset.dataset.fieldsetKey = key;
+        }
+        // Expose canonical type/name for any callers that serialize fieldsets (member/admin).
+        // This must be component-owned so all consumers behave identically.
+        try {
+            fieldset.dataset.fieldsetType = (typeof key === 'string') ? String(key).trim() : '';
+            fieldset.dataset.fieldsetName = (typeof name === 'string') ? String(name).trim() : '';
+        } catch (e) {}
+        
+        // Get tooltip: check customTooltip first (editable fieldsets), then tooltip, then fieldset_tooltip
+        var tooltip = fieldData.customTooltip || fieldData.tooltip || fieldData.fieldset_tooltip;
+        if (!tooltip && key && fieldsets && fieldsets.length > 0) {
+            var matchingFieldset = fieldsets.find(function(fs) {
+                return fs.value === key || fs.key === key || fs.fieldset_key === key || fs.fieldsetKey === key;
+            });
+            if (matchingFieldset && matchingFieldset.fieldset_tooltip) {
+                tooltip = matchingFieldset.fieldset_tooltip;
+            }
+        }
+        
+        // Canonical: fieldset_placeholder (from DB). Editable override: customPlaceholder (from fieldset_mods).
+        var placeholder = fieldData.customPlaceholder || fieldData.fieldset_placeholder;
+        var minLength = fieldData.min_length;
+        var maxLength = fieldData.max_length;
+        var fieldOptions = fieldData.fieldset_options || fieldData.options;
+        var fields = fieldData.fieldset_fields;
+
+        function applyPlaceholder(el, value) {
+            if (!el) return;
+            if (typeof value !== 'string') return;
+            var v = value.trim();
+            if (!v) return;
+            el.placeholder = v;
+        }
+        
+        // Build based on fieldset type
+        // CRITICAL: No fallbacks. Fieldset keys must match DB-defined keys exactly.
+        switch (key) {
+            case 'password':
+            case 'confirm-password':
+            case 'new-password':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var pwInput = document.createElement('input');
+                pwInput.type = 'password';
+                pwInput.className = 'fieldset-input';
+                applyPlaceholder(pwInput, placeholder);
+                var pwValidation = addInputValidation(pwInput, minLength, maxLength, null);
+                fieldset.appendChild(pwInput);
+                fieldset.appendChild(pwValidation.charCount);
+                break;
+
+            case 'title':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var titleInput = document.createElement('input');
+                titleInput.type = 'text';
+                titleInput.className = 'fieldset-input';
+                applyPlaceholder(titleInput, placeholder);
+                var titleValidation = addInputValidation(titleInput, minLength, maxLength, null);
+                fieldset.appendChild(titleInput);
+                fieldset.appendChild(titleValidation.charCount);
+                break;
+            
+            case 'coupon':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var couponInput = document.createElement('input');
+                couponInput.type = 'text';
+                couponInput.className = 'fieldset-input';
+                applyPlaceholder(couponInput, placeholder);
+                var couponValidation = addInputValidation(couponInput, minLength, maxLength, null);
+                fieldset.appendChild(couponInput);
+                fieldset.appendChild(couponValidation.charCount);
+                break;
+                
+            case 'description':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var descTextarea = document.createElement('textarea');
+                descTextarea.className = 'fieldset-textarea';
+                applyPlaceholder(descTextarea, placeholder);
+                var descValidation = addInputValidation(descTextarea, minLength, maxLength, null);
+                fieldset.appendChild(descTextarea);
+                fieldset.appendChild(descValidation.charCount);
+                break;
+                
+            case 'custom_text': // post_map_cards.custom_text
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var textBoxInput = document.createElement('input');
+                textBoxInput.type = 'text';
+                textBoxInput.className = 'fieldset-input';
+                applyPlaceholder(textBoxInput, placeholder);
+                var textBoxValidation = addInputValidation(textBoxInput, minLength, maxLength, null);
+                fieldset.appendChild(textBoxInput);
+                fieldset.appendChild(textBoxValidation.charCount);
+                break;
+                
+            case 'custom_textarea': // post_map_cards.custom_textarea
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var editableTextarea = document.createElement('textarea');
+                editableTextarea.className = 'fieldset-textarea';
+                applyPlaceholder(editableTextarea, placeholder);
+                var textareaValidation = addInputValidation(editableTextarea, minLength, maxLength, null);
+                fieldset.appendChild(editableTextarea);
+                fieldset.appendChild(textareaValidation.charCount);
+                break;
+                
+            case 'custom_dropdown': // post_map_cards.custom_dropdown
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var select = document.createElement('select');
+                select.className = 'fieldset-select';
+                select.innerHTML = '<option value="">Select an option...</option>';
+                if (Array.isArray(fieldOptions)) {
+                    fieldOptions.forEach(function(opt) {
+                        var option = document.createElement('option');
+                        option.value = opt;
+                        option.textContent = opt;
+                        select.appendChild(option);
+                    });
+                }
+                fieldset.appendChild(select);
+                break;
+                
+            case 'custom_radio': // post_map_cards.custom_radio
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var radioGroup = document.createElement('div');
+                radioGroup.className = 'fieldset-radio-group';
+                if (Array.isArray(fieldOptions)) {
+                    fieldOptions.forEach(function(opt, i) {
+                        var radio = document.createElement('label');
+                        radio.className = 'fieldset-radio';
+                        radio.innerHTML = '<input type="radio" name="radio-' + index + '" class="fieldset-radio-input" value="' + opt + '"><span class="fieldset-radio-text">' + opt + '</span>';
+                        radioGroup.appendChild(radio);
+                    });
+                }
+                fieldset.appendChild(radioGroup);
+                break;
+                
+            case 'email':
+            case 'account_email':
+            case 'public_email':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var emailInput = document.createElement('input');
+                emailInput.type = 'email';
+                emailInput.className = 'fieldset-input';
+                applyPlaceholder(emailInput, placeholder);
+                var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
+                fieldset.appendChild(emailInput);
+                fieldset.appendChild(emailValidation.charCount);
+                break;
+                
+            case 'phone':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var phoneRow = document.createElement('div');
+                phoneRow.className = 'fieldset-row';
+                phoneRow.appendChild(buildPhonePrefixMenu(container));
+                var phoneInput = document.createElement('input');
+                phoneInput.type = 'tel';
+                phoneInput.className = 'fieldset-input';
+                applyPlaceholder(phoneInput, placeholder);
+                makePhoneDigitsOnly(phoneInput);
+                var phoneValidation = addInputValidation(phoneInput, minLength, maxLength, null);
+                phoneRow.appendChild(phoneInput);
+                applyFieldsetRowItemClasses(phoneRow);
+                fieldset.appendChild(phoneRow);
+                fieldset.appendChild(phoneValidation.charCount);
+                break;
+                
+            case 'address':
+            case 'location': // legacy support
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var addrInputEl = document.createElement('input');
+                addrInputEl.type = 'text';
+                addrInputEl.className = 'fieldset-input';
+                applyPlaceholder(addrInputEl, placeholder);
+                fieldset.appendChild(addrInputEl);
+                // Hidden lat/lng fields
+                var addrLatInput = document.createElement('input');
+                addrLatInput.type = 'hidden';
+                addrLatInput.className = 'fieldset-lat';
+                var addrLngInput = document.createElement('input');
+                addrLngInput.type = 'hidden';
+                addrLngInput.className = 'fieldset-lng';
+                var addrCountryInput = document.createElement('input');
+                addrCountryInput.type = 'hidden';
+                addrCountryInput.className = 'fieldset-country';
+                fieldset.appendChild(addrLatInput);
+                fieldset.appendChild(addrLngInput);
+                fieldset.appendChild(addrCountryInput);
+                // Status indicator
+                var addrStatus = document.createElement('div');
+                addrStatus.className = 'fieldset-location-status';
+                fieldset.appendChild(addrStatus);
+                // Init Google Places
+                initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus);
+                break;
+                
+            case 'city':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var cityInputEl = document.createElement('input');
+                cityInputEl.type = 'text';
+                cityInputEl.className = 'fieldset-input';
+                applyPlaceholder(cityInputEl, placeholder);
+                fieldset.appendChild(cityInputEl);
+                // Hidden lat/lng fields
+                var cityLatInput = document.createElement('input');
+                cityLatInput.type = 'hidden';
+                cityLatInput.className = 'fieldset-lat';
+                var cityLngInput = document.createElement('input');
+                cityLngInput.type = 'hidden';
+                cityLngInput.className = 'fieldset-lng';
+                var cityCountryInput = document.createElement('input');
+                cityCountryInput.type = 'hidden';
+                cityCountryInput.className = 'fieldset-country';
+                fieldset.appendChild(cityLatInput);
+                fieldset.appendChild(cityLngInput);
+                fieldset.appendChild(cityCountryInput);
+                // Status indicator
+                var cityStatus = document.createElement('div');
+                cityStatus.className = 'fieldset-location-status';
+                fieldset.appendChild(cityStatus);
+                // Init Google Places (cities only)
+                initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityCountryInput, cityStatus);
+                break;
+                
+            case 'website-url':
+            case 'tickets-url':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var urlInput = document.createElement('input');
+                urlInput.type = 'text'; // text not url, we handle protocol
+                urlInput.className = 'fieldset-input';
+                applyPlaceholder(urlInput, placeholder);
+                autoUrlProtocol(urlInput);
+                var urlValidation = addInputValidation(urlInput, minLength, maxLength, isValidUrl);
+                fieldset.appendChild(urlInput);
+                fieldset.appendChild(urlValidation.charCount);
+                break;
+                
+            case 'images':
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                var imagesContainer = document.createElement('div');
+                imagesContainer.className = 'fieldset-images-container';
+                
+                // Each entry: { file, fileUrl, cropState?, cropRect?, previewUrl? }
+                // cropRect: { x1, y1, x2, y2 } in original image pixels (for Bunny Dynamic Image API crop=...)
+                var imageEntries = [];
+                var nextImageEntryId = 1;
+                var maxImages = 10;
+
+                // Hidden JSON payload so the outside form serializer can pick up crop info later.
+                // NOTE: This fieldset currently manages files in-memory; upload/saving is implemented elsewhere.
+                var imagesMetaInput = document.createElement('input');
+                imagesMetaInput.type = 'hidden';
+                imagesMetaInput.className = 'fieldset-images-meta';
+                imagesMetaInput.value = '[]';
+                fieldset.appendChild(imagesMetaInput);
+
+                function updateImagesMeta() {
+                    try {
+                        var payload = imageEntries.map(function(entry) {
+                            return {
+                                file_name: entry && entry.file ? (entry.file.name || '') : '',
+                                file_type: entry && entry.file ? (entry.file.type || '') : '',
+                                file_size: entry && entry.file ? (entry.file.size || 0) : 0,
+                                crop: entry && entry.cropRect ? {
+                                    x1: entry.cropRect.x1,
+                                    y1: entry.cropRect.y1,
+                                    x2: entry.cropRect.x2,
+                                    y2: entry.cropRect.y2
+                                } : null
+                            };
+                        });
+                        imagesMetaInput.value = JSON.stringify(payload);
+
+                        // Notify FieldsetBuilder validity system (required asterisk + dataset.complete).
+                        // The hidden input value changes programmatically, so we must emit an event.
+                        try {
+                            imagesMetaInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        } catch (e2) {}
+                    } catch (e) {
+                        // If JSON fails, we want the error visible (no silent fallback)
+                        throw e;
+                    }
+                }
+
+                function revokeEntryUrls(entry) {
+                    if (!entry) return;
+                    if (entry.previewUrl && typeof entry.previewUrl === 'string' && entry.previewUrl.indexOf('blob:') === 0) {
+                        try { URL.revokeObjectURL(entry.previewUrl); } catch (e) {}
+                    }
+                    if (entry.fileUrl && typeof entry.fileUrl === 'string' && entry.fileUrl.indexOf('blob:') === 0) {
+                        try { URL.revokeObjectURL(entry.fileUrl); } catch (e) {}
+                    }
+                    entry.previewUrl = '';
+                    entry.fileUrl = '';
+                }
+
+                // ------------------------------------------------------------------
+                // Cropper - uses PostCropperComponent (non-destructive for post images)
+                // Uses Bunny Dynamic Image API crop params later (server-side + cached).
+                // ------------------------------------------------------------------
+
+                var currentCropEntry = null;
+
+                function openCropperForEntry(entry) {
+                    if (!entry || !entry.fileUrl) return;
+                    
+                    if (!window.PostCropperComponent) {
+                        console.error('[Fieldset] PostCropperComponent not available');
+                        return;
+                    }
+                    
+                    currentCropEntry = entry;
+                    
+                    PostCropperComponent.open({
+                        url: entry.fileUrl,
+                        cropState: entry.cropState || null,
+                        callback: function(result) {
+                            if (!result || !currentCropEntry) return;
+                            
+                            currentCropEntry.cropState = result.cropState;
+                            currentCropEntry.cropRect = result.cropRect;
+                            
+                            updateImagesMeta();
+                            renderEntryPreviewFromCrop(currentCropEntry);
+                            currentCropEntry = null;
+                        }
+                    });
+                }
+
+                function renderEntryPreviewFromCrop(entry) {
+                    if (!entry || !entry.fileUrl || !entry.cropRect) return;
+
+                    // Create a small local preview so users see exactly what the square crop will look like.
+                    var url = entry.fileUrl;
+                    var img = new Image();
+                    img.onload = function() {
+                        var iw = img.naturalWidth || img.width;
+                        var ih = img.naturalHeight || img.height;
+                        if (!iw || !ih) return;
+
+                        var rect = entry.cropRect;
+                        var sx = Math.max(0, Math.min(iw, rect.x1));
+                        var sy = Math.max(0, Math.min(ih, rect.y1));
+                        var sw = Math.max(1, Math.min(iw - sx, rect.x2 - rect.x1));
+                        var sh = Math.max(1, Math.min(ih - sy, rect.y2 - rect.y1));
+
+                        var canvas = document.createElement('canvas');
+                        canvas.width = 200;
+                        canvas.height = 200;
+                        var ctx = canvas.getContext('2d');
+                        if (!ctx) throw new Error('Images fieldset crop preview: canvas 2D context unavailable.');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+                        canvas.toBlob(function(blob) {
+                            if (!blob) throw new Error('Images fieldset crop preview: failed to generate preview blob.');
+
+                            if (entry.previewUrl && entry.previewUrl.indexOf('blob:') === 0) {
+                                try { URL.revokeObjectURL(entry.previewUrl); } catch (e) {}
+                            }
+                            entry.previewUrl = URL.createObjectURL(blob);
+                            renderImages();
+                        }, 'image/jpeg', 0.92);
+                    };
+                    img.onerror = function() {
+                        throw new Error('Images fieldset crop preview: failed to load image for preview.');
+                    };
+                    img.src = url;
+                }
+                
+                function renderImages() {
+                    // Prevent layout "flash" / jump while we rebuild the grid.
+                    // Re-rendering clears and re-adds nodes; locking the min-height keeps the page stable.
+                    try {
+                        var r = imagesContainer.getBoundingClientRect();
+                        if (r && r.height && r.height > 0) {
+                            imagesContainer.style.minHeight = Math.ceil(r.height) + 'px';
+                        }
+                    } catch (e0) {}
+
+                    imagesContainer.innerHTML = '';
+                    
+                    // Show existing images
+                    imageEntries.forEach(function(entry, idx) {
+                        var thumb = document.createElement('div');
+                        thumb.className = 'fieldset-image-thumb';
+                        // Native drag is disabled until a press-and-hold (no visible drag handle here).
+                        thumb.draggable = false;
+                        // Stable ID so we can rebuild imageEntries order from DOM order after drag.
+                        if (entry && !entry._imageEntryId) {
+                            entry._imageEntryId = String(nextImageEntryId++);
+                        }
+                        thumb.dataset.imageEntryId = entry ? entry._imageEntryId : '';
+                        
+                        var img = document.createElement('img');
+                        img.className = 'fieldset-image-thumb-img';
+                        img.src = (entry && entry.previewUrl) ? entry.previewUrl : (entry ? entry.fileUrl : '');
+                        thumb.appendChild(img);
+
+                        // Click thumb to crop (avatar-style)
+                        var didDrag = false;
+                        thumb.addEventListener('click', function() {
+                            // If this click is the tail-end of a drag, ignore it.
+                            if (didDrag) {
+                                didDrag = false;
+                                return;
+                            }
+                            if (entry) openCropperForEntry(entry);
+                        });
+                        
+                        var removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'fieldset-image-thumb-remove';
+                        removeBtn.textContent = '×';
+                        (function(idx) {
+                            removeBtn.addEventListener('click', function(e) {
+                                // Prevent thumb click from opening cropper
+                                if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                                if (imageEntries[idx]) {
+                                    revokeEntryUrls(imageEntries[idx]);
+                                }
+                                imageEntries.splice(idx, 1);
+                                updateImagesMeta();
+                                renderImages();
+                            });
+                        })(idx);
+                        thumb.appendChild(removeBtn);
+                        
+                        // ------------------------------------------------------------------
+                        // Drag-to-reorder (same drag pattern used in Formbuilder)
+                        // - No drag handle: dragging begins immediately when the user grabs + moves a thumb
+                        // - Click without dragging still opens the cropper
+                        // ------------------------------------------------------------------
+                        var dragStartIndex = -1;
+                        var dragArmed = false;
+
+                        function armDrag(e) {
+                            // Don't arm dragging from the remove button.
+                            if (e && e.target && (e.target === removeBtn || (e.target.closest && e.target.closest('.fieldset-image-thumb-remove')))) {
+                                return;
+                            }
+                            dragArmed = true;
+                            thumb.draggable = true;
+                            thumb.classList.add('fieldset-image-thumb--dragready');
+                        }
+
+                        function disarmDrag() {
+                            dragArmed = false;
+                            if (!thumb.classList.contains('dragging')) {
+                                thumb.draggable = false;
+                                thumb.classList.remove('fieldset-image-thumb--dragready');
+                            }
+                        }
+
+                        function setThumbDragImage(ev) {
+                            try {
+                                if (!ev || !ev.dataTransfer) return;
+                                var r = thumb.getBoundingClientRect();
+                                var size = Math.max(1, Math.round(Math.min(r.width || 1, r.height || 1)));
+
+                                // Use an offscreen square ghost so the browser drag preview can't distort/squash.
+                                var ghost = document.createElement('div');
+                                ghost.style.width = size + 'px';
+                                ghost.style.height = size + 'px';
+                                ghost.style.borderRadius = '5px';
+                                ghost.style.overflow = 'hidden';
+                                ghost.style.background = '#222';
+                                ghost.style.position = 'fixed';
+                                ghost.style.left = '-99999px';
+                                ghost.style.top = '-99999px';
+                                ghost.style.pointerEvents = 'none';
+
+                                var gimg = document.createElement('img');
+                                gimg.src = (entry && entry.previewUrl) ? entry.previewUrl : (entry ? entry.fileUrl : '');
+                                gimg.style.width = '100%';
+                                gimg.style.height = '100%';
+                                gimg.style.objectFit = 'cover';
+                                gimg.draggable = false;
+                                ghost.appendChild(gimg);
+
+                                document.body.appendChild(ghost);
+                                ev.dataTransfer.setDragImage(ghost, Math.floor(size / 2), Math.floor(size / 2));
+                                setTimeout(function() {
+                                    try { ghost.remove(); } catch (e) {}
+                                }, 0);
+                            } catch (e) {
+                                // If setDragImage fails (browser quirks), allow default behavior.
+                            }
+                        }
+
+                        thumb.addEventListener('mousedown', function(e) {
+                            if (e && typeof e.button === 'number' && e.button !== 0) return;
+                            armDrag(e);
+                        });
+                        thumb.addEventListener('mouseup', function() {
+                            disarmDrag();
+                        });
+                        thumb.addEventListener('mouseleave', function() {
+                            // If the user didn't start an actual drag, disarm when leaving.
+                            disarmDrag();
+                        });
+
+                        thumb.addEventListener('dragstart', function(e) {
+                            if (!thumb.draggable || !dragArmed) {
+                                if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                                return;
+                            }
+                            didDrag = true;
+                            setThumbDragImage(e);
+                            var siblings = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            dragStartIndex = siblings.indexOf(thumb);
+                            if (e && e.dataTransfer) {
+                                e.dataTransfer.effectAllowed = 'move';
+                                try { e.dataTransfer.setData('text/plain', thumb.dataset.imageEntryId || ''); } catch (err) {}
+                            }
+                            thumb.classList.add('dragging');
+                        });
+                        thumb.addEventListener('dragend', function() {
+                            thumb.classList.remove('dragging');
+                            thumb.classList.remove('fieldset-image-thumb--dragready');
+                            thumb.draggable = false;
+                            dragArmed = false;
+
+                            // Rebuild imageEntries in the new DOM order (exclude the upload tile).
+                            var orderedThumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            var idToEntry = {};
+                            imageEntries.forEach(function(en) {
+                                if (en && en._imageEntryId) idToEntry[String(en._imageEntryId)] = en;
+                            });
+                            var nextEntries = [];
+                            orderedThumbs.forEach(function(el) {
+                                var id = el && el.dataset ? el.dataset.imageEntryId : '';
+                                if (id && idToEntry[id]) nextEntries.push(idToEntry[id]);
+                            });
+                            // Only apply if we still have the same number of entries
+                            if (nextEntries.length === imageEntries.length) {
+                                imageEntries = nextEntries;
+                                updateImagesMeta();
+                            }
+
+                            // Only notify meta/UI if position actually changed
+                            var siblingsNow = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            var currentIndex = siblingsNow.indexOf(thumb);
+                            if (dragStartIndex !== -1 && currentIndex !== -1 && currentIndex !== dragStartIndex) {
+                                // Re-render to ensure remove buttons map to correct indices
+                                renderImages();
+                            }
+                            dragStartIndex = -1;
+                        });
+                        // Dragover on each thumb is handled at container level for grid-friendly ordering
+                        
+                        imagesContainer.appendChild(thumb);
+                    });
+                    
+                    // Show upload button if under max
+                    if (imageEntries.length < maxImages) {
+                        var uploadBox = document.createElement('div');
+                        uploadBox.className = 'fieldset-images';
+                        uploadBox.innerHTML = ImageAddTileComponent.buildMarkup({
+                            iconClass: 'fieldset-images-icon',
+                            textClass: 'fieldset-images-text',
+                            label: 'Add'
+                        });
+                        uploadBox.addEventListener('click', function() {
+                            fileInput.click();
+                        });
+                        imagesContainer.appendChild(uploadBox);
+                    }
+
+                    // Release the height lock on the next frame once DOM is populated.
+                    try {
+                        requestAnimationFrame(function() {
+                            imagesContainer.style.minHeight = '';
+                        });
+                    } catch (e1) {
+                        try { imagesContainer.style.minHeight = ''; } catch (e2) {}
+                    }
+                }
+
+                // Grid-friendly dragover handler (insertBefore/after like Formbuilder)
+                imagesContainer.addEventListener('dragover', function(e) {
+                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                    var dragging = imagesContainer.querySelector('.fieldset-image-thumb.dragging');
+                    if (!dragging) return;
+
+                    var px = (e && typeof e.clientX === 'number') ? e.clientX : 0;
+                    var py = (e && typeof e.clientY === 'number') ? e.clientY : 0;
+
+                    // Prefer the element under the cursor for intuitive drops.
+                    var target = null;
+                    if (document && typeof document.elementFromPoint === 'function') {
+                        target = document.elementFromPoint(px, py);
+                    }
+                    var overThumb = target && target.closest ? target.closest('.fieldset-image-thumb') : null;
+                    if (overThumb && overThumb === dragging) overThumb = null;
+
+                    var thumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                    if (!thumbs.length) return;
+
+                    // If not directly over a thumb, allow easier "drop to first" / "drop to last" behavior.
+                    if (!overThumb) {
+                        var containerRect = imagesContainer.getBoundingClientRect();
+                        var first = thumbs[0];
+                        var last = thumbs[thumbs.length - 1];
+                        if (first) {
+                            var fr = first.getBoundingClientRect();
+                            // If cursor is above/left of the first thumb (with some leniency), insert before first.
+                            if (py < (fr.top + fr.height * 0.5) && px < (fr.left + fr.width * 0.5)) {
+                                imagesContainer.insertBefore(dragging, first);
+                                return;
+                            }
+                        }
+                        if (last) {
+                            var lr = last.getBoundingClientRect();
+                            // If cursor is below/right of the last thumb (with some leniency), insert after last.
+                            if (py > (lr.top + lr.height * 0.5) && px > (lr.left + lr.width * 0.5)) {
+                                imagesContainer.insertBefore(dragging, last.nextSibling);
+                                return;
+                            }
+                        }
+                        // Otherwise do nothing (avoids jumpiness when dragging between grid gaps).
+                        return;
+                    }
+
+                    var rect = overThumb.getBoundingClientRect();
+                    var midX = rect.left + rect.width / 2;
+                    // Flip before/after at 50% of the thumb width (no need to drag "90% across").
+                    var after = (px >= midX);
+                    if (after) {
+                        imagesContainer.insertBefore(dragging, overThumb.nextSibling);
+                    } else {
+                        imagesContainer.insertBefore(dragging, overThumb);
+                    }
+                });
+                
+                var fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.multiple = true;
+                fileInput.style.display = 'none';
+                // Keep a stable reference to the selected files, because we clear fileInput.value after reading.
+                // This allows the create-post submit pipeline to read the actual File objects without drafts.
+                fileInput._imageFiles = [];
+                fileInput.addEventListener('change', function() {
+                    var files = Array.from(this.files);
+                    files.forEach(function(file) {
+                        if (imageEntries.length < maxImages && file.type.startsWith('image/')) {
+                            var fileUrl = URL.createObjectURL(file);
+                            imageEntries.push({
+                                _imageEntryId: String(nextImageEntryId++),
+                                file: file,
+                                fileUrl: fileUrl,
+                                previewUrl: '',
+                                cropState: null,
+                                cropRect: null
+                            });
+                        }
+                    });
+                    try { fileInput._imageFiles = imageEntries.map(function(e){ return e && e.file ? e.file : null; }).filter(Boolean); } catch (e0) {}
+                    updateImagesMeta();
+                    renderImages();
+                    this.value = '';
+                });
+                fieldset.appendChild(fileInput);
+                fieldset.appendChild(imagesContainer);
+                
+                renderImages();
+                break;
+            
+            case 'amenities':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                var amenitiesGrid = document.createElement('div');
+                amenitiesGrid.className = 'fieldset-amenities';
+                
+                // Get amenities from amenities table (via picklist response structure)
+                var allAmenities = dropdownOptions['amenity'];
+                if (!allAmenities) {
+                    allAmenities = [];
+                }
+                
+                // Filter to only show selected amenities (if specified in fieldData)
+                var selectedAmenities = fieldData.selectedAmenities;
+                if (selectedAmenities && !Array.isArray(selectedAmenities)) {
+                    // Handle case where it might be a string or other type
+                    selectedAmenities = null;
+                }
+                var amenities = [];
+                if (selectedAmenities && Array.isArray(selectedAmenities) && selectedAmenities.length > 0) {
+                    // Normalize selectedAmenities for comparison (trim and lowercase)
+                    var normalizedSelected = selectedAmenities.map(function(val) {
+                        if (!val) return '';
+                        return val.toString().trim().toLowerCase();
+                    });
+                    // Only show amenities that are in the selected list
+                    amenities = allAmenities.filter(function(item) {
+                        if (!item || !item.value) return false;
+                        var itemValue = item.value.toString().trim().toLowerCase();
+                        return normalizedSelected.indexOf(itemValue) !== -1;
+                    });
+                } else {
+                    // If no selection, show all amenities (backward compatibility)
+                    amenities = allAmenities;
+                }
+                
+                amenities.forEach(function(item, i) {
+                    // Use database values directly
+                    var amenityName = item.value; // Display name (e.g., "Parking", "Wheelchair Access")
+                    var description = item.label || ''; // Full description for tooltip
+                    var filename = item.filename || ''; // Icon filename (e.g., "parking.svg")
+                    
+                    var row = document.createElement('div');
+                    row.className = 'fieldset-amenity-row';
+                    row.title = description; // Tooltip on hover
+                    
+                    // Icon
+                    var iconEl = document.createElement('div');
+                    iconEl.className = 'fieldset-amenity-icon';
+                    var amenityUrl = '';
+                    if (filename) {
+                        // Remove .svg extension if present (getImageUrl may add it, or filename may already include it)
+                        var cleanFilename = filename.replace(/\.svg$/i, '');
+                        amenityUrl = window.App.getImageUrl('amenities', cleanFilename + '.svg');
+                    }
+                    var iconImg = document.createElement('img');
+                    iconImg.className = 'fieldset-amenity-icon-image';
+                    iconImg.src = amenityUrl;
+                    iconImg.alt = amenityName;
+                    iconEl.appendChild(iconImg);
+                    row.appendChild(iconEl);
+                    
+                    // Name
+                    var nameEl = document.createElement('div');
+                    nameEl.className = 'fieldset-amenity-name';
+                    nameEl.textContent = amenityName;
+                    row.appendChild(nameEl);
+                    
+                    // Yes/No options
+                    var optionsEl = document.createElement('div');
+                    optionsEl.className = 'fieldset-amenity-options';
+                    
+                    // Use value as unique identifier for radio button names
+                    var radioName = 'amenity-' + (item.value || i).replace(/[^a-z0-9]/gi, '-').toLowerCase();
+                    
+                    var yesLabel = document.createElement('label');
+                    yesLabel.className = 'fieldset-amenity-option';
+                    var yesRadio = document.createElement('input');
+                    yesRadio.type = 'radio';
+                    yesRadio.name = radioName;
+                    yesRadio.value = '1';
+                    yesRadio.className = 'fieldset-amenity-option-input';
+                    var yesText = document.createElement('span');
+                    yesText.className = 'fieldset-amenity-option-text';
+                    yesText.textContent = 'Yes';
+                    yesLabel.appendChild(yesRadio);
+                    yesLabel.appendChild(yesText);
+                    optionsEl.appendChild(yesLabel);
+                    
+                    var noLabel = document.createElement('label');
+                    noLabel.className = 'fieldset-amenity-option';
+                    var noRadio = document.createElement('input');
+                    noRadio.type = 'radio';
+                    noRadio.name = radioName;
+                    noRadio.value = '0';
+                    noRadio.className = 'fieldset-amenity-option-input';
+                    var noText = document.createElement('span');
+                    noText.className = 'fieldset-amenity-option-text';
+                    noText.textContent = 'No';
+                    noLabel.appendChild(noRadio);
+                    noLabel.appendChild(noText);
+                    optionsEl.appendChild(noLabel);
+                    
+                    // Add change listeners to update row styling
+                    function setAmenityState(isYes) {
+                        nameEl.classList.toggle('fieldset-amenity-name--selected-no', !isYes);
+                        iconImg.classList.toggle('fieldset-amenity-icon-image--selected-yes', !!isYes);
+                        iconImg.classList.toggle('fieldset-amenity-icon-image--selected-no', !isYes);
+                    }
+                    
+                    yesRadio.addEventListener('change', function() {
+                        setAmenityState(true);
+                    });
+                    
+                    noRadio.addEventListener('change', function() {
+                        setAmenityState(false);
+                    });
+                    
+                    row.appendChild(optionsEl);
+                    amenitiesGrid.appendChild(row);
+                });
+                
+                fieldset.appendChild(amenitiesGrid);
+                break;
+                
+            case 'item-pricing':
+                // Item Name, Currency, Item Price (full width), then list of variants
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+
+                // Item Name (single, no +/-)
+                var itemNameSub = document.createElement('div');
+                itemNameSub.className = 'fieldset-sublabel';
+                itemNameSub.textContent = 'Item Name';
+                fieldset.appendChild(itemNameSub);
+                var itemNameInput = document.createElement('input');
+                itemNameInput.type = 'text';
+                itemNameInput.className = 'fieldset-input';
+                itemNameInput.placeholder = 'eg. T-Shirt';
+                itemNameInput.style.marginBottom = '10px';
+                fieldset.appendChild(itemNameInput);
+                
+                // Currency + Item Price row
+                var itemPriceRow = document.createElement('div');
+                itemPriceRow.className = 'fieldset-row';
+                itemPriceRow.style.marginBottom = '10px';
+                
+                // Currency column (fixed width 100px)
+                var itemCurrencyCol = document.createElement('div');
+                itemCurrencyCol.style.flex = '0 0 100px';
+                var itemCurrencySub = document.createElement('div');
+                itemCurrencySub.className = 'fieldset-sublabel';
+                itemCurrencySub.textContent = 'Currency';
+                itemCurrencyCol.appendChild(itemCurrencySub);
+                
+                // Build currency menu for item
+                var initialCurrencyCode = defaultCurrency || null;
+                if (typeof CurrencyComponent === 'undefined') {
+                    console.error('[FieldsetBuilder] CurrencyComponent not available');
+                    var placeholderMenu = document.createElement('div');
+                    itemCurrencyCol.appendChild(placeholderMenu);
+                } else {
+                    var result = CurrencyComponent.buildCompactMenu({
+                        initialValue: initialCurrencyCode,
+                        onSelect: function(value, label, countryCode) {
+                            // Currency selected for entire item
+                        }
+                    });
+                    itemCurrencyCol.appendChild(result.element);
+                }
+                itemPriceRow.appendChild(itemCurrencyCol);
+                
+                // Item Price column (flexible width)
+                var itemPriceCol = document.createElement('div');
+                itemPriceCol.style.flex = '1';
+                var itemPriceSub = document.createElement('div');
+                itemPriceSub.className = 'fieldset-sublabel';
+                itemPriceSub.textContent = 'Item Price';
+                var itemPriceInput = document.createElement('input');
+                itemPriceInput.type = 'text';
+                itemPriceInput.className = 'fieldset-input';
+                itemPriceInput.placeholder = '0.00';
+                attachMoneyInputBehavior(itemPriceInput);
+                itemPriceCol.appendChild(itemPriceSub);
+                itemPriceCol.appendChild(itemPriceInput);
+                itemPriceRow.appendChild(itemPriceCol);
+                applyFieldsetRowItemClasses(itemPriceRow);
+                
+                fieldset.appendChild(itemPriceRow);
+                
+                // Variants section label (single label at top)
+                var variantsSectionLabel = document.createElement('div');
+                variantsSectionLabel.className = 'fieldset-sublabel';
+                variantsSectionLabel.textContent = 'Variants';
+                variantsSectionLabel.style.marginTop = '10px';
+                fieldset.appendChild(variantsSectionLabel);
+                
+                // Variants container
+                var itemVariantsContainer = document.createElement('div');
+                itemVariantsContainer.className = 'fieldset-variants-container';
+                fieldset.appendChild(itemVariantsContainer);
+                
+                function createItemVariantBlock() {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-variant-block';
+                    block.style.marginBottom = '10px';
+                    
+                    // Variant input + +/- buttons (no indentation)
+                    var variantRow = document.createElement('div');
+                    variantRow.className = 'fieldset-row';
+                    
+                    var variantCol = document.createElement('div');
+                    variantCol.style.flex = '1';
+                    var variantInput = document.createElement('input');
+                    variantInput.type = 'text';
+                    variantInput.className = 'fieldset-input';
+                    variantInput.placeholder = 'eg. Large Red';
+                    variantCol.appendChild(variantInput);
+                    variantRow.appendChild(variantCol);
+                    
+                    // + button
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        itemVariantsContainer.appendChild(createItemVariantBlock());
+                        updateItemVariantButtons();
+                    });
+                    variantRow.appendChild(addBtn);
+                    
+                    // - button
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        updateItemVariantButtons();
+                    });
+                    variantRow.appendChild(removeBtn);
+                    applyFieldsetRowItemClasses(variantRow);
+                    
+                    block.appendChild(variantRow);
+                    
+                    return block;
+                }
+                
+                function updateItemVariantButtons() {
+                    var blocks = itemVariantsContainer.querySelectorAll('.fieldset-variant-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                // Create first variant block
+                itemVariantsContainer.appendChild(createItemVariantBlock());
+                updateItemVariantButtons();
+                break;
+                
+            case 'ticket-pricing':
+                // Seating Areas container with nested Pricing Tiers
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                var seatingAreasContainer = document.createElement('div');
+                seatingAreasContainer.className = 'fieldset-seating-areas-container';
+                fieldset.appendChild(seatingAreasContainer);
+                
+                // Track shared currency state
+                // Use defaultCurrency if provided, otherwise null (user must select)
+                var initialCurrencyCode = defaultCurrency || null;
+                var initialCurrency = null;
+                if (initialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var found = CurrencyComponent.getData().find(function(item) {
+                        return item.value === initialCurrencyCode;
+                    });
+                    if (found) {
+                        var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                        initialCurrency = { flag: countryCode, code: initialCurrencyCode };
+                    }
+                }
+                var ticketCurrencyState = initialCurrency || { flag: null, code: null };
+                var ticketCurrencyMenus = []; // [{ element, setValue }]
+
+                function syncAllTicketCurrencies() {
+                    ticketCurrencyMenus.forEach(function(menuObj) {
+                        try {
+                            if (!menuObj || typeof menuObj.setValue !== 'function') return;
+                            menuObj.setValue(ticketCurrencyState.code || null);
+                        } catch (e0) {}
+                    });
+                }
+
+                function buildTicketCurrencyMenu() {
+                    if (typeof CurrencyComponent === 'undefined') {
+                        console.error('[FieldsetBuilder] CurrencyComponent not available');
+                        return document.createElement('div');
+                    }
+                    var result = CurrencyComponent.buildCompactMenu({
+                        initialValue: ticketCurrencyState.code,
+                        onSelect: function(value, label, countryCode) {
+                            ticketCurrencyState.flag = countryCode;
+                            ticketCurrencyState.code = value;
+                            syncAllTicketCurrencies();
+                        }
+                    });
+                    ticketCurrencyMenus.push(result);
+                    return result.element;
+                }
+                
+                function createPricingTierBlock(tiersContainer) {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-tier-block';
+                    block.style.marginBottom = '10px';
+                    block.style.marginLeft = '20px';
+                    
+                    // Row 1: Tier name + +/- buttons
+                    var tierRow = document.createElement('div');
+                    tierRow.className = 'fieldset-row';
+                    tierRow.style.marginBottom = '10px';
+                    
+                    var tierCol = document.createElement('div');
+                    tierCol.style.flex = '1';
+                    var tierSub = document.createElement('div');
+                    tierSub.className = 'fieldset-sublabel';
+                    tierSub.textContent = 'Pricing Tier';
+                    var tierInput = document.createElement('input');
+                    tierInput.type = 'text';
+                    tierInput.className = 'fieldset-input';
+                    tierInput.placeholder = 'eg. Adult';
+                    tierCol.appendChild(tierSub);
+                    tierCol.appendChild(tierInput);
+                    tierRow.appendChild(tierCol);
+                    
+                    // + button
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
+                        updateTierButtons(tiersContainer);
+                    });
+                    tierRow.appendChild(addBtn);
+                    
+                    // - button
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        // Remove from tracked menus
+                        var blockMenu = block.querySelector('.component-currencycompact-menu');
+                        var idx = -1;
+                        for (var mi = 0; mi < ticketCurrencyMenus.length; mi++) {
+                            if (ticketCurrencyMenus[mi] && ticketCurrencyMenus[mi].element === blockMenu) { idx = mi; break; }
+                        }
+                        if (idx > -1) ticketCurrencyMenus.splice(idx, 1);
+                        updateTierButtons(tiersContainer);
+                    });
+                    tierRow.appendChild(removeBtn);
+                    applyFieldsetRowItemClasses(tierRow);
+                    
+                    block.appendChild(tierRow);
+                    
+                    // Row 2: Currency + Price (cropped to align under tier)
+                    var priceRow = document.createElement('div');
+                    priceRow.className = 'fieldset-row';
+                    priceRow.style.marginRight = '92px'; // 10px gap + 36px + 10px + 36px
+                    
+                    var currencyCol = document.createElement('div');
+                    currencyCol.style.flex = '0 0 100px';
+                    var currencySub = document.createElement('div');
+                    currencySub.className = 'fieldset-sublabel';
+                    currencySub.textContent = 'Currency';
+                    currencyCol.appendChild(currencySub);
+                    currencyCol.appendChild(buildTicketCurrencyMenu());
+                    priceRow.appendChild(currencyCol);
+                    
+                    var priceCol = document.createElement('div');
+                    priceCol.style.flex = '1';
+                    var priceSub = document.createElement('div');
+                    priceSub.className = 'fieldset-sublabel';
+                    priceSub.textContent = 'Price';
+                    var priceInput = document.createElement('input');
+                    priceInput.className = 'fieldset-input';
+                    priceInput.placeholder = '0.00';
+                    attachMoneyInputBehavior(priceInput);
+                    priceCol.appendChild(priceSub);
+                    priceCol.appendChild(priceInput);
+                    priceRow.appendChild(priceCol);
+                    applyFieldsetRowItemClasses(priceRow);
+                    
+                    block.appendChild(priceRow);
+                    
+                    return block;
+                }
+                
+                function updateTierButtons(tiersContainer) {
+                    var blocks = tiersContainer.querySelectorAll('.fieldset-tier-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        // + button: grey out at cap
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        // - button: grey out when only 1
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                function createSeatingAreaBlock() {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-seating-block';
+                    block.style.marginBottom = '20px';
+                    block.style.paddingBottom = '10px';
+                    block.style.borderBottom = '1px solid #333';
+                    
+                    // Seating Area row
+                    var seatRow = document.createElement('div');
+                    seatRow.className = 'fieldset-row';
+                    seatRow.style.marginBottom = '10px';
+                    
+                    var seatCol = document.createElement('div');
+                    seatCol.style.flex = '1';
+                    var seatSub = document.createElement('div');
+                    seatSub.className = 'fieldset-sublabel';
+                    seatSub.textContent = 'Seating Area';
+                    var seatInput = document.createElement('input');
+                    seatInput.type = 'text';
+                    seatInput.className = 'fieldset-input';
+                    seatInput.placeholder = 'eg. Orchestra';
+                    seatCol.appendChild(seatSub);
+                    seatCol.appendChild(seatInput);
+                    seatRow.appendChild(seatCol);
+                    
+                    // + button for seating area
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        seatingAreasContainer.appendChild(createSeatingAreaBlock());
+                        updateSeatingAreaButtons();
+                    });
+                    seatRow.appendChild(addBtn);
+                    
+                    // - button for seating area
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        updateSeatingAreaButtons();
+                    });
+                    seatRow.appendChild(removeBtn);
+                    applyFieldsetRowItemClasses(seatRow);
+                    
+                    block.appendChild(seatRow);
+                    
+                    // Pricing tiers container for this seating area
+                    var tiersContainer = document.createElement('div');
+                    tiersContainer.className = 'fieldset-tiers-container';
+                    tiersContainer.appendChild(createPricingTierBlock(tiersContainer));
+                    updateTierButtons(tiersContainer);
+                    block.appendChild(tiersContainer);
+                    
+                    return block;
+                }
+                
+                function updateSeatingAreaButtons() {
+                    var blocks = seatingAreasContainer.querySelectorAll('.fieldset-seating-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-pricing-remove');
+                        // + button: grey out at cap
+                        if (atMax) {
+                            addBtn.style.opacity = '0.3';
+                            addBtn.style.cursor = 'not-allowed';
+                            addBtn.disabled = true;
+                        } else {
+                            addBtn.style.opacity = '1';
+                            addBtn.style.cursor = 'pointer';
+                            addBtn.disabled = false;
+                        }
+                        // - button: grey out when only 1
+                        if (blocks.length === 1) {
+                            removeBtn.style.opacity = '0.3';
+                            removeBtn.style.cursor = 'not-allowed';
+                            removeBtn.disabled = true;
+                        } else {
+                            removeBtn.style.opacity = '1';
+                            removeBtn.style.cursor = 'pointer';
+                            removeBtn.disabled = false;
+                        }
+                    });
+                }
+                
+                // Create first seating area
+                seatingAreasContainer.appendChild(createSeatingAreaBlock());
+                updateSeatingAreaButtons();
+                break;
+                
+            case 'sessions':
+                // Horizontal scrolling calendar + auto-generated session rows with autofill
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                // Track selected dates: { '2025-01-15': { times: ['19:00', ''], edited: [true, false] }, ... }
+                var sessionData = {};
+                
+                var today = new Date();
+                today.setHours(0, 0, 0, 0);
+                var todayIso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                
+                var minDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                var maxDate = new Date(today.getFullYear(), today.getMonth() + 24, 1);
+                
+                var todayMonthEl = null;
+                var todayMonthIndex = 0;
+                var totalMonths = 0;
+                var weekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                
+                function toISODate(d) {
+                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                }
+                
+                function getDayOfWeek(dateStr) {
+                    var d = new Date(dateStr + 'T00:00:00');
+                    return d.getDay();
+                }
+                
+                // Calendar container
+                var calContainer = document.createElement('div');
+                calContainer.className = 'fieldset-calendar-container';
+                
+                var calScroll = document.createElement('div');
+                calScroll.className = 'fieldset-calendar-scroll';
+                
+                var calendar = document.createElement('div');
+                calendar.className = 'fieldset-calendar';
+                
+                // Build months
+                var current = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+                var monthIdx = 0;
+                while (current <= maxDate) {
+                    var monthEl = document.createElement('div');
+                    monthEl.className = 'fieldset-calendar-month';
+                    
+                    var header = document.createElement('div');
+                    header.className = 'fieldset-calendar-header';
+                    header.textContent = current.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+                    monthEl.appendChild(header);
+                    
+                    var grid = document.createElement('div');
+                    grid.className = 'fieldset-calendar-grid';
+                    
+                    weekdayNames.forEach(function(wd) {
+                        var w = document.createElement('div');
+                        w.className = 'fieldset-calendar-weekday';
+                        w.textContent = wd;
+                        grid.appendChild(w);
+                    });
+                    
+                    var firstDay = new Date(current.getFullYear(), current.getMonth(), 1);
+                    var startDow = firstDay.getDay();
+                    var daysInMonth = new Date(current.getFullYear(), current.getMonth() + 1, 0).getDate();
+                    
+                    for (var i = 0; i < 42; i++) {
+                        var cell = document.createElement('div');
+                        cell.className = 'fieldset-calendar-day';
+                        var dayNum = i - startDow + 1;
+                        
+                        if (i < startDow || dayNum > daysInMonth) {
+                            cell.classList.add('empty');
+                        } else {
+                            cell.textContent = dayNum;
+                            var dateObj = new Date(current.getFullYear(), current.getMonth(), dayNum);
+                            dateObj.setHours(0, 0, 0, 0);
+                            var iso = toISODate(dateObj);
+                            cell.dataset.iso = iso;
+                            
+                            if (dateObj < today) {
+                                cell.classList.add('past');
+                            } else {
+                                cell.classList.add('future');
+                            }
+                            
+                            if (iso === todayIso) {
+                                cell.classList.add('today');
+                                todayMonthEl = monthEl;
+                                todayMonthIndex = monthIdx;
+                            }
+                        }
+                        grid.appendChild(cell);
+                    }
+                    
+                    monthEl.appendChild(grid);
+                    calendar.appendChild(monthEl);
+                    current.setMonth(current.getMonth() + 1);
+                    monthIdx++;
+                }
+                totalMonths = monthIdx;
+                
+                calScroll.appendChild(calendar);
+                calContainer.appendChild(calScroll);
+                
+                // Today marker
+                var marker = document.createElement('div');
+                marker.className = 'fieldset-calendar-today-marker';
+                calContainer.appendChild(marker);
+                
+                fieldset.appendChild(calContainer);
+                
+                // Sessions container (below calendar)
+                var sessionsContainer = document.createElement('div');
+                sessionsContainer.className = 'fieldset-sessions';
+                fieldset.appendChild(sessionsContainer);
+                
+                // Position marker dynamically based on today's month index
+                setTimeout(function() {
+                    if (todayMonthEl) {
+                        calScroll.scrollLeft = todayMonthEl.offsetLeft;
+                    }
+                    var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
+                    var markerPos = markerFraction * (calContainer.clientWidth - 8);
+                    marker.style.left = markerPos + 'px';
+                }, 0);
+                
+                // Marker click - scroll to today
+                marker.addEventListener('click', function() {
+                    if (todayMonthEl) {
+                        calScroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
+                    }
+                });
+                
+                // Horizontal wheel scroll (reduced sensitivity)
+                calScroll.addEventListener('wheel', function(e) {
+                    e.preventDefault();
+                    calScroll.scrollLeft += (e.deltaY || e.deltaX) * 0.3;
+                });
+                
+                // Track which slot indices have had their "god" time set
+                // GOD = first edit fills ALL dates
+                // DEMIGOD = subsequent edits fill same weekday only
+                var godSetForSlot = {};
+                
+                function autofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                    var sortedDates = Object.keys(sessionData).sort();
+                    var changedDow = getDayOfWeek(changedDateStr);
+                    
+                    if (!godSetForSlot[changedSlotIdx]) {
+                        // GOD MODE: first edit at this slot - fill ALL unedited slots
+                        godSetForSlot[changedSlotIdx] = true;
+                        
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            var data = sessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                data.times[changedSlotIdx] = newTime;
+                            }
+                        }
+                    } else {
+                        // DEMIGOD MODE: fill only same weekday unedited slots
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            if (getDayOfWeek(dateStr) !== changedDow) continue;
+                            var data = sessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) {
+                                data.times[changedSlotIdx] = newTime;
+                            }
+                        }
+                    }
+                }
+                
+                // Get autofill value for a new time slot (worship the demigod - same weekday first)
+                function getAutofillForSlot(dateStr, slotIdx) {
+                    var dow = getDayOfWeek(dateStr);
+                    var sortedDates = Object.keys(sessionData).sort();
+                    
+                    // Priority 1: Same weekday with a value at this slot (worship the demigod)
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (getDayOfWeek(d) === dow && sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
+                            return sessionData[d].times[slotIdx];
+                        }
+                    }
+                    
+                    // Priority 2: Any date with a value at this slot (worship the god if no demigod)
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (sessionData[d].times.length > slotIdx && sessionData[d].times[slotIdx]) {
+                            return sessionData[d].times[slotIdx];
+                        }
+                    }
+                    
+                    return '';
+                }
+                
+                // Render session rows
+                function renderSessions() {
+                    sessionsContainer.innerHTML = '';
+                    
+                    var sortedDates = Object.keys(sessionData).sort();
+                    
+                    sortedDates.forEach(function(dateStr) {
+                        var data = sessionData[dateStr];
+                        var group = document.createElement('div');
+                        group.className = 'fieldset-session-group';
+                        
+                        data.times.forEach(function(timeVal, idx) {
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-session-row';
+                            
+                            if (idx === 0) {
+                                var dateDisplay = document.createElement('div');
+                                dateDisplay.className = 'fieldset-session-date';
+                                var d = new Date(dateStr + 'T00:00:00');
+                                dateDisplay.textContent = d.toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                row.appendChild(dateDisplay);
+                            } else {
+                                var spacer = document.createElement('div');
+                                spacer.className = 'fieldset-session-date-spacer';
+                                row.appendChild(spacer);
+                            }
+                            
+                            var timeWrapper = document.createElement('div');
+                            timeWrapper.className = 'fieldset-session-time';
+                            var timeInput = document.createElement('input');
+                            timeInput.type = 'text';
+                            timeInput.className = 'fieldset-time';
+                            timeInput.placeholder = 'HH:MM';
+                            timeInput.maxLength = 5;
+                            timeInput.value = timeVal;
+                            timeInput.dataset.date = dateStr;
+                            timeInput.dataset.idx = idx;
+                            
+                            // Select all on focus for easy overwrite
+                            timeInput.addEventListener('focus', function() {
+                                var input = this;
+                                setTimeout(function() { input.select(); }, 0);
+                            });
+                            
+                            // Auto-format time input (add colon after 2 digits)
+                            timeInput.addEventListener('input', function() {
+                                var v = this.value.replace(/[^0-9]/g, '');
+                                if (v.length >= 2) {
+                                    v = v.substring(0, 2) + ':' + v.substring(2, 4);
+                                }
+                                this.value = v;
+                            });
+                            
+                            (function(dateStr, idx) {
+                                timeInput.addEventListener('blur', function() {
+                                    var raw = this.value.replace(/[^0-9]/g, ''); // digits only
+                                    if (raw === '') {
+                                        sessionData[dateStr].times[idx] = '';
+                                        // Notify fieldset completion logic after blur cleanup.
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                                        return;
+                                    }
+                                    
+                                    var hh, mm;
+                                    if (raw.length === 1) {
+                                        // "9" → "09:00"
+                                        hh = '0' + raw;
+                                        mm = '00';
+                                    } else if (raw.length === 2) {
+                                        // "19" → "19:00"
+                                        hh = raw;
+                                        mm = '00';
+                                    } else if (raw.length === 3) {
+                                        // "193" → "19:30"
+                                        hh = raw.substring(0, 2);
+                                        mm = raw.substring(2) + '0';
+                                    } else {
+                                        // "1930" → "19:30"
+                                        hh = raw.substring(0, 2);
+                                        mm = raw.substring(2, 4);
+                                    }
+                                    
+                                    var newTime = hh + ':' + mm;
+                                    
+                                    // Validate hours 00-23 and minutes 00-59
+                                    var hours = parseInt(hh, 10);
+                                    var mins = parseInt(mm, 10);
+                                    if (hours <= 23 && mins <= 59) {
+                                        this.value = newTime;
+                                        sessionData[dateStr].times[idx] = newTime;
+                                        sessionData[dateStr].edited[idx] = true;
+                                        autofillTimes(dateStr, idx, newTime);
+                                        // Update other visible time inputs without full re-render
+                                        sessionsContainer.querySelectorAll('.fieldset-time').forEach(function(input) {
+                                            var d = input.dataset.date;
+                                            var i = parseInt(input.dataset.idx, 10);
+                                            if (d && sessionData[d] && sessionData[d].times[i] !== undefined) {
+                                                input.value = sessionData[d].times[i];
+                                            }
+                                        });
+                                        // Notify fieldset completion logic after normalization.
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                    } else {
+                                        // Invalid time - reset input
+                                        this.value = '';
+                                        sessionData[dateStr].times[idx] = '';
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                                    }
+                                });
+                            })(dateStr, idx);
+                            
+                            timeWrapper.appendChild(timeInput);
+                            row.appendChild(timeWrapper);
+                            
+                            // + button (always visible, greyed out at max 10)
+                            var maxTimesPerDate = 10;
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-session-add';
+                            addBtn.textContent = '+';
+                            if (data.times.length >= maxTimesPerDate) {
+                                addBtn.disabled = true;
+                                addBtn.style.opacity = '0.3';
+                                addBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    addBtn.addEventListener('click', function() {
+                                        var newSlotIdx = idx + 1;
+                                        var autofillVal = getAutofillForSlot(dateStr, newSlotIdx);
+                                        sessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                        sessionData[dateStr].edited.splice(newSlotIdx, 0, false);
+                                        renderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(addBtn);
+                            
+                            // - button (always visible, greyed out if only 1 time)
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-session-remove';
+                            removeBtn.textContent = '−';
+                            if (data.times.length === 1) {
+                                removeBtn.disabled = true;
+                                removeBtn.style.opacity = '0.3';
+                                removeBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    removeBtn.addEventListener('click', function() {
+                                        sessionData[dateStr].times.splice(idx, 1);
+                                        sessionData[dateStr].edited.splice(idx, 1);
+                                        renderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(removeBtn);
+                            
+                            group.appendChild(row);
+                        });
+                        
+                        sessionsContainer.appendChild(group);
+                    });
+
+                    // Recompute required/completion state after the DOM has changed (new time inputs, removals, etc.)
+                    // This keeps the asterisk honest without requiring the user to click into a newly added input.
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                }
+                
+                // Calendar day click
+                calendar.addEventListener('click', function(e) {
+                    var day = e.target;
+                    if (day.classList.contains('fieldset-calendar-day') && !day.classList.contains('empty')) {
+                        var iso = day.dataset.iso;
+                        if (sessionData[iso]) {
+                            delete sessionData[iso];
+                            day.classList.remove('selected');
+                        } else {
+                            // New date - autofill first time slot
+                            var autofillVal = getAutofillForSlot(iso, 0);
+                            sessionData[iso] = { times: [autofillVal], edited: [false] };
+                            day.classList.add('selected');
+                        }
+                        renderSessions();
+                        // Notify listeners (member checkout pricing needs final session date per location)
+                        try {
+                            fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true }));
+                        } catch (e) {}
+                    }
+                });
+                
+                break;
+
+            case 'session_pricing':
+                // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+
+                // Track selected dates:
+                // { 'YYYY-MM-DD': { times: ['19:00', ...], edited: [true,false...], groups: ['','B',...] } }
+                var spSessionData = {};
+
+                // Ticket-group popover state
+                var spTicketGroups = {}; // { A: groupEl, B: groupEl, ... } (groupEl has .fieldset-sessionpricing-pricing-group)
+                var spTicketGroupList = null; // container element for group list inside popover
+                var spTicketMenuOpen = false;
+                var spTicketMenuDocHandler = null;
+                var spTicketMenuWinHandler = null;
+                var spTicketMenuScrollEl = null;
+                var spActivePicker = null; // { dateStr, idx, timeInput, ticketBtn, rowEl }
+
+                var spOpenGroupKey = null;
+                var spOpenGroupSnapshot = null; // pricing snapshot array
+
+                function spGetSystemTicketIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_ticket ? String(sys.icon_ticket || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function spFirstUnusedLetter() {
+                    for (var i = 0; i < 26; i++) {
+                        var key = String.fromCharCode(65 + i);
+                        if (!spTicketGroups[key]) return key;
+                    }
+                    // Extremely rare: beyond Z
+                    return 'G' + (Object.keys(spTicketGroups).length + 1);
+                }
+
+                function spEnsureDefaultGroup() {
+                    // Default starting group is A (question-mark system remains for cleared/deleted cases)
+                    if (!spTicketGroups['A']) spEnsureTicketGroup('A');
+                }
+
+                // Shared currency state across all pricing editors in this fieldset
+                var spInitialCurrencyCode = defaultCurrency || null;
+                var spInitialCurrency = null;
+                if (spInitialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var spFound = CurrencyComponent.getData().find(function(item) { return item.value === spInitialCurrencyCode; });
+                    if (spFound) {
+                        var spCountryCode = spFound.filename ? spFound.filename.replace('.svg', '') : null;
+                        spInitialCurrency = { flag: spCountryCode, code: spInitialCurrencyCode };
+                    }
+                }
+                var spTicketCurrencyState = spInitialCurrency || { flag: null, code: null };
+                var spTicketCurrencyMenus = []; // [{ element, setValue }]
+
+                function spSyncAllTicketCurrencies() {
+                    spTicketCurrencyMenus.forEach(function(menuObj) {
+                        try {
+                            if (!menuObj || typeof menuObj.setValue !== 'function') return;
+                            menuObj.setValue(spTicketCurrencyState.code || null);
+                        } catch (e0) {}
+                    });
+                }
+                function spBuildTicketCurrencyMenu() {
+                    if (typeof CurrencyComponent === 'undefined') {
+                        console.error('[FieldsetBuilder] CurrencyComponent not available');
+                        return document.createElement('div');
+                    }
+                    var result = CurrencyComponent.buildCompactMenu({
+                        initialValue: spTicketCurrencyState.code,
+                        onSelect: function(value, label, countryCode) {
+                            spTicketCurrencyState.flag = countryCode;
+                            spTicketCurrencyState.code = value;
+                            spSyncAllTicketCurrencies();
+                        }
+                    });
+                    spTicketCurrencyMenus.push(result);
+                    return result.element;
+                }
+                function spAttachMoneyInputBehavior(inputEl) {
+                    if (!inputEl) return;
+                    inputEl.addEventListener('input', function() {
+                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
+                        var parts = raw.split('.');
+                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+                        this.value = raw;
+                    });
+                    inputEl.addEventListener('blur', function() {
+                        var v = String(this.value || '').trim();
+                        if (v === '') return;
+                        var num = parseFloat(v);
+                        if (isNaN(num)) { this.value = ''; return; }
+                        this.value = num.toFixed(2);
+                    });
+                }
+
+                // --- Pricing editor builders (same visual as ticket-pricing) ---
+                function spCreatePricingTierBlock(tiersContainer) {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-sessionpricing-pricing-tier-block';
+                    block.style.marginBottom = '10px';
+                    block.style.marginLeft = '20px';
+
+                    var tierRow = document.createElement('div');
+                    tierRow.className = 'fieldset-row';
+                    tierRow.style.marginBottom = '10px';
+
+                    var tierCol = document.createElement('div');
+                    tierCol.style.flex = '1';
+                    var tierSub = document.createElement('div');
+                    tierSub.className = 'fieldset-sublabel';
+                    tierSub.textContent = 'Pricing Tier';
+                    var tierInput = document.createElement('input');
+                    tierInput.className = 'fieldset-input';
+                    tierInput.placeholder = 'eg. Adult';
+                    tierCol.appendChild(tierSub);
+                    tierCol.appendChild(tierInput);
+                    tierRow.appendChild(tierCol);
+
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-sessionpricing-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        tiersContainer.appendChild(spCreatePricingTierBlock(tiersContainer));
+                        spUpdateTierButtons(tiersContainer);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    tierRow.appendChild(addBtn);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-sessionpricing-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        spUpdateTierButtons(tiersContainer);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    tierRow.appendChild(removeBtn);
+
+                    applyFieldsetRowItemClasses(tierRow);
+                    block.appendChild(tierRow);
+
+                    var priceRow = document.createElement('div');
+                    priceRow.className = 'fieldset-row';
+                    priceRow.style.marginRight = '92px';
+
+                    var currencyCol = document.createElement('div');
+                    currencyCol.style.flex = '0 0 100px';
+                    var currencySub = document.createElement('div');
+                    currencySub.className = 'fieldset-sublabel';
+                    currencySub.textContent = 'Currency';
+                    currencyCol.appendChild(currencySub);
+                    currencyCol.appendChild(spBuildTicketCurrencyMenu());
+                    priceRow.appendChild(currencyCol);
+
+                    var priceCol = document.createElement('div');
+                    priceCol.style.flex = '1';
+                    var priceSub = document.createElement('div');
+                    priceSub.className = 'fieldset-sublabel';
+                    priceSub.textContent = 'Price';
+                    var priceInput = document.createElement('input');
+                    priceInput.className = 'fieldset-input';
+                    priceInput.placeholder = '0.00';
+                    spAttachMoneyInputBehavior(priceInput);
+                    priceCol.appendChild(priceSub);
+                    priceCol.appendChild(priceInput);
+                    priceRow.appendChild(priceCol);
+
+                    applyFieldsetRowItemClasses(priceRow);
+                    block.appendChild(priceRow);
+                    return block;
+                }
+                function spUpdateTierButtons(tiersContainer) {
+                    var blocks = tiersContainer.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-sessionpricing-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-sessionpricing-pricing-remove');
+                        if (atMax) { addBtn.style.opacity = '0.3'; addBtn.style.cursor = 'not-allowed'; addBtn.disabled = true; }
+                        else { addBtn.style.opacity = '1'; addBtn.style.cursor = 'pointer'; addBtn.disabled = false; }
+                        if (blocks.length === 1) { removeBtn.style.opacity = '0.3'; removeBtn.style.cursor = 'not-allowed'; removeBtn.disabled = true; }
+                        else { removeBtn.style.opacity = '1'; removeBtn.style.cursor = 'pointer'; removeBtn.disabled = false; }
+                    });
+                }
+                function spCreateSeatingAreaBlock(seatingAreasContainer) {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-sessionpricing-pricing-seating-block';
+                    block.style.marginBottom = '20px';
+                    block.style.paddingBottom = '10px';
+                    block.style.borderBottom = '1px solid #333';
+
+                    var seatRow = document.createElement('div');
+                    seatRow.className = 'fieldset-row';
+                    seatRow.style.marginBottom = '10px';
+
+                    var seatCol = document.createElement('div');
+                    seatCol.style.flex = '1';
+                    var seatSub = document.createElement('div');
+                    seatSub.className = 'fieldset-sublabel';
+                    seatSub.textContent = 'Seating Area';
+                    var seatInput = document.createElement('input');
+                    seatInput.type = 'text';
+                    seatInput.className = 'fieldset-input';
+                    seatInput.placeholder = 'eg. Orchestra';
+                    seatCol.appendChild(seatSub);
+                    seatCol.appendChild(seatInput);
+                    seatRow.appendChild(seatCol);
+
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-sessionpricing-pricing-add';
+                    addBtn.textContent = '+';
+                    addBtn.addEventListener('click', function() {
+                        seatingAreasContainer.appendChild(spCreateSeatingAreaBlock(seatingAreasContainer));
+                        spUpdateSeatingAreaButtons(seatingAreasContainer);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    seatRow.appendChild(addBtn);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-sessionpricing-pricing-remove';
+                    removeBtn.textContent = '−';
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        spUpdateSeatingAreaButtons(seatingAreasContainer);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    seatRow.appendChild(removeBtn);
+
+                    applyFieldsetRowItemClasses(seatRow);
+                    block.appendChild(seatRow);
+
+                    var tiersContainer = document.createElement('div');
+                    tiersContainer.className = 'fieldset-sessionpricing-pricing-tiers-container';
+                    tiersContainer.appendChild(spCreatePricingTierBlock(tiersContainer));
+                    spUpdateTierButtons(tiersContainer);
+                    block.appendChild(tiersContainer);
+                    return block;
+                }
+                function spUpdateSeatingAreaButtons(seatingAreasContainer) {
+                    var blocks = seatingAreasContainer.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-sessionpricing-pricing-add');
+                        var removeBtn = block.querySelector('.fieldset-sessionpricing-pricing-remove');
+                        if (atMax) { addBtn.style.opacity = '0.3'; addBtn.style.cursor = 'not-allowed'; addBtn.disabled = true; }
+                        else { addBtn.style.opacity = '1'; addBtn.style.cursor = 'pointer'; addBtn.disabled = false; }
+                        if (blocks.length === 1) { removeBtn.style.opacity = '0.3'; removeBtn.style.cursor = 'not-allowed'; removeBtn.disabled = true; }
+                        else { removeBtn.style.opacity = '1'; removeBtn.style.cursor = 'pointer'; removeBtn.disabled = false; }
+                    });
+                }
+
+                // Calendar + sessions list
+                function spGetDayOfWeek(dateStr) { return new Date(dateStr + 'T00:00:00').getDay(); }
+
+                // Single source of truth: use CalendarComponent (same calendar used elsewhere).
+                var spCalContainer = document.createElement('div');
+                spCalContainer.className = 'calendar-container fieldset-sessionpricing-calendar-container';
+                var spCalendarInstance = CalendarComponent.create(spCalContainer, {
+                    monthsPast: 0,
+                    monthsFuture: 24,
+                    allowPast: false,
+                    showActions: false,
+                    selectionMode: 'multi',
+                    onChange: function(_start, _end, dates) {
+                        // Only track changes while the picker is open.
+                        if (!spDatePickerOpen) return;
+                        try {
+                            spDateDraft = new Set(Array.isArray(dates) ? dates : []);
+                        } catch (e0) {
+                            spDateDraft = new Set();
+                        }
+                    }
+                });
+
+                // Date picker pop-up (mirrors filter daterange behavior: OK / Cancel / click-away)
+                var spDatePickerOpen = false;
+                var spDateDraft = null; // Set of iso strings while popover is open
+                var spDatePickerDocHandler = null;
+                var spDatePickerAnchorEl = null;
+
+                var spDatePickerPopover = document.createElement('div');
+                spDatePickerPopover.className = 'fieldset-sessionpricing-datepicker-popover';
+
+                var spDatePickerBody = document.createElement('div');
+                spDatePickerBody.className = 'fieldset-sessionpricing-datepicker-body';
+                spDatePickerBody.appendChild(spCalContainer);
+
+                var spDatePickerActions = document.createElement('div');
+                spDatePickerActions.className = 'fieldset-sessionpricing-datepicker-actions';
+
+                var spDatePickerCancel = document.createElement('button');
+                spDatePickerCancel.type = 'button';
+                spDatePickerCancel.className = 'fieldset-sessionpricing-datepicker-cancel';
+                spDatePickerCancel.textContent = 'Cancel';
+
+                var spDatePickerOk = document.createElement('button');
+                spDatePickerOk.type = 'button';
+                spDatePickerOk.className = 'fieldset-sessionpricing-datepicker-ok';
+                spDatePickerOk.textContent = 'OK';
+
+                spDatePickerActions.appendChild(spDatePickerOk);
+                spDatePickerActions.appendChild(spDatePickerCancel);
+
+                spDatePickerPopover.appendChild(spDatePickerBody);
+                spDatePickerPopover.appendChild(spDatePickerActions);
+                // Attach inside the fieldset so it naturally scrolls with the panel (same model as the session picker originally).
+                fieldset.appendChild(spDatePickerPopover);
+
+                var spSessionsContainer = document.createElement('div');
+                spSessionsContainer.className = 'fieldset-sessionpricing-sessions-container';
+                fieldset.appendChild(spSessionsContainer);
+
+                // Date selector row (shown even before any dates are selected)
+                var spDatePickerRow = document.createElement('div');
+                spDatePickerRow.className = 'fieldset-sessionpricing-sessions-row fieldset-sessionpricing-sessions-row--picker';
+                var spDatePickerBox = document.createElement('div');
+                spDatePickerBox.className = 'fieldset-sessionpricing-sessions-date fieldset-sessionpricing-sessions-date--picker';
+                spDatePickerBox.setAttribute('role', 'button');
+                spDatePickerBox.setAttribute('tabindex', '0');
+                spDatePickerBox.setAttribute('aria-haspopup', 'dialog');
+                spDatePickerBox.setAttribute('aria-expanded', 'false');
+                spDatePickerBox.textContent = 'Select Dates';
+                spDatePickerRow.appendChild(spDatePickerBox);
+                
+                // Make the initial row match real session rows: include disabled controls until dates exist.
+                var spPickerTimeWrap = document.createElement('div');
+                spPickerTimeWrap.className = 'fieldset-sessionpricing-sessions-time';
+                var spPickerTimeInput = document.createElement('input');
+                spPickerTimeInput.type = 'text';
+                spPickerTimeInput.className = 'fieldset-sessionpricing-sessions-time-input';
+                spPickerTimeInput.placeholder = 'HH:MM';
+                spPickerTimeInput.maxLength = 5;
+                spPickerTimeInput.disabled = true;
+                spPickerTimeWrap.appendChild(spPickerTimeInput);
+                spDatePickerRow.appendChild(spPickerTimeWrap);
+                
+                var spPickerAddBtn = document.createElement('button');
+                spPickerAddBtn.type = 'button';
+                spPickerAddBtn.className = 'fieldset-sessionpricing-sessions-add';
+                spPickerAddBtn.textContent = '+';
+                spPickerAddBtn.disabled = true;
+                spPickerAddBtn.style.opacity = '0.3';
+                spPickerAddBtn.style.cursor = 'not-allowed';
+                spDatePickerRow.appendChild(spPickerAddBtn);
+                
+                var spPickerRemoveBtn = document.createElement('button');
+                spPickerRemoveBtn.type = 'button';
+                spPickerRemoveBtn.className = 'fieldset-sessionpricing-sessions-remove';
+                spPickerRemoveBtn.textContent = '−';
+                spPickerRemoveBtn.disabled = true;
+                spPickerRemoveBtn.style.opacity = '0.3';
+                spPickerRemoveBtn.style.cursor = 'not-allowed';
+                spDatePickerRow.appendChild(spPickerRemoveBtn);
+
+                var spPickerTicketBtn = document.createElement('button');
+                spPickerTicketBtn.type = 'button';
+                spPickerTicketBtn.className = 'fieldset-sessionpricing-ticketgroup-button';
+                spPickerTicketBtn.title = 'Ticket Group';
+                spPickerTicketBtn.disabled = true;
+                spPickerTicketBtn.style.opacity = '0.3';
+                spPickerTicketBtn.style.cursor = 'not-allowed';
+                var spPickerIconUrl = spGetSystemTicketIconUrl();
+                if (spPickerIconUrl) {
+                    var spPImg = document.createElement('img');
+                    spPImg.className = 'fieldset-sessionpricing-ticketgroup-icon';
+                    spPImg.alt = '';
+                    spPImg.src = spPickerIconUrl;
+                    spPickerTicketBtn.appendChild(spPImg);
+                }
+                var spPLetter = document.createElement('div');
+                spPLetter.className = 'fieldset-sessionpricing-ticketgroup-letter';
+                spPLetter.textContent = 'A';
+                spPickerTicketBtn.appendChild(spPLetter);
+                spDatePickerRow.appendChild(spPickerTicketBtn);
+
+                var spPricingGroupsWrap = document.createElement('div');
+                spPricingGroupsWrap.className = 'fieldset-sessionpricing-pricing-groups';
+                spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover');
+
+                // Scroll container INSIDE the popover shell so the shell padding area never scrolls.
+                // This prevents content bleeding "behind" the sticky header.
+                var spTicketGroupScroll = document.createElement('div');
+                spTicketGroupScroll.className = 'fieldset-sessionpricing-ticketgroup-scroll';
+
+                // Inner padded content so the scrollbar stays flush to the popover edge.
+                var spTicketGroupContent = document.createElement('div');
+                spTicketGroupContent.className = 'fieldset-sessionpricing-ticketgroup-content';
+
+                spTicketGroupList = document.createElement('div');
+                spTicketGroupList.className = 'fieldset-sessionpricing-ticketgroup-list';
+                spTicketGroupContent.appendChild(spTicketGroupList);
+
+                spTicketGroupScroll.appendChild(spTicketGroupContent);
+                spPricingGroupsWrap.appendChild(spTicketGroupScroll);
+
+                // Pop-up footer (locked like session picker)
+                var spTicketGroupFooter = document.createElement('div');
+                spTicketGroupFooter.className = 'fieldset-sessionpricing-ticketgroup-footer';
+                var spTicketGroupFooterOk = document.createElement('button');
+                spTicketGroupFooterOk.type = 'button';
+                spTicketGroupFooterOk.className = 'fieldset-sessionpricing-ticketgroup-footer-ok';
+                spTicketGroupFooterOk.textContent = 'OK';
+                var spTicketGroupFooterCancel = document.createElement('button');
+                spTicketGroupFooterCancel.type = 'button';
+                spTicketGroupFooterCancel.className = 'fieldset-sessionpricing-ticketgroup-footer-cancel';
+                spTicketGroupFooterCancel.textContent = 'Cancel';
+                spTicketGroupFooter.appendChild(spTicketGroupFooterOk);
+                spTicketGroupFooter.appendChild(spTicketGroupFooterCancel);
+                spPricingGroupsWrap.appendChild(spTicketGroupFooter);
+
+                fieldset.appendChild(spPricingGroupsWrap);
+
+                function spApplyDraftToCalendar() {
+                    try {
+                        if (!spCalendarInstance || typeof spCalendarInstance.setSelectedDates !== 'function') return;
+                        spCalendarInstance.setSelectedDates(spDateDraft ? Array.from(spDateDraft) : []);
+                    } catch (e0) {}
+                }
+
+                function spCloseDatePicker() {
+                    if (!spDatePickerOpen) return;
+                    spDatePickerOpen = false;
+                    spDatePickerPopover.classList.remove('fieldset-sessionpricing-datepicker-popover--open');
+                    spDatePickerBox.setAttribute('aria-expanded', 'false');
+                    try {
+                        if (spDatePickerAnchorEl) {
+                            spDatePickerAnchorEl.classList.remove('fieldset-sessionpricing-sessions-date--open');
+                        }
+                    } catch (e0) {}
+                    spDatePickerAnchorEl = null;
+                    spDateDraft = null;
+                    if (spDatePickerDocHandler) {
+                        try { document.removeEventListener('click', spDatePickerDocHandler, true); } catch (e1) {}
+                        spDatePickerDocHandler = null;
+                    }
+                }
+
+                function spOpenDatePicker(anchorEl) {
+                    if (!anchorEl) return;
+                    // Toggle close when clicking any date box while open.
+                    if (spDatePickerOpen) {
+                        spCloseDatePicker();
+                        return;
+                    }
+                    spDatePickerOpen = true;
+                    spDateDraft = new Set(Object.keys(spSessionData || {}));
+                    spApplyDraftToCalendar();
+                    spDatePickerAnchorEl = anchorEl;
+                    try { anchorEl.classList.add('fieldset-sessionpricing-sessions-date--open'); } catch (eOpen2) {}
+
+                    // Position popover BELOW the clicked date box (10px gap)
+                    try {
+                        if (fieldset && fieldset.style) fieldset.style.position = 'relative';
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var r = anchorEl.getBoundingClientRect();
+                        var top = (r.bottom - fsRect.top) + 10;
+                        if (top < 0) top = 0;
+                        spDatePickerPopover.style.top = top + 'px';
+                    } catch (eTop) {}
+
+                    spDatePickerPopover.classList.add('fieldset-sessionpricing-datepicker-popover--open');
+                    spDatePickerBox.setAttribute('aria-expanded', 'true');
+
+                    // Scroll to today month when opening (like filter)
+                    try { if (spTodayMonthEl) spCalScroll.scrollLeft = spTodayMonthEl.offsetLeft; } catch (eScroll) {}
+
+                    // Close when clicking outside (treat as cancel, like filter)
+                    spDatePickerDocHandler = function(ev) {
+                        try {
+                            // Clicking any session date box should NOT close the picker.
+                            if (ev.target && ev.target.closest && ev.target.closest('.fieldset-sessionpricing-sessions-date')) return;
+                            if (!spDatePickerPopover.contains(ev.target) && !(spDatePickerAnchorEl && spDatePickerAnchorEl.contains(ev.target))) {
+                                spCloseDatePicker();
+                            }
+                        } catch (e2) {}
+                    };
+                    try { document.addEventListener('click', spDatePickerDocHandler, true); } catch (e3) {}
+                }
+
+                // Open date picker on click/enter/space
+                spDatePickerBox.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    spOpenDatePicker(spDatePickerBox);
+                });
+                spDatePickerBox.addEventListener('keydown', function(e) {
+                    if (!e) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        spOpenDatePicker(spDatePickerBox);
+                    }
+                });
+
+                spDatePickerCancel.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    spCloseDatePicker();
+                });
+
+                spDatePickerOk.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    if (!spDateDraft) { spCloseDatePicker(); return; }
+
+                    var draftKeys = Array.from(spDateDraft).sort();
+                    var currentKeys = Object.keys(spSessionData).sort();
+
+                    // Remove deselected dates
+                    currentKeys.forEach(function(k) {
+                        if (!spDateDraft.has(k)) delete spSessionData[k];
+                    });
+
+                    // Add newly selected dates
+                    draftKeys.forEach(function(k) {
+                        if (!spSessionData[k]) {
+                            spEnsureDefaultGroup();
+                            var autofillVal = spGetAutofillForSlot(k, 0);
+                            spSessionData[k] = { times: [autofillVal], edited: [false], groups: ['A'] };
+                        }
+                    });
+
+                    spRenderSessions();
+                    try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e1) {}
+                    spCloseDatePicker();
+                });
+
+                var spGodSetForSlot = {};
+                function spAutofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                    var sortedDates = Object.keys(spSessionData).sort();
+                    var changedDow = spGetDayOfWeek(changedDateStr);
+                    if (!spGodSetForSlot[changedSlotIdx]) {
+                        spGodSetForSlot[changedSlotIdx] = true;
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            var data = spSessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) data.times[changedSlotIdx] = newTime;
+                        }
+                    } else {
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            if (spGetDayOfWeek(dateStr) !== changedDow) continue;
+                            var data = spSessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) data.times[changedSlotIdx] = newTime;
+                        }
+                    }
+                }
+                function spGetAutofillForSlot(dateStr, slotIdx) {
+                    var dow = spGetDayOfWeek(dateStr);
+                    var sortedDates = Object.keys(spSessionData).sort();
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (spGetDayOfWeek(d) === dow && spSessionData[d].times.length > slotIdx && spSessionData[d].times[slotIdx]) return spSessionData[d].times[slotIdx];
+                    }
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (spSessionData[d].times.length > slotIdx && spSessionData[d].times[slotIdx]) return spSessionData[d].times[slotIdx];
+                    }
+                    return '';
+                }
+
+                function spExtractPricingFromEditor(editorEl) {
+                    if (!editorEl) return [];
+                    try {
+                        var seatingBlocks = editorEl.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
+                        var seatOut = [];
+                        seatingBlocks.forEach(function(block) {
+                            var seatName = '';
+                            var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                            if (seatInput) seatName = String(seatInput.value || '').trim();
+                            var tiers = [];
+                            block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
+                                var tierName = '';
+                                var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
+                                if (tierInput) tierName = String(tierInput.value || '').trim();
+                                var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
+                                var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                var priceInput = null;
+                                var inputs = tier.querySelectorAll('input.fieldset-input');
+                                if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
+                                var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                            });
+                            seatOut.push({ seating_area: seatName, tiers: tiers });
+                        });
+                        return seatOut;
+                    } catch (e) {
+                        return [];
+                    }
+                }
+
+                function spReplaceEditorFromPricing(editorEl, pricingArr) {
+                    if (!editorEl) return;
+                    editorEl.innerHTML = '';
+                    var seatingAreasContainer = document.createElement('div');
+                    seatingAreasContainer.className = 'fieldset-sessionpricing-pricing-seatingareas-container';
+                    editorEl.appendChild(seatingAreasContainer);
+                    var seats = Array.isArray(pricingArr) ? pricingArr : [];
+                    if (seats.length === 0) seats = [{}];
+                    seats.forEach(function(seat) {
+                        var block = spCreateSeatingAreaBlock(seatingAreasContainer);
+                        seatingAreasContainer.appendChild(block);
+                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                        if (seatInput) seatInput.value = String((seat && seat.seating_area) || '');
+                        var tiersContainer = block.querySelector('.fieldset-sessionpricing-pricing-tiers-container');
+                        if (tiersContainer) tiersContainer.innerHTML = '';
+                        var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
+                        if (tiers.length === 0) tiers = [{}];
+                        tiers.forEach(function(tierObj) {
+                            var tierBlock = spCreatePricingTierBlock(tiersContainer);
+                            tiersContainer.appendChild(tierBlock);
+                            var tierNameInput = tierBlock.querySelector('.fieldset-row input.fieldset-input');
+                            if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
+                            // IMPORTANT: do not clear the currency input directly (that causes "flag + Search").
+                            // Only set currency when we actually have a saved value, and do it via the component API.
+                            var curr = String((tierObj && tierObj.currency) || '').trim();
+                            if (curr) {
+                                try {
+                                    var menuEl = tierBlock.querySelector('.component-currencycompact-menu');
+                                    if (menuEl) {
+                                        for (var mi = 0; mi < spTicketCurrencyMenus.length; mi++) {
+                                            var mo = spTicketCurrencyMenus[mi];
+                                            if (mo && mo.element === menuEl && typeof mo.setValue === 'function') {
+                                                mo.setValue(curr);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } catch (eCur) {}
+                            }
+                            var inputs = tierBlock.querySelectorAll('input.fieldset-input');
+                            var priceInput = inputs && inputs.length ? inputs[inputs.length - 1] : null;
+                            if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
+                        });
+                        spUpdateTierButtons(tiersContainer);
+                    });
+                    spUpdateSeatingAreaButtons(seatingAreasContainer);
+                }
+
+                function spSetGroupEditorOpen(groupKey, isOpen) {
+                    var g = spTicketGroups[String(groupKey || '')];
+                    if (!g) return;
+                    var wrap = g.querySelector('.fieldset-sessionpricing-ticketgroup-editorwrap');
+                    if (!wrap) return;
+                    wrap.style.display = isOpen ? '' : 'none';
+                    g.classList.toggle('fieldset-sessionpricing-pricing-group--open', !!isOpen);
+
+                    // Keep the active group's header sticky inside the scrollable popover so the user
+                    // always knows which group is being edited.
+                    try {
+                        Object.keys(spTicketGroups).forEach(function(k) {
+                            var gg = spTicketGroups[k];
+                            if (!gg) return;
+                            var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-header');
+                            if (!hh) return;
+                            hh.classList.remove('fieldset-sessionpricing-ticketgroup-header--sticky');
+                        });
+                        if (isOpen) {
+                            var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-header');
+                            if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-header--sticky');
+                        }
+                    } catch (eSticky) {}
+                }
+
+                function spCloseAllGroupEditors() {
+                    Object.keys(spTicketGroups).forEach(function(k) {
+                        spSetGroupEditorOpen(k, false);
+                    });
+                    spOpenGroupKey = null;
+                    spOpenGroupSnapshot = null;
+                }
+
+                function spUpdateTicketGroupHeaderButtons() {
+                    try {
+                        var keys = Object.keys(spTicketGroups);
+                        var count = keys.length;
+                        keys.forEach(function(k) {
+                            var g = spTicketGroups[k];
+                            if (!g) return;
+                            var removeBtn = g.querySelector('.fieldset-sessionpricing-ticketgroup-remove');
+                            if (!removeBtn) return;
+                            var disabled = (String(k) === 'A') || (count <= 1);
+                            removeBtn.disabled = disabled;
+                            removeBtn.style.opacity = disabled ? '0.3' : '1';
+                            removeBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+                        });
+                    } catch (e0) {}
+                }
+
+                function spAssignGroupToActive(groupKey) {
+                    if (!spActivePicker || !spActivePicker.timeInput || !spActivePicker.ticketBtn) return;
+                    var normalizedKey = String(groupKey || '').trim();
+                    var dateStr = spActivePicker.dateStr;
+                    var idx = spActivePicker.idx;
+                    var data = spSessionData[dateStr];
+                    if (!data) return;
+                    if (!Array.isArray(data.groups)) data.groups = [];
+                    data.groups[idx] = normalizedKey;
+                    spActivePicker.timeInput.dataset.ticketGroupKey = normalizedKey;
+                    var letterEl = spActivePicker.ticketBtn.querySelector('.fieldset-sessionpricing-ticketgroup-letter');
+                    if (letterEl) letterEl.textContent = normalizedKey ? normalizedKey : '?';
+                    try { spActivePicker.ticketBtn.setAttribute('aria-label', normalizedKey ? ('Ticket Group ' + normalizedKey) : 'Ticket Group unassigned'); } catch (eAria) {}
+
+                    // Highlight the selected group in the picker menu (so selection is obvious)
+                    try {
+                        Object.keys(spTicketGroups).forEach(function(k) {
+                            var g = spTicketGroups[k];
+                            if (!g) return;
+                            var header = g.querySelector('.fieldset-sessionpricing-ticketgroup-header');
+                            if (!header) return;
+                            header.classList.toggle('fieldset-sessionpricing-ticketgroup-header--selected', normalizedKey && String(k) === String(normalizedKey));
+                        });
+                    } catch (eSel) {}
+                }
+
+                function spUpdateAllTicketButtonsFromData() {
+                    try {
+                        var inputs = spSessionsContainer.querySelectorAll('.fieldset-sessionpricing-sessions-time-input');
+                        inputs.forEach(function(input) {
+                            var d = String(input.dataset.date || '');
+                            var i = parseInt(String(input.dataset.idx || '0'), 10);
+                            if (!d || !spSessionData[d] || !Array.isArray(spSessionData[d].groups)) return;
+                            var g = String(spSessionData[d].groups[i] || '').trim();
+                            input.dataset.ticketGroupKey = g;
+                            var row = input.closest('.fieldset-sessionpricing-sessions-row');
+                            if (!row) return;
+                            var btn = row.querySelector('.fieldset-sessionpricing-ticketgroup-button');
+                            if (!btn) return;
+                            var letterEl = btn.querySelector('.fieldset-sessionpricing-ticketgroup-letter');
+                            if (letterEl) letterEl.textContent = g ? g : '?';
+                            try { btn.setAttribute('aria-label', g ? ('Ticket Group ' + g) : 'Ticket Group unassigned'); } catch (eAria2) {}
+                        });
+                    } catch (eUp) {}
+                }
+
+                function spCloseTicketMenu() {
+                    if (!spTicketMenuOpen) return;
+                    spTicketMenuOpen = false;
+                    spPricingGroupsWrap.classList.remove('fieldset-sessionpricing-ticketgroup-popover--open');
+                    try {
+                        if (spActivePicker && spActivePicker.ticketBtn) {
+                            spActivePicker.ticketBtn.classList.remove('fieldset-sessionpricing-ticketgroup-button--open');
+                        }
+                    } catch (eCls) {}
+                    spActivePicker = null;
+                    if (spTicketMenuDocHandler) {
+                        try { document.removeEventListener('click', spTicketMenuDocHandler, true); } catch (e) {}
+                        spTicketMenuDocHandler = null;
+                    }
+                    if (spTicketMenuWinHandler) {
+                        try { window.removeEventListener('resize', spTicketMenuWinHandler, true); } catch (e1) {}
+                        spTicketMenuWinHandler = null;
+                    }
+                    spTicketMenuScrollEl = null;
+                }
+
+                // Footer buttons (OK/Cancel) for the ticket-group pop-up (locked like session picker)
+                spTicketGroupFooterOk.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    spCloseAllGroupEditors();
+                    spCloseTicketMenu();
+                });
+
+                spTicketGroupFooterCancel.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    // Revert current open editor only, then close the menu.
+                    try {
+                        if (spOpenGroupKey && spOpenGroupSnapshot) {
+                            var g = spTicketGroups[String(spOpenGroupKey || '')];
+                            if (g) {
+                                var editorEl = g.querySelector('.fieldset-sessionpricing-pricing-editor');
+                                if (editorEl) spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot || []);
+                            }
+                        }
+                    } catch (e1) {}
+                    spCloseAllGroupEditors();
+                    spCloseTicketMenu();
+                });
+
+                function spOpenTicketMenu(anchorRowEl, pickerObj) {
+                    if (!anchorRowEl || !pickerObj) return;
+                    spCloseTicketMenu();
+                    spActivePicker = pickerObj;
+                    try { if (pickerObj.ticketBtn) pickerObj.ticketBtn.classList.add('fieldset-sessionpricing-ticketgroup-button--open'); } catch (eCls2) {}
+
+                    // Ensure active row has a group assigned
+                    var currentKey = '';
+                    try { currentKey = String(pickerObj.timeInput.dataset.ticketGroupKey || '').trim(); } catch (e0) { currentKey = ''; }
+                    if (!currentKey) {
+                        currentKey = 'A';
+                        spEnsureDefaultGroup();
+                    }
+                    spAssignGroupToActive(currentKey);
+
+                    // Auto-open the editor for the currently selected group when the menu opens.
+                    try {
+                        spEnsureTicketGroup(currentKey);
+                        spCloseAllGroupEditors();
+                        spOpenGroupKey = currentKey;
+                        var grpEl0 = spTicketGroups[currentKey];
+                        var editorEl0 = grpEl0 ? grpEl0.querySelector('.fieldset-sessionpricing-pricing-editor') : null;
+                        spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
+                        spSetGroupEditorOpen(currentKey, true);
+                    } catch (eAutoOpen) {}
+
+                    // Pop-up positioning inside the fieldset (same model as session picker)
+                    try {
+                        if (fieldset && fieldset.style) fieldset.style.position = 'relative';
+                    } catch (ePos) {}
+                    try {
+                        if (spPricingGroupsWrap.parentNode !== fieldset) {
+                            fieldset.appendChild(spPricingGroupsWrap);
+                        }
+                    } catch (eApp) {}
+                    try {
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var rowRect = anchorRowEl.getBoundingClientRect();
+                        var top = (rowRect.bottom - fsRect.top) + 10;
+                        if (top < 0) top = 0;
+                        spPricingGroupsWrap.style.top = top + 'px';
+                    } catch (eTop) {}
+
+                    spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroup-popover--open');
+                    spTicketMenuOpen = true;
+
+                    // Close when clicking outside (Formbuilder-style)
+                    spTicketMenuDocHandler = function(ev) {
+                        try {
+                            // If a confirm dialog is open, don't treat clicks inside it as "outside" the ticket-group menu.
+                            var confirmOverlay = document.querySelector('.component-confirm-dialog-overlay--visible');
+                            if (confirmOverlay && confirmOverlay.contains(ev.target)) return;
+                            if (!spPricingGroupsWrap.contains(ev.target) && !(pickerObj.ticketBtn && pickerObj.ticketBtn.contains(ev.target))) {
+                                spCloseTicketMenu();
+                            }
+                        } catch (e) {}
+                    };
+                    try { document.addEventListener('click', spTicketMenuDocHandler, true); } catch (e1) {}
+                }
+
+                function spEnsureTicketGroup(groupKey) {
+                    var key = String(groupKey || '').trim();
+                    if (!key) return null;
+                    if (spTicketGroups[key]) return spTicketGroups[key];
+
+                    var group = document.createElement('div');
+                    group.className = 'fieldset-sessionpricing-pricing-group';
+                    group.dataset.ticketGroupKey = key;
+
+                    // Header row: select group + edit pencil
+                    var header = document.createElement('div');
+                    header.className = 'fieldset-sessionpricing-ticketgroup-header';
+
+                    var selectBtn = document.createElement('button');
+                    selectBtn.type = 'button';
+                    selectBtn.className = 'fieldset-sessionpricing-ticketgroup-select';
+                    selectBtn.textContent = 'Ticket Group ' + key;
+                    selectBtn.addEventListener('click', function() {
+                        // Selecting a group closes any open edit panels (only one editing context at a time)
+                        spCloseAllGroupEditors();
+                        spAssignGroupToActive(key);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    header.appendChild(selectBtn);
+
+                    var editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'fieldset-sessionpricing-ticketgroup-edit';
+                    editBtn.textContent = '✎';
+                    editBtn.title = 'Edit Ticket Group';
+                    editBtn.setAttribute('aria-label', 'Edit Ticket Group');
+                    editBtn.addEventListener('click', function(e) {
+                        try { e.stopPropagation(); } catch (e0) {}
+                        if (spOpenGroupKey && spOpenGroupKey !== key) {
+                            spCloseAllGroupEditors();
+                        }
+                        var isOpen = group.classList.contains('fieldset-sessionpricing-pricing-group--open');
+                        if (!isOpen) {
+                            var editorEl0 = group.querySelector('.fieldset-sessionpricing-pricing-editor');
+                            spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
+                            spOpenGroupKey = key;
+                        } else {
+                            spOpenGroupSnapshot = null;
+                            spOpenGroupKey = null;
+                        }
+                        spSetGroupEditorOpen(key, !isOpen);
+                    });
+                    header.appendChild(editBtn);
+
+                    // Add/Remove ticket group buttons (replaces "Create New Ticket Group" and deletes)
+                    var addGroupBtn = document.createElement('button');
+                    addGroupBtn.type = 'button';
+                    addGroupBtn.className = 'fieldset-sessionpricing-ticketgroup-add';
+                    addGroupBtn.textContent = '+';
+                    addGroupBtn.setAttribute('aria-label', 'Add Ticket Group');
+                    addGroupBtn.addEventListener('click', function(e) {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        var newKey = spFirstUnusedLetter();
+                        spEnsureTicketGroup(newKey);
+                        spUpdateTicketGroupHeaderButtons();
+                        // Select and open the new group for editing
+                        spAssignGroupToActive(newKey);
+                        spCloseAllGroupEditors();
+                        spOpenGroupKey = newKey;
+                        spOpenGroupSnapshot = [];
+                        spSetGroupEditorOpen(newKey, true);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                    });
+                    header.appendChild(addGroupBtn);
+
+                    var removeGroupBtn = document.createElement('button');
+                    removeGroupBtn.type = 'button';
+                    removeGroupBtn.className = 'fieldset-sessionpricing-ticketgroup-remove';
+                    removeGroupBtn.textContent = '−';
+                    removeGroupBtn.setAttribute('aria-label', 'Delete Ticket Group');
+                    removeGroupBtn.addEventListener('click', async function(e) {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        // Group A is never deletable
+                        if (key === 'A') return;
+                        // If only one group remains, deletion is disabled
+                        if (Object.keys(spTicketGroups).length <= 1) return;
+                        try {
+                            if (typeof ConfirmDialogComponent === 'undefined' || !ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                                console.error('[session_pricing] ConfirmDialogComponent not available');
+                                return;
+                            }
+                        } catch (eCheck) { return; }
+                        var confirmed = false;
+                        try {
+                            confirmed = await ConfirmDialogComponent.show({
+                                titleText: 'Delete Ticket Group',
+                                messageText: 'Are you sure?',
+                                confirmLabel: 'Delete',
+                                confirmClass: 'danger',
+                                focusCancel: true
+                            });
+                        } catch (eDlg) { confirmed = false; }
+                        if (!confirmed) return;
+
+                        try { group.remove(); } catch (e1) {}
+                        delete spTicketGroups[key];
+                        spOpenGroupKey = null;
+                        spOpenGroupSnapshot = null;
+
+                        // Allow gaps. Any session times using the deleted group fall back to A.
+                        Object.keys(spSessionData).forEach(function(ds) {
+                            var data = spSessionData[ds];
+                            if (!data || !Array.isArray(data.groups)) return;
+                            for (var i = 0; i < data.groups.length; i++) {
+                                if (String(data.groups[i] || '') === key) data.groups[i] = 'A';
+                            }
+                        });
+                        spUpdateAllTicketButtonsFromData();
+                        try {
+                            if (spActivePicker && spActivePicker.timeInput) {
+                                var cur = String(spActivePicker.timeInput.dataset.ticketGroupKey || '').trim();
+                                if (cur === key) cur = 'A';
+                                spAssignGroupToActive(cur);
+                            }
+                        } catch (e3) {}
+                        spUpdateTicketGroupHeaderButtons();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                    });
+                    header.appendChild(removeGroupBtn);
+
+                    group.appendChild(header);
+
+                    var editorWrap = document.createElement('div');
+                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-editorwrap';
+                    editorWrap.style.display = 'none';
+
+                    var editor = document.createElement('div');
+                    editor.className = 'fieldset-sessionpricing-pricing-editor';
+                    editorWrap.appendChild(editor);
+                    spReplaceEditorFromPricing(editor, []);
+                    group.appendChild(editorWrap);
+
+                    spTicketGroups[key] = group;
+                    if (spTicketGroupList) spTicketGroupList.appendChild(group);
+                    try { spUpdateTicketGroupHeaderButtons(); } catch (eBtn0) {}
+                    return group;
+                }
+
+                function spRenderSessions() {
+                    // Close the ticket menu before rerendering (prevents stale anchors)
+                    spCloseTicketMenu();
+                    spSessionsContainer.innerHTML = '';
+                    var sortedDates = Object.keys(spSessionData).sort();
+                    // Update the date selector box text
+                    if (sortedDates.length === 0) {
+                        // Only show the date selector row when there are no dates yet.
+                        spSessionsContainer.appendChild(spDatePickerRow);
+                        spDatePickerBox.textContent = 'Select Dates';
+                        // Disable the placeholder row controls until at least one date exists
+                        try {
+                            spPickerTimeInput.disabled = true;
+                            spPickerAddBtn.disabled = true;
+                            spPickerRemoveBtn.disabled = true;
+                            spPickerTicketBtn.disabled = true;
+                            spPickerTimeInput.style.opacity = '0.3';
+                            spPickerTicketBtn.style.opacity = '0.3';
+                        } catch (e0) {}
+                    } else {
+                        try {
+                            var d0 = new Date(sortedDates[0] + 'T00:00:00');
+                            var wd0 = d0.toLocaleDateString('en-AU', { weekday: 'short' });
+                            var dm0 = d0.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+                            var yy0 = d0.toLocaleDateString('en-AU', { year: 'numeric' });
+                            spDatePickerBox.textContent = (wd0 + ' ' + dm0 + ', ' + yy0).replace(/\s+/g, ' ').trim();
+                        } catch (eFmt0) {
+                            spDatePickerBox.textContent = sortedDates[0];
+                        }
+                    }
+                    sortedDates.forEach(function(dateStr) {
+                        var data = spSessionData[dateStr];
+                        var group = document.createElement('div');
+                        group.className = 'fieldset-sessionpricing-sessions-group';
+                        data.times.forEach(function(timeVal, idx) {
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-sessionpricing-sessions-row';
+                            if (idx === 0) {
+                                var dateDisplay = document.createElement('div');
+                                dateDisplay.className = 'fieldset-sessionpricing-sessions-date';
+                                var d = new Date(dateStr + 'T00:00:00');
+                                try {
+                                    var wd = d.toLocaleDateString('en-AU', { weekday: 'short' });
+                                    var dm = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+                                    var yy = d.toLocaleDateString('en-AU', { year: 'numeric' });
+                                    dateDisplay.textContent = (wd + ' ' + dm + ', ' + yy).replace(/\s+/g, ' ').trim();
+                                } catch (eFmt) {
+                                    dateDisplay.textContent = d.toDateString();
+                                }
+                                // Clicking any date box opens the date picker pop-up
+                                try {
+                                    dateDisplay.setAttribute('role', 'button');
+                                    dateDisplay.setAttribute('tabindex', '0');
+                                    dateDisplay.addEventListener('click', function(ev) {
+                                        try { ev.preventDefault(); ev.stopPropagation(); } catch (e0) {}
+                                        spOpenDatePicker(dateDisplay);
+                                    });
+                                } catch (ePick) {}
+                                row.appendChild(dateDisplay);
+                            } else {
+                                var spacer = document.createElement('div');
+                                spacer.className = 'fieldset-sessionpricing-sessions-date-spacer';
+                                row.appendChild(spacer);
+                            }
+                            var timeWrapper = document.createElement('div');
+                            timeWrapper.className = 'fieldset-sessionpricing-sessions-time';
+                            var timeInput = document.createElement('input');
+                            timeInput.type = 'text';
+                            timeInput.className = 'fieldset-sessionpricing-sessions-time-input';
+                            timeInput.placeholder = 'HH:MM';
+                            timeInput.maxLength = 5;
+                            timeInput.value = timeVal;
+                            timeInput.dataset.date = dateStr;
+                            timeInput.dataset.idx = idx;
+                            if (!Array.isArray(data.groups)) data.groups = [];
+                            // Default each session time to Group A unless it was explicitly cleared ('' -> '?')
+                            if (typeof data.groups[idx] !== 'string') data.groups[idx] = 'A';
+                            timeInput.dataset.ticketGroupKey = String(data.groups[idx] || '').trim();
+                            timeInput.addEventListener('focus', function() {
+                                var input = this;
+                                setTimeout(function() { input.select(); }, 0);
+                            });
+                            timeInput.addEventListener('input', function() {
+                                var v = String(this.value || '').replace(/[^0-9]/g, '');
+                                if (v.length >= 2) v = v.substring(0, 2) + ':' + v.substring(2, 4);
+                                this.value = v;
+                            });
+                            function spTimeToMinutes(timeStr) {
+                                var t = String(timeStr || '').trim();
+                                if (!t) return null;
+                                var m = t.match(/^(\d{1,2}):(\d{2})$/);
+                                if (!m) return null;
+                                var hh = parseInt(m[1], 10);
+                                var mm = parseInt(m[2], 10);
+                                if (isNaN(hh) || isNaN(mm)) return null;
+                                if (hh < 0 || hh > 23) return null;
+                                if (mm < 0 || mm > 59) return null;
+                                return (hh * 60) + mm;
+                            }
+                            function spSortTimesForDate(dateKey) {
+                                try {
+                                    var ds = String(dateKey || '');
+                                    var d = spSessionData[ds];
+                                    if (!d || !Array.isArray(d.times)) return false;
+                                    if (!Array.isArray(d.edited)) d.edited = [];
+                                    if (!Array.isArray(d.groups)) d.groups = [];
+
+                                    var items = d.times.map(function(tv, i) {
+                                        return {
+                                            i: i,
+                                            time: String(tv || ''),
+                                            edited: !!d.edited[i],
+                                            group: String(d.groups[i] || 'A')
+                                        };
+                                    });
+
+                                    // Stable sort: valid times first (ascending), blanks/invalid last, preserve relative order for ties.
+                                    items.sort(function(a, b) {
+                                        var am = spTimeToMinutes(a.time);
+                                        var bm = spTimeToMinutes(b.time);
+                                        var aValid = (am !== null);
+                                        var bValid = (bm !== null);
+                                        if (aValid && bValid) {
+                                            if (am < bm) return -1;
+                                            if (am > bm) return 1;
+                                            return a.i - b.i;
+                                        }
+                                        if (aValid && !bValid) return -1;
+                                        if (!aValid && bValid) return 1;
+                                        return a.i - b.i;
+                                    });
+
+                                    var changed = false;
+                                    for (var k = 0; k < items.length; k++) {
+                                        if (items[k].i !== k) { changed = true; break; }
+                                    }
+                                    if (!changed) return false;
+
+                                    d.times = items.map(function(it) { return it.time; });
+                                    d.edited = items.map(function(it) { return it.edited; });
+                                    d.groups = items.map(function(it) { return it.group; });
+                                    return true;
+                                } catch (eSort) {
+                                    return false;
+                                }
+                            }
+                            (function(dateStr, idx) {
+                                timeInput.addEventListener('blur', function() {
+                                    var raw = String(this.value || '').replace(/[^0-9]/g, '');
+                                    if (raw === '') {
+                                        spSessionData[dateStr].times[idx] = '';
+                                        // Sort after user finishes editing (blur), even if clearing, so blanks drift to the end.
+                                        if (spSortTimesForDate(dateStr)) spRenderSessions();
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                                        return;
+                                    }
+                                    var hh, mm;
+                                    if (raw.length === 1) { hh = '0' + raw; mm = '00'; }
+                                    else if (raw.length === 2) { hh = raw; mm = '00'; }
+                                    else if (raw.length === 3) { hh = raw.substring(0, 2); mm = raw.substring(2) + '0'; }
+                                    else { hh = raw.substring(0, 2); mm = raw.substring(2, 4); }
+                                    var newTime = hh + ':' + mm;
+                                    var hours = parseInt(hh, 10);
+                                    var mins = parseInt(mm, 10);
+                                    if (hours <= 23 && mins <= 59) {
+                                        this.value = newTime;
+                                        spSessionData[dateStr].times[idx] = newTime;
+                                        spSessionData[dateStr].edited[idx] = true;
+                                        spAutofillTimes(dateStr, idx, newTime);
+                                        // Sort only after the user finishes typing (blur), and keep group/edited aligned with the time.
+                                        if (spSortTimesForDate(dateStr)) {
+                                            spRenderSessions();
+                                        } else {
+                                            // Still sync any autofill results without rerendering if order didn't change.
+                                            spSessionsContainer.querySelectorAll('.fieldset-sessionpricing-sessions-time-input').forEach(function(input) {
+                                                var d0 = input.dataset.date;
+                                                var i0 = parseInt(input.dataset.idx, 10);
+                                                if (d0 && spSessionData[d0] && spSessionData[d0].times[i0] !== undefined) input.value = spSessionData[d0].times[i0];
+                                            });
+                                        }
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                    } else {
+                                        this.value = '';
+                                        spSessionData[dateStr].times[idx] = '';
+                                        if (spSortTimesForDate(dateStr)) spRenderSessions();
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                                    }
+                                });
+                            })(dateStr, idx);
+                            timeWrapper.appendChild(timeInput);
+                            row.appendChild(timeWrapper);
+
+                            var spMaxTimesPerDate = 10;
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-sessionpricing-sessions-add';
+                            addBtn.textContent = '+';
+                            if (data.times.length >= spMaxTimesPerDate) {
+                                addBtn.disabled = true;
+                                addBtn.style.opacity = '0.3';
+                                addBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    addBtn.addEventListener('click', function() {
+                                        var newSlotIdx = idx + 1;
+                                        var autofillVal = spGetAutofillForSlot(dateStr, newSlotIdx);
+                                        spSessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                        spSessionData[dateStr].edited.splice(newSlotIdx, 0, false);
+                                        if (!Array.isArray(spSessionData[dateStr].groups)) spSessionData[dateStr].groups = [];
+                                        var inheritKey = String(spSessionData[dateStr].groups[idx] || '').trim();
+                                        if (!inheritKey) inheritKey = 'A';
+                                        spSessionData[dateStr].groups.splice(newSlotIdx, 0, inheritKey);
+                                        spEnsureDefaultGroup();
+                                        spRenderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(addBtn);
+
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-sessionpricing-sessions-remove';
+                            removeBtn.textContent = '−';
+                            if (data.times.length === 1) {
+                                removeBtn.disabled = true;
+                                removeBtn.style.opacity = '0.3';
+                                removeBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    removeBtn.addEventListener('click', function() {
+                                        spSessionData[dateStr].times.splice(idx, 1);
+                                        spSessionData[dateStr].edited.splice(idx, 1);
+                                        if (Array.isArray(spSessionData[dateStr].groups)) spSessionData[dateStr].groups.splice(idx, 1);
+                                        spRenderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(removeBtn);
+
+                            // Ticket group button (icon + letter)
+                            var ticketBtn = document.createElement('button');
+                            ticketBtn.type = 'button';
+                            ticketBtn.className = 'fieldset-sessionpricing-ticketgroup-button';
+                            ticketBtn.title = 'Ticket Group';
+
+                            var iconUrl = spGetSystemTicketIconUrl();
+                            if (iconUrl) {
+                                var img = document.createElement('img');
+                                img.className = 'fieldset-sessionpricing-ticketgroup-icon';
+                                img.alt = '';
+                                img.src = iconUrl;
+                                ticketBtn.appendChild(img);
+                            }
+                            var letter = document.createElement('div');
+                            letter.className = 'fieldset-sessionpricing-ticketgroup-letter';
+                            letter.textContent = String(data.groups[idx] || '').trim() ? String(data.groups[idx] || '').trim() : '?';
+                            ticketBtn.appendChild(letter);
+                            try { ticketBtn.setAttribute('aria-label', String(data.groups[idx] || '').trim() ? ('Ticket Group ' + String(data.groups[idx] || '').trim()) : 'Ticket Group unassigned'); } catch (eAriaBtn) {}
+
+                            (function(dateStr, idx, timeInput, ticketBtn, rowEl) {
+                                ticketBtn.addEventListener('click', function(e) {
+                                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                                    var picker = { dateStr: dateStr, idx: idx, timeInput: timeInput, ticketBtn: ticketBtn, rowEl: rowEl };
+                                    if (spTicketMenuOpen && spActivePicker && spActivePicker.ticketBtn === ticketBtn) {
+                                        spCloseTicketMenu();
+                                        return;
+                                    }
+                                    spOpenTicketMenu(rowEl, picker);
+                                });
+                            })(dateStr, idx, timeInput, ticketBtn, row);
+                            row.appendChild(ticketBtn);
+
+                            group.appendChild(row);
+                        });
+                        spSessionsContainer.appendChild(group);
+                    });
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                }
+
+                // Calendar clicks are handled by CalendarComponent (single source of truth).
+
+                // Initial UI state
+                // Initial UI state
+                spRenderSessions();
+
+                break;
+                
+            case 'venue':
+                // SMART VENUE FIELDSET
+                // - Both inputs have Google Places (unrestricted)
+                // - Auto-fill ONLY empty boxes
+                // - User edits are protected
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                // Hidden lat/lng fields
+                var smartLatInput = document.createElement('input');
+                smartLatInput.type = 'hidden';
+                smartLatInput.className = 'fieldset-lat';
+                var smartLngInput = document.createElement('input');
+                smartLngInput.type = 'hidden';
+                smartLngInput.className = 'fieldset-lng';
+                var smartCountryInput = document.createElement('input');
+                smartCountryInput.type = 'hidden';
+                smartCountryInput.className = 'fieldset-country';
+                
+                // Venue name row
+                var smartVenueSub = document.createElement('div');
+                smartVenueSub.className = 'fieldset-sublabel';
+                smartVenueSub.textContent = 'Venue Name';
+                fieldset.appendChild(smartVenueSub);
+                var smartVenueInput = document.createElement('input');
+                smartVenueInput.type = 'text';
+                smartVenueInput.className = 'fieldset-input';
+                smartVenueInput.placeholder = 'Search or type venue name...';
+                smartVenueInput.style.marginBottom = '8px';
+                fieldset.appendChild(smartVenueInput);
+                
+                // Address row
+                var smartAddrSub = document.createElement('div');
+                smartAddrSub.className = 'fieldset-sublabel';
+                smartAddrSub.textContent = 'Address';
+                fieldset.appendChild(smartAddrSub);
+                var smartAddrInput = document.createElement('input');
+                smartAddrInput.type = 'text';
+                smartAddrInput.className = 'fieldset-input';
+                smartAddrInput.placeholder = 'Search or type address...';
+                smartAddrInput.style.marginBottom = '4px';
+                fieldset.appendChild(smartAddrInput);
+
+                // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
+                try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e0) {}
+                
+                // Status indicator
+                var smartStatus = document.createElement('div');
+                smartStatus.className = 'fieldset-location-status';
+                fieldset.appendChild(smartStatus);
+                
+                fieldset.appendChild(smartLatInput);
+                fieldset.appendChild(smartLngInput);
+                fieldset.appendChild(smartCountryInput);
+                
+                // Smart autofill function - only fills empty boxes - Uses new API
+                function initSmartVenueAutocomplete(inputEl, otherInputEl, isVenueBox) {
+                    if (typeof google === 'undefined' || !google.maps || !google.maps.places) {
+                        console.warn('Google Places API not loaded');
+                        return;
+                    }
+                    
+                    if (!google.maps.places.AutocompleteSuggestion) {
+                        console.warn('Google Places AutocompleteSuggestion API not available');
+                        return;
+                    }
+                    
+                    // Create dropdown for suggestions
+                    var dropdown = document.createElement('div');
+                    dropdown.className = 'fieldset-location-dropdown';
+                    dropdown.style.display = 'none';
+                    dropdown.style.position = 'absolute';
+                    dropdown.style.zIndex = '1000';
+                    dropdown.style.backgroundColor = '#fff';
+                    dropdown.style.border = '1px solid #ccc';
+                    dropdown.style.borderRadius = '4px';
+                    dropdown.style.maxHeight = '200px';
+                    dropdown.style.overflowY = 'auto';
+                    dropdown.style.width = '100%';
+                    dropdown.style.marginTop = '2px';
+                    dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+                    
+                    var parent = inputEl.parentNode;
+                    if (parent) {
+                        parent.style.position = 'relative';
+                        parent.appendChild(dropdown);
+                    }
+                    
+                    // Fetch suggestions using new API (unrestricted - finds both venues and addresses)
+                    var debounceTimer = null;
+                    async function fetchSuggestions(query) {
+                        if (!query || query.length < 2) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+                        
+                        try {
+                            // Use same API call as map controls (no type restrictions)
+                            var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                                input: query
+                            });
+                            
+                            dropdown.innerHTML = '';
+                            
+                            if (!response || !response.suggestions || response.suggestions.length === 0) {
+                                dropdown.style.display = 'none';
+                                return;
+                            }
+                            
+                            response.suggestions.forEach(function(suggestion) {
+                                var prediction = suggestion.placePrediction;
+                                if (!prediction) return;
+                                
+                                var item = document.createElement('div');
+                                item.className = 'fieldset-location-dropdown-item';
+                                item.style.padding = '8px 12px';
+                                item.style.cursor = 'pointer';
+                                item.style.borderBottom = '1px solid #eee';
+                                
+                                var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
+                                var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
+                                
+                                item.innerHTML = 
+                                    '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
+                                    (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
+                                
+                                item.addEventListener('mouseenter', function() {
+                                    item.style.backgroundColor = '#f5f5f5';
+                                });
+                                item.addEventListener('mouseleave', function() {
+                                    item.style.backgroundColor = 'transparent';
+                                });
+                                
+                                item.addEventListener('click', async function() {
+                                    try {
+                                        var place = prediction.toPlace();
+                                        await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'types', 'addressComponents'] });
+                                        
+                                        if (!place.location) return;
+                                        
+                                        var lat = place.location.lat();
+                                        var lng = place.location.lng();
+                                        var venueName = place.displayName || '';
+                                        var address = place.formattedAddress || '';
+                                        var types = place.types || [];
+                                        var isEstablishment = types.includes('establishment');
+                                        
+                                        // Always update lat/lng
+                                        smartLatInput.value = lat;
+                                        smartLngInput.value = lng;
+                                        
+                                        // Country code (2-letter)
+                                        try {
+                                            var cc = '';
+                                            if (Array.isArray(place.addressComponents)) {
+                                                place.addressComponents.forEach(function(c) {
+                                                    if (!c || !Array.isArray(c.types)) return;
+                                                    if (c.types.indexOf('country') === -1) return;
+                                                    var raw = c.shortText || c.short_name || c.short || c.longText || c.long_name || '';
+                                                    var code = String(raw || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+                                                    if (code.length === 2) cc = code;
+                                                });
+                                            }
+                                            smartCountryInput.value = cc;
+                                        } catch (eCC) {}
+                                        
+                                        if (isVenueBox) {
+                                            // User searched in venue box
+                                            // Strip venue name to just the name (Google fills with full address)
+                                            if (isEstablishment && venueName) {
+                                                smartVenueInput.value = venueName;
+                                            }
+                                            // Address: ALWAYS use the Google-confirmed formatted address.
+                                            smartAddrInput.value = address;
+                                        } else {
+                                            // User searched in address box
+                                            // Address: strip to just address (in case Google added extra)
+                                            smartAddrInput.value = address;
+                                            // Venue name: fill only if empty AND result is an establishment
+                                            if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
+                                                smartVenueInput.value = venueName;
+                                            }
+                                        }
+                                        
+                                        inputEl.value = isVenueBox ? (isEstablishment ? venueName : address) : address;
+                                        dropdown.style.display = 'none';
+
+                                        // Mark address as Places-confirmed (required for completion)
+                                        try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
+                                        // Use change so we don't trigger the address input handler.
+                                        try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                        
+                                        // Update status
+                                        smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
+                                        smartStatus.className = 'fieldset-location-status success';
+                                    } catch (err) {
+                                        console.error('Place details error:', err);
+                                    }
+                                });
+                                
+                                dropdown.appendChild(item);
+                            });
+                            
+                            dropdown.style.display = 'block';
+                        } catch (err) {
+                            console.error('Autocomplete error:', err);
+                            dropdown.style.display = 'none';
+                        }
+                    }
+                    
+                    // Input event handler with debounce
+                    inputEl.addEventListener('input', function() {
+                        // Manual typing invalidates Places confirmation for the address field.
+                        // Venue name can be typed freely, but the address must be confirmed via Google.
+                        if (!isVenueBox) {
+                            try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e2) {}
+                            smartLatInput.value = '';
+                            smartLngInput.value = '';
+                            // No re-dispatch here; this handler is already running due to input.
+                        }
+                        clearTimeout(debounceTimer);
+                        var query = inputEl.value.trim();
+                        
+                        if (query.length < 2) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
+                        
+                        debounceTimer = setTimeout(function() {
+                            fetchSuggestions(query);
+                        }, 300);
+                    });
+                    
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', function(e) {
+                        if (!inputEl.contains(e.target) && !dropdown.contains(e.target)) {
+                            dropdown.style.display = 'none';
+                        }
+                    });
+                }
+                
+                // Init both inputs with smart autofill
+                initSmartVenueAutocomplete(smartVenueInput, smartAddrInput, true);
+                initSmartVenueAutocomplete(smartAddrInput, smartVenueInput, false);
+                break;
+                
+            default:
+                // Unknown field type - use generic text input
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'fieldset-input';
+                applyPlaceholder(input, placeholder);
+                var validation = addInputValidation(input, minLength, maxLength, null);
+                fieldset.appendChild(input);
+                fieldset.appendChild(validation.charCount);
+        }
+
+        // ---------------------------------------------------------------------
+        // REQUIRED + COMPLETE STATE (component-owned)
+        //
+        // - FieldsetBuilder is the single source of truth for fieldset validity UI,
+        //   so Admin form preview and Member Create Post behave identically.
+        // - Member/Admin code should only read dataset flags; it must not re-implement
+        //   per-field rules (min/max, email/url, complex nested fieldsets, etc).
+        // ---------------------------------------------------------------------
+
+        function normalizeRequiredFlag(v) {
+            if (v === true || v === 1 || v === '1' || v === 'true') return true;
+            return false;
+        }
+
+        var requiredFlag = normalizeRequiredFlag(fieldData.required || fieldData.is_required);
+        try {
+            fieldset.dataset.required = requiredFlag ? 'true' : 'false';
+        } catch (e) {}
+
+        var requiredStar = fieldset.querySelector('.fieldset-label-required');
+        if (requiredStar) {
+            // If not required, hide the star entirely (no "complete" state needed).
+            if (!requiredFlag) {
+                requiredStar.style.display = 'none';
+            }
+        }
+
+        function setCompleteState(isComplete) {
+            var complete = !!isComplete;
+            try {
+                fieldset.dataset.complete = complete ? 'true' : 'false';
+            } catch (e) {}
+            if (requiredStar && requiredStar.style.display !== 'none') {
+                requiredStar.classList.toggle('fieldset-label-required--complete', complete);
+            }
+            try {
+                fieldset.dispatchEvent(new CustomEvent('fieldset:validity-change', { bubbles: true }));
+            } catch (e2) {}
+        }
+
+        function strLenOk(v, minL, maxL) {
+            var s = (typeof v === 'string') ? v.trim() : '';
+            if (!s) return false;
+            var L = s.length;
+            if (typeof minL === 'number' && isFinite(minL) && minL > 0 && L < minL) return false;
+            if (typeof maxL === 'number' && isFinite(maxL) && maxL > 0 && L > maxL) return false;
+            return true;
+        }
+
+        function isTimeHHMM(v) {
+            var s = (typeof v === 'string') ? v.trim() : '';
+            var m = s.match(/^(\d{2}):(\d{2})$/);
+            if (!m) return false;
+            var hh = parseInt(m[1], 10);
+            var mm = parseInt(m[2], 10);
+            return (hh >= 0 && hh <= 23 && mm >= 0 && mm <= 59);
+        }
+
+        function computeComplete() {
+            function fieldHasAnyUserValue() {
+                try {
+                    switch (key) {
+                        case 'custom_radio':
+                            return !!fieldset.querySelector('input[type="radio"]:checked');
+                        case 'custom_dropdown': {
+                            var sel = fieldset.querySelector('select');
+                            return !!(sel && String(sel.value || '').trim());
+                        }
+                        case 'images': {
+                            var meta = fieldset.querySelector('input.fieldset-images-meta');
+                            var raw = meta ? String(meta.value || '').trim() : '';
+                            if (!raw) return false;
+                            try {
+                                var arr = JSON.parse(raw);
+                                return Array.isArray(arr) && arr.length > 0;
+                            } catch (e0) {
+                                return true; // has something, but malformed => treat as "user value exists"
+                            }
+                        }
+                        case 'amenities':
+                            return !!fieldset.querySelector('.fieldset-amenity-row input[type="radio"]:checked');
+                        case 'sessions': {
+                            var selected = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                            if (selected && selected.length > 0) return true;
+                            // If any time input has value, user interacted.
+                            var t = fieldset.querySelectorAll('input.fieldset-time');
+                            for (var i = 0; i < t.length; i++) {
+                                if (t[i] && String(t[i].value || '').trim()) return true;
+                            }
+                            return false;
+                        }
+                        case 'session_pricing': {
+                            var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
+                            if (selected2 && selected2.length > 0) return true;
+                            var t2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input');
+                            for (var i2 = 0; i2 < t2.length; i2++) {
+                                if (t2[i2] && String(t2[i2].value || '').trim()) return true;
+                            }
+                            var pricingInputs = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-groups .fieldset-sessionpricing-pricing-group:not([style*="display: none"]) input:not([type="hidden"]), .fieldset-sessionpricing-pricing-groups .fieldset-sessionpricing-pricing-group:not([style*="display: none"]) select, .fieldset-sessionpricing-pricing-groups .fieldset-sessionpricing-pricing-group:not([style*="display: none"]) textarea');
+                            for (var p0 = 0; p0 < pricingInputs.length; p0++) {
+                                var el0 = pricingInputs[p0];
+                                if (!el0) continue;
+                                if (el0.type === 'checkbox' || el0.type === 'radio') {
+                                    if (el0.checked) return true;
+                                } else if (String(el0.value || '').trim()) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                        case 'phone': {
+                            var pfx = fieldset.querySelector('.fieldset-menu-button-input');
+                            var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
+                            if (pfx && String(pfx.value || '').trim()) return true;
+                            if (tel && String(tel.value || '').trim()) return true;
+                            return false;
+                        }
+                        case 'item-pricing':
+                        case 'ticket-pricing': {
+                            var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
+                            for (var i = 0; i < els.length; i++) {
+                                var el = els[i];
+                                if (!el) continue;
+                                if (el.type === 'checkbox' || el.type === 'radio') {
+                                    if (el.checked) return true;
+                                } else if (String(el.value || '').trim()) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                        default: {
+                            var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
+                            for (var i = 0; i < els.length; i++) {
+                                var el = els[i];
+                                if (!el) continue;
+                                if (el.type === 'checkbox' || el.type === 'radio') {
+                                    if (el.checked) return true;
+                                } else if (String(el.value || '').trim()) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            // Optional fieldsets: empty => complete; but if the user entered anything, it must validate.
+            if (!requiredFlag && !fieldHasAnyUserValue()) return true;
+
+            function isVisibleControl(el) {
+                if (!el) return false;
+                if (el.disabled) return false;
+                if (el.tagName === 'INPUT' && el.type === 'hidden') return false;
+                // During initial build, fieldsets are often validated before being inserted into the DOM.
+                // In that state, offsetParent/rects can be "invisible" even though the control will be visible.
+                // Be conservative: treat detached controls as visible so required fieldsets start incomplete (red).
+                if (el.isConnected === false) return true;
+                // Covers display:none, detached, etc.
+                if (el.offsetParent === null && el.getClientRects().length === 0) return false;
+                return true;
+            }
+
+            function allVisibleControlsFilled(containerEl) {
+                var els = containerEl.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
+                if (!els || els.length === 0) return false;
+                var checkedCount = 0;
+                for (var i = 0; i < els.length; i++) {
+                    var el = els[i];
+                    if (!isVisibleControl(el)) continue;
+                    checkedCount++;
+                    if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        if (!el.checked) return false;
+                        continue;
+                    }
+                    var val = String(el.value || '').trim();
+                    if (!val) return false;
+                }
+                // If none were considered visible/required, do not allow a required fieldset to be "complete".
+                return checkedCount > 0;
+            }
+
+            switch (key) {
+                case 'title':
+                case 'coupon':
+                case 'custom_text':
+                case 'username':
+                case 'password':
+                case 'new-password': {
+                    var inp = fieldset.querySelector('input.fieldset-input');
+                    return inp ? strLenOk(inp.value, minLength, maxLength) : false;
+                }
+                case 'confirm-password': {
+                    var confirmInput = fieldset.querySelector('input.fieldset-input');
+                    if (!confirmInput) return false;
+                    // Must meet its own length constraints and must match the password field above it.
+                    if (!strLenOk(confirmInput.value, minLength, maxLength)) return false;
+
+                    // Find the nearest password/new-password fieldset above this one in DOM order.
+                    var pwFieldset = null;
+                    try {
+                        var prev = fieldset.previousElementSibling;
+                        while (prev) {
+                            if (prev.classList && prev.classList.contains('fieldset')) {
+                                var k = String(prev.dataset && prev.dataset.fieldsetKey ? prev.dataset.fieldsetKey : '').trim();
+                                if (k === 'password' || k === 'new-password') {
+                                    pwFieldset = prev;
+                                    break;
+                                }
+                            }
+                            prev = prev.previousElementSibling;
+                        }
+                        // Fallback: first matching fieldset in the same container
+                        if (!pwFieldset && fieldset.parentNode && fieldset.parentNode.querySelector) {
+                            pwFieldset = fieldset.parentNode.querySelector('.fieldset[data-fieldset-key="password"], .fieldset[data-fieldset-key="new-password"]');
+                        }
+                    } catch (e0) {}
+
+                    var pwInput = pwFieldset ? pwFieldset.querySelector('input.fieldset-input') : null;
+                    if (!pwInput) return false;
+
+                    // Identical means identical (no trimming differences).
+                    return String(confirmInput.value || '') === String(pwInput.value || '');
+                }
+                case 'description':
+                case 'custom_textarea':
+                {
+                    var ta = fieldset.querySelector('textarea');
+                    return ta ? strLenOk(ta.value, minLength, maxLength) : false;
+                }
+                case 'email':
+                case 'account_email':
+                case 'public_email': {
+                    var e = fieldset.querySelector('input.fieldset-input');
+                    if (!e) return false;
+                    if (!strLenOk(e.value, minLength, maxLength)) return false;
+                    return isValidEmail(e.value);
+                }
+                case 'website-url':
+                case 'tickets-url': {
+                    var u = fieldset.querySelector('input.fieldset-input');
+                    if (!u) return false;
+                    if (!strLenOk(u.value, minLength, maxLength)) return false;
+                    return isValidUrl(u.value);
+                }
+                case 'custom_dropdown': {
+                    var sel = fieldset.querySelector('select');
+                    var v = sel ? String(sel.value || '').trim() : '';
+                    return !!v;
+                }
+                case 'custom_radio': {
+                    var checked = fieldset.querySelector('input[type="radio"]:checked');
+                    return !!checked;
+                }
+                case 'phone': {
+                    var prefixInput = fieldset.querySelector('.fieldset-menu-button-input');
+                    var phoneInput = fieldset.querySelector('input[type="tel"].fieldset-input');
+                    if (!prefixInput || !phoneInput) return false;
+                    var pfx = String(prefixInput.value || '').trim();
+                    if (!pfx) return false;
+                    return strLenOk(phoneInput.value, minLength, maxLength);
+                }
+                case 'address':
+                case 'city':
+                case 'location': {
+                    // Address/City must be Google Places confirmed (not manual typing).
+                    var addr = fieldset.querySelector('input.fieldset-input');
+                    var lat = fieldset.querySelector('input.fieldset-lat');
+                    var lng = fieldset.querySelector('input.fieldset-lng');
+                    if (!addr || !lat || !lng) return false;
+                    if (!strLenOk(addr.value, minLength, maxLength)) return false;
+                    if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
+                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
+                }
+                case 'venue': {
+                    // Venue requires:
+                    // - Venue Name: any non-empty text (user-typed allowed)
+                    // - Address: Google Places confirmed (lat/lng set)
+                    var inputs = fieldset.querySelectorAll('input.fieldset-input');
+                    var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
+                    var addr = inputs && inputs[1] ? inputs[1] : null;
+                    var lat = fieldset.querySelector('input.fieldset-lat');
+                    var lng = fieldset.querySelector('input.fieldset-lng');
+                    if (!venueName) return false;
+                    if (!addr || !lat || !lng) return false;
+                    if (!strLenOk(String(addr.value || ''), minLength, maxLength)) return false;
+                    if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
+                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
+                }
+                case 'sessions': {
+                    var selectedDays = fieldset.querySelectorAll('.fieldset-calendar-day.selected[data-iso]');
+                    if (!selectedDays || selectedDays.length === 0) return false;
+                    // Session time inputs are rendered with class "fieldset-time"
+                    var timeInputs = fieldset.querySelectorAll('input.fieldset-time');
+                    if (!timeInputs || timeInputs.length === 0) return false;
+                    for (var i = 0; i < timeInputs.length; i++) {
+                        var ti = timeInputs[i];
+                        if (!ti) return false;
+                        // Only require boxes the user can actually see/interact with.
+                        if (!isVisibleControl(ti)) continue;
+                        // A time box is only "complete" when it's fully formed (HH:MM).
+                        if (!isTimeHHMM(ti.value)) return false;
+                    }
+                    return true;
+                }
+                case 'session_pricing': {
+                    var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
+                    if (!selectedDays2 || selectedDays2.length === 0) return false;
+
+                    var timeInputs2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input');
+                    if (!timeInputs2 || timeInputs2.length === 0) return false;
+                    for (var i2 = 0; i2 < timeInputs2.length; i2++) {
+                        var ti2 = timeInputs2[i2];
+                        if (!ti2) return false;
+                        if (!isVisibleControl(ti2)) continue;
+                        if (!isTimeHHMM(ti2.value)) return false;
+                    }
+
+                    // Ticket pricing groups must be complete:
+                    // - Every visible time must have a non-empty group selected
+                    // - Every existing group editor must have no blank fields (no partial/half-built groups)
+                    var groupsWrap = fieldset.querySelector('.fieldset-sessionpricing-pricing-groups');
+                    if (!groupsWrap) return false;
+                    var groups = groupsWrap.querySelectorAll('.fieldset-sessionpricing-pricing-group');
+                    if (!groups || groups.length === 0) return false;
+
+                    function allControlsFilledNoVisibility(containerEl) {
+                        var els = containerEl.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
+                        if (!els || els.length === 0) return false;
+                        for (var i = 0; i < els.length; i++) {
+                            var el = els[i];
+                            if (!el) return false;
+                            if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
+                            if (el.type === 'checkbox' || el.type === 'radio') {
+                                if (!el.checked) return false;
+                                continue;
+                            }
+                            var val = String(el.value || '').trim();
+                            if (!val) return false;
+                        }
+                        return true;
+                    }
+
+                    for (var tgi = 0; tgi < timeInputs2.length; tgi++) {
+                        var ti3 = timeInputs2[tgi];
+                        if (!ti3 || !isVisibleControl(ti3)) continue;
+                        var gk = ti3.dataset ? String(ti3.dataset.ticketGroupKey || '').trim() : '';
+                        if (!gk) return false; // every visible time must have a group
+                        var grpEl0 = groupsWrap.querySelector('.fieldset-sessionpricing-pricing-group[data-ticket-group-key="' + gk + '"]');
+                        if (!grpEl0) return false;
+                    }
+
+                    for (var gi = 0; gi < groups.length; gi++) {
+                        var grpEl = groups[gi];
+                        if (!grpEl) return false;
+                        var editor = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor') || grpEl;
+                        if (!allControlsFilledNoVisibility(editor)) return false;
+                    }
+                    return true;
+                }
+                case 'images': {
+                    var meta = fieldset.querySelector('input.fieldset-images-meta');
+                    var raw = meta ? String(meta.value || '').trim() : '';
+                    if (!raw) return false;
+                    try {
+                        var arr = JSON.parse(raw);
+                        return Array.isArray(arr) && arr.length > 0;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+                case 'amenities': {
+                    // Required amenities: every row needs Yes/No selected.
+                    var rows = fieldset.querySelectorAll('.fieldset-amenity-row');
+                    if (!rows || rows.length === 0) return false;
+                    for (var i = 0; i < rows.length; i++) {
+                        if (!rows[i].querySelector('input[type="radio"]:checked')) return false;
+                    }
+                    return true;
+                }
+                case 'item-pricing': {
+                    // Rule: all visible boxes in this pricing UI must be filled out.
+                    // Covers item name + each variant's name/currency/price.
+                    return allVisibleControlsFilled(fieldset);
+                }
+                case 'ticket-pricing': {
+                    // Rule: all visible boxes in this seating/tier pricing UI must be filled out.
+                    // Covers seating area name + tier name + currency + price.
+                    return allVisibleControlsFilled(fieldset);
+                }
+                default: {
+                    // Fallback: require at least one non-hidden input to have a value and to be natively valid.
+                    var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
+                    if (!els || els.length === 0) return false;
+                    for (var i = 0; i < els.length; i++) {
+                        var el = els[i];
+                        if (!el) continue;
+                        if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
+                        var val = (el.type === 'checkbox') ? (el.checked ? '1' : '') : String(el.value || '').trim();
+                        if (!val) return false;
+                    }
+                    return true;
+                }
+            }
+        }
+
+        function updateCompleteFromDom() {
+            // Only show "complete" for required fieldsets.
+            setCompleteState(computeComplete());
+        }
+
+        // Initial state
+        updateCompleteFromDom();
+
+        // Recalculate on any interaction inside this fieldset.
+        fieldset.addEventListener('input', updateCompleteFromDom, true);
+        fieldset.addEventListener('change', updateCompleteFromDom, true);
+        fieldset.addEventListener('blur', updateCompleteFromDom, true);
+
+        // Confirm-password depends on the password field above it, so it must revalidate when that field changes too.
+        if (key === 'confirm-password' && container && typeof container.addEventListener === 'function') {
+            try { container.addEventListener('input', updateCompleteFromDom, true); } catch (e3) {}
+            try { container.addEventListener('change', updateCompleteFromDom, true); } catch (e4) {}
+        }
+
+        return fieldset;
+    }
+    
+    // NOTE: No auto-load at script startup (performance). Callers should call
+    // FieldsetBuilder.loadFromDatabase() before building fieldsets that need picklists.
+    
+    return {
+        initGooglePlaces: initGooglePlaces,
+        buildLabel: buildLabel,
+        buildFieldset: buildFieldset,
+        addInputValidation: addInputValidation,
+        isValidEmail: isValidEmail,
+        isValidUrl: isValidUrl,
+        makePhoneDigitsOnly: makePhoneDigitsOnly,
+        autoUrlProtocol: autoUrlProtocol,
+        setPicklist: setPicklist,
+        getPicklist: function() { return dropdownOptions; },
+        getFieldsets: function() { return fieldsets; },
+        isLoaded: function() { return dataLoaded; },
+        loadFromDatabase: loadFromDatabase,
+        buildCurrencyMenuCompact: buildCurrencyMenuCompact,
+        buildPhonePrefixMenu: buildPhonePrefixMenu
+    };
+})();
+
+
+window.FieldsetBuilder = FieldsetBuilder;
