@@ -1918,7 +1918,8 @@
     text-align: center;
     font-size: 13px;
     font-weight: bold;
-    background: #2e3a72;
+    background: #111111;
+    color: #ffffff;
 }
 
 .calendar-grid {
@@ -1942,6 +1943,10 @@
 .calendar-day {
     cursor: pointer;
     background: #222;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 12px;
 }
 
 .calendar-today-marker {
@@ -1950,7 +1955,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #ff0000;
+    background: var(--website-blue-border, #3b82f5);
     cursor: pointer;
     z-index: 10;
 }
@@ -1999,39 +2004,45 @@
 }
 
 .calendar-day.today {
-    color: #ff0000;
-    font-weight: bold;
+    color: #ffffff;
+    font-weight: 700;
 }
 
 .calendar-day:not(.selected):not(.empty):hover {
-    background: #333;
+    background: var(--website-blue-hover-fill, #3b82f5);
+    border-color: var(--website-blue-border, #3b82f5);
+    color: #fff;
 }
 
 .calendar-day:not(.selected):not(.empty):active {
-    background: #2e3a72;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, #3b82f5);
     color: #fff;
 }
 
 .calendar-day.selected {
-    background: #2e3a72;
+    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue-border, #3b82f5);
     color: #fff;
 }
 
 .calendar-day.selected.today {
-    color: #ff0000;
+    color: #fff;
 }
 
 .calendar-day.range-start {
-    border-radius: 5px 0 0 5px;
+    border-radius: 4px 0 0 4px;
 }
 
 .calendar-day.range-end {
-    border-radius: 0 5px 5px 0;
+    border-radius: 0 4px 4px 0;
 }
 
 .calendar-day.in-range {
-    background: rgba(46, 58, 114, 0.5);
+    background: var(--website-blue, #3b82f599);
+    border-color: var(--website-blue-border, #3b82f5);
     color: #fff;
+    border-radius: 0;
 }
 
 .calendar-ok:hover {
