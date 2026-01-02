@@ -408,34 +408,39 @@
             flex-direction: column;
             gap: 6px;
         }
-        .fieldset-amenity-row {
+        .fieldset-images-container-row {
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 6px 0;
         }
-        .fieldset-amenity-icon {
+
+        .fieldset-images-container-row-icon {
             width: 24px;
             height: 24px;
             flex-shrink: 0;
         }
-        .fieldset-amenity-icon img {
+
+        .fieldset-images-container-row-icon img {
             width: 100%;
             height: 100%;
             object-fit: contain;
             filter: brightness(0) invert(1);
         }
-        .fieldset-amenity-name {
+
+        .fieldset-images-field-label {
             flex: 1;
             font-size: 13px;
             color: #fff;
         }
-        .fieldset-amenity-options {
+
+        .fieldset-images-field-options {
             display: flex;
             gap: 16px;
             flex-shrink: 0;
         }
-        .fieldset-amenity-option {
+
+        .fieldset-images-field-option {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -448,18 +453,19 @@
             padding: 0 8px;
             border-radius: 4px;
         }
-        .fieldset-amenity-option input {
+
+        .fieldset-images-field-option input {
             cursor: pointer;
             accent-color: #3b82f5;
         }
         /* Row states based on selection */
-        .fieldset-amenity-row.selected-yes .fieldset-amenity-icon img {
+        .fieldset-images-container-row.selected-yes .fieldset-images-container-row-icon img {
             filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
         }
-        .fieldset-amenity-row.selected-no .fieldset-amenity-icon img {
+        .fieldset-images-container-row.selected-no .fieldset-images-container-row-icon img {
             filter: brightness(0) invert(0.4);
         }
-        .fieldset-amenity-row.selected-no .fieldset-amenity-name {
+        .fieldset-images-container-row.selected-no .fieldset-images-field-label {
             color: #666;
         }
     </style>

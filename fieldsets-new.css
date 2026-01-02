@@ -362,7 +362,7 @@
     width: 100%;
 }
 
-.fieldset-image-thumb {
+.fieldset-images-field-item {
     position: relative;
     aspect-ratio: 1;
     border-radius: 5px;
@@ -372,28 +372,28 @@
     cursor: pointer;
 }
 
-.fieldset-image-thumb.dragging {
+.fieldset-images-field-item.dragging {
     opacity: 1;
 }
 
-.fieldset-image-thumb.fieldset-image-thumb--dragready {
+.fieldset-images-field-item.fieldset-images-field-item--dragready {
     outline: 2px solid rgba(59, 130, 246, 0.85);
     outline-offset: -2px;
     cursor: grab;
     user-select: none;
 }
 
-.fieldset-image-thumb.fieldset-image-thumb--dragready:active {
+.fieldset-images-field-item.fieldset-images-field-item--dragready:active {
     cursor: grabbing;
 }
 
-.fieldset-image-thumb-img {
+.fieldset-images-field-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.fieldset-image-thumb-remove {
+.fieldset-images-button-remove {
     position: absolute;
     top: 4px;
     right: 4px;
@@ -411,12 +411,12 @@
     justify-content: center;
 }
 
-.fieldset-image-thumb-remove:hover {
+.fieldset-images-button-remove:hover {
     background: rgba(239, 68, 68, 0.9);
 }
 
 /* Appearance - Images Upload Button */
-.fieldset-images {
+.fieldset-images-button-add {
     aspect-ratio: 1;
     padding: 0;
     background: #222;
@@ -431,7 +431,7 @@
     color: rgba(255,255,255,0.9);
 }
 
-.fieldset-images-icon {
+.fieldset-images-button-add-icon {
     width: 28px;
     height: 28px;
     display: block;
@@ -446,7 +446,7 @@
     mask-position: center;
 }
 
-.fieldset-images-text {
+.fieldset-images-button-add-label {
     font-size: 13px;
     font-weight: 600;
     color: inherit;

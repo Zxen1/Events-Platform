@@ -1002,7 +1002,7 @@ const FieldsetBuilder = (function(){
                     // Show existing images
                     imageEntries.forEach(function(entry, idx) {
                         var thumb = document.createElement('div');
-                        thumb.className = 'fieldset-image-thumb';
+                        thumb.className = 'fieldset-images-field-item';
                         // Native drag is disabled until a press-and-hold (no visible drag handle here).
                         thumb.draggable = false;
                         // Stable ID so we can rebuild imageEntries order from DOM order after drag.
@@ -1012,7 +1012,7 @@ const FieldsetBuilder = (function(){
                         thumb.dataset.imageEntryId = entry ? entry._imageEntryId : '';
                         
                         var img = document.createElement('img');
-                        img.className = 'fieldset-image-thumb-img';
+                        img.className = 'fieldset-images-field-image';
                         img.src = (entry && entry.previewUrl) ? entry.previewUrl : (entry ? entry.fileUrl : '');
                         thumb.appendChild(img);
 
@@ -1029,7 +1029,7 @@ const FieldsetBuilder = (function(){
                         
                         var removeBtn = document.createElement('button');
                         removeBtn.type = 'button';
-                        removeBtn.className = 'fieldset-image-thumb-remove';
+                        removeBtn.className = 'fieldset-images-button-remove';
                         removeBtn.textContent = '×';
                         (function(idx) {
                             removeBtn.addEventListener('click', function(e) {
@@ -1055,19 +1055,19 @@ const FieldsetBuilder = (function(){
 
                         function armDrag(e) {
                             // Don't arm dragging from the remove button.
-                            if (e && e.target && (e.target === removeBtn || (e.target.closest && e.target.closest('.fieldset-image-thumb-remove')))) {
+                            if (e && e.target && (e.target === removeBtn || (e.target.closest && e.target.closest('.fieldset-images-button-remove')))) {
                                 return;
                             }
                             dragArmed = true;
                             thumb.draggable = true;
-                            thumb.classList.add('fieldset-image-thumb--dragready');
+                            thumb.classList.add('fieldset-images-field-item--dragready');
                         }
 
                         function disarmDrag() {
                             dragArmed = false;
                             if (!thumb.classList.contains('dragging')) {
                                 thumb.draggable = false;
-                                thumb.classList.remove('fieldset-image-thumb--dragready');
+                                thumb.classList.remove('fieldset-images-field-item--dragready');
                             }
                         }
 
@@ -1126,7 +1126,7 @@ const FieldsetBuilder = (function(){
                             }
                             didDrag = true;
                             setThumbDragImage(e);
-                            var siblings = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            var siblings = Array.from(imagesContainer.querySelectorAll('.fieldset-images-field-item'));
                             dragStartIndex = siblings.indexOf(thumb);
                             if (e && e.dataTransfer) {
                                 e.dataTransfer.effectAllowed = 'move';
@@ -1136,12 +1136,12 @@ const FieldsetBuilder = (function(){
                         });
                         thumb.addEventListener('dragend', function() {
                             thumb.classList.remove('dragging');
-                            thumb.classList.remove('fieldset-image-thumb--dragready');
+                            thumb.classList.remove('fieldset-images-field-item--dragready');
                             thumb.draggable = false;
                             dragArmed = false;
 
                             // Rebuild imageEntries in the new DOM order (exclude the upload tile).
-                            var orderedThumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            var orderedThumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-images-field-item'));
                             var idToEntry = {};
                             imageEntries.forEach(function(en) {
                                 if (en && en._imageEntryId) idToEntry[String(en._imageEntryId)] = en;
@@ -1158,7 +1158,7 @@ const FieldsetBuilder = (function(){
                             }
 
                             // Only notify meta/UI if position actually changed
-                            var siblingsNow = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                            var siblingsNow = Array.from(imagesContainer.querySelectorAll('.fieldset-images-field-item'));
                             var currentIndex = siblingsNow.indexOf(thumb);
                             if (dragStartIndex !== -1 && currentIndex !== -1 && currentIndex !== dragStartIndex) {
                                 // Re-render to ensure remove buttons map to correct indices
@@ -1174,11 +1174,11 @@ const FieldsetBuilder = (function(){
                     // Show upload button if under max
                     if (imageEntries.length < maxImages) {
                         var uploadBox = document.createElement('div');
-                        uploadBox.className = 'fieldset-images';
+                        uploadBox.className = 'fieldset-images-button-add';
                         uploadBox.innerHTML = ImageAddTileComponent.buildMarkup({
-                            iconClass: 'fieldset-images-icon',
-                            textClass: 'fieldset-images-text',
-                            label: 'Add'
+                            iconClass: 'fieldset-images-button-add-icon',
+                            textClass: 'fieldset-images-button-add-label',
+                            label: 'Add Image'
                         });
                         uploadBox.addEventListener('click', function() {
                             fileInput.click();
