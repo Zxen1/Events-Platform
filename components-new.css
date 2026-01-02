@@ -853,8 +853,7 @@
 
 .fieldset-sessionpricing-ticketgroup-button--open {
     border-color: #3b82f5;
-    /* Match the effective "Update Profile" drawer header blue (rgba(59,130,245,0.15) over #080808 ≈ #10192b) */
-    background: #10192b;
+    background: #3b82f599; /* 60% opacity */
 }
 
 .fieldset-sessionpricing-ticketgroup-icon {
@@ -933,7 +932,7 @@
 
 .fieldset-sessionpricing-ticketgroup-footer-ok:hover,
 .fieldset-sessionpricing-ticketgroup-footer-cancel:hover {
-    background: #3b82f5;
+    background: #3b82f5; /* 100% opacity */
     border-color: #3b82f5;
 }
 
@@ -960,7 +959,7 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-create:hover {
-    background: #3b82f5;
+    background: #3b82f5; /* 100% opacity */
     border-color: #3b82f5;
 }
 
@@ -989,7 +988,7 @@
     position: sticky;
     top: 10px;
     z-index: calc(var(--layer-menu, 85) + 1);
-    background: #10192b;
+    background: #3b82f599; /* 60% opacity */
     border-color: #3b82f5;
 }
 
@@ -1006,13 +1005,18 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-header--selected {
-    background: #10192b;
+    background: #3b82f599; /* 60% opacity */
     border-color: #3b82f5;
 }
 
 .fieldset-sessionpricing-ticketgroup-header:hover {
-    background: #3b82f5;
+    background: #3b82f5; /* 100% opacity */
     border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-ticketgroup-header--selected:hover,
+.fieldset-sessionpricing-ticketgroup-header--sticky:hover {
+    background: #3b82f599; /* 60% opacity */
 }
 
 .fieldset-sessionpricing-ticketgroup-edit {
@@ -1064,7 +1068,7 @@
     top: 3px;
     width: 30px;
     height: 30px;
-    background: #3b82f5;
+    background: #3b82f599; /* 60% opacity */
     border-radius: 5px;
     z-index: -1;
 }
@@ -1097,7 +1101,7 @@
 
 /* Blue bordered editor container that visually extends the header */
 .fieldset-sessionpricing-pricing-group--open .fieldset-sessionpricing-ticketgroup-header {
-    background: #10192b;
+    background: #3b82f599; /* 60% opacity */
     border-color: #3b82f5;
     border-radius: 4px 4px 0 0;
     border-bottom: none;
@@ -1224,7 +1228,7 @@
 
 .fieldset-sessionpricing-datepicker-ok:hover,
 .fieldset-sessionpricing-datepicker-cancel:hover {
-    background: #3b82f5;
+    background: #3b82f5; /* 100% opacity */
     border-color: #3b82f5;
 }
 
@@ -1239,7 +1243,7 @@
 }
 
 .fieldset-sessionpricing-sessions-date--open {
-    background: #10192b;
+    background: #3b82f599; /* 60% opacity */
     border-color: #3b82f5;
     color: #fff;
 }
@@ -1331,16 +1335,16 @@
 }
 
 .fieldset-sessionpricing-calendar-day:not(.fieldset-sessionpricing-calendar-day--selected):not(.fieldset-sessionpricing-calendar-day--empty):hover {
-    background: #333;
+    background: #3b82f5; /* 100% opacity */
 }
 
 .fieldset-sessionpricing-calendar-day:not(.fieldset-sessionpricing-calendar-day--selected):not(.fieldset-sessionpricing-calendar-day--empty):active {
-    background: #10192b;
+    background: #3b82f599; /* 60% opacity */
     color: #fff;
 }
 
 .fieldset-sessionpricing-calendar-day--selected {
-    background: #10192b;
+    background: #3b82f599; /* 60% opacity */
     color: #fff;
 }
 
@@ -1608,6 +1612,35 @@
 .fieldset-sessionpricing-pricing-remove:hover {
     border-color: #f87171;
     color: #f87171;
+}
+
+.fieldset-sessionpricing-sessions-add:active,
+.fieldset-sessionpricing-pricing-add:active {
+    background: #3b82f599; /* #3b82f5 @ 0.6 */
+    border-color: #3b82f5;
+    color: #fff;
+}
+
+.fieldset-sessionpricing-ticketgroup-button:active {
+    background: #3b82f599; /* #3b82f5 @ 0.6 */
+    border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-ticketgroup-footer-ok:active,
+.fieldset-sessionpricing-ticketgroup-footer-cancel:active {
+    background: #3b82f599; /* #3b82f5 @ 0.6 */
+    border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-ticketgroup-create:active {
+    background: #3b82f599; /* #3b82f5 @ 0.6 */
+    border-color: #3b82f5;
+}
+
+.fieldset-sessionpricing-datepicker-ok:active,
+.fieldset-sessionpricing-datepicker-cancel:active {
+    background: #3b82f599; /* #3b82f5 @ 0.6 */
+    border-color: #3b82f5;
 }
 
 /* States - Location */
