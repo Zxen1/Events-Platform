@@ -3424,13 +3424,13 @@ const MemberModule = (function() {
 
             case 'item-pricing':
                 try {
-                    var itemNameInput = el.querySelector('input.fieldset-input');
+                    var itemNameInput = el.querySelector('input.fieldset-itempricing-field-label');
                     var itemName = itemNameInput ? String(itemNameInput.value || '').trim() : '';
                     var variants = [];
                     el.querySelectorAll('.fieldset-variant-block').forEach(function(block) {
-                        var vInputs = block.querySelectorAll('input.fieldset-input');
-                        var variantName = vInputs && vInputs[0] ? String(vInputs[0].value || '').trim() : '';
-                        var priceInput = vInputs && vInputs.length ? vInputs[vInputs.length - 1] : null;
+                        var variantInput = block.querySelector('input.fieldset-itempricing-field-variant');
+                        var variantName = variantInput ? String(variantInput.value || '').trim() : '';
+                        var priceInput = block.querySelector('input.fieldset-itempricing-field-price');
                         var price = priceInput ? String(priceInput.value || '').trim() : '';
                         var currencyInput = block.querySelector('input.component-currencycompact-menu-button-input');
                         var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
@@ -3449,13 +3449,13 @@ const MemberModule = (function() {
                 // New-site amenities are rendered as rows with Yes/No radios (no dataset payload).
                 // Return a stable array of answers so required validation works and backend can consume it.
                 try {
-                    var rows = el.querySelectorAll('.fieldset-amenity-row');
+                    var rows = el.querySelectorAll('.fieldset-amenities-container-row');
                     if (!rows || rows.length === 0) return [];
                     var out = [];
                     for (var i = 0; i < rows.length; i++) {
                         var row = rows[i];
                         if (!row) return [];
-                        var nameEl = row.querySelector('.fieldset-amenity-name');
+                        var nameEl = row.querySelector('.fieldset-amenities-field-label');
                         var amenityName = nameEl ? String(nameEl.textContent || '').trim() : '';
                         var checked = row.querySelector('input[type="radio"]:checked');
                         if (!checked) return []; // incomplete
