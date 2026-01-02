@@ -2987,78 +2987,27 @@ const FieldsetBuilder = (function(){
                 }
 
                 // Calendar + sessions list
-                var spToday = new Date();
-                spToday.setHours(0, 0, 0, 0);
-                var spTodayIso = spToday.getFullYear() + '-' + String(spToday.getMonth() + 1).padStart(2, '0') + '-' + String(spToday.getDate()).padStart(2, '0');
-                var spMinDate = new Date(spToday.getFullYear(), spToday.getMonth(), 1);
-                var spMaxDate = new Date(spToday.getFullYear(), spToday.getMonth() + 24, 1);
-                var spTodayMonthEl = null;
-                var spTodayMonthIndex = 0;
-                var spTotalMonths = 0;
-                var spWeekdayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-                function spToISODate(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
                 function spGetDayOfWeek(dateStr) { return new Date(dateStr + 'T00:00:00').getDay(); }
 
+                // Single source of truth: use CalendarComponent (same calendar used elsewhere).
                 var spCalContainer = document.createElement('div');
-                spCalContainer.className = 'fieldset-sessionpricing-calendar-container';
-                var spCalScroll = document.createElement('div');
-                spCalScroll.className = 'fieldset-sessionpricing-calendar-scroll';
-                var spCalendar = document.createElement('div');
-                spCalendar.className = 'fieldset-sessionpricing-calendar';
-
-                var spCurrent = new Date(spMinDate.getFullYear(), spMinDate.getMonth(), 1);
-                var spMonthIdx = 0;
-                while (spCurrent <= spMaxDate) {
-                    var spMonthEl = document.createElement('div');
-                    spMonthEl.className = 'fieldset-sessionpricing-calendar-month';
-                    var spHeader = document.createElement('div');
-                    spHeader.className = 'fieldset-sessionpricing-calendar-header';
-                    spHeader.textContent = spCurrent.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-                    spMonthEl.appendChild(spHeader);
-                    var spGrid = document.createElement('div');
-                    spGrid.className = 'fieldset-sessionpricing-calendar-grid';
-                    spWeekdayNames.forEach(function(wd) {
-                        var w = document.createElement('div');
-                        w.className = 'fieldset-sessionpricing-calendar-weekday';
-                        w.textContent = wd;
-                        spGrid.appendChild(w);
-                    });
-                    var spFirstDay = new Date(spCurrent.getFullYear(), spCurrent.getMonth(), 1);
-                    var spStartDow = spFirstDay.getDay();
-                    var spDaysInMonth = new Date(spCurrent.getFullYear(), spCurrent.getMonth() + 1, 0).getDate();
-                    for (var spi = 0; spi < 42; spi++) {
-                        var spCell = document.createElement('div');
-                        spCell.className = 'fieldset-sessionpricing-calendar-day';
-                        var spDayNum = spi - spStartDow + 1;
-                        if (spi < spStartDow || spDayNum > spDaysInMonth) {
-                            spCell.classList.add('fieldset-sessionpricing-calendar-day--empty');
-                        } else {
-                            spCell.textContent = spDayNum;
-                            var spDateObj = new Date(spCurrent.getFullYear(), spCurrent.getMonth(), spDayNum);
-                            spDateObj.setHours(0, 0, 0, 0);
-                            var spIso = spToISODate(spDateObj);
-                            spCell.dataset.iso = spIso;
-                            if (spDateObj < spToday) spCell.classList.add('fieldset-sessionpricing-calendar-day--past');
-                            else spCell.classList.add('fieldset-sessionpricing-calendar-day--future');
-                            if (spIso === spTodayIso) {
-                                spCell.classList.add('fieldset-sessionpricing-calendar-day--today');
-                                spTodayMonthEl = spMonthEl;
-                                spTodayMonthIndex = spMonthIdx;
-                            }
+                spCalContainer.className = 'calendar-container fieldset-sessionpricing-calendar-container';
+                var spCalendarInstance = CalendarComponent.create(spCalContainer, {
+                    monthsPast: 0,
+                    monthsFuture: 24,
+                    allowPast: false,
+                    showActions: false,
+                    selectionMode: 'multi',
+                    onChange: function(_start, _end, dates) {
+                        // Only track changes while the picker is open.
+                        if (!spDatePickerOpen) return;
+                        try {
+                            spDateDraft = new Set(Array.isArray(dates) ? dates : []);
+                        } catch (e0) {
+                            spDateDraft = new Set();
                         }
-                        spGrid.appendChild(spCell);
                     }
-                    spMonthEl.appendChild(spGrid);
-                    spCalendar.appendChild(spMonthEl);
-                    spCurrent.setMonth(spCurrent.getMonth() + 1);
-                    spMonthIdx++;
-                }
-                spTotalMonths = spMonthIdx;
-                spCalScroll.appendChild(spCalendar);
-                spCalContainer.appendChild(spCalScroll);
-                var spMarker = document.createElement('div');
-                spMarker.className = 'fieldset-sessionpricing-calendar-today-marker';
-                spCalContainer.appendChild(spMarker);
+                });
 
                 // Date picker pop-up (mirrors filter daterange behavior: OK / Cancel / click-away)
                 var spDatePickerOpen = false;
@@ -3198,27 +3147,10 @@ const FieldsetBuilder = (function(){
 
                 fieldset.appendChild(spPricingGroupsWrap);
 
-                setTimeout(function() {
-                    if (spTodayMonthEl) spCalScroll.scrollLeft = spTodayMonthEl.offsetLeft;
-                    var markerFraction = (spTodayMonthIndex + 0.5) / spTotalMonths;
-                    var markerPos = markerFraction * (spCalContainer.clientWidth - 8);
-                    spMarker.style.left = markerPos + 'px';
-                }, 0);
-                spMarker.addEventListener('click', function() {
-                    if (spTodayMonthEl) spCalScroll.scrollTo({ left: spTodayMonthEl.offsetLeft, behavior: 'smooth' });
-                });
-                spCalScroll.addEventListener('wheel', function(e) {
-                    e.preventDefault();
-                    spCalScroll.scrollLeft += (e.deltaY || e.deltaX) * 0.3;
-                });
-
                 function spApplyDraftToCalendar() {
                     try {
-                        var days = spCalendar.querySelectorAll('.fieldset-sessionpricing-calendar-day[data-iso]');
-                        days.forEach(function(day) {
-                            var iso = String(day.dataset.iso || '');
-                            day.classList.toggle('fieldset-sessionpricing-calendar-day--selected', !!(spDateDraft && spDateDraft.has(iso)));
-                        });
+                        if (!spCalendarInstance || typeof spCalendarInstance.setSelectedDates !== 'function') return;
+                        spCalendarInstance.setSelectedDates(spDateDraft ? Array.from(spDateDraft) : []);
                     } catch (e0) {}
                 }
 
@@ -4064,20 +3996,7 @@ const FieldsetBuilder = (function(){
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
 
-                spCalendar.addEventListener('click', function(e) {
-                    var day = e.target;
-                    if (day.classList.contains('fieldset-sessionpricing-calendar-day') && !day.classList.contains('fieldset-sessionpricing-calendar-day--empty')) {
-                        var iso = day.dataset.iso;
-                        if (!spDatePickerOpen || !spDateDraft) return;
-                        try {
-                            // No selecting past dates
-                            if (day.classList.contains('fieldset-sessionpricing-calendar-day--past')) return;
-                            if (spDateDraft.has(iso)) spDateDraft.delete(iso);
-                            else spDateDraft.add(iso);
-                            spApplyDraftToCalendar();
-                        } catch (e2) {}
-                    }
-                });
+                // Calendar clicks are handled by CalendarComponent (single source of truth).
 
                 // Initial UI state
                 // Initial UI state
@@ -4434,7 +4353,7 @@ const FieldsetBuilder = (function(){
                             return false;
                         }
                         case 'session_pricing': {
-                            var selected2 = fieldset.querySelectorAll('.fieldset-sessionpricing-calendar-day--selected[data-iso]');
+                            var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                             if (selected2 && selected2.length > 0) return true;
                             var t2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input');
                             for (var i2 = 0; i2 < t2.length; i2++) {
@@ -4652,7 +4571,7 @@ const FieldsetBuilder = (function(){
                     return true;
                 }
                 case 'session_pricing': {
-                    var selectedDays2 = fieldset.querySelectorAll('.fieldset-sessionpricing-calendar-day--selected[data-iso]');
+                    var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                     if (!selectedDays2 || selectedDays2.length === 0) return false;
 
                     var timeInputs2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input');
@@ -4816,6 +4735,7 @@ const CalendarComponent = (function(){
         var onSelect = options.onSelect || null;
         var onChange = options.onChange || null;
         var showActions = options.showActions || false;
+        var selectionMode = String(options.selectionMode || 'range').trim();
         
         var today = new Date();
         today.setHours(0,0,0,0);
@@ -4832,6 +4752,7 @@ const CalendarComponent = (function(){
         // Date selection state
         var selectedStart = null;
         var selectedEnd = null;
+        var selectedDates = new Set(); // used in multi mode
         
         var scroll = document.createElement('div');
         scroll.className = 'calendar-scroll';
@@ -4890,8 +4811,22 @@ const CalendarComponent = (function(){
                     // Add click handler if future OR if allowPast is true
                     if (dateObj >= today || allowPast) {
                         cell.addEventListener('click', function() {
-                            var clickedDate = this.dataset.iso;
-                            
+                            var clickedDate = String(this.dataset.iso || '');
+                            if (!clickedDate) return;
+
+                            if (selectionMode === 'multi') {
+                                if (selectedDates.has(clickedDate)) selectedDates.delete(clickedDate);
+                                else selectedDates.add(clickedDate);
+                                // Range values are not meaningful in multi mode.
+                                selectedStart = null;
+                                selectedEnd = null;
+                                updateSelection(calendar);
+                                if (onChange) onChange(null, null, Array.from(selectedDates));
+                                if (!showActions && onSelect) onSelect(null, null, Array.from(selectedDates));
+                                return;
+                            }
+
+                            // Default: range selection
                             if (!selectedStart || (selectedStart && selectedEnd)) {
                                 // Start new selection
                                 selectedStart = clickedDate;
@@ -4908,7 +4843,7 @@ const CalendarComponent = (function(){
                                 }
                                 updateSelection(calendar);
                                 if (onChange) onChange(selectedStart, selectedEnd);
-                                
+
                                 if (!showActions && onSelect) {
                                     onSelect(selectedStart, selectedEnd);
                                 }
@@ -5024,7 +4959,44 @@ const CalendarComponent = (function(){
             days.forEach(function(d) {
                 d.classList.remove('selected', 'range-start', 'range-end', 'in-range');
                 var iso = d.dataset.iso;
-                
+            });
+
+            if (selectionMode === 'multi') {
+                // Mark all selected dates and compute per-row joins (no week-wrap joins).
+                var months = calendarEl.querySelectorAll('.calendar-month');
+                months.forEach(function(monthEl) {
+                    var monthCells = Array.from(monthEl.querySelectorAll('.calendar-day[data-iso]'));
+                    monthCells.forEach(function(cell, idx) {
+                        var iso = String(cell.dataset.iso || '');
+                        if (!iso) return;
+                        if (!selectedDates.has(iso)) return;
+                        cell.classList.add('selected');
+
+                        var col = idx % 7;
+                        var leftSel = false;
+                        var rightSel = false;
+                        if (col > 0) {
+                            var left = monthCells[idx - 1];
+                            leftSel = !!(left && selectedDates.has(String(left.dataset.iso || '')));
+                        }
+                        if (col < 6) {
+                            var right = monthCells[idx + 1];
+                            rightSel = !!(right && selectedDates.has(String(right.dataset.iso || '')));
+                        }
+
+                        if (leftSel || rightSel) {
+                            if (!leftSel && rightSel) cell.classList.add('range-start');
+                            else if (leftSel && !rightSel) cell.classList.add('range-end');
+                            else if (leftSel && rightSel) cell.classList.add('in-range');
+                        }
+                    });
+                });
+                return;
+            }
+
+            // Range mode
+            days.forEach(function(d) {
+                var iso = d.dataset.iso;
                 if (selectedStart && iso === selectedStart) {
                     d.classList.add('selected', 'range-start');
                 }
@@ -5050,10 +5022,26 @@ const CalendarComponent = (function(){
             clearSelection: function() {
                 selectedStart = null;
                 selectedEnd = null;
+                selectedDates = new Set();
                 updateSelection(calendar);
             },
             getSelection: function() {
-                return { start: selectedStart, end: selectedEnd };
+                if (selectionMode === 'multi') {
+                    return { start: null, end: null, dates: Array.from(selectedDates).sort() };
+                }
+                return { start: selectedStart, end: selectedEnd, dates: null };
+            },
+            setSelectedDates: function(dates) {
+                if (selectionMode !== 'multi') return;
+                try {
+                    selectedDates = new Set(Array.isArray(dates) ? dates : []);
+                } catch (e0) {
+                    selectedDates = new Set();
+                }
+                // Keep range values empty in multi mode.
+                selectedStart = null;
+                selectedEnd = null;
+                updateSelection(calendar);
             }
         };
     }
