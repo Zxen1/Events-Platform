@@ -550,7 +550,7 @@
 .member-lighting-button:hover,
 .member-style-button:hover {
   background: rgba(0, 0, 0, 0.2);
-  color: #3b82f6;
+  color: #3b82f5;
 }
 
 .member-lighting-button--active,
@@ -558,7 +558,7 @@
 .member-style-button--active,
 .member-style-button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.2);
-  color: #3b82f6;
+  color: #3b82f5;
 }
 
 .member-lighting-button-icon {
@@ -886,7 +886,7 @@
 }
 
 .member-button-submit {
-  background: var(--website-color, #3b82f6);
+  background: var(--website-color, #3b82f5);
   border: none;
   color: #ffffff;
   font-size: 13px;
@@ -1532,12 +1532,12 @@
 }
 
 .member-formpicker-menu-button:hover {
-  border-color: #3b82f6;
-  background: #3b82f6;
+  border-color: #3b82f5;
+  background: #3b82f5;
 }
 
 .member-formpicker-menu-button--open {
-  border-color: #3b82f6;
+  border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -1582,7 +1582,7 @@
   left: 0;
   width: 100%;
   background: #222;
-  border: 1px solid #3b82f6;
+  border: 1px solid #3b82f5;
   border-top: none;
   border-radius: 0 0 5px 5px;
   max-height: 300px;
@@ -1609,7 +1609,7 @@
 }
 
 .member-formpicker-menu-option:hover {
-  background: #3b82f6;
+  background: #3b82f5;
 }
 
 .member-formpicker-menu-option-image {

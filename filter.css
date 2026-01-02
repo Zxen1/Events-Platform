@@ -534,7 +534,7 @@
 
 /* Sort options */
 .sort-options .sort-option[aria-pressed="true"]{
-  background:#3b82f6;
+  background:#3b82f5;
   color:#fff;
   border-color:#cc6600;
 }

@@ -1830,7 +1830,7 @@ textarea.input-invalid{
 #tab-forms .session-date-input,
 #memberPanel .member-create-fields .venue-name-input,
 #memberPanel .member-create-fields .session-date-input{
-  color:#3b82f6 !important;
+  color:#3b82f5 !important;
   font-weight:bold !important;
 }
 #tab-forms .venue-name-input,
@@ -2948,7 +2948,7 @@ textarea.input-invalid{
 #tab-forms .session-date-input,
 #memberPanel .member-create-fields .venue-name-input,
 #memberPanel .member-create-fields .session-date-input{
-  color:#3b82f6 !important;
+  color:#3b82f5 !important;
   font-weight:bold !important;
 }
 
@@ -4617,7 +4617,7 @@ textarea.input-invalid{
 
 #memberPanel .member-create-fields .venue-name-input,
 #memberPanel .member-create-fields .session-date-input{
-  color:#3b82f6;
+  color:#3b82f5;
   font-weight:bold;
 }
 

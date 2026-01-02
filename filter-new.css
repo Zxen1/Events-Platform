@@ -292,8 +292,8 @@
 }
 
 .filter-favourites-btn[aria-pressed="true"] {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: #3b82f5;
+  border-color: #3b82f5;
 }
 
 .filter-favourites-icon--active {
@@ -340,7 +340,7 @@
 }
 
 .filter-sort-menu-button--open {
-  border-color: #3b82f6;
+  border-color: #3b82f5;
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -377,7 +377,7 @@
   left: 0;
   width: 100%;
   background: #222;
-  border: 1px solid #3b82f6;
+  border: 1px solid #3b82f5;
   border-top: none;
   border-radius: 0 0 5px 5px;
   max-height: 300px;
@@ -402,7 +402,7 @@
 }
 
 .filter-sort-menu-option:hover {
-  background: #3b82f6;
+  background: #3b82f5;
 }
 
 .filter-sort-menu-option--selected {
@@ -583,8 +583,8 @@
 }
 
 .filter-expired-slider--on {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: #3b82f5;
+  border-color: #3b82f5;
 }
 
 .filter-expired-slider--on::before {
