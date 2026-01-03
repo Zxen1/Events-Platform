@@ -229,6 +229,36 @@ Website loading speed is critical. Any changes that slow down initial page load 
 ---
 
 
+### CSS Class Naming Pattern: Big to Small (Physical Nesting)
+
+The naming formula is `.{section}-{name}-{type}-{part}-{subpart}--{state}`.
+
+**CRITICAL RULES:**
+1. **Big to Small (Left to Right):** Class names must match physical DOM nesting. The section/name is on the left, moving to specific elements on the right.
+2. **Structural Types (ingredient level):** Use `label` (headline), `sublabel` (internal text labels), `input` (text entry), `menu` (dropdowns), `container` (for lists/grids), `row` (structural wrappers), `button` (triggers), `image` (standalone images/icons), `text` (static display text).
+3. **Labels vs. Names:** 
+   - `sublabel`: Descriptive text that appears **above** or beside an element.
+   - `name`: Specifically used within the part/subpart for inputs where the user types a name (e.g., `input-itemname`).
+4. **Physicality Only:** Do not continue the chain if there is no further nesting. If an `input` is the end of the line, stop there.
+5. **No Redundant Nesting:** If a `row` already provides the necessary structure, do not nest another `row` inside it.
+6. **Single-Word Parts:** Multi-word parts (like `itemvariantadd`) should be joined as one word to keep hyphens strictly for hierarchy levels.
+7. **"Sub" means Hierarchy, not Position:** `sublabel` means a secondary label *within* a component. It almost always appears visually **above** its target input.
+
+**Example: Item Pricing Fieldset**
+- `.fieldset-itempricing-label` (Headline)
+- `.fieldset-itempricing-sublabel-itemname` (Text above input)
+- `.fieldset-itempricing-input-itemname` (User entry field)
+- `.fieldset-itempricing-button-itemvariantadd` (Action nested in a row)
+
+**Mistakes to Avoid:**
+- ❌ Using "field" as a type (too vague).
+- ❌ Inventing new types (e.g., "marker") instead of using established ones like `image` or `icon`.
+- ❌ Truncating names (e.g., `item` instead of `itemname`) which causes data collision.
+- ❌ Using "sublabel" to mean "below" (it means "child of").
+- ❌ Adding parts to elements that have no further nesting in the DOM.
+
+---
+
 ## ⚠️ CRITICAL: TIMEZONE POLICY (UTC-12) ⚠️
 
 **Purpose:** Give users the maximum benefit of the doubt for all date-related features.
