@@ -1708,6 +1708,13 @@
   margin-bottom: 12px;
 }
 
+/* Venue sections - override form-container styling */
+.member-section-venue.member-form-container {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
 /* Quantity picker container - invisible, sits on panel */
 .member-section-quantity {
   background: transparent;
@@ -1720,14 +1727,13 @@
   border-color: var(--website-blue-active-fill, #3b82f5);
 }
 
-/* Section headers - 36px, styled like formpicker buttons */
+/* Section headers - 36px, EXACT copy of formpicker menu button */
 .member-section-header {
   width: 100%;
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 12px;
-  margin: 0 0 10px;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
@@ -1742,8 +1748,11 @@
   background: var(--website-blue-hover-fill, #3b82f5);
 }
 
-.member-section-header--collapsed {
-  border-radius: 5px;
+/* When expanded - connect to content below */
+.member-section-venue:not(.member-section-venue--collapsed) .member-section-header {
+  border-color: var(--website-blue-border, #3b82f5);
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
 }
 
 .member-section-header-text {
@@ -1756,7 +1765,7 @@
   white-space: nowrap;
 }
 
-/* Collapse arrow in header */
+/* Arrow - EXACT copy from formpicker menu button arrow */
 .member-section-header-arrow {
   width: 16px;
   height: 36px;
@@ -1768,14 +1777,29 @@
   transition: transform 0.2s;
 }
 
-.member-section-header--collapsed .member-section-header-arrow {
-  transform: rotate(-90deg);
+/* Collapsed = arrow points down (default). Expanded = arrow rotated 180deg */
+.member-section-venue:not(.member-section-venue--collapsed) .member-section-header-arrow {
+  transform: rotate(180deg);
 }
 
 /* Delete button in header */
 .member-section-header .member-location-delete-btn {
   flex-shrink: 0;
   margin-left: 0;
+}
+
+/* Venue content - styled like formpicker menu options */
+.member-venue-content {
+  background: #222;
+  border: 1px solid var(--website-blue-border, #3b82f5);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  padding: 12px;
+}
+
+/* When collapsed, content is hidden */
+.member-section-venue--collapsed .member-venue-content {
+  display: none;
 }
 
 /* Additional location containers */

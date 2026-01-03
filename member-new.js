@@ -2541,12 +2541,9 @@ const MemberModule = (function() {
         v1Arrow.textContent = '▼';
         v1Arrow.style.display = 'none';
         
-        // Click on header to collapse/expand
+        // Click on header to collapse/expand (CSS handles visibility)
         v1Header.addEventListener('click', function() {
-            var content = venue1Container.querySelector('.member-venue-content');
-            var isCollapsed = venue1Container.classList.toggle('member-section-venue--collapsed');
-            v1Header.classList.toggle('member-section-header--collapsed', isCollapsed);
-            if (content) content.style.display = isCollapsed ? 'none' : '';
+            venue1Container.classList.toggle('member-section-venue--collapsed');
         });
         
         v1Header.appendChild(v1HeaderText);
@@ -2713,7 +2710,7 @@ const MemberModule = (function() {
                 
                 // Create container (same level as venue 1)
                 var locationContainer = document.createElement('div');
-                locationContainer.className = 'member-form-container member-section-container member-additional-location-container';
+                locationContainer.className = 'member-form-container member-section-container member-section-venue member-additional-location-container';
                 locationContainer.dataset.locationNumber = locationNum;
                 locationContainer.dataset.venue = locationNum;
                 
@@ -2735,13 +2732,10 @@ const MemberModule = (function() {
                 deleteBtn.innerHTML = '&times;';
                 deleteBtn.setAttribute('aria-label', 'Delete ' + defaultName);
                 
-                // Click on header to collapse (but not on delete button)
+                // Click on header to collapse (but not on delete button) - CSS handles visibility
                 headerRow.addEventListener('click', function(e) {
                     if (e.target === deleteBtn || deleteBtn.contains(e.target)) return;
-                    var content = locationContainer.querySelector('.member-venue-content');
-                    var isCollapsed = locationContainer.classList.toggle('member-section-venue--collapsed');
-                    headerRow.classList.toggle('member-section-header--collapsed', isCollapsed);
-                    if (content) content.style.display = isCollapsed ? 'none' : '';
+                    locationContainer.classList.toggle('member-section-venue--collapsed');
                 });
                 
                 headerRow.appendChild(headerText);
@@ -2750,7 +2744,7 @@ const MemberModule = (function() {
                 locationContainer.appendChild(headerRow);
                 
                 // Inner content section (collapsible)
-                var locationSection = document.createElement('div');
+            var locationSection = document.createElement('div');
                 locationSection.className = 'member-venue-content member-additional-location';
                 locationSection.dataset.locationNumber = locationNum;
                 
@@ -2795,6 +2789,9 @@ const MemberModule = (function() {
                 // Use the original fields array order if available, otherwise combine
                 var combinedFieldsets = mustRepeatFieldsets.concat(locationRepeatOnlyFieldsets);
                 
+                // TRIAL: All location-repeat fieldsets always visible - no Advanced switch
+                // COMMENTED OUT FOR POSSIBLE REVERT:
+                /*
                 // Location options switch (only if there are optional override fieldsets)
                 var optionsSwitch = null;
                 var hasOptionalFields = locationRepeatOnlyFieldsets.length > 0;
@@ -2868,6 +2865,7 @@ const MemberModule = (function() {
                         overrideFields.forEach(function(f) { f.style.display = 'none'; });
                     }
                 }
+                */
                 
                 // First, render the location fieldset (venue/city/address)
             var locationFieldData = {};
@@ -2924,7 +2922,8 @@ const MemberModule = (function() {
                     if (isOptionalOverride) {
                         fieldset.dataset.isOverride = 'true';
                         fieldset.dataset.fieldsetKey = key;
-                        fieldset.style.display = 'none'; // Hidden by default
+                        // TRIAL: Always show - commented out for possible revert:
+                        // fieldset.style.display = 'none'; // Hidden by default
                     }
                 
                 locationSection.appendChild(fieldset);
