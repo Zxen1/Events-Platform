@@ -55,8 +55,9 @@
 
 .fieldset-label-required {
     color: #f87171;
-    font-weight: bold;
-    margin-left: 3px;
+    font-size: 8px;
+    margin-left: 4px;
+    vertical-align: middle;
 }
 
 .fieldset-label-required--complete {

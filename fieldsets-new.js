@@ -275,11 +275,11 @@ const FieldsetBuilder = (function(){
         return result.element;
     }
     
-    // Build label with required asterisk and tooltip
+    // Build label with required indicator (dot) and tooltip
     function buildLabel(name, tooltip, minLength, maxLength) {
         var label = document.createElement('div');
         label.className = 'fieldset-label';
-        label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">*</span>';
+        label.innerHTML = '<span class="fieldset-label-text">' + name + '</span><span class="fieldset-label-required">●</span>';
         
         // Build tooltip text with character limits appended
         var tooltipText = tooltip;
