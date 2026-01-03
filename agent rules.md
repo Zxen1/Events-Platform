@@ -244,11 +244,21 @@ The naming formula is `.{section}-{name}-{type}-{part}-{subpart}--{state}`.
 6. **Single-Word Parts:** Multi-word parts (like `itemvariantadd`) should be joined as one word to keep hyphens strictly for hierarchy levels.
 7. **"Sub" means Hierarchy, not Position:** `sublabel` means a secondary label *within* a component. It almost always appears visually **above** its target input.
 
-**Example: Item Pricing Fieldset**
-- `.fieldset-itempricing-label` (Headline)
-- `.fieldset-itempricing-sublabel-itemname` (Text above input)
-- `.fieldset-itempricing-input-itemname` (User entry field)
-- `.fieldset-itempricing-button-itemvariantadd` (Action nested in a row)
+**Full Approved List: Item Pricing Fieldset (14 elements)**
+1.  `.fieldset-itempricing-label` (Headline)
+2.  `.fieldset-itempricing-sublabel-itemname` (Item Name Text Label)
+3.  `.fieldset-itempricing-input-itemname` (Item Name Input field)
+4.  `.fieldset-itempricing-row-itemprice` (Price/Currency Wrapper Row)
+5.  `.fieldset-itempricing-sublabel-currency` (Currency Text Label)
+6.  `.fieldset-itempricing-menu-currency` (Currency Dropdown Menu)
+7.  `.fieldset-itempricing-sublabel-itemprice` (Price Text Label)
+8.  `.fieldset-itempricing-input-itemprice` (Price Input field)
+9.  `.fieldset-itempricing-sublabel-itemvariants` (Variants Section Header Label)
+10. `.fieldset-itempricing-container-itemvariants` (Repeating List Container)
+11. `.fieldset-itempricing-row-itemvariant` (Individual Variant Row)
+12. `.fieldset-itempricing-input-itemvariantname` (Variant Name Input field)
+13. `.fieldset-itempricing-button-itemvariantadd` (Add Variant Trigger)
+14. `.fieldset-itempricing-button-itemvariantremove` (Remove Variant Trigger)
 
 **Mistakes to Avoid:**
 - ❌ Using "field" as a type (too vague).
