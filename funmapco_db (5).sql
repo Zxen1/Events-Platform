@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 02:21 PM
+-- Generation Time: Jan 03, 2026 at 04:04 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Database: `funmapco_db`
 --
-CREATE DATABASE IF NOT EXISTS `funmapco_db` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
-USE `funmapco_db`;
 
 -- --------------------------------------------------------
 
@@ -1260,7 +1258,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (4, 'Custom TextArea', 'custom_textarea', 'subcategory', 50, '[\"text-area\"]', NULL, 'eg. Sing along!', 'Write more stuff here.', '2025-10-29 19:03:05', '2026-01-01 10:25:34'),
 (5, 'Custom Dropdown', 'custom_dropdown', 'subcategory', 50, '[\"dropdown\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'One,Two,Three', 'Select one option from the dropdown menu. Choose the option that best matches your listing.', '2025-10-29 19:03:05', '2026-01-01 10:25:46'),
 (6, 'Custom Radio', 'custom_radio', 'subcategory', 50, '[\"radio\"]', '[\"Option 1\",\"Option 2\",\"Option 3\"]', 'Four,Five,Six', 'Choose one option from the radio buttons. Only one selection is allowed.', '2025-10-29 19:03:05', '2026-01-01 10:25:56'),
-(8, 'Phone', 'phone', 'subcategory', 4, '[\"phone-prefix\", \"phone\"]', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(8, 'Public Phone', 'public_phone', 'subcategory', 4, '[\"phone-prefix\", \"phone\"]', NULL, '+61 455 555 555', 'Enter a phone number where visitors can reach you. Include country code if applicable.', '2025-10-29 19:03:05', '2026-01-03 05:04:05'),
 (9, 'Address', 'address', 'subcategory', 6, '[\"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (10, 'Website (URL)', 'website-url', 'subcategory', 8, '[\"website\"]', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (11, 'Tickets (URL)', 'tickets-url', 'subcategory', 9, '[\"website\"]', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
@@ -1873,7 +1871,7 @@ CREATE TABLE `post_map_cards` (
   `custom_radio` varchar(255) DEFAULT NULL,
   `public_email` varchar(255) DEFAULT NULL,
   `phone_prefix` varchar(20) DEFAULT NULL,
-  `phone` varchar(50) DEFAULT NULL,
+  `public_phone` varchar(50) DEFAULT NULL,
   `venue_name` varchar(255) DEFAULT NULL,
   `address_line` varchar(500) DEFAULT NULL,
   `city` varchar(200) DEFAULT NULL,

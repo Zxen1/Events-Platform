@@ -370,7 +370,7 @@ foreach ($byLoc as $locNum => $entries) {
     'custom_radio' => null,
     'public_email' => null,
     'phone_prefix' => null,
-    'phone' => null,
+    'public_phone' => null,
     'venue_name' => null,
     'address_line' => null,
     'city' => null,
@@ -421,17 +421,28 @@ foreach ($byLoc as $locNum => $entries) {
     // Map common fieldsets to map card columns.
     if ($key === 'title' && is_string($val)) $card['title'] = trim($val);
     if (($key === 'description' || $baseType === 'description') && is_string($val)) $card['description'] = trim($val);
-    if ($baseType === 'custom_text' && is_string($val)) $card['custom_text'] = trim($val);
-    if ($baseType === 'custom_textarea' && is_string($val)) $card['custom_textarea'] = trim($val);
-    if ($baseType === 'custom_dropdown' && is_string($val)) $card['custom_dropdown'] = trim($val);
-    if ($baseType === 'custom_radio' && is_string($val)) $card['custom_radio'] = trim($val);
+    
+    // Custom fieldsets: prepend label for database readability (e.g., "Favorite Pet: cat")
+    $fieldLabel = isset($e['name']) ? trim((string)$e['name']) : '';
+    if ($baseType === 'custom_text' && is_string($val)) {
+      $card['custom_text'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    }
+    if ($baseType === 'custom_textarea' && is_string($val)) {
+      $card['custom_textarea'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    }
+    if ($baseType === 'custom_dropdown' && is_string($val)) {
+      $card['custom_dropdown'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    }
+    if ($baseType === 'custom_radio' && is_string($val)) {
+      $card['custom_radio'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    }
     if ($baseType === 'public_email' && is_string($val)) $card['public_email'] = trim($val);
-    if ($baseType === 'phone' && is_array($val)) {
+    if ($baseType === 'public_phone' && is_array($val)) {
       $pfx = isset($val['phone_prefix']) ? trim((string)$val['phone_prefix']) : '';
-      $num = isset($val['phone']) ? trim((string)$val['phone']) : '';
+      $num = isset($val['public_phone']) ? trim((string)$val['public_phone']) : '';
       if ($pfx !== '' && $num !== '') {
         $card['phone_prefix'] = $pfx;
-        $card['phone'] = $num;
+        $card['public_phone'] = $num;
       }
     }
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
@@ -531,7 +542,7 @@ foreach ($byLoc as $locNum => $entries) {
   }
   if ($priceCount > 0) $card['price_summary'] = 'Prices: ' . $priceCount;
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
@@ -545,7 +556,7 @@ foreach ($byLoc as $locNum => $entries) {
   $customRadioParam = $card['custom_radio'];
   $emailParam = $card['public_email'];
   $phonePrefixParam = $card['phone_prefix'];
-  $phoneParam = $card['phone'];
+  $phoneParam = $card['public_phone'];
   $venueNameParam = $card['venue_name'];
   $addrLineParam = $card['address_line'];
   $cityParam = $card['city'];
@@ -566,7 +577,7 @@ foreach ($byLoc as $locNum => $entries) {
   // s (title)
   // s (description)
   // ssss (custom_*)
-  // sss (public_email, phone_prefix, phone)
+  // sss (public_email, phone_prefix, public_phone)
   // sss (venue_name, address_line, city)
   // dd (lat,lng)
   // ss (country_code, amenities)

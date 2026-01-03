@@ -763,7 +763,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(emailValidation.charCount);
                 break;
                 
-            case 'phone':
+            case 'public_phone':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var phoneRow = document.createElement('div');
                 phoneRow.className = 'fieldset-row';
@@ -3198,7 +3198,7 @@ const FieldsetBuilder = (function(){
                             }
                             return false;
                         }
-                        case 'phone': {
+                        case 'public_phone': {
                             var pfx = fieldset.querySelector('.fieldset-menu-button-input');
                             var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
                             if (pfx && String(pfx.value || '').trim()) return true;
@@ -3345,7 +3345,7 @@ const FieldsetBuilder = (function(){
                     var checked = fieldset.querySelector('input[type="radio"]:checked');
                     return !!checked;
                 }
-                case 'phone': {
+                case 'public_phone': {
                     var prefixInput = fieldset.querySelector('.fieldset-menu-button-input');
                     var phoneInput = fieldset.querySelector('input[type="tel"].fieldset-input');
                     if (!prefixInput || !phoneInput) return false;

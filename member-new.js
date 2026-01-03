@@ -3259,8 +3259,8 @@ const MemberModule = (function() {
                 var checked = el.querySelector('input[type="radio"]:checked');
                 return checked ? checked.value : '';
 
-            case 'phone':
-                // Store atomically (DB has phone_prefix + phone).
+            case 'public_phone':
+                // Store atomically (DB has phone_prefix + public_phone).
                 // No fallbacks: if either part is missing, return empty so required validation blocks submit.
                 try {
                     var pfxInput = el.querySelector('.fieldset-menu-button-input');
@@ -3268,7 +3268,7 @@ const MemberModule = (function() {
                     var pfx = pfxInput ? String(pfxInput.value || '').trim() : '';
                     var num = telInput ? String(telInput.value || '').trim() : '';
                     if (!pfx || !num) return '';
-                    return { phone_prefix: pfx, phone: num };
+                    return { phone_prefix: pfx, public_phone: num };
                 } catch (eP) {
                     return '';
                 }
