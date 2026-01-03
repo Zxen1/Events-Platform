@@ -3489,6 +3489,21 @@ const FieldsetBuilder = (function(){
         fieldset.addEventListener('change', updateCompleteFromDom, true);
         fieldset.addEventListener('blur', updateCompleteFromDom, true);
 
+        // Detect browser autofill via CSS animation and trigger validation.
+        // Browser autofill doesn't fire input events, so we listen for the animation.
+        fieldset.addEventListener('animationstart', function(e) {
+            if (e.animationName === 'fieldset-autofill-detected') {
+                var target = e.target;
+                if (target && target.tagName === 'INPUT') {
+                    // Small delay to ensure browser has populated the value
+                    setTimeout(function() {
+                        target.dispatchEvent(new Event('input', { bubbles: true }));
+                        target.dispatchEvent(new Event('change', { bubbles: true }));
+                    }, 20);
+                }
+            }
+        }, true);
+
         // Confirm-password depends on the password field above it, so it must revalidate when that field changes too.
         if (key === 'confirm-password' && container && typeof container.addEventListener === 'function') {
             try { container.addEventListener('input', updateCompleteFromDom, true); } catch (e3) {}

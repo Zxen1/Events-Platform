@@ -524,6 +524,18 @@ const MemberModule = (function() {
                 e.preventDefault();
                 handleLogin();
             });
+            // Detect browser autofill and trigger input events for validation
+            loginForm.addEventListener('animationstart', function(e) {
+                if (e.animationName === 'member-autofill-detected') {
+                    var target = e.target;
+                    if (target && target.tagName === 'INPUT') {
+                        setTimeout(function() {
+                            target.dispatchEvent(new Event('input', { bubbles: true }));
+                            target.dispatchEvent(new Event('change', { bubbles: true }));
+                        }, 20);
+                    }
+                }
+            }, true);
         }
         if (registerForm) {
             registerForm.addEventListener('submit', function(e) {
