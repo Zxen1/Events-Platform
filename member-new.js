@@ -2618,10 +2618,13 @@ const MemberModule = (function() {
                         v1HeaderText.textContent = name || (venueTypeName + ' 1');
                     }
                 }
-                // Poll for value changes (catches Google Places autofill)
-                setInterval(updateV1Header, 200);
                 venueInput.addEventListener('input', updateV1Header);
                 venueInput.addEventListener('change', updateV1Header);
+                // Use MutationObserver instead of setInterval to avoid memory leaks
+                var observer = new MutationObserver(function() { updateV1Header(); });
+                observer.observe(venueInput, { attributes: true, attributeFilter: ['value'] });
+                // Also check on focus out (catches Google Places autofill)
+                venueInput.addEventListener('blur', function() { setTimeout(updateV1Header, 50); });
             }
         }
         
@@ -2942,10 +2945,10 @@ const MemberModule = (function() {
                             headerText.textContent = name || defaultName;
                         }
                     }
-                    // Poll for value changes (catches Google Places autofill)
-                    setInterval(updateLocHeader, 200);
                     venueInput.addEventListener('input', updateLocHeader);
                     venueInput.addEventListener('change', updateLocHeader);
+                    // Use blur to catch Google Places autofill (no setInterval to avoid memory leaks)
+                    venueInput.addEventListener('blur', function() { setTimeout(updateLocHeader, 50); });
                 }
                 
                 // Render all repeat fieldsets in order

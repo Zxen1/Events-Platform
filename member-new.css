@@ -1762,15 +1762,14 @@
 }
 
 /* When container is active/focused - blue border, active fill background */
-.member-section-venue.member-section-container--active > .member-section-header,
-.member-section-venue.member-form-container--active > .member-section-header {
-  border-color: var(--website-blue-border, #3b82f5) !important;
-  background: var(--website-blue-active-fill, #3b82f599) !important;
+/* Higher specificity to override :hover and :not() rules */
+.member-section-container.member-section-venue.member-section-container--active > .member-section-header {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-active-fill, #3b82f599);
 }
 
-.member-section-venue.member-section-container--active > .member-venue-content,
-.member-section-venue.member-form-container--active > .member-venue-content {
-  border-color: var(--website-blue-border, #3b82f5) !important;
+.member-section-container.member-section-venue.member-section-container--active > .member-venue-content {
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .member-section-header-text {
