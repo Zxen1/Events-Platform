@@ -2589,28 +2589,43 @@ const MemberModule = (function() {
         // Store reference for additional locations to insert after
         window._memberVenue1Container = venue1Container;
         
-        // SECTION: Checkout Container (checkout + terms + submit)
+        // SECTION: Checkout Container (checkout + terms + submit + auth gate)
+        var checkoutContainer = document.createElement('div');
+        checkoutContainer.className = 'member-form-container member-section-container member-section-checkout';
+        
+        var cHeader = document.createElement('div');
+        cHeader.className = 'member-section-header';
+        var cHeaderText = document.createElement('span');
+        cHeaderText.className = 'member-section-header-text';
+        cHeaderText.textContent = 'Checkout';
+        cHeader.appendChild(cHeaderText);
+        checkoutContainer.appendChild(cHeader);
+        
+        // Move checkout wrapper if exists
         if (checkoutWrapper) {
-            var checkoutContainer = document.createElement('div');
-            checkoutContainer.className = 'member-form-container member-section-container member-section-checkout';
-            
-            var cHeader = document.createElement('div');
-            cHeader.className = 'member-section-header';
-            var cHeaderText = document.createElement('span');
-            cHeaderText.className = 'member-section-header-text';
-            cHeaderText.textContent = 'Checkout';
-            cHeader.appendChild(cHeaderText);
-            checkoutContainer.appendChild(cHeader);
-            
-            // Move checkout, terms, submit sections
             checkoutContainer.appendChild(checkoutWrapper);
-            formFields.querySelectorAll('.member-terms-section, .member-submit-section, .member-submit-wrapper').forEach(function(el) {
-                checkoutContainer.appendChild(el);
-            });
-            
-            // Insert at end
-            tabPanel.appendChild(checkoutContainer);
         }
+        
+        // Move terms agreement
+        var termsEl = formFields.querySelector('.member-terms-agreement');
+        if (termsEl) {
+            checkoutContainer.appendChild(termsEl);
+        }
+        
+        // Move inline auth gate (login/register form in Create Post)
+        var authGate = formFields.querySelector('.member-auth');
+        if (authGate) {
+            checkoutContainer.appendChild(authGate);
+        }
+        
+        // Move submit buttons
+        var actionsEl = formFields.querySelector('.member-create-actions');
+        if (actionsEl) {
+            checkoutContainer.appendChild(actionsEl);
+        }
+        
+        // Insert at end of tab panel
+        tabPanel.appendChild(checkoutContainer);
         
         // Blue border focus tracking
         function setupContainerFocus(container) {
@@ -2691,8 +2706,8 @@ const MemberModule = (function() {
                 locationContainer.appendChild(headerRow);
                 
                 // Inner content section
-                var locationSection = document.createElement('div');
-                locationSection.className = 'member-additional-location';
+            var locationSection = document.createElement('div');
+            locationSection.className = 'member-additional-location';
                 locationSection.dataset.locationNumber = locationNum;
                 
                 // Delete button handler
@@ -2811,24 +2826,24 @@ const MemberModule = (function() {
                 }
                 
                 // First, render the location fieldset (venue/city/address)
-                var locationFieldData = {};
-                for (var prop in locationFieldsetData) {
-                    if (locationFieldsetData.hasOwnProperty(prop)) {
-                        locationFieldData[prop] = locationFieldsetData[prop];
-                    }
+            var locationFieldData = {};
+            for (var prop in locationFieldsetData) {
+                if (locationFieldsetData.hasOwnProperty(prop)) {
+                    locationFieldData[prop] = locationFieldsetData[prop];
                 }
+            }
                 locationFieldData.name = defaultName;
-                
-                var locationFieldsetClone = FieldsetBuilder.buildFieldset(locationFieldData, {
-                    idPrefix: 'memberCreate',
-                    fieldIndex: 0,
+            
+            var locationFieldsetClone = FieldsetBuilder.buildFieldset(locationFieldData, {
+                idPrefix: 'memberCreate',
+                fieldIndex: 0,
                     locationNumber: locationNum,
-                    container: locationSection,
-                    defaultCurrency: getDefaultCurrencyForForms()
-                });
-                
-                locationSection.appendChild(locationFieldsetClone);
-                
+                container: locationSection,
+                defaultCurrency: getDefaultCurrencyForForms()
+            });
+            
+            locationSection.appendChild(locationFieldsetClone);
+            
                 // Listen for venue name changes to update header
                 var venueInput = locationFieldsetClone.querySelector('input[type="text"]');
                 if (venueInput) {
@@ -2840,50 +2855,50 @@ const MemberModule = (function() {
                 
                 // Render all repeat fieldsets in order
                 combinedFieldsets.forEach(function(fieldData, fieldIndex) {
-                    var key = (fieldData && (fieldData.fieldsetKey || fieldData.key || fieldData.type)) ? String(fieldData.fieldsetKey || fieldData.key || fieldData.type).toLowerCase() : '';
-                    if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
-                        return;
-                    }
+                var key = (fieldData && (fieldData.fieldsetKey || fieldData.key || fieldData.type)) ? String(fieldData.fieldsetKey || fieldData.key || fieldData.type).toLowerCase() : '';
+                if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
+                    return;
+                }
                     
                     var isOptionalOverride = !!locationRepeatOnlyKeys[key];
                     
-                    var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
-                        idPrefix: 'memberCreate',
-                        fieldIndex: fieldIndex,
+                var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
+                    idPrefix: 'memberCreate',
+                    fieldIndex: fieldIndex,
                         locationNumber: locationNum,
-                        container: locationSection,
-                        defaultCurrency: getDefaultCurrencyForForms()
-                    });
-                    
+                    container: locationSection,
+                    defaultCurrency: getDefaultCurrencyForForms()
+                });
+                
                     // Mark optional override fieldsets
                     if (isOptionalOverride) {
                         fieldset.dataset.isOverride = 'true';
                         fieldset.dataset.fieldsetKey = key;
                         fieldset.style.display = 'none'; // Hidden by default
                     }
-                    
-                    locationSection.appendChild(fieldset);
+                
+                locationSection.appendChild(fieldset);
 
                     // Number fieldsets by location number
-                    var labelTextEl = fieldset.querySelector('.fieldset-label-text');
-                    if (labelTextEl) {
-                        if (!fieldset.dataset.baseLabel) {
-                            fieldset.dataset.baseLabel = (labelTextEl.textContent || '').trim();
-                        }
-                        var base = fieldset.dataset.baseLabel || '';
-                        if (base) {
-                            labelTextEl.textContent = base + ' ' + locationNum;
-                        }
+                var labelTextEl = fieldset.querySelector('.fieldset-label-text');
+                if (labelTextEl) {
+                    if (!fieldset.dataset.baseLabel) {
+                        fieldset.dataset.baseLabel = (labelTextEl.textContent || '').trim();
                     }
-                    
+                    var base = fieldset.dataset.baseLabel || '';
+                    if (base) {
+                            labelTextEl.textContent = base + ' ' + locationNum;
+                    }
+                }
+                
                     // Handle autofill behavior
-                    var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
+                var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
                     if (isOptionalOverride) {
                         // Autofill vs Placeholder for override fields
-                        if (isAutofill) {
+                if (isAutofill) {
                             fieldset.dataset.autofillMode = 'value';
                             (function(fs, k) {
-                                setTimeout(function() {
+                    setTimeout(function() {
                                     copyLocation1Values(fs, k);
                                 }, 150);
                             })(fieldset, key);
@@ -2902,7 +2917,7 @@ const MemberModule = (function() {
                         (function(fs, fd) {
                             setTimeout(function() {
                                 copyFieldsetValues(fs, fd, 1, locationNum);
-                            }, 100);
+                    }, 100);
                         })(fieldset, fieldData);
                     }
                 });
@@ -4918,8 +4933,19 @@ const MemberModule = (function() {
         registerForm.appendChild(registerPanel);
         wrap.appendChild(registerForm);
 
-        // Insert at bottom of the create form wrapper (after fields)
+        // Insert into checkout container (or fallback to formWrapper)
+        var checkoutSection = document.querySelector('.member-section-checkout');
+        if (checkoutSection) {
+            // Insert before the submit buttons (member-create-actions)
+            var actionsEl = checkoutSection.querySelector('.member-create-actions');
+            if (actionsEl) {
+                checkoutSection.insertBefore(wrap, actionsEl);
+            } else {
+                checkoutSection.appendChild(wrap);
+            }
+        } else {
         formWrapper.appendChild(wrap);
+        }
 
         // Wire refs
         createAuthWrapper = wrap;
