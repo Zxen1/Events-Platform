@@ -2342,8 +2342,20 @@ const MemberModule = (function() {
                         // Explanatory message (shown when quantity > 1)
                         var locationExplainer = document.createElement('p');
                         locationExplainer.className = 'member-location-explainer';
-                        locationExplainer.textContent = 'Each location creates a separate listing. Fields not customised will match Location 1.';
                         locationExplainer.style.display = 'none';
+                        
+                        // Fetch message from database (no hardcoding)
+                        if (typeof window.getMessage === 'function') {
+                            window.getMessage('msg_post_location_explainer', {}, false).then(function(msg) {
+                                if (msg) {
+                                    // Replace \n with <br> for line breaks
+                                    locationExplainer.innerHTML = msg.replace(/\n/g, '<br>');
+                                }
+                            }).catch(function() {
+                                // No fallback - message must come from database
+                            });
+                        }
+                        
                         if (formFields) {
                             formFields.appendChild(locationExplainer);
                         }
