@@ -1109,11 +1109,16 @@
   color: var(--button-text);
 }
 
-/* Main login submit button (non-tab) should be WebsiteBlue by default */
+/* Main login submit button - match logout button styling */
 .member-auth-submit[data-action="login"] {
   background: var(--website-blue-hover-fill, #3b82f5);
   border-color: var(--website-blue-border, #3b82f5);
   color: #ffffff;
+  width: auto;
+  min-width: 0;
+  padding: 0 10px;
+  white-space: nowrap;
+  align-self: flex-start;
 }
 
 .member-auth-tab:focus-visible {

@@ -4041,6 +4041,22 @@ const MemberModule = (function() {
         return !incomplete;
     }
 
+    function getRegisterMissingFieldsetNames() {
+        var out = [];
+        if (!registerFieldsetsContainer) return out;
+        var required = registerFieldsetsContainer.querySelectorAll('.fieldset[data-required="true"]');
+        if (!required || required.length === 0) return out;
+        for (var i = 0; i < required.length; i++) {
+            var fs = required[i];
+            if (!fs || !fs.dataset) continue;
+            if (String(fs.dataset.complete || '') !== 'true') {
+                var nm = String(fs.dataset.fieldsetName || fs.dataset.fieldsetKey || '').trim();
+                if (nm) out.push(nm);
+            }
+        }
+        return out;
+    }
+
     function updateRegisterSubmitButtonState() {
         try {
             if (!registerPanel) return;
@@ -4048,6 +4064,8 @@ const MemberModule = (function() {
             if (!btn) return;
             var complete = isRegisterFormComplete();
             btn.disabled = !complete;
+            // Attach missing popover on first call
+            attachMissingPopoverToButton(btn, getRegisterMissingFieldsetNames);
         } catch (e) {
             // ignore
         }
