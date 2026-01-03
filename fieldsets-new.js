@@ -855,12 +855,14 @@ const FieldsetBuilder = (function(){
                 
             case 'images':
                 // BUNNY CDN IMAGE FLOW:
-                // 1. User selects & crops image here → cropRect stored as {x1,y1,x2,y2}
-                // 2. On submit: ORIGINAL image uploaded to Bunny, crop saved to post_media.settings_json
-                // 3. On display: get-posts.php appends ?crop=x1,y1,x2,y2 to URL
-                // 4. Bunny Optimizer crops on first request, caches globally, instant thereafter
-                // 5. Each class+crop combo is a separate cache entry (thumbnail vs full = 2 cached versions)
-                // See "agent rules.md" for full documentation.
+                // 1. User crops here → cropRect {x1,y1,x2,y2} stored in hidden input (images_meta)
+                // 2. On submit: ORIGINAL image uploaded to Bunny unchanged, crop coords saved to post_media.settings_json
+                // 3. On display: get-posts.php builds URL with ?crop=x1,y1,x2,y2 appended
+                // 4. Bunny Optimizer applies crop on first request, caches result at edge nodes globally
+                // 5. Subsequent requests: instant from cache. Each unique URL cached separately.
+                // 6. Classes (thumbnail, minithumb, etc.) = Bunny presets for width/height/quality
+                // 7. Explicit ?crop= in URL overrides any class "gravity" setting
+                // 8. No crop data = no ?crop= param, Bunny uses class defaults or serves original
                 
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
