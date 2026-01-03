@@ -2486,22 +2486,19 @@ const MemberModule = (function() {
         // renderAdditionalLocations called
         locationRepeatOnlyFieldsets = locationRepeatOnlyFieldsets || [];
         
-        // Remove existing additional locations
-        var existingLocations = formFields.querySelectorAll('.member-additional-location');
-        existingLocations.forEach(function(el) {
+        // Remove existing additional location containers (they're siblings of formWrapper now)
+        var existingContainers = document.querySelectorAll('.member-additional-location-container');
+        existingContainers.forEach(function(el) {
             el.remove();
         });
         
         // Don't render if quantity is 1 or less
         if (quantity <= 1) {
-            // Quantity is 1 or less, not rendering additional locations
             return;
         }
         
-        // Find insertion point - before checkout options section
-        var checkoutSection = formFields.querySelector('.member-checkout-wrapper');
-        if (!checkoutSection) {
-            console.warn('[Member] Checkout section not found, cannot render additional locations');
+        if (!formWrapper) {
+            console.warn('[Member] formWrapper not found, cannot render additional locations');
             return;
         }
         
@@ -2510,9 +2507,17 @@ const MemberModule = (function() {
             return;
         }
         
-        // Render locations 2, 3, 4, etc.
+        // Render locations 2, 3, 4, etc. as separate containers (siblings of formWrapper)
+        var insertAfter = formWrapper;
+        
         for (var i = 2; i <= quantity; i++) {
             (function(locationNum) {
+                // Create outer container (same level as formWrapper)
+                var locationContainer = document.createElement('div');
+                locationContainer.className = 'member-form-container member-additional-location-container';
+                locationContainer.dataset.locationNumber = locationNum;
+                
+                // Inner section
                 var locationSection = document.createElement('div');
                 locationSection.className = 'member-additional-location';
                 locationSection.dataset.locationNumber = locationNum;
@@ -2542,7 +2547,7 @@ const MemberModule = (function() {
                             focusCancel: true
                         }).then(function(confirmed) {
                             if (confirmed) {
-                                locationSection.remove();
+                                locationContainer.remove();
                                 if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
                                     window._memberLocationQuantity--;
                                     var qtyDisplay = formFields.querySelector('.member-location-quantity-display');
@@ -2808,24 +2813,30 @@ const MemberModule = (function() {
                     return null;
                 }
                 
-                // Insert before checkout options
-                formFields.insertBefore(locationSection, checkoutSection);
+                // Add section to container
+                locationContainer.appendChild(locationSection);
+                
+                // Insert container as sibling after formWrapper (or after previous location container)
+                insertAfter.parentNode.insertBefore(locationContainer, insertAfter.nextSibling);
+                insertAfter = locationContainer;
             })(i);
         }
-        
-        // Finished rendering additional locations
     }
     
     // Renumber remaining location sections after deletion
     function renumberLocations() {
-        if (!formFields) return;
-        var sections = formFields.querySelectorAll('.member-additional-location');
-        sections.forEach(function(section, index) {
+        var containers = document.querySelectorAll('.member-additional-location-container');
+        containers.forEach(function(container, index) {
             var newNum = index + 2; // Locations start at 2
-            section.dataset.locationNumber = newNum;
+            container.dataset.locationNumber = newNum;
+            
+            var section = container.querySelector('.member-additional-location');
+            if (section) {
+                section.dataset.locationNumber = newNum;
+            }
             
             // Update header text
-            var header = section.querySelector('.member-additional-location-header');
+            var header = container.querySelector('.member-additional-location-header');
             if (header) {
                 var text = header.textContent || '';
                 var match = text.match(/^(\w+)\s+\d+$/);
@@ -2961,10 +2972,10 @@ const MemberModule = (function() {
             var mainIso = getMaxSelectedIso(mainSessions);
             result.push(mainIso ? daysToIso(mainIso) : 0);
 
-            // Locations 2+ are inside .member-additional-location sections
+            // Locations 2+ are in separate containers (siblings of formWrapper)
             for (var i = 2; i <= qty; i++) {
-                var section = formFields.querySelector('.member-additional-location[data-location-number="' + i + '"]');
-                var fs = section ? section.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
+                var container = document.querySelector('.member-additional-location-container[data-location-number="' + i + '"]');
+                var fs = container ? container.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
                 var iso = getMaxSelectedIso(fs);
                 result.push(iso ? daysToIso(iso) : 0);
             }

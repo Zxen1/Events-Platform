@@ -1713,11 +1713,13 @@
    ADDITIONAL LOCATIONS
    ============================================================================ */
 
-.member-additional-location {
+/* Additional location containers - siblings of main form */
+.member-additional-location-container {
   margin-top: 20px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
+}
+
+.member-additional-location {
+  /* Content inside the container */
 }
 
 .member-additional-location-header,
