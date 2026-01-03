@@ -1805,8 +1805,9 @@
 /* Location explainer message */
 .member-location-explainer {
   margin: 4px 0 8px;
-  padding: 8px 0;
+  padding: 8px 12px;
   background: transparent;
+  border-radius: 4px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
