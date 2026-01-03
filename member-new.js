@@ -3449,13 +3449,13 @@ const MemberModule = (function() {
                 // New-site amenities are rendered as rows with Yes/No radios (no dataset payload).
                 // Return a stable array of answers so required validation works and backend can consume it.
                 try {
-                    var rows = el.querySelectorAll('.fieldset-amenities-container-row');
+                    var rows = el.querySelectorAll('.fieldset-amenities-row');
                     if (!rows || rows.length === 0) return [];
                     var out = [];
                     for (var i = 0; i < rows.length; i++) {
                         var row = rows[i];
                         if (!row) return [];
-                        var nameEl = row.querySelector('.fieldset-amenities-field-label');
+                        var nameEl = row.querySelector('.fieldset-amenities-row-text');
                         var amenityName = nameEl ? String(nameEl.textContent || '').trim() : '';
                         var checked = row.querySelector('input[type="radio"]:checked');
                         if (!checked) return []; // incomplete

@@ -1074,39 +1074,34 @@
     gap: 6px;
 }
 
-.fieldset-amenities-container-row {
+.fieldset-amenities-row {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 6px 0;
 }
 
-.fieldset-amenities-container-row-icon {
+.fieldset-amenities-row-image {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
-}
-
-.fieldset-amenities-field-icon {
-    width: 100%;
-    height: 100%;
     object-fit: contain;
     filter: brightness(0) invert(1);
 }
 
-.fieldset-amenities-field-label {
+.fieldset-amenities-row-text {
     flex: 1;
     font-size: 13px;
     color: #fff;
 }
 
-.fieldset-amenities-field-options {
+.fieldset-amenities-row-options {
     display: flex;
     gap: 16px;
     flex-shrink: 0;
 }
 
-.fieldset-amenities-field-option {
+.fieldset-amenities-option {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1120,9 +1115,13 @@
     border-radius: 5px;
 }
 
-.fieldset-amenities-field-option-input {
+.fieldset-amenities-option-radio {
     cursor: pointer;
     accent-color: var(--website-blue-border, #3b82f5);
+}
+
+.fieldset-amenities-option-text {
+    /* Yes/No text styling */
 }
 
 /* Appearance - Google Places */
@@ -1335,15 +1334,15 @@
 }
 
 /* States - Amenities */
-.fieldset-amenities-field-icon--selected-yes {
+.fieldset-amenities-row-image--yes {
     filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
 }
 
-.fieldset-amenities-field-icon--selected-no {
+.fieldset-amenities-row-image--no {
     filter: brightness(0) invert(0.4);
 }
 
-.fieldset-amenities-field-label--selected-no {
+.fieldset-amenities-row-text--no {
     color: #666;
 }
 

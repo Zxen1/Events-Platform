@@ -1328,12 +1328,10 @@ const FieldsetBuilder = (function(){
                     var filename = item.filename || ''; // Icon filename (e.g., "parking.svg")
                     
                     var row = document.createElement('div');
-                    row.className = 'fieldset-amenities-container-row';
+                    row.className = 'fieldset-amenities-row';
                     row.title = description; // Tooltip on hover
                     
-                    // Icon
-                    var iconEl = document.createElement('div');
-                    iconEl.className = 'fieldset-amenities-container-row-icon';
+                    // Icon (no wrapper, direct img element)
                     var amenityUrl = '';
                     if (filename) {
                         // Remove .svg extension if present (getImageUrl may add it, or filename may already include it)
@@ -1341,48 +1339,47 @@ const FieldsetBuilder = (function(){
                         amenityUrl = window.App.getImageUrl('amenities', cleanFilename + '.svg');
                     }
                     var iconImg = document.createElement('img');
-                    iconImg.className = 'fieldset-amenities-field-icon';
+                    iconImg.className = 'fieldset-amenities-row-image';
                     iconImg.src = amenityUrl;
                     iconImg.alt = amenityName;
-                    iconEl.appendChild(iconImg);
-                    row.appendChild(iconEl);
+                    row.appendChild(iconImg);
                     
                     // Name
                     var nameEl = document.createElement('div');
-                    nameEl.className = 'fieldset-amenities-field-label';
+                    nameEl.className = 'fieldset-amenities-row-text';
                     nameEl.textContent = amenityName;
                     row.appendChild(nameEl);
                     
                     // Yes/No options
                     var optionsEl = document.createElement('div');
-                    optionsEl.className = 'fieldset-amenities-field-options';
+                    optionsEl.className = 'fieldset-amenities-row-options';
                     
                     // Use value as unique identifier for radio button names
                     var radioName = 'amenity-' + (item.value || i).replace(/[^a-z0-9]/gi, '-').toLowerCase();
                     
                     var yesLabel = document.createElement('label');
-                    yesLabel.className = 'fieldset-amenities-field-option';
+                    yesLabel.className = 'fieldset-amenities-option';
                     var yesRadio = document.createElement('input');
                     yesRadio.type = 'radio';
                     yesRadio.name = radioName;
                     yesRadio.value = '1';
-                    yesRadio.className = 'fieldset-amenities-field-option-input';
+                    yesRadio.className = 'fieldset-amenities-option-radio';
                     var yesText = document.createElement('span');
-                    yesText.className = 'fieldset-amenities-field-option-label';
+                    yesText.className = 'fieldset-amenities-option-text';
                     yesText.textContent = 'Yes';
                     yesLabel.appendChild(yesRadio);
                     yesLabel.appendChild(yesText);
                     optionsEl.appendChild(yesLabel);
                     
                     var noLabel = document.createElement('label');
-                    noLabel.className = 'fieldset-amenities-field-option';
+                    noLabel.className = 'fieldset-amenities-option';
                     var noRadio = document.createElement('input');
                     noRadio.type = 'radio';
                     noRadio.name = radioName;
                     noRadio.value = '0';
-                    noRadio.className = 'fieldset-amenities-field-option-input';
+                    noRadio.className = 'fieldset-amenities-option-radio';
                     var noText = document.createElement('span');
-                    noText.className = 'fieldset-amenities-field-option-label';
+                    noText.className = 'fieldset-amenities-option-text';
                     noText.textContent = 'No';
                     noLabel.appendChild(noRadio);
                     noLabel.appendChild(noText);
@@ -1390,9 +1387,9 @@ const FieldsetBuilder = (function(){
                     
                     // Add change listeners to update row styling
                     function setAmenityState(isYes) {
-                        nameEl.classList.toggle('fieldset-amenities-field-label--selected-no', !isYes);
-                        iconImg.classList.toggle('fieldset-amenities-field-icon--selected-yes', !!isYes);
-                        iconImg.classList.toggle('fieldset-amenities-field-icon--selected-no', !isYes);
+                        nameEl.classList.toggle('fieldset-amenities-row-text--no', !isYes);
+                        iconImg.classList.toggle('fieldset-amenities-row-image--yes', !!isYes);
+                        iconImg.classList.toggle('fieldset-amenities-row-image--no', !isYes);
                     }
                     
                     yesRadio.addEventListener('change', function() {
@@ -3175,7 +3172,7 @@ const FieldsetBuilder = (function(){
                             }
                         }
                         case 'amenities':
-                            return !!fieldset.querySelector('.fieldset-amenities-container-row input[type="radio"]:checked');
+                            return !!fieldset.querySelector('.fieldset-amenities-row input[type="radio"]:checked');
                         case 'session_pricing': {
                             var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                             if (selected2 && selected2.length > 0) return true;
@@ -3445,7 +3442,7 @@ const FieldsetBuilder = (function(){
                 }
                 case 'amenities': {
                     // Required amenities: every row needs Yes/No selected.
-                    var rows = fieldset.querySelectorAll('.fieldset-amenities-container-row');
+                    var rows = fieldset.querySelectorAll('.fieldset-amenities-row');
                     if (!rows || rows.length === 0) return false;
                     for (var i = 0; i < rows.length; i++) {
                         if (!rows[i].querySelector('input[type="radio"]:checked')) return false;
