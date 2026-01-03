@@ -2327,8 +2327,8 @@ const MemberModule = (function() {
                         plusBtn.innerHTML = icons.plus;
                         plusBtn.setAttribute('aria-label', 'Increase location quantity');
                         
-                        quantityControls.appendChild(minusBtn);
                         quantityControls.appendChild(quantityDisplay);
+                        quantityControls.appendChild(minusBtn);
                         quantityControls.appendChild(plusBtn);
                         
                         quantityRow.appendChild(quantityLabel);
@@ -2589,22 +2589,14 @@ const MemberModule = (function() {
                     
                     if (window.SwitchComponent && typeof SwitchComponent.create === 'function') {
                         optionsSwitch = SwitchComponent.create({
+                            size: 'small',
                             checked: false,
+                            ariaLabel: 'Advanced options',
                             onChange: function(isOn) {
                                 handleAdvancedSwitch(isOn, locationSection);
                             }
                         });
                         switchWrap.appendChild(optionsSwitch.element);
-                    } else {
-                        // Fallback checkbox
-                        var switchInput = document.createElement('input');
-                        switchInput.type = 'checkbox';
-                        switchInput.className = 'member-location-options-checkbox';
-                        switchInput.addEventListener('change', function() {
-                            handleAdvancedSwitch(switchInput.checked, locationSection);
-                        });
-                        optionsSwitch = { element: switchInput, setChecked: function(v) { switchInput.checked = v; } };
-                        switchWrap.appendChild(switchInput);
                     }
                     
                     var switchLabel = document.createElement('span');

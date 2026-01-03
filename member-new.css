@@ -1667,7 +1667,7 @@
 .member-location-quantity-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .member-location-quantity-btn {
@@ -1702,6 +1702,7 @@
 
 .member-location-quantity-display {
   min-width: 24px;
+  margin-right: 16px;
   text-align: center;
   font-size: 16px;
   font-weight: 600;
@@ -1713,9 +1714,10 @@
    ============================================================================ */
 
 .member-additional-location {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
 }
 
 .member-additional-location-header,
@@ -1740,25 +1742,22 @@
 
 .member-location-delete-btn {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.6);
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
   width: 36px;
   height: 36px;
   min-width: 36px;
   min-height: 36px;
-  border-radius: 50%;
-  font-size: 20px;
+  font-size: 24px;
   line-height: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .member-location-delete-btn:hover {
-  background: rgba(231, 76, 60, 0.2);
-  border-color: #e74c3c;
   color: #e74c3c;
 }
 
