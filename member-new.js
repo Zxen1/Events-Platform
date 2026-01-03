@@ -2532,19 +2532,25 @@ const MemberModule = (function() {
                 deleteBtn.innerHTML = '&times;';
                 deleteBtn.setAttribute('aria-label', 'Delete ' + locationName);
                 deleteBtn.addEventListener('click', function() {
-                    // Confirm deletion
-                    if (window.confirm('Delete ' + locationName + '? This cannot be undone.')) {
-                        // Remove this location section
-                        locationSection.remove();
-                        // Decrement quantity and update UI
-                        if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
-                            window._memberLocationQuantity--;
-                            // Update quantity display
-                            var qtyDisplay = formFields.querySelector('.member-location-quantity-display');
-                            if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
-                            // Renumber remaining locations
-                            renumberLocations();
-                        }
+                    if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                        ConfirmDialogComponent.show({
+                            titleText: 'Delete ' + locationName,
+                            messageText: 'This cannot be undone.',
+                            confirmLabel: 'Delete',
+                            cancelLabel: 'Cancel',
+                            confirmClass: 'danger',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                locationSection.remove();
+                                if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
+                                    window._memberLocationQuantity--;
+                                    var qtyDisplay = formFields.querySelector('.member-location-quantity-display');
+                                    if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
+                                    renumberLocations();
+                                }
+                            }
+                        });
                     }
                 });
                 
