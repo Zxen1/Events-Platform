@@ -1720,7 +1720,7 @@
 
 .member-additional-location-header,
 .member-first-location-header {
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 18px;
   font-weight: 600;
   color: #fff;
@@ -1728,6 +1728,51 @@
 
 .member-first-location-header {
   margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+/* Location header row with delete button */
+.member-additional-location-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.member-location-delete-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.6);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-location-delete-btn:hover {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+/* Location explainer message */
+.member-location-explainer {
+  margin: 12px 0 20px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0 4px 4px 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
 }
 
 /* Location options switch row */
@@ -1790,10 +1835,22 @@
   margin-bottom: 16px;
 }
 
-/* Override fields show inherited value as placeholder */
+/* Placeholder mode: fields show grey placeholder from location 1 */
+.member-location-override--placeholder .fieldset-input,
+.member-location-override--placeholder .fieldset-textarea {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.member-location-override--placeholder .fieldset-input:focus,
+.member-location-override--placeholder .fieldset-textarea:focus,
+.member-location-override--placeholder .fieldset-input:not(:placeholder-shown),
+.member-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
+  color: #fff;
+}
+
 .member-location-overrides .fieldset-input::placeholder,
 .member-location-overrides .fieldset-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
   font-style: italic;
 }
 

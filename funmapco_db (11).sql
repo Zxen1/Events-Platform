@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 07:24 PM
+-- Generation Time: Jan 03, 2026 at 08:53 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -197,7 +197,8 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `container_ke
 (334, 'Password Requires Lowercase', 'msg_auth_password_require_lowercase', 'msg_member', 'Password must contain a lowercase letter (a-z).', 'Password missing lowercase', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
 (335, 'Password Requires Uppercase', 'msg_auth_password_require_uppercase', 'msg_member', 'Password must contain an uppercase letter (A-Z).', 'Password missing uppercase', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
 (336, 'Password Requires Number', 'msg_auth_password_require_number', 'msg_member', 'Password must contain a number (0-9).', 'Password missing number', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
-(337, 'Password Requires Symbol', 'msg_auth_password_require_symbol', 'msg_member', 'Password must contain a special character (!@#$%^&*).', 'Password missing symbol', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21');
+(337, 'Password Requires Symbol', 'msg_auth_password_require_symbol', 'msg_member', 'Password must contain a special character (!@#$%^&*).', 'Password missing symbol', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
+(259, 'Location Explainer Message', 'msg_post_location_explainer', 'msg_member', 'You can display your post at up to 10 locations around the world. \n\nYour second location onwards is charged at a reduced rate. \n\nCertain fields are able to be modified for each location. ', 'Shown when user selects multiple locations in post creation', 'label', 'post', 0, NULL, 1, 1, 0, 3000, '2026-01-03 09:47:18', '2026-01-03 09:53:28');
 
 -- --------------------------------------------------------
 
