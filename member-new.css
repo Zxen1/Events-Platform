@@ -1655,8 +1655,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 8px 0 12px;
-  padding: 8px 0;
+  margin: 0 0 8px;
+  padding: 0;
 }
 
 .member-location-quantity-label {
@@ -1713,22 +1713,21 @@
    ============================================================================ */
 
 .member-additional-location {
-  margin-top: 32px;
-  padding-top: 24px;
+  margin-top: 16px;
+  padding-top: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .member-additional-location-header,
 .member-first-location-header {
-  margin: 0;
+  margin: 0 0 8px;
   font-size: 18px;
   font-weight: 600;
   color: #fff;
 }
 
 .member-first-location-header {
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: 12px;
 }
 
 /* Location header row with delete button */
@@ -1736,7 +1735,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .member-location-delete-btn {
@@ -1765,11 +1764,10 @@
 
 /* Location explainer message */
 .member-location-explainer {
-  margin: 12px 0 20px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.05);
-  border-left: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 0 4px 4px 0;
+  margin: 4px 0 8px;
+  padding: 0;
+  background: transparent;
+  border: none;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
@@ -1779,8 +1777,8 @@
 .member-location-options-row {
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 8px 0;
+  margin-bottom: 8px;
+  padding: 0;
 }
 
 .member-location-options-switch {
@@ -1830,9 +1828,9 @@
 /* Override fieldsets container */
 .member-location-overrides {
   border-left: 2px solid rgba(255, 255, 255, 0.15);
-  padding-left: 16px;
-  margin-top: 8px;
-  margin-bottom: 16px;
+  padding-left: 12px;
+  margin-top: 4px;
+  margin-bottom: 8px;
 }
 
 /* Placeholder mode: fields show grey placeholder from location 1 */
