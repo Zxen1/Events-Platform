@@ -854,6 +854,14 @@ const FieldsetBuilder = (function(){
                 break;
                 
             case 'images':
+                // BUNNY CDN IMAGE FLOW:
+                // 1. User selects & crops image here → cropRect stored as {x1,y1,x2,y2}
+                // 2. On submit: ORIGINAL image uploaded to Bunny, crop saved to post_media.settings_json
+                // 3. On display: get-posts.php appends ?crop=x1,y1,x2,y2 to URL
+                // 4. Bunny Optimizer crops on first request, caches globally, instant thereafter
+                // 5. Each class+crop combo is a separate cache entry (thumbnail vs full = 2 cached versions)
+                // See "agent rules.md" for full documentation.
+                
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
                 var imagesContainer = document.createElement('div');

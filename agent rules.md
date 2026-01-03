@@ -301,6 +301,79 @@ $now = new DateTime('now', $utcMinus12);
 
 ---
 
+## ⚠️ CRITICAL: IMAGE STORAGE & BUNNY CDN SYSTEM ⚠️
+
+**Purpose:** All post images are stored on Bunny CDN with dynamic cropping via URL parameters.
+
+### How It Works
+
+1. **Upload Flow:**
+   - User selects image in browser → user crops using PostCropperComponent
+   - Crop coordinates stored in browser as `cropRect: {x1, y1, x2, y2}`
+   - On submit: **original full image** uploaded to Bunny Storage (no cropping applied)
+   - Crop coordinates saved to `post_media.settings_json` as JSON
+
+2. **Display Flow:**
+   - `get-posts.php` reads `file_url` and `settings_json` from database
+   - Appends `?crop=x1,y1,x2,y2` to the URL before sending to frontend
+   - Bunny Optimizer applies crop on first request, then caches result globally
+
+3. **Caching Behavior:**
+   - First request: Bunny processes crop (~100-500ms), caches result at edge nodes
+   - Subsequent requests: Instant delivery from cache worldwide
+   - Each unique URL is cached separately (`?class=thumbnail&crop=...` ≠ `?class=full&crop=...`)
+
+### Database Structure
+
+**`post_media` table:**
+- `file_url`: Full URL to original image (e.g., `https://cdn.funmap.com/post-images/2025-01/123-abc456.jpg`)
+- `settings_json`: JSON with crop and other settings (e.g., `{"crop":{"x1":100,"y1":50,"x2":400,"y2":350}}`)
+- `deleted_at`: Soft delete timestamp (NULL = active)
+
+**`admin_settings` keys:**
+- `storage_api_key`: Bunny Storage Zone password for API uploads
+- `storage_zone_name`: Bunny Storage Zone name (e.g., "funmap")
+- `folder_post_images`: Base CDN URL for post images
+
+### Bunny Dashboard Configuration
+
+**Required settings (in Bunny CDN dashboard):**
+- Bunny Optimizer: **Enabled**
+- Dynamic image API: **Enabled** (makes `?crop=` parameter work)
+- WebP compression: Enabled (automatic format optimization)
+
+**Image Classes (presets):**
+- Classes define default sizing (width, height, aspect ratio)
+- "Crop Gravity: Center" in classes is fallback only
+- Explicit `?crop=x1,y1,x2,y2` in URL **overrides** class gravity settings
+
+### URL Parameter Hierarchy
+
+When combining classes and explicit params:
+```
+image.jpg?class=thumbnail&crop=100,50,400,350
+```
+- Class provides: width, height, quality, format
+- Explicit param overrides: crop coordinates
+
+### Critical Rules
+
+1. **Never store cropped images** — always upload originals, crop via URL params
+2. **Crop data lives in `settings_json`** — not `backup_json` (that's for reversion system)
+3. **URLs are built at display time** — `get-posts.php` constructs full URLs with crop params
+4. **Cache purging is significant** — clears all processed images, requires re-processing on first view
+5. **Soft deletes via `deleted_at`** — queries must filter `WHERE deleted_at IS NULL`
+
+### Files Involved
+
+- `fieldsets-new.js`: PostCropperComponent, stores crop in hidden `images_meta` input
+- `member-new.js`: Sends `images_meta` in form submission
+- `add-post.php`: Uploads to Bunny, saves crop to `settings_json`
+- `get-posts.php`: Reads `settings_json`, appends crop params to URLs
+- `components-new.js`: PostCropperComponent UI
+
+---
+
 ## BUTTON ANCHOR COMPONENTS (BOTTOM + TOP) — HOW TO USE
 
 **Purpose:** Keep the clicked control stationary when accordion/panels auto-close above or below it (no “yank”, no “flick”, no snapping).
