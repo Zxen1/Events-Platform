@@ -2522,11 +2522,6 @@ const IconPickerComponent = (function(){
 
 
 /* ============================================================================
-   SYSTEM IMAGE PICKER
-   Uses system_images folder path from admin settings
-   ============================================================================ */
-
-/* ============================================================================
    MAP CONTROL ROW
    
    Plain HTML controls - fully styled via CSS:
