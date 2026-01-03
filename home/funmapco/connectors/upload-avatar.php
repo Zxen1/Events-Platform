@@ -40,14 +40,17 @@ if($_SERVER['REQUEST_METHOD']!=='POST') fail(405,'Method not allowed');
 
 if(empty($_FILES['file']['name'])) fail(400,'No file uploaded');
 
-// Get avatar folder and Bunny Storage credentials from admin settings
-$stmt = $mysqli->prepare("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_avatars', 'storage_api_key', 'storage_zone_name')");
+// Get avatar folder, Bunny Storage credentials, and validation limits from admin settings
+$stmt = $mysqli->prepare("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_avatars', 'storage_api_key', 'storage_zone_name', 'avatar_min_width', 'avatar_min_height', 'avatar_max_size')");
 if(!$stmt) fail(500,'Failed to get settings');
 $stmt->execute();
 $result = $stmt->get_result();
 $avatarFolder = 'https://cdn.funmap.com/avatars/';
 $storageApiKey = '';
 $storageZoneName = '';
+$avatarMinWidth = 1000;
+$avatarMinHeight = 1000;
+$avatarMaxSize = 5242880; // 5MB default
 while($row = $result->fetch_assoc()) {
   if($row['setting_key'] === 'folder_avatars') {
     $avatarFolder = $row['setting_value'];
@@ -56,6 +59,12 @@ while($row = $result->fetch_assoc()) {
     $storageApiKey = trim($row['setting_value']);
   } elseif($row['setting_key'] === 'storage_zone_name') {
     $storageZoneName = trim($row['setting_value']);
+  } elseif($row['setting_key'] === 'avatar_min_width') {
+    $avatarMinWidth = (int)$row['setting_value'] ?: 1000;
+  } elseif($row['setting_key'] === 'avatar_min_height') {
+    $avatarMinHeight = (int)$row['setting_value'] ?: 1000;
+  } elseif($row['setting_key'] === 'avatar_max_size') {
+    $avatarMaxSize = (int)$row['setting_value'] ?: 5242880;
   }
 }
 $stmt->close();
@@ -77,10 +86,21 @@ if(!in_array($ext, $allowedExts)) {
 // Naming convention (rules file): {memberId}-avatar.{extension}
 $finalFilename = $userId . '-avatar.' . $ext;
 
-// Basic size guard (10MB)
-$maxBytes = 10 * 1024 * 1024;
-if (isset($_FILES['file']['size']) && (int)$_FILES['file']['size'] > $maxBytes) {
-  fail(400, 'File too large. Max 10MB');
+// File size validation
+if (isset($_FILES['file']['size']) && (int)$_FILES['file']['size'] > $avatarMaxSize) {
+  $maxMB = round($avatarMaxSize / 1024 / 1024, 1);
+  fail(400, 'File too large. Max ' . $maxMB . 'MB');
+}
+
+// Image dimension validation
+$imageInfo = @getimagesize($_FILES['file']['tmp_name']);
+if ($imageInfo === false) {
+  fail(400, 'Could not read image dimensions');
+}
+$imgWidth = $imageInfo[0];
+$imgHeight = $imageInfo[1];
+if ($imgWidth < $avatarMinWidth || $imgHeight < $avatarMinHeight) {
+  fail(400, 'Avatar must be at least ' . $avatarMinWidth . 'x' . $avatarMinHeight . ' pixels');
 }
 
 // Determine storage type: external (http/https) or local

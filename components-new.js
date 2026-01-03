@@ -2002,6 +2002,27 @@ const MemberAuthFieldsetsComponent = (function(){
         var fs = getFieldset(fieldsetKey) || {};
         var name = fs.fieldset_name || fs.name || fieldsetKey;
         var tooltip = fs.fieldset_tooltip || fs.tooltip || '';
+        
+        // For avatar fieldset, append dynamic requirements from admin_settings
+        if (fieldsetKey === 'avatar') {
+            var avatarMinWidth = 1000;
+            var avatarMinHeight = 1000;
+            var avatarMaxSize = 5242880;
+            try {
+                if (window.adminSettings) {
+                    if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10) || 1000;
+                    if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10) || 1000;
+                    if (window.adminSettings.avatar_max_size) avatarMaxSize = parseInt(window.adminSettings.avatar_max_size, 10) || 5242880;
+                }
+            } catch (e) {}
+            var avatarMaxMB = (avatarMaxSize / 1024 / 1024).toFixed(0);
+            var avatarRequirements = 'Min ' + avatarMinWidth + '×' + avatarMinHeight + ' pixels\nMax ' + avatarMaxMB + 'MB';
+            if (tooltip) {
+                tooltip += '\n\n———\n' + avatarRequirements;
+            } else {
+                tooltip = avatarRequirements;
+            }
+        }
 
         var wrap = document.createElement('div');
         wrap.className = 'fieldset';
@@ -5920,13 +5941,61 @@ const AvatarPickerComponent = (function() {
             setSelectedKey('self');
         }
 
+        // Avatar validation settings (from admin_settings 403-405)
+        var avatarMinWidth = 1000;
+        var avatarMinHeight = 1000;
+        var avatarMaxSize = 5242880; // 5MB
+        try {
+            if (window.adminSettings) {
+                if (window.adminSettings.avatar_min_width) avatarMinWidth = parseInt(window.adminSettings.avatar_min_width, 10) || 1000;
+                if (window.adminSettings.avatar_min_height) avatarMinHeight = parseInt(window.adminSettings.avatar_min_height, 10) || 1000;
+                if (window.adminSettings.avatar_max_size) avatarMaxSize = parseInt(window.adminSettings.avatar_max_size, 10) || 5242880;
+            }
+        } catch (e) {}
+        
+        function validateAvatarFile(file) {
+            return new Promise(function(resolve, reject) {
+                // Check file size first
+                if (file.size > avatarMaxSize) {
+                    var maxMB = (avatarMaxSize / 1024 / 1024).toFixed(1);
+                    reject('Avatar must be smaller than ' + maxMB + 'MB');
+                    return;
+                }
+                
+                // Check dimensions
+                var img = new Image();
+                var objectUrl = URL.createObjectURL(file);
+                img.onload = function() {
+                    URL.revokeObjectURL(objectUrl);
+                    if (img.naturalWidth < avatarMinWidth || img.naturalHeight < avatarMinHeight) {
+                        reject('Avatar must be at least ' + avatarMinWidth + 'x' + avatarMinHeight + ' pixels');
+                    } else {
+                        resolve();
+                    }
+                };
+                img.onerror = function() {
+                    URL.revokeObjectURL(objectUrl);
+                    reject('Could not read image file');
+                };
+                img.src = objectUrl;
+            });
+        }
+        
         function openCropperForFile(file) {
             if (!allowUpload) return;
             if (!window.AvatarCropperComponent || typeof AvatarCropperComponent.open !== 'function') {
                 throw new Error('[AvatarPickerComponent] AvatarCropperComponent is required.');
             }
-            AvatarCropperComponent.open(file, function(result) {
-                setSelfFromCropResult(result);
+            
+            // Validate before opening cropper
+            validateAvatarFile(file).then(function() {
+                AvatarCropperComponent.open(file, function(result) {
+                    setSelfFromCropResult(result);
+                });
+            }).catch(function(errorMsg) {
+                if (window.ToastComponent && ToastComponent.showError) {
+                    ToastComponent.showError(errorMsg);
+                }
             });
         }
 

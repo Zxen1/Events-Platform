@@ -293,13 +293,20 @@ function load_bunny_settings(mysqli $mysqli): array
     'folder_post_images' => '',
     'storage_api_key' => '',
     'storage_zone_name' => '',
+    'image_min_width' => 1000,
+    'image_min_height' => 1000,
+    'image_max_size' => 5242880, // 5MB default
   ];
-  $res = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_post_images','storage_api_key','storage_zone_name')");
+  $res = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_post_images','storage_api_key','storage_zone_name','image_min_width','image_min_height','image_max_size')");
   if ($res) {
     while ($row = $res->fetch_assoc()) {
       $k = $row['setting_key'] ?? '';
       $v = isset($row['setting_value']) ? trim((string)$row['setting_value']) : '';
-      if (array_key_exists($k, $out)) $out[$k] = $v;
+      if ($k === 'image_min_width' || $k === 'image_min_height' || $k === 'image_max_size') {
+        $out[$k] = (int)$v ?: $out[$k];
+      } elseif (array_key_exists($k, $out)) {
+        $out[$k] = $v;
+      }
     }
     $res->free();
   }
@@ -831,9 +838,31 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtMedia) abort_with_error($mysqli, 500, 'Prepare media', $transactionActive);
 
+  // Get validation limits
+  $imageMinWidth = (int)($settings['image_min_width'] ?? 1000);
+  $imageMinHeight = (int)($settings['image_min_height'] ?? 1000);
+  $imageMaxSize = (int)($settings['image_max_size'] ?? 5242880);
+
   for ($i = 0; $i < $count; $i++) {
     $tmp = $_FILES['images']['tmp_name'][$i] ?? '';
     if (!$tmp || !is_uploaded_file($tmp)) continue;
+    
+    // Validate file size
+    $fileSize = (int)($_FILES['images']['size'][$i] ?? 0);
+    if ($fileSize > $imageMaxSize) {
+      $maxMB = round($imageMaxSize / 1024 / 1024, 1);
+      abort_with_error($mysqli, 400, 'Image too large. Max ' . $maxMB . 'MB', $transactionActive);
+    }
+    
+    // Validate image dimensions
+    $imageInfo = @getimagesize($tmp);
+    if ($imageInfo === false) {
+      abort_with_error($mysqli, 400, 'Could not read image dimensions', $transactionActive);
+    }
+    if ($imageInfo[0] < $imageMinWidth || $imageInfo[1] < $imageMinHeight) {
+      abort_with_error($mysqli, 400, 'Image must be at least ' . $imageMinWidth . 'x' . $imageMinHeight . ' pixels', $transactionActive);
+    }
+    
     $origName = (string)($_FILES['images']['name'][$i] ?? 'image');
     $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
     if ($ext === '') $ext = 'jpg';

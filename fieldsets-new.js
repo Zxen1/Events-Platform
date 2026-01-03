@@ -901,7 +901,29 @@ const FieldsetBuilder = (function(){
                 // 4. For CDN: first request processes crop & caches globally; subsequent = instant
                 // 5. Each unique URL (class+crop combo) cached separately
                 
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                // Image validation settings (from admin_settings 400-402)
+                var imageMinWidth = 1000;
+                var imageMinHeight = 1000;
+                var imageMaxSize = 5242880; // 5MB
+                try {
+                    if (window.adminSettings) {
+                        if (window.adminSettings.image_min_width) imageMinWidth = parseInt(window.adminSettings.image_min_width, 10) || 1000;
+                        if (window.adminSettings.image_min_height) imageMinHeight = parseInt(window.adminSettings.image_min_height, 10) || 1000;
+                        if (window.adminSettings.image_max_size) imageMaxSize = parseInt(window.adminSettings.image_max_size, 10) || 5242880;
+                    }
+                } catch (e) {}
+                
+                // Build dynamic tooltip with image requirements
+                var imageMaxMB = (imageMaxSize / 1024 / 1024).toFixed(0);
+                var imageRequirements = 'Min ' + imageMinWidth + '×' + imageMinHeight + ' pixels\nMax ' + imageMaxMB + 'MB';
+                var imageTooltipText = tooltip || '';
+                if (imageTooltipText) {
+                    imageTooltipText += '\n\n———\n' + imageRequirements;
+                } else {
+                    imageTooltipText = imageRequirements;
+                }
+                
+                fieldset.appendChild(buildLabel(name, imageTooltipText, null, null));
                 
                 var imagesContainer = document.createElement('div');
                 imagesContainer.className = 'fieldset-images-container';
@@ -1299,6 +1321,34 @@ const FieldsetBuilder = (function(){
                     }
                 });
                 
+                function validateImageFile(file) {
+                    return new Promise(function(resolve, reject) {
+                        // Check file size first
+                        if (file.size > imageMaxSize) {
+                            var maxMB = (imageMaxSize / 1024 / 1024).toFixed(1);
+                            reject('Image must be smaller than ' + maxMB + 'MB');
+                            return;
+                        }
+                        
+                        // Check dimensions
+                        var img = new Image();
+                        var objectUrl = URL.createObjectURL(file);
+                        img.onload = function() {
+                            URL.revokeObjectURL(objectUrl);
+                            if (img.naturalWidth < imageMinWidth || img.naturalHeight < imageMinHeight) {
+                                reject('Image must be at least ' + imageMinWidth + 'x' + imageMinHeight + ' pixels');
+                            } else {
+                                resolve();
+                            }
+                        };
+                        img.onerror = function() {
+                            URL.revokeObjectURL(objectUrl);
+                            reject('Could not read image file');
+                        };
+                        img.src = objectUrl;
+                    });
+                }
+                
                 var fileInput = document.createElement('input');
                 fileInput.type = 'file';
                 fileInput.accept = 'image/*';
@@ -1309,8 +1359,25 @@ const FieldsetBuilder = (function(){
                 fileInput._imageFiles = [];
                 fileInput.addEventListener('change', function() {
                     var files = Array.from(this.files);
-                    files.forEach(function(file) {
-                        if (imageEntries.length < maxImages && file.type.startsWith('image/')) {
+                    var inputEl = this;
+                    
+                    // Process files sequentially with validation
+                    var processNext = function(index) {
+                        if (index >= files.length) {
+                            try { fileInput._imageFiles = imageEntries.map(function(e){ return e && e.file ? e.file : null; }).filter(Boolean); } catch (e0) {}
+                            updateImagesMeta();
+                            renderImages();
+                            inputEl.value = '';
+                            return;
+                        }
+                        
+                        var file = files[index];
+                        if (imageEntries.length >= maxImages || !file.type.startsWith('image/')) {
+                            processNext(index + 1);
+                            return;
+                        }
+                        
+                        validateImageFile(file).then(function() {
                             var fileUrl = URL.createObjectURL(file);
                             imageEntries.push({
                                 _imageEntryId: String(nextImageEntryId++),
@@ -1320,12 +1387,16 @@ const FieldsetBuilder = (function(){
                                 cropState: null,
                                 cropRect: null
                             });
-                        }
-                    });
-                    try { fileInput._imageFiles = imageEntries.map(function(e){ return e && e.file ? e.file : null; }).filter(Boolean); } catch (e0) {}
-                    updateImagesMeta();
-                    renderImages();
-                    this.value = '';
+                            processNext(index + 1);
+                        }).catch(function(errorMsg) {
+                            if (window.ToastComponent && ToastComponent.showError) {
+                                ToastComponent.showError(errorMsg);
+                            }
+                            processNext(index + 1);
+                        });
+                    };
+                    
+                    processNext(0);
                 });
                 fieldset.appendChild(fileInput);
                 fieldset.appendChild(imagesContainer);
