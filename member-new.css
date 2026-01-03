@@ -1765,9 +1765,9 @@
 /* Location explainer message */
 .member-location-explainer {
   margin: 4px 0 8px;
-  padding: 0;
-  background: transparent;
-  border: none;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
