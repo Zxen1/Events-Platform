@@ -908,7 +908,7 @@
   cursor: not-allowed;
 }
 
-/* Missing-list popover (shown on hover over disabled submit area) */
+/* Incomplete-list popover (shown on hover over disabled submit area) */
 .member-missing-popover {
   position: absolute;
   right: 0;

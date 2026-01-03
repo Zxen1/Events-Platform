@@ -683,6 +683,16 @@ const FieldsetBuilder = (function(){
                 // Build label with dynamic tooltip (pass null for min/max to prevent double display)
                 fieldset.appendChild(buildLabel(name, pwTooltipText, null, null));
                 
+                // Store password settings on fieldset for computeComplete validation
+                fieldset.dataset.pwMinLength = pwMinLength;
+                fieldset.dataset.pwMaxLength = pwMaxLength;
+                if (pwSettings) {
+                    fieldset.dataset.pwRequireLowercase = pwSettings.require_lowercase ? '1' : '0';
+                    fieldset.dataset.pwRequireUppercase = pwSettings.require_uppercase ? '1' : '0';
+                    fieldset.dataset.pwRequireNumber = pwSettings.require_number ? '1' : '0';
+                    fieldset.dataset.pwRequireSymbol = pwSettings.require_symbol ? '1' : '0';
+                }
+                
                 var pwInput = document.createElement('input');
                 pwInput.type = 'password';
                 pwInput.className = 'fieldset-input';
@@ -3312,13 +3322,23 @@ const FieldsetBuilder = (function(){
                 case 'password':
                 case 'new-password': {
                     var inp = fieldset.querySelector('input.fieldset-input');
-                    return inp ? strLenOk(inp.value, minLength, maxLength) : false;
+                    if (!inp) return false;
+                    var val = String(inp.value || '');
+                    // Use password settings from dataset (set during fieldset build)
+                    var pwMin = fieldset.dataset.pwMinLength ? parseInt(fieldset.dataset.pwMinLength, 10) : minLength;
+                    var pwMax = fieldset.dataset.pwMaxLength ? parseInt(fieldset.dataset.pwMaxLength, 10) : maxLength;
+                    if (!strLenOk(val, pwMin, pwMax)) return false;
+                    // Check additional requirements from member_settings
+                    if (fieldset.dataset.pwRequireLowercase === '1' && !/[a-z]/.test(val)) return false;
+                    if (fieldset.dataset.pwRequireUppercase === '1' && !/[A-Z]/.test(val)) return false;
+                    if (fieldset.dataset.pwRequireNumber === '1' && !/[0-9]/.test(val)) return false;
+                    if (fieldset.dataset.pwRequireSymbol === '1' && !/[!@#$%^&*()_+\-=\[\]{};\'":\\|,.<>\/?`~]/.test(val)) return false;
+                    return true;
                 }
                 case 'confirm-password': {
                     var confirmInput = fieldset.querySelector('input.fieldset-input');
                     if (!confirmInput) return false;
-                    // Must meet its own length constraints and must match the password field above it.
-                    if (!strLenOk(confirmInput.value, minLength, maxLength)) return false;
+                    var confirmVal = String(confirmInput.value || '');
 
                     // Find the nearest password/new-password fieldset above this one in DOM order.
                     var pwFieldset = null;
@@ -3343,8 +3363,18 @@ const FieldsetBuilder = (function(){
                     var pwInput = pwFieldset ? pwFieldset.querySelector('input.fieldset-input') : null;
                     if (!pwInput) return false;
 
+                    // Use password settings from the password fieldset for validation
+                    var pwMin = pwFieldset.dataset.pwMinLength ? parseInt(pwFieldset.dataset.pwMinLength, 10) : minLength;
+                    var pwMax = pwFieldset.dataset.pwMaxLength ? parseInt(pwFieldset.dataset.pwMaxLength, 10) : maxLength;
+                    if (!strLenOk(confirmVal, pwMin, pwMax)) return false;
+                    // Check additional requirements
+                    if (pwFieldset.dataset.pwRequireLowercase === '1' && !/[a-z]/.test(confirmVal)) return false;
+                    if (pwFieldset.dataset.pwRequireUppercase === '1' && !/[A-Z]/.test(confirmVal)) return false;
+                    if (pwFieldset.dataset.pwRequireNumber === '1' && !/[0-9]/.test(confirmVal)) return false;
+                    if (pwFieldset.dataset.pwRequireSymbol === '1' && !/[!@#$%^&*()_+\-=\[\]{};\'":\\|,.<>\/?`~]/.test(confirmVal)) return false;
+
                     // Identical means identical (no trimming differences).
-                    return String(confirmInput.value || '') === String(pwInput.value || '');
+                    return confirmVal === String(pwInput.value || '');
                 }
                 case 'description':
                 case 'custom_textarea':

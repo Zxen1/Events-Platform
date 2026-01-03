@@ -2943,7 +2943,7 @@ const MemberModule = (function() {
 
         var title = document.createElement('div');
         title.className = 'member-missing-popover-title';
-        title.textContent = 'Missing';
+        title.textContent = 'Incomplete';
         pop.appendChild(title);
 
         var list = document.createElement('div');
