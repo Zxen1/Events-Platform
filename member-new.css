@@ -393,7 +393,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 10px;
+  padding: 12px 10px 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
   display: flex;
@@ -791,7 +791,7 @@
   flex-direction: column;
   width: 100%;
   max-width: 420px;
-  margin: 0 auto;
+  margin: 0 auto 12px;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
@@ -1493,7 +1493,7 @@
    ============================================================================ */
 
 .member-formpicker-container {
-  margin-top: 12px;
+  margin-bottom: 12px;
   width: 100%;
   max-width: 100%;
 }
@@ -1695,7 +1695,7 @@
 
 /* Section containers - siblings of main form */
 .member-section-container {
-  margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .member-section-container--active,
@@ -1757,7 +1757,7 @@
 
 /* Additional location containers */
 .member-additional-location-container {
-  margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .member-additional-location {
