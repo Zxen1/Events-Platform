@@ -393,14 +393,12 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  /* Total interior spacing should add up to 10px (not 20px). */
   padding: 0 10px;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 20px;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
@@ -780,7 +778,6 @@
 .member-tab-panel--active {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   /* Do NOT force full-height: it creates phantom overflow (scrollbars) on short content. */
   min-height: 0;
 }
@@ -792,14 +789,13 @@
 .member-form-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 10px 10px 10px;
+  padding: 10px;
 }
 
 .member-form-container[hidden] {
@@ -1497,11 +1493,9 @@
    ============================================================================ */
 
 .member-formpicker-container {
-  margin: 8px 0;
+  margin-top: 12px;
   width: 100%;
   max-width: 100%;
-  margin-left: 0;
-  margin-right: 0;
 }
 
 .member-formpicker-cats {
@@ -1702,10 +1696,6 @@
 /* Section containers - siblings of main form */
 .member-section-container {
   margin-top: 12px;
-}
-
-.member-section-container:first-of-type {
-  margin-top: 0;
 }
 
 .member-section-container--active,
