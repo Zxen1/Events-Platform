@@ -1718,10 +1718,82 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.member-additional-location-header {
+.member-additional-location-header,
+.member-first-location-header {
   margin: 0 0 16px;
   font-size: 18px;
   font-weight: 600;
   color: #fff;
+}
+
+.member-first-location-header {
+  margin-top: 24px;
+}
+
+/* Location options switch row */
+.member-location-options-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 8px 0;
+}
+
+.member-location-options-switch {
+  flex-shrink: 0;
+}
+
+.member-location-options-label {
+  margin-left: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  user-select: none;
+}
+
+/* Fallback checkbox style if SwitchComponent unavailable */
+.member-location-options-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 40px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.member-location-options-checkbox::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.member-location-options-checkbox:checked {
+  background: #4CAF50;
+}
+
+.member-location-options-checkbox:checked::after {
+  transform: translateX(20px);
+}
+
+/* Override fieldsets container */
+.member-location-overrides {
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  padding-left: 16px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+/* Override fields show inherited value as placeholder */
+.member-location-overrides .fieldset-input::placeholder,
+.member-location-overrides .fieldset-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
 }
 
