@@ -1733,7 +1733,7 @@
   height: 36px;
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 0 0 10px;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
@@ -1741,16 +1741,16 @@
   color: #fff;
   font-size: 14px;
   user-select: none;
+  box-sizing: border-box;
 }
 
 .member-section-header:hover {
-  border-color: var(--website-blue-border, #3b82f5);
-  background: var(--website-blue-hover-fill, #3b82f5);
+  background: rgba(255,255,255,0.05);
 }
 
 /* When expanded - connect to content below */
 .member-section-venue:not(.member-section-venue--collapsed) .member-section-header {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: rgba(255,255,255,0.1);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -1768,6 +1768,7 @@
 /* Arrow - EXACT copy from formpicker menu button arrow */
 .member-section-header-arrow {
   width: 16px;
+  min-width: 16px;
   height: 36px;
   display: flex;
   align-items: center;
@@ -1775,6 +1776,7 @@
   font-size: 10px;
   color: #888;
   transition: transform 0.2s;
+  flex-shrink: 0;
 }
 
 /* Collapsed = arrow points down (default). Expanded = arrow rotated 180deg */
@@ -1785,13 +1787,14 @@
 /* Delete button in header */
 .member-section-header .member-location-delete-btn {
   flex-shrink: 0;
-  margin-left: 0;
+  margin-left: 4px;
+  margin-right: 10px;
 }
 
 /* Venue content - styled like formpicker menu options */
 .member-venue-content {
   background: #222;
-  border: 1px solid var(--website-blue-border, #3b82f5);
+  border: 1px solid rgba(255,255,255,0.1);
   border-top: none;
   border-radius: 0 0 5px 5px;
   padding: 12px;
