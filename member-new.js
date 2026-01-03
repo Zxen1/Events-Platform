@@ -5024,8 +5024,9 @@ const MemberModule = (function() {
             
             if (!payload || payload.success === false || payload.error) {
                 var key = payload && payload.message_key ? String(payload.message_key) : '';
+                var placeholders = payload && payload.placeholders ? payload.placeholders : {};
                 if (key) {
-                    getMessage(key, {}, false).then(function(message) {
+                    getMessage(key, placeholders, false).then(function(message) {
                         if (message) {
                             if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                                 ToastComponent.showError(message);
