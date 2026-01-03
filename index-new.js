@@ -614,8 +614,35 @@ const App = (function() {
     // Global Escape key handler - closes modals, menus, panels in order of focus
     // Priority: Dialogs (capture phase) > Menus (MenuManager) > Panels (panelStack)
     initGlobalEscapeHandler();
+    
+    // Global autofill compliance - detect browser autofill and trigger validation
+    initGlobalAutofillHandler();
 
     // App initialization complete
+  }
+  
+  /**
+   * Global autofill handler
+   * Detects browser autofill via animation and triggers input/change events for validation
+   */
+  function initGlobalAutofillHandler() {
+    document.addEventListener('animationstart', function(e) {
+      if (e.animationName === 'global-autofill-detected') {
+        var input = e.target;
+        if (input && (input.tagName === 'INPUT' || input.tagName === 'TEXTAREA' || input.tagName === 'SELECT')) {
+          // Dispatch input and change events to trigger validation
+          try {
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          } catch (err) {
+            // IE fallback
+            var evt = document.createEvent('Event');
+            evt.initEvent('input', true, true);
+            input.dispatchEvent(evt);
+          }
+        }
+      }
+    }, true);
   }
   
   /**

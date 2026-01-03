@@ -146,9 +146,10 @@
 }
 
 /* ============================================================================
-   GLOBAL RULES (ONLY TWO IN THE ENTIRE WEBSITE)
+   GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)
    1) SCROLLBARS
    2) GLOBAL FONT (system-ui, sans-serif)
+   3) BROWSER AUTOFILL COMPLIANCE
    ============================================================================ */
 
 html, body, button, input, select, textarea {
@@ -177,6 +178,33 @@ html, body, button, input, select, textarea {
 
 *::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* 3) BROWSER AUTOFILL COMPLIANCE
+   Forces dark background and white text on all autofilled inputs.
+   Animation triggers JS detection for validation. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #1c1c1c inset;
+  -webkit-text-fill-color: #fff;
+  background: #1c1c1c;
+  border-color: rgba(255, 255, 255, 0.1);
+  animation: global-autofill-detected 0.01s forwards;
+}
+
+@keyframes global-autofill-detected {
+  from { opacity: 0.99; }
+  to { opacity: 1; }
 }
 
 /* ============================================================================

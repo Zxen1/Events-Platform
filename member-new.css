@@ -1153,22 +1153,8 @@
   cursor: text;
 }
 
-/* Browser autofill styling - !important required to override browser defaults */
-.member-auth-panel-input:-webkit-autofill,
-.member-auth-panel-input:-webkit-autofill:hover,
-.member-auth-panel-input:-webkit-autofill:focus,
-.member-auth-panel-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px #1c1c1c inset !important;
-  -webkit-text-fill-color: #fff !important;
-  background: #1c1c1c !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  animation: member-autofill-detected 0.01s forwards;
-}
-
-@keyframes member-autofill-detected {
-  from { opacity: 0.99; }
-  to { opacity: 1; }
-}
+/* Browser autofill styling uses global rule from base-new.css */
+/* Animation name: global-autofill-detected */
 
 .member-auth-panel-input:focus {
   outline: 2px solid var(--btn-selected);
@@ -1715,7 +1701,7 @@
 
 /* Section containers - siblings of main form */
 .member-section-container {
-  margin-top: 20px;
+  margin: 8px 0;
 }
 
 .member-section-container--active,
@@ -1745,10 +1731,34 @@
   white-space: nowrap;
 }
 
+/* Collapse button in header */
+.member-section-collapse-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.member-section-collapse-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.member-section-collapse-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Delete button in header */
 .member-section-header .member-location-delete-btn {
   flex-shrink: 0;
-  margin-left: 12px;
+  margin-left: 0;
 }
 
 /* Additional location containers */
@@ -1795,9 +1805,8 @@
 /* Location explainer message */
 .member-location-explainer {
   margin: 4px 0 8px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  padding: 8px 0;
+  background: transparent;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;

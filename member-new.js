@@ -524,18 +524,7 @@ const MemberModule = (function() {
                 e.preventDefault();
                 handleLogin();
             });
-            // Detect browser autofill and trigger input events for validation
-            loginForm.addEventListener('animationstart', function(e) {
-                if (e.animationName === 'member-autofill-detected') {
-                    var target = e.target;
-                    if (target && target.tagName === 'INPUT') {
-                        setTimeout(function() {
-                            target.dispatchEvent(new Event('input', { bubbles: true }));
-                            target.dispatchEvent(new Event('change', { bubbles: true }));
-                        }, 20);
-                    }
-                }
-            }, true);
+            // Browser autofill detection handled by global initGlobalAutofillHandler() in index-new.js
         }
         if (registerForm) {
             registerForm.addEventListener('submit', function(e) {
@@ -2410,6 +2399,11 @@ const MemberModule = (function() {
                                 }
                                 applyMustRepeatNumberingForMainForm();
                                 
+                                // Show/hide venue 1 collapse button
+                                if (window._memberVenue1CollapseBtn) {
+                                    window._memberVenue1CollapseBtn.style.display = locationQuantity > 1 ? '' : 'none';
+                                }
+                                
                                 // Re-render additional locations (after checkout section)
                                 // Minus clicked
                                 setTimeout(function() {
@@ -2437,6 +2431,11 @@ const MemberModule = (function() {
                             }
                             updateLocation1Header(true);
                             applyMustRepeatNumberingForMainForm();
+                            
+                            // Show venue 1 collapse button when multiple venues
+                            if (window._memberVenue1CollapseBtn) {
+                                window._memberVenue1CollapseBtn.style.display = '';
+                            }
                             
                             // Re-render additional locations (after checkout section)
                             // Plus clicked
@@ -2512,21 +2511,16 @@ const MemberModule = (function() {
             }
         });
         
-        // SECTION: Location Quantity (picker + message)
+        // SECTION: Location Quantity (picker + message) - no header
         if (quantityRow) {
             var quantityContainer = document.createElement('div');
             quantityContainer.className = 'member-form-container member-section-container member-section-quantity';
             
-            var qHeader = document.createElement('div');
-            qHeader.className = 'member-section-header';
-            var qHeaderText = document.createElement('span');
-            qHeaderText.className = 'member-section-header-text';
-            qHeaderText.textContent = 'Number of Locations';
-            qHeader.appendChild(qHeaderText);
-            quantityContainer.appendChild(qHeader);
-            
             quantityContainer.appendChild(quantityRow);
-            if (explainerMsg) quantityContainer.appendChild(explainerMsg);
+            if (explainerMsg) {
+                explainerMsg.style.display = ''; // Always visible
+                quantityContainer.appendChild(explainerMsg);
+            }
             
             tabPanel.insertBefore(quantityContainer, formWrapper.nextSibling);
         }
@@ -2542,12 +2536,35 @@ const MemberModule = (function() {
         v1HeaderText.className = 'member-section-header-text';
         var venueTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
         v1HeaderText.textContent = venueTypeName + ' 1';
+        
+        // Collapse button (hidden by default, shown when there are multiple venues)
+        var v1CollapseBtn = document.createElement('button');
+        v1CollapseBtn.type = 'button';
+        v1CollapseBtn.className = 'member-section-collapse-btn';
+        v1CollapseBtn.innerHTML = icons.chevronDown || '▼';
+        v1CollapseBtn.setAttribute('aria-label', 'Collapse');
+        v1CollapseBtn.style.display = 'none';
+        v1CollapseBtn.addEventListener('click', function() {
+            var content = venue1Container.querySelector('.member-venue-content');
+            var isCollapsed = venue1Container.classList.toggle('member-section-venue--collapsed');
+            v1CollapseBtn.innerHTML = isCollapsed ? (icons.chevronRight || '▶') : (icons.chevronDown || '▼');
+            if (content) content.style.display = isCollapsed ? 'none' : '';
+        });
+        
         v1Header.appendChild(v1HeaderText);
+        v1Header.appendChild(v1CollapseBtn);
         venue1Container.appendChild(v1Header);
         
-        // Move location fieldset to venue 1 container
+        // Store reference to collapse button for showing/hiding based on venue count
+        window._memberVenue1CollapseBtn = v1CollapseBtn;
+        
+        // Content wrapper for collapsing
+        var v1Content = document.createElement('div');
+        v1Content.className = 'member-venue-content';
+        
+        // Move location fieldset to venue 1 content
         if (locationFieldsetEl) {
-            venue1Container.appendChild(locationFieldsetEl);
+            v1Content.appendChild(locationFieldsetEl);
             
             // Listen for venue name changes to update header
             var venueInput = locationFieldsetEl.querySelector('input[type="text"]');
@@ -2559,21 +2576,30 @@ const MemberModule = (function() {
             }
         }
         
-        // Move must-repeat fieldsets to venue 1 container
+        // Move all location-related fieldsets to venue 1 content
+        // (both must-repeat AND location-repeat-only)
+        var allRepeatKeys = {};
         if (mustRepeatFieldsets && mustRepeatFieldsets.length > 0) {
-            var mustKeys = {};
             mustRepeatFieldsets.forEach(function(f) {
                 var k = (f.fieldsetKey || f.key || f.type || '').toLowerCase();
-                if (k) mustKeys[k] = true;
-            });
-            formFields.querySelectorAll('.fieldset').forEach(function(fs) {
-                var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
-                if (k === 'venue' || k === 'city' || k === 'address' || k === 'location') return;
-                if (mustKeys[k]) {
-                    venue1Container.appendChild(fs);
-                }
+                if (k) allRepeatKeys[k] = true;
             });
         }
+        if (locationRepeatOnlyFieldsets && locationRepeatOnlyFieldsets.length > 0) {
+            locationRepeatOnlyFieldsets.forEach(function(f) {
+                var k = (f.fieldsetKey || f.key || f.type || '').toLowerCase();
+                if (k) allRepeatKeys[k] = true;
+            });
+        }
+        formFields.querySelectorAll('.fieldset').forEach(function(fs) {
+            var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
+            if (k === 'venue' || k === 'city' || k === 'address' || k === 'location') return;
+            if (allRepeatKeys[k]) {
+                v1Content.appendChild(fs);
+            }
+        });
+        
+        venue1Container.appendChild(v1Content);
         
         // Remove old location 1 header (we have new one in container)
         if (location1Header) location1Header.remove();
@@ -2687,13 +2713,25 @@ const MemberModule = (function() {
                 locationContainer.dataset.locationNumber = locationNum;
                 locationContainer.dataset.venue = locationNum;
                 
-                // Header row (36px) with delete button
+                // Header row (36px) with collapse and delete buttons
                 var headerRow = document.createElement('div');
                 headerRow.className = 'member-section-header';
                 
                 var headerText = document.createElement('span');
                 headerText.className = 'member-section-header-text';
                 headerText.textContent = defaultName;
+                
+                var collapseBtn = document.createElement('button');
+                collapseBtn.type = 'button';
+                collapseBtn.className = 'member-section-collapse-btn';
+                collapseBtn.innerHTML = icons.chevronDown || '▼';
+                collapseBtn.setAttribute('aria-label', 'Collapse');
+                collapseBtn.addEventListener('click', function() {
+                    var content = locationContainer.querySelector('.member-venue-content');
+                    var isCollapsed = locationContainer.classList.toggle('member-section-venue--collapsed');
+                    collapseBtn.innerHTML = isCollapsed ? (icons.chevronRight || '▶') : (icons.chevronDown || '▼');
+                    if (content) content.style.display = isCollapsed ? 'none' : '';
+                });
                 
                 var deleteBtn = document.createElement('button');
                 deleteBtn.type = 'button';
@@ -2702,12 +2740,13 @@ const MemberModule = (function() {
                 deleteBtn.setAttribute('aria-label', 'Delete ' + defaultName);
                 
                 headerRow.appendChild(headerText);
+                headerRow.appendChild(collapseBtn);
                 headerRow.appendChild(deleteBtn);
                 locationContainer.appendChild(headerRow);
                 
-                // Inner content section
-            var locationSection = document.createElement('div');
-            locationSection.className = 'member-additional-location';
+                // Inner content section (collapsible)
+                var locationSection = document.createElement('div');
+                locationSection.className = 'member-venue-content member-additional-location';
                 locationSection.dataset.locationNumber = locationNum;
                 
                 // Delete button handler
@@ -3066,20 +3105,21 @@ const MemberModule = (function() {
     }
     
     function copyFieldsetValues(targetFieldset, fieldData, sourceLocation, targetLocation) {
-        if (!formFields) throw new Error('[Member] copyFieldsetValues: formFields not available.');
         if (!targetFieldset) throw new Error('[Member] copyFieldsetValues: targetFieldset is required.');
         if (!fieldData) throw new Error('[Member] copyFieldsetValues: fieldData is required.');
         
         var fieldsetKeyLower = String(fieldData.key || fieldData.fieldset_key || fieldData.fieldsetKey || '').toLowerCase();
         if (!fieldsetKeyLower) throw new Error('[Member] copyFieldsetValues: fieldset key is required.');
         
-        // Find the location-1 fieldset by its canonical key (set by FieldsetBuilder)
+        // Find the location-1 fieldset in venue 1 container
+        var venue1Container = document.querySelector('.member-section-venue[data-venue="1"]');
+        if (!venue1Container) throw new Error('[Member] copyFieldsetValues: venue 1 container not found.');
+        
         var sourceFieldset = null;
-        var allFieldsets = formFields.querySelectorAll('.fieldset');
+        var allFieldsets = venue1Container.querySelectorAll('.fieldset');
         for (var i = 0; i < allFieldsets.length; i++) {
             var fs = allFieldsets[i];
             if (!fs || !fs.dataset) continue;
-            if (fs.closest('.member-additional-location')) continue;
             var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
             if (k === fieldsetKeyLower) {
                 sourceFieldset = fs;
@@ -3088,7 +3128,7 @@ const MemberModule = (function() {
         }
         
         if (!sourceFieldset) {
-            throw new Error('[Member] copyFieldsetValues: could not find source fieldset for key "' + fieldsetKeyLower + '".');
+            throw new Error('[Member] copyFieldsetValues: could not find source fieldset for key "' + fieldsetKeyLower + '" in venue 1 container.');
         }
         
         var sourceInputs = sourceFieldset.querySelectorAll('input:not([type="hidden"]), textarea, select');
