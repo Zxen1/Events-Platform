@@ -526,8 +526,8 @@ foreach ($byLoc as $locNum => $entries) {
       if (is_array($tiers)) $priceCount += count($tiers);
     }
   }
-  if (is_array($itemPricing) && isset($itemPricing['variants']) && is_array($itemPricing['variants'])) {
-    $priceCount += count($itemPricing['variants']);
+  if (is_array($itemPricing) && isset($itemPricing['item_variants']) && is_array($itemPricing['item_variants'])) {
+    $priceCount += count($itemPricing['item_variants']);
   }
   if ($priceCount > 0) $card['price_summary'] = 'Prices: ' . $priceCount;
 
@@ -715,20 +715,21 @@ foreach ($byLoc as $locNum => $entries) {
     }
   }
 
-  // Insert children: item pricing
-  if (is_array($itemPricing) && isset($itemPricing['variants']) && is_array($itemPricing['variants'])) {
-    $stmtItem = $mysqli->prepare("INSERT INTO post_children (map_card_id, session_date, session_time, seating_area, pricing_tier, item_name, item_variant, price, currency, created_at, updated_at)
-      VALUES (?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, NOW(), NOW())");
+  // Insert item pricing
+  if (is_array($itemPricing) && !empty($itemPricing['item_name'])) {
+    $stmtItem = $mysqli->prepare("INSERT INTO post_item_pricing (map_card_id, item_name, item_variants, item_price, currency, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
     if ($stmtItem) {
-      $itemName = isset($itemPricing['item_name']) ? trim((string)$itemPricing['item_name']) : '';
-      foreach ($itemPricing['variants'] as $v) {
-        if (!is_array($v)) continue;
-        $vn = isset($v['item_variant']) ? (string)$v['item_variant'] : (isset($v['variant_name']) ? (string)$v['variant_name'] : '');
-        $curr = isset($v['currency']) ? normalize_currency($v['currency']) : '';
-        $amt = normalize_price_amount($v['price'] ?? null);
-        if ($vn === '' || $curr === '' || $amt === null) continue;
-        $stmtItem->bind_param('issss', $mapCardId, $itemName, $vn, $amt, $curr);
-        if (!$stmtItem->execute()) { $stmtItem->close(); abort_with_error($mysqli, 500, 'Insert child item pricing', $transactionActive); }
+      $itemName = trim((string)$itemPricing['item_name']);
+      $variants = isset($itemPricing['item_variants']) ? $itemPricing['item_variants'] : [];
+      $variantsJson = json_encode($variants, JSON_UNESCAPED_UNICODE);
+      $price = normalize_price_amount($itemPricing['item_price'] ?? null);
+      $curr = isset($itemPricing['currency']) ? normalize_currency($itemPricing['currency']) : '';
+      
+      $stmtItem->bind_param('issss', $mapCardId, $itemName, $variantsJson, $price, $curr);
+      if (!$stmtItem->execute()) { 
+        $stmtItem->close(); 
+        abort_with_error($mysqli, 500, 'Insert item pricing', $transactionActive); 
       }
       $stmtItem->close();
     }

@@ -3424,21 +3424,21 @@ const MemberModule = (function() {
 
             case 'item-pricing':
                 try {
-                    var itemNameInput = el.querySelector('input.fieldset-itempricing-field-label');
-                    var itemName = itemNameInput ? String(itemNameInput.value || '').trim() : '';
-                    var variants = [];
-                    el.querySelectorAll('.fieldset-variant-block').forEach(function(block) {
-                        var variantInput = block.querySelector('input.fieldset-itempricing-field-variant');
+                    var itemNameInput = el.querySelector('input.fieldset-itempricing-input-itemname');
+                    var item_name = itemNameInput ? String(itemNameInput.value || '').trim() : '';
+                    var currencyInput = el.querySelector('input.component-currencycompact-menu-button-input');
+                    var currency = currencyInput ? String(currencyInput.value || '').trim() : '';
+                    var priceInput = el.querySelector('input.fieldset-itempricing-input-itemprice');
+                    var item_price = priceInput ? String(priceInput.value || '').trim() : '';
+                    var item_variants = [];
+                    el.querySelectorAll('.fieldset-itempricing-row-itemvariant').forEach(function(row) {
+                        var variantInput = row.querySelector('input.fieldset-itempricing-input-itemvariantname');
                         var variantName = variantInput ? String(variantInput.value || '').trim() : '';
-                        var priceInput = block.querySelector('input.fieldset-itempricing-field-price');
-                        var price = priceInput ? String(priceInput.value || '').trim() : '';
-                        var currencyInput = block.querySelector('input.component-currencycompact-menu-button-input');
-                        var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
-                        variants.push({ variant_name: variantName, currency: curr, price: price });
+                        item_variants.push(variantName);
                     });
-                    return { item_name: itemName, variants: variants };
+                    return { item_name: item_name, currency: currency, item_price: item_price, item_variants: item_variants };
                 } catch (e5) {
-                    return { item_name: '', variants: [] };
+                    return { item_name: '', currency: '', item_price: '', item_variants: [] };
                 }
                 
             case 'currency':

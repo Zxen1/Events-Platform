@@ -1414,28 +1414,30 @@ const FieldsetBuilder = (function(){
                 // Item Name, Currency, Item Price (full width), then list of variants
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
 
-                // Item Name (single, no +/-)
+                // Item Name sublabel
                 var itemNameSub = document.createElement('div');
-                itemNameSub.className = 'fieldset-sublabel';
+                itemNameSub.className = 'fieldset-itempricing-sublabel-itemname';
                 itemNameSub.textContent = 'Item Name';
                 fieldset.appendChild(itemNameSub);
+                
+                // Item Name input
                 var itemNameInput = document.createElement('input');
                 itemNameInput.type = 'text';
-                itemNameInput.className = 'fieldset-input fieldset-itempricing-field-label';
+                itemNameInput.className = 'fieldset-itempricing-input-itemname';
                 itemNameInput.placeholder = 'eg. T-Shirt';
-                itemNameInput.style.marginBottom = '10px';
                 fieldset.appendChild(itemNameInput);
                 
                 // Currency + Item Price row
                 var itemPriceRow = document.createElement('div');
-                itemPriceRow.className = 'fieldset-row';
-                itemPriceRow.style.marginBottom = '10px';
+                itemPriceRow.className = 'fieldset-itempricing-row-itemprice';
                 
                 // Currency column (fixed width 100px)
                 var itemCurrencyCol = document.createElement('div');
                 itemCurrencyCol.style.flex = '0 0 100px';
+                
+                // Currency sublabel
                 var itemCurrencySub = document.createElement('div');
-                itemCurrencySub.className = 'fieldset-sublabel';
+                itemCurrencySub.className = 'fieldset-itempricing-sublabel-currency';
                 itemCurrencySub.textContent = 'Currency';
                 itemCurrencyCol.appendChild(itemCurrencySub);
                 
@@ -1452,7 +1454,7 @@ const FieldsetBuilder = (function(){
                             // Currency selected for entire item
                         }
                     });
-                    result.element.classList.add('fieldset-itempricing-field-currency');
+                    result.element.classList.add('fieldset-itempricing-menu-currency');
                     itemCurrencyCol.appendChild(result.element);
                 }
                 itemPriceRow.appendChild(itemCurrencyCol);
@@ -1460,60 +1462,55 @@ const FieldsetBuilder = (function(){
                 // Item Price column (flexible width)
                 var itemPriceCol = document.createElement('div');
                 itemPriceCol.style.flex = '1';
+                
+                // Item Price sublabel
                 var itemPriceSub = document.createElement('div');
-                itemPriceSub.className = 'fieldset-sublabel';
+                itemPriceSub.className = 'fieldset-itempricing-sublabel-itemprice';
                 itemPriceSub.textContent = 'Item Price';
+                itemPriceCol.appendChild(itemPriceSub);
+                
+                // Item Price input
                 var itemPriceInput = document.createElement('input');
                 itemPriceInput.type = 'text';
-                itemPriceInput.className = 'fieldset-input fieldset-itempricing-field-price';
+                itemPriceInput.className = 'fieldset-itempricing-input-itemprice';
                 itemPriceInput.placeholder = '0.00';
                 attachMoneyInputBehavior(itemPriceInput);
-                itemPriceCol.appendChild(itemPriceSub);
                 itemPriceCol.appendChild(itemPriceInput);
                 itemPriceRow.appendChild(itemPriceCol);
                 applyFieldsetRowItemClasses(itemPriceRow);
                 
                 fieldset.appendChild(itemPriceRow);
                 
-                // Variants section label (single label at top)
+                // Variants section sublabel
                 var variantsSectionLabel = document.createElement('div');
-                variantsSectionLabel.className = 'fieldset-sublabel';
+                variantsSectionLabel.className = 'fieldset-itempricing-sublabel-itemvariants';
                 variantsSectionLabel.textContent = 'Item Variants';
-                variantsSectionLabel.style.marginTop = '10px';
                 fieldset.appendChild(variantsSectionLabel);
                 
                 // Variants container
                 var itemVariantsContainer = document.createElement('div');
-                itemVariantsContainer.className = 'fieldset-variants-container';
+                itemVariantsContainer.className = 'fieldset-itempricing-container-itemvariants';
                 fieldset.appendChild(itemVariantsContainer);
                 
-                function createItemVariantBlock() {
-                    var block = document.createElement('div');
-                    block.className = 'fieldset-variant-block';
-                    block.style.marginBottom = '10px';
-                    
-                    // Variant input + +/- buttons (no indentation)
+                function createItemVariantRow() {
+                    // Single row element (no separate block wrapper)
                     var variantRow = document.createElement('div');
-                    variantRow.className = 'fieldset-row';
+                    variantRow.className = 'fieldset-itempricing-row-itemvariant';
                     
-                    var variantCol = document.createElement('div');
-                    variantCol.style.flex = '1';
-                    variantCol.style.display = 'flex';
-                    variantCol.style.alignItems = 'center';
+                    // Variant name input
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
-                    variantInput.className = 'fieldset-input fieldset-itempricing-field-variant';
+                    variantInput.className = 'fieldset-itempricing-input-itemvariantname';
                     variantInput.placeholder = 'eg. Large Red';
-                    variantCol.appendChild(variantInput);
-                    variantRow.appendChild(variantCol);
+                    variantRow.appendChild(variantInput);
                     
                     // + button
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
-                    addBtn.className = 'fieldset-itempricing-button-add';
+                    addBtn.className = 'fieldset-itempricing-button-itemvariantadd';
                     addBtn.textContent = '+';
                     addBtn.addEventListener('click', function() {
-                        itemVariantsContainer.appendChild(createItemVariantBlock());
+                        itemVariantsContainer.appendChild(createItemVariantRow());
                         updateItemVariantButtons();
                     });
                     variantRow.appendChild(addBtn);
@@ -1521,26 +1518,24 @@ const FieldsetBuilder = (function(){
                     // - button
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.className = 'fieldset-itempricing-button-remove';
+                    removeBtn.className = 'fieldset-itempricing-button-itemvariantremove';
                     removeBtn.textContent = '−';
                     removeBtn.addEventListener('click', function() {
-                        block.remove();
+                        variantRow.remove();
                         updateItemVariantButtons();
                     });
                     variantRow.appendChild(removeBtn);
                     applyFieldsetRowItemClasses(variantRow);
                     
-                    block.appendChild(variantRow);
-                    
-                    return block;
+                    return variantRow;
                 }
                 
                 function updateItemVariantButtons() {
-                    var blocks = itemVariantsContainer.querySelectorAll('.fieldset-variant-block');
-                    var atMax = blocks.length >= 10;
-                    blocks.forEach(function(block) {
-                        var addBtn = block.querySelector('.fieldset-itempricing-button-add');
-                        var removeBtn = block.querySelector('.fieldset-itempricing-button-remove');
+                    var rows = itemVariantsContainer.querySelectorAll('.fieldset-itempricing-row-itemvariant');
+                    var atMax = rows.length >= 10;
+                    rows.forEach(function(row) {
+                        var addBtn = row.querySelector('.fieldset-itempricing-button-itemvariantadd');
+                        var removeBtn = row.querySelector('.fieldset-itempricing-button-itemvariantremove');
                         if (atMax) {
                             addBtn.style.opacity = '0.3';
                             addBtn.style.cursor = 'not-allowed';
@@ -1550,7 +1545,7 @@ const FieldsetBuilder = (function(){
                             addBtn.style.cursor = 'pointer';
                             addBtn.disabled = false;
                         }
-                        if (blocks.length === 1) {
+                        if (rows.length === 1) {
                             removeBtn.style.opacity = '0.3';
                             removeBtn.style.cursor = 'not-allowed';
                             removeBtn.disabled = true;
@@ -1562,8 +1557,8 @@ const FieldsetBuilder = (function(){
                     });
                 }
                 
-                // Create first variant block
-                itemVariantsContainer.appendChild(createItemVariantBlock());
+                // Create first variant row
+                itemVariantsContainer.appendChild(createItemVariantRow());
                 updateItemVariantButtons();
                 break;
                 

@@ -1609,8 +1609,9 @@ function sanitizeItemPricingOptions(array $options): array
         }
         $clean[] = [
             'item_name' => sanitizeString($option['item_name'] ?? '', 255),
-            'item_currency' => strtoupper(sanitizeString($option['item_currency'] ?? '', 12)),
+            'currency' => strtoupper(sanitizeString($option['currency'] ?? '', 12)),
             'item_price' => sanitizeString($option['item_price'] ?? '', 64),
+            'item_variants' => isset($option['item_variants']) && is_array($option['item_variants']) ? array_map(function($v) { return sanitizeString($v, 255); }, $option['item_variants']) : [],
         ];
     }
     return $clean;
