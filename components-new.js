@@ -1999,6 +1999,7 @@ const MemberAuthFieldsetsComponent = (function(){
         var wrap = document.createElement('div');
         wrap.className = 'fieldset';
         if (typeof fieldsetKey === 'string' && fieldsetKey) wrap.dataset.fieldsetKey = fieldsetKey;
+        if (typeof name === 'string' && name) wrap.dataset.fieldsetName = name;
         if (window.FieldsetBuilder && typeof FieldsetBuilder.buildLabel === 'function') {
             wrap.appendChild(FieldsetBuilder.buildLabel(String(name || ''), tooltip || '', null, null));
         }
