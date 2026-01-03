@@ -1713,7 +1713,45 @@
    ADDITIONAL LOCATIONS
    ============================================================================ */
 
-/* Additional location containers - siblings of main form */
+/* Section containers - siblings of main form */
+.member-section-container {
+  margin-top: 20px;
+}
+
+.member-section-container--active,
+.member-form-container--active {
+  border-color: var(--website-blue-active-fill, #3b82f5);
+}
+
+/* Section headers - 36px, collapsible-ready */
+.member-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0;
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.member-section-header-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Delete button in header */
+.member-section-header .member-location-delete-btn {
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* Additional location containers */
 .member-additional-location-container {
   margin-top: 20px;
 }
@@ -1722,24 +1760,15 @@
   /* Content inside the container */
 }
 
+/* Legacy location headers (replaced by member-section-header) */
 .member-additional-location-header,
 .member-first-location-header {
-  margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 600;
-  color: #fff;
+  display: none;
 }
 
-.member-first-location-header {
-  margin-top: 12px;
-}
-
-/* Location header row with delete button */
+/* Location header row with delete button (legacy - now in member-section-header) */
 .member-additional-location-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
+  display: none;
 }
 
 .member-location-delete-btn {
