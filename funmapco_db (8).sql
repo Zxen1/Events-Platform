@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 04:04 PM
+-- Generation Time: Jan 03, 2026 at 05:45 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -191,7 +191,13 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `container_ke
 (255, 'Account Delete Failed', 'msg_account_delete_failed', 'msg_member', 'Unable to delete account. Please try again.', 'When account deletion fails', 'error', 'profile', 0, NULL, 1, 1, 0, 3000, '2025-12-30 03:09:35', '2025-12-30 03:09:35'),
 (256, 'Active Posts Block Delete', 'msg_delete_blocked_active_posts', 'msg_member', 'You have {count} active post(s). Please delete them before deleting your account.', 'Shown when member tries to delete account but has active posts', 'error', 'profile', 0, '[\"count\"]', 1, 1, 0, 5000, '2025-12-30 03:25:47', '2025-12-30 03:25:47'),
 (257, 'Account Scheduled Delete', 'msg_account_scheduled_delete', 'msg_member', 'Your account has been scheduled for deletion. You have 30 days to reactivate by logging in.', 'Shown after soft delete is initiated', 'success', 'profile', 0, NULL, 1, 1, 0, 5000, '2025-12-30 03:25:47', '2025-12-30 03:25:47'),
-(258, 'Account Reactivated', 'msg_account_reactivated', 'msg_member', 'Welcome back! Your account has been reactivated.', 'Shown when a soft-deleted member logs back in', 'success', 'profile', 0, NULL, 1, 1, 0, 3000, '2025-12-30 03:25:47', '2025-12-30 03:25:47');
+(258, 'Account Reactivated', 'msg_account_reactivated', 'msg_member', 'Welcome back! Your account has been reactivated.', 'Shown when a soft-deleted member logs back in', 'success', 'profile', 0, NULL, 1, 1, 0, 3000, '2025-12-30 03:25:47', '2025-12-30 03:25:47'),
+(332, 'Password Too Short', 'msg_auth_password_too_short', 'msg_member', 'Password must be at least {min} characters.', 'Password below minimum length', 'error', 'auth', 0, '[\"min\"]', 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
+(333, 'Password Too Long', 'msg_auth_password_too_long', 'msg_member', 'Password must be no more than {max} characters.', 'Password above maximum length', 'error', 'auth', 0, '[\"max\"]', 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
+(334, 'Password Requires Lowercase', 'msg_auth_password_require_lowercase', 'msg_member', 'Password must contain a lowercase letter (a-z).', 'Password missing lowercase', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
+(335, 'Password Requires Uppercase', 'msg_auth_password_require_uppercase', 'msg_member', 'Password must contain an uppercase letter (A-Z).', 'Password missing uppercase', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
+(336, 'Password Requires Number', 'msg_auth_password_require_number', 'msg_member', 'Password must contain a number (0-9).', 'Password missing number', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
+(337, 'Password Requires Symbol', 'msg_auth_password_require_symbol', 'msg_member', 'Password must contain a special character (!@#$%^&*).', 'Password missing symbol', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21');
 
 -- --------------------------------------------------------
 
@@ -1270,7 +1276,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (18, 'Amenities', 'amenities', 'subcategory', 14, '[\"amenities\"]', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', '2025-12-14 19:13:31', '2026-01-01 08:41:37'),
 (21, 'Session Pricing', 'session_pricing', 'subcategory', 17, '[\"session-date\",\"session-time\",\"seating-area\",\"pricing-tier\",\"currency\",\"ticket-price\"]', NULL, 'eg. Sessions with pricing', '1. Click the first date box and select all the session dates on the calendar for your event. This will create a table with one session time per date. \n\n2. Type the 24 hour starting time for each session. You can add or remove session times for each session date with the + and - buttons. Starting Times are auto-repeated for every session when you start, but automation will stop when you edit them.\n\n3. Click the Ticket Pricing button for the first session time. Create the Seating Areas, Pricing Tiers, Currency and Prices for this session. eg.\n\nStalls Adult USD 10.00\nStalls Pensioner USD 8.00 \nStalls Child USD 6.00\nBalcony Adult USD 12.00\nBalcony Pensioner USD 10.00 \nBalcony Child USD 8.00\n\n4. Ticket Group A has now been created. If a session has different prices from A (eg. matinee or special event), you can add a new Ticket Group (B, C, D) for it. Select the one you want for each session or click the pencil tool to edit that group.\n\nThis system was designed to let you fill out massive amounts of information in seconds.', '2026-01-01 12:54:10', '2026-01-02 08:04:04'),
 (27, 'Public Email', 'public_email', 'subcategory', 3, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2026-01-01 07:54:19', '2026-01-01 08:41:37'),
-(100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2025-10-29 19:03:05', '2026-01-01 09:23:54'),
+(100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Your login email for this website. This is how admins will contact you. ', '2025-10-29 19:03:05', '2026-01-03 06:34:01'),
 (101, 'Username', 'username', 'auth', NULL, '[\"username\"]', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
 (102, 'Password', 'password', 'auth', NULL, '[\"password\"]', NULL, 'Choose a password', 'Choose a password to protect your account.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
 (103, 'Confirm Password', 'confirm-password', 'auth', NULL, '[\"confirm-password\"]', NULL, 'Repeat your password', 'Type the same password again to confirm.', '2025-12-30 16:30:08', '2026-01-01 10:24:19'),
@@ -2430,7 +2436,7 @@ ALTER TABLE `addons`
 -- AUTO_INCREMENT for table `admin_messages`
 --
 ALTER TABLE `admin_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=332;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=338;
 
 --
 -- AUTO_INCREMENT for table `admin_settings`

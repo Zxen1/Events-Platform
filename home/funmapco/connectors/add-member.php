@@ -71,6 +71,31 @@ if(!$hasAvatarFile && $avatar==='') fail_key_ph(400,'msg_post_validation_require
 if(!filter_var($email,FILTER_VALIDATE_EMAIL)) fail_key(400,'msg_auth_register_email_invalid');
 if($pass!==$conf) fail_key(400,'msg_auth_register_password_mismatch');
 
+// Validate password against member_settings requirements
+$pwSettings = [];
+$pwStmt = $mysqli->prepare("SELECT member_setting_key, member_setting_value FROM member_settings WHERE member_setting_key LIKE 'password_%'");
+if ($pwStmt) {
+  $pwStmt->execute();
+  $pwResult = $pwStmt->get_result();
+  while ($pwRow = $pwResult->fetch_assoc()) {
+    $pwSettings[$pwRow['member_setting_key']] = $pwRow['member_setting_value'];
+  }
+  $pwStmt->close();
+}
+$pwMinLen = isset($pwSettings['password_min_length']) ? (int)$pwSettings['password_min_length'] : 8;
+$pwMaxLen = isset($pwSettings['password_max_length']) ? (int)$pwSettings['password_max_length'] : 128;
+$pwReqLower = isset($pwSettings['password_require_lowercase']) && $pwSettings['password_require_lowercase'] === '1';
+$pwReqUpper = isset($pwSettings['password_require_uppercase']) && $pwSettings['password_require_uppercase'] === '1';
+$pwReqNumber = isset($pwSettings['password_require_number']) && $pwSettings['password_require_number'] === '1';
+$pwReqSymbol = isset($pwSettings['password_require_symbol']) && $pwSettings['password_require_symbol'] === '1';
+
+if (strlen($pass) < $pwMinLen) fail_key_ph(400, 'msg_auth_password_too_short', ['min' => $pwMinLen]);
+if (strlen($pass) > $pwMaxLen) fail_key_ph(400, 'msg_auth_password_too_long', ['max' => $pwMaxLen]);
+if ($pwReqLower && !preg_match('/[a-z]/', $pass)) fail_key(400, 'msg_auth_password_require_lowercase');
+if ($pwReqUpper && !preg_match('/[A-Z]/', $pass)) fail_key(400, 'msg_auth_password_require_uppercase');
+if ($pwReqNumber && !preg_match('/[0-9]/', $pass)) fail_key(400, 'msg_auth_password_require_number');
+if ($pwReqSymbol && !preg_match('/[!@#$%^&*()_+\-=\[\]{};\'":\\|,.<>\/?`~]/', $pass)) fail_key(400, 'msg_auth_password_require_symbol');
+
 $country = preg_match('/^[a-z]{2}$/', $country) ? $country : '';
 if($country==='') fail_key_ph(400,'msg_post_validation_required',['field'=>'Country']);
 
