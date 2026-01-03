@@ -120,8 +120,11 @@ if (empty($postImagesFolder)) {
     fail(500, 'Post images folder not configured in admin settings (folder_post_images).');
 }
 
-if (empty($storageApiKey) || empty($storageZoneName)) {
-    fail(500, 'Bunny Storage credentials not configured (storage_api_key / storage_zone_name).');
+// Determine storage type: external (http/https) or local
+$isExternal = preg_match('#^https?://#i', $postImagesFolder);
+
+if ($isExternal && (empty($storageApiKey) || empty($storageZoneName))) {
+    fail(500, 'Storage credentials not configured for external storage (storage_api_key / storage_zone_name).');
 }
 
 // Calculate current month in UTC-12 (Baker Island / Howland Island)
@@ -151,53 +154,74 @@ $hash = substr(md5(uniqid('', true) . random_bytes(8)), 0, 6);
 
 $finalFilename = $post_id . '-' . $hash . '.' . $extension;
 
-// Extract CDN path from folder URL
-// e.g., https://cdn.funmap.com/post-images -> post-images
-$cdnPath = preg_replace('#^https?://[^/]+/#', '', $postImagesFolder);
-$cdnPath = rtrim($cdnPath, '/');
-
-// Construct full path with month folder
-$fullPath = $cdnPath . '/' . $monthFolder . '/' . $finalFilename;
-
-// Construct Bunny Storage API URL
-$apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $fullPath;
-
 // Read file content
 $fileContent = file_get_contents($_FILES['file']['tmp_name']);
 if ($fileContent === false) {
     fail(500, 'Failed to read uploaded file.');
 }
 
-// Upload to Bunny Storage
-$ch = curl_init($apiUrl);
-curl_setopt_array($ch, [
-    CURLOPT_CUSTOMREQUEST => 'PUT',
-    CURLOPT_POSTFIELDS => $fileContent,
-    CURLOPT_HTTPHEADER => [
-        'AccessKey: ' . $storageApiKey,
-        'Content-Type: application/octet-stream',
-    ],
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_TIMEOUT => 60,
-]);
+if ($isExternal) {
+    // External storage (Bunny CDN)
+    // Extract CDN path from folder URL
+    // e.g., https://cdn.funmap.com/post-images -> post-images
+    $cdnPath = preg_replace('#^https?://[^/]+/#', '', $postImagesFolder);
+    $cdnPath = rtrim($cdnPath, '/');
 
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlError = curl_error($ch);
-curl_close($ch);
+    // Construct full path with month folder
+    $fullPath = $cdnPath . '/' . $monthFolder . '/' . $finalFilename;
 
-if ($curlError) {
-    fail(500, 'Bunny Storage upload error: ' . $curlError);
+    // Construct Bunny Storage API URL
+    $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $fullPath;
+
+    // Upload to Bunny Storage
+    $ch = curl_init($apiUrl);
+    curl_setopt_array($ch, [
+        CURLOPT_CUSTOMREQUEST => 'PUT',
+        CURLOPT_POSTFIELDS => $fileContent,
+        CURLOPT_HTTPHEADER => [
+            'AccessKey: ' . $storageApiKey,
+            'Content-Type: application/octet-stream',
+        ],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 60,
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($curlError) {
+        fail(500, 'Storage upload error: ' . $curlError);
+    }
+
+    if ($httpCode < 200 || $httpCode >= 300) {
+        $snippet = substr($response, 0, 200);
+        fail(500, 'Storage returned error code: ' . $httpCode . ($snippet ? (' ' . $snippet) : ''));
+    }
+
+    // Construct the public CDN URL
+    $publicUrl = rtrim($postImagesFolder, '/') . '/' . $monthFolder . '/' . $finalFilename;
+} else {
+    // Local storage
+    $localBasePath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/' . ltrim($postImagesFolder, '/');
+    $localDir = $localBasePath . '/' . $monthFolder;
+    
+    // Create directory if it doesn't exist
+    if (!is_dir($localDir)) {
+        if (!mkdir($localDir, 0755, true)) {
+            fail(500, 'Failed to create local directory: ' . $localDir);
+        }
+    }
+    
+    $localPath = $localDir . '/' . $finalFilename;
+    if (file_put_contents($localPath, $fileContent) === false) {
+        fail(500, 'Failed to save file locally.');
+    }
+    
+    // Construct the public URL (relative path)
+    $publicUrl = '/' . ltrim($postImagesFolder, '/') . '/' . $monthFolder . '/' . $finalFilename;
 }
-
-if ($httpCode < 200 || $httpCode >= 300) {
-    $snippet = substr($response, 0, 200);
-    fail(500, 'Bunny Storage returned error code: ' . $httpCode . ($snippet ? (' ' . $snippet) : ''));
-}
-
-// Construct the public CDN URL
-// Ensure folder URL ends with / and append month folder and filename
-$publicUrl = rtrim($postImagesFolder, '/') . '/' . $monthFolder . '/' . $finalFilename;
 
 // Get file size
 $fileSize = $_FILES['file']['size'];

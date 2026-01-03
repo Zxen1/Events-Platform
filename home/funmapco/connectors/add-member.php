@@ -140,9 +140,9 @@ if(!$insert->execute()){ $insert->close(); fail(500,'Database insert failed'); }
 $id = $insert->insert_id;
 $insert->close();
 
-// If avatar_file is present, upload to Bunny now (final filename), then update member row
+// If avatar_file is present, upload now (final filename), then update member row
 if ($hasAvatarFile) {
-  // Get avatar folder and Bunny Storage credentials from admin settings
+  // Get avatar folder and storage credentials from admin settings
   $stmt = $mysqli->prepare("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_avatars', 'storage_api_key', 'storage_zone_name')");
   if(!$stmt) { $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1'); fail(500,'Failed to get settings'); }
   $stmt->execute();
@@ -162,9 +162,12 @@ if ($hasAvatarFile) {
   }
   $stmt->close();
 
-  if (!$storageApiKey || !$storageZoneName) {
+  // Determine storage type: external (http/https) or local
+  $isExternal = preg_match('#^https?://#i', $avatarFolder);
+
+  if ($isExternal && (!$storageApiKey || !$storageZoneName)) {
     $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
-    fail(500, 'Avatar storage not configured. Bunny Storage credentials missing (storage_api_key / storage_zone_name).');
+    fail(500, 'Storage credentials not configured for external storage (storage_api_key / storage_zone_name).');
   }
 
   $originalName = $_FILES['avatar_file']['name'] ?? 'avatar.png';
@@ -176,35 +179,58 @@ if ($hasAvatarFile) {
     fail(400, 'Invalid avatar file type. Allowed: JPG, PNG, GIF, WebP');
   }
 
-  // Extract folder path from CDN URL
-  $cdnPath = preg_replace('#^https?://[^/]+/#', '', $avatarFolder);
-  $cdnPath = rtrim($cdnPath, '/');
-
   $finalFilename = $id . '-avatar.' . $ext;
-  $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $cdnPath . '/' . $finalFilename;
   $fileContent = file_get_contents($_FILES['avatar_file']['tmp_name']);
-
-  $ch = curl_init($apiUrl);
-  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-  curl_setopt($ch, CURLOPT_POSTFIELDS, $fileContent);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    'AccessKey: ' . $storageApiKey
-  ]);
-
-  $response = curl_exec($ch);
-  $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-  $curlError = curl_error($ch);
-  curl_close($ch);
-
-  if($curlError !== '') {
+  if ($fileContent === false) {
     $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
-    fail(500, 'Bunny Storage upload error: ' . $curlError);
+    fail(500, 'Failed to read uploaded file.');
   }
-  if($httpCode !== 201 && $httpCode !== 200) {
-    $snippet = is_string($response) ? substr($response, 0, 200) : '';
-    $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
-    fail(500, 'Bunny Storage returned error code: ' . $httpCode . ($snippet ? (' ' . $snippet) : ''));
+
+  if ($isExternal) {
+    // External storage (Bunny CDN)
+    $cdnPath = preg_replace('#^https?://[^/]+/#', '', $avatarFolder);
+    $cdnPath = rtrim($cdnPath, '/');
+
+    $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $cdnPath . '/' . $finalFilename;
+
+    $ch = curl_init($apiUrl);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $fileContent);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+      'AccessKey: ' . $storageApiKey
+    ]);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if($curlError !== '') {
+      $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
+      fail(500, 'Storage upload error: ' . $curlError);
+    }
+    if($httpCode !== 201 && $httpCode !== 200) {
+      $snippet = is_string($response) ? substr($response, 0, 200) : '';
+      $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
+      fail(500, 'Storage returned error code: ' . $httpCode . ($snippet ? (' ' . $snippet) : ''));
+    }
+  } else {
+    // Local storage
+    $localBasePath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/' . ltrim(rtrim($avatarFolder, '/'), '/');
+    
+    if (!is_dir($localBasePath)) {
+      if (!mkdir($localBasePath, 0755, true)) {
+        $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
+        fail(500, 'Failed to create local directory: ' . $localBasePath);
+      }
+    }
+    
+    $localPath = $localBasePath . '/' . $finalFilename;
+    if (file_put_contents($localPath, $fileContent) === false) {
+      $mysqli->query('DELETE FROM members WHERE id='.(int)$id.' LIMIT 1');
+      fail(500, 'Failed to save file locally.');
+    }
   }
 
   // Store filename only (rules convention)

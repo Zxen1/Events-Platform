@@ -740,19 +740,31 @@ foreach ($byLoc as $locNum => $entries) {
 $uploadedPaths = [];
 $mediaIds = [];
 if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
-  // If curl is missing, we'd fatal. Fail cleanly with debug info.
-  if (!function_exists('curl_init')) {
-    abort_with_error($mysqli, 500, 'bunny_curl_missing', $transactionActive);
-  }
   $settings = load_bunny_settings($mysqli);
   $folder = rtrim((string)$settings['folder_post_images'], '/');
-  $storageApiKey = (string)$settings['storage_api_key'];
-  $storageZoneName = (string)$settings['storage_zone_name'];
-  if ($folder === '' || $storageApiKey === '' || $storageZoneName === '') {
-    abort_with_error($mysqli, 500, 'Missing storage settings', $transactionActive);
+  if ($folder === '') {
+    abort_with_error($mysqli, 500, 'Missing folder_post_images setting', $transactionActive);
   }
-  $cdnPath = preg_replace('#^https?://[^/]+/#', '', $folder);
-  $cdnPath = rtrim((string)$cdnPath, '/');
+  
+  // Determine storage type: external (http/https) or local
+  $isExternal = preg_match('#^https?://#i', $folder);
+  
+  if ($isExternal) {
+    // External storage (Bunny CDN) - need curl and credentials
+    if (!function_exists('curl_init')) {
+      abort_with_error($mysqli, 500, 'bunny_curl_missing', $transactionActive);
+    }
+    $storageApiKey = (string)$settings['storage_api_key'];
+    $storageZoneName = (string)$settings['storage_zone_name'];
+    if ($storageApiKey === '' || $storageZoneName === '') {
+      abort_with_error($mysqli, 500, 'Missing storage credentials for external storage', $transactionActive);
+    }
+    $cdnPath = preg_replace('#^https?://[^/]+/#', '', $folder);
+    $cdnPath = rtrim((string)$cdnPath, '/');
+  } else {
+    // Local storage - resolve to absolute path
+    $localBasePath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/' . ltrim($folder, '/');
+  }
 
   $utcMinus12 = new DateTimeZone('Etc/GMT+12');
   $now = new DateTime('now', $utcMinus12);
@@ -777,19 +789,39 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     if ($ext === '') $ext = 'jpg';
     $hash = substr(md5(uniqid('', true) . random_bytes(8)), 0, 6);
     $finalFilename = $insertId . '-' . $hash . '.' . $ext;
-    $fullPath = $cdnPath . '/' . $monthFolder . '/' . $finalFilename;
 
     $bytes = file_get_contents($tmp);
     if ($bytes === false) abort_with_error($mysqli, 500, 'Read image bytes', $transactionActive);
-    $httpCode = 0;
-    $resp = '';
-    if (!bunny_upload_bytes($storageApiKey, $storageZoneName, $fullPath, $bytes, $httpCode, $resp)) {
-      // cleanup uploads done so far
-      foreach ($uploadedPaths as $p) { bunny_delete_path($storageApiKey, $storageZoneName, $p); }
-      abort_with_error($mysqli, 500, 'Upload failed', $transactionActive);
+    
+    if ($isExternal) {
+      // External: Upload to Bunny CDN
+      $fullPath = $cdnPath . '/' . $monthFolder . '/' . $finalFilename;
+      $httpCode = 0;
+      $resp = '';
+      if (!bunny_upload_bytes($storageApiKey, $storageZoneName, $fullPath, $bytes, $httpCode, $resp)) {
+        foreach ($uploadedPaths as $p) { bunny_delete_path($storageApiKey, $storageZoneName, $p); }
+        abort_with_error($mysqli, 500, 'Upload failed', $transactionActive);
+      }
+      $uploadedPaths[] = $fullPath;
+      $publicUrl = $folder . '/' . $monthFolder . '/' . $finalFilename;
+    } else {
+      // Local: Save to filesystem
+      $localDir = $localBasePath . '/' . $monthFolder;
+      if (!is_dir($localDir)) {
+        if (!mkdir($localDir, 0755, true)) {
+          abort_with_error($mysqli, 500, 'Failed to create local directory', $transactionActive);
+        }
+      }
+      $localPath = $localDir . '/' . $finalFilename;
+      if (file_put_contents($localPath, $bytes) === false) {
+        // Cleanup local files uploaded so far
+        foreach ($uploadedPaths as $p) { @unlink($p); }
+        abort_with_error($mysqli, 500, 'Failed to save local file', $transactionActive);
+      }
+      $uploadedPaths[] = $localPath;
+      $publicUrl = '/' . ltrim($folder, '/') . '/' . $monthFolder . '/' . $finalFilename;
     }
-    $uploadedPaths[] = $fullPath;
-    $publicUrl = $folder . '/' . $monthFolder . '/' . $finalFilename;
+    
     $fileSize = (int)($_FILES['images']['size'][$i] ?? 0);
     $settingsJson = null;
     if (isset($meta[$i]) && is_array($meta[$i])) {
@@ -797,7 +829,11 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     }
     $stmtMedia->bind_param('iissis', $memberId, $insertId, $finalFilename, $publicUrl, $fileSize, $settingsJson);
     if (!$stmtMedia->execute()) {
-      foreach ($uploadedPaths as $p) { bunny_delete_path($storageApiKey, $storageZoneName, $p); }
+      if ($isExternal) {
+        foreach ($uploadedPaths as $p) { bunny_delete_path($storageApiKey, $storageZoneName, $p); }
+      } else {
+        foreach ($uploadedPaths as $p) { @unlink($p); }
+      }
       $stmtMedia->close();
       abort_with_error($mysqli, 500, 'Insert media', $transactionActive);
     }

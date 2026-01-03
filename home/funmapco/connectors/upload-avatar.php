@@ -83,15 +83,25 @@ if (isset($_FILES['file']['size']) && (int)$_FILES['file']['size'] > $maxBytes) 
   fail(400, 'File too large. Max 10MB');
 }
 
-// Extract folder path from CDN URL (e.g., https://cdn.funmap.com/avatars -> avatars)
-$cdnPath = preg_replace('#^https?://[^/]+/#', '', $avatarFolder);
-$cdnPath = rtrim($cdnPath, '/');
+// Determine storage type: external (http/https) or local
+$isExternal = preg_match('#^https?://#i', $avatarFolder);
 
-// Upload to Bunny Storage (BUNNY ONLY — no local fallbacks)
-if($storageApiKey && $storageZoneName) {
-  $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $cdnPath . '/' . $finalFilename;
+$fileContent = file_get_contents($_FILES['file']['tmp_name']);
+if ($fileContent === false) {
+  fail(500, 'Failed to read uploaded file.');
+}
+
+if ($isExternal) {
+  // External storage (Bunny CDN)
+  if (!$storageApiKey || !$storageZoneName) {
+    fail(500, 'Storage credentials not configured for external storage (storage_api_key / storage_zone_name).');
+  }
   
-  $fileContent = file_get_contents($_FILES['file']['tmp_name']);
+  // Extract folder path from CDN URL (e.g., https://cdn.funmap.com/avatars -> avatars)
+  $cdnPath = preg_replace('#^https?://[^/]+/#', '', $avatarFolder);
+  $cdnPath = rtrim($cdnPath, '/');
+  
+  $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . $cdnPath . '/' . $finalFilename;
   
   $ch = curl_init($apiUrl);
   curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
@@ -107,19 +117,33 @@ if($storageApiKey && $storageZoneName) {
   curl_close($ch);
   
   if($curlError !== '') {
-    fail(500, 'Bunny Storage upload error: ' . $curlError);
+    fail(500, 'Storage upload error: ' . $curlError);
   }
   
   if($httpCode !== 201 && $httpCode !== 200) {
-    // Include a small snippet of response for debugging (safe; Bunny errors are not secrets)
     $snippet = is_string($response) ? substr($response, 0, 200) : '';
-    fail(500, 'Bunny Storage returned error code: ' . $httpCode . ($snippet ? (' ' . $snippet) : ''));
+    fail(500, 'Storage returned error code: ' . $httpCode . ($snippet ? (' ' . $snippet) : ''));
   }
+  
+  $avatarUrl = rtrim($avatarFolder, '/') . '/' . $finalFilename;
 } else {
-  fail(500, 'Avatar storage not configured. Bunny Storage credentials missing (storage_api_key / storage_zone_name).');
+  // Local storage
+  $localBasePath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/' . ltrim(rtrim($avatarFolder, '/'), '/');
+  
+  // Create directory if it doesn't exist
+  if (!is_dir($localBasePath)) {
+    if (!mkdir($localBasePath, 0755, true)) {
+      fail(500, 'Failed to create local directory: ' . $localBasePath);
+    }
+  }
+  
+  $localPath = $localBasePath . '/' . $finalFilename;
+  if (file_put_contents($localPath, $fileContent) === false) {
+    fail(500, 'Failed to save file locally.');
+  }
+  
+  $avatarUrl = '/' . ltrim(rtrim($avatarFolder, '/'), '/') . '/' . $finalFilename;
 }
-
-$avatarUrl = $avatarFolder . $finalFilename;
 
 ok(['url'=>$avatarUrl,'filename'=>$finalFilename]);
 ?>
