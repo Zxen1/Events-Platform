@@ -2573,9 +2573,17 @@ const MemberModule = (function() {
             });
         });
         
-        // Click on header to collapse/expand (only when multiple venues)
+        // Click on header to collapse/expand (only when multiple venues) and activate
         v1Header.addEventListener('click', function(e) {
             if (e.target === v1DeleteBtn || v1DeleteBtn.contains(e.target)) return;
+            // Activate this container
+            var tabPanel = venue1Container.parentNode;
+            if (tabPanel) {
+                tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
+                    c.classList.remove('member-form-container--active', 'member-section-container--active');
+                });
+            }
+            venue1Container.classList.add('member-section-container--active');
             // Only allow collapse when there's more than one venue
             if (window._memberLocationQuantity > 1) {
                 venue1Container.classList.toggle('member-section-venue--collapsed');
@@ -2764,9 +2772,14 @@ const MemberModule = (function() {
                 deleteBtn.innerHTML = '&times;';
                 deleteBtn.setAttribute('aria-label', 'Delete ' + defaultName);
                 
-                // Click on header to collapse (but not on delete button) - CSS handles visibility
+                // Click on header to collapse (but not on delete button) and activate
                 headerRow.addEventListener('click', function(e) {
                     if (e.target === deleteBtn || deleteBtn.contains(e.target)) return;
+                    // Activate this container
+                    tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
+                        c.classList.remove('member-form-container--active', 'member-section-container--active');
+                    });
+                    locationContainer.classList.add('member-section-container--active');
                     locationContainer.classList.toggle('member-section-venue--collapsed');
                 });
                 
