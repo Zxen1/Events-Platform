@@ -240,6 +240,33 @@ try {
     $formData['banned_words'] = $bannedWords;
     $formData['field_limits'] = $fieldLimitsLookup;
 
+    // Fetch password requirements from member_settings
+    $passwordSettings = [
+        'min_length' => 8,
+        'max_length' => 128,
+        'require_lowercase' => false,
+        'require_uppercase' => false,
+        'require_number' => false,
+        'require_symbol' => false,
+    ];
+    try {
+        $pwStmt = $pdo->prepare("SELECT member_setting_key, member_setting_value FROM member_settings WHERE member_setting_key LIKE 'password_%'");
+        $pwStmt->execute();
+        while ($pwRow = $pwStmt->fetch(PDO::FETCH_ASSOC)) {
+            $k = $pwRow['member_setting_key'] ?? '';
+            $v = $pwRow['member_setting_value'] ?? '';
+            if ($k === 'password_min_length') $passwordSettings['min_length'] = (int)$v;
+            if ($k === 'password_max_length') $passwordSettings['max_length'] = (int)$v;
+            if ($k === 'password_require_lowercase') $passwordSettings['require_lowercase'] = ($v === '1');
+            if ($k === 'password_require_uppercase') $passwordSettings['require_uppercase'] = ($v === '1');
+            if ($k === 'password_require_number') $passwordSettings['require_number'] = ($v === '1');
+            if ($k === 'password_require_symbol') $passwordSettings['require_symbol'] = ($v === '1');
+        }
+    } catch (Throwable $e) {
+        // Use defaults if fetch fails
+    }
+    $formData['password_settings'] = $passwordSettings;
+
     // Flush output immediately
     echo json_encode([
         'success' => true,

@@ -1958,6 +1958,7 @@ const CountryComponent = (function(){
 
 const MemberAuthFieldsetsComponent = (function(){
     var fieldsetMap = null;
+    var passwordSettings = null;
     var loadPromise = null;
 
     function loadFromDatabase() {
@@ -1972,6 +1973,8 @@ const MemberAuthFieldsetsComponent = (function(){
                     if (!k) return;
                     fieldsetMap[k] = f;
                 });
+                // Store password settings
+                passwordSettings = res && res.formData && res.formData.password_settings ? res.formData.password_settings : null;
                 return fieldsetMap;
             })
             .catch(function(err) {
@@ -1980,6 +1983,10 @@ const MemberAuthFieldsetsComponent = (function(){
                 return fieldsetMap;
             });
         return loadPromise;
+    }
+
+    function getPasswordSettings() {
+        return passwordSettings;
     }
 
     function getFieldset(key) {
@@ -2063,11 +2070,17 @@ const MemberAuthFieldsetsComponent = (function(){
                 if (!fd) return null;
                 // Registration rule: all auth fieldsets are required.
                 var fdReq = Object.assign({}, fd, { required: true, is_required: true });
-                var fieldset = FieldsetBuilder.buildFieldset(fdReq, {
+                var buildOptions = {
                     idPrefix: 'memberRegister',
                     fieldIndex: 0,
                     container: containerEl
-                });
+                };
+                // Pass password settings for password fieldsets
+                var isPasswordField = (fieldsetKey === 'password' || fieldsetKey === 'confirm-password' || fieldsetKey === 'new-password');
+                if (isPasswordField && passwordSettings) {
+                    buildOptions.passwordSettings = passwordSettings;
+                }
+                var fieldset = FieldsetBuilder.buildFieldset(fdReq, buildOptions);
                 containerEl.appendChild(fieldset);
                 var input = fieldset.querySelector('input, textarea, select');
                 if (typeof patchInput === 'function') patchInput(input || null);
@@ -2131,11 +2144,17 @@ const MemberAuthFieldsetsComponent = (function(){
             function addFieldset(fieldsetKey, patchInput) {
                 var fd = getFieldset(fieldsetKey);
                 if (!fd) return null;
-                var fieldset = FieldsetBuilder.buildFieldset(fd, {
+                var buildOptions = {
                     idPrefix: 'memberProfile',
                     fieldIndex: 0,
                     container: containerEl
-                });
+                };
+                // Pass password settings for password fieldsets
+                var isPasswordField = (fieldsetKey === 'password' || fieldsetKey === 'confirm-password' || fieldsetKey === 'new-password');
+                if (isPasswordField && passwordSettings) {
+                    buildOptions.passwordSettings = passwordSettings;
+                }
+                var fieldset = FieldsetBuilder.buildFieldset(fd, buildOptions);
                 containerEl.appendChild(fieldset);
                 var input = fieldset.querySelector('input, textarea, select');
                 if (typeof patchInput === 'function') patchInput(input || null);

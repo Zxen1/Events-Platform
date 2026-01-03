@@ -656,12 +656,43 @@ const FieldsetBuilder = (function(){
             case 'password':
             case 'confirm-password':
             case 'new-password':
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                // Use password settings from member_settings if provided
+                var pwSettings = options.passwordSettings || null;
+                var pwMinLength = pwSettings ? pwSettings.min_length : (minLength || 8);
+                var pwMaxLength = pwSettings ? pwSettings.max_length : (maxLength || 128);
+                
+                // Build dynamic password requirements for tooltip
+                var pwRequirements = [];
+                pwRequirements.push(pwMinLength + '-' + pwMaxLength + ' characters');
+                if (pwSettings) {
+                    if (pwSettings.require_lowercase) pwRequirements.push('Lowercase letter (a-z)');
+                    if (pwSettings.require_uppercase) pwRequirements.push('Uppercase letter (A-Z)');
+                    if (pwSettings.require_number) pwRequirements.push('Number (0-9)');
+                    if (pwSettings.require_symbol) pwRequirements.push('Special character (!@#$%^&*)');
+                }
+                
+                // Build tooltip with custom text + requirements
+                var pwTooltipText = tooltip || '';
+                var pwRequirementsText = pwRequirements.join('\n');
+                if (pwTooltipText) {
+                    pwTooltipText = pwTooltipText + '\n──────────\n' + pwRequirementsText;
+                } else {
+                    pwTooltipText = pwRequirementsText;
+                }
+                
+                // Build label with dynamic tooltip (pass null for min/max to prevent double display)
+                fieldset.appendChild(buildLabel(name, pwTooltipText, null, null));
+                
                 var pwInput = document.createElement('input');
                 pwInput.type = 'password';
                 pwInput.className = 'fieldset-input';
-                applyPlaceholder(pwInput, placeholder);
-                var pwValidation = addInputValidation(pwInput, minLength, maxLength, null);
+                
+                // Dynamic placeholder showing min length
+                var pwPlaceholder = placeholder || ('Min ' + pwMinLength + ' characters');
+                applyPlaceholder(pwInput, pwPlaceholder);
+                
+                // Use password settings for validation
+                var pwValidation = addInputValidation(pwInput, pwMinLength, pwMaxLength, null);
                 fieldset.appendChild(pwInput);
                 fieldset.appendChild(pwValidation.charCount);
                 break;
