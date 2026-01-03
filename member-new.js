@@ -2328,10 +2328,9 @@ const MemberModule = (function() {
                             formFields.appendChild(quantityRow);
                         }
                         
-                        // Explanatory message (shown when quantity > 1)
+                        // Explanatory message (always visible)
                         var locationExplainer = document.createElement('p');
                         locationExplainer.className = 'member-location-explainer';
-                        locationExplainer.style.display = 'none';
                         
                         // Fetch message from database (no hardcoding)
                         if (typeof window.getMessage === 'function') {
@@ -2518,7 +2517,6 @@ const MemberModule = (function() {
             
             quantityContainer.appendChild(quantityRow);
             if (explainerMsg) {
-                explainerMsg.style.display = ''; // Always visible
                 quantityContainer.appendChild(explainerMsg);
             }
             

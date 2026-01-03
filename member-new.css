@@ -1698,6 +1698,13 @@
   margin-bottom: 12px;
 }
 
+/* Quantity picker container - invisible, sits on panel */
+.member-section-quantity {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
 .member-section-container--active,
 .member-form-container--active {
   border-color: var(--website-blue-active-fill, #3b82f5);
@@ -1709,11 +1716,13 @@
   align-items: center;
   justify-content: space-between;
   height: 36px;
-  padding: 0;
+  padding: 0 10px;
   margin: 0 0 10px;
   font-size: 16px;
   font-weight: 600;
   color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   cursor: pointer;
   user-select: none;
 }
@@ -1796,12 +1805,11 @@
   color: #e74c3c;
 }
 
-/* Location explainer message */
+/* Location explainer message - no container, sits on panel */
 .member-location-explainer {
-  margin: 4px 0 8px;
-  padding: 8px 12px;
+  margin: 0;
+  padding: 0;
   background: transparent;
-  border-radius: 4px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
