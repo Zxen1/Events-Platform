@@ -606,9 +606,6 @@ const FieldsetBuilder = (function(){
                 if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
                 if (child.classList.contains('component-currencycompact-menu')) child.classList.add('fieldset-row-item--currency-compact');
                 if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
-                if (child.classList.contains('fieldset-sessionpricing-pricing-add') || child.classList.contains('fieldset-sessionpricing-pricing-remove')) {
-                    child.classList.add('fieldset-row-item--no-flex');
-                }
             });
         }
         
@@ -1693,7 +1690,7 @@ const FieldsetBuilder = (function(){
 
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
-                    addBtn.className = 'fieldset-sessionpricing-pricing-button-add';
+                    addBtn.className = 'fieldset-sessionpricing-pricing-button-add fieldset-row-item--no-flex';
                     addBtn.textContent = '+';
                     addBtn.addEventListener('click', function() {
                         tiersContainer.appendChild(spCreatePricingTierBlock(tiersContainer));
@@ -1704,7 +1701,7 @@ const FieldsetBuilder = (function(){
 
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.className = 'fieldset-sessionpricing-pricing-button-remove';
+                    removeBtn.className = 'fieldset-sessionpricing-pricing-button-remove fieldset-row-item--no-flex';
                     removeBtn.textContent = '−';
                     removeBtn.addEventListener('click', function() {
                         block.remove();
@@ -1784,7 +1781,7 @@ const FieldsetBuilder = (function(){
 
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
-                    addBtn.className = 'fieldset-sessionpricing-pricing-button-add';
+                    addBtn.className = 'fieldset-sessionpricing-pricing-button-add fieldset-row-item--no-flex';
                     addBtn.textContent = '+';
                     addBtn.addEventListener('click', function() {
                         seatingAreasContainer.appendChild(spCreateSeatingAreaBlock(seatingAreasContainer));
@@ -1795,7 +1792,7 @@ const FieldsetBuilder = (function(){
 
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
-                    removeBtn.className = 'fieldset-sessionpricing-pricing-button-remove';
+                    removeBtn.className = 'fieldset-sessionpricing-pricing-button-remove fieldset-row-item--no-flex';
                     removeBtn.textContent = '−';
                     removeBtn.addEventListener('click', function() {
                         block.remove();
