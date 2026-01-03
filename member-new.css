@@ -1727,13 +1727,12 @@
   border-color: var(--website-blue-active-fill, #3b82f5);
 }
 
-/* Section headers - 36px, EXACT copy of formpicker menu button */
+/* Section headers - 36px, horizontal flex only, line-height for vertical */
 .member-section-header {
   width: 100%;
   height: 36px;
   display: flex;
-  align-items: center;
-  padding: 0 0 0 10px;
+  padding: 0 10px;
   background: rgba(0,0,0,0.2);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
@@ -1745,34 +1744,41 @@
 }
 
 .member-section-header:hover {
-  background: rgba(255,255,255,0.05);
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 /* When expanded - connect to content below */
 .member-section-venue:not(.member-section-venue--collapsed) .member-section-header {
-  border-color: rgba(255,255,255,0.1);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
 
+/* When container is active/focused - blue border */
+.member-section-venue.member-section-container--active .member-section-header {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+.member-section-venue.member-section-container--active .member-venue-content {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
 .member-section-header-text {
   flex: 1;
-  text-align: left;
   font-size: 14px;
   color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  line-height: 36px;
 }
 
-/* Arrow - EXACT copy from formpicker menu button arrow */
+/* Arrow - line-height for vertical centering */
 .member-section-header-arrow {
   width: 16px;
-  min-width: 16px;
   height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  line-height: 36px;
+  text-align: center;
   font-size: 10px;
   color: #888;
   transition: transform 0.2s;
@@ -1788,7 +1794,6 @@
 .member-section-header .member-location-delete-btn {
   flex-shrink: 0;
   margin-left: 4px;
-  margin-right: 10px;
 }
 
 /* Venue content - styled like formpicker menu options */
@@ -1834,12 +1839,10 @@
   min-width: 36px;
   min-height: 36px;
   font-size: 24px;
-  line-height: 1;
+  line-height: 36px;
+  text-align: center;
   cursor: pointer;
   transition: color 0.15s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .member-location-delete-btn:hover {
