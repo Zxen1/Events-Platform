@@ -95,7 +95,7 @@
     color: #fff;
     width: auto;
     white-space: pre-line;
-    z-index: var(--layer-menu, 85);
+    z-index: var(--layer-dialog, 86);
     line-height: 1.4;
 }
 
@@ -116,7 +116,7 @@
     height: 36px;
     padding: 0 10px;
     background: #222;
-    border: 1px solid #333;
+    border: 1px solid #444;
     border-radius: 5px;
     color: #fff;
     font-size: 13px;
@@ -135,11 +135,11 @@
 }
 
 .fieldset-input::placeholder {
-    color: #666;
+    color: #777;
 }
 
 .fieldset-input:hover {
-    border-color: #555;
+    border-color: #666;
 }
 
 .fieldset-input:focus {

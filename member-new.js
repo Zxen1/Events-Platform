@@ -2398,9 +2398,12 @@ const MemberModule = (function() {
                                 }
                                 applyMustRepeatNumberingForMainForm();
                                 
-                                // Show/hide venue 1 arrow
+                                // Show/hide venue 1 arrow and delete button
                                 if (window._memberVenue1Arrow) {
                                     window._memberVenue1Arrow.style.display = locationQuantity > 1 ? '' : 'none';
+                                }
+                                if (window._memberVenue1DeleteBtn) {
+                                    window._memberVenue1DeleteBtn.style.display = locationQuantity > 1 ? '' : 'none';
                                 }
                                 
                                 // Re-render additional locations (after checkout section)
@@ -2431,9 +2434,12 @@ const MemberModule = (function() {
                             updateLocation1Header(true);
                             applyMustRepeatNumberingForMainForm();
                             
-                            // Show venue 1 arrow when multiple venues
+                            // Show venue 1 arrow and delete button when multiple venues
                             if (window._memberVenue1Arrow) {
                                 window._memberVenue1Arrow.style.display = '';
+                            }
+                            if (window._memberVenue1DeleteBtn) {
+                                window._memberVenue1DeleteBtn.style.display = '';
                             }
                             
                             // Re-render additional locations (after checkout section)
@@ -2541,17 +2547,46 @@ const MemberModule = (function() {
         v1Arrow.textContent = '▼';
         v1Arrow.style.display = 'none';
         
+        // Delete button (shown when multiple venues)
+        var v1DeleteBtn = document.createElement('button');
+        v1DeleteBtn.type = 'button';
+        v1DeleteBtn.className = 'member-location-delete-btn';
+        v1DeleteBtn.innerHTML = '&times;';
+        v1DeleteBtn.setAttribute('aria-label', 'Delete ' + venueTypeName + ' 1');
+        v1DeleteBtn.style.display = 'none';
+        v1DeleteBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var venueName = v1HeaderText.textContent || (venueTypeName + ' 1');
+            ConfirmDialogComponent.show({
+                title: 'Delete Location',
+                message: 'Delete "' + venueName + '"?',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                isDanger: true,
+                onConfirm: function() {
+                    venue1Container.remove();
+                    window._memberLocationQuantity--;
+                    var qtyDisplay = document.querySelector('.member-location-quantity-display');
+                    if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
+                    updateVenueDeleteButtons();
+                }
+            });
+        });
+        
         // Click on header to collapse/expand (CSS handles visibility)
-        v1Header.addEventListener('click', function() {
+        v1Header.addEventListener('click', function(e) {
+            if (e.target === v1DeleteBtn || v1DeleteBtn.contains(e.target)) return;
             venue1Container.classList.toggle('member-section-venue--collapsed');
         });
         
         v1Header.appendChild(v1HeaderText);
         v1Header.appendChild(v1Arrow);
+        v1Header.appendChild(v1DeleteBtn);
         venue1Container.appendChild(v1Header);
         
-        // Store reference to arrow for showing/hiding based on venue count
+        // Store references for showing/hiding based on venue count
         window._memberVenue1Arrow = v1Arrow;
+        window._memberVenue1DeleteBtn = v1DeleteBtn;
         
         // Content wrapper for collapsing
         var v1Content = document.createElement('div');
@@ -2561,19 +2596,21 @@ const MemberModule = (function() {
         if (locationFieldsetEl) {
             v1Content.appendChild(locationFieldsetEl);
             
-            // Listen for venue name changes to update header (including Google Places autofill)
+            // Sync header with venue input (supports Google Places autofill)
             var venueInput = locationFieldsetEl.querySelector('input[type="text"]');
             if (venueInput) {
+                var lastValue = '';
                 function updateV1Header() {
                     var name = venueInput.value.trim();
-                    v1HeaderText.textContent = name || (venueTypeName + ' 1');
+                    if (name !== lastValue) {
+                        lastValue = name;
+                        v1HeaderText.textContent = name || (venueTypeName + ' 1');
+                    }
                 }
+                // Poll for value changes (catches Google Places autofill)
+                setInterval(updateV1Header, 200);
                 venueInput.addEventListener('input', updateV1Header);
                 venueInput.addEventListener('change', updateV1Header);
-                // Google Places may set value programmatically - poll briefly after focus
-                venueInput.addEventListener('blur', function() {
-                    setTimeout(updateV1Header, 100);
-                });
             }
         }
         
@@ -2765,7 +2802,7 @@ const MemberModule = (function() {
                                     window._memberLocationQuantity--;
                                     var qtyDisplay = document.querySelector('.member-location-quantity-display');
                                     if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
-                                    renumberLocations();
+                                    updateVenueDeleteButtons();
                                 }
                             }
                         });
@@ -2886,19 +2923,21 @@ const MemberModule = (function() {
             
             locationSection.appendChild(locationFieldsetClone);
             
-                // Listen for venue name changes to update header (including Google Places autofill)
+                // Sync header with venue input (supports Google Places autofill)
                 var venueInput = locationFieldsetClone.querySelector('input[type="text"]');
                 if (venueInput) {
+                    var lastValue = '';
                     function updateLocHeader() {
                         var name = venueInput.value.trim();
-                        headerText.textContent = name || defaultName;
+                        if (name !== lastValue) {
+                            lastValue = name;
+                            headerText.textContent = name || defaultName;
+                        }
                     }
+                    // Poll for value changes (catches Google Places autofill)
+                    setInterval(updateLocHeader, 200);
                     venueInput.addEventListener('input', updateLocHeader);
                     venueInput.addEventListener('change', updateLocHeader);
-                    // Google Places may set value programmatically - poll briefly after focus
-                    venueInput.addEventListener('blur', function() {
-                        setTimeout(updateLocHeader, 100);
-                    });
                 }
                 
                 // Render all repeat fieldsets in order
@@ -3080,37 +3119,26 @@ const MemberModule = (function() {
         }
     }
     
-    // Renumber remaining location sections after deletion
-    function renumberLocations() {
-        var containers = document.querySelectorAll('.member-additional-location-container');
-        containers.forEach(function(container, index) {
-            var newNum = index + 2; // Locations start at 2
-            container.dataset.locationNumber = newNum;
-            container.dataset.venue = newNum;
-            
-            var section = container.querySelector('.member-additional-location');
-            if (section) {
-                section.dataset.locationNumber = newNum;
+    // Update delete button visibility based on venue count
+    function updateVenueDeleteButtons() {
+        var allVenueContainers = document.querySelectorAll('.member-section-venue');
+        var venueCount = allVenueContainers.length;
+        var showDelete = venueCount > 1;
+        
+        // Update venue 1 delete button
+        if (window._memberVenue1DeleteBtn) {
+            window._memberVenue1DeleteBtn.style.display = showDelete ? '' : 'none';
+        }
+        if (window._memberVenue1Arrow) {
+            window._memberVenue1Arrow.style.display = showDelete ? '' : 'none';
+        }
+        
+        // Update all venue delete buttons
+        allVenueContainers.forEach(function(container) {
+            var deleteBtn = container.querySelector('.member-location-delete-btn');
+            if (deleteBtn) {
+                deleteBtn.style.display = showDelete ? '' : 'none';
             }
-            
-            // Update header text (check new structure first, then old)
-            var headerText = container.querySelector('.member-section-header-text');
-            if (headerText) {
-                var text = headerText.textContent || '';
-                var match = text.match(/^(\w+)\s+\d+$/);
-                if (match) {
-                    headerText.textContent = match[1] + ' ' + newNum;
-                }
-            }
-            
-            // Update fieldset labels
-            var fieldsets = section.querySelectorAll('.fieldset');
-            fieldsets.forEach(function(fs) {
-                var labelText = fs.querySelector('.fieldset-label-text');
-                if (labelText && fs.dataset.baseLabel) {
-                    labelText.textContent = fs.dataset.baseLabel + ' ' + newNum;
-                }
-            });
         });
     }
     
