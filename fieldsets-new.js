@@ -1002,7 +1002,7 @@ const FieldsetBuilder = (function(){
                     // Show existing images
                     imageEntries.forEach(function(entry, idx) {
                         var thumb = document.createElement('div');
-                        thumb.className = 'fieldset-images-field-item';
+                        thumb.className = 'fieldset-images-item';
                         // Native drag is disabled until a press-and-hold (no visible drag handle here).
                         thumb.draggable = false;
                         // Stable ID so we can rebuild imageEntries order from DOM order after drag.
@@ -1012,7 +1012,7 @@ const FieldsetBuilder = (function(){
                         thumb.dataset.imageEntryId = entry ? entry._imageEntryId : '';
                         
                         var img = document.createElement('img');
-                        img.className = 'fieldset-images-field-image';
+                        img.className = 'fieldset-images-item-image';
                         img.src = (entry && entry.previewUrl) ? entry.previewUrl : (entry ? entry.fileUrl : '');
                         thumb.appendChild(img);
 
@@ -1029,7 +1029,7 @@ const FieldsetBuilder = (function(){
                         
                         var removeBtn = document.createElement('button');
                         removeBtn.type = 'button';
-                        removeBtn.className = 'fieldset-images-button-remove';
+                        removeBtn.className = 'fieldset-images-item-button-remove';
                         removeBtn.textContent = '×';
                         (function(idx) {
                             removeBtn.addEventListener('click', function(e) {
@@ -1055,19 +1055,19 @@ const FieldsetBuilder = (function(){
 
                         function armDrag(e) {
                             // Don't arm dragging from the remove button.
-                            if (e && e.target && (e.target === removeBtn || (e.target.closest && e.target.closest('.fieldset-images-button-remove')))) {
+                            if (e && e.target && (e.target === removeBtn || (e.target.closest && e.target.closest('.fieldset-images-item-button-remove')))) {
                                 return;
                             }
                             dragArmed = true;
                             thumb.draggable = true;
-                            thumb.classList.add('fieldset-images-field-item--dragready');
+                            thumb.classList.add('fieldset-images-item--dragready');
                         }
 
                         function disarmDrag() {
                             dragArmed = false;
-                            if (!thumb.classList.contains('dragging')) {
+                            if (!thumb.classList.contains('fieldset-images-item--dragging')) {
                                 thumb.draggable = false;
-                                thumb.classList.remove('fieldset-images-field-item--dragready');
+                                thumb.classList.remove('fieldset-images-item--dragready');
                             }
                         }
 
@@ -1126,22 +1126,22 @@ const FieldsetBuilder = (function(){
                             }
                             didDrag = true;
                             setThumbDragImage(e);
-                            var siblings = Array.from(imagesContainer.querySelectorAll('.fieldset-images-field-item'));
+                            var siblings = Array.from(imagesContainer.querySelectorAll('.fieldset-images-item'));
                             dragStartIndex = siblings.indexOf(thumb);
                             if (e && e.dataTransfer) {
                                 e.dataTransfer.effectAllowed = 'move';
                                 try { e.dataTransfer.setData('text/plain', thumb.dataset.imageEntryId || ''); } catch (err) {}
                             }
-                            thumb.classList.add('dragging');
+                            thumb.classList.add('fieldset-images-item--dragging');
                         });
                         thumb.addEventListener('dragend', function() {
-                            thumb.classList.remove('dragging');
-                            thumb.classList.remove('fieldset-images-field-item--dragready');
+                            thumb.classList.remove('fieldset-images-item--dragging');
+                            thumb.classList.remove('fieldset-images-item--dragready');
                             thumb.draggable = false;
                             dragArmed = false;
 
                             // Rebuild imageEntries in the new DOM order (exclude the upload tile).
-                            var orderedThumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-images-field-item'));
+                            var orderedThumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-images-item'));
                             var idToEntry = {};
                             imageEntries.forEach(function(en) {
                                 if (en && en._imageEntryId) idToEntry[String(en._imageEntryId)] = en;
@@ -1158,7 +1158,7 @@ const FieldsetBuilder = (function(){
                             }
 
                             // Only notify meta/UI if position actually changed
-                            var siblingsNow = Array.from(imagesContainer.querySelectorAll('.fieldset-images-field-item'));
+                            var siblingsNow = Array.from(imagesContainer.querySelectorAll('.fieldset-images-item'));
                             var currentIndex = siblingsNow.indexOf(thumb);
                             if (dragStartIndex !== -1 && currentIndex !== -1 && currentIndex !== dragStartIndex) {
                                 // Re-render to ensure remove buttons map to correct indices
@@ -1177,7 +1177,7 @@ const FieldsetBuilder = (function(){
                         uploadBox.className = 'fieldset-images-button-add';
                         uploadBox.innerHTML = ImageAddTileComponent.buildMarkup({
                             iconClass: 'fieldset-images-button-add-icon',
-                            textClass: 'fieldset-images-button-add-label',
+                            textClass: 'fieldset-images-button-add-text',
                             label: 'Add Image'
                         });
                         uploadBox.addEventListener('click', function() {
@@ -1199,7 +1199,7 @@ const FieldsetBuilder = (function(){
                 // Grid-friendly dragover handler (insertBefore/after like Formbuilder)
                 imagesContainer.addEventListener('dragover', function(e) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    var dragging = imagesContainer.querySelector('.fieldset-image-thumb.dragging');
+                    var dragging = imagesContainer.querySelector('.fieldset-images-item.dragging');
                     if (!dragging) return;
 
                     var px = (e && typeof e.clientX === 'number') ? e.clientX : 0;
@@ -1210,10 +1210,10 @@ const FieldsetBuilder = (function(){
                     if (document && typeof document.elementFromPoint === 'function') {
                         target = document.elementFromPoint(px, py);
                     }
-                    var overThumb = target && target.closest ? target.closest('.fieldset-image-thumb') : null;
+                    var overThumb = target && target.closest ? target.closest('.fieldset-images-item') : null;
                     if (overThumb && overThumb === dragging) overThumb = null;
 
-                    var thumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-image-thumb'));
+                    var thumbs = Array.from(imagesContainer.querySelectorAll('.fieldset-images-item'));
                     if (!thumbs.length) return;
 
                     // If not directly over a thumb, allow easier "drop to first" / "drop to last" behavior.
