@@ -1939,6 +1939,30 @@ const FieldsetBuilder = (function(){
                 // Calendar + sessions list
                 function spGetDayOfWeek(dateStr) { return new Date(dateStr + 'T00:00:00').getDay(); }
 
+                // Apply draft changes immediately to session data
+                function spApplyDraft() {
+                    if (!spDateDraft) return;
+                    var draftKeys = Array.from(spDateDraft).sort();
+                    var currentKeys = Object.keys(spSessionData).sort();
+                    
+                    // Remove deselected dates
+                    currentKeys.forEach(function(k) {
+                        if (!spDateDraft.has(k)) delete spSessionData[k];
+                    });
+                    
+                    // Add newly selected dates
+                    draftKeys.forEach(function(k) {
+                        if (!spSessionData[k]) {
+                            spEnsureDefaultGroup();
+                            var autofillVal = spGetAutofillForSlot(k, 0);
+                            spSessionData[k] = { times: [autofillVal], edited: [false], groups: ['A'] };
+                        }
+                    });
+                    
+                    spRenderSessions();
+                    try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e1) {}
+                }
+
                 // Single source of truth: use CalendarComponent (same calendar used elsewhere).
                 var spCalContainer = document.createElement('div');
                 spCalContainer.className = 'calendar-container fieldset-sessionpricing-calendar-container';
@@ -1956,6 +1980,8 @@ const FieldsetBuilder = (function(){
                         } catch (e0) {
                             spDateDraft = new Set();
                         }
+                        // Apply changes immediately (no OK button needed)
+                        spApplyDraft();
                     }
                 });
 
@@ -1972,24 +1998,8 @@ const FieldsetBuilder = (function(){
                 spDatePickerBody.className = 'fieldset-sessionpricing-calendar-popover-body';
                 spDatePickerBody.appendChild(spCalContainer);
 
-                var spDatePickerActions = document.createElement('div');
-                spDatePickerActions.className = 'fieldset-sessionpricing-calendar-popover-footer';
-
-                var spDatePickerCancel = document.createElement('button');
-                spDatePickerCancel.type = 'button';
-                spDatePickerCancel.className = 'fieldset-sessionpricing-calendar-button-cancel';
-                spDatePickerCancel.textContent = 'Cancel';
-
-                var spDatePickerOk = document.createElement('button');
-                spDatePickerOk.type = 'button';
-                spDatePickerOk.className = 'fieldset-sessionpricing-calendar-button-ok';
-                spDatePickerOk.textContent = 'OK';
-
-                spDatePickerActions.appendChild(spDatePickerOk);
-                spDatePickerActions.appendChild(spDatePickerCancel);
-
+                // No OK/Cancel buttons - changes apply immediately
                 spDatePickerPopover.appendChild(spDatePickerBody);
-                spDatePickerPopover.appendChild(spDatePickerActions);
                 // Attach inside the fieldset so it naturally scrolls with the panel (same model as the session picker originally).
                 fieldset.appendChild(spDatePickerPopover);
 
@@ -2177,36 +2187,7 @@ const FieldsetBuilder = (function(){
                     }
                 });
 
-                spDatePickerCancel.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                    spCloseDatePicker();
-                });
-
-                spDatePickerOk.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                    if (!spDateDraft) { spCloseDatePicker(); return; }
-
-                    var draftKeys = Array.from(spDateDraft).sort();
-                    var currentKeys = Object.keys(spSessionData).sort();
-
-                    // Remove deselected dates
-                    currentKeys.forEach(function(k) {
-                        if (!spDateDraft.has(k)) delete spSessionData[k];
-                    });
-
-                    // Add newly selected dates
-                    draftKeys.forEach(function(k) {
-                        if (!spSessionData[k]) {
-                            spEnsureDefaultGroup();
-                            var autofillVal = spGetAutofillForSlot(k, 0);
-                            spSessionData[k] = { times: [autofillVal], edited: [false], groups: ['A'] };
-                        }
-                    });
-
-                    spRenderSessions();
-                    try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e1) {}
-                    spCloseDatePicker();
-                });
+                // Click outside to close (already handled by spDatePickerDocHandler)
 
                 var spGodSetForSlot = {};
                 function spAutofillTimes(changedDateStr, changedSlotIdx, newTime) {

@@ -2573,10 +2573,13 @@ const MemberModule = (function() {
             });
         });
         
-        // Click on header to collapse/expand (CSS handles visibility)
+        // Click on header to collapse/expand (only when multiple venues)
         v1Header.addEventListener('click', function(e) {
             if (e.target === v1DeleteBtn || v1DeleteBtn.contains(e.target)) return;
-            venue1Container.classList.toggle('member-section-venue--collapsed');
+            // Only allow collapse when there's more than one venue
+            if (window._memberLocationQuantity > 1) {
+                venue1Container.classList.toggle('member-section-venue--collapsed');
+            }
         });
         
         v1Header.appendChild(v1HeaderText);
@@ -2656,14 +2659,6 @@ const MemberModule = (function() {
         // SECTION: Checkout Container (checkout + terms + submit + auth gate)
         var checkoutContainer = document.createElement('div');
         checkoutContainer.className = 'member-form-container member-section-container member-section-checkout';
-        
-        var cHeader = document.createElement('div');
-        cHeader.className = 'member-section-header';
-        var cHeaderText = document.createElement('span');
-        cHeaderText.className = 'member-section-header-text';
-        cHeaderText.textContent = 'Checkout';
-        cHeader.appendChild(cHeaderText);
-        checkoutContainer.appendChild(cHeader);
         
         // Move checkout wrapper if exists
         if (checkoutWrapper) {

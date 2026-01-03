@@ -1660,9 +1660,9 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid #333;
+  border: 1px solid #444;
   border-radius: 5px;
-  color: #666;
+  color: #777;
   cursor: pointer;
   font-size: 18px;
   flex: 0 0 36px;
@@ -1723,9 +1723,14 @@
   padding: 0;
 }
 
-.member-section-container--active,
-.member-form-container--active {
-  border-color: var(--website-blue-active-fill, #3b82f5);
+/* Active state for basic form container (not venues - venues have their own rules) */
+.member-form-container--active:not(.member-section-venue):not(.member-section-checkout) {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+/* Checkout section active state */
+.member-section-checkout.member-section-container--active {
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 /* Section headers - 36px, horizontal flex only, line-height for vertical */
