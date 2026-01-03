@@ -4566,6 +4566,10 @@ const WelcomeModalComponent = (function() {
      */
     function close() {
         if (!modal) return;
+        // Move focus out before hiding to avoid aria-hidden violation
+        if (document.activeElement && modal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
         isOpen = false;
@@ -5709,6 +5713,10 @@ const AvatarCropperComponent = (function() {
     
     function close() {
         if (!overlay) return;
+        // Move focus out before hiding to avoid aria-hidden violation
+        if (document.activeElement && overlay.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
         overlay.hidden = true;
         overlay.setAttribute('aria-hidden', 'true');
         
@@ -6470,6 +6478,10 @@ const PostCropperComponent = (function() {
     
     function close() {
         if (!overlay) return;
+        // Move focus out before hiding to avoid aria-hidden violation
+        if (document.activeElement && overlay.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
         overlay.hidden = true;
         overlay.setAttribute('aria-hidden', 'true');
         cropImg = null;
