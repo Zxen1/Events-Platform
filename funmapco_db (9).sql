@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 03, 2026 at 05:45 PM
+-- Generation Time: Jan 03, 2026 at 07:21 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -304,7 +304,13 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (310, 'starting_lat', '-33.86873', 'decimal', 'Starting location latitude coordinate', '2025-12-08 11:43:09', '2025-12-30 06:22:01'),
 (311, 'starting_lng', '151.20695', 'decimal', 'Starting location longitude coordinate', '2025-12-08 11:43:09', '2025-12-30 06:22:01'),
 (312, 'starting_pitch', '0', 'integer', NULL, '2025-12-20 06:10:19', '2025-12-30 06:22:01'),
-(313, 'wait_for_map_tiles', 'false', 'boolean', NULL, '2025-12-10 05:16:15', '2025-12-30 06:22:01');
+(313, 'wait_for_map_tiles', 'false', 'boolean', NULL, '2025-12-10 05:16:15', '2025-12-30 06:22:01'),
+(400, 'image_min_width', '1000', '', 'Minimum post image width in pixels', '2026-01-03 08:20:33', '2026-01-03 08:20:33'),
+(401, 'image_min_height', '1000', '', 'Minimum post image height in pixels', '2026-01-03 08:20:33', '2026-01-03 08:20:33'),
+(402, 'image_max_size', '5242880', '', 'Maximum post image file size in bytes (5MB)', '2026-01-03 08:20:33', '2026-01-03 08:20:33'),
+(403, 'avatar_min_width', '1000', '', 'Minimum avatar width in pixels', '2026-01-03 08:20:33', '2026-01-03 08:20:33'),
+(404, 'avatar_min_height', '1000', '', 'Minimum avatar height in pixels', '2026-01-03 08:20:33', '2026-01-03 08:20:33'),
+(405, 'avatar_max_size', '5242880', '', 'Maximum avatar file size in bytes (5MB)', '2026-01-03 08:20:33', '2026-01-03 08:20:33');
 
 -- --------------------------------------------------------
 
@@ -2442,7 +2448,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=324;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=406;
 
 --
 -- AUTO_INCREMENT for table `amenities`

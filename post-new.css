@@ -560,7 +560,7 @@
   border-bottom: none;
   margin-bottom: 0;
   display: grid;
-  grid-template-columns: 80px 1fr 36px;
+  grid-template-columns: 100px 1fr 36px;
   gap: 12px;
   align-items: flex-start;
   padding: 12px;
@@ -1405,7 +1405,7 @@
   }
   
   .post-card {
-    grid-template-columns: 80px 1fr 36px;
+    grid-template-columns: 100px 1fr 36px;
     gap: 12px;
     padding: 12px;
     border-radius: 0;

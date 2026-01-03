@@ -5498,8 +5498,8 @@ const AvatarCropperComponent = (function() {
         previewWrap.className = 'component-avatarcropper-tool-preview';
         canvas = document.createElement('canvas');
         canvas.className = 'component-avatarcropper-tool-canvas';
-        canvas.width = 530;
-        canvas.height = 530;
+        canvas.width = 1000;
+        canvas.height = 1000;
         previewWrap.appendChild(canvas);
         
         var zoomWrap = document.createElement('div');
