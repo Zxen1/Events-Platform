@@ -765,7 +765,8 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
   }
 
   $count = count($_FILES['images']['name']);
-  $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, backup_json, created_at, updated_at)
+  $cacheWarmUrls = [];
+  $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtMedia) abort_with_error($mysqli, 500, 'Prepare media', $transactionActive);
 
@@ -791,19 +792,34 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
     $uploadedPaths[] = $fullPath;
     $publicUrl = $folder . '/' . $monthFolder . '/' . $finalFilename;
     $fileSize = (int)($_FILES['images']['size'][$i] ?? 0);
-    $backupJson = null;
+    $settingsJson = null;
+    $cropMeta = null;
     if (isset($meta[$i]) && is_array($meta[$i])) {
-      $backupJson = json_encode($meta[$i], JSON_UNESCAPED_UNICODE);
+      $settingsJson = json_encode($meta[$i], JSON_UNESCAPED_UNICODE);
+      $cropMeta = $meta[$i]['crop'] ?? null;
     }
-    $stmtMedia->bind_param('iissis', $memberId, $insertId, $finalFilename, $publicUrl, $fileSize, $backupJson);
+    $stmtMedia->bind_param('iissis', $memberId, $insertId, $finalFilename, $publicUrl, $fileSize, $settingsJson);
     if (!$stmtMedia->execute()) {
       foreach ($uploadedPaths as $p) { bunny_delete_path($storageApiKey, $storageZoneName, $p); }
       $stmtMedia->close();
       abort_with_error($mysqli, 500, 'Insert media', $transactionActive);
     }
     $mediaIds[] = $stmtMedia->insert_id;
+    // Track URLs with crop for cache warming
+    $cacheWarmUrls[] = ['url' => $publicUrl, 'crop' => $cropMeta];
   }
   $stmtMedia->close();
+
+  // Cache warming: ping each image URL with crop params to warm Bunny CDN cache
+  foreach ($cacheWarmUrls as $item) {
+    $warmUrl = $item['url'];
+    if (!empty($item['crop']) && isset($item['crop']['x1'], $item['crop']['y1'], $item['crop']['x2'], $item['crop']['y2'])) {
+      $cropParam = intval($item['crop']['x1']) . ',' . intval($item['crop']['y1']) . ',' . intval($item['crop']['x2']) . ',' . intval($item['crop']['y2']);
+      $warmUrl .= '?crop=' . $cropParam;
+    }
+    // Non-blocking HEAD request to warm cache
+    @file_get_contents($warmUrl, false, stream_context_create(['http' => ['method' => 'HEAD', 'timeout' => 2]]));
+  }
 }
 
 // Update map cards with media_ids (same list for now)

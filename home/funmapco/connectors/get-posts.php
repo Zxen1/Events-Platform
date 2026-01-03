@@ -286,19 +286,31 @@ try {
 
     $stmt->close();
 
-    // Batch lookup media URLs
+    // Batch lookup media URLs with crop settings
     $mediaUrlsById = [];
     if (!empty($allMediaIds)) {
         $allMediaIds = array_unique($allMediaIds);
         $placeholders = implode(',', array_fill(0, count($allMediaIds), '?'));
-        $mediaStmt = $mysqli->prepare("SELECT id, file_url FROM `post_media` WHERE id IN ($placeholders)");
+        $mediaStmt = $mysqli->prepare("SELECT id, file_url, settings_json FROM `post_media` WHERE id IN ($placeholders) AND deleted_at IS NULL");
         if ($mediaStmt) {
             $types = str_repeat('i', count($allMediaIds));
             $mediaStmt->bind_param($types, ...$allMediaIds);
             $mediaStmt->execute();
             $mediaResult = $mediaStmt->get_result();
             while ($mediaRow = $mediaResult->fetch_assoc()) {
-                $mediaUrlsById[(int)$mediaRow['id']] = $mediaRow['file_url'];
+                $url = $mediaRow['file_url'];
+                // Append crop parameters if settings_json contains crop data
+                if (!empty($mediaRow['settings_json'])) {
+                    $settings = json_decode($mediaRow['settings_json'], true);
+                    if (is_array($settings) && !empty($settings['crop'])) {
+                        $crop = $settings['crop'];
+                        if (isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
+                            $cropParam = intval($crop['x1']) . ',' . intval($crop['y1']) . ',' . intval($crop['x2']) . ',' . intval($crop['y2']);
+                            $url .= (strpos($url, '?') === false ? '?' : '&') . 'crop=' . $cropParam;
+                        }
+                    }
+                }
+                $mediaUrlsById[(int)$mediaRow['id']] = $url;
             }
             $mediaStmt->close();
         }
