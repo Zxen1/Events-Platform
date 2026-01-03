@@ -1725,6 +1725,10 @@ const MemberModule = (function() {
         panelContent.addEventListener('transitionend', function handler() {
             panelContent.removeEventListener('transitionend', handler);
             panel.classList.remove('member-panel--show');
+            // Move focus out before hiding to avoid aria-hidden violation
+            if (document.activeElement && panel.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
             panel.setAttribute('aria-hidden', 'true');
             
             // Remove from panel stack
