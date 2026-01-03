@@ -1825,15 +1825,9 @@
   transform: translateX(20px);
 }
 
-/* Override fieldsets container */
-.member-location-overrides {
-  border-left: 2px solid rgba(255, 255, 255, 0.15);
-  padding-left: 12px;
-  margin-top: 4px;
-  margin-bottom: 8px;
-}
+/* Override fieldsets (inline, hidden by default until Advanced is toggled) */
 
-/* Placeholder mode: fields show grey placeholder from location 1 */
+/* Placeholder mode: override fields show grey placeholder from location 1 */
 .member-location-override--placeholder .fieldset-input,
 .member-location-override--placeholder .fieldset-textarea {
   color: rgba(255, 255, 255, 0.5);
@@ -1846,8 +1840,8 @@
   color: #fff;
 }
 
-.member-location-overrides .fieldset-input::placeholder,
-.member-location-overrides .fieldset-textarea::placeholder {
+.member-location-override--placeholder .fieldset-input::placeholder,
+.member-location-override--placeholder .fieldset-textarea::placeholder {
   color: rgba(255, 255, 255, 0.35);
   font-style: italic;
 }

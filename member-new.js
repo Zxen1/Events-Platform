@@ -2552,14 +2552,32 @@ const MemberModule = (function() {
                 locationHeaderRow.appendChild(deleteBtn);
                 locationSection.appendChild(locationHeaderRow);
                 
+                // Build combined list of all fieldsets in correct order
+                // Merge must-repeat and location-repeat-only, preserving original field order
+                var allRepeatFieldsets = [];
+                var locationRepeatOnlyKeys = {};
+                locationRepeatOnlyFieldsets.forEach(function(f) {
+                    var k = (f && (f.fieldsetKey || f.key || f.type)) ? String(f.fieldsetKey || f.key || f.type).toLowerCase() : '';
+                    if (k) locationRepeatOnlyKeys[k] = f;
+                });
+                var mustRepeatKeys = {};
+                mustRepeatFieldsets.forEach(function(f) {
+                    var k = (f && (f.fieldsetKey || f.key || f.type)) ? String(f.fieldsetKey || f.key || f.type).toLowerCase() : '';
+                    if (k) mustRepeatKeys[k] = f;
+                });
+                
+                // Use the original fields array order if available, otherwise combine
+                var combinedFieldsets = mustRepeatFieldsets.concat(locationRepeatOnlyFieldsets);
+                
                 // Location options switch (only if there are optional override fieldsets)
-                var overridesContainer = null;
                 var optionsSwitch = null;
-                if (locationRepeatOnlyFieldsets.length > 0) {
+                var hasOptionalFields = locationRepeatOnlyFieldsets.length > 0;
+                
+                if (hasOptionalFields) {
                     var toggleRow = document.createElement('div');
                     toggleRow.className = 'member-location-options-row';
                     
-                    // Create switch using SwitchComponent if available, otherwise fallback
+                    // Create switch using SwitchComponent
                     var switchWrap = document.createElement('div');
                     switchWrap.className = 'member-location-options-switch';
                     
@@ -2567,17 +2585,17 @@ const MemberModule = (function() {
                         optionsSwitch = SwitchComponent.create({
                             checked: false,
                             onChange: function(isOn) {
-                                handleSwitchChange(isOn);
+                                handleAdvancedSwitch(isOn, locationSection);
                             }
                         });
                         switchWrap.appendChild(optionsSwitch.element);
                     } else {
-                        // Fallback checkbox switch
+                        // Fallback checkbox
                         var switchInput = document.createElement('input');
                         switchInput.type = 'checkbox';
                         switchInput.className = 'member-location-options-checkbox';
                         switchInput.addEventListener('change', function() {
-                            handleSwitchChange(switchInput.checked);
+                            handleAdvancedSwitch(switchInput.checked, locationSection);
                         });
                         optionsSwitch = { element: switchInput, setChecked: function(v) { switchInput.checked = v; } };
                         switchWrap.appendChild(switchInput);
@@ -2591,50 +2609,49 @@ const MemberModule = (function() {
                     toggleRow.appendChild(switchLabel);
                     locationSection.appendChild(toggleRow);
                     
-                    // Container for override fieldsets (hidden by default)
-                    overridesContainer = document.createElement('div');
-                    overridesContainer.className = 'member-location-overrides';
-                    overridesContainer.style.display = 'none';
-                    
-                    // Check if any override field has a value (beyond placeholder)
-                    function hasOverrideValues() {
-                        if (!overridesContainer) return false;
-                        var inputs = overridesContainer.querySelectorAll('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), textarea, select');
-                        for (var j = 0; j < inputs.length; j++) {
-                            var input = inputs[j];
+                    // Store switch reference on section for hasOverrideValues check
+                    locationSection._optionsSwitch = optionsSwitch;
+                }
+                
+                // Check if any override field has a value
+                function hasOverrideValuesInSection(section) {
+                    var overrideFields = section.querySelectorAll('[data-is-override="true"]');
+                    for (var j = 0; j < overrideFields.length; j++) {
+                        var fieldset = overrideFields[j];
+                        var inputs = fieldset.querySelectorAll('input:not([type="hidden"]):not([type="radio"]):not([type="checkbox"]), textarea, select');
+                        for (var k = 0; k < inputs.length; k++) {
+                            var input = inputs[k];
                             if (!input) continue;
                             var val = String(input.value || '').trim();
                             var placeholder = String(input.placeholder || '').trim();
-                            // Has a value AND it's different from the placeholder (not just showing inherited)
                             if (val && val !== placeholder) return true;
                         }
-                        var radios = overridesContainer.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked');
+                        var radios = fieldset.querySelectorAll('input[type="radio"]:checked, input[type="checkbox"]:checked');
                         if (radios.length > 0) return true;
-                        return false;
                     }
-                    
-                    // Switch change handler
-                    function handleSwitchChange(isOn) {
-                        if (isOn) {
-                            overridesContainer.style.display = '';
-                        } else {
-                            // Check if any override fields have values
-                            if (hasOverrideValues()) {
-                                // Prevent turning off - show warning and reset switch
-                                if (optionsSwitch && optionsSwitch.setChecked) {
-                                    optionsSwitch.setChecked(true);
-                                }
-                                if (window.ToastComponent && ToastComponent.showError) {
-                                    ToastComponent.showError('Clear custom values first');
-                                }
-                                return;
+                    return false;
+                }
+                
+                // Switch handler
+                function handleAdvancedSwitch(isOn, section) {
+                    var overrideFields = section.querySelectorAll('[data-is-override="true"]');
+                    if (isOn) {
+                        overrideFields.forEach(function(f) { f.style.display = ''; });
+                    } else {
+                        if (hasOverrideValuesInSection(section)) {
+                            if (section._optionsSwitch && section._optionsSwitch.setChecked) {
+                                section._optionsSwitch.setChecked(true);
                             }
-                            overridesContainer.style.display = 'none';
+                            if (window.ToastComponent && ToastComponent.showError) {
+                                ToastComponent.showError('Clear custom values first');
+                            }
+                            return;
                         }
+                        overrideFields.forEach(function(f) { f.style.display = 'none'; });
                     }
                 }
                 
-                // First, render the location fieldset again (venue/city/address)
+                // First, render the location fieldset (venue/city/address)
                 var locationFieldData = {};
                 for (var prop in locationFieldsetData) {
                     if (locationFieldsetData.hasOwnProperty(prop)) {
@@ -2653,12 +2670,15 @@ const MemberModule = (function() {
                 
                 locationSection.appendChild(locationFieldsetClone);
                 
-                // Then, render must-repeat fieldsets
-                mustRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
+                // Render all repeat fieldsets in order
+                combinedFieldsets.forEach(function(fieldData, fieldIndex) {
                     var key = (fieldData && (fieldData.fieldsetKey || fieldData.key || fieldData.type)) ? String(fieldData.fieldsetKey || fieldData.key || fieldData.type).toLowerCase() : '';
                     if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
                         return;
                     }
+                    
+                    var isOptionalOverride = !!locationRepeatOnlyKeys[key];
+                    
                     var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
                         idPrefix: 'memberCreate',
                         fieldIndex: fieldIndex,
@@ -2667,9 +2687,16 @@ const MemberModule = (function() {
                         defaultCurrency: getDefaultCurrencyForForms()
                     });
                     
+                    // Mark optional override fieldsets
+                    if (isOptionalOverride) {
+                        fieldset.dataset.isOverride = 'true';
+                        fieldset.dataset.fieldsetKey = key;
+                        fieldset.style.display = 'none'; // Hidden by default
+                    }
+                    
                     locationSection.appendChild(fieldset);
 
-                    // Number repeated fieldsets by location number (2, 3, 4...)
+                    // Number fieldsets by location number
                     var labelTextEl = fieldset.querySelector('.fieldset-label-text');
                     if (labelTextEl) {
                         if (!fieldset.dataset.baseLabel) {
@@ -2681,70 +2708,36 @@ const MemberModule = (function() {
                         }
                     }
                     
-                    // If autofill-repeat, copy values from first location
+                    // Handle autofill behavior
                     var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
-                    if (isAutofill) {
-                        setTimeout(function() {
-                            copyFieldsetValues(fieldset, fieldData, 1, locationNum);
-                        }, 100);
-                    }
-                });
-                
-                // Render location-repeat-only fieldsets (optional overrides) into the overrides container
-                if (overridesContainer && locationRepeatOnlyFieldsets.length > 0) {
-                    locationRepeatOnlyFieldsets.forEach(function(fieldData, fieldIndex) {
-                        var key = (fieldData && (fieldData.fieldsetKey || fieldData.key || fieldData.type)) ? String(fieldData.fieldsetKey || fieldData.key || fieldData.type).toLowerCase() : '';
-                        if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
-                            return;
-                        }
-                        var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
-                            idPrefix: 'memberCreate',
-                            fieldIndex: fieldIndex,
-                            locationNumber: locationNum,
-                            container: overridesContainer,
-                            defaultCurrency: getDefaultCurrencyForForms()
-                        });
-                        
-                        // Mark as override fieldset
-                        fieldset.dataset.isOverride = 'true';
-                        fieldset.dataset.fieldsetKey = key;
-                        
-                        overridesContainer.appendChild(fieldset);
-
-                        // Number override fieldsets by location number
-                        var labelTextEl = fieldset.querySelector('.fieldset-label-text');
-                        if (labelTextEl) {
-                            if (!fieldset.dataset.baseLabel) {
-                                fieldset.dataset.baseLabel = (labelTextEl.textContent || '').trim();
-                            }
-                            var base = fieldset.dataset.baseLabel || '';
-                            if (base) {
-                                labelTextEl.textContent = base + ' ' + locationNum;
-                            }
-                        }
-                        
-                        // Autofill vs Placeholder behavior:
-                        // - autofill_repeat = true: Copy value (white, editable, frozen snapshot)
-                        // - autofill_repeat = false: Show as placeholder (grey, updates with location 1)
-                        var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
+                    if (isOptionalOverride) {
+                        // Autofill vs Placeholder for override fields
                         if (isAutofill) {
-                            // Autofill: One-time copy into value (white, editable)
                             fieldset.dataset.autofillMode = 'value';
-                            setTimeout(function() {
-                                copyLocation1Values(fieldset, key);
-                            }, 150);
+                            (function(fs, k) {
+                                setTimeout(function() {
+                                    copyLocation1Values(fs, k);
+                                }, 150);
+                            })(fieldset, key);
                         } else {
                             // Placeholder: Show as grey hint (live updates with location 1)
                             fieldset.dataset.autofillMode = 'placeholder';
                             fieldset.classList.add('member-location-override--placeholder');
-                            setTimeout(function() {
-                                setupPlaceholderSync(fieldset, key);
-                            }, 150);
+                            (function(fs, k) {
+                                setTimeout(function() {
+                                    setupPlaceholderSync(fs, k);
+                                }, 150);
+                            })(fieldset, key);
                         }
-                    });
-                    
-                    locationSection.appendChild(overridesContainer);
-                }
+                    } else if (isAutofill) {
+                        // Must-repeat with autofill
+                        (function(fs, fd) {
+                            setTimeout(function() {
+                                copyFieldsetValues(fs, fd, 1, locationNum);
+                            }, 100);
+                        })(fieldset, fieldData);
+                    }
+                });
                 
                 // Helper: Copy location 1's values INTO fields (autofill - one-time, frozen)
                 function copyLocation1Values(targetFieldset, fieldsetKeyLower) {
