@@ -1209,7 +1209,7 @@ const FieldsetBuilder = (function(){
                 // Grid-friendly dragover handler (insertBefore/after like Formbuilder)
                 imagesContainer.addEventListener('dragover', function(e) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                    var dragging = imagesContainer.querySelector('.fieldset-images-item.dragging');
+                    var dragging = imagesContainer.querySelector('.fieldset-images-item--dragging');
                     if (!dragging) return;
 
                     var px = (e && typeof e.clientX === 'number') ? e.clientX : 0;
