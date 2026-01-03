@@ -379,6 +379,7 @@ foreach ($byLoc as $locNum => $entries) {
     'country_code' => null,
     'website_url' => null,
     'tickets_url' => null,
+    'coupon_code' => null,
     'amenities' => null,
     'checkout_title' => null,
     'session_summary' => null,
@@ -447,6 +448,7 @@ foreach ($byLoc as $locNum => $entries) {
     }
     if (($baseType === 'website-url' || $baseType === 'url') && is_string($val)) $card['website_url'] = trim($val);
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
+    if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
       // Store as JSON for flexibility; column is TEXT.
       $card['amenities'] = json_encode($val, JSON_UNESCAPED_UNICODE);
@@ -494,29 +496,33 @@ foreach ($byLoc as $locNum => $entries) {
     }
   }
 
-  // session_summary (simple)
+  // session_summary (JSON: {start, end} date range)
   $sessionsForSummary = $sessions;
   if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
     $sessionsForSummary = $sessionPricing['sessions'];
   }
-  // Count actual session times (not just dates)
-  $sessionTimeCount = 0;
+  $allSessionDates = [];
   if (is_array($sessionsForSummary)) {
     foreach ($sessionsForSummary as $s0) {
       if (!is_array($s0)) continue;
-      $times0 = $s0['times'] ?? [];
-      if (!is_array($times0)) continue;
-      $sessionTimeCount += count($times0);
+      $d = $s0['date'] ?? null;
+      if ($d && is_string($d)) $allSessionDates[] = $d;
     }
   }
-  if ($sessionTimeCount > 0) {
-    $card['session_summary'] = 'Sessions: ' . $sessionTimeCount;
+  if (!empty($allSessionDates)) {
+    sort($allSessionDates);
+    $card['session_summary'] = json_encode([
+      'start' => $allSessionDates[0],
+      'end' => $allSessionDates[count($allSessionDates) - 1]
+    ], JSON_UNESCAPED_UNICODE);
   }
 
-  // price_summary (simple)
-  $priceCount = 0;
-  // For merged session_pricing, pricing is keyed by group: pricing_groups[groupKey] = [ { seating_area, tiers } ... ]
-  $ticketPricingForSummary = $ticketPricing;
+  // price_summary (JSON: {ticket: {min, max, currency}, item: {price, currency}})
+  $priceSummary = [];
+  
+  // Ticket pricing: find min/max across all tiers
+  $ticketPrices = [];
+  $ticketCurrency = null;
   $pricingGroupsForSummary = null;
   if (is_array($sessionPricing) && isset($sessionPricing['pricing_groups']) && is_array($sessionPricing['pricing_groups'])) {
     $pricingGroupsForSummary = $sessionPricing['pricing_groups'];
@@ -527,23 +533,53 @@ foreach ($byLoc as $locNum => $entries) {
       foreach ($seats as $seat) {
         if (!is_array($seat)) continue;
         $tiers = $seat['tiers'] ?? [];
-        if (is_array($tiers)) $priceCount += count($tiers);
+        if (!is_array($tiers)) continue;
+        foreach ($tiers as $tier) {
+          if (!is_array($tier)) continue;
+          $p = isset($tier['price']) ? (float)$tier['price'] : null;
+          if ($p !== null && $p > 0) $ticketPrices[] = $p;
+          if (!$ticketCurrency && isset($tier['currency'])) $ticketCurrency = trim((string)$tier['currency']);
+        }
       }
     }
-  } else if (is_array($ticketPricingForSummary)) {
-    foreach ($ticketPricingForSummary as $seat) {
+  } else if (is_array($ticketPricing)) {
+    foreach ($ticketPricing as $seat) {
       if (!is_array($seat)) continue;
       $tiers = $seat['tiers'] ?? [];
-      if (is_array($tiers)) $priceCount += count($tiers);
+      if (!is_array($tiers)) continue;
+      foreach ($tiers as $tier) {
+        if (!is_array($tier)) continue;
+        $p = isset($tier['price']) ? (float)$tier['price'] : null;
+        if ($p !== null && $p > 0) $ticketPrices[] = $p;
+        if (!$ticketCurrency && isset($tier['currency'])) $ticketCurrency = trim((string)$tier['currency']);
+      }
     }
   }
-  if (is_array($itemPricing) && isset($itemPricing['item_variants']) && is_array($itemPricing['item_variants'])) {
-    $priceCount += count($itemPricing['item_variants']);
+  if (!empty($ticketPrices)) {
+    $priceSummary['ticket'] = [
+      'min' => min($ticketPrices),
+      'max' => max($ticketPrices),
+      'currency' => $ticketCurrency ?: ''
+    ];
   }
-  if ($priceCount > 0) $card['price_summary'] = 'Prices: ' . $priceCount;
+  
+  // Item pricing: single price
+  if (is_array($itemPricing) && !empty($itemPricing['item_price'])) {
+    $itemPrice = (float)$itemPricing['item_price'];
+    if ($itemPrice > 0) {
+      $priceSummary['item'] = [
+        'price' => $itemPrice,
+        'currency' => isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : ''
+      ];
+    }
+  }
+  
+  if (!empty($priceSummary)) {
+    $card['price_summary'] = json_encode($priceSummary, JSON_UNESCAPED_UNICODE);
+  }
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, website_url, tickets_url, checkout_title, session_summary, price_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, website_url, tickets_url, coupon_code, checkout_title, session_summary, price_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -566,6 +602,7 @@ foreach ($byLoc as $locNum => $entries) {
   $amenitiesParam = $card['amenities'];
   $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
+  $couponCodeParam = $card['coupon_code'];
   $checkoutTitleParam = $card['checkout_title'];
   $sessSumParam = $card['session_summary'];
   $priceSumParam = $card['price_summary'];
@@ -582,9 +619,10 @@ foreach ($byLoc as $locNum => $entries) {
   // dd (lat,lng)
   // ss (country_code, amenities)
   // ss (website_url, tickets_url)
+  // s (coupon_code)
   // sss (checkout_title, session_summary, price_summary)
   $stmtCard->bind_param(
-    'isssssssssssssssddsssssss',
+    'isssssssssssssssddssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -605,6 +643,7 @@ foreach ($byLoc as $locNum => $entries) {
     $amenitiesParam,
     $websiteParam,
     $ticketsParam,
+    $couponCodeParam,
     $checkoutTitleParam,
     $sessSumParam,
     $priceSumParam
