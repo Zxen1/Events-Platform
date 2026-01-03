@@ -1537,6 +1537,7 @@
 
 .member-formpicker-menu-button--open {
   border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-active-fill, #3b82f599);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -1754,9 +1755,10 @@
   border-bottom: none;
 }
 
-/* When container is active/focused - blue border */
+/* When container is active/focused - blue border, active fill background */
 .member-section-venue.member-section-container--active .member-section-header {
   border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-active-fill, #3b82f599);
 }
 
 .member-section-venue.member-section-container--active .member-venue-content {
