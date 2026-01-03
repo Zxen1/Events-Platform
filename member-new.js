@@ -2398,9 +2398,9 @@ const MemberModule = (function() {
                                 }
                                 applyMustRepeatNumberingForMainForm();
                                 
-                                // Show/hide venue 1 collapse button
-                                if (window._memberVenue1CollapseBtn) {
-                                    window._memberVenue1CollapseBtn.style.display = locationQuantity > 1 ? '' : 'none';
+                                // Show/hide venue 1 arrow
+                                if (window._memberVenue1Arrow) {
+                                    window._memberVenue1Arrow.style.display = locationQuantity > 1 ? '' : 'none';
                                 }
                                 
                                 // Re-render additional locations (after checkout section)
@@ -2431,9 +2431,9 @@ const MemberModule = (function() {
                             updateLocation1Header(true);
                             applyMustRepeatNumberingForMainForm();
                             
-                            // Show venue 1 collapse button when multiple venues
-                            if (window._memberVenue1CollapseBtn) {
-                                window._memberVenue1CollapseBtn.style.display = '';
+                            // Show venue 1 arrow when multiple venues
+                            if (window._memberVenue1Arrow) {
+                                window._memberVenue1Arrow.style.display = '';
                             }
                             
                             // Re-render additional locations (after checkout section)
@@ -2535,26 +2535,26 @@ const MemberModule = (function() {
         var venueTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
         v1HeaderText.textContent = venueTypeName + ' 1';
         
-        // Collapse button (hidden by default, shown when there are multiple venues)
-        var v1CollapseBtn = document.createElement('button');
-        v1CollapseBtn.type = 'button';
-        v1CollapseBtn.className = 'member-section-collapse-btn';
-        v1CollapseBtn.innerHTML = icons.chevronDown || '▼';
-        v1CollapseBtn.setAttribute('aria-label', 'Collapse');
-        v1CollapseBtn.style.display = 'none';
-        v1CollapseBtn.addEventListener('click', function() {
+        // Arrow (like formpicker menus)
+        var v1Arrow = document.createElement('span');
+        v1Arrow.className = 'member-section-header-arrow';
+        v1Arrow.textContent = '▼';
+        v1Arrow.style.display = 'none';
+        
+        // Click on header to collapse/expand
+        v1Header.addEventListener('click', function() {
             var content = venue1Container.querySelector('.member-venue-content');
             var isCollapsed = venue1Container.classList.toggle('member-section-venue--collapsed');
-            v1CollapseBtn.innerHTML = isCollapsed ? (icons.chevronRight || '▶') : (icons.chevronDown || '▼');
+            v1Header.classList.toggle('member-section-header--collapsed', isCollapsed);
             if (content) content.style.display = isCollapsed ? 'none' : '';
         });
         
         v1Header.appendChild(v1HeaderText);
-        v1Header.appendChild(v1CollapseBtn);
+        v1Header.appendChild(v1Arrow);
         venue1Container.appendChild(v1Header);
         
-        // Store reference to collapse button for showing/hiding based on venue count
-        window._memberVenue1CollapseBtn = v1CollapseBtn;
+        // Store reference to arrow for showing/hiding based on venue count
+        window._memberVenue1Arrow = v1Arrow;
         
         // Content wrapper for collapsing
         var v1Content = document.createElement('div');
@@ -2564,12 +2564,18 @@ const MemberModule = (function() {
         if (locationFieldsetEl) {
             v1Content.appendChild(locationFieldsetEl);
             
-            // Listen for venue name changes to update header
+            // Listen for venue name changes to update header (including Google Places autofill)
             var venueInput = locationFieldsetEl.querySelector('input[type="text"]');
             if (venueInput) {
-                venueInput.addEventListener('input', function() {
+                function updateV1Header() {
                     var name = venueInput.value.trim();
                     v1HeaderText.textContent = name || (venueTypeName + ' 1');
+                }
+                venueInput.addEventListener('input', updateV1Header);
+                venueInput.addEventListener('change', updateV1Header);
+                // Google Places may set value programmatically - poll briefly after focus
+                venueInput.addEventListener('blur', function() {
+                    setTimeout(updateV1Header, 100);
                 });
             }
         }
@@ -2719,17 +2725,9 @@ const MemberModule = (function() {
                 headerText.className = 'member-section-header-text';
                 headerText.textContent = defaultName;
                 
-                var collapseBtn = document.createElement('button');
-                collapseBtn.type = 'button';
-                collapseBtn.className = 'member-section-collapse-btn';
-                collapseBtn.innerHTML = icons.chevronDown || '▼';
-                collapseBtn.setAttribute('aria-label', 'Collapse');
-                collapseBtn.addEventListener('click', function() {
-                    var content = locationContainer.querySelector('.member-venue-content');
-                    var isCollapsed = locationContainer.classList.toggle('member-section-venue--collapsed');
-                    collapseBtn.innerHTML = isCollapsed ? (icons.chevronRight || '▶') : (icons.chevronDown || '▼');
-                    if (content) content.style.display = isCollapsed ? 'none' : '';
-                });
+                var headerArrow = document.createElement('span');
+                headerArrow.className = 'member-section-header-arrow';
+                headerArrow.textContent = '▼';
                 
                 var deleteBtn = document.createElement('button');
                 deleteBtn.type = 'button';
@@ -2737,8 +2735,17 @@ const MemberModule = (function() {
                 deleteBtn.innerHTML = '&times;';
                 deleteBtn.setAttribute('aria-label', 'Delete ' + defaultName);
                 
+                // Click on header to collapse (but not on delete button)
+                headerRow.addEventListener('click', function(e) {
+                    if (e.target === deleteBtn || deleteBtn.contains(e.target)) return;
+                    var content = locationContainer.querySelector('.member-venue-content');
+                    var isCollapsed = locationContainer.classList.toggle('member-section-venue--collapsed');
+                    headerRow.classList.toggle('member-section-header--collapsed', isCollapsed);
+                    if (content) content.style.display = isCollapsed ? 'none' : '';
+                });
+                
                 headerRow.appendChild(headerText);
-                headerRow.appendChild(collapseBtn);
+                headerRow.appendChild(headerArrow);
                 headerRow.appendChild(deleteBtn);
                 locationContainer.appendChild(headerRow);
                 
@@ -2881,12 +2888,18 @@ const MemberModule = (function() {
             
             locationSection.appendChild(locationFieldsetClone);
             
-                // Listen for venue name changes to update header
+                // Listen for venue name changes to update header (including Google Places autofill)
                 var venueInput = locationFieldsetClone.querySelector('input[type="text"]');
                 if (venueInput) {
-                    venueInput.addEventListener('input', function() {
+                    function updateLocHeader() {
                         var name = venueInput.value.trim();
                         headerText.textContent = name || defaultName;
+                    }
+                    venueInput.addEventListener('input', updateLocHeader);
+                    venueInput.addEventListener('change', updateLocHeader);
+                    // Google Places may set value programmatically - poll briefly after focus
+                    venueInput.addEventListener('blur', function() {
+                        setTimeout(updateLocHeader, 100);
                     });
                 }
                 

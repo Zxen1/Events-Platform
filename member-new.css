@@ -1651,27 +1651,37 @@
 }
 
 .member-location-quantity-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  color: #fff;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #666;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  font-size: 18px;
+  flex: 0 0 36px;
   padding: 0;
 }
 
-.member-location-quantity-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+.member-location-quantity-btn--plus:hover {
+  border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+  color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+}
+
+.member-location-quantity-btn--minus:hover {
+  border-color: #f87171;
+  color: #f87171;
 }
 
 .member-location-quantity-btn:active {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+  color: #fff;
 }
 
 .member-location-quantity-btn--minus:disabled,
@@ -1710,52 +1720,56 @@
   border-color: var(--website-blue-active-fill, #3b82f5);
 }
 
-/* Section headers - 36px, collapsible-ready */
+/* Section headers - 36px, styled like formpicker buttons */
 .member-section-header {
+  width: 100%;
+  height: 36px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 36px;
-  padding: 0 10px;
+  padding: 0 12px;
   margin: 0 0 10px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 4px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
   cursor: pointer;
+  color: #fff;
+  font-size: 14px;
   user-select: none;
+}
+
+.member-section-header:hover {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-hover-fill, #3b82f5);
+}
+
+.member-section-header--collapsed {
+  border-radius: 5px;
 }
 
 .member-section-header-text {
   flex: 1;
+  text-align: left;
+  font-size: 14px;
+  color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Collapse button in header */
-.member-section-collapse-btn {
-  flex-shrink: 0;
-  width: 36px;
+/* Collapse arrow in header */
+.member-section-header-arrow {
+  width: 16px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  cursor: pointer;
-  transition: color 0.15s;
+  font-size: 10px;
+  color: #888;
+  transition: transform 0.2s;
 }
 
-.member-section-collapse-btn:hover {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.member-section-collapse-btn svg {
-  width: 16px;
-  height: 16px;
+.member-section-header--collapsed .member-section-header-arrow {
+  transform: rotate(-90deg);
 }
 
 /* Delete button in header */
