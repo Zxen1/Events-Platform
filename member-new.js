@@ -2433,7 +2433,7 @@ const MemberModule = (function() {
         
         // Create checkout options wrapper
         var wrapper = document.createElement('div');
-        wrapper.className = 'fieldset member-checkout-wrapper';
+        wrapper.className = 'fieldset member-checkout-wrapper form-checkout-container';
         
         // Label
         var label = document.createElement('div');

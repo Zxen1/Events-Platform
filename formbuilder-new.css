@@ -1518,12 +1518,17 @@
 
 /* Form Primary Container - holds non-location fieldsets */
 .form-primary-container {
-  /* Structural container, no visible styling */
+  margin-bottom: 12px;
 }
 
 /* Form Location Picker - holds quantity picker + explainer message */
 .form-location-picker {
-  /* Structural container, no visible styling */
+  margin-bottom: 12px;
+}
+
+/* Form Checkout Container - holds checkout options, login/registration, submit */
+.form-checkout-container {
+  margin-top: 12px;
 }
 
 /* Location container */
