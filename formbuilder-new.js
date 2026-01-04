@@ -4054,31 +4054,55 @@
                     locationFieldsetEl = fieldset;
                     v1ContainerData.content.appendChild(fieldset);
                     
-                    // Set up automatic header renaming from venue input (supports Google Places autofill)
-                    if (setupHeaderRenaming) {
-                        var venueInput = fieldset.querySelector('input[type="text"]');
-                        if (venueInput && v1ContainerData.headerText) {
+                    // Set up automatic header renaming from location inputs (supports Google Places autofill)
+                    if (setupHeaderRenaming && v1ContainerData.headerText) {
+                        // Find all relevant inputs based on fieldset type
+                        var inputsToWatch = [];
+                        if (fieldsetKey === 'venue') {
+                            // Venue fieldset: check venue name first, then address
+                            var allInputs = fieldset.querySelectorAll('input[type="text"].fieldset-input');
+                            if (allInputs[0]) inputsToWatch.push(allInputs[0]); // Venue name
+                            if (allInputs[1]) inputsToWatch.push(allInputs[1]); // Address
+                        } else if (fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                            // City/Address fieldset: single input
+                            var locationInput = fieldset.querySelector('input[type="text"].fieldset-input');
+                            if (locationInput) inputsToWatch.push(locationInput);
+                        }
+                        
+                        if (inputsToWatch.length > 0) {
                             var lastValue = '';
                             function updateHeader() {
-                                var name = venueInput.value.trim();
-                                if (name !== lastValue) {
-                                    lastValue = name;
-                                    var headerText = '';
-                                    if (name && name.trim()) {
-                                        headerText = name.trim();
-                                    } else {
-                                        headerText = venue1Name;
-                                    }
-                                    v1ContainerData.headerText.textContent = headerText;
+                                // Priority: venue name > address > city
+                                var headerValue = '';
+                                if (fieldsetKey === 'venue') {
+                                    var venueName = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
+                                    var address = inputsToWatch[1] ? inputsToWatch[1].value.trim() : '';
+                                    headerValue = venueName || address || '';
+                                } else {
+                                    headerValue = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
+                                }
+                                
+                                if (headerValue !== lastValue) {
+                                    lastValue = headerValue;
+                                    v1ContainerData.headerText.textContent = headerValue || venue1Name;
                                 }
                             }
-                            venueInput.addEventListener('input', updateHeader);
-                            venueInput.addEventListener('change', updateHeader);
-                            // Use MutationObserver to catch Google Places autofill
-                            var observer = new MutationObserver(function() { updateHeader(); });
-                            observer.observe(venueInput, { attributes: true, attributeFilter: ['value'] });
-                            // Also check on focus out (catches Google Places autofill)
-                            venueInput.addEventListener('blur', function() { setTimeout(updateHeader, 50); });
+                            
+                            // Watch all inputs for changes
+                            inputsToWatch.forEach(function(input) {
+                                if (input) {
+                                    input.addEventListener('input', updateHeader);
+                                    input.addEventListener('change', updateHeader);
+                                    // MutationObserver to catch Google Places autofill
+                                    var observer = new MutationObserver(function() { updateHeader(); });
+                                    observer.observe(input, { attributes: true, attributeFilter: ['value'] });
+                                    // Blur with delay catches Google Places autofill
+                                    input.addEventListener('blur', function() { setTimeout(updateHeader, 50); });
+                                }
+                            });
+                            
+                            // Initial update
+                            updateHeader();
                         }
                     }
                 }
@@ -4160,29 +4184,57 @@
                 if (additionalLocationFieldset) {
                     additionalContainerData.content.appendChild(additionalLocationFieldset);
                     
-                    // Set up automatic header renaming from venue input (supports Google Places autofill)
-                    if (setupHeaderRenaming) {
-                        var venueInput = additionalLocationFieldset.querySelector('input[type="text"]');
-                        if (venueInput && additionalContainerData.headerText) {
+                    // Set up automatic header renaming from location inputs (supports Google Places autofill)
+                    if (setupHeaderRenaming && additionalContainerData.headerText) {
+                        // Find all relevant inputs based on fieldset type
+                        var inputsToWatch = [];
+                        var fieldsetKey = locationFieldsetType ? locationFieldsetType.toLowerCase() : '';
+                        
+                        if (fieldsetKey === 'venue') {
+                            // Venue fieldset: check venue name first, then address
+                            var allInputs = additionalLocationFieldset.querySelectorAll('input[type="text"].fieldset-input');
+                            if (allInputs[0]) inputsToWatch.push(allInputs[0]); // Venue name
+                            if (allInputs[1]) inputsToWatch.push(allInputs[1]); // Address
+                        } else if (fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                            // City/Address fieldset: single input
+                            var locationInput = additionalLocationFieldset.querySelector('input[type="text"].fieldset-input');
+                            if (locationInput) inputsToWatch.push(locationInput);
+                        }
+                        
+                        if (inputsToWatch.length > 0) {
                             var lastValue = '';
                             function updateHeader() {
-                                var name = venueInput.value.trim();
-                                if (name !== lastValue) {
-                                    lastValue = name;
-                                    var headerText = '';
-                                    if (name && name.trim()) {
-                                        headerText = name.trim();
-                                    } else {
-                                        headerText = additionalName;
-                                    }
-                                    additionalContainerData.headerText.textContent = headerText;
+                                // Priority: venue name > address > city
+                                var headerValue = '';
+                                if (fieldsetKey === 'venue') {
+                                    var venueName = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
+                                    var address = inputsToWatch[1] ? inputsToWatch[1].value.trim() : '';
+                                    headerValue = venueName || address || '';
+                                } else {
+                                    headerValue = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
+                                }
+                                
+                                if (headerValue !== lastValue) {
+                                    lastValue = headerValue;
+                                    additionalContainerData.headerText.textContent = headerValue || additionalName;
                                 }
                             }
-                            venueInput.addEventListener('input', updateHeader);
-                            venueInput.addEventListener('change', updateHeader);
-                            var observer = new MutationObserver(function() { updateHeader(); });
-                            observer.observe(venueInput, { attributes: true, attributeFilter: ['value'] });
-                            venueInput.addEventListener('blur', function() { setTimeout(updateHeader, 50); });
+                            
+                            // Watch all inputs for changes
+                            inputsToWatch.forEach(function(input) {
+                                if (input) {
+                                    input.addEventListener('input', updateHeader);
+                                    input.addEventListener('change', updateHeader);
+                                    // MutationObserver to catch Google Places autofill
+                                    var observer = new MutationObserver(function() { updateHeader(); });
+                                    observer.observe(input, { attributes: true, attributeFilter: ['value'] });
+                                    // Blur with delay catches Google Places autofill
+                                    input.addEventListener('blur', function() { setTimeout(updateHeader, 50); });
+                                }
+                            });
+                            
+                            // Initial update
+                            updateHeader();
                         }
                     }
                 }
@@ -4371,20 +4423,60 @@
                 if (locationFieldsetClone) {
                     locationSection.appendChild(locationFieldsetClone);
                     
-                    // Sync header with venue input (supports Google Places autofill)
-                    var venueInput = locationFieldsetClone.querySelector('input[type="text"]');
-                    if (venueInput) {
+                    // Sync header with location inputs (supports Google Places autofill)
+                    var inputsToWatch = [];
+                    var fieldsetKey = '';
+                    if (locationFieldData.fieldset_key) {
+                        fieldsetKey = locationFieldData.fieldset_key.toLowerCase();
+                    } else if (locationFieldData.fieldsetKey) {
+                        fieldsetKey = locationFieldData.fieldsetKey.toLowerCase();
+                    }
+                    
+                    if (fieldsetKey === 'venue') {
+                        // Venue fieldset: check venue name first, then address
+                        var allInputs = locationFieldsetClone.querySelectorAll('input[type="text"].fieldset-input');
+                        if (allInputs[0]) inputsToWatch.push(allInputs[0]); // Venue name
+                        if (allInputs[1]) inputsToWatch.push(allInputs[1]); // Address
+                    } else if (fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                        // City/Address fieldset: single input
+                        var locationInput = locationFieldsetClone.querySelector('input[type="text"].fieldset-input');
+                        if (locationInput) inputsToWatch.push(locationInput);
+                    }
+                    
+                    if (inputsToWatch.length > 0) {
                         var lastValue = '';
                         function updateLocHeader() {
-                            var name = venueInput.value.trim();
-                            if (name !== lastValue) {
-                                lastValue = name;
-                                headerText.textContent = name || defaultName;
+                            // Priority: venue name > address > city
+                            var headerValue = '';
+                            if (fieldsetKey === 'venue') {
+                                var venueName = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
+                                var address = inputsToWatch[1] ? inputsToWatch[1].value.trim() : '';
+                                headerValue = venueName || address || '';
+                            } else {
+                                headerValue = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
+                            }
+                            
+                            if (headerValue !== lastValue) {
+                                lastValue = headerValue;
+                                headerText.textContent = headerValue || defaultName;
                             }
                         }
-                        venueInput.addEventListener('input', updateLocHeader);
-                        venueInput.addEventListener('change', updateLocHeader);
-                        venueInput.addEventListener('blur', function() { setTimeout(updateLocHeader, 50); });
+                        
+                        // Watch all inputs for changes
+                        inputsToWatch.forEach(function(input) {
+                            if (input) {
+                                input.addEventListener('input', updateLocHeader);
+                                input.addEventListener('change', updateLocHeader);
+                                // MutationObserver to catch Google Places autofill
+                                var observer = new MutationObserver(function() { updateLocHeader(); });
+                                observer.observe(input, { attributes: true, attributeFilter: ['value'] });
+                                // Blur with delay catches Google Places autofill
+                                input.addEventListener('blur', function() { setTimeout(updateLocHeader, 50); });
+                            }
+                        });
+                        
+                        // Initial update
+                        updateLocHeader();
                     }
                 }
                 
