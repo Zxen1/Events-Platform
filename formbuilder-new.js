@@ -1664,6 +1664,50 @@
                 }
             });
         }
+
+        // Visual divider above the (auto-managed) location fieldset.
+        // UI-only: does NOT change any current repeat behavior.
+        function getFieldsetKeyLowerFromWrapper(wrapper) {
+            if (!wrapper) return '';
+            var fsId = wrapper.getAttribute('data-fieldset-id');
+            var fieldset = fieldsets.find(function(fs) {
+                return (fs && ((fs.id || fs.key || fs.fieldset_key) == fsId));
+            });
+            var key = fieldset ? (fieldset.key || fieldset.fieldset_key || fieldset.id) : fsId;
+            return String(key || '').toLowerCase();
+        }
+
+        function isLocationFieldsetKeyLower(keyLower) {
+            return keyLower === 'venue' || keyLower === 'city' || keyLower === 'address' || keyLower === 'location';
+        }
+
+        function ensureLocationDivider() {
+            if (!fieldsContainer) return;
+
+            // Remove any existing divider(s) (rebuild deterministically based on current DOM order)
+            fieldsContainer.querySelectorAll('.formbuilder-location-divider').forEach(function(el) {
+                el.remove();
+            });
+
+            var wrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+            var firstLocationWrapper = null;
+            wrappers.forEach(function(wrapper) {
+                if (firstLocationWrapper) return;
+                var keyLower = getFieldsetKeyLowerFromWrapper(wrapper);
+                if (isLocationFieldsetKeyLower(keyLower)) {
+                    firstLocationWrapper = wrapper;
+                }
+            });
+            if (!firstLocationWrapper) return;
+
+            var divider = document.createElement('div');
+            divider.className = 'formbuilder-location-divider';
+            divider.setAttribute('aria-hidden', 'true');
+            if (!firstLocationWrapper.previousElementSibling) {
+                divider.classList.add('formbuilder-location-divider--first');
+            }
+            fieldsContainer.insertBefore(divider, firstLocationWrapper);
+        }
         
         function manageLocationTypeFieldsets(selectedType) {
             if (!selectedType) {
@@ -1679,6 +1723,7 @@
                 if (fieldsetBtn) {
                     fieldsetBtn.textContent = 'Select Location Type';
                 }
+                ensureLocationDivider();
                 return;
             }
             
@@ -1785,6 +1830,11 @@
                     }
                     notifyChange();
                 }
+                ensureLocationDivider();
+                return;
+            }
+
+            ensureLocationDivider();
         }
     }
     
@@ -2071,6 +2121,9 @@
             var fieldWrapper = document.createElement('div');
             fieldWrapper.className = 'formbuilder-field-wrapper';
             fieldWrapper.setAttribute('data-fieldset-id', fsId);
+            if (isLocationFieldsetKeyLower(fieldsetKeyLower)) {
+                fieldWrapper.classList.add('formbuilder-field-wrapper--location-fieldset');
+            }
             
             var field = document.createElement('div');
             field.className = 'formbuilder-field';
@@ -2184,6 +2237,7 @@
                     var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
                     updateLocationTypeFieldsets(currentLocationType);
                 }
+                ensureLocationDivider();
                 notifyChange();
             });
             
@@ -2690,6 +2744,7 @@
                 if (currentIndex !== fieldDragStartIndex) {
                     notifyChange();
                 }
+                ensureLocationDivider();
                 fieldDragStartIndex = -1;
             });
             fieldWrapper.addEventListener('dragover', function(ev) {
@@ -2772,6 +2827,9 @@
             var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
             if (menuOpt) menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
         });
+
+        // If the location fieldset already exists in saved data, show the divider immediately.
+        ensureLocationDivider();
         
         // AFTER loading existing fields, manage location type fieldset (will only add if missing)
         if (initialLocationType) {
