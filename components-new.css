@@ -330,10 +330,10 @@
 
 .calendar-today-marker {
     position: absolute;
-    left: 0;
-    bottom: 1px;
-    width: 6px;
-    height: 6px;
+    left: 2px;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--website-blue-border, #3b82f5);
     cursor: pointer;
