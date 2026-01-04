@@ -305,7 +305,7 @@
     border-radius: 0 0 5px 5px;
     max-height: 300px;
     overflow-y: auto;
-    z-index: var(--layer-menu, 85);
+    z-index: calc(var(--layer-menu, 85) + 3);
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }
@@ -1009,6 +1009,20 @@
     overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
+}
+
+/* Clip mask to hide content above sticky header */
+.fieldset-sessionpricing-ticketgroups-popover-scroll::before {
+    content: '';
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: #222;
+    display: block;
+    z-index: calc(var(--layer-menu, 85) + 2);
+    margin-bottom: -10px;
 }
 
 .fieldset-sessionpricing-ticketgroups-popover-content {
