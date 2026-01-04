@@ -2557,20 +2557,26 @@ const MemberModule = (function() {
         v1DeleteBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             var venueName = v1HeaderText.textContent || (venueTypeName + ' 1');
-            ConfirmDialogComponent.show({
-                title: 'Delete Location',
-                message: 'Delete "' + venueName + '"?',
-                confirmText: 'Delete',
-                cancelText: 'Cancel',
-                isDanger: true,
-                onConfirm: function() {
-                    venue1Container.remove();
-                    window._memberLocationQuantity--;
-                    var qtyDisplay = document.querySelector('.member-location-quantity-display');
-                    if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
-                    updateVenueDeleteButtons();
-                }
-            });
+            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                ConfirmDialogComponent.show({
+                    titleText: 'Delete ' + venueName,
+                    messageText: 'This cannot be undone.',
+                    confirmLabel: 'Delete',
+                    cancelLabel: 'Cancel',
+                    confirmClass: 'danger',
+                    focusCancel: true
+                }).then(function(confirmed) {
+                    if (confirmed) {
+                        venue1Container.remove();
+                        if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
+                            window._memberLocationQuantity--;
+                            var qtyDisplay = document.querySelector('.member-location-quantity-display');
+                            if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
+                            updateVenueDeleteButtons();
+                        }
+                    }
+                });
+            }
         });
         
         // Click on header to collapse/expand (only when multiple venues) and activate

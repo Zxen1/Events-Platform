@@ -1855,6 +1855,7 @@
   text-align: center;
   cursor: pointer;
   transition: color 0.15s ease;
+  padding: 0;
 }
 
 .member-location-delete-btn:hover {
