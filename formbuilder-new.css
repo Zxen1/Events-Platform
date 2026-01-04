@@ -1522,6 +1522,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 12px;
+  margin-bottom: 12px;
 }
 
 /* Form Location Picker - matches formpicker menu styling */
@@ -1530,6 +1531,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 12px;
+  margin-bottom: 12px;
 }
 
 /* Form Checkout Container - matches formpicker menu styling */
@@ -1538,11 +1540,12 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 12px;
+  margin-bottom: 12px;
 }
 
 /* Location container */
 .form-location-container {
-  /* Gap from parent handles spacing */
+  margin-bottom: 12px;
 }
 
 /* Location header - 36px, horizontal flex, website blue background */
@@ -1635,7 +1638,7 @@
 
 /* Location content - styled like formpicker menu options */
 .form-location-content {
-  background: #222;
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255,255,255,0.1);
   border-top: none;
   border-radius: 0 0 5px 5px;

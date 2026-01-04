@@ -2213,7 +2213,7 @@ const MemberModule = (function() {
                                         idPrefix: 'memberCreate',
                                         getDefaultCurrency: getDefaultCurrencyForForms,
                                         venue1Container: locationData.venue1Container,
-                                        insertBeforeElement: document.querySelector('.member-section-checkout'),
+                                        insertBeforeElement: document.querySelector('.form-checkout-container'),
                                         onQuantityUpdate: function(delta) {
                                             if (typeof window._memberLocationQuantity === 'number') {
                                                 window._memberLocationQuantity += delta;
@@ -2382,7 +2382,7 @@ const MemberModule = (function() {
                         idPrefix: 'memberCreate',
                         getDefaultCurrency: getDefaultCurrencyForForms,
                         venue1Container: locationData.venue1Container,
-                        insertBeforeElement: document.querySelector('.member-section-checkout'),
+                        insertBeforeElement: document.querySelector('.form-checkout-container'),
                         onQuantityUpdate: function(delta) {
                             if (typeof window._memberLocationQuantity === 'number') {
                                 window._memberLocationQuantity += delta;
@@ -2573,6 +2573,15 @@ const MemberModule = (function() {
     function renderTermsAndSubmitSection() {
         if (!formFields) return;
         
+        // Find checkout container to append terms and actions inside it
+        var checkoutContainer = formFields.querySelector('.form-checkout-container');
+        if (!checkoutContainer) {
+            // Create checkout container if it doesn't exist
+            checkoutContainer = document.createElement('div');
+            checkoutContainer.className = 'form-checkout-container';
+            formFields.appendChild(checkoutContainer);
+        }
+        
         // Terms agreement row
         var termsWrapper = document.createElement('div');
         termsWrapper.className = 'fieldset member-terms-agreement';
@@ -2606,7 +2615,7 @@ const MemberModule = (function() {
         checkboxWrapper.appendChild(labelText);
         checkboxWrapper.appendChild(termsLinkInline);
         termsWrapper.appendChild(checkboxWrapper);
-        formFields.appendChild(termsWrapper);
+        checkoutContainer.appendChild(termsWrapper);
         
         // Submit buttons container
         var actionsWrapper = document.createElement('div');
@@ -2634,7 +2643,7 @@ const MemberModule = (function() {
         }
         
         actionsWrapper.appendChild(adminSubmitBtn);
-        formFields.appendChild(actionsWrapper);
+        checkoutContainer.appendChild(actionsWrapper);
         // Hover popover listing all missing items (no toasts; button stays truly disabled)
         attachMissingPopoverToButton(submitBtn, function() { return getCreatePostMissingList({ mode: null }); });
         attachMissingPopoverToButton(adminSubmitBtn, function() { return getCreatePostMissingList({ mode: null }); });
@@ -4268,7 +4277,7 @@ const MemberModule = (function() {
         wrap.appendChild(registerForm);
 
         // Insert into checkout container (or fallback to formWrapper)
-        var checkoutSection = document.querySelector('.member-section-checkout');
+        var checkoutSection = document.querySelector('.form-checkout-container');
         if (checkoutSection) {
             // Insert before the submit buttons (member-create-actions)
             var actionsEl = checkoutSection.querySelector('.member-create-actions');
@@ -4278,7 +4287,7 @@ const MemberModule = (function() {
                 checkoutSection.appendChild(wrap);
             }
         } else {
-        formWrapper.appendChild(wrap);
+            formWrapper.appendChild(wrap);
         }
 
         // Wire refs

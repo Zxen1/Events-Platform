@@ -787,12 +787,9 @@
    ============================================================================ */
 
 .member-form-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 12px;
+  margin: 0 auto;
   background: transparent;
   border: none;
   border-radius: 0;
