@@ -1,0 +1,1946 @@
+/* ============================================================================
+   MEMBER PANEL - Cleaned for new architecture
+   ============================================================================ */
+
+/* ============================================================================
+   STATUS MESSAGE
+   ============================================================================ */
+
+.member-status-message {
+  position: fixed;
+  top: calc(var(--safe-top, 0px) + 20px);
+  left: 50%;
+  transform: translate(-50%, -10px);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: var(--layer-dialog);
+  font-size: 14px;
+}
+
+.member-status-message--error {
+  background: #c62828;
+  color: #fff;
+}
+
+.member-status-message--success {
+  background: #2ea060;
+  color: #fff;
+}
+
+.member-status-message--show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ============================================================================
+   SUPPORT FUNMAP (REGISTER TAB)
+   ============================================================================ */
+
+.member-auth #member-auth-register {
+  gap: 10px;
+}
+
+.member-supporter-message {
+  margin: 0;
+  color: #ddd;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.member-supporter-payment {
+  margin: 0;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.member-supporter-payment-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+/* Payment preset buttons: allowed single new class (no base class overlap) */
+.member-supporterpayment-button {
+  width: 100%;
+  height: 44px;
+  font-weight: 600;
+  padding: 0 10px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: rgba(34, 197, 94, 0.14);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+
+.member-supporterpayment-button:hover {
+  border-color: transparent;
+  background: rgba(34, 197, 94, 0.22);
+  color: #fff;
+}
+
+.member-supporterpayment-button:active {
+  border-color: transparent;
+  background: rgba(34, 197, 94, 0.30);
+  color: #fff;
+  transform: scale(0.97);
+}
+
+.member-supporterpayment-button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.member-supporterpayment-button[aria-pressed="true"] {
+  border-color: rgba(34, 197, 94, 1);
+  background: rgba(34, 197, 94, 0.30);
+  color: #fff;
+}
+
+.member-supporterpayment-input {
+  margin: 0;
+  width: 100%;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1c1c1c;
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  box-sizing: border-box;
+  caret-color: #fff;
+}
+
+.member-supporterpayment-input:focus {
+  outline: 2px solid var(--btn-selected);
+  outline-offset: 2px;
+}
+
+.member-auth-submit[data-action="register"] {
+  width: 100%;
+  /* Use the same sizing/states as `.member-button-submit` (Create Post submit). */
+}
+
+.member-supporter-join-toggle {
+  margin: 10px 0;
+  height: 44px;
+  border-color: rgba(59, 130, 245, 0.6);
+}
+
+.member-supporter-join-fields {
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ============================================================================
+   PANEL BASE
+   ============================================================================ */
+
+.member-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: calc(var(--vh, 1vh) * 100);
+  background: transparent;
+  display: none;
+  z-index: var(--layer-panel);
+  pointer-events: none;
+}
+
+.member-panel--show {
+  display: block;
+}
+
+/* ============================================================================
+   PANEL CONTENT
+   ============================================================================ */
+
+.member-panel-content {
+  --panel-transition-duration: 0.3s;
+  position: absolute;
+  left: auto;
+  right: 0;
+  top: calc(var(--header-h) + var(--safe-top));
+  bottom: auto;
+  width: min(440px, 100%);
+  max-width: 100%;
+  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  pointer-events: auto;
+  transition: transform var(--panel-transition-duration, 0.3s) ease;
+  will-change: transform;
+  box-sizing: border-box;
+  background: #222222;
+  color: #fff;
+  overscroll-behavior: contain;
+}
+
+.member-panel-content--side-left {
+  transform: translateX(-100%);
+}
+
+.member-panel-content--side-right {
+  transform: translateX(100%);
+}
+
+.member-panel-content--hidden {
+  pointer-events: none;
+}
+
+.member-panel-content--visible {
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .member-panel-content {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 440px) {
+  .member-panel-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: none;
+    border-radius: 0;
+  }
+}
+
+/* ============================================================================
+   PANEL HEADER
+   ============================================================================ */
+
+.member-panel-header {
+  position: sticky;
+  top: 0;
+  padding: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+  cursor: ew-resize;
+  background: #222222;
+}
+
+.member-panel-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.member-panel-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   PANEL ACTIONS
+   ============================================================================ */
+
+.member-panel-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.member-panel-actions-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+  border-radius: 5px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.member-panel-actions-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.member-panel-actions-icon-btn-icon {
+  width: 30px;
+  height: 30px;
+  background-color: #fff;
+  opacity: 1;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.member-panel-actions-icon-btn-icon--save {
+  -webkit-mask-image: var(--ui-icon-save);
+  mask-image: var(--ui-icon-save);
+}
+
+.member-panel-actions-icon-btn-icon--discard {
+  -webkit-mask-image: var(--ui-icon-discard);
+  mask-image: var(--ui-icon-discard);
+}
+
+.member-panel-actions-icon-btn-icon--close {
+  -webkit-mask-image: var(--ui-icon-close);
+  mask-image: var(--ui-icon-close);
+}
+
+.member-panel-actions-icon-btn--disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.member-panel-actions-icon-btn-icon--disabled {
+  background-color: #888;
+}
+
+.member-panel-actions-icon-btn-icon--save-enabled {
+  background-color: #22c55e;
+}
+
+.member-panel-actions-icon-btn--save-enabled:hover {
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.member-panel-actions-icon-btn-icon--save-enabled-hover {
+  background-color: #4ade80;
+}
+
+.member-panel-actions-icon-btn-icon--discard-enabled {
+  background-color: #ef4444;
+}
+
+.member-panel-actions-icon-btn--discard-enabled:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.member-panel-actions-icon-btn-icon--discard-enabled-hover {
+  background-color: #f87171;
+}
+
+.member-panel-actions-icon-btn--close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.member-panel-actions-primary {
+  background: var(--button-selected-bg, var(--btn-selected));
+  border-color: var(--button-selected-border, var(--button-selected-bg, var(--btn-selected)));
+  color: var(--button-selected-text, var(--button-active-text));
+}
+
+.member-panel-actions-primary:hover {
+  background: var(--button-selected-hover, var(--btn-selected-hover));
+  border-color: var(--button-selected-hover-border, var(--button-selected-hover, var(--btn-selected-hover)));
+  color: var(--button-selected-hover-text, var(--button-selected-text, var(--button-active-text)));
+}
+
+.member-panel-actions-discard--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   PANEL BODY
+   ============================================================================ */
+
+.member-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 10px 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-scrollbar-thumb) transparent;
+}
+
+/* Bottom slack is provided by `.bottomSlack` elements. */
+
+/* IMPORTANT: panel bodies are flex columns; prevent children shrinking so bottom slack
+   always creates real overflow/scroll (especially for short tabs like logged-in Profile). */
+.member-panel-body > * {
+  flex-shrink: 0;
+}
+
+.member-panel-body::-webkit-scrollbar {
+  width: 12px;
+}
+
+.member-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.member-panel-body::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 5px;
+}
+
+.member-panel-body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* Smooth scrollbar resize: fade thumb during spacer/lock transitions */
+.member-panel-body.panel-scrollbar-fade {
+  scrollbar-color: transparent transparent;
+}
+
+.member-panel-body.panel-scrollbar-fade::-webkit-scrollbar-thumb,
+.member-panel-body.panel-scrollbar-fade::-webkit-scrollbar-thumb:hover {
+  background-color: transparent;
+}
+
+.member-panel-body::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.member-panel-body-item {
+  width: 100%;
+  max-width: 420px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  min-width: 0;
+}
+
+.member-panel-body-item--last {
+  margin-bottom: 0;
+}
+
+.member-panel-form {
+  padding: 10px;
+  padding-bottom: 100px;
+}
+
+/* ============================================================================
+   PANEL FIELD
+   ============================================================================ */
+
+.member-panel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.member-panel-field[hidden] {
+  display: none;
+}
+
+.member-panel-field-label {
+  display: block;
+  text-align: left;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.member-panel-field-label--alt {
+  color: var(--panel-label-color);
+}
+
+.member-settings-field-label {
+  display: block;
+  text-align: left;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+}
+
+.member-map-settings-container {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 10px auto;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* member-preferences-container removed (no language/currency filters) */
+
+.member-lighting-buttons,
+.member-style-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.member-style-buttons {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.member-lighting-button,
+.member-style-button {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.2);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  box-sizing: border-box;
+  font-size: 14px;
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.member-lighting-button:hover,
+.member-style-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--website-blue-border, #3b82f5);
+}
+
+.member-lighting-button--active,
+.member-lighting-button[aria-pressed="true"],
+.member-style-button--active,
+.member-style-button[aria-pressed="true"] {
+  background: rgba(0, 0, 0, 0.2);
+  color: var(--website-blue-border, #3b82f5);
+}
+
+.member-lighting-button-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.member-lighting-button-text {
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+  text-transform: none;
+  display: none;
+}
+
+.member-style-button-text {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.member-panel-field-title {
+  color: var(--panel-title-color);
+  font-size: var(--panel-title-size);
+}
+
+.member-panel-field-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 8px 12px;
+  color: var(--input-text, #fff);
+  font-size: 14px;
+}
+
+.member-panel-field-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 8px 12px;
+  color: var(--input-text, #fff);
+  font-size: 14px;
+}
+
+/* ============================================================================
+   TINY BUTTON (Logout button)
+   ============================================================================ */
+
+.member-tiny-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  background: var(--btn);
+  cursor: pointer;
+  border: 1px solid var(--btn);
+}
+
+.member-tiny-btn--disabled {
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.member-tiny-btn-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ============================================================================
+   BUTTON STYLES
+   ============================================================================ */
+
+.member-button-auth {
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  color: var(--button-text);
+  font-size: 14px;
+  padding: 0 10px;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  min-width: 35px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s, transform .05s;
+}
+
+.member-button-auth:hover {
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--button-hover-text);
+}
+
+.member-button-auth:active {
+  background: var(--btn-selected-active);
+  border-color: var(--btn-selected-active);
+  color: var(--button-active-text);
+  transform: scale(0.97);
+}
+
+.member-button-auth:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.member-button-auth--disabled {
+  background: var(--btn-disabled);
+  border-color: var(--btn-disabled);
+  color: var(--button-disabled-text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+
+/* ============================================================================
+   SUPPORT FUNMAP: PAYMENT BUTTONS
+   ============================================================================ */
+
+/* ============================================================================
+   INPUT STYLES
+   ============================================================================ */
+
+.member-input-text {
+  font: inherit;
+  caret-color: auto;
+  -webkit-user-select: text;
+  user-select: text;
+  height: var(--control-h);
+  border-radius: 5px;
+}
+
+.member-input-text::placeholder {
+  color: var(--placeholder-text);
+  font-size: inherit;
+}
+
+.member-input-dropdown {
+  font: inherit;
+  background: var(--dropdown-bg);
+  color: var(--dropdown-text);
+  border-radius: var(--dropdown-radius);
+  height: var(--control-h);
+}
+
+/* ============================================================================
+   TAB BAR
+   ============================================================================ */
+
+.member-tab-bar {
+  display: flex;
+  gap: 6px;
+}
+
+.member-tab-bar-button {
+  flex: 1;
+  height: var(--control-h);
+  min-height: var(--control-h);
+  padding: 0 10px 1px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  color: var(--button-text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.member-tab-bar-button:hover {
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--button-active-text);
+}
+
+.member-tab-bar-button:active {
+  transform: none;
+}
+
+.member-tab-bar-button--selected {
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
+  box-shadow: none;
+  color: var(--button-active-text);
+}
+
+.member-tab-bar-button:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   TAB PANELS
+   ============================================================================ */
+
+.member-tab-panel {
+  display: none;
+}
+
+.member-tab-panel--active {
+  display: flex;
+  flex-direction: column;
+  /* Do NOT force full-height: it creates phantom overflow (scrollbars) on short content. */
+  min-height: 0;
+}
+
+/* ============================================================================
+   MEMBER FORM CONTAINER
+   ============================================================================ */
+
+.member-form-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.member-form-container[hidden] {
+  display: none;
+}
+
+.member-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 100px;
+}
+
+/* ============================================================================
+   MEMBER CREATE STYLES
+   ============================================================================ */
+
+.member-create-intro {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.member-create-intro--error {
+  color: #ff6b6b;
+}
+
+.member-create-selects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.member-create-field {
+  margin: 0;
+}
+
+.member-create-select {
+  max-width: 240px;
+}
+
+.member-create-placeholder {
+  margin: 4px 0 0;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.member-create-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.member-create-checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.member-create-price-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.member-create-price-row-select {
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+.member-create-price-row-input {
+  flex: 1 1 120px;
+  min-width: 120px;
+}
+
+.member-create-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  margin-top: 20px;
+}
+
+.member-button-submit {
+  background: var(--website-color, #3b82f5);
+  border: none;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.member-button-submit:hover:not(:disabled) {
+  background: var(--website-color-hover, #2563eb);
+}
+
+.member-button-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Incomplete-list popover (shown on hover over disabled submit area) */
+.member-missing-popover {
+  position: absolute;
+  right: 0;
+  bottom: 42px;
+  min-width: 220px;
+  max-width: 320px;
+  background: rgba(20, 20, 20, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 6px;
+  padding: 10px 10px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 20;
+}
+
+.member-missing-popover-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 8px;
+}
+
+.member-missing-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.member-missing-popover-item {
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.member-button-admin-submit {
+  background: #22c55e;
+  border: 1px solid #22c55e;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0 16px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 5px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.member-button-admin-submit:hover {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+
+.member-button-admin-submit:disabled {
+  background: #166534;
+  border-color: #166534;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ============================================================================
+   TERMS AGREEMENT ROW (on form)
+   ============================================================================ */
+
+.member-terms-agreement {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #333;
+}
+
+.member-terms-agreement-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.member-terms-agreement-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--website-blue-border, #3b82f5);
+  flex-shrink: 0;
+}
+
+.member-terms-agreement-text {
+  color: #ffffff;
+}
+
+.member-terms-agreement-link {
+  color: var(--website-blue-border, #3b82f5);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.member-terms-agreement-link:hover {
+  color: #60a5fa;
+}
+
+/* ============================================================================
+   ADMIN SKIP PAYMENT BUTTON
+   ============================================================================ */
+
+.member-admin-skip-payment-btn {
+  background: rgba(100, 150, 200, 0.2);
+  border: 1px solid rgba(100, 150, 200, 0.4);
+  color: #8ab4ff;
+  padding: 10px 16px;
+  border-radius: 5px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.member-admin-skip-payment-btn:hover {
+  background: rgba(100, 150, 200, 0.3);
+  border-color: rgba(100, 150, 200, 0.6);
+}
+
+.member-admin-skip-payment-btn--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   MEMBER AUTH CONTAINER
+   ============================================================================ */
+
+.member-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Profile tab: keep layout helpers, but DO NOT force it visible when inactive.
+   Visibility is controlled by `.member-tab-panel` / `.member-tab-panel--active`. */
+#member-tab-profile {
+  /* IMPORTANT: Don't force full-height here.
+     When this is 100%, it consumes the panel's extra bottom scroll padding,
+     so Profile (logged-in) can't scroll down into the bottom slack area like other panels. */
+  min-height: 0;
+}
+
+/* When logged in, the auth container should fill available height */
+#member-tab-profile .member-auth {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Profile panel should behave like a column so actions can sit at bottom */
+.member-auth-profile {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.member-auth-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.member-auth-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 36px;
+  border-radius: 5px;
+  border: 1px solid var(--btn);
+  background: var(--btn);
+  color: var(--button-text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.member-auth-tab:hover {
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--button-active-text);
+}
+
+.member-auth-tab:active {
+  transform: none;
+}
+
+.member-auth-tab--selected {
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--button-active-text);
+}
+
+/* Main login submit button - match logout button styling */
+.member-auth-submit[data-action="login"] {
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: #ffffff;
+  width: auto;
+  min-width: 0;
+  padding: 0 10px;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.member-auth-submit[data-action="register"] {
+  margin-bottom: 12px;
+}
+
+.member-auth-tab:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+.member-auth-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.member-auth-panel--hidden {
+  display: none;
+}
+
+.member-auth-panel-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.member-auth-panel-input {
+  height: 36px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #1c1c1c;
+  color: #fff;
+  padding: 0 12px;
+  box-sizing: border-box;
+  caret-color: #fff;
+  cursor: text;
+}
+
+/* Browser autofill styling uses global rule from base-new.css */
+/* Animation name: global-autofill-detected */
+
+.member-auth-panel-input:focus {
+  outline: 2px solid var(--btn-selected);
+  outline-offset: 2px;
+  background: #1c1c1c;
+}
+
+/* Support FunMap custom amount input uses its own class: .member-supporterpayment-input */
+
+.member-auth-submit {
+  width: 100%;
+  align-self: stretch;
+  /* Spacing is controlled by the panel gap (10px) */
+  margin-bottom: 0;
+}
+
+.member-profile-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-profile-save-btn {
+  align-self: flex-start;
+}
+
+.member-auth-profile {
+  gap: 18px;
+}
+
+.member-auth-tabs--logged-in {
+  display: none;
+}
+
+.member-auth-panel--logged-in {
+  gap: 16px;
+}
+
+/* ============================================================================
+   MEMBER PROFILE
+   ============================================================================ */
+
+.member-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.member-profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-sizing: border-box;
+  background: #111111;
+}
+
+.member-profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.member-profile-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.member-profile-email {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ============================================================================
+   UPDATE PROFILE DRAWER (Accordion style - copied from admin settings)
+   ============================================================================ */
+
+.member-profile-drawer {
+  width: 100%;
+  background: #080808;
+  border-radius: 5px;
+  overflow: visible;
+  border: 1px solid transparent;
+}
+
+.member-profile-drawer:hover {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+.member-profile-drawer-header {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  background: rgba(59, 130, 245, 0.15);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.member-profile-drawer--open .member-profile-drawer-header {
+  border-radius: 4px 4px 0 0;
+}
+
+.member-profile-drawer-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.member-profile-drawer-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.member-profile-drawer-arrow--open {
+  transform: rotate(180deg);
+}
+
+.member-profile-drawer-body {
+  display: none;
+  padding: 12px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-profile-drawer-body--open {
+  display: flex;
+}
+
+/* Username row with more button */
+.member-profile-edit-row {
+  display: flex;
+  gap: 8px;
+  position: relative;
+}
+
+.member-profile-edit-name-input {
+  flex: 1;
+}
+
+/* More button (3-dot menu) - matches FormBuilder pattern */
+.member-profile-more-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.member-profile-more-btn:hover {
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue-border, #3b82f5);
+}
+
+.member-profile-more-btn[aria-expanded="true"] {
+  border-color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue-border, #3b82f5);
+}
+
+/* More menu dropdown */
+.member-profile-more-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 180px;
+  margin-top: 4px;
+  background: #111;
+  border: 1px solid var(--website-blue-border, #3b82f5);
+  border-radius: 5px;
+  padding: 5px 0;
+  z-index: var(--layer-menu, 85);
+}
+
+.member-profile-more-menu[hidden] {
+  display: none;
+}
+
+.member-profile-more-item {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 13px;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  gap: 8px;
+}
+
+.member-profile-more-item:hover {
+  background: #222;
+}
+
+.member-profile-more-item-text {
+  flex: 1;
+}
+
+/* Hide Account switch - matches FormBuilder pattern */
+.member-profile-more-switch {
+  width: 36px;
+  height: 20px;
+  background: #444;
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.member-profile-more-switch::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px;
+  left: 2px;
+  transition: left 0.2s;
+}
+
+.member-profile-more-switch[aria-checked="true"] {
+  background: var(--website-blue-active-fill, #3b82f599);
+}
+
+.member-profile-more-switch[aria-checked="true"]::after {
+  left: 18px;
+}
+
+/* Delete Account button */
+.member-profile-more-delete {
+  color: #f87171;
+}
+
+.member-profile-more-delete:hover {
+  background: #7f1d1d;
+}
+
+.member-profile-more-delete svg {
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   AVATAR PICKER / UPLOAD
+   ============================================================================ */
+
+/* Note: AvatarPickerComponent styles live in components-new.css (.component-avatarpicker-*) */
+/* Note: AvatarCropperComponent styles live in components-new.css (.component-avatarcropper-tool-*) */
+
+.member-profile-actions {
+  position: static;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  margin-top: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.member-profile-actions-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+
+/* Logout button uses same auth button styling */
+.member-profile-actions-btn.member-button-auth {
+  font-size: 14px;
+}
+
+/* Spacing under content is handled by `.bottomSlack` at the end of the panel body. */
+
+/* ============================================================================
+   UNSAVED PROMPT DIALOG
+   ============================================================================ */
+
+.member-unsaved-prompt {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: var(--layer-dialog);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.member-unsaved-prompt--show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.member-unsaved-dialog {
+  background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 20px;
+  max-width: 360px;
+  width: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.member-unsaved-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ============================================================================
+   FORMPICKER (Category/Subcategory picker in Create tab)
+   ============================================================================ */
+
+.member-formpicker-container {
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.member-formpicker-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Formpicker dropdowns container */
+.member-formpicker-dropdowns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Formpicker menu (copied from filter-sort-menu pattern) */
+.member-formpicker-menu {
+  position: relative;
+}
+
+.member-formpicker-menu-button {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+}
+
+.member-formpicker-menu-button:hover {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-hover-fill, #3b82f5);
+}
+
+.member-formpicker-menu-button--open {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+.member-formpicker-menu-button-image {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.member-formpicker-menu-button-text {
+  flex: 1;
+  text-align: left;
+  padding-left: 10px;
+  font-size: 14px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-formpicker-menu-button-arrow {
+  width: 16px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: #888;
+  transition: transform 0.2s;
+}
+
+.member-formpicker-menu-button-arrow--open {
+  transform: rotate(180deg);
+}
+
+.member-formpicker-menu-options {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  width: 100%;
+  background: #222;
+  border: 1px solid var(--website-blue-border, #3b82f5);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.member-formpicker-menu-options--open {
+  display: block;
+}
+
+.member-formpicker-menu-option {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
+}
+
+.member-formpicker-menu-option:hover {
+  background: var(--website-blue-hover-fill, #3b82f5);
+}
+
+.member-formpicker-menu-option-image {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.member-formpicker-menu-option-text {
+  flex: 1;
+  text-align: left;
+  padding-left: 10px;
+  font-size: 14px;
+  color: #fff;
+}
+
+/* ============================================================================
+   LOCATION QUANTITY CONTROLS
+   ============================================================================ */
+
+.member-location-quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.member-location-quantity-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.member-location-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.member-location-quantity-btn {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 5px;
+  color: #777;
+  cursor: pointer;
+  font-size: 18px;
+  flex: 0 0 36px;
+  padding: 0;
+}
+
+.member-location-quantity-btn--plus:hover {
+  border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+  color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+}
+
+.member-location-quantity-btn--minus:hover {
+  border-color: #f87171;
+  color: #f87171;
+}
+
+.member-location-quantity-btn:active {
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+  color: #fff;
+}
+
+.member-location-quantity-btn--minus:disabled,
+.member-location-quantity-btn--plus:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.member-location-quantity-display {
+  min-width: 24px;
+  margin-right: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============================================================================
+   ADDITIONAL LOCATIONS
+   ============================================================================ */
+
+/* Section containers - siblings of main form */
+.member-section-container {
+  margin-bottom: 12px;
+}
+
+/* Venue sections - override form-container styling */
+.member-section-venue.member-form-container {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Quantity picker container - invisible, sits on panel */
+.member-section-quantity {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+/* Active state for basic form container (not venues - venues have their own rules) */
+.member-form-container--active:not(.member-section-venue):not(.member-section-checkout) {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+/* Checkout section active state */
+.member-section-checkout.member-section-container--active {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+/* Section headers - 36px, horizontal flex only, line-height for vertical */
+.member-section-header {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.member-section-header:hover {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-hover-fill, #3b82f5);
+}
+
+/* When expanded - connect to content below */
+.member-section-venue:not(.member-section-venue--collapsed) .member-section-header {
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+/* When container is active/focused - blue border, active fill background */
+/* Higher specificity to override :hover and :not() rules */
+.member-section-container.member-section-venue.member-section-container--active > .member-section-header {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-active-fill, #3b82f599);
+}
+
+.member-section-container.member-section-venue.member-section-container--active > .member-venue-content {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+.member-section-header-text {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 36px;
+}
+
+/* Arrow - line-height for vertical centering */
+.member-section-header-arrow {
+  width: 16px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  font-size: 10px;
+  color: #888;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+/* Collapsed = arrow points down (default). Expanded = arrow rotated 180deg */
+.member-section-venue:not(.member-section-venue--collapsed) .member-section-header-arrow {
+  transform: rotate(180deg);
+}
+
+/* Delete button in header */
+.member-section-header .member-location-delete-btn {
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+/* Venue content - styled like formpicker menu options */
+.member-venue-content {
+  background: #222;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  padding: 12px;
+}
+
+/* When collapsed, content is hidden */
+.member-section-venue--collapsed .member-venue-content {
+  display: none;
+}
+
+/* Additional location containers */
+.member-additional-location-container {
+  margin-bottom: 12px;
+}
+
+.member-additional-location {
+  /* Content inside the container */
+}
+
+/* Legacy location headers (replaced by member-section-header) */
+.member-additional-location-header,
+.member-first-location-header {
+  display: none;
+}
+
+/* Location header row with delete button (legacy - now in member-section-header) */
+.member-additional-location-header-row {
+  display: none;
+}
+
+.member-location-delete-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 24px;
+  line-height: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.member-location-delete-btn:hover {
+  color: #e74c3c;
+}
+
+/* Location explainer message - no container, sits on panel */
+.member-location-explainer {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* Location options switch row */
+.member-location-options-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.member-location-options-switch {
+  flex-shrink: 0;
+}
+
+.member-location-options-label {
+  margin-left: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  user-select: none;
+}
+
+/* Fallback checkbox style if SwitchComponent unavailable */
+.member-location-options-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 40px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.member-location-options-checkbox::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+
+.member-location-options-checkbox:checked {
+  background: #4CAF50;
+}
+
+.member-location-options-checkbox:checked::after {
+  transform: translateX(20px);
+}
+
+/* Override fieldsets (inline, hidden by default until Advanced is toggled) */
+
+/* Placeholder mode: override fields show grey placeholder from location 1 */
+.member-location-override--placeholder .fieldset-input,
+.member-location-override--placeholder .fieldset-textarea {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.member-location-override--placeholder .fieldset-input:focus,
+.member-location-override--placeholder .fieldset-textarea:focus,
+.member-location-override--placeholder .fieldset-input:not(:placeholder-shown),
+.member-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
+  color: #fff;
+}
+
+.member-location-override--placeholder .fieldset-input::placeholder,
+.member-location-override--placeholder .fieldset-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+  font-style: italic;
+}
+
