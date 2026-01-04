@@ -1007,7 +1007,7 @@
     flex: 1 1 auto;
     max-height: 700px;
     overflow-y: auto;
-    overflow-x: visible;
+    overflow-x: clip;
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }
@@ -1133,7 +1133,7 @@
     position: sticky;
     top: 10px;
     z-index: calc(var(--layer-menu, 85) + 1);
-    background: var(--website-blue-active-fill, #3b82f599);
+    background: #2563ab;
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
