@@ -3626,7 +3626,12 @@
                 },
                 initialQuantity: 1,
                 onQuantityChange: function(quantity, isIncrease) {
-                    // Preview doesn't need to handle quantity changes
+                    // FormBuilder blueprint now handles container re-rendering internally
+                    // Caller only handles non-blueprint logic (like checkout context updates)
+                    
+                    if (window.CheckoutOptionsComponent && typeof CheckoutOptionsComponent.updateContext === 'function') {
+                        // Update checkout context if it exists
+                    }
                 },
                 getMessage: function(key, params, fallback) {
                     if (typeof window.getMessage === 'function') {
@@ -4137,6 +4142,38 @@
         var quantityPicker = createLocationQuantityPicker({
             initialQuantity: initialQuantity,
             onQuantityChange: function(quantity, isIncrease) {
+                // INTERNAL: Automatically re-render additional locations
+                if (locationFieldset) {
+                    renderAdditionalLocations({
+                        quantity: quantity,
+                        locationType: locationFieldsetType,
+                        locationFieldsetData: locationFieldset,
+                        mustRepeatFieldsets: mustRepeatFieldsets,
+                        locationRepeatOnlyFieldsets: locationRepeatOnlyFieldsets,
+                        buildFieldset: buildFieldset,
+                        idPrefix: idPrefix,
+                        venue1Container: v1ContainerData.container,
+                        insertBeforeElement: checkoutContainer,
+                        onQuantityUpdate: function() {
+                            // Sync Venue 1 delete button visibility
+                            updateVenueDeleteButtons();
+                        }
+                    });
+                }
+                
+                // INTERNAL: Automatically update Venue 1 header and UI
+                if (v1ContainerData.arrow) {
+                    v1ContainerData.arrow.style.display = quantity > 1 ? '' : 'none';
+                }
+                if (v1ContainerData.deleteBtn) {
+                    v1ContainerData.deleteBtn.style.display = quantity > 1 ? '' : 'none';
+                }
+                if (v1ContainerData.headerText) {
+                    var locTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
+                    v1ContainerData.headerText.textContent = quantity > 1 ? (locTypeName + ' 1') : locTypeName;
+                }
+                
+                // EXTERNAL: Notify receiver of quantity change (for surcharge context etc)
                 onQuantityChange(quantity, isIncrease);
             },
             getMessage: getMessage

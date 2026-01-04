@@ -2136,102 +2136,12 @@ const MemberModule = (function() {
                         locationQuantity = quantity;
                         window._memberLocationQuantity = quantity;
                         
-                        // Update arrow and delete button visibility
-                        if (locationData && locationData.venue1Arrow) {
-                            locationData.venue1Arrow.style.display = quantity > 1 ? '' : 'none';
-                        }
-                        if (locationData && locationData.venue1DeleteBtn) {
-                            locationData.venue1DeleteBtn.style.display = quantity > 1 ? '' : 'none';
-                        }
+                        // FormBuilder blueprint now handles container re-rendering and header updates internally
+                        // Member form only handles its specific logic (checkout context, events)
                         
-                        // Update header text
-                        if (locationData && locationData.venue1HeaderText) {
-                            var locTypeName = locationData.locationFieldsetType ? locationData.locationFieldsetType.charAt(0).toUpperCase() + locationData.locationFieldsetType.slice(1) : 'Venue';
-                            locationData.venue1HeaderText.textContent = quantity > 1 ? (locTypeName + ' 1') : locTypeName;
-                        }
-                        
-                        // Re-render additional locations if needed
-                        if (locationData && locationData.locationFieldsetType) {
-                            setTimeout(function() {
-                                // Get field data for additional locations rendering
-                                var locationFieldset = null;
-                                var mustRepeatFieldsets = [];
-                                var autofillRepeatFieldsets = [];
-                                var locationRepeatOnlyFieldsets = [];
-                                
-                                fields.forEach(function(fieldData) {
-                                    var fieldsetKey = window.FormbuilderModule && typeof FormbuilderModule.getFieldsetKey === 'function'
-                                        ? FormbuilderModule.getFieldsetKey(fieldData)
-                                        : '';
-                                    if (!fieldsetKey) return;
-                                    
-                                    if (fieldsetKey === locationData.locationFieldsetType || fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
-                                        if (!locationFieldset) locationFieldset = fieldData;
-                                    }
-                                    var isLocationKey = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location');
-                                    var isMustRepeat = false;
-                                    if (fieldData.must_repeat !== undefined) {
-                                        isMustRepeat = !!fieldData.must_repeat;
-                                    }
-                                    if (isMustRepeat) {
-                                        if (!isLocationKey) mustRepeatFieldsets.push(fieldData);
-                                    }
-                                    var isAutofillRepeat = false;
-                                    if (fieldData.autofill_repeat !== undefined) {
-                                        isAutofillRepeat = !!fieldData.autofill_repeat;
-                                    }
-                                    if (isAutofillRepeat) {
-                                        autofillRepeatFieldsets.push(fieldData);
-                                    }
-                                    var isLocationRepeat = false;
-                                    if (fieldData.location_repeat !== undefined) {
-                                        isLocationRepeat = !!fieldData.location_repeat;
-                                    }
-                                    if (isLocationRepeat && !isMustRepeat && !isLocationKey) {
-                                        locationRepeatOnlyFieldsets.push(fieldData);
-                                    }
-                                });
-                                
-                                if (locationFieldset && window.FormbuilderModule && typeof FormbuilderModule.renderAdditionalLocations === 'function') {
-                                    FormbuilderModule.renderAdditionalLocations({
-                                        quantity: quantity,
-                                        locationType: locationData.locationFieldsetType,
-                                        locationFieldsetData: locationFieldset,
-                                        mustRepeatFieldsets: mustRepeatFieldsets,
-                                        autofillRepeatFieldsets: autofillRepeatFieldsets,
-                                        locationRepeatOnlyFieldsets: locationRepeatOnlyFieldsets,
-                                        buildFieldset: function(fieldData, options) {
-                                            var field = ensureFieldDefaults(fieldData);
-                                            return FieldsetBuilder.buildFieldset(field, {
-                                                idPrefix: options.idPrefix || 'memberCreate',
-                                                fieldIndex: options.fieldIndex || 0,
-                                                locationNumber: options.locationNumber,
-                                                container: options.container,
-                                                defaultCurrency: getDefaultCurrencyForForms()
-                                            });
-                                        },
-                                        idPrefix: 'memberCreate',
-                                        getDefaultCurrency: getDefaultCurrencyForForms,
-                                        venue1Container: locationData.venue1Container,
-                                        insertBeforeElement: document.querySelector('.form-checkout-container'),
-                                        onQuantityUpdate: function(delta) {
-                                            if (typeof window._memberLocationQuantity === 'number') {
-                                                window._memberLocationQuantity += delta;
-                                                var qtyDisplay = document.querySelector('.form-location-quantity-display');
-                                                if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
-                                            }
-                                        }
-                                    });
-                                }
-                            }, 100);
-                        }
-                        
-                        // Update checkout context
                         if (checkoutInstance && typeof checkoutInstance.updateContext === 'function') {
-                            setTimeout(function() {
-                                checkoutInstance.updateContext({ locationCount: quantity });
-                                try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
-                            }, 50);
+                            checkoutInstance.updateContext({ locationCount: quantity });
+                            try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
                         }
                     },
                     getMessage: function(key, params, fallback) {
