@@ -2187,7 +2187,7 @@ const FieldsetBuilder = (function(){
 
                 // Open date picker on click/enter/space
                 spDatePickerBox.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    try { e.preventDefault(); } catch (e0) {}
                     spOpenDatePicker(spDatePickerBox);
                 });
                 spDatePickerBox.addEventListener('keydown', function(e) {
@@ -2435,13 +2435,13 @@ const FieldsetBuilder = (function(){
 
                 // Footer buttons (OK/Cancel) for the ticket-group pop-up (locked like session picker)
                 spTicketGroupFooterOk.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    try { e.preventDefault(); } catch (e0) {}
                     spCloseAllGroupEditors();
                     spCloseTicketMenu();
                 });
 
                 spTicketGroupFooterCancel.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    try { e.preventDefault(); } catch (e0) {}
                     // Revert current open editor only, then close the menu.
                     try {
                         if (spOpenGroupKey && spOpenGroupSnapshot) {
@@ -2548,7 +2548,6 @@ const FieldsetBuilder = (function(){
                     editBtn.title = 'Edit Ticket Group';
                     editBtn.setAttribute('aria-label', 'Edit Ticket Group');
                     editBtn.addEventListener('click', function(e) {
-                        try { e.stopPropagation(); } catch (e0) {}
                         if (spOpenGroupKey && spOpenGroupKey !== key) {
                             spCloseAllGroupEditors();
                         }
@@ -2572,7 +2571,7 @@ const FieldsetBuilder = (function(){
                     addGroupBtn.textContent = '+';
                     addGroupBtn.setAttribute('aria-label', 'Add Ticket Group');
                     addGroupBtn.addEventListener('click', function(e) {
-                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        try { e.preventDefault(); } catch (e0) {}
                         var newKey = spFirstUnusedLetter();
                         spEnsureTicketGroup(newKey);
                         spUpdateTicketGroupHeaderButtons();
@@ -2592,7 +2591,7 @@ const FieldsetBuilder = (function(){
                     removeGroupBtn.textContent = '−';
                     removeGroupBtn.setAttribute('aria-label', 'Delete Ticket Group');
                     removeGroupBtn.addEventListener('click', async function(e) {
-                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        try { e.preventDefault(); } catch (e0) {}
                         // Group A is never deletable
                         if (key === 'A') return;
                         // If only one group remains, deletion is disabled
@@ -2713,7 +2712,7 @@ const FieldsetBuilder = (function(){
                                     dateDisplay.setAttribute('role', 'button');
                                     dateDisplay.setAttribute('tabindex', '0');
                                     dateDisplay.addEventListener('click', function(ev) {
-                                        try { ev.preventDefault(); ev.stopPropagation(); } catch (e0) {}
+                                        try { ev.preventDefault(); } catch (e0) {}
                                         spOpenDatePicker(dateDisplay);
                                     });
                                 } catch (ePick) {}
@@ -2920,7 +2919,7 @@ const FieldsetBuilder = (function(){
 
                             (function(dateStr, idx, timeInput, ticketBtn, rowEl) {
                                 ticketBtn.addEventListener('click', function(e) {
-                                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                                    try { e.preventDefault(); } catch (e0) {}
                                     var picker = { dateStr: dateStr, idx: idx, timeInput: timeInput, ticketBtn: ticketBtn, rowEl: rowEl };
                                     if (spTicketMenuOpen && spActivePicker && spActivePicker.ticketBtn === ticketBtn) {
                                         spCloseTicketMenu();
