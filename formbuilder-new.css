@@ -1518,16 +1518,28 @@
 
 /* Form Primary Container - holds non-location fieldsets */
 .form-primary-container {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 12px;
   margin-bottom: 12px;
 }
 
 /* Form Location Picker - holds quantity picker + explainer message */
 .form-location-picker {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 12px;
   margin-bottom: 12px;
 }
 
 /* Form Checkout Container - holds checkout options, login/registration, submit */
 .form-checkout-container {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 12px;
   margin-top: 12px;
 }
 
