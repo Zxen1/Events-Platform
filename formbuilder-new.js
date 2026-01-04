@@ -3939,6 +3939,8 @@
             var fieldsetKey = '';
             if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
                 fieldsetKey = fieldData.fieldset_key.toLowerCase();
+            } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                fieldsetKey = fieldData.fieldsetKey.toLowerCase();
             }
             if (!fieldsetKey) return;
             
@@ -3990,6 +3992,8 @@
             var k = '';
             if (f.fieldset_key && typeof f.fieldset_key === 'string') {
                 k = f.fieldset_key.toLowerCase();
+            } else if (f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                k = f.fieldsetKey.toLowerCase();
             }
             if (k) allRepeatKeys[k] = true;
         });
@@ -3997,6 +4001,8 @@
             var k = '';
             if (f.fieldset_key && typeof f.fieldset_key === 'string') {
                 k = f.fieldset_key.toLowerCase();
+            } else if (f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                k = f.fieldsetKey.toLowerCase();
             }
             if (k) allRepeatKeys[k] = true;
         });
@@ -4035,11 +4041,12 @@
             var fieldsetKey = '';
             if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
                 fieldsetKey = fieldData.fieldset_key.toLowerCase();
+            } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                fieldsetKey = fieldData.fieldsetKey.toLowerCase();
             }
-            if (!fieldsetKey) return;
             
             // Location fieldset goes into Venue 1 container
-            if (fieldsetKey === locationFieldsetType || fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+            if (fieldsetKey && (fieldsetKey === locationFieldsetType || fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location')) {
                 if (!locationFieldsetEl) {
                     locationFieldsetEl = fieldset;
                     v1ContainerData.content.appendChild(fieldset);
@@ -4074,10 +4081,11 @@
                 }
             }
             // Must-repeat and location-repeat-only fieldsets go into Venue 1 container
-            else if (allRepeatKeys[fieldsetKey]) {
+            else if (fieldsetKey && allRepeatKeys[fieldsetKey]) {
                 v1ContainerData.content.appendChild(fieldset);
             }
             // Regular fieldsets go first (before quantity picker and venue containers)
+            // This includes fields without fieldsetKey/fieldset_key
             else {
                 regularFieldsets.push(fieldset);
             }
