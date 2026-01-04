@@ -4023,7 +4023,17 @@
                     container.classList.toggle('form-location-container--collapsed');
                 }
             },
-            onActivate: customOnActivate || function() {}
+            onActivate: customOnActivate || function(container, locationNumber) {
+                // Remove active from all siblings
+                var parent = container.parentNode;
+                if (parent) {
+                    parent.querySelectorAll('.form-location-container--active').forEach(function(c) {
+                        c.classList.remove('form-location-container--active');
+                    });
+                }
+                // Add active to this container
+                container.classList.add('form-location-container--active');
+            }
         });
         
         // Hide arrow and delete button when only one location
@@ -4148,6 +4158,14 @@
         // STEP 3: Append Venue 1 container after location picker
         container.appendChild(v1ContainerData.container);
         
+        // Add focus tracking for blue border (only one active at a time)
+        v1ContainerData.container.addEventListener('focusin', function(e) {
+            container.querySelectorAll('.form-location-container--active').forEach(function(c) {
+                c.classList.remove('form-location-container--active');
+            });
+            v1ContainerData.container.classList.add('form-location-container--active');
+        });
+        
         // STEP 4: Create additional location containers if quantity > 1
         var allLocationContainers = [v1ContainerData];
         if (initialQuantity > 1 && locationFieldset) {
@@ -4163,7 +4181,17 @@
                     onHeaderClick: customOnHeaderClick || function(container, locationNumber) {
                         container.classList.toggle('form-location-container--collapsed');
                     },
-                    onActivate: customOnActivate || function() {}
+                    onActivate: customOnActivate || function(container, locationNumber) {
+                        // Remove active from all siblings
+                        var parent = container.parentNode;
+                        if (parent) {
+                            parent.querySelectorAll('.form-location-container--active').forEach(function(c) {
+                                c.classList.remove('form-location-container--active');
+                            });
+                        }
+                        // Add active to this container
+                        container.classList.add('form-location-container--active');
+                    }
                 });
                 
                 // Build location fieldset for this additional location
@@ -4267,6 +4295,15 @@
                 });
                 
                 container.appendChild(additionalContainerData.container);
+                
+                // Add focus tracking for blue border (only one active at a time)
+                additionalContainerData.container.addEventListener('focusin', function(e) {
+                    container.querySelectorAll('.form-location-container--active').forEach(function(c) {
+                        c.classList.remove('form-location-container--active');
+                    });
+                    additionalContainerData.container.classList.add('form-location-container--active');
+                });
+                
                 allLocationContainers.push(additionalContainerData);
             }
         }
