@@ -1867,19 +1867,22 @@
             if (!targetFieldsetKey) return;
             
             // Find all location type fieldsets in the fields container
-            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+            var allFieldWrappers = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
+            var existingLocationWrapper = null;
+            var existingLocationIndex = -1;
             var targetFieldsetExists = false;
             
-            // Remove any location fieldsets that don't match the selected type
-            allFieldWrappers.forEach(function(wrapper) {
+            // Find existing location fieldset and its position
+            for (var i = 0; i < allFieldWrappers.length; i++) {
+                var wrapper = allFieldWrappers[i];
                 var fsId = wrapper.getAttribute('data-fieldset-id');
                 var fieldset = fieldsets.find(function(fs) {
-                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                    return fs.id == fsId;
                 });
-                if (!fieldset) return;
+                if (!fieldset) continue;
                 
-                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                if (!fieldset.fieldset_key) continue;
+                var fieldsetKeyLower = String(fieldset.fieldset_key).toLowerCase();
                 
                 // Check if this is a location fieldset
                 var isLocationFieldset = fieldsetKeyLower === 'venue' || 
@@ -1888,6 +1891,9 @@
                                         fieldsetKeyLower === 'location';
                 
                 if (isLocationFieldset) {
+                    existingLocationWrapper = wrapper;
+                    existingLocationIndex = i;
+                    
                     // Check if it matches the selected type
                     var matches = false;
                     if (targetFieldsetKey === 'address') {
@@ -1896,53 +1902,68 @@
                         matches = (fieldsetKeyLower === targetFieldsetKey);
                     }
                     
-                    // Remove if it doesn't match the selected type
-                    if (!matches) {
-                        wrapper.remove();
-                        addedFieldsets[fsId] = false;
-                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                        if (menuOpt) {
-                            menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
-                        }
-                    } else {
-                        // This is the matching fieldset
+                    if (matches) {
                         targetFieldsetExists = true;
                     }
+                    break;
                 }
-            });
+            }
             
-            // If target fieldset doesn't exist, add it automatically
+            // If target fieldset doesn't exist, swap it in at the same position
             if (!targetFieldsetExists) {
-                // Try to find fieldset by target key, or 'location' if target is 'address'
+                // Find target fieldset by fieldset_key
                 var targetFieldset = null;
                 if (targetFieldsetKey === 'address') {
                     // Try 'address' first, then 'location'
                     targetFieldset = fieldsets.find(function(fs) {
-                        var fsKey = fs.key || fs.fieldset_key || fs.id;
-                        return String(fsKey).toLowerCase() === 'address';
+                        if (!fs.fieldset_key) return false;
+                        return String(fs.fieldset_key).toLowerCase() === 'address';
                     });
                     if (!targetFieldset) {
                         targetFieldset = fieldsets.find(function(fs) {
-                            var fsKey = fs.key || fs.fieldset_key || fs.id;
-                            return String(fsKey).toLowerCase() === 'location';
+                            if (!fs.fieldset_key) return false;
+                            return String(fs.fieldset_key).toLowerCase() === 'location';
                         });
                     }
                 } else {
                     targetFieldset = fieldsets.find(function(fs) {
-                        var fsKey = fs.key || fs.fieldset_key || fs.id;
-                        return String(fsKey).toLowerCase() === targetFieldsetKey;
+                        if (!fs.fieldset_key) return false;
+                        return String(fs.fieldset_key).toLowerCase() === targetFieldsetKey;
                     });
                 }
                 
                 if (targetFieldset) {
+                    // Save reference to next sibling before removing old location fieldset
+                    var insertBeforeNode = null;
+                    if (existingLocationWrapper) {
+                        insertBeforeNode = existingLocationWrapper.nextSibling;
+                        var oldFsId = existingLocationWrapper.getAttribute('data-fieldset-id');
+                        existingLocationWrapper.remove();
+                        addedFieldsets[oldFsId] = false;
+                        var oldMenuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + oldFsId + '"]');
+                        if (oldMenuOpt) {
+                            oldMenuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                        }
+                    }
+                    
+                    // Create new location fieldset
                     var result = createFieldElement(targetFieldset, true, targetFieldset);
-                    fieldsContainer.appendChild(result.wrapper);
                     addedFieldsets[result.fsId] = true;
                     var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
                     if (menuOpt) {
                         menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
                     }
-                    // Update divider and location repeat switches after adding location fieldset
+                    
+                    // Insert at the same position if location existed, otherwise append
+                    if (insertBeforeNode) {
+                        // Insert before the element that was after the old location fieldset
+                        fieldsContainer.insertBefore(result.wrapper, insertBeforeNode);
+                    } else {
+                        // No existing location, just append
+                        fieldsContainer.appendChild(result.wrapper);
+                    }
+                    
+                    // Update divider and location repeat switches after swapping location fieldset
                     setTimeout(function() {
                         updateLocationDividerAndRepeatSwitches();
                     }, 0);
@@ -2355,28 +2376,35 @@
             fieldMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
             var fieldMoreMenuEl = fieldMoreBtn.querySelector('.formbuilder-field-more-menu');
             
-            fieldMoreBtn.addEventListener('click', function(ev) {
-                ev.stopPropagation();
-                var wasOpen = fieldMoreMenuEl && fieldMoreMenuEl.classList.contains('formbuilder-field-more-menu--open');
-                closeAllMenus();
-                if (!wasOpen && fieldMoreMenuEl) fieldMoreMenuEl.classList.add('formbuilder-field-more-menu--open');
-            });
-            
-            var fieldDeleteItem = fieldMoreBtn.querySelector('.formbuilder-field-more-delete');
-            fieldDeleteItem.addEventListener('click', function(ev) {
-                ev.stopPropagation();
-                fieldWrapper.remove();
-                addedFieldsets[fsId] = false;
-                var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                if (menuOpt) {
-                    menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
-                    // Re-apply location type filtering after removing "already added" disabled state
-                    var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
-                    var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
-                    updateLocationTypeFieldsets(currentLocationType);
-                }
-                notifyChange();
-            });
+            // Lock more menu for location fieldsets - prevent deletion
+            if (isLockedLocationFieldset) {
+                fieldMoreBtn.classList.add('disabled');
+                fieldMoreBtn.style.pointerEvents = 'none';
+                fieldMoreBtn.style.opacity = '0.5';
+            } else {
+                fieldMoreBtn.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    var wasOpen = fieldMoreMenuEl && fieldMoreMenuEl.classList.contains('formbuilder-field-more-menu--open');
+                    closeAllMenus();
+                    if (!wasOpen && fieldMoreMenuEl) fieldMoreMenuEl.classList.add('formbuilder-field-more-menu--open');
+                });
+                
+                var fieldDeleteItem = fieldMoreBtn.querySelector('.formbuilder-field-more-delete');
+                fieldDeleteItem.addEventListener('click', function(ev) {
+                    ev.stopPropagation();
+                    fieldWrapper.remove();
+                    addedFieldsets[fsId] = false;
+                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                    if (menuOpt) {
+                        menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                        // Re-apply location type filtering after removing "already added" disabled state
+                        var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
+                        var currentLocationType = currentLocationTypeRadio ? currentLocationTypeRadio.value : null;
+                        updateLocationTypeFieldsets(currentLocationType);
+                    }
+                    notifyChange();
+                });
+            }
             
             editRow.appendChild(requiredLabel);
             editRow.appendChild(fieldMoreBtn);
