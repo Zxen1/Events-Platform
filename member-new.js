@@ -2530,84 +2530,75 @@ const MemberModule = (function() {
         }
         
         // SECTION: Venue 1 Container
-        var venue1Container = document.createElement('div');
-        venue1Container.className = 'member-form-container member-section-container member-section-venue';
-        venue1Container.dataset.venue = '1';
-        
-        var v1Header = document.createElement('div');
-        v1Header.className = 'member-section-header';
-        var v1HeaderText = document.createElement('span');
-        v1HeaderText.className = 'member-section-header-text';
         var venueTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
-        v1HeaderText.textContent = venueTypeName + ' 1';
+        var venue1Name = venueTypeName + ' 1';
         
-        // Arrow (like formpicker menus)
-        var v1Arrow = document.createElement('span');
-        v1Arrow.className = 'member-section-header-arrow';
-        v1Arrow.textContent = '▼';
-        v1Arrow.style.display = 'none';
-        
-        // Delete button (shown when multiple venues)
-        var v1DeleteBtn = document.createElement('button');
-        v1DeleteBtn.type = 'button';
-        v1DeleteBtn.className = 'member-location-delete-btn';
-        v1DeleteBtn.innerHTML = '&times;';
-        v1DeleteBtn.setAttribute('aria-label', 'Delete ' + venueTypeName + ' 1');
-        v1DeleteBtn.style.display = 'none';
-        v1DeleteBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            var venueName = v1HeaderText.textContent || (venueTypeName + ' 1');
-            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
-                ConfirmDialogComponent.show({
-                    titleText: 'Delete ' + venueName,
-                    messageText: 'This cannot be undone.',
-                    confirmLabel: 'Delete',
-                    cancelLabel: 'Cancel',
-                    confirmClass: 'danger',
-                    focusCancel: true
-                }).then(function(confirmed) {
-                    if (confirmed) {
-                        venue1Container.remove();
-                        if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
-                            window._memberLocationQuantity--;
-                            var qtyDisplay = document.querySelector('.member-location-quantity-display');
-                            if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
-                            updateVenueDeleteButtons();
-                        }
+        var v1ContainerData = window.FormbuilderModule && typeof window.FormbuilderModule.createLocationContainerHeader === 'function'
+            ? window.FormbuilderModule.createLocationContainerHeader({
+                locationName: venue1Name,
+                locationNumber: 1,
+                showDelete: false,
+                onDelete: function(container, locationNumber) {
+                    var venueName = v1ContainerData.headerText.textContent || venue1Name;
+                    if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                        ConfirmDialogComponent.show({
+                            titleText: 'Delete ' + venueName,
+                            messageText: 'This cannot be undone.',
+                            confirmLabel: 'Delete',
+                            cancelLabel: 'Cancel',
+                            confirmClass: 'danger',
+                            focusCancel: true
+                        }).then(function(confirmed) {
+                            if (confirmed) {
+                                container.remove();
+                                if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
+                                    window._memberLocationQuantity--;
+                                    var qtyDisplay = document.querySelector('.member-location-quantity-display');
+                                    if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
+                                    updateVenueDeleteButtons();
+                                }
+                            }
+                        });
                     }
-                });
-            }
-        });
+                },
+                onHeaderClick: function(container, locationNumber) {
+                    if (window._memberLocationQuantity > 1) {
+                        container.classList.toggle('formbuilder-location-container--collapsed');
+                    }
+                },
+                onActivate: function(container, locationNumber) {
+                    var tabPanel = container.parentNode;
+                    if (tabPanel) {
+                        tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
+                            c.classList.remove('member-form-container--active', 'member-section-container--active');
+                        });
+                    }
+                    container.classList.add('member-section-container--active');
+                }
+            })
+            : null;
         
-        // Click on header to collapse/expand (only when multiple venues) and activate
-        v1Header.addEventListener('click', function(e) {
-            if (e.target === v1DeleteBtn || v1DeleteBtn.contains(e.target)) return;
-            // Activate this container
-            var tabPanel = venue1Container.parentNode;
-            if (tabPanel) {
-                tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
-                    c.classList.remove('member-form-container--active', 'member-section-container--active');
-                });
-            }
-            venue1Container.classList.add('member-section-container--active');
-            // Only allow collapse when there's more than one venue
-            if (window._memberLocationQuantity > 1) {
-                venue1Container.classList.toggle('member-section-venue--collapsed');
-            }
-        });
+        if (!v1ContainerData) {
+            console.error('[Member] FormbuilderModule.createLocationContainerHeader not available');
+            return;
+        }
         
-        v1Header.appendChild(v1HeaderText);
-        v1Header.appendChild(v1Arrow);
-        v1Header.appendChild(v1DeleteBtn);
-        venue1Container.appendChild(v1Header);
+        var venue1Container = v1ContainerData.container;
+        var v1Header = v1ContainerData.header;
+        var v1HeaderText = v1ContainerData.headerText;
+        var v1Arrow = v1ContainerData.arrow;
+        var v1DeleteBtn = v1ContainerData.deleteBtn;
+        var v1Content = v1ContainerData.content;
+        
+        // Add member-specific classes for backward compatibility
+        venue1Container.classList.add('member-form-container', 'member-section-container', 'member-section-venue');
+        v1Content.classList.add('member-venue-content');
         
         // Store references for showing/hiding based on venue count
         window._memberVenue1Arrow = v1Arrow;
         window._memberVenue1DeleteBtn = v1DeleteBtn;
-        
-        // Content wrapper for collapsing
-        var v1Content = document.createElement('div');
-        v1Content.className = 'member-venue-content';
+        v1Arrow.style.display = 'none';
+        v1DeleteBtn.style.display = 'none';
         
         // Move location fieldset to venue 1 content
         if (locationFieldsetEl) {
@@ -2729,14 +2720,16 @@ const MemberModule = (function() {
         locationRepeatOnlyFieldsets = locationRepeatOnlyFieldsets || [];
         
         // Remove existing additional location containers
-        document.querySelectorAll('.member-additional-location-container').forEach(function(el) {
-            el.remove();
+        document.querySelectorAll('.formbuilder-location-container[data-location-number]').forEach(function(el) {
+            if (parseInt(el.dataset.locationNumber || '0', 10) > 1) {
+                el.remove();
+            }
         });
         
         if (quantity <= 1) return;
         
         // Find venue 1 container to insert after
-        var venue1Container = window._memberVenue1Container || document.querySelector('.member-section-venue[data-venue="1"]');
+        var venue1Container = window._memberVenue1Container || document.querySelector('.formbuilder-location-container[data-venue="1"]');
         var checkoutContainer = document.querySelector('.member-section-checkout');
         
         if (!venue1Container) {
@@ -2757,74 +2750,62 @@ const MemberModule = (function() {
                 var venueTypeName = locationType.charAt(0).toUpperCase() + locationType.slice(1);
                 var defaultName = venueTypeName + ' ' + locationNum;
                 
-                // Create container (same level as venue 1)
-                var locationContainer = document.createElement('div');
-                locationContainer.className = 'member-form-container member-section-container member-section-venue member-additional-location-container';
-                locationContainer.dataset.locationNumber = locationNum;
-                locationContainer.dataset.venue = locationNum;
-                
-                // Header row (36px) with collapse and delete buttons
-                var headerRow = document.createElement('div');
-                headerRow.className = 'member-section-header';
-                
-                var headerText = document.createElement('span');
-                headerText.className = 'member-section-header-text';
-                headerText.textContent = defaultName;
-                
-                var headerArrow = document.createElement('span');
-                headerArrow.className = 'member-section-header-arrow';
-                headerArrow.textContent = '▼';
-                
-                var deleteBtn = document.createElement('button');
-                deleteBtn.type = 'button';
-                deleteBtn.className = 'member-location-delete-btn';
-                deleteBtn.innerHTML = '&times;';
-                deleteBtn.setAttribute('aria-label', 'Delete ' + defaultName);
-                
-                // Click on header to collapse (but not on delete button) and activate
-                headerRow.addEventListener('click', function(e) {
-                    if (e.target === deleteBtn || deleteBtn.contains(e.target)) return;
-                    // Activate this container
-                    tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
-                        c.classList.remove('member-form-container--active', 'member-section-container--active');
-                    });
-                    locationContainer.classList.add('member-section-container--active');
-                    locationContainer.classList.toggle('member-section-venue--collapsed');
-                });
-                
-                headerRow.appendChild(headerText);
-                headerRow.appendChild(headerArrow);
-                headerRow.appendChild(deleteBtn);
-                locationContainer.appendChild(headerRow);
-                
-                // Inner content section (collapsible)
-            var locationSection = document.createElement('div');
-                locationSection.className = 'member-venue-content member-additional-location';
-                locationSection.dataset.locationNumber = locationNum;
-                
-                // Delete button handler
-                deleteBtn.addEventListener('click', function() {
-                    if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
-                        ConfirmDialogComponent.show({
-                            titleText: 'Delete ' + (headerText.textContent || defaultName),
-                            messageText: 'This cannot be undone.',
-                            confirmLabel: 'Delete',
-                            cancelLabel: 'Cancel',
-                            confirmClass: 'danger',
-                            focusCancel: true
-                        }).then(function(confirmed) {
-                            if (confirmed) {
-                                locationContainer.remove();
-                                if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
-                                    window._memberLocationQuantity--;
-                                    var qtyDisplay = document.querySelector('.member-location-quantity-display');
-                                    if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
-                                    updateVenueDeleteButtons();
-                                }
+                // Create container using shared function
+                var locationContainerData = window.FormbuilderModule && typeof window.FormbuilderModule.createLocationContainerHeader === 'function'
+                    ? window.FormbuilderModule.createLocationContainerHeader({
+                        locationName: defaultName,
+                        locationNumber: locationNum,
+                        showDelete: true,
+                        onDelete: function(container, locationNumber) {
+                            var headerText = locationContainerData.headerText;
+                            var deleteName = headerText.textContent || defaultName;
+                            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                                ConfirmDialogComponent.show({
+                                    titleText: 'Delete ' + deleteName,
+                                    messageText: 'This cannot be undone.',
+                                    confirmLabel: 'Delete',
+                                    cancelLabel: 'Cancel',
+                                    confirmClass: 'danger',
+                                    focusCancel: true
+                                }).then(function(confirmed) {
+                                    if (confirmed) {
+                                        container.remove();
+                                        if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
+                                            window._memberLocationQuantity--;
+                                            var qtyDisplay = document.querySelector('.member-location-quantity-display');
+                                            if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
+                                            updateVenueDeleteButtons();
+                                        }
+                                    }
+                                });
                             }
-                        });
-                    }
-                });
+                        },
+                        onHeaderClick: function(container, locationNumber) {
+                            container.classList.toggle('formbuilder-location-container--collapsed');
+                        },
+                        onActivate: function(container, locationNumber) {
+                            tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
+                                c.classList.remove('member-form-container--active', 'member-section-container--active');
+                            });
+                            container.classList.add('member-section-container--active');
+                        }
+                    })
+                    : null;
+                
+                if (!locationContainerData) {
+                    console.error('[Member] FormbuilderModule.createLocationContainerHeader not available');
+                    return;
+                }
+                
+                var locationContainer = locationContainerData.container;
+                var headerRow = locationContainerData.header;
+                var headerText = locationContainerData.headerText;
+                var locationSection = locationContainerData.content;
+                
+                // Add member-specific classes for backward compatibility
+                locationContainer.classList.add('member-form-container', 'member-section-container', 'member-section-venue', 'member-additional-location-container');
+                locationSection.classList.add('member-venue-content', 'member-additional-location');
+                locationSection.dataset.locationNumber = locationNum;
                 
                 // Build combined list of all fieldsets in correct order
                 // Merge must-repeat and location-repeat-only, preserving original field order
@@ -3086,7 +3067,7 @@ const MemberModule = (function() {
                 // Helper: Find location 1's fieldset by key
                 function findLocation1Fieldset(fieldsetKeyLower) {
                     // Check venue 1 container first
-                    var venue1 = document.querySelector('.member-section-venue[data-venue="1"]');
+                    var venue1 = document.querySelector('.formbuilder-location-container[data-venue="1"]');
                     if (venue1) {
                         var allFieldsets = venue1.querySelectorAll('.fieldset');
                         for (var j = 0; j < allFieldsets.length; j++) {
@@ -3138,7 +3119,7 @@ const MemberModule = (function() {
     
     // Update delete button visibility based on venue count
     function updateVenueDeleteButtons() {
-        var allVenueContainers = document.querySelectorAll('.member-section-venue');
+        var allVenueContainers = document.querySelectorAll('.formbuilder-location-container');
         var venueCount = allVenueContainers.length;
         var showDelete = venueCount > 1;
         
@@ -3152,7 +3133,7 @@ const MemberModule = (function() {
         
         // Update all venue delete buttons
         allVenueContainers.forEach(function(container) {
-            var deleteBtn = container.querySelector('.member-location-delete-btn');
+            var deleteBtn = container.querySelector('.formbuilder-location-header-button-delete');
             if (deleteBtn) {
                 deleteBtn.style.display = showDelete ? '' : 'none';
             }
@@ -3167,7 +3148,7 @@ const MemberModule = (function() {
         if (!fieldsetKeyLower) throw new Error('[Member] copyFieldsetValues: fieldset key is required.');
         
         // Find the location-1 fieldset in venue 1 container
-        var venue1Container = document.querySelector('.member-section-venue[data-venue="1"]');
+        var venue1Container = document.querySelector('.formbuilder-location-container[data-venue="1"]');
         if (!venue1Container) throw new Error('[Member] copyFieldsetValues: venue 1 container not found.');
         
         var sourceFieldset = null;
@@ -3278,7 +3259,7 @@ const MemberModule = (function() {
 
             // Locations 2+ are in separate containers (siblings of formWrapper)
             for (var i = 2; i <= qty; i++) {
-                var container = document.querySelector('.member-additional-location-container[data-location-number="' + i + '"]');
+                var container = document.querySelector('.formbuilder-location-container[data-location-number="' + i + '"]');
                 var fs = container ? container.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
                 var iso = getMaxSelectedIso(fs);
                 result.push(iso ? daysToIso(iso) : 0);

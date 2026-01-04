@@ -3499,6 +3499,18 @@
             emptyMsg.textContent = 'No fields configured for this subcategory.';
             body.appendChild(emptyMsg);
         } else {
+            // Find location fieldset
+            var locationFieldsetData = null;
+            var locationFieldsetIndex = -1;
+            fields.forEach(function(fieldData, index) {
+                var fieldsetKey = (fieldData.fieldsetKey || fieldData.key || '').toLowerCase();
+                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') {
+                    locationFieldsetData = fieldData;
+                    locationFieldsetIndex = index;
+                }
+            });
+            
+            // Render fields, wrapping location fieldset in container
             fields.forEach(function(fieldData, index) {
                 var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
                     idPrefix: 'formpreview',
@@ -3508,7 +3520,27 @@
                 if (fieldset && fieldset.classList) {
                     fieldset.classList.add('fieldset--formbuilder-preview');
                 }
-                body.appendChild(fieldset);
+                
+                // If this is the location fieldset, wrap it in a location container
+                var fieldsetKey = (fieldData.fieldsetKey || fieldData.key || '').toLowerCase();
+                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') {
+                    var locationTypeName = fieldsetKey.charAt(0).toUpperCase() + fieldsetKey.slice(1);
+                    var locationContainerData = createLocationContainerHeader({
+                        locationName: locationTypeName + ' 1',
+                        locationNumber: 1,
+                        showDelete: false,
+                        onDelete: function() {},
+                        onHeaderClick: function(container, locationNumber) {
+                            container.classList.toggle('formbuilder-location-container--collapsed');
+                        },
+                        onActivate: function() {}
+                    });
+                    
+                    locationContainerData.content.appendChild(fieldset);
+                    body.appendChild(locationContainerData.container);
+                } else {
+                    body.appendChild(fieldset);
+                }
             });
         }
         
@@ -3576,6 +3608,95 @@
     }
     
     /* --------------------------------------------------------------------------
+       LOCATION CONTAINER HEADERS
+       Shared infrastructure for location repeat containers (used in member forms and form preview)
+       -------------------------------------------------------------------------- */
+    
+    /**
+     * Creates a location container header with text, arrow, and delete button
+     * @param {Object} options - Configuration options
+     * @param {string} options.locationName - Display name (e.g., "Venue 1", "City 2")
+     * @param {number} options.locationNumber - Location number (1, 2, 3, etc.)
+     * @param {boolean} options.showDelete - Whether to show delete button
+     * @param {Function} options.onDelete - Callback when delete is clicked
+     * @param {Function} options.onHeaderClick - Callback when header is clicked (for collapse/expand)
+     * @param {Function} options.onActivate - Callback when container is activated
+     * @returns {Object} - { container, header, headerText, arrow, deleteBtn, content }
+     */
+    function createLocationContainerHeader(options) {
+        options = options || {};
+        var locationName = options.locationName || 'Location 1';
+        var locationNumber = options.locationNumber || 1;
+        var showDelete = options.showDelete !== false;
+        var onDelete = options.onDelete || function() {};
+        var onHeaderClick = options.onHeaderClick || function() {};
+        var onActivate = options.onActivate || function() {};
+        
+        // Create container
+        var container = document.createElement('div');
+        container.className = 'formbuilder-location-container';
+        container.dataset.venue = String(locationNumber);
+        container.dataset.locationNumber = String(locationNumber);
+        
+        // Create header
+        var header = document.createElement('div');
+        header.className = 'formbuilder-location-header';
+        
+        // Header text
+        var headerText = document.createElement('span');
+        headerText.className = 'formbuilder-location-header-text';
+        headerText.textContent = locationName;
+        
+        // Arrow
+        var arrow = document.createElement('span');
+        arrow.className = 'formbuilder-location-header-arrow';
+        arrow.textContent = '▼';
+        
+        // Delete button
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'formbuilder-location-header-button-delete';
+        deleteBtn.innerHTML = '&times;';
+        deleteBtn.setAttribute('aria-label', 'Delete ' + locationName);
+        if (!showDelete) {
+            deleteBtn.style.display = 'none';
+        }
+        
+        // Delete button handler
+        deleteBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            onDelete(container, locationNumber);
+        });
+        
+        // Header click handler (collapse/expand, activate)
+        header.addEventListener('click', function(e) {
+            if (e.target === deleteBtn || deleteBtn.contains(e.target)) return;
+            onHeaderClick(container, locationNumber);
+            onActivate(container, locationNumber);
+        });
+        
+        // Assemble header
+        header.appendChild(headerText);
+        header.appendChild(arrow);
+        header.appendChild(deleteBtn);
+        container.appendChild(header);
+        
+        // Create content wrapper
+        var content = document.createElement('div');
+        content.className = 'formbuilder-location-content';
+        container.appendChild(content);
+        
+        return {
+            container: container,
+            header: header,
+            headerText: headerText,
+            arrow: arrow,
+            deleteBtn: deleteBtn,
+            content: content
+        };
+    }
+    
+    /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
     
@@ -3584,7 +3705,8 @@
         refresh: loadFormData,
         save: saveFormbuilder,
         discard: discardChanges,
-        capture: captureFormbuilderState
+        capture: captureFormbuilderState,
+        createLocationContainerHeader: createLocationContainerHeader
     };
     
     // Register module with App

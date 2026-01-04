@@ -1509,6 +1509,119 @@
   margin-bottom: 0;
 }
 
+/* ============================================================================
+   LOCATION CONTAINER HEADERS
+   Shared infrastructure for location repeat containers (used in member forms and form preview)
+   ============================================================================ */
+
+/* Location container */
+.formbuilder-location-container {
+  margin-bottom: 12px;
+}
+
+/* Location header - 36px, horizontal flex, line-height for vertical centering */
+.formbuilder-location-header {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.formbuilder-location-header:hover {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-hover-fill, #3b82f5);
+}
+
+/* When expanded - connect to content below */
+.formbuilder-location-container:not(.formbuilder-location-container--collapsed) .formbuilder-location-header {
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+/* When container is active/focused - blue border, active fill background */
+.formbuilder-location-container.formbuilder-location-container--active > .formbuilder-location-header {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: var(--website-blue-active-fill, #3b82f599);
+}
+
+.formbuilder-location-container.formbuilder-location-container--active > .formbuilder-location-content {
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+/* Header text */
+.formbuilder-location-header-text {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 36px;
+}
+
+/* Arrow - line-height for vertical centering */
+.formbuilder-location-header-arrow {
+  width: 16px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  font-size: 10px;
+  color: #888;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+/* Collapsed = arrow points down (default). Expanded = arrow rotated 180deg */
+.formbuilder-location-container:not(.formbuilder-location-container--collapsed) .formbuilder-location-header-arrow {
+  transform: rotate(180deg);
+}
+
+/* Delete button in header */
+.formbuilder-location-header-button-delete {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 24px;
+  line-height: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.formbuilder-location-header-button-delete:hover {
+  color: #e74c3c;
+}
+
+/* Location content - styled like formpicker menu options */
+.formbuilder-location-content {
+  background: #222;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  padding: 12px;
+}
+
+/* When collapsed, content is hidden */
+.formbuilder-location-container--collapsed .formbuilder-location-content {
+  display: none;
+}
+
 .formbuilder-formpreview-empty {
   color: #888;
   text-align: center;
