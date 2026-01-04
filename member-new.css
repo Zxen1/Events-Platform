@@ -1639,110 +1639,13 @@
   margin-bottom: 12px;
 }
 
-/* Venue sections - override form-container styling (for backward compatibility) */
-.member-section-venue.member-form-container {
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
-/* Quantity picker container - invisible, sits on panel */
-.member-section-quantity {
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
-/* Active state for basic form container (not venues - venues have their own rules) */
-.member-form-container--active:not(.member-section-venue):not(.member-section-checkout) {
+/* Active state for basic form container */
+.member-form-container--active:not(.member-section-checkout) {
   border-color: var(--website-blue-border, #3b82f5);
 }
 
 /* Checkout section active state */
 .member-section-checkout.member-section-container--active {
   border-color: var(--website-blue-border, #3b82f5);
-}
-
-/* Legacy location headers (replaced by formbuilder-location-header) */
-.member-additional-location-header {
-  display: none;
-}
-
-/* Location header row with delete button (legacy - now in formbuilder-location-header) */
-.member-additional-location-header-row {
-  display: none;
-}
-
-/* Location options switch row */
-.member-location-options-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  padding: 0;
-}
-
-.member-location-options-switch {
-  flex-shrink: 0;
-}
-
-.member-location-options-label {
-  margin-left: 10px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  user-select: none;
-}
-
-/* Fallback checkbox style if SwitchComponent unavailable */
-.member-location-options-checkbox {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 40px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  position: relative;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.member-location-options-checkbox::after {
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s ease;
-}
-
-.member-location-options-checkbox:checked {
-  background: #4CAF50;
-}
-
-.member-location-options-checkbox:checked::after {
-  transform: translateX(20px);
-}
-
-/* Override fieldsets (inline, hidden by default until Advanced is toggled) */
-
-/* Placeholder mode: override fields show grey placeholder from location 1 */
-.member-location-override--placeholder .fieldset-input,
-.member-location-override--placeholder .fieldset-textarea {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.member-location-override--placeholder .fieldset-input:focus,
-.member-location-override--placeholder .fieldset-textarea:focus,
-.member-location-override--placeholder .fieldset-input:not(:placeholder-shown),
-.member-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
-  color: #fff;
-}
-
-.member-location-override--placeholder .fieldset-input::placeholder,
-.member-location-override--placeholder .fieldset-textarea::placeholder {
-  color: rgba(255, 255, 255, 0.35);
-  font-style: italic;
 }
 
