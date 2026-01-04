@@ -984,8 +984,8 @@
     border-radius: 4px;
     padding: 0;
     box-sizing: border-box;
-    max-height: 600px;
-    overflow: hidden;
+    max-height: 800px;
+    overflow: visible;
     position: absolute;
     left: 0;
     right: 0;
@@ -1005,8 +1005,9 @@
 
 .fieldset-sessionpricing-ticketgroups-popover-scroll {
     flex: 1 1 auto;
+    max-height: 700px;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: visible;
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }
@@ -1016,13 +1017,15 @@
     content: '';
     position: sticky;
     top: 0;
-    left: 0;
-    right: 0;
+    left: -10px;
+    right: -10px;
+    width: calc(100% + 20px);
     height: 10px;
     background: #222;
     display: block;
     z-index: calc(var(--layer-menu, 85) + 2);
     margin-bottom: -10px;
+    pointer-events: none;
 }
 
 .fieldset-sessionpricing-ticketgroups-popover-content {
@@ -1236,6 +1239,7 @@
     border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
     border-top: none;
     border-radius: 0 0 4px 4px;
+    overflow: visible;
 }
 
 .fieldset-sessionpricing-ticketgroup-actions {
