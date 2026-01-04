@@ -2101,8 +2101,8 @@ const FieldsetBuilder = (function(){
                 spTicketGroupFooterCancel.type = 'button';
                 spTicketGroupFooterCancel.className = 'fieldset-sessionpricing-ticketgroups-button-cancel';
                 spTicketGroupFooterCancel.textContent = 'Cancel';
-                spTicketGroupFooter.appendChild(spTicketGroupFooterOk);
                 spTicketGroupFooter.appendChild(spTicketGroupFooterCancel);
+                spTicketGroupFooter.appendChild(spTicketGroupFooterOk);
                 spPricingGroupsWrap.appendChild(spTicketGroupFooter);
 
                 fieldset.appendChild(spPricingGroupsWrap);
