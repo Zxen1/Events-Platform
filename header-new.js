@@ -136,26 +136,40 @@ const HeaderModule = (function() {
         // Header access button icons (Member / Admin / Fullscreen)
         if (systemImages.icon_member) {
             setHeaderCssVar('--header-icon-member', window.App.getImageUrl('systemImages', systemImages.icon_member));
+            var memberIcon = document.querySelector('.header-access-button-icon--member');
+            if (memberIcon) memberIcon.classList.add('header-access-button-icon--loaded');
         }
         if (systemImages.icon_admin) {
             setHeaderCssVar('--header-icon-admin', window.App.getImageUrl('systemImages', systemImages.icon_admin));
+            var adminIcon = document.querySelector('.header-access-button-icon--admin');
+            if (adminIcon) adminIcon.classList.add('header-access-button-icon--loaded');
         }
         if (systemImages.icon_fullscreen) {
             setHeaderCssVar('--header-icon-fullscreen', window.App.getImageUrl('systemImages', systemImages.icon_fullscreen));
+            var fullscreenIcon = document.querySelector('.header-access-button-icon--fullscreen');
+            if (fullscreenIcon) fullscreenIcon.classList.add('header-access-button-icon--loaded');
         }
         if (systemImages.icon_fullscreen_exit) {
             setHeaderCssVar('--header-icon-fullscreen-exit', window.App.getImageUrl('systemImages', systemImages.icon_fullscreen_exit));
+            var fullscreenExitIcon = document.querySelector('.header-access-button-icon--fullscreen-exit');
+            if (fullscreenExitIcon) fullscreenExitIcon.classList.add('header-access-button-icon--loaded');
         }
         
         // Mode switch icons (NO FALLBACKS)
         if (systemImages.icon_recent) {
             setHeaderCssVar('--header-icon-recent', window.App.getImageUrl('systemImages', systemImages.icon_recent));
+            var recentIcon = document.querySelector('.header-modeswitch-button-icon--recent');
+            if (recentIcon) recentIcon.classList.add('header-modeswitch-button-icon--loaded');
         }
         if (systemImages.icon_posts) {
             setHeaderCssVar('--header-icon-posts', window.App.getImageUrl('systemImages', systemImages.icon_posts));
+            var postsIcon = document.querySelector('.header-modeswitch-button-icon--posts');
+            if (postsIcon) postsIcon.classList.add('header-modeswitch-button-icon--loaded');
         }
         if (systemImages.icon_map) {
             setHeaderCssVar('--header-icon-map', window.App.getImageUrl('systemImages', systemImages.icon_map));
+            var mapIcon = document.querySelector('.header-modeswitch-button-icon--map');
+            if (mapIcon) mapIcon.classList.add('header-modeswitch-button-icon--loaded');
         }
     }
     
