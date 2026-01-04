@@ -1783,8 +1783,184 @@
                     if (menuOpt) {
                         menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
                     }
+                    // Update divider and location repeat switches after adding location fieldset
+                    setTimeout(function() {
+                        updateLocationDividerAndRepeatSwitches();
+                    }, 0);
                     notifyChange();
                 }
+        }
+        
+        // Function to update divider line and location repeat switches based on location type selection
+        function updateLocationDividerAndRepeatSwitches() {
+            if (!fieldsContainer) return;
+            
+            // Check if any location type is selected (Venue, City, or Address)
+            var currentLocationTypeRadio = subEditPanel.querySelector('input[type="radio"][name^="locationType-"]:checked');
+            var isLocationTypeSelected = currentLocationTypeRadio && currentLocationTypeRadio.checked;
+            
+            // Find all field wrappers
+            var allFieldWrappers = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
+            
+            // Find the location fieldset (venue, city, or address)
+            var locationFieldsetWrapper = null;
+            var locationFieldsetIndex = -1;
+            
+            for (var i = 0; i < allFieldWrappers.length; i++) {
+                var wrapper = allFieldWrappers[i];
+                var fsId = wrapper.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (!fieldset) continue;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                var isLocationFieldset = fieldsetKeyLower === 'venue' || 
+                                        fieldsetKeyLower === 'city' || 
+                                        fieldsetKeyLower === 'address' || 
+                                        fieldsetKeyLower === 'location';
+                
+                if (isLocationFieldset) {
+                    locationFieldsetWrapper = wrapper;
+                    locationFieldsetIndex = i;
+                    break;
+                }
+            }
+            
+            // Remove existing divider if any
+            var existingDivider = fieldsContainer.querySelector('.formbuilder-location-divider');
+            if (existingDivider) {
+                existingDivider.remove();
+            }
+            
+            // If location type is selected and location fieldset exists, add divider above it
+            if (isLocationTypeSelected && locationFieldsetWrapper) {
+                var divider = document.createElement('div');
+                divider.className = 'formbuilder-location-divider';
+                fieldsContainer.insertBefore(divider, locationFieldsetWrapper);
+            }
+            
+            // Update location repeat switches based on position relative to divider
+            if (isLocationTypeSelected && locationFieldsetWrapper) {
+                var dividerIndex = locationFieldsetIndex; // Divider is right before location fieldset
+                
+                for (var i = 0; i < allFieldWrappers.length; i++) {
+                    var wrapper = allFieldWrappers[i];
+                    var fsId = wrapper.getAttribute('data-fieldset-id');
+                    var fieldset = fieldsets.find(function(fs) {
+                        return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                    });
+                    if (!fieldset) continue;
+                    
+                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                    var isLocationFieldset = fieldsetKeyLower === 'venue' || 
+                                            fieldsetKeyLower === 'city' || 
+                                            fieldsetKeyLower === 'address' || 
+                                            fieldsetKeyLower === 'location';
+                    
+                    // Skip locked location fieldsets (they're always on)
+                    if (isLocationFieldset) continue;
+                    
+                    var locationRepeatSwitch = wrapper.querySelector('.formbuilder-field-switch');
+                    var locationRepeatLabel = wrapper.querySelector('.formbuilder-field-switch-label');
+                    if (!locationRepeatSwitch || !locationRepeatLabel) continue;
+                    
+                    // Fieldsets below the divider (index > dividerIndex) should have location repeat ON and locked (disabled)
+                    // Fieldsets above the divider (index < dividerIndex) should have location repeat OFF and disabled
+                    if (i > dividerIndex) {
+                        // Below divider - lock location repeat switch ON (disabled but on)
+                        locationRepeatSwitch.classList.add('on');
+                        locationRepeatLabel.classList.add('disabled');
+                        locationRepeatSwitch.classList.add('disabled');
+                        wrapper.classList.add('formbuilder-field-wrapper--location-repeat');
+                        var mustRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[1];
+                        var mustRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[1];
+                        var autofillRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[2];
+                        var autofillRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[2];
+                        if (mustRepeatLabel) mustRepeatLabel.classList.remove('disabled');
+                        if (mustRepeatSwitch) mustRepeatSwitch.classList.remove('disabled');
+                        if (autofillRepeatLabel) autofillRepeatLabel.classList.remove('disabled');
+                        if (autofillRepeatSwitch) autofillRepeatSwitch.classList.remove('disabled');
+                        syncFieldWrapperUi(wrapper);
+                        notifyChange();
+                    } else {
+                        // Above divider - disable location repeat switch and turn it off
+                        locationRepeatSwitch.classList.remove('on');
+                        locationRepeatLabel.classList.add('disabled');
+                        locationRepeatSwitch.classList.add('disabled');
+                        wrapper.classList.remove('formbuilder-field-wrapper--location-repeat');
+                        var mustRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[1];
+                        var mustRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[1];
+                        var autofillRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[2];
+                        var autofillRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[2];
+                        if (mustRepeatLabel) mustRepeatLabel.classList.add('disabled');
+                        if (mustRepeatSwitch) {
+                            mustRepeatSwitch.classList.add('disabled');
+                            mustRepeatSwitch.classList.remove('on');
+                        }
+                        if (autofillRepeatLabel) autofillRepeatLabel.classList.add('disabled');
+                        if (autofillRepeatSwitch) {
+                            autofillRepeatSwitch.classList.add('disabled');
+                            autofillRepeatSwitch.classList.remove('on');
+                        }
+                        wrapper.classList.remove('formbuilder-field-wrapper--must-repeat');
+                        wrapper.classList.remove('formbuilder-field-wrapper--autofill-repeat');
+                        syncFieldWrapperUi(wrapper);
+                        notifyChange();
+                    }
+                }
+                
+                // Ensure location fieldset is first below the divider
+                // Get all wrappers again (in case order changed)
+                var allWrappersAfterDivider = Array.from(fieldsContainer.children);
+                var dividerElement = fieldsContainer.querySelector('.formbuilder-location-divider');
+                if (dividerElement && locationFieldsetWrapper) {
+                    var dividerPos = allWrappersAfterDivider.indexOf(dividerElement);
+                    var locationPos = allWrappersAfterDivider.indexOf(locationFieldsetWrapper);
+                    
+                    // If location fieldset is not immediately after divider, move it
+                    if (locationPos !== dividerPos + 1) {
+                        // Find first non-location fieldset after divider
+                        var firstNonLocationAfterDivider = null;
+                        for (var i = dividerPos + 1; i < allWrappersAfterDivider.length; i++) {
+                            var el = allWrappersAfterDivider[i];
+                            if (el === locationFieldsetWrapper) continue;
+                            if (el.classList.contains('formbuilder-field-wrapper')) {
+                                var fsId = el.getAttribute('data-fieldset-id');
+                                var fieldset = fieldsets.find(function(fs) {
+                                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                                });
+                                if (!fieldset) continue;
+                                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                                var isLocationFieldset = fieldsetKeyLower === 'venue' || 
+                                                        fieldsetKeyLower === 'city' || 
+                                                        fieldsetKeyLower === 'address' || 
+                                                        fieldsetKeyLower === 'location';
+                                if (!isLocationFieldset) {
+                                    firstNonLocationAfterDivider = el;
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        // Move location fieldset to be first after divider
+                        if (firstNonLocationAfterDivider) {
+                            fieldsContainer.insertBefore(locationFieldsetWrapper, firstNonLocationAfterDivider);
+                        } else {
+                            // No non-location fieldsets after divider, just ensure it's right after divider
+                            if (locationPos !== dividerPos + 1) {
+                                fieldsContainer.insertBefore(locationFieldsetWrapper, dividerElement.nextSibling);
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Location type not selected - remove divider
+                // (location repeat states remain as user set them)
+            }
         }
     }
     
@@ -1797,6 +1973,10 @@
                 updateLocationTypeFieldsets('Venue');
                 manageLocationTypeFieldsets('Venue');
                 if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
+                // Update divider and location repeat switches after a brief delay to ensure DOM is updated
+                setTimeout(function() {
+                    updateLocationDividerAndRepeatSwitches();
+                }, 0);
                 notifyChange();
             }
         });
@@ -1810,6 +1990,10 @@
                 updateLocationTypeFieldsets('City');
                 manageLocationTypeFieldsets('City');
                 if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
+                // Update divider and location repeat switches after a brief delay to ensure DOM is updated
+                setTimeout(function() {
+                    updateLocationDividerAndRepeatSwitches();
+                }, 0);
                 notifyChange();
             }
         });
@@ -1823,6 +2007,10 @@
                 updateLocationTypeFieldsets('Address');
                 manageLocationTypeFieldsets('Address');
                 if (fieldsetBtn) fieldsetBtn.textContent = '+ Add Fieldset';
+                // Update divider and location repeat switches after a brief delay to ensure DOM is updated
+                setTimeout(function() {
+                    updateLocationDividerAndRepeatSwitches();
+                }, 0);
                 notifyChange();
             }
         });
@@ -2688,6 +2876,8 @@
                 var siblings = Array.from(fieldsContainer.querySelectorAll('.formbuilder-field-wrapper'));
                 var currentIndex = siblings.indexOf(fieldWrapper);
                 if (currentIndex !== fieldDragStartIndex) {
+                    // Update divider and location repeat switches after drag-sort
+                    updateLocationDividerAndRepeatSwitches();
                     notifyChange();
                 }
                 fieldDragStartIndex = -1;
@@ -2744,6 +2934,10 @@
                 addedFieldsets[result.fsId] = true;
                 opt.classList.add('formbuilder-fieldset-menu-option--disabled');
                 setFieldsetMenuOpen(false);
+                // Update divider and location repeat switches after adding fieldset
+                setTimeout(function() {
+                    updateLocationDividerAndRepeatSwitches();
+                }, 0);
                 notifyChange();
             };
             fieldsetOpts.appendChild(opt);
@@ -2776,6 +2970,10 @@
         // AFTER loading existing fields, manage location type fieldset (will only add if missing)
         if (initialLocationType) {
             manageLocationTypeFieldsets(initialLocationType);
+            // Update divider and location repeat switches for existing subcategories with location type
+            setTimeout(function() {
+                updateLocationDividerAndRepeatSwitches();
+            }, 0);
         }
         
         function setFieldsetMenuOpen(isOpen) {
