@@ -787,7 +787,7 @@
 .formbuilder-location-divider::before {
   content: '';
   position: absolute;
-  top: 5px;
+  top: 2px;
   left: 0;
   right: 0;
   height: 3px;

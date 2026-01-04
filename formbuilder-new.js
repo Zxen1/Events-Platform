@@ -1757,6 +1757,17 @@
                         locationRepeatLabel.classList.add('disabled');
                         locationRepeatSwitch.classList.add('disabled');
                         wrapper.classList.remove('formbuilder-field-wrapper--location-repeat');
+                        
+                        // Lock must-repeat and autofill-repeat switches above divider (disable but don't change values)
+                        var mustRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[1];
+                        var mustRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[1];
+                        var autofillRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[2];
+                        var autofillRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[2];
+                        if (mustRepeatLabel) mustRepeatLabel.classList.add('disabled');
+                        if (mustRepeatSwitch) mustRepeatSwitch.classList.add('disabled');
+                        if (autofillRepeatLabel) autofillRepeatLabel.classList.add('disabled');
+                        if (autofillRepeatSwitch) autofillRepeatSwitch.classList.add('disabled');
+                        
                         syncFieldWrapperUi(wrapper);
                         notifyChange();
                     }
