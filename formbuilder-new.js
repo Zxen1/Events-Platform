@@ -3731,13 +3731,7 @@
         
         var quantityLabel = document.createElement('span');
         quantityLabel.className = 'formbuilder-location-quantity-label';
-        if (getMessage && typeof getMessage === 'function') {
-            getMessage('msg_post_location_quantity_label', {}, false).then(function(msg) {
-                if (msg) {
-                    quantityLabel.textContent = msg;
-                }
-            });
-        }
+        quantityLabel.textContent = 'Number of locations:';
         
         var quantityControls = document.createElement('div');
         quantityControls.className = 'formbuilder-location-quantity-controls';
