@@ -1516,36 +1516,33 @@
    used by both admin form preview and member-facing forms.
    ============================================================================ */
 
-/* Form Primary Container - holds non-location fieldsets */
+/* Form Primary Container - matches formpicker menu styling */
 .form-primary-container {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 12px;
-  margin-bottom: 12px;
 }
 
-/* Form Location Picker - holds quantity picker + explainer message */
+/* Form Location Picker - matches formpicker menu styling */
 .form-location-picker {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 12px;
-  margin-bottom: 12px;
 }
 
-/* Form Checkout Container - holds checkout options, login/registration, submit */
+/* Form Checkout Container - matches formpicker menu styling */
 .form-checkout-container {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 12px;
-  margin-top: 12px;
 }
 
 /* Location container */
 .form-location-container {
-  margin-bottom: 12px;
+  /* Gap from parent handles spacing */
 }
 
 /* Location header - 36px, horizontal flex, website blue background */
