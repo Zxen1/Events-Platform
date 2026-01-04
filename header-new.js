@@ -109,6 +109,20 @@ const HeaderModule = (function() {
         if (typeof window.App === 'undefined' || typeof window.App.getImageUrl !== 'function') {
             return;
         }
+
+        // Icons are rendered via CSS masks; before the mask-image URL exists the element can appear
+        // as a solid grey box. Keep icons hidden by default and only reveal once a mask-image is present.
+        function syncIconVisibility(el) {
+            if (!el) return;
+            try {
+                var cs = window.getComputedStyle(el);
+                var mask = (cs && (cs.webkitMaskImage || cs.maskImage)) || '';
+                var hasMask = !!mask && mask !== 'none';
+                el.style.opacity = hasMask ? '1' : '0';
+            } catch (e) {
+                // ignore
+            }
+        }
         
         function setHeaderCssVar(name, url) {
             try {
@@ -131,6 +145,7 @@ const HeaderModule = (function() {
             filterIcon.style.webkitMaskPosition = 'center';
             filterIcon.style.maskPosition = 'center';
             filterIcon.style.backgroundColor = '#ffffff';
+            syncIconVisibility(filterIcon);
         }
         
         // Header access button icons (Member / Admin / Fullscreen)
@@ -156,6 +171,15 @@ const HeaderModule = (function() {
         }
         if (systemImages.icon_map) {
             setHeaderCssVar('--header-icon-map', window.App.getImageUrl('systemImages', systemImages.icon_map));
+        }
+
+        // Reveal icons only if/when their CSS mask-image is present
+        try {
+            document.querySelectorAll('.header-modeswitch-button-icon, .header-access-button-icon').forEach(function(el) {
+                syncIconVisibility(el);
+            });
+        } catch (e) {
+            // ignore
         }
     }
     
@@ -416,6 +440,15 @@ const HeaderModule = (function() {
         var icon = fullscreenBtn.querySelector('.header-access-button-icon');
         if (icon) {
             icon.classList.toggle('header-access-button-icon--fullscreen-exit', !!isFull);
+            // If the exit icon isn't configured, don't show a grey placeholder when fullscreen toggles.
+            try { 
+                var cs = window.getComputedStyle(icon);
+                var mask = (cs && (cs.webkitMaskImage || cs.maskImage)) || '';
+                var hasMask = !!mask && mask !== 'none';
+                icon.style.opacity = hasMask ? '1' : '0';
+            } catch (e) {
+                // ignore
+            }
         }
     }
 

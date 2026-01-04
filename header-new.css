@@ -87,6 +87,8 @@
 .header-filter-button-icon {
   width: 30px;
   height: 30px;
+  /* Hide until the CDN mask-image is actually applied (prevents grey placeholders) */
+  opacity: 0;
 }
 
 
@@ -175,6 +177,8 @@
   height: 30px;
   display: block;
   background-color: currentColor;
+  /* Hide until the CDN mask-image is actually applied (prevents grey placeholders) */
+  opacity: 0;
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
@@ -247,6 +251,8 @@
   width: 35px;
   height: 35px;
   background-color: #888;
+  /* Hide until the CDN mask-image is actually applied (prevents grey placeholders) */
+  opacity: 0;
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
