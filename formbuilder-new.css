@@ -1510,8 +1510,10 @@
 }
 
 /* ============================================================================
-   LOCATION CONTAINER HEADERS
-   Shared infrastructure for location repeat containers (used in member forms and form preview)
+   FORM LOCATION MANAGER
+   Centralized location container infrastructure for form building.
+   This is the single source of truth for location-related UI components,
+   used by both admin form preview and member-facing forms.
    ============================================================================ */
 
 /* Location container */

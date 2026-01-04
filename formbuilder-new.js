@@ -3680,10 +3680,18 @@
         }
     }
     
-    /* --------------------------------------------------------------------------
-       LOCATION CONTAINER INFRASTRUCTURE
-       Shared infrastructure for location repeat containers (used in member forms and form preview)
-       -------------------------------------------------------------------------- */
+    /* ============================================================================
+       FORM LOCATION MANAGER
+       ============================================================================
+       Centralized location container infrastructure for form building.
+       This is the single source of truth for location-related UI components,
+       used by both admin form preview and member-facing forms.
+       
+       Functions:
+       - createLocationQuantityPicker: Creates the "Number of locations" selector
+       - createLocationContainerHeader: Creates location container headers with collapse/expand and delete
+       - organizeFieldsIntoLocationContainers: Main function that organizes fieldsets into location containers
+       ============================================================================ */
     
     /**
      * Creates location quantity picker (Number of locations selector)
@@ -3872,6 +3880,10 @@
      * @param {Function} options.onQuantityChange - Callback when quantity changes (optional)
      * @param {Function} options.getMessage - Function to get messages (optional)
      * @param {string} options.idPrefix - Prefix for field IDs (e.g., 'formpreview', 'memberCreate')
+     * @param {Function} options.onDelete - Custom delete callback for Venue 1 (optional)
+     * @param {Function} options.onHeaderClick - Custom header click callback for Venue 1 (optional)
+     * @param {Function} options.onActivate - Custom activate callback for Venue 1 (optional)
+     * @param {boolean} options.setupHeaderRenaming - Whether to set up automatic header renaming from venue input (default: false)
      * @returns {Object} - { quantityPicker, locationContainers, locationFieldsetType }
      */
     function organizeFieldsIntoLocationContainers(options) {
@@ -3882,6 +3894,10 @@
         var initialQuantity = options.initialQuantity || 1;
         var onQuantityChange = options.onQuantityChange || function() {};
         var getMessage = options.getMessage || null;
+        var customOnDelete = options.onDelete || null;
+        var customOnHeaderClick = options.onHeaderClick || null;
+        var customOnActivate = options.onActivate || null;
+        var setupHeaderRenaming = options.setupHeaderRenaming === true;
         var idPrefix = '';
         if (options && options.idPrefix && typeof options.idPrefix === 'string') {
             idPrefix = options.idPrefix;
@@ -3903,13 +3919,10 @@
         // Parse repeat flags from field data
         fields.forEach(function(fieldData, index) {
             var fieldsetKey = '';
-            if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
-                fieldsetKey = fieldData.fieldsetKey.toLowerCase();
-            } else if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+            if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
                 fieldsetKey = fieldData.fieldset_key.toLowerCase();
-            } else if (fieldData.key && typeof fieldData.key === 'string') {
-                fieldsetKey = fieldData.key.toLowerCase();
             }
+            if (!fieldsetKey) return;
             
             // Check if location fieldset
             if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
@@ -3923,14 +3936,10 @@
             var isLocationRepeat = false;
             if (fieldData.location_repeat !== undefined) {
                 isLocationRepeat = !!fieldData.location_repeat;
-            } else if (fieldData.locationRepeat !== undefined) {
-                isLocationRepeat = !!fieldData.locationRepeat;
             }
             var isMustRepeat = false;
             if (fieldData.must_repeat !== undefined) {
                 isMustRepeat = !!fieldData.must_repeat;
-            } else if (fieldData.mustRepeat !== undefined) {
-                isMustRepeat = !!fieldData.mustRepeat;
             }
             var isLocationKey = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location');
             
@@ -3955,70 +3964,46 @@
             return { quantityPicker: null, locationContainers: [], locationFieldsetType: null };
         }
         
-        // Create quantity picker
-        var quantityPicker = createLocationQuantityPicker({
-            initialQuantity: initialQuantity,
-            onQuantityChange: function(quantity, isIncrease) {
-                onQuantityChange(quantity, isIncrease);
-            },
-            getMessage: getMessage
+        // Build all fieldsets first and organize them
+        var locationFieldsetEl = null;
+        var regularFieldsets = [];
+        var allRepeatKeys = {};
+        mustRepeatFieldsets.forEach(function(f) {
+            var k = '';
+            if (f.fieldset_key && typeof f.fieldset_key === 'string') {
+                k = f.fieldset_key.toLowerCase();
+            }
+            if (k) allRepeatKeys[k] = true;
+        });
+        locationRepeatOnlyFieldsets.forEach(function(f) {
+            var k = '';
+            if (f.fieldset_key && typeof f.fieldset_key === 'string') {
+                k = f.fieldset_key.toLowerCase();
+            }
+            if (k) allRepeatKeys[k] = true;
         });
         
-        // Render quantity picker and explainer
-        if (quantityPicker.quantityRow) {
-            container.appendChild(quantityPicker.quantityRow);
-        }
-        if (quantityPicker.explainerMsg) {
-            container.appendChild(quantityPicker.explainerMsg);
-        }
-        
-        // Create location container for Venue 1 first
+        // Create location container for Venue 1
         var locationTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
         var venue1Name = locationTypeName + ' 1';
         
         var v1ContainerData = createLocationContainerHeader({
             locationName: venue1Name,
             locationNumber: 1,
-            showDelete: false,
-            onDelete: function() {},
-            onHeaderClick: function(container, locationNumber) {
+            showDelete: customOnDelete !== null,
+            onDelete: customOnDelete || function() {},
+            onHeaderClick: customOnHeaderClick || function(container, locationNumber) {
                 if (initialQuantity > 1) {
                     container.classList.toggle('formbuilder-location-container--collapsed');
                 }
             },
-            onActivate: function() {}
+            onActivate: customOnActivate || function() {}
         });
         
         // Hide arrow when only one location
         if (initialQuantity <= 1) {
             v1ContainerData.arrow.style.display = 'none';
         }
-        
-        // Build all fieldsets and organize them
-        var locationFieldsetEl = null;
-        var allRepeatKeys = {};
-        mustRepeatFieldsets.forEach(function(f) {
-            var k = '';
-            if (f.fieldsetKey && typeof f.fieldsetKey === 'string') {
-                k = f.fieldsetKey.toLowerCase();
-            } else if (f.fieldset_key && typeof f.fieldset_key === 'string') {
-                k = f.fieldset_key.toLowerCase();
-            } else if (f.key && typeof f.key === 'string') {
-                k = f.key.toLowerCase();
-            }
-            if (k) allRepeatKeys[k] = true;
-        });
-        locationRepeatOnlyFieldsets.forEach(function(f) {
-            var k = '';
-            if (f.fieldsetKey && typeof f.fieldsetKey === 'string') {
-                k = f.fieldsetKey.toLowerCase();
-            } else if (f.fieldset_key && typeof f.fieldset_key === 'string') {
-                k = f.fieldset_key.toLowerCase();
-            } else if (f.key && typeof f.key === 'string') {
-                k = f.key.toLowerCase();
-            }
-            if (k) allRepeatKeys[k] = true;
-        });
         
         // Build fieldsets and organize them into containers
         fields.forEach(function(fieldData, index) {
@@ -4030,39 +4015,81 @@
             if (!fieldset) return;
             
             var fieldsetKey = '';
-            if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
-                fieldsetKey = fieldData.fieldsetKey.toLowerCase();
-            } else if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+            if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
                 fieldsetKey = fieldData.fieldset_key.toLowerCase();
-            } else if (fieldData.key && typeof fieldData.key === 'string') {
-                fieldsetKey = fieldData.key.toLowerCase();
             }
+            if (!fieldsetKey) return;
             
             // Location fieldset goes into Venue 1 container
             if (fieldsetKey === locationFieldsetType || fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
                 if (!locationFieldsetEl) {
                     locationFieldsetEl = fieldset;
                     v1ContainerData.content.appendChild(fieldset);
+                    
+                    // Set up automatic header renaming from venue input (supports Google Places autofill)
+                    if (setupHeaderRenaming) {
+                        var venueInput = fieldset.querySelector('input[type="text"]');
+                        if (venueInput && v1ContainerData.headerText) {
+                            var lastValue = '';
+                            function updateHeader() {
+                                var name = venueInput.value.trim();
+                                if (name !== lastValue) {
+                                    lastValue = name;
+                                    var headerText = '';
+                                    if (name && name.trim()) {
+                                        headerText = name.trim();
+                                    } else {
+                                        headerText = venue1Name;
+                                    }
+                                    v1ContainerData.headerText.textContent = headerText;
+                                }
+                            }
+                            venueInput.addEventListener('input', updateHeader);
+                            venueInput.addEventListener('change', updateHeader);
+                            // Use MutationObserver to catch Google Places autofill
+                            var observer = new MutationObserver(function() { updateHeader(); });
+                            observer.observe(venueInput, { attributes: true, attributeFilter: ['value'] });
+                            // Also check on focus out (catches Google Places autofill)
+                            venueInput.addEventListener('blur', function() { setTimeout(updateHeader, 50); });
+                        }
+                    }
                 }
             }
             // Must-repeat and location-repeat-only fieldsets go into Venue 1 container
             else if (allRepeatKeys[fieldsetKey]) {
                 v1ContainerData.content.appendChild(fieldset);
             }
-            // Regular fieldsets go after location container
+            // Regular fieldsets go first (before quantity picker and venue containers)
             else {
-                container.appendChild(fieldset);
+                regularFieldsets.push(fieldset);
             }
         });
         
-        // Insert Venue 1 container after quantity picker
-        if (quantityPicker.quantityRow && quantityPicker.quantityRow.nextSibling) {
-            container.insertBefore(v1ContainerData.container, quantityPicker.quantityRow.nextSibling);
-        } else if (quantityPicker.quantityRow) {
-            container.insertBefore(v1ContainerData.container, quantityPicker.quantityRow.nextSibling);
-        } else {
-            container.appendChild(v1ContainerData.container);
+        // STEP 1: Append regular fieldsets first
+        regularFieldsets.forEach(function(fieldset) {
+            container.appendChild(fieldset);
+        });
+        
+        // STEP 2: Create and append quantity picker + message together
+        var quantityPicker = createLocationQuantityPicker({
+            initialQuantity: initialQuantity,
+            onQuantityChange: function(quantity, isIncrease) {
+                onQuantityChange(quantity, isIncrease);
+            },
+            getMessage: getMessage
+        });
+        
+        // Append quantity picker row (contains label + controls)
+        if (quantityPicker.quantityRow) {
+            container.appendChild(quantityPicker.quantityRow);
         }
+        // Append explainer message immediately after quantity picker
+        if (quantityPicker.explainerMsg) {
+            container.appendChild(quantityPicker.explainerMsg);
+        }
+        
+        // STEP 3: Append Venue 1 container after quantity picker + message
+        container.appendChild(v1ContainerData.container);
         
         return {
             quantityPicker: quantityPicker,
@@ -4070,7 +4097,8 @@
             locationFieldsetType: locationFieldsetType,
             venue1Container: v1ContainerData.container,
             venue1HeaderText: v1ContainerData.headerText,
-            venue1Arrow: v1ContainerData.arrow
+            venue1Arrow: v1ContainerData.arrow,
+            venue1DeleteBtn: v1ContainerData.deleteBtn
         };
     }
     
