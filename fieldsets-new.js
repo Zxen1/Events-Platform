@@ -2101,8 +2101,8 @@ const FieldsetBuilder = (function(){
                 spTicketGroupFooterCancel.type = 'button';
                 spTicketGroupFooterCancel.className = 'fieldset-sessionpricing-ticketgroups-button-cancel';
                 spTicketGroupFooterCancel.textContent = 'Cancel';
-                spTicketGroupFooter.appendChild(spTicketGroupFooterCancel);
                 spTicketGroupFooter.appendChild(spTicketGroupFooterOk);
+                spTicketGroupFooter.appendChild(spTicketGroupFooterCancel);
                 spPricingGroupsWrap.appendChild(spTicketGroupFooter);
 
                 fieldset.appendChild(spPricingGroupsWrap);
@@ -2145,11 +2145,14 @@ const FieldsetBuilder = (function(){
                     spDatePickerAnchorEl = anchorEl;
                     try { anchorEl.classList.add('fieldset-sessionpricing-session-field-label--open'); } catch (eOpen2) {}
 
-                    // Position popover ABOVE the fieldset label (bottom of popover 10px above label top)
+                    // Position popover BELOW the clicked date box (10px gap)
                     try {
                         if (fieldset && fieldset.style) fieldset.style.position = 'relative';
-                        // CSS handles positioning with bottom: 100% and margin-bottom: 10px
-                        spDatePickerPopover.style.top = '';
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var r = anchorEl.getBoundingClientRect();
+                        var top = (r.bottom - fsRect.top) + 10;
+                        if (top < 0) top = 0;
+                        spDatePickerPopover.style.top = top + 'px';
                     } catch (eTop) {}
 
                     spDatePickerPopover.classList.add('fieldset-sessionpricing-calendar-popover--open');
@@ -3119,10 +3122,8 @@ const FieldsetBuilder = (function(){
 
                                         // Mark address as Places-confirmed (required for completion)
                                         try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
-                                        // Dispatch change on address input
+                                        // Use change so we don't trigger the address input handler.
                                         try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
-                                        // Dispatch change on venue input so header updates with Places-filled value
-                                        try { smartVenueInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                                         
                                         // Update status
                                         smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);

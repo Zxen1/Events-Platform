@@ -246,7 +246,7 @@
     overflow: hidden;
     background: #222;
     border: 1px solid #333;
-    border-radius: 0;
+    border-radius: 5px;
     position: relative;
 }
 
@@ -260,12 +260,12 @@
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
+    scrollbar-color: #888 #222;
 }
 
 .calendar-scroll::-webkit-scrollbar {
     height: 8px;
-    background: transparent;
+    background: #222;
 }
 
 .calendar-scroll::-webkit-scrollbar-thumb {
@@ -330,15 +330,13 @@
 
 .calendar-today-marker {
     position: absolute;
-    left: 100px;
-    bottom: 1px;
-    width: 7px;
-    height: 7px;
+    bottom: 0;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--website-blue-border, #3b82f5);
     cursor: pointer;
-    z-index: 20;
-    pointer-events: auto;
+    z-index: 10;
 }
 
 .calendar-actions {
@@ -384,8 +382,8 @@
     background: #222;
 }
 
-.calendar-day.today:not(.selected) {
-    color: var(--website-blue-border, #3b82f5);
+.calendar-day.today {
+    color: #ffffff;
     font-weight: 700;
 }
 
@@ -913,7 +911,7 @@
     border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
-    z-index: calc(var(--layer-menu, 85) + 10);
+    z-index: var(--layer-menu, 85);
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }

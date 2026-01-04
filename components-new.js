@@ -641,7 +641,7 @@ const CalendarComponent = (function(){
         
         scroll.appendChild(calendar);
         
-        // Wrap scroll and marker - marker overlays the scrollbar gutter
+        // Wrap scroll and marker so marker stays at bottom of scroll area
         var scrollWrapper = document.createElement('div');
         scrollWrapper.className = 'calendar-scroll-wrapper';
         scrollWrapper.appendChild(scroll);
@@ -686,13 +686,14 @@ const CalendarComponent = (function(){
             });
         }
         
-        // Position the today marker to overlay the scrollbar gutter
+        // Position the red dot marker
         // Formula: (todayMonthIndex + 0.5) / totalMonths gives the fraction
+        // e.g., month 13 of 37 = (13 + 0.5) / 37 = 0.365 (about 1/3 along)
         function positionMarker() {
             var width = scrollWrapper.clientWidth;
             if (width > 0 && totalMonths > 0) {
                 var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
-                var markerPos = markerFraction * (width - 6);
+                var markerPos = markerFraction * (width - 8);
                 marker.style.left = markerPos + 'px';
             }
         }
@@ -700,7 +701,7 @@ const CalendarComponent = (function(){
         // Initial position
         positionMarker();
         
-        // Recalculate marker position when container resizes
+        // Recalculate marker position when container resizes (e.g., becomes visible)
         if (typeof ResizeObserver !== 'undefined') {
             var resizeObserver = new ResizeObserver(function() {
                 positionMarker();
@@ -894,19 +895,6 @@ const CurrencyComponent = (function(){
             if (btn) btn.classList.toggle('component-currencycompact-menu-button--open', !!isOpen);
             if (arrow) arrow.classList.toggle('component-currencycompact-menu-button-arrow--open', !!isOpen);
             if (opts) opts.classList.toggle('component-currencycompact-menu-options--open', !!isOpen);
-            // Use fixed positioning so dropdown escapes all container clipping
-            if (isOpen && btn && opts) {
-                var rect = btn.getBoundingClientRect();
-                opts.style.position = 'fixed';
-                opts.style.top = (rect.bottom) + 'px';
-                opts.style.left = rect.left + 'px';
-                opts.style.width = '250px';
-            } else if (opts) {
-                opts.style.position = '';
-                opts.style.top = '';
-                opts.style.left = '';
-                opts.style.width = '';
-            }
         }
 
         // Required by MenuManager (strict)

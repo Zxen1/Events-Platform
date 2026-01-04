@@ -2551,30 +2551,26 @@ const MemberModule = (function() {
         var v1DeleteBtn = document.createElement('button');
         v1DeleteBtn.type = 'button';
         v1DeleteBtn.className = 'member-location-delete-btn';
-        v1DeleteBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        v1DeleteBtn.innerHTML = '&times;';
         v1DeleteBtn.setAttribute('aria-label', 'Delete ' + venueTypeName + ' 1');
         v1DeleteBtn.style.display = 'none';
         v1DeleteBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             var venueName = v1HeaderText.textContent || (venueTypeName + ' 1');
-            if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
-                ConfirmDialogComponent.show({
-                    titleText: 'Delete ' + venueName,
-                    messageText: 'This cannot be undone.',
-                    confirmLabel: 'Delete',
-                    cancelLabel: 'Cancel',
-                    confirmClass: 'danger',
-                    focusCancel: true
-                }).then(function(confirmed) {
-                    if (confirmed) {
-                        venue1Container.remove();
-                        window._memberLocationQuantity--;
-                        var qtyDisplay = document.querySelector('.member-location-quantity-display');
-                        if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
-                        updateVenueDeleteButtons();
-                    }
-                });
-            }
+            ConfirmDialogComponent.show({
+                title: 'Delete Location',
+                message: 'Delete "' + venueName + '"?',
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                isDanger: true,
+                onConfirm: function() {
+                    venue1Container.remove();
+                    window._memberLocationQuantity--;
+                    var qtyDisplay = document.querySelector('.member-location-quantity-display');
+                    if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
+                    updateVenueDeleteButtons();
+                }
+            });
         });
         
         // Click on header to collapse/expand (only when multiple venues) and activate
@@ -2776,7 +2772,7 @@ const MemberModule = (function() {
                 var deleteBtn = document.createElement('button');
                 deleteBtn.type = 'button';
                 deleteBtn.className = 'member-location-delete-btn';
-                deleteBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+                deleteBtn.innerHTML = '&times;';
                 deleteBtn.setAttribute('aria-label', 'Delete ' + defaultName);
                 
                 // Click on header to collapse (but not on delete button) and activate

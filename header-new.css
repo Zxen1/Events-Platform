@@ -174,17 +174,13 @@
   width: 30px;
   height: 30px;
   display: block;
-  background-color: transparent;
+  background-color: currentColor;
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
-}
-
-.header-modeswitch-button-icon--loaded {
-  background-color: currentColor;
 }
 
 .header-modeswitch-button-icon--recent {
@@ -250,17 +246,13 @@
 .header-access-button-icon {
   width: 35px;
   height: 35px;
-  background-color: transparent;
+  background-color: #888;
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
-}
-
-.header-access-button-icon--loaded {
-  background-color: #888;
 }
 
 /* Active access button icon (must come AFTER base icon styles to win cascade) */
