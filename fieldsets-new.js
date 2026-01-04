@@ -1679,7 +1679,8 @@ const FieldsetBuilder = (function(){
                 
             case 'session_pricing':
                 // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var spLabelEl = buildLabel(name, tooltip, minLength, maxLength);
+                fieldset.appendChild(spLabelEl);
 
                 // Track selected dates:
                 // { 'YYYY-MM-DD': { times: ['19:00', ...], edited: [true,false...], groups: ['','B',...] } }
@@ -2145,13 +2146,23 @@ const FieldsetBuilder = (function(){
                     spDatePickerAnchorEl = anchorEl;
                     try { anchorEl.classList.add('fieldset-sessionpricing-session-field-label--open'); } catch (eOpen2) {}
 
-                    // Position popover below the clicked date box
+                    // Position popover above the main session pricing label
                     try {
                         if (fieldset && fieldset.style) fieldset.style.position = 'relative';
                         var fsRect = fieldset.getBoundingClientRect();
-                        var r = anchorEl.getBoundingClientRect();
-                        var top = (r.bottom - fsRect.top) + 10;
-                        if (top < 0) top = 0;
+                        var labelRect = spLabelEl.getBoundingClientRect();
+                        
+                        // Measure popover height (must be visible but hidden to measure)
+                        spDatePickerPopover.style.visibility = 'hidden';
+                        spDatePickerPopover.style.display = 'block';
+                        spDatePickerPopover.classList.add('fieldset-sessionpricing-calendar-popover--open');
+                        var popHeight = spDatePickerPopover.offsetHeight;
+                        spDatePickerPopover.classList.remove('fieldset-sessionpricing-calendar-popover--open');
+                        spDatePickerPopover.style.display = '';
+                        spDatePickerPopover.style.visibility = '';
+                        
+                        // Calculate top: label's top relative to fieldset minus popover height minus 10px
+                        var top = (labelRect.top - fsRect.top) - popHeight - 10;
                         spDatePickerPopover.style.top = top + 'px';
                     } catch (eTop) {}
 
