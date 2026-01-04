@@ -1525,6 +1525,11 @@
   margin-bottom: 12px;
 }
 
+/* When container is active/focused - blue border */
+.form-primary-container.form-primary-container--active {
+  border-color: var(--website-blue-border);
+}
+
 /* Form Location Picker - matches formpicker menu styling */
 .form-location-picker {
   background: rgba(0, 0, 0, 0.2);
@@ -1534,6 +1539,11 @@
   margin-bottom: 12px;
 }
 
+/* When container is active/focused - blue border */
+.form-location-picker.form-location-picker--active {
+  border-color: var(--website-blue-border);
+}
+
 /* Form Checkout Container - matches formpicker menu styling */
 .form-checkout-container {
   background: rgba(0, 0, 0, 0.2);
@@ -1541,6 +1551,11 @@
   border-radius: 5px;
   padding: 12px;
   margin-bottom: 12px;
+}
+
+/* When container is active/focused - blue border */
+.form-checkout-container.form-checkout-container--active {
+  border-color: var(--website-blue-border);
 }
 
 /* Location container */
@@ -1577,11 +1592,11 @@
 
 /* When container is active/focused - blue border */
 .form-location-container.form-location-container--active > .form-location-header {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue-border);
 }
 
 .form-location-container.form-location-container--active > .form-location-content {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue-border);
 }
 
 /* Header text */

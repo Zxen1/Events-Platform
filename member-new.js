@@ -2582,6 +2582,8 @@ const MemberModule = (function() {
             formFields.appendChild(checkoutContainer);
         }
         
+        // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
+        
         // Terms agreement row
         var termsWrapper = document.createElement('div');
         termsWrapper.className = 'fieldset member-terms-agreement';

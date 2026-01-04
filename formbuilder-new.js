@@ -4024,11 +4024,11 @@
                 }
             },
             onActivate: customOnActivate || function(container, locationNumber) {
-                // Remove active from all siblings
+                // Remove active from all container types
                 var parent = container.parentNode;
                 if (parent) {
-                    parent.querySelectorAll('.form-location-container--active').forEach(function(c) {
-                        c.classList.remove('form-location-container--active');
+                    parent.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
+                        c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
                     });
                 }
                 // Add active to this container
@@ -4158,14 +4158,6 @@
         // STEP 3: Append Venue 1 container after location picker
         container.appendChild(v1ContainerData.container);
         
-        // Add focus tracking for blue border (only one active at a time)
-        v1ContainerData.container.addEventListener('focusin', function(e) {
-            container.querySelectorAll('.form-location-container--active').forEach(function(c) {
-                c.classList.remove('form-location-container--active');
-            });
-            v1ContainerData.container.classList.add('form-location-container--active');
-        });
-        
         // STEP 4: Create additional location containers if quantity > 1
         var allLocationContainers = [v1ContainerData];
         if (initialQuantity > 1 && locationFieldset) {
@@ -4182,11 +4174,11 @@
                         container.classList.toggle('form-location-container--collapsed');
                     },
                     onActivate: customOnActivate || function(container, locationNumber) {
-                        // Remove active from all siblings
+                        // Remove active from all container types
                         var parent = container.parentNode;
                         if (parent) {
-                            parent.querySelectorAll('.form-location-container--active').forEach(function(c) {
-                                c.classList.remove('form-location-container--active');
+                            parent.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
+                                c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
                             });
                         }
                         // Add active to this container
@@ -4295,18 +4287,12 @@
                 });
                 
                 container.appendChild(additionalContainerData.container);
-                
-                // Add focus tracking for blue border (only one active at a time)
-                additionalContainerData.container.addEventListener('focusin', function(e) {
-                    container.querySelectorAll('.form-location-container--active').forEach(function(c) {
-                        c.classList.remove('form-location-container--active');
-                    });
-                    additionalContainerData.container.classList.add('form-location-container--active');
-                });
-                
                 allLocationContainers.push(additionalContainerData);
             }
         }
+        
+        // Set up centralized click tracking for all form containers (event delegation)
+        setupFormContainerClickTracking(container);
         
         return {
             quantityPicker: quantityPicker,
@@ -4427,8 +4413,8 @@
                         container.classList.toggle('form-location-container--collapsed');
                     },
                     onActivate: function(container, locNum) {
-                        parentContainer.querySelectorAll('.form-location-container--active').forEach(function(c) {
-                            c.classList.remove('form-location-container--active');
+                        parentContainer.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
+                            c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
                         });
                         container.classList.add('form-location-container--active');
                     }
@@ -4592,15 +4578,41 @@
                 }
                 insertAfter = locationContainer;
                 
-                // Focus tracking for blue border
-                locationContainer.addEventListener('focusin', function() {
-                    parentContainer.querySelectorAll('.form-location-container--active').forEach(function(c) {
-                        c.classList.remove('form-location-container--active');
-                    });
-                    locationContainer.classList.add('form-location-container--active');
-                });
+                // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
             })(i);
         }
+    }
+    
+    /**
+     * Set up centralized click tracking for all form containers using event delegation
+     * Works automatically for any container with classes: form-primary-container, form-location-picker, form-checkout-container, form-location-container
+     * @param {HTMLElement} container - Parent container element
+     */
+    function setupFormContainerClickTracking(container) {
+        if (!container) return;
+        
+        // Use event delegation - single handler on parent for all containers
+        container.addEventListener('click', function(e) {
+            // Find the clicked form container (or closest ancestor that is a form container)
+            var clickedContainer = e.target.closest('.form-primary-container, .form-location-picker, .form-checkout-container, .form-location-container');
+            if (!clickedContainer) return;
+            
+            // Remove active from all form containers
+            container.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
+                c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
+            });
+            
+            // Add active class based on container type
+            if (clickedContainer.classList.contains('form-primary-container')) {
+                clickedContainer.classList.add('form-primary-container--active');
+            } else if (clickedContainer.classList.contains('form-location-picker')) {
+                clickedContainer.classList.add('form-location-picker--active');
+            } else if (clickedContainer.classList.contains('form-checkout-container')) {
+                clickedContainer.classList.add('form-checkout-container--active');
+            } else if (clickedContainer.classList.contains('form-location-container')) {
+                clickedContainer.classList.add('form-location-container--active');
+            }
+        });
     }
     
     /**
@@ -4786,7 +4798,8 @@
         organizeFieldsIntoLocationContainers: organizeFieldsIntoLocationContainers,
         renderAdditionalLocations: renderAdditionalLocations,
         updateVenueDeleteButtons: updateVenueDeleteButtons,
-        getFieldsetKey: getFieldsetKey
+        getFieldsetKey: getFieldsetKey,
+        setupFormContainerClickTracking: setupFormContainerClickTracking
     };
     
     // Register module with App
