@@ -684,6 +684,7 @@
                 titleText: 'Delete Category',
                 messageText: 'Delete "' + name + '" and all its subcategories?',
                 confirmLabel: 'Delete',
+                confirmClass: 'danger',
                 focusCancel: true
             }).then(function(confirmed) {
                 if (confirmed) {
@@ -715,6 +716,7 @@
                 titleText: 'Delete Subcategory',
                 messageText: 'Delete "' + name + '"?',
                 confirmLabel: 'Delete',
+                confirmClass: 'danger',
                 focusCancel: true
             }).then(function(confirmed) {
                 if (confirmed) {
