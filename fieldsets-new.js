@@ -2145,11 +2145,14 @@ const FieldsetBuilder = (function(){
                     spDatePickerAnchorEl = anchorEl;
                     try { anchorEl.classList.add('fieldset-sessionpricing-session-field-label--open'); } catch (eOpen2) {}
 
-                    // Position popover ABOVE the Session Pricing label (bottom 10px above label top)
+                    // Position popover below the clicked date box
                     try {
                         if (fieldset && fieldset.style) fieldset.style.position = 'relative';
-                        spDatePickerPopover.style.top = 'auto';
-                        spDatePickerPopover.style.bottom = 'calc(100% + 10px)';
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var r = anchorEl.getBoundingClientRect();
+                        var top = (r.bottom - fsRect.top) + 10;
+                        if (top < 0) top = 0;
+                        spDatePickerPopover.style.top = top + 'px';
                     } catch (eTop) {}
 
                     spDatePickerPopover.classList.add('fieldset-sessionpricing-calendar-popover--open');
