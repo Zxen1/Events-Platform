@@ -1267,7 +1267,7 @@
 
 /* Calendar */
 .fieldset-sessionpricing-calendar-container {
-    margin-bottom: 10px;
+    margin-bottom: 0;
 }
 
 .fieldset-sessionpricing-calendar-popover {
@@ -1277,7 +1277,7 @@
     margin-top: 0;
     background: #222;
     border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
-    border-radius: 4px;
+    border-radius: 0;
     display: none;
     overflow: hidden;
     z-index: var(--layer-menu, 85);
@@ -1288,7 +1288,7 @@
 }
 
 .fieldset-sessionpricing-calendar-popover-body {
-    padding: 10px;
+    padding: 0;
 }
 
 .fieldset-sessionpricing-calendar-popover-footer {

@@ -246,7 +246,7 @@
     overflow: hidden;
     background: #222;
     border: 1px solid #333;
-    border-radius: 5px;
+    border-radius: 0;
     position: relative;
 }
 
@@ -330,6 +330,7 @@
 
 .calendar-today-marker {
     position: absolute;
+    left: 0;
     bottom: 0;
     width: 8px;
     height: 8px;
