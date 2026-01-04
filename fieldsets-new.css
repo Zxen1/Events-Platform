@@ -1007,12 +1007,12 @@
     flex: 1 1 auto;
     max-height: 700px;
     overflow-y: auto;
-    overflow-x: clip;
+    overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: #888 transparent;
 }
 
-/* Clip mask to hide content above sticky header */
+/* Mask to hide content in the 10px gap above sticky header */
 .fieldset-sessionpricing-ticketgroups-popover-scroll::before {
     content: '';
     position: sticky;
@@ -1028,6 +1028,19 @@
     pointer-events: none;
 }
 
+/* Mask behind sticky header - hides scrolled content so header can be transparent */
+.fieldset-sessionpricing-ticketgroup-item-header--sticky::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #222;
+    z-index: -1;
+    border-radius: inherit;
+}
+
 .fieldset-sessionpricing-ticketgroups-popover-content {
     padding: 10px;
     box-sizing: border-box;
@@ -1041,6 +1054,8 @@
     gap: 10px;
     border-top: 1px solid #333;
     background: #222;
+    position: relative;
+    z-index: 1;
 }
 
 .fieldset-sessionpricing-ticketgroups-button-ok,
@@ -1124,16 +1139,16 @@
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
-.fieldset-sessionpricing-ticketgroup-item-header--selected:hover,
-.fieldset-sessionpricing-ticketgroup-item-header--sticky:hover {
+.fieldset-sessionpricing-ticketgroup-item-header--selected:hover {
     background: var(--website-blue-active-fill, #3b82f599);
 }
 
-.fieldset-sessionpricing-ticketgroup-item-header--sticky {
+.fieldset-sessionpricing-ticketgroup-item-header--sticky,
+.fieldset-sessionpricing-ticketgroup-item-header--sticky:hover {
     position: sticky;
     top: 10px;
     z-index: calc(var(--layer-menu, 85) + 1);
-    background: #2563ab;
+    background: var(--website-blue-active-fill, #3b82f599);
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 

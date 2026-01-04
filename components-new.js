@@ -894,6 +894,19 @@ const CurrencyComponent = (function(){
             if (btn) btn.classList.toggle('component-currencycompact-menu-button--open', !!isOpen);
             if (arrow) arrow.classList.toggle('component-currencycompact-menu-button-arrow--open', !!isOpen);
             if (opts) opts.classList.toggle('component-currencycompact-menu-options--open', !!isOpen);
+            // Use fixed positioning so dropdown escapes all container clipping
+            if (isOpen && btn && opts) {
+                var rect = btn.getBoundingClientRect();
+                opts.style.position = 'fixed';
+                opts.style.top = (rect.bottom) + 'px';
+                opts.style.left = rect.left + 'px';
+                opts.style.width = '250px';
+            } else if (opts) {
+                opts.style.position = '';
+                opts.style.top = '';
+                opts.style.left = '';
+                opts.style.width = '';
+            }
         }
 
         // Required by MenuManager (strict)
