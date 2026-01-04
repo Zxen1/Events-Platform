@@ -2431,9 +2431,19 @@ const MemberModule = (function() {
         
         var isEvent = subcategoryType === 'Events';
         
-        // Create checkout options wrapper
-        var wrapper = document.createElement('div');
-        wrapper.className = 'fieldset member-checkout-wrapper form-checkout-container';
+        // Use existing centralized checkout container
+        var wrapper = formFields.querySelector('.form-checkout-container');
+        if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.className = 'form-checkout-container';
+            formFields.appendChild(wrapper);
+        }
+        
+        // Add specific member wrapper class
+        wrapper.classList.add('fieldset', 'member-checkout-wrapper');
+        
+        // Clear previous content (except if we want to preserve it, but usually we re-render)
+        wrapper.innerHTML = '';
         
         // Label
         var label = document.createElement('div');
@@ -2563,8 +2573,6 @@ const MemberModule = (function() {
             // Apply initial context (ensures prices reflect current locations + dates)
             updateCheckoutContext();
         }
-        
-        formFields.appendChild(wrapper);
     }
     
     // Form terms agreement row element
@@ -2573,16 +2581,8 @@ const MemberModule = (function() {
     function renderTermsAndSubmitSection() {
         if (!formFields) return;
         
-        // Find checkout container to append terms and actions inside it
+        // Find centralized checkout container to append terms and actions inside it
         var checkoutContainer = formFields.querySelector('.form-checkout-container');
-        if (!checkoutContainer) {
-            // Create checkout container if it doesn't exist
-            checkoutContainer = document.createElement('div');
-            checkoutContainer.className = 'form-checkout-container';
-            formFields.appendChild(checkoutContainer);
-        }
-        
-        // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
         
         // Terms agreement row
         var termsWrapper = document.createElement('div');

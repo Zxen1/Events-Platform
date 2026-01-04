@@ -3639,9 +3639,8 @@
         }
         
         // Render checkout options using CheckoutOptionsComponent
-        if (activeCheckoutOptions.length > 0) {
-            var checkoutWrapper = document.createElement('div');
-            checkoutWrapper.className = 'formbuilder-formpreview-checkout';
+        if (activeCheckoutOptions.length > 0 && locationData && locationData.checkoutContainer) {
+            var checkoutWrapper = locationData.checkoutContainer;
             
             var checkoutLabel = document.createElement('div');
             checkoutLabel.className = 'fieldset-label';
@@ -3663,8 +3662,6 @@
                 baseId: 'formpreview',
                 groupName: 'formpreview-checkout'
             });
-            
-            body.appendChild(checkoutWrapper);
         }
         
         // Assemble modal
@@ -4291,6 +4288,11 @@
             }
         }
         
+        // STEP 5: Create Form Checkout container (centralized source of truth)
+        var checkoutContainer = document.createElement('div');
+        checkoutContainer.className = 'form-checkout-container';
+        container.appendChild(checkoutContainer);
+        
         // Set up centralized click tracking for all form containers (event delegation)
         setupFormContainerClickTracking(container);
         
@@ -4301,7 +4303,8 @@
             venue1Container: v1ContainerData.container,
             venue1HeaderText: v1ContainerData.headerText,
             venue1Arrow: v1ContainerData.arrow,
-            venue1DeleteBtn: v1ContainerData.deleteBtn
+            venue1DeleteBtn: v1ContainerData.deleteBtn,
+            checkoutContainer: checkoutContainer
         };
     }
     
