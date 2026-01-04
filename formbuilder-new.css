@@ -776,7 +776,7 @@
 /* Location divider line - appears above location fieldset when location type is selected */
 .formbuilder-location-divider {
   width: 100%;
-  height: 9px;
+  height: 13px;
   background: transparent;
   margin: 0;
   padding: 0;
@@ -787,7 +787,7 @@
 .formbuilder-location-divider::before {
   content: '';
   position: absolute;
-  top: 3px;
+  top: 5px;
   left: 0;
   right: 0;
   height: 3px;
