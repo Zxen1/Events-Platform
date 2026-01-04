@@ -1690,8 +1690,14 @@
             for (var i = 0; i < allFieldWrappers.length; i++) {
                 var wrapper = allFieldWrappers[i];
                 var fsId = wrapper.getAttribute('data-fieldset-id');
+                if (!fsId) continue;
+                
                 var fieldset = fieldsets.find(function(fs) {
-                    return fs.id == fsId;
+                    if (fs.id && String(fs.id) === fsId) return true;
+                    if (fs.fieldset_key && String(fs.fieldset_key) === fsId) return true;
+                    if (fs.key && String(fs.key) === fsId) return true;
+                    if (fs.name && String(fs.name) === fsId) return true;
+                    return false;
                 });
                 if (!fieldset) continue;
                 
@@ -1729,8 +1735,14 @@
                 for (var i = 0; i < allFieldWrappers.length; i++) {
                     var wrapper = allFieldWrappers[i];
                     var fsId = wrapper.getAttribute('data-fieldset-id');
+                    if (!fsId) continue;
+                    
                     var fieldset = fieldsets.find(function(fs) {
-                        return fs.id == fsId;
+                        if (fs.id && String(fs.id) === fsId) return true;
+                        if (fs.fieldset_key && String(fs.fieldset_key) === fsId) return true;
+                        if (fs.key && String(fs.key) === fsId) return true;
+                        if (fs.name && String(fs.name) === fsId) return true;
+                        return false;
                     });
                     if (!fieldset) continue;
                     
@@ -1797,8 +1809,14 @@
                             if (el === locationFieldsetWrapper) continue;
                             if (el.classList.contains('formbuilder-field-wrapper')) {
                                 var fsId = el.getAttribute('data-fieldset-id');
+                                if (!fsId) continue;
+                                
                                 var fieldset = fieldsets.find(function(fs) {
-                                    return fs.id == fsId;
+                                    if (fs.id && String(fs.id) === fsId) return true;
+                                    if (fs.fieldset_key && String(fs.fieldset_key) === fsId) return true;
+                                    if (fs.key && String(fs.key) === fsId) return true;
+                                    if (fs.name && String(fs.name) === fsId) return true;
+                                    return false;
                                 });
                                 if (!fieldset) continue;
                                 if (!fieldset.fieldset_key) continue;
