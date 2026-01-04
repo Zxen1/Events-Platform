@@ -1526,7 +1526,7 @@
 }
 
 /* When container is active/focused - blue border */
-.form-primary-container.form-primary-container--active {
+.form-primary-container[data-active="true"] {
   border-color: var(--website-blue-border);
 }
 
@@ -1540,7 +1540,7 @@
 }
 
 /* When container is active/focused - blue border */
-.form-location-picker.form-location-picker--active {
+.form-location-picker[data-active="true"] {
   border-color: var(--website-blue-border);
 }
 
@@ -1554,7 +1554,7 @@
 }
 
 /* When container is active/focused - blue border */
-.form-checkout-container.form-checkout-container--active {
+.form-checkout-container[data-active="true"] {
   border-color: var(--website-blue-border);
 }
 
@@ -1591,11 +1591,11 @@
 }
 
 /* When container is active/focused - blue border */
-.form-location-container.form-location-container--active > .form-location-header {
+.form-location-container[data-active="true"] > .form-location-header {
   border-color: var(--website-blue-border);
 }
 
-.form-location-container.form-location-container--active > .form-location-content {
+.form-location-container[data-active="true"] > .form-location-content {
   border-color: var(--website-blue-border);
 }
 

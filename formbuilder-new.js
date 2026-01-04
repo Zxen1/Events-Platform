@@ -4029,12 +4029,12 @@
                 // Remove active from all container types
                 var parent = container.parentNode;
                 if (parent) {
-                    parent.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
-                        c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
+                    parent.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                        c.removeAttribute('data-active');
                     });
                 }
                 // Add active to this container
-                container.classList.add('form-location-container--active');
+                container.setAttribute('data-active', 'true');
             }
         });
         
@@ -4211,12 +4211,12 @@
                         // Remove active from all container types
                         var parent = container.parentNode;
                         if (parent) {
-                            parent.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
-                                c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
+                            parent.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                                c.removeAttribute('data-active');
                             });
                         }
                         // Add active to this container
-                        container.classList.add('form-location-container--active');
+                        container.setAttribute('data-active', 'true');
                     }
                 });
                 
@@ -4453,10 +4453,10 @@
                         container.classList.toggle('form-location-container--collapsed');
                     },
                     onActivate: function(container, locNum) {
-                        parentContainer.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
-                            c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
+                        parentContainer.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                            c.removeAttribute('data-active');
                         });
-                        container.classList.add('form-location-container--active');
+                        container.setAttribute('data-active', 'true');
                     }
                 });
                 
@@ -4637,21 +4637,13 @@
             var clickedContainer = e.target.closest('.form-primary-container, .form-location-picker, .form-checkout-container, .form-location-container');
             if (!clickedContainer) return;
             
-            // Remove active from all form containers
-            container.querySelectorAll('.form-primary-container--active, .form-location-picker--active, .form-checkout-container--active, .form-location-container--active').forEach(function(c) {
-                c.classList.remove('form-primary-container--active', 'form-location-picker--active', 'form-checkout-container--active', 'form-location-container--active');
+            // Remove active state from all form containers
+            container.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                c.removeAttribute('data-active');
             });
             
-            // Add active class based on container type
-            if (clickedContainer.classList.contains('form-primary-container')) {
-                clickedContainer.classList.add('form-primary-container--active');
-            } else if (clickedContainer.classList.contains('form-location-picker')) {
-                clickedContainer.classList.add('form-location-picker--active');
-            } else if (clickedContainer.classList.contains('form-checkout-container')) {
-                clickedContainer.classList.add('form-checkout-container--active');
-            } else if (clickedContainer.classList.contains('form-location-container')) {
-                clickedContainer.classList.add('form-location-container--active');
-            }
+            // Add active state to clicked container
+            clickedContainer.setAttribute('data-active', 'true');
         });
     }
     
