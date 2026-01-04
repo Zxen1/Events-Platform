@@ -3122,8 +3122,10 @@ const FieldsetBuilder = (function(){
 
                                         // Mark address as Places-confirmed (required for completion)
                                         try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
-                                        // Use change so we don't trigger the address input handler.
+                                        // Dispatch change on address input
                                         try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                        // Dispatch change on venue input so header updates with Places-filled value
+                                        try { smartVenueInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                                         
                                         // Update status
                                         smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
