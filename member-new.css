@@ -1089,9 +1089,9 @@
 }
 
 .member-auth-tab:hover {
-  /* Keep grey fill; only highlight the border on hover */
-  background: var(--btn);
+  background: var(--website-blue-hover-fill, #3b82f5);
   border-color: var(--website-blue-border, #3b82f5);
+  color: var(--button-active-text);
 }
 
 .member-auth-tab:active {
@@ -1099,10 +1099,9 @@
 }
 
 .member-auth-tab--selected {
-  /* Active tab should look like inactive (grey fill), but keep the blue border */
-  background: var(--btn);
+  background: var(--website-blue-active-fill, #3b82f599);
   border-color: var(--website-blue-border, #3b82f5);
-  color: var(--button-text);
+  color: var(--button-active-text);
 }
 
 /* Main login submit button - match logout button styling */
@@ -1115,6 +1114,10 @@
   padding: 0 10px;
   white-space: nowrap;
   align-self: flex-start;
+}
+
+.member-auth-submit[data-action="register"] {
+  margin-bottom: 12px;
 }
 
 .member-auth-tab:focus-visible {
