@@ -1665,132 +1665,6 @@
             });
         }
         
-        function manageLocationTypeFieldsets(selectedType) {
-            if (!selectedType) {
-                // No location type selected:
-                // - Keep button visible but force admin to pick a location type first
-                // - Do NOT allow fieldset menu to open yet
-                if (fieldsetMenu) {
-                    fieldsetMenu.style.display = '';
-                    fieldsetMenu.classList.remove('formbuilder-fieldset-menu--open');
-                    if (fieldsetBtn) fieldsetBtn.classList.remove('formbuilder-fieldset-menu-button--open');
-                    if (fieldsetOpts) fieldsetOpts.classList.remove('formbuilder-fieldset-menu-options--open');
-                }
-                if (fieldsetBtn) {
-                    fieldsetBtn.textContent = 'Select Location Type';
-                }
-                return;
-            }
-            
-            // Show Add Field button
-            if (fieldsetMenu) {
-                fieldsetMenu.style.display = '';
-            }
-            if (fieldsetBtn) {
-                fieldsetBtn.textContent = '+ Add Fieldset';
-            }
-            
-            // Update gray-out state based on selected type
-            updateLocationTypeFieldsets(selectedType);
-            
-            var selectedTypeLower = String(selectedType).toLowerCase();
-            var targetFieldsetKey = null;
-            
-            // Determine which fieldset key to use
-            if (selectedTypeLower === 'venue') {
-                targetFieldsetKey = 'venue';
-            } else if (selectedTypeLower === 'city') {
-                targetFieldsetKey = 'city';
-            } else if (selectedTypeLower === 'address') {
-                targetFieldsetKey = 'address';
-            }
-            
-            if (!targetFieldsetKey) return;
-            
-            // Find all location type fieldsets in the fields container
-            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
-            var targetFieldsetExists = false;
-            
-            // Remove any location fieldsets that don't match the selected type
-            allFieldWrappers.forEach(function(wrapper) {
-                var fsId = wrapper.getAttribute('data-fieldset-id');
-                var fieldset = fieldsets.find(function(fs) {
-                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
-                });
-                if (!fieldset) return;
-                
-                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
-                
-                // Check if this is a location fieldset
-                var isLocationFieldset = fieldsetKeyLower === 'venue' || 
-                                        fieldsetKeyLower === 'city' || 
-                                        fieldsetKeyLower === 'address' || 
-                                        fieldsetKeyLower === 'location';
-                
-                if (isLocationFieldset) {
-                    // Check if it matches the selected type
-                    var matches = false;
-                    if (targetFieldsetKey === 'address') {
-                        matches = (fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location');
-                    } else {
-                        matches = (fieldsetKeyLower === targetFieldsetKey);
-                    }
-                    
-                    // Remove if it doesn't match the selected type
-                    if (!matches) {
-                        wrapper.remove();
-                        addedFieldsets[fsId] = false;
-                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
-                        if (menuOpt) {
-                            menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
-                        }
-                    } else {
-                        // This is the matching fieldset
-                        targetFieldsetExists = true;
-                    }
-                }
-            });
-            
-            // If target fieldset doesn't exist, add it automatically
-            if (!targetFieldsetExists) {
-                // Try to find fieldset by target key, or 'location' if target is 'address'
-                var targetFieldset = null;
-                if (targetFieldsetKey === 'address') {
-                    // Try 'address' first, then 'location'
-                    targetFieldset = fieldsets.find(function(fs) {
-                        var fsKey = fs.key || fs.fieldset_key || fs.id;
-                        return String(fsKey).toLowerCase() === 'address';
-                    });
-                    if (!targetFieldset) {
-                        targetFieldset = fieldsets.find(function(fs) {
-                            var fsKey = fs.key || fs.fieldset_key || fs.id;
-                            return String(fsKey).toLowerCase() === 'location';
-                        });
-                    }
-                } else {
-                    targetFieldset = fieldsets.find(function(fs) {
-                        var fsKey = fs.key || fs.fieldset_key || fs.id;
-                        return String(fsKey).toLowerCase() === targetFieldsetKey;
-                    });
-                }
-                
-                if (targetFieldset) {
-                    var result = createFieldElement(targetFieldset, true, targetFieldset);
-                    fieldsContainer.appendChild(result.wrapper);
-                    addedFieldsets[result.fsId] = true;
-                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
-                    if (menuOpt) {
-                        menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
-                    }
-                    // Update divider and location repeat switches after adding location fieldset
-                    setTimeout(function() {
-                        updateLocationDividerAndRepeatSwitches();
-                    }, 0);
-                    notifyChange();
-                }
-        }
-        
         // Function to update divider line and location repeat switches based on location type selection
         function updateLocationDividerAndRepeatSwitches() {
             if (!fieldsContainer) return;
@@ -1961,6 +1835,132 @@
                 // Location type not selected - remove divider
                 // (location repeat states remain as user set them)
             }
+        }
+        
+        function manageLocationTypeFieldsets(selectedType) {
+            if (!selectedType) {
+                // No location type selected:
+                // - Keep button visible but force admin to pick a location type first
+                // - Do NOT allow fieldset menu to open yet
+                if (fieldsetMenu) {
+                    fieldsetMenu.style.display = '';
+                    fieldsetMenu.classList.remove('formbuilder-fieldset-menu--open');
+                    if (fieldsetBtn) fieldsetBtn.classList.remove('formbuilder-fieldset-menu-button--open');
+                    if (fieldsetOpts) fieldsetOpts.classList.remove('formbuilder-fieldset-menu-options--open');
+                }
+                if (fieldsetBtn) {
+                    fieldsetBtn.textContent = 'Select Location Type';
+                }
+                return;
+            }
+            
+            // Show Add Field button
+            if (fieldsetMenu) {
+                fieldsetMenu.style.display = '';
+            }
+            if (fieldsetBtn) {
+                fieldsetBtn.textContent = '+ Add Fieldset';
+            }
+            
+            // Update gray-out state based on selected type
+            updateLocationTypeFieldsets(selectedType);
+            
+            var selectedTypeLower = String(selectedType).toLowerCase();
+            var targetFieldsetKey = null;
+            
+            // Determine which fieldset key to use
+            if (selectedTypeLower === 'venue') {
+                targetFieldsetKey = 'venue';
+            } else if (selectedTypeLower === 'city') {
+                targetFieldsetKey = 'city';
+            } else if (selectedTypeLower === 'address') {
+                targetFieldsetKey = 'address';
+            }
+            
+            if (!targetFieldsetKey) return;
+            
+            // Find all location type fieldsets in the fields container
+            var allFieldWrappers = fieldsContainer.querySelectorAll('.formbuilder-field-wrapper');
+            var targetFieldsetExists = false;
+            
+            // Remove any location fieldsets that don't match the selected type
+            allFieldWrappers.forEach(function(wrapper) {
+                var fsId = wrapper.getAttribute('data-fieldset-id');
+                var fieldset = fieldsets.find(function(fs) {
+                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                });
+                if (!fieldset) return;
+                
+                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                
+                // Check if this is a location fieldset
+                var isLocationFieldset = fieldsetKeyLower === 'venue' || 
+                                        fieldsetKeyLower === 'city' || 
+                                        fieldsetKeyLower === 'address' || 
+                                        fieldsetKeyLower === 'location';
+                
+                if (isLocationFieldset) {
+                    // Check if it matches the selected type
+                    var matches = false;
+                    if (targetFieldsetKey === 'address') {
+                        matches = (fieldsetKeyLower === 'address' || fieldsetKeyLower === 'location');
+                    } else {
+                        matches = (fieldsetKeyLower === targetFieldsetKey);
+                    }
+                    
+                    // Remove if it doesn't match the selected type
+                    if (!matches) {
+                        wrapper.remove();
+                        addedFieldsets[fsId] = false;
+                        var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + fsId + '"]');
+                        if (menuOpt) {
+                            menuOpt.classList.remove('formbuilder-fieldset-menu-option--disabled');
+                        }
+                    } else {
+                        // This is the matching fieldset
+                        targetFieldsetExists = true;
+                    }
+                }
+            });
+            
+            // If target fieldset doesn't exist, add it automatically
+            if (!targetFieldsetExists) {
+                // Try to find fieldset by target key, or 'location' if target is 'address'
+                var targetFieldset = null;
+                if (targetFieldsetKey === 'address') {
+                    // Try 'address' first, then 'location'
+                    targetFieldset = fieldsets.find(function(fs) {
+                        var fsKey = fs.key || fs.fieldset_key || fs.id;
+                        return String(fsKey).toLowerCase() === 'address';
+                    });
+                    if (!targetFieldset) {
+                        targetFieldset = fieldsets.find(function(fs) {
+                            var fsKey = fs.key || fs.fieldset_key || fs.id;
+                            return String(fsKey).toLowerCase() === 'location';
+                        });
+                    }
+                } else {
+                    targetFieldset = fieldsets.find(function(fs) {
+                        var fsKey = fs.key || fs.fieldset_key || fs.id;
+                        return String(fsKey).toLowerCase() === targetFieldsetKey;
+                    });
+                }
+                
+                if (targetFieldset) {
+                    var result = createFieldElement(targetFieldset, true, targetFieldset);
+                    fieldsContainer.appendChild(result.wrapper);
+                    addedFieldsets[result.fsId] = true;
+                    var menuOpt = fieldsetOpts.querySelector('[data-fieldset-id="' + result.fsId + '"]');
+                    if (menuOpt) {
+                        menuOpt.classList.add('formbuilder-fieldset-menu-option--disabled');
+                    }
+                    // Update divider and location repeat switches after adding location fieldset
+                    setTimeout(function() {
+                        updateLocationDividerAndRepeatSwitches();
+                    }, 0);
+                    notifyChange();
+                }
         }
     }
     
