@@ -2234,14 +2234,17 @@
             var fieldName = fieldData.name || fieldData.key;
             
             // Location fieldsets are mandatory per-location and must never be configurable.
-            // Lock repeat settings for: Venue, City, Address
-            var fieldsetKeyLower = '';
-            if (fieldsetDef) {
-                fieldsetKeyLower = String(fieldsetDef.key || fieldsetDef.fieldset_key || fieldsetDef.fieldsetKey || '').toLowerCase();
-            } else if (fieldData) {
-                fieldsetKeyLower = String(fieldData.fieldsetKey || fieldData.key || '').toLowerCase();
+            // Lock repeat settings and required checkbox for: Venue, City, Address
+            var isLockedLocationFieldset = false;
+            if (fieldsetDef && fieldsetDef.fieldset_key) {
+                var fieldsetKeyLower = String(fieldsetDef.fieldset_key).toLowerCase();
+                isLockedLocationFieldset = (fieldsetKeyLower === 'venue' || fieldsetKeyLower === 'city' || fieldsetKeyLower === 'address');
             }
-            var isLockedLocationFieldset = (fieldsetKeyLower === 'venue' || fieldsetKeyLower === 'city' || fieldsetKeyLower === 'address');
+            
+            // Location fieldsets must always be required
+            if (isLockedLocationFieldset) {
+                isRequired = true;
+            }
             
             var fieldWrapper = document.createElement('div');
             fieldWrapper.className = 'formbuilder-field-wrapper';
@@ -2320,8 +2323,21 @@
             if (isRequired) {
                 fieldWrapper.classList.add('formbuilder-field-wrapper--required');
             }
+            
+            // Lock required checkbox for location fieldsets
+            if (isLockedLocationFieldset) {
+                requiredCheckbox.checked = true;
+                requiredCheckbox.disabled = true;
+                requiredLabel.classList.add('disabled');
+            }
+            
             syncFieldWrapperUi(fieldWrapper);
             requiredCheckbox.onchange = function() {
+                if (isLockedLocationFieldset) {
+                    // Prevent unchecking location fieldsets - force it back to checked
+                    requiredCheckbox.checked = true;
+                    return;
+                }
                 if (requiredCheckbox.checked) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--required');
                 } else {
