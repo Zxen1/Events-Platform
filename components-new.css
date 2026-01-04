@@ -1470,7 +1470,7 @@
     border: 1px solid var(--website-blue-border, #3b82f5);
     border-top: none;
     border-radius: 0 0 5px 5px;
-    max-height: 300px;
+    max-height: 600px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
