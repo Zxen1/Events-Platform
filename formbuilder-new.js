@@ -1684,12 +1684,12 @@
                 var wrapper = allFieldWrappers[i];
                 var fsId = wrapper.getAttribute('data-fieldset-id');
                 var fieldset = fieldsets.find(function(fs) {
-                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                    return fs.id == fsId;
                 });
                 if (!fieldset) continue;
                 
-                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                if (!fieldset.fieldset_key) continue;
+                var fieldsetKeyLower = String(fieldset.fieldset_key).toLowerCase();
                 var isLocationFieldset = fieldsetKeyLower === 'venue' || 
                                         fieldsetKeyLower === 'city' || 
                                         fieldsetKeyLower === 'address' || 
@@ -1723,12 +1723,12 @@
                     var wrapper = allFieldWrappers[i];
                     var fsId = wrapper.getAttribute('data-fieldset-id');
                     var fieldset = fieldsets.find(function(fs) {
-                        return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                        return fs.id == fsId;
                     });
                     if (!fieldset) continue;
                     
-                    var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                    var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                    if (!fieldset.fieldset_key) continue;
+                    var fieldsetKeyLower = String(fieldset.fieldset_key).toLowerCase();
                     var isLocationFieldset = fieldsetKeyLower === 'venue' || 
                                             fieldsetKeyLower === 'city' || 
                                             fieldsetKeyLower === 'address' || 
@@ -1749,14 +1749,6 @@
                         locationRepeatLabel.classList.add('disabled');
                         locationRepeatSwitch.classList.add('disabled');
                         wrapper.classList.add('formbuilder-field-wrapper--location-repeat');
-                        var mustRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[1];
-                        var mustRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[1];
-                        var autofillRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[2];
-                        var autofillRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[2];
-                        if (mustRepeatLabel) mustRepeatLabel.classList.remove('disabled');
-                        if (mustRepeatSwitch) mustRepeatSwitch.classList.remove('disabled');
-                        if (autofillRepeatLabel) autofillRepeatLabel.classList.remove('disabled');
-                        if (autofillRepeatSwitch) autofillRepeatSwitch.classList.remove('disabled');
                         syncFieldWrapperUi(wrapper);
                         notifyChange();
                     } else {
@@ -1765,22 +1757,6 @@
                         locationRepeatLabel.classList.add('disabled');
                         locationRepeatSwitch.classList.add('disabled');
                         wrapper.classList.remove('formbuilder-field-wrapper--location-repeat');
-                        var mustRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[1];
-                        var mustRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[1];
-                        var autofillRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[2];
-                        var autofillRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[2];
-                        if (mustRepeatLabel) mustRepeatLabel.classList.add('disabled');
-                        if (mustRepeatSwitch) {
-                            mustRepeatSwitch.classList.add('disabled');
-                            mustRepeatSwitch.classList.remove('on');
-                        }
-                        if (autofillRepeatLabel) autofillRepeatLabel.classList.add('disabled');
-                        if (autofillRepeatSwitch) {
-                            autofillRepeatSwitch.classList.add('disabled');
-                            autofillRepeatSwitch.classList.remove('on');
-                        }
-                        wrapper.classList.remove('formbuilder-field-wrapper--must-repeat');
-                        wrapper.classList.remove('formbuilder-field-wrapper--autofill-repeat');
                         syncFieldWrapperUi(wrapper);
                         notifyChange();
                     }
@@ -1804,11 +1780,11 @@
                             if (el.classList.contains('formbuilder-field-wrapper')) {
                                 var fsId = el.getAttribute('data-fieldset-id');
                                 var fieldset = fieldsets.find(function(fs) {
-                                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                                    return fs.id == fsId;
                                 });
                                 if (!fieldset) continue;
-                                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
-                                var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
+                                if (!fieldset.fieldset_key) continue;
+                                var fieldsetKeyLower = String(fieldset.fieldset_key).toLowerCase();
                                 var isLocationFieldset = fieldsetKeyLower === 'venue' || 
                                                         fieldsetKeyLower === 'city' || 
                                                         fieldsetKeyLower === 'address' || 
