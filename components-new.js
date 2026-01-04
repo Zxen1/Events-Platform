@@ -645,7 +645,12 @@ const CalendarComponent = (function(){
         var scrollWrapper = document.createElement('div');
         scrollWrapper.className = 'calendar-scroll-wrapper';
         scrollWrapper.appendChild(scroll);
-        scrollWrapper.appendChild(marker);
+        
+        var markerContainer = document.createElement('div');
+        markerContainer.className = 'calendar-marker-container';
+        markerContainer.appendChild(marker);
+        scrollWrapper.appendChild(markerContainer);
+        
         containerEl.appendChild(scrollWrapper);
 
         // Add action buttons if showActions is true
