@@ -1274,7 +1274,8 @@
     position: absolute;
     left: 0;
     right: 0;
-    margin-top: 0;
+    bottom: 100%;
+    margin-bottom: 10px;
     background: #222;
     border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
     border-radius: 0;

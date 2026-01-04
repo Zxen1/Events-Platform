@@ -641,12 +641,17 @@ const CalendarComponent = (function(){
         
         scroll.appendChild(calendar);
         
-        // Wrap scroll and marker so marker stays at bottom of scroll area
+        // Wrap scroll area
         var scrollWrapper = document.createElement('div');
         scrollWrapper.className = 'calendar-scroll-wrapper';
         scrollWrapper.appendChild(scroll);
-        scrollWrapper.appendChild(marker);
         containerEl.appendChild(scrollWrapper);
+        
+        // Create indicator track below scrollbar (consistent across all browsers)
+        var indicatorTrack = document.createElement('div');
+        indicatorTrack.className = 'calendar-indicator-track';
+        indicatorTrack.appendChild(marker);
+        containerEl.appendChild(indicatorTrack);
 
         // Add action buttons if showActions is true
         var actionsEl = null;
@@ -686,11 +691,10 @@ const CalendarComponent = (function(){
             });
         }
         
-        // Position the red dot marker
+        // Position the today marker on the indicator track
         // Formula: (todayMonthIndex + 0.5) / totalMonths gives the fraction
-        // e.g., month 13 of 37 = (13 + 0.5) / 37 = 0.365 (about 1/3 along)
         function positionMarker() {
-            var width = scrollWrapper.clientWidth;
+            var width = indicatorTrack.clientWidth;
             if (width > 0 && totalMonths > 0) {
                 var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
                 var markerPos = markerFraction * (width - 8);
@@ -701,12 +705,12 @@ const CalendarComponent = (function(){
         // Initial position
         positionMarker();
         
-        // Recalculate marker position when container resizes (e.g., becomes visible)
+        // Recalculate marker position when container resizes
         if (typeof ResizeObserver !== 'undefined') {
             var resizeObserver = new ResizeObserver(function() {
                 positionMarker();
             });
-            resizeObserver.observe(scrollWrapper);
+            resizeObserver.observe(indicatorTrack);
         }
         
         // Click marker to scroll to today
