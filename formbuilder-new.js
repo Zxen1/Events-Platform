@@ -1621,18 +1621,18 @@
             allOptions.forEach(function(opt) {
                 var fsId = opt.getAttribute('data-fieldset-id');
                 var fieldset = fieldsets.find(function(fs) {
-                    return (fs.id || fs.key || fs.fieldset_key) == fsId;
+                    if (fs.fieldset_key && typeof fs.fieldset_key === 'string') {
+                        return String(fs.fieldset_key) == fsId;
+                    }
+                    return false;
                 });
                 if (!fieldset) return;
                 
                 var fieldsetKey = '';
-                if (fieldset.key && typeof fieldset.key === 'string') {
-                    fieldsetKey = fieldset.key;
-                } else if (fieldset.fieldset_key && typeof fieldset.fieldset_key === 'string') {
+                if (fieldset.fieldset_key && typeof fieldset.fieldset_key === 'string') {
                     fieldsetKey = fieldset.fieldset_key;
-                } else if (fieldset.id && typeof fieldset.id === 'string') {
-                    fieldsetKey = fieldset.id;
                 }
+                if (!fieldsetKey) return;
                 // Normalize to lowercase for comparison
                 var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
                 var isVenue = fieldsetKeyLower === 'venue';
