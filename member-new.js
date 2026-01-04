@@ -2217,7 +2217,7 @@ const MemberModule = (function() {
                                         onQuantityUpdate: function(delta) {
                                             if (typeof window._memberLocationQuantity === 'number') {
                                                 window._memberLocationQuantity += delta;
-                                                var qtyDisplay = document.querySelector('.formbuilder-location-quantity-display');
+                                                var qtyDisplay = document.querySelector('.form-location-quantity-display');
                                                 if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                                             }
                                         }
@@ -2262,7 +2262,7 @@ const MemberModule = (function() {
                                     container.remove();
                                     if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
                                         window._memberLocationQuantity--;
-                                        var qtyDisplay = document.querySelector('.formbuilder-location-quantity-display');
+                                        var qtyDisplay = document.querySelector('.form-location-quantity-display');
                                         if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                                         if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
                                             FormbuilderModule.updateVenueDeleteButtons();
@@ -2274,17 +2274,17 @@ const MemberModule = (function() {
                     },
                     onHeaderClick: function(container, locationNumber) {
                         if (window._memberLocationQuantity > 1) {
-                            container.classList.toggle('formbuilder-location-container--collapsed');
+                            container.classList.toggle('form-location-container--collapsed');
                         }
                     },
                     onActivate: function(container, locationNumber) {
                         var tabPanel = container.parentNode;
                         if (tabPanel) {
-                            tabPanel.querySelectorAll('.formbuilder-location-container--active').forEach(function(c) {
-                                c.classList.remove('formbuilder-location-container--active');
+                            tabPanel.querySelectorAll('.form-location-container--active').forEach(function(c) {
+                                c.classList.remove('form-location-container--active');
                             });
                         }
-                        container.classList.add('formbuilder-location-container--active');
+                        container.classList.add('form-location-container--active');
                     },
                     idPrefix: 'memberCreate'
                 });
@@ -2386,7 +2386,7 @@ const MemberModule = (function() {
                         onQuantityUpdate: function(delta) {
                             if (typeof window._memberLocationQuantity === 'number') {
                                 window._memberLocationQuantity += delta;
-                                var qtyDisplay = document.querySelector('.formbuilder-location-quantity-display');
+                                var qtyDisplay = document.querySelector('.form-location-quantity-display');
                                 if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                             }
                         }
@@ -2486,7 +2486,7 @@ const MemberModule = (function() {
 
             var result = [];
 
-            // Location 1 sessions are in the main form (not inside .formbuilder-location-container with location > 1)
+            // Location 1 sessions are in the main form (not inside .form-location-container with location > 1)
             // Use session_pricing fieldset.
             var mainSessions = formFields.querySelector('.fieldset[data-fieldset-key="session_pricing"]');
             var mainIso = getMaxSelectedIso(mainSessions);
@@ -2494,7 +2494,7 @@ const MemberModule = (function() {
 
             // Locations 2+ are in separate containers (siblings of formWrapper)
             for (var i = 2; i <= qty; i++) {
-                var container = document.querySelector('.formbuilder-location-container[data-location-number="' + i + '"]');
+                var container = document.querySelector('.form-location-container[data-location-number="' + i + '"]');
                 var fs = container ? container.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
                 var iso = getMaxSelectedIso(fs);
                 result.push(iso ? daysToIso(iso) : 0);
@@ -3036,7 +3036,7 @@ const MemberModule = (function() {
             // Location grouping: main form = 1, additional locations have a wrapper with data-location-number.
             var locationNumber = 1;
             try {
-                var locWrap = el.closest ? el.closest('.formbuilder-location-container[data-location-number]') : null;
+                var locWrap = el.closest ? el.closest('.form-location-container[data-location-number]') : null;
                 if (locWrap && locWrap.dataset && locWrap.dataset.locationNumber) {
                     locationNumber = parseInt(locWrap.dataset.locationNumber, 10) || 1;
                 }

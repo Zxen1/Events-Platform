@@ -1718,7 +1718,7 @@
             }
             
             // Remove existing divider if any
-            var existingDivider = fieldsContainer.querySelector('.formbuilder-location-divider');
+            var existingDivider = fieldsContainer.querySelector('.form-location-divider');
             if (existingDivider) {
                 existingDivider.remove();
             }
@@ -1726,7 +1726,7 @@
             // If location type is selected and location fieldset exists, add divider above it
             if (isLocationTypeSelected && locationFieldsetWrapper) {
                 var divider = document.createElement('div');
-                divider.className = 'formbuilder-location-divider';
+                divider.className = 'form-location-divider';
                 fieldsContainer.insertBefore(divider, locationFieldsetWrapper);
             }
             
@@ -1797,7 +1797,7 @@
                 // Ensure location fieldset is first below the divider
                 // Get all wrappers again (in case order changed)
                 var allWrappersAfterDivider = Array.from(fieldsContainer.children);
-                var dividerElement = fieldsContainer.querySelector('.formbuilder-location-divider');
+                var dividerElement = fieldsContainer.querySelector('.form-location-divider');
                 if (dividerElement && locationFieldsetWrapper) {
                     var dividerPos = allWrappersAfterDivider.indexOf(dividerElement);
                     var locationPos = allWrappersAfterDivider.indexOf(locationFieldsetWrapper);
@@ -3730,28 +3730,28 @@
         
         // Create quantity selector row
         var quantityRow = document.createElement('div');
-        quantityRow.className = 'formbuilder-location-quantity-row';
+        quantityRow.className = 'form-location-quantity-row';
         
         var quantityLabel = document.createElement('span');
-        quantityLabel.className = 'formbuilder-location-quantity-label';
+        quantityLabel.className = 'form-location-quantity-label';
         quantityLabel.textContent = 'Number of locations:';
         
         var quantityControls = document.createElement('div');
-        quantityControls.className = 'formbuilder-location-quantity-controls';
+        quantityControls.className = 'form-location-quantity-controls';
         
         var minusBtn = document.createElement('button');
         minusBtn.type = 'button';
-        minusBtn.className = 'formbuilder-location-quantity-btn formbuilder-location-quantity-btn--minus';
+        minusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--minus';
         minusBtn.innerHTML = '−';
         minusBtn.setAttribute('aria-label', 'Decrease location quantity');
         
         var quantityDisplay = document.createElement('span');
-        quantityDisplay.className = 'formbuilder-location-quantity-display';
+        quantityDisplay.className = 'form-location-quantity-display';
         quantityDisplay.textContent = initialQuantity;
         
         var plusBtn = document.createElement('button');
         plusBtn.type = 'button';
-        plusBtn.className = 'formbuilder-location-quantity-btn formbuilder-location-quantity-btn--plus';
+        plusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--plus';
         plusBtn.innerHTML = '+';
         plusBtn.setAttribute('aria-label', 'Increase location quantity');
         
@@ -3783,7 +3783,7 @@
         
         // Explanatory message
         var explainerMsg = document.createElement('p');
-        explainerMsg.className = 'formbuilder-location-explainer';
+        explainerMsg.className = 'form-location-explainer';
         
         if (getMessage && typeof getMessage === 'function') {
             getMessage('msg_post_location_explainer', {}, false).then(function(msg) {
@@ -3823,28 +3823,28 @@
         
         // Create container
         var container = document.createElement('div');
-        container.className = 'formbuilder-location-container';
+        container.className = 'form-location-container';
         container.dataset.venue = String(locationNumber);
         container.dataset.locationNumber = String(locationNumber);
         
         // Create header
         var header = document.createElement('div');
-        header.className = 'formbuilder-location-header';
+        header.className = 'form-location-header';
         
         // Header text
         var headerText = document.createElement('span');
-        headerText.className = 'formbuilder-location-header-text';
+        headerText.className = 'form-location-header-text';
         headerText.textContent = locationName;
         
         // Arrow
         var arrow = document.createElement('span');
-        arrow.className = 'formbuilder-location-header-arrow';
+        arrow.className = 'form-location-header-arrow';
         arrow.textContent = '▼';
         
         // Delete button
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'formbuilder-location-header-button-delete';
+        deleteBtn.className = 'form-location-header-button-delete';
         deleteBtn.innerHTML = '&times;';
         deleteBtn.setAttribute('aria-label', 'Delete ' + locationName);
         if (!showDelete) {
@@ -3872,7 +3872,7 @@
         
         // Create content wrapper
         var content = document.createElement('div');
-        content.className = 'formbuilder-location-content';
+        content.className = 'form-location-content';
         container.appendChild(content);
         
         return {
@@ -4020,7 +4020,7 @@
             onDelete: customOnDelete || function() {},
             onHeaderClick: customOnHeaderClick || function(container, locationNumber) {
                 if (initialQuantity > 1) {
-                    container.classList.toggle('formbuilder-location-container--collapsed');
+                    container.classList.toggle('form-location-container--collapsed');
                 }
             },
             onActivate: customOnActivate || function() {}
@@ -4094,12 +4094,15 @@
             }
         });
         
-        // STEP 1: Append regular fieldsets first
+        // STEP 1: Create form-primary-container and append regular fieldsets
+        var primaryContainer = document.createElement('div');
+        primaryContainer.className = 'form-primary-container';
         regularFieldsets.forEach(function(fieldset) {
-            container.appendChild(fieldset);
+            primaryContainer.appendChild(fieldset);
         });
+        container.appendChild(primaryContainer);
         
-        // STEP 2: Create and append quantity picker + message together
+        // STEP 2: Create form-location-picker container with quantity picker + message
         var quantityPicker = createLocationQuantityPicker({
             initialQuantity: initialQuantity,
             onQuantityChange: function(quantity, isIncrease) {
@@ -4108,16 +4111,17 @@
             getMessage: getMessage
         });
         
-        // Append quantity picker row (contains label + controls)
+        var locationPickerContainer = document.createElement('div');
+        locationPickerContainer.className = 'form-location-picker';
         if (quantityPicker.quantityRow) {
-            container.appendChild(quantityPicker.quantityRow);
+            locationPickerContainer.appendChild(quantityPicker.quantityRow);
         }
-        // Append explainer message immediately after quantity picker
         if (quantityPicker.explainerMsg) {
-            container.appendChild(quantityPicker.explainerMsg);
+            locationPickerContainer.appendChild(quantityPicker.explainerMsg);
         }
+        container.appendChild(locationPickerContainer);
         
-        // STEP 3: Append Venue 1 container after quantity picker + message
+        // STEP 3: Append Venue 1 container after location picker
         container.appendChild(v1ContainerData.container);
         
         // STEP 4: Create additional location containers if quantity > 1
@@ -4133,7 +4137,7 @@
                     showDelete: customOnDelete !== null,
                     onDelete: customOnDelete || function() {},
                     onHeaderClick: customOnHeaderClick || function(container, locationNumber) {
-                        container.classList.toggle('formbuilder-location-container--collapsed');
+                        container.classList.toggle('form-location-container--collapsed');
                     },
                     onActivate: customOnActivate || function() {}
                 });
@@ -4258,7 +4262,7 @@
         var onQuantityUpdate = options.onQuantityUpdate || function() {};
         
         // Remove existing additional location containers (keep venue 1)
-        document.querySelectorAll('.formbuilder-location-container[data-location-number]').forEach(function(el) {
+        document.querySelectorAll('.form-location-container[data-location-number]').forEach(function(el) {
             var locNum = parseInt(el.dataset.locationNumber || '0', 10);
             if (locNum > 1) {
                 el.remove();
@@ -4268,7 +4272,7 @@
         if (quantity <= 1) return;
         
         if (!venue1Container) {
-            venue1Container = document.querySelector('.formbuilder-location-container[data-venue="1"]');
+            venue1Container = document.querySelector('.form-location-container[data-venue="1"]');
         }
         
         if (!venue1Container) {
@@ -4331,13 +4335,13 @@
                         }
                     },
                     onHeaderClick: function(container, locNum) {
-                        container.classList.toggle('formbuilder-location-container--collapsed');
+                        container.classList.toggle('form-location-container--collapsed');
                     },
                     onActivate: function(container, locNum) {
-                        parentContainer.querySelectorAll('.formbuilder-location-container--active').forEach(function(c) {
-                            c.classList.remove('formbuilder-location-container--active');
+                        parentContainer.querySelectorAll('.form-location-container--active').forEach(function(c) {
+                            c.classList.remove('form-location-container--active');
                         });
-                        container.classList.add('formbuilder-location-container--active');
+                        container.classList.add('form-location-container--active');
                     }
                 });
                 
@@ -4435,7 +4439,7 @@
                             })(fieldset, key);
                         } else {
                             fieldset.dataset.autofillMode = 'placeholder';
-                            fieldset.classList.add('formbuilder-location-override--placeholder');
+                            fieldset.classList.add('form-location-override--placeholder');
                             (function(fs, k) {
                                 setTimeout(function() {
                                     setupPlaceholderSync(fs, k);
@@ -4461,10 +4465,10 @@
                 
                 // Focus tracking for blue border
                 locationContainer.addEventListener('focusin', function() {
-                    parentContainer.querySelectorAll('.formbuilder-location-container--active').forEach(function(c) {
-                        c.classList.remove('formbuilder-location-container--active');
+                    parentContainer.querySelectorAll('.form-location-container--active').forEach(function(c) {
+                        c.classList.remove('form-location-container--active');
                     });
-                    locationContainer.classList.add('formbuilder-location-container--active');
+                    locationContainer.classList.add('form-location-container--active');
                 });
             })(i);
         }
@@ -4494,7 +4498,7 @@
      * Update delete button visibility based on venue count
      */
     function updateVenueDeleteButtons() {
-        var allVenueContainers = document.querySelectorAll('.formbuilder-location-container');
+        var allVenueContainers = document.querySelectorAll('.form-location-container');
         var venueCount = allVenueContainers.length;
         var showDelete = venueCount > 1;
         
@@ -4508,11 +4512,11 @@
         
         // Update all venue delete buttons
         allVenueContainers.forEach(function(container) {
-            var deleteBtn = container.querySelector('.formbuilder-location-header-button-delete');
+            var deleteBtn = container.querySelector('.form-location-header-button-delete');
             if (deleteBtn) {
                 deleteBtn.style.display = showDelete ? '' : 'none';
             }
-            var arrow = container.querySelector('.formbuilder-location-header-arrow');
+            var arrow = container.querySelector('.form-location-header-arrow');
             if (arrow) {
                 arrow.style.display = showDelete ? '' : 'none';
             }
@@ -4584,7 +4588,7 @@
      */
     function findLocation1Fieldset(fieldsetKeyLower) {
         // Check venue 1 container first
-        var venue1 = document.querySelector('.formbuilder-location-container[data-venue="1"]');
+        var venue1 = document.querySelector('.form-location-container[data-venue="1"]');
         if (venue1) {
             var allFieldsets = venue1.querySelectorAll('.fieldset');
             for (var j = 0; j < allFieldsets.length; j++) {
@@ -4610,7 +4614,7 @@
         if (!fieldsetKeyLower) return;
         
         // Find the location-1 fieldset in venue 1 container
-        var venue1Container = document.querySelector('.formbuilder-location-container[data-venue="1"]');
+        var venue1Container = document.querySelector('.form-location-container[data-venue="1"]');
         if (!venue1Container) return;
         
         var sourceFieldset = null;

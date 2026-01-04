@@ -774,7 +774,7 @@
 }
 
 /* Location divider line - appears above location fieldset when location type is selected */
-.formbuilder-location-divider {
+.form-location-divider {
   width: 100%;
   height: 3px;
   min-height: 3px;
@@ -1516,20 +1516,30 @@
    used by both admin form preview and member-facing forms.
    ============================================================================ */
 
+/* Form Primary Container - holds non-location fieldsets */
+.form-primary-container {
+  /* Structural container, no visible styling */
+}
+
+/* Form Location Picker - holds quantity picker + explainer message */
+.form-location-picker {
+  /* Structural container, no visible styling */
+}
+
 /* Location container */
-.formbuilder-location-container {
+.form-location-container {
   margin-bottom: 12px;
 }
 
-/* Location header - 36px, horizontal flex, line-height for vertical centering */
-.formbuilder-location-header {
+/* Location header - 36px, horizontal flex, website blue background */
+.form-location-header {
   width: 100%;
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 10px;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--website-blue-active-fill, #3b82f599);
+  border: 1px solid transparent;
   border-radius: 5px;
   cursor: pointer;
   color: #fff;
@@ -1538,29 +1548,27 @@
   box-sizing: border-box;
 }
 
-.formbuilder-location-header:hover {
-  border-color: var(--website-blue-border, #3b82f5);
+.form-location-header:hover {
   background: var(--website-blue-hover-fill, #3b82f5);
 }
 
 /* When expanded - connect to content below */
-.formbuilder-location-container:not(.formbuilder-location-container--collapsed) .formbuilder-location-header {
+.form-location-container:not(.form-location-container--collapsed) .form-location-header {
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
 
-/* When container is active/focused - blue border, active fill background */
-.formbuilder-location-container.formbuilder-location-container--active > .formbuilder-location-header {
+/* When container is active/focused - blue border */
+.form-location-container.form-location-container--active > .form-location-header {
   border-color: var(--website-blue-border, #3b82f5);
-  background: var(--website-blue-active-fill, #3b82f599);
 }
 
-.formbuilder-location-container.formbuilder-location-container--active > .formbuilder-location-content {
+.form-location-container.form-location-container--active > .form-location-content {
   border-color: var(--website-blue-border, #3b82f5);
 }
 
 /* Header text */
-.formbuilder-location-header-text {
+.form-location-header-text {
   flex: 1;
   font-size: 14px;
   color: #fff;
@@ -1571,7 +1579,7 @@
 }
 
 /* Arrow - line-height for vertical centering */
-.formbuilder-location-header-arrow {
+.form-location-header-arrow {
   width: 16px;
   height: 36px;
   line-height: 36px;
@@ -1583,12 +1591,12 @@
 }
 
 /* Collapsed = arrow points down (default). Expanded = arrow rotated 180deg */
-.formbuilder-location-container:not(.formbuilder-location-container--collapsed) .formbuilder-location-header-arrow {
+.form-location-container:not(.form-location-container--collapsed) .form-location-header-arrow {
   transform: rotate(180deg);
 }
 
 /* Delete button in header */
-.formbuilder-location-header-button-delete {
+.form-location-header-button-delete {
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.5);
@@ -1597,8 +1605,9 @@
   min-width: 36px;
   min-height: 36px;
   font-size: 24px;
-  line-height: 36px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: color 0.15s ease;
   padding: 0;
@@ -1606,12 +1615,12 @@
   margin-left: 4px;
 }
 
-.formbuilder-location-header-button-delete:hover {
+.form-location-header-button-delete:hover {
   color: #e74c3c;
 }
 
 /* Location content - styled like formpicker menu options */
-.formbuilder-location-content {
+.form-location-content {
   background: #222;
   border: 1px solid rgba(255,255,255,0.1);
   border-top: none;
@@ -1620,7 +1629,7 @@
 }
 
 /* When collapsed, content is hidden */
-.formbuilder-location-container--collapsed .formbuilder-location-content {
+.form-location-container--collapsed .form-location-content {
   display: none;
 }
 
@@ -1628,7 +1637,7 @@
    LOCATION QUANTITY PICKER
    ============================================================================ */
 
-.formbuilder-location-quantity-row {
+.form-location-quantity-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1637,18 +1646,18 @@
   padding: 0;
 }
 
-.formbuilder-location-quantity-label {
+.form-location-quantity-label {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
 }
 
-.formbuilder-location-quantity-controls {
+.form-location-quantity-controls {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.formbuilder-location-quantity-btn {
+.form-location-quantity-btn {
   width: 36px;
   min-width: 36px;
   max-width: 36px;
@@ -1666,29 +1675,29 @@
   padding: 0;
 }
 
-.formbuilder-location-quantity-btn--plus:hover {
+.form-location-quantity-btn--plus:hover {
   border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
   color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
 }
 
-.formbuilder-location-quantity-btn--minus:hover {
+.form-location-quantity-btn--minus:hover {
   border-color: #f87171;
   color: #f87171;
 }
 
-.formbuilder-location-quantity-btn:active {
+.form-location-quantity-btn:active {
   background: var(--website-blue-active-fill, #3b82f599);
   border-color: var(--website-blue-border, #3b82f5);
   color: #fff;
 }
 
-.formbuilder-location-quantity-btn--minus:disabled,
-.formbuilder-location-quantity-btn--plus:disabled {
+.form-location-quantity-btn--minus:disabled,
+.form-location-quantity-btn--plus:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.formbuilder-location-quantity-display {
+.form-location-quantity-display {
   min-width: 24px;
   margin-right: 16px;
   text-align: center;
@@ -1697,7 +1706,7 @@
   color: #fff;
 }
 
-.formbuilder-location-explainer {
+.form-location-explainer {
   margin: 0;
   padding: 0;
   background: transparent;
@@ -1707,20 +1716,20 @@
 }
 
 /* Placeholder mode: override fields show grey placeholder from location 1 */
-.formbuilder-location-override--placeholder .fieldset-input,
-.formbuilder-location-override--placeholder .fieldset-textarea {
+.form-location-override--placeholder .fieldset-input,
+.form-location-override--placeholder .fieldset-textarea {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.formbuilder-location-override--placeholder .fieldset-input:focus,
-.formbuilder-location-override--placeholder .fieldset-textarea:focus,
-.formbuilder-location-override--placeholder .fieldset-input:not(:placeholder-shown),
-.formbuilder-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
+.form-location-override--placeholder .fieldset-input:focus,
+.form-location-override--placeholder .fieldset-textarea:focus,
+.form-location-override--placeholder .fieldset-input:not(:placeholder-shown),
+.form-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
   color: #fff;
 }
 
-.formbuilder-location-override--placeholder .fieldset-input::placeholder,
-.formbuilder-location-override--placeholder .fieldset-textarea::placeholder {
+.form-location-override--placeholder .fieldset-input::placeholder,
+.form-location-override--placeholder .fieldset-textarea::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
 
