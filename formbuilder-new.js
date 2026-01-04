@@ -1625,7 +1625,14 @@
                 });
                 if (!fieldset) return;
                 
-                var fieldsetKey = fieldset.key || fieldset.fieldset_key || fieldset.id;
+                var fieldsetKey = '';
+                if (fieldset.key && typeof fieldset.key === 'string') {
+                    fieldsetKey = fieldset.key;
+                } else if (fieldset.fieldset_key && typeof fieldset.fieldset_key === 'string') {
+                    fieldsetKey = fieldset.fieldset_key;
+                } else if (fieldset.id && typeof fieldset.id === 'string') {
+                    fieldsetKey = fieldset.id;
+                }
                 // Normalize to lowercase for comparison
                 var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
                 var isVenue = fieldsetKeyLower === 'venue';
@@ -2251,8 +2258,22 @@
         var addedFieldsets = {};
         
         function createFieldElement(fieldData, isRequired, fieldsetDef) {
-            var fsId = fieldData.id || fieldData.fieldsetKey || fieldData.key || fieldData.name;
-            var fieldName = fieldData.name || fieldData.key;
+            var fsId = '';
+            if (fieldData.id && typeof fieldData.id === 'string') {
+                fsId = fieldData.id;
+            } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                fsId = fieldData.fieldsetKey;
+            } else if (fieldData.key && typeof fieldData.key === 'string') {
+                fsId = fieldData.key;
+            } else if (fieldData.name && typeof fieldData.name === 'string') {
+                fsId = fieldData.name;
+            }
+            var fieldName = '';
+            if (fieldData.name && typeof fieldData.name === 'string') {
+                fieldName = fieldData.name;
+            } else if (fieldData.key && typeof fieldData.key === 'string') {
+                fieldName = fieldData.key;
+            }
             
             // Location fieldsets are mandatory per-location and must never be configurable.
             // Lock repeat settings and required checkbox for: Venue, City, Address
@@ -2511,9 +2532,30 @@
             // Initialize repeat switch states from fieldData (loaded from database)
             // Location fieldsets are force-locked above (Venue/City/Address).
             if (!isLockedLocationFieldset) {
-                var initialLocationRepeat = !!(fieldData && (fieldData.location_repeat || fieldData.locationRepeat));
-                var initialMustRepeat = !!(fieldData && (fieldData.must_repeat || fieldData.mustRepeat));
-                var initialAutofillRepeat = !!(fieldData && (fieldData.autofill_repeat || fieldData.autofillRepeat));
+                var initialLocationRepeat = false;
+                if (fieldData) {
+                    if (fieldData.location_repeat !== undefined) {
+                        initialLocationRepeat = !!fieldData.location_repeat;
+                    } else if (fieldData.locationRepeat !== undefined) {
+                        initialLocationRepeat = !!fieldData.locationRepeat;
+                    }
+                }
+                var initialMustRepeat = false;
+                if (fieldData) {
+                    if (fieldData.must_repeat !== undefined) {
+                        initialMustRepeat = !!fieldData.must_repeat;
+                    } else if (fieldData.mustRepeat !== undefined) {
+                        initialMustRepeat = !!fieldData.mustRepeat;
+                    }
+                }
+                var initialAutofillRepeat = false;
+                if (fieldData) {
+                    if (fieldData.autofill_repeat !== undefined) {
+                        initialAutofillRepeat = !!fieldData.autofill_repeat;
+                    } else if (fieldData.autofillRepeat !== undefined) {
+                        initialAutofillRepeat = !!fieldData.autofillRepeat;
+                    }
+                }
 
                 if (initialLocationRepeat) {
                     locationRepeatSwitch.classList.add('on');
@@ -2546,7 +2588,16 @@
             // CRITICAL: fieldset key is the source of truth (not input_type / not a generic "type").
             // If we prioritize a generic type first, option/amenities editors can disappear even when
             // the fieldset is actually "amenities" or "custom_*".
-            var fieldType = fieldsetDef.fieldset_key || fieldsetDef.key || fieldsetDef.type || fieldsetDef.fieldset_type;
+            var fieldType = '';
+            if (fieldsetDef.fieldset_key && typeof fieldsetDef.fieldset_key === 'string') {
+                fieldType = fieldsetDef.fieldset_key;
+            } else if (fieldsetDef.key && typeof fieldsetDef.key === 'string') {
+                fieldType = fieldsetDef.key;
+            } else if (fieldsetDef.type && typeof fieldsetDef.type === 'string') {
+                fieldType = fieldsetDef.type;
+            } else if (fieldsetDef.fieldset_type && typeof fieldsetDef.fieldset_type === 'string') {
+                fieldType = fieldsetDef.fieldset_type;
+            }
             var needsAmenities = fieldType === 'amenities';
             // CRITICAL: No fallbacks in the member/admin renderers, but Form Builder must still
             // recognize option-based fieldsets so the editor UI is available.
@@ -2667,7 +2718,15 @@
                     nameInput.value = '';
                     nameInput.style.color = '#888';
                 }
-                fieldNameSpan.textContent = nameInput.value || defaultName || 'Unnamed';
+                var displayName = '';
+                if (nameInput.value && nameInput.value.trim()) {
+                    displayName = nameInput.value.trim();
+                } else if (defaultName && typeof defaultName === 'string' && defaultName.trim()) {
+                    displayName = defaultName.trim();
+                } else {
+                    displayName = 'Unnamed';
+                }
+                fieldNameSpan.textContent = displayName;
                 checkModifiedState();
                 notifyChange();
             });
@@ -2936,8 +2995,22 @@
         var selectedLocationType = subFeeData.location_type;
         var currentSubcategoryType = subFeeData.subcategory_type;
         fieldsets.forEach(function(fs) {
-            var fsId = fs.id || fs.key || fs.name;
-            var fieldsetKey = fs.key || fs.fieldset_key || fs.id;
+            var fsId = '';
+            if (fs.id && typeof fs.id === 'string') {
+                fsId = fs.id;
+            } else if (fs.key && typeof fs.key === 'string') {
+                fsId = fs.key;
+            } else if (fs.name && typeof fs.name === 'string') {
+                fsId = fs.name;
+            }
+            var fieldsetKey = '';
+            if (fs.key && typeof fs.key === 'string') {
+                fieldsetKey = fs.key;
+            } else if (fs.fieldset_key && typeof fs.fieldset_key === 'string') {
+                fieldsetKey = fs.fieldset_key;
+            } else if (fs.id && typeof fs.id === 'string') {
+                fieldsetKey = fs.id;
+            }
             // Normalize to lowercase for comparison
             var fieldsetKeyLower = String(fieldsetKey).toLowerCase();
             var isVenue = fieldsetKeyLower === 'venue';
@@ -2952,7 +3025,15 @@
             
             var opt = document.createElement('div');
             opt.className = 'formbuilder-fieldset-menu-option';
-            opt.textContent = fs.name || fs.key || 'Unnamed';
+            var displayName = '';
+            if (fs.name && typeof fs.name === 'string' && fs.name.trim()) {
+                displayName = fs.name.trim();
+            } else if (fs.key && typeof fs.key === 'string' && fs.key.trim()) {
+                displayName = fs.key.trim();
+            } else {
+                displayName = 'Unnamed';
+            }
+            opt.textContent = displayName;
             opt.setAttribute('data-fieldset-id', fsId);
             
             opt.onclick = function(e) {
@@ -2987,7 +3068,14 @@
         var existingFields = subFieldsMap[subName] || [];
         existingFields.forEach(function(fieldData) {
             var isRequired = fieldData.required === true || fieldData.required === 1 || fieldData.required === '1';
-            var fieldsetKey = fieldData.fieldsetKey || fieldData.key || fieldData.id;
+            var fieldsetKey = '';
+            if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                fieldsetKey = fieldData.fieldsetKey;
+            } else if (fieldData.key && typeof fieldData.key === 'string') {
+                fieldsetKey = fieldData.key;
+            } else if (fieldData.id && typeof fieldData.id === 'string') {
+                fieldsetKey = fieldData.id;
+            }
             var matchingFieldset = fieldsets.find(function(fs) {
                 return fs.id === fieldsetKey || fs.key === fieldsetKey || fs.fieldset_key === fieldsetKey;
             });
@@ -3475,7 +3563,13 @@
         
         var headerTitle = document.createElement('span');
         headerTitle.className = 'formbuilder-formpreview-modal-title';
-        headerTitle.textContent = subName || 'Form Preview';
+        var previewTitle = '';
+        if (subName && typeof subName === 'string' && subName.trim()) {
+            previewTitle = subName.trim();
+        } else {
+            previewTitle = 'Form Preview';
+        }
+        headerTitle.textContent = previewTitle;
         
         var closeBtn = ClearButtonComponent.create({
             className: 'formbuilder-formpreview-modal-close',
@@ -3492,55 +3586,34 @@
         var body = document.createElement('div');
         body.className = 'formbuilder-formpreview-modal-body';
         
-        // Render fields using FieldsetBuilder (auto-loads its own picklist data)
+        // Render fields using shared location container infrastructure
         if (fields.length === 0) {
             var emptyMsg = document.createElement('p');
             emptyMsg.className = 'formbuilder-formpreview-empty';
             emptyMsg.textContent = 'No fields configured for this subcategory.';
             body.appendChild(emptyMsg);
         } else {
-            // Find location fieldset
-            var locationFieldsetData = null;
-            var locationFieldsetIndex = -1;
-            fields.forEach(function(fieldData, index) {
-                var fieldsetKey = (fieldData.fieldsetKey || fieldData.key || '').toLowerCase();
-                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') {
-                    locationFieldsetData = fieldData;
-                    locationFieldsetIndex = index;
-                }
-            });
-            
-            // Render fields, wrapping location fieldset in container
-            fields.forEach(function(fieldData, index) {
-                var fieldset = FieldsetBuilder.buildFieldset(fieldData, {
-                    idPrefix: 'formpreview',
-                    fieldIndex: index,
-                    container: body
-                });
-                if (fieldset && fieldset.classList) {
-                    fieldset.classList.add('fieldset--formbuilder-preview');
-                }
-                
-                // If this is the location fieldset, wrap it in a location container
-                var fieldsetKey = (fieldData.fieldsetKey || fieldData.key || '').toLowerCase();
-                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') {
-                    var locationTypeName = fieldsetKey.charAt(0).toUpperCase() + fieldsetKey.slice(1);
-                    var locationContainerData = createLocationContainerHeader({
-                        locationName: locationTypeName + ' 1',
-                        locationNumber: 1,
-                        showDelete: false,
-                        onDelete: function() {},
-                        onHeaderClick: function(container, locationNumber) {
-                            container.classList.toggle('formbuilder-location-container--collapsed');
-                        },
-                        onActivate: function() {}
-                    });
-                    
-                    locationContainerData.content.appendChild(fieldset);
-                    body.appendChild(locationContainerData.container);
-                } else {
-                    body.appendChild(fieldset);
-                }
+            var locationData = organizeFieldsIntoLocationContainers({
+                fields: fields,
+                container: body,
+                buildFieldset: function(fieldData, options) {
+                    var fieldset = FieldsetBuilder.buildFieldset(fieldData, options);
+                    if (fieldset && fieldset.classList) {
+                        fieldset.classList.add('fieldset--formbuilder-preview');
+                    }
+                    return fieldset;
+                },
+                initialQuantity: 1,
+                onQuantityChange: function(quantity, isIncrease) {
+                    // Preview doesn't need to handle quantity changes
+                },
+                getMessage: function(key, params, fallback) {
+                    if (typeof window.getMessage === 'function') {
+                        return window.getMessage(key, params, fallback);
+                    }
+                    return Promise.resolve(null);
+                },
+                idPrefix: 'formpreview'
             });
         }
         
@@ -3608,9 +3681,101 @@
     }
     
     /* --------------------------------------------------------------------------
-       LOCATION CONTAINER HEADERS
+       LOCATION CONTAINER INFRASTRUCTURE
        Shared infrastructure for location repeat containers (used in member forms and form preview)
        -------------------------------------------------------------------------- */
+    
+    /**
+     * Creates location quantity picker (Number of locations selector)
+     * @param {Object} options - Configuration options
+     * @param {number} options.initialQuantity - Starting quantity (default: 1)
+     * @param {Function} options.onQuantityChange - Callback when quantity changes (quantity, isIncrease)
+     * @param {Function} options.getMessage - Function to get message text (optional)
+     * @returns {Object} - { quantityRow, quantityDisplay, explainerMsg }
+     */
+    function createLocationQuantityPicker(options) {
+        options = options || {};
+        var initialQuantity = options.initialQuantity || 1;
+        var onQuantityChange = options.onQuantityChange || function() {};
+        var getMessage = options.getMessage || null;
+        
+        // Create quantity selector row
+        var quantityRow = document.createElement('div');
+        quantityRow.className = 'formbuilder-location-quantity-row';
+        
+        var quantityLabel = document.createElement('span');
+        quantityLabel.className = 'formbuilder-location-quantity-label';
+        if (getMessage && typeof getMessage === 'function') {
+            getMessage('msg_post_location_quantity_label', {}, false).then(function(msg) {
+                if (msg) {
+                    quantityLabel.textContent = msg;
+                }
+            });
+        }
+        
+        var quantityControls = document.createElement('div');
+        quantityControls.className = 'formbuilder-location-quantity-controls';
+        
+        var minusBtn = document.createElement('button');
+        minusBtn.type = 'button';
+        minusBtn.className = 'formbuilder-location-quantity-btn formbuilder-location-quantity-btn--minus';
+        minusBtn.innerHTML = '−';
+        minusBtn.setAttribute('aria-label', 'Decrease location quantity');
+        
+        var quantityDisplay = document.createElement('span');
+        quantityDisplay.className = 'formbuilder-location-quantity-display';
+        quantityDisplay.textContent = initialQuantity;
+        
+        var plusBtn = document.createElement('button');
+        plusBtn.type = 'button';
+        plusBtn.className = 'formbuilder-location-quantity-btn formbuilder-location-quantity-btn--plus';
+        plusBtn.innerHTML = '+';
+        plusBtn.setAttribute('aria-label', 'Increase location quantity');
+        
+        quantityControls.appendChild(quantityDisplay);
+        quantityControls.appendChild(minusBtn);
+        quantityControls.appendChild(plusBtn);
+        
+        quantityRow.appendChild(quantityLabel);
+        quantityRow.appendChild(quantityControls);
+        
+        // Quantity button handlers
+        minusBtn.addEventListener('click', function() {
+            var currentQty = parseInt(quantityDisplay.textContent, 10);
+            if (isNaN(currentQty) || currentQty < 1) currentQty = 1;
+            if (currentQty > 1) {
+                currentQty--;
+                quantityDisplay.textContent = currentQty;
+                onQuantityChange(currentQty, false);
+            }
+        });
+        
+        plusBtn.addEventListener('click', function() {
+            var currentQty = parseInt(quantityDisplay.textContent, 10);
+            if (isNaN(currentQty) || currentQty < 1) currentQty = 1;
+            currentQty++;
+            quantityDisplay.textContent = currentQty;
+            onQuantityChange(currentQty, true);
+        });
+        
+        // Explanatory message
+        var explainerMsg = document.createElement('p');
+        explainerMsg.className = 'formbuilder-location-explainer';
+        
+        if (getMessage && typeof getMessage === 'function') {
+            getMessage('msg_post_location_explainer', {}, false).then(function(msg) {
+                if (msg) {
+                    explainerMsg.innerHTML = msg.replace(/\n/g, '<br>');
+                }
+            });
+        }
+        
+        return {
+            quantityRow: quantityRow,
+            quantityDisplay: quantityDisplay,
+            explainerMsg: explainerMsg
+        };
+    }
     
     /**
      * Creates a location container header with text, arrow, and delete button
@@ -3696,6 +3861,219 @@
         };
     }
     
+    /**
+     * Organizes fieldsets into location containers with quantity picker
+     * This is the central source of truth for location container infrastructure
+     * @param {Object} options - Configuration options
+     * @param {Array} options.fields - Array of field data objects
+     * @param {HTMLElement} options.container - Container element to render into
+     * @param {Function} options.buildFieldset - Function to build a fieldset element (FieldsetBuilder.buildFieldset)
+     * @param {number} options.initialQuantity - Starting location quantity (default: 1)
+     * @param {Function} options.onQuantityChange - Callback when quantity changes (optional)
+     * @param {Function} options.getMessage - Function to get messages (optional)
+     * @param {string} options.idPrefix - Prefix for field IDs (e.g., 'formpreview', 'memberCreate')
+     * @returns {Object} - { quantityPicker, locationContainers, locationFieldsetType }
+     */
+    function organizeFieldsIntoLocationContainers(options) {
+        options = options || {};
+        var fields = options.fields || [];
+        var container = options.container;
+        var buildFieldset = options.buildFieldset;
+        var initialQuantity = options.initialQuantity || 1;
+        var onQuantityChange = options.onQuantityChange || function() {};
+        var getMessage = options.getMessage || null;
+        var idPrefix = '';
+        if (options && options.idPrefix && typeof options.idPrefix === 'string') {
+            idPrefix = options.idPrefix;
+        } else {
+            idPrefix = 'form';
+        }
+        
+        if (!container || !buildFieldset) {
+            console.error('[FormBuilder] organizeFieldsIntoLocationContainers: container and buildFieldset are required');
+            return null;
+        }
+        
+        // Identify location fieldset and repeat fieldsets
+        var locationFieldset = null;
+        var locationFieldsetType = null;
+        var mustRepeatFieldsets = [];
+        var locationRepeatOnlyFieldsets = [];
+        
+        // Parse repeat flags from field data
+        fields.forEach(function(fieldData, index) {
+            var fieldsetKey = '';
+            if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                fieldsetKey = fieldData.fieldsetKey.toLowerCase();
+            } else if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+                fieldsetKey = fieldData.fieldset_key.toLowerCase();
+            } else if (fieldData.key && typeof fieldData.key === 'string') {
+                fieldsetKey = fieldData.key.toLowerCase();
+            }
+            
+            // Check if location fieldset
+            if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                if (!locationFieldset) {
+                    locationFieldset = fieldData;
+                    locationFieldsetType = fieldsetKey === 'location' ? 'address' : fieldsetKey;
+                }
+            }
+            
+            // Check for repeat flags
+            var isLocationRepeat = false;
+            if (fieldData.location_repeat !== undefined) {
+                isLocationRepeat = !!fieldData.location_repeat;
+            } else if (fieldData.locationRepeat !== undefined) {
+                isLocationRepeat = !!fieldData.locationRepeat;
+            }
+            var isMustRepeat = false;
+            if (fieldData.must_repeat !== undefined) {
+                isMustRepeat = !!fieldData.must_repeat;
+            } else if (fieldData.mustRepeat !== undefined) {
+                isMustRepeat = !!fieldData.mustRepeat;
+            }
+            var isLocationKey = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location');
+            
+            if (isMustRepeat && !isLocationKey) {
+                mustRepeatFieldsets.push(fieldData);
+            }
+            if (isLocationRepeat && !isMustRepeat && !isLocationKey) {
+                locationRepeatOnlyFieldsets.push(fieldData);
+            }
+        });
+        
+        if (!locationFieldset) {
+            // No location fieldset - render fields normally
+            fields.forEach(function(fieldData, index) {
+                var fieldset = buildFieldset(fieldData, {
+                    idPrefix: idPrefix,
+                    fieldIndex: index,
+                    container: container
+                });
+                if (fieldset) container.appendChild(fieldset);
+            });
+            return { quantityPicker: null, locationContainers: [], locationFieldsetType: null };
+        }
+        
+        // Create quantity picker
+        var quantityPicker = createLocationQuantityPicker({
+            initialQuantity: initialQuantity,
+            onQuantityChange: function(quantity, isIncrease) {
+                onQuantityChange(quantity, isIncrease);
+            },
+            getMessage: getMessage
+        });
+        
+        // Render quantity picker and explainer
+        if (quantityPicker.quantityRow) {
+            container.appendChild(quantityPicker.quantityRow);
+        }
+        if (quantityPicker.explainerMsg) {
+            container.appendChild(quantityPicker.explainerMsg);
+        }
+        
+        // Create location container for Venue 1 first
+        var locationTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
+        var venue1Name = locationTypeName + ' 1';
+        
+        var v1ContainerData = createLocationContainerHeader({
+            locationName: venue1Name,
+            locationNumber: 1,
+            showDelete: false,
+            onDelete: function() {},
+            onHeaderClick: function(container, locationNumber) {
+                if (initialQuantity > 1) {
+                    container.classList.toggle('formbuilder-location-container--collapsed');
+                }
+            },
+            onActivate: function() {}
+        });
+        
+        // Hide arrow when only one location
+        if (initialQuantity <= 1) {
+            v1ContainerData.arrow.style.display = 'none';
+        }
+        
+        // Build all fieldsets and organize them
+        var locationFieldsetEl = null;
+        var allRepeatKeys = {};
+        mustRepeatFieldsets.forEach(function(f) {
+            var k = '';
+            if (f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                k = f.fieldsetKey.toLowerCase();
+            } else if (f.fieldset_key && typeof f.fieldset_key === 'string') {
+                k = f.fieldset_key.toLowerCase();
+            } else if (f.key && typeof f.key === 'string') {
+                k = f.key.toLowerCase();
+            }
+            if (k) allRepeatKeys[k] = true;
+        });
+        locationRepeatOnlyFieldsets.forEach(function(f) {
+            var k = '';
+            if (f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                k = f.fieldsetKey.toLowerCase();
+            } else if (f.fieldset_key && typeof f.fieldset_key === 'string') {
+                k = f.fieldset_key.toLowerCase();
+            } else if (f.key && typeof f.key === 'string') {
+                k = f.key.toLowerCase();
+            }
+            if (k) allRepeatKeys[k] = true;
+        });
+        
+        // Build fieldsets and organize them into containers
+        fields.forEach(function(fieldData, index) {
+            var fieldset = buildFieldset(fieldData, {
+                idPrefix: idPrefix,
+                fieldIndex: index,
+                container: null
+            });
+            if (!fieldset) return;
+            
+            var fieldsetKey = '';
+            if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                fieldsetKey = fieldData.fieldsetKey.toLowerCase();
+            } else if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+                fieldsetKey = fieldData.fieldset_key.toLowerCase();
+            } else if (fieldData.key && typeof fieldData.key === 'string') {
+                fieldsetKey = fieldData.key.toLowerCase();
+            }
+            
+            // Location fieldset goes into Venue 1 container
+            if (fieldsetKey === locationFieldsetType || fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                if (!locationFieldsetEl) {
+                    locationFieldsetEl = fieldset;
+                    v1ContainerData.content.appendChild(fieldset);
+                }
+            }
+            // Must-repeat and location-repeat-only fieldsets go into Venue 1 container
+            else if (allRepeatKeys[fieldsetKey]) {
+                v1ContainerData.content.appendChild(fieldset);
+            }
+            // Regular fieldsets go after location container
+            else {
+                container.appendChild(fieldset);
+            }
+        });
+        
+        // Insert Venue 1 container after quantity picker
+        if (quantityPicker.quantityRow && quantityPicker.quantityRow.nextSibling) {
+            container.insertBefore(v1ContainerData.container, quantityPicker.quantityRow.nextSibling);
+        } else if (quantityPicker.quantityRow) {
+            container.insertBefore(v1ContainerData.container, quantityPicker.quantityRow.nextSibling);
+        } else {
+            container.appendChild(v1ContainerData.container);
+        }
+        
+        return {
+            quantityPicker: quantityPicker,
+            locationContainers: [v1ContainerData],
+            locationFieldsetType: locationFieldsetType,
+            venue1Container: v1ContainerData.container,
+            venue1HeaderText: v1ContainerData.headerText,
+            venue1Arrow: v1ContainerData.arrow
+        };
+    }
+    
     /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
@@ -3706,7 +4084,9 @@
         save: saveFormbuilder,
         discard: discardChanges,
         capture: captureFormbuilderState,
-        createLocationContainerHeader: createLocationContainerHeader
+        createLocationQuantityPicker: createLocationQuantityPicker,
+        createLocationContainerHeader: createLocationContainerHeader,
+        organizeFieldsIntoLocationContainers: organizeFieldsIntoLocationContainers
     };
     
     // Register module with App

@@ -1622,6 +1622,88 @@
   display: none;
 }
 
+/* ============================================================================
+   LOCATION QUANTITY PICKER
+   ============================================================================ */
+
+.formbuilder-location-quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.formbuilder-location-quantity-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.formbuilder-location-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.formbuilder-location-quantity-btn {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 5px;
+  color: #777;
+  cursor: pointer;
+  font-size: 18px;
+  flex: 0 0 36px;
+  padding: 0;
+}
+
+.formbuilder-location-quantity-btn--plus:hover {
+  border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+  color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+}
+
+.formbuilder-location-quantity-btn--minus:hover {
+  border-color: #f87171;
+  color: #f87171;
+}
+
+.formbuilder-location-quantity-btn:active {
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: #fff;
+}
+
+.formbuilder-location-quantity-btn--minus:disabled,
+.formbuilder-location-quantity-btn--plus:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.formbuilder-location-quantity-display {
+  min-width: 24px;
+  margin-right: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.formbuilder-location-explainer {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
 .formbuilder-formpreview-empty {
   color: #888;
   text-align: center;

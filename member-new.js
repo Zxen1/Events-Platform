@@ -2105,13 +2105,9 @@ const MemberModule = (function() {
 
         if (formFields) formFields.innerHTML = '';
 
-        // Track location quantity and repeat fieldsets
+        // Track location quantity
         var locationQuantity = 1;
-        var locationFieldset = null;
-        var locationFieldsetType = null;
-        var mustRepeatFieldsets = [];
-        var autofillRepeatFieldsets = [];
-        var locationRepeatOnlyFieldsets = []; // location_repeat=true but must_repeat=false (optional overrides)
+        var locationData = null;
 
         if (fields.length === 0) {
             var placeholder = document.createElement('p');
@@ -2119,11 +2115,209 @@ const MemberModule = (function() {
             placeholder.textContent = 'No fields configured for this subcategory yet.';
             if (formFields) formFields.appendChild(placeholder);
         } else {
-            // First pass: identify location fieldset and collect repeat fieldsets
-            // Also get subcategory data to check for must-repeat and autofill-repeat CSV strings
-            var subcategoryData = null;
-            if (selectedCategory && selectedSubcategory) {
-                var category = memberCategories.find(function(c) {
+            // Use shared Form Builder infrastructure for location containers
+            if (window.FormbuilderModule && typeof window.FormbuilderModule.organizeFieldsIntoLocationContainers === 'function') {
+                locationData = window.FormbuilderModule.organizeFieldsIntoLocationContainers({
+                    fields: fields,
+                    container: formFields,
+                    buildFieldset: function(fieldData, options) {
+                        var field = ensureFieldDefaults(fieldData);
+                        return FieldsetBuilder.buildFieldset(field, {
+                            idPrefix: (options && options.idPrefix && typeof options.idPrefix === 'string') ? options.idPrefix : 'memberCreate',
+                            fieldIndex: options.fieldIndex || 0,
+                            container: options.container,
+                            defaultCurrency: getDefaultCurrencyForForms()
+                        });
+                    },
+                    initialQuantity: locationQuantity,
+                    onQuantityChange: function(quantity, isIncrease) {
+                        locationQuantity = quantity;
+                        window._memberLocationQuantity = quantity;
+                        
+                        // Update arrow and delete button visibility
+                        if (locationData && locationData.venue1Arrow) {
+                            locationData.venue1Arrow.style.display = quantity > 1 ? '' : 'none';
+                        }
+                        if (locationData && locationData.venue1DeleteBtn) {
+                            locationData.venue1DeleteBtn.style.display = quantity > 1 ? '' : 'none';
+                        }
+                        
+                        // Update header text
+                        if (locationData && locationData.venue1HeaderText) {
+                            var locationTypeName = locationData.locationFieldsetType ? locationData.locationFieldsetType.charAt(0).toUpperCase() + locationData.locationFieldsetType.slice(1) : 'Venue';
+                            locationData.venue1HeaderText.textContent = quantity > 1 ? (locationTypeName + ' 1') : locationTypeName;
+                        }
+                        
+                        // Re-render additional locations if needed
+                        if (locationData && locationData.locationFieldsetType) {
+                            setTimeout(function() {
+                                // Get field data for additional locations rendering
+                                var locationFieldset = null;
+                                var mustRepeatFieldsets = [];
+                                var autofillRepeatFieldsets = [];
+                                var locationRepeatOnlyFieldsets = [];
+                                
+                                fields.forEach(function(fieldData) {
+                                    var fieldsetKey = '';
+                    if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                        fieldsetKey = fieldData.fieldsetKey.toLowerCase();
+                    } else if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+                        fieldsetKey = fieldData.fieldset_key.toLowerCase();
+                    } else if (fieldData.key && typeof fieldData.key === 'string') {
+                        fieldsetKey = fieldData.key.toLowerCase();
+                    }
+                                    if (fieldsetKey === locationData.locationFieldsetType || fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                                        if (!locationFieldset) locationFieldset = fieldData;
+                                    }
+                                    var isLocationKey = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location');
+                                    var isMustRepeat = false;
+                                    if (fieldData.must_repeat !== undefined) {
+                                        isMustRepeat = !!fieldData.must_repeat;
+                                    } else if (fieldData.mustRepeat !== undefined) {
+                                        isMustRepeat = !!fieldData.mustRepeat;
+                                    }
+                                    if (isMustRepeat) {
+                                        if (!isLocationKey) mustRepeatFieldsets.push(fieldData);
+                                    }
+                                    var isAutofillRepeat = false;
+                                    if (fieldData.autofill_repeat !== undefined) {
+                                        isAutofillRepeat = !!fieldData.autofill_repeat;
+                                    } else if (fieldData.autofillRepeat !== undefined) {
+                                        isAutofillRepeat = !!fieldData.autofillRepeat;
+                                    }
+                                    if (isAutofillRepeat) {
+                                        autofillRepeatFieldsets.push(fieldData);
+                                    }
+                                    var isLocationRepeat = false;
+                                    if (fieldData.location_repeat !== undefined) {
+                                        isLocationRepeat = !!fieldData.location_repeat;
+                                    } else if (fieldData.locationRepeat !== undefined) {
+                                        isLocationRepeat = !!fieldData.locationRepeat;
+                                    }
+                                    if (isLocationRepeat && !isMustRepeat && !isLocationKey) {
+                                        locationRepeatOnlyFieldsets.push(fieldData);
+                                    }
+                                });
+                                
+                                if (locationFieldset) {
+                                    renderAdditionalLocations(quantity, locationData.locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets, locationRepeatOnlyFieldsets);
+                                }
+                            }, 100);
+                        }
+                        
+                        // Update checkout context
+                        if (checkoutInstance && typeof checkoutInstance.updateContext === 'function') {
+                            setTimeout(function() {
+                                checkoutInstance.updateContext({ locationCount: quantity });
+                                try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
+                            }, 50);
+                        }
+                    },
+                    getMessage: function(key, params, fallback) {
+                        if (typeof window.getMessage === 'function') {
+                            return window.getMessage(key, params, fallback);
+                        }
+                        return Promise.resolve(null);
+                    },
+                    idPrefix: 'memberCreate'
+                });
+                
+                // Store references for member-specific functionality
+                if (locationData) {
+                    window._memberVenue1Arrow = locationData.venue1Arrow;
+                    window._memberVenue1DeleteBtn = locationData.venue1DeleteBtn;
+                    window._memberVenue1Container = locationData.venue1Container;
+                    window._memberLocationQuantity = locationQuantity;
+                }
+            } else {
+                // Fallback: render fields normally if Form Builder not available
+                fields.forEach(function(fieldData, index) {
+                    var field = ensureFieldDefaults(fieldData);
+                    var fieldset = FieldsetBuilder.buildFieldset(field, {
+                        idPrefix: 'memberCreate',
+                        fieldIndex: index,
+                        container: formFields,
+                        defaultCurrency: getDefaultCurrencyForForms()
+                    });
+                    if (fieldset) formFields.appendChild(fieldset);
+                });
+            }
+            
+        }
+        
+        // Render checkout options at the bottom of the form (member-specific)
+        renderCheckoutOptionsSection();
+        
+        // Render additional locations if quantity > 1 (after checkout section is rendered)
+        // This is member-specific functionality
+        if (locationQuantity > 1 && locationData && locationData.locationFieldsetType) {
+            setTimeout(function() {
+                // Get field data for additional locations rendering
+                var locationFieldset = null;
+                var mustRepeatFieldsets = [];
+                var autofillRepeatFieldsets = [];
+                var locationRepeatOnlyFieldsets = [];
+                
+                fields.forEach(function(fieldData) {
+                    var fieldsetKey = '';
+                    if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                        fieldsetKey = fieldData.fieldsetKey.toLowerCase();
+                    } else if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+                        fieldsetKey = fieldData.fieldset_key.toLowerCase();
+                    } else if (fieldData.key && typeof fieldData.key === 'string') {
+                        fieldsetKey = fieldData.key.toLowerCase();
+                    }
+                    if (fieldsetKey === locationData.locationFieldsetType || fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
+                        if (!locationFieldset) locationFieldset = fieldData;
+                    }
+                    var isLocationKey = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location');
+                    var isMustRepeat = false;
+                    if (fieldData.must_repeat !== undefined) {
+                        isMustRepeat = !!fieldData.must_repeat;
+                    } else if (fieldData.mustRepeat !== undefined) {
+                        isMustRepeat = !!fieldData.mustRepeat;
+                    }
+                    if (isMustRepeat) {
+                        if (!isLocationKey) mustRepeatFieldsets.push(fieldData);
+                    }
+                    var isAutofillRepeat = false;
+                    if (fieldData.autofill_repeat !== undefined) {
+                        isAutofillRepeat = !!fieldData.autofill_repeat;
+                    } else if (fieldData.autofillRepeat !== undefined) {
+                        isAutofillRepeat = !!fieldData.autofillRepeat;
+                    }
+                    if (isAutofillRepeat) {
+                        autofillRepeatFieldsets.push(fieldData);
+                    }
+                    var isLocationRepeat = false;
+                    if (fieldData.location_repeat !== undefined) {
+                        isLocationRepeat = !!fieldData.location_repeat;
+                    } else if (fieldData.locationRepeat !== undefined) {
+                        isLocationRepeat = !!fieldData.locationRepeat;
+                    }
+                    if (isLocationRepeat && !isMustRepeat && !isLocationKey) {
+                        locationRepeatOnlyFieldsets.push(fieldData);
+                    }
+                });
+                
+                if (locationFieldset) {
+                    renderAdditionalLocations(locationQuantity, locationData.locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets, locationRepeatOnlyFieldsets);
+                }
+            }, 100);
+        }
+        
+        // Render terms agreement and submit buttons after checkout options (member-specific)
+        renderTermsAndSubmitSection();
+
+        // Show the form wrapper FIRST so any dependent UI (like inline auth gate) can become interactive
+        // immediately (no "must click something first" sequencing bug).
+        if (formWrapper) formWrapper.hidden = false;
+
+        // Keep submit state reactive: any change inside the form recalculates readiness.
+        attachCreatePostValidationListeners();
+        updateSubmitButtonState();
+    }
+    
                     return c.name === selectedCategory;
                 });
                 if (category && category.subFields && category.subFields[selectedSubcategory]) {
@@ -2186,9 +2380,30 @@ const MemberModule = (function() {
                 
                 // Check for location-repeat, must-repeat, and autofill-repeat flags
                 // Check field data properties first, then CSV flags by index
-                var isLocationRepeat = field.location_repeat || field.locationRepeat || (locationRepeatFlags[index] === true);
-                var isMustRepeat = field.must_repeat || field.mustRepeat || (mustRepeatFlags[index] === true);
-                var isAutofillRepeat = field.autofill_repeat || field.autofillRepeat || (autofillRepeatFlags[index] === true);
+                var isLocationRepeat = false;
+                if (field.location_repeat !== undefined) {
+                    isLocationRepeat = !!field.location_repeat;
+                } else if (field.locationRepeat !== undefined) {
+                    isLocationRepeat = !!field.locationRepeat;
+                } else if (locationRepeatFlags && Array.isArray(locationRepeatFlags) && locationRepeatFlags[index] === true) {
+                    isLocationRepeat = true;
+                }
+                var isMustRepeat = false;
+                if (field.must_repeat !== undefined) {
+                    isMustRepeat = !!field.must_repeat;
+                } else if (field.mustRepeat !== undefined) {
+                    isMustRepeat = !!field.mustRepeat;
+                } else if (mustRepeatFlags && Array.isArray(mustRepeatFlags) && mustRepeatFlags[index] === true) {
+                    isMustRepeat = true;
+                }
+                var isAutofillRepeat = false;
+                if (field.autofill_repeat !== undefined) {
+                    isAutofillRepeat = !!field.autofill_repeat;
+                } else if (field.autofillRepeat !== undefined) {
+                    isAutofillRepeat = !!field.autofillRepeat;
+                } else if (autofillRepeatFlags && Array.isArray(autofillRepeatFlags) && autofillRepeatFlags[index] === true) {
+                    isAutofillRepeat = true;
+                }
                 
                 // IMPORTANT:
                 // Location fieldset is ALWAYS repeated via its own dedicated location slot.
@@ -2228,7 +2443,14 @@ const MemberModule = (function() {
 
                 var mustKeys = {};
                 mustRepeatFieldsets.forEach(function(f) {
-                    var k = (f && (f.fieldsetKey || f.key || f.type)) ? String(f.fieldsetKey || f.key || f.type).toLowerCase() : '';
+                    var k = '';
+                    if (f && f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                        k = f.fieldsetKey.toLowerCase();
+                    } else if (f && f.key && typeof f.key === 'string') {
+                        k = f.key.toLowerCase();
+                    } else if (f && f.type && typeof f.type === 'string') {
+                        k = f.type.toLowerCase();
+                    }
                     if (k) mustKeys[k] = true;
                 });
 
@@ -2282,183 +2504,6 @@ const MemberModule = (function() {
                 // without guessing: required flag + fieldset type are part of the form configuration.
                 // Fieldset validity UI is component-owned (FieldsetBuilder sets dataset flags + required star state).
                 
-                // Add location quantity selector to location fieldset
-                if (isLocationFieldset) {
-                    // Adding quantity selector to location fieldset
-                    // Find the label element - it should be the first child with class fieldset-label
-                    var labelEl = fieldset.querySelector('.fieldset-label');
-                    if (labelEl) {
-                        // Found label element, adding quantity controls
-                        // Create quantity selector row
-                        var quantityRow = document.createElement('div');
-                        quantityRow.className = 'member-location-quantity-row';
-                        
-                        var quantityLabel = document.createElement('span');
-                        quantityLabel.className = 'member-location-quantity-label';
-                        quantityLabel.textContent = 'Number of locations:';
-                        
-                        var quantityControls = document.createElement('div');
-                        quantityControls.className = 'member-location-quantity-controls';
-                        
-                        var minusBtn = document.createElement('button');
-                        minusBtn.type = 'button';
-                        minusBtn.className = 'member-location-quantity-btn member-location-quantity-btn--minus';
-                        minusBtn.innerHTML = icons.minus;
-                        minusBtn.setAttribute('aria-label', 'Decrease location quantity');
-                        
-                        var quantityDisplay = document.createElement('span');
-                        quantityDisplay.className = 'member-location-quantity-display';
-                        quantityDisplay.textContent = locationQuantity;
-                        
-                        var plusBtn = document.createElement('button');
-                        plusBtn.type = 'button';
-                        plusBtn.className = 'member-location-quantity-btn member-location-quantity-btn--plus';
-                        plusBtn.innerHTML = icons.plus;
-                        plusBtn.setAttribute('aria-label', 'Increase location quantity');
-                        
-                        quantityControls.appendChild(quantityDisplay);
-                        quantityControls.appendChild(minusBtn);
-                        quantityControls.appendChild(plusBtn);
-                        
-                        quantityRow.appendChild(quantityLabel);
-                        quantityRow.appendChild(quantityControls);
-                        
-                        // Place the quantity row ABOVE the location fieldset (not inside it)
-                        if (formFields) {
-                            formFields.appendChild(quantityRow);
-                        }
-                        
-                        // Explanatory message (always visible)
-                        var locationExplainer = document.createElement('p');
-                        locationExplainer.className = 'member-location-explainer';
-                        
-                        // Fetch message from database (no hardcoding)
-                        if (typeof window.getMessage === 'function') {
-                            window.getMessage('msg_post_location_explainer', {}, false).then(function(msg) {
-                                if (msg) {
-                                    // Replace \n with <br> for line breaks
-                                    locationExplainer.innerHTML = msg.replace(/\n/g, '<br>');
-                                }
-                            }).catch(function() {
-                                // No fallback - message must come from database
-                            });
-                        }
-                        
-                        if (formFields) {
-                            formFields.appendChild(locationExplainer);
-                        }
-                        
-                        // Create "Location 1" header (same style as additional locations)
-                        var location1Header = document.createElement('h3');
-                        location1Header.className = 'member-first-location-header';
-                        location1Header.style.display = 'none'; // Hidden by default
-                        if (formFields) {
-                            formFields.appendChild(location1Header);
-                        }
-                        
-                        function updateLocation1Header(show) {
-                            if (!location1Header) return;
-                            var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                            location1Header.textContent = baseName + ' 1';
-                            location1Header.style.display = show ? '' : 'none';
-                            // Also show/hide the explainer message
-                            if (locationExplainer) {
-                                locationExplainer.style.display = show ? '' : 'none';
-                            }
-                        }
-                        
-                        // Update label text if quantity > 1
-                        if (locationQuantity > 1) {
-                            var labelTextEl = labelEl.querySelector('.fieldset-label-text');
-                            if (labelTextEl) {
-                                var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                labelTextEl.textContent = baseName + ' 1';
-                            }
-                            updateLocation1Header(true);
-                            applyMustRepeatNumberingForMainForm();
-                        }
-                        
-                        // Quantity button handlers
-                        minusBtn.addEventListener('click', function() {
-                            if (locationQuantity > 1) {
-                                locationQuantity--;
-                                quantityDisplay.textContent = locationQuantity;
-                                window._memberLocationQuantity = locationQuantity;
-                                
-                                // Update label and header
-                                var labelTextEl = labelEl.querySelector('.fieldset-label-text');
-                                if (labelTextEl) {
-                                    var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                    if (locationQuantity === 1) {
-                                        labelTextEl.textContent = baseName;
-                                        updateLocation1Header(false);
-                                    } else {
-                                        labelTextEl.textContent = baseName + ' 1';
-                                    }
-                                }
-                                applyMustRepeatNumberingForMainForm();
-                                
-                                // Show/hide venue 1 arrow and delete button
-                                if (window._memberVenue1Arrow) {
-                                    window._memberVenue1Arrow.style.display = locationQuantity > 1 ? '' : 'none';
-                                }
-                                if (window._memberVenue1DeleteBtn) {
-                                    window._memberVenue1DeleteBtn.style.display = locationQuantity > 1 ? '' : 'none';
-                                }
-                                
-                                // Re-render additional locations (after checkout section)
-                                // Minus clicked
-                                setTimeout(function() {
-                                    renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets, locationRepeatOnlyFieldsets);
-                                    if (checkoutInstance && typeof checkoutInstance.updateContext === 'function') {
-                                        setTimeout(function() {
-                                            checkoutInstance.updateContext({ locationCount: locationQuantity });
-                                            try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
-                                        }, 50);
-                                    }
-                                }, 100);
-                            }
-                        });
-                        
-                        plusBtn.addEventListener('click', function() {
-                            locationQuantity++;
-                            quantityDisplay.textContent = locationQuantity;
-                            window._memberLocationQuantity = locationQuantity;
-                            
-                            // Update label and header
-                            var labelTextEl = labelEl.querySelector('.fieldset-label-text');
-                            if (labelTextEl) {
-                                var baseName = locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1);
-                                labelTextEl.textContent = baseName + ' 1';
-                            }
-                            updateLocation1Header(true);
-                            applyMustRepeatNumberingForMainForm();
-                            
-                            // Show venue 1 arrow and delete button when multiple venues
-                            if (window._memberVenue1Arrow) {
-                                window._memberVenue1Arrow.style.display = '';
-                            }
-                            if (window._memberVenue1DeleteBtn) {
-                                window._memberVenue1DeleteBtn.style.display = '';
-                            }
-                            
-                            // Re-render additional locations (after checkout section)
-                            // Plus clicked
-                            setTimeout(function() {
-                                renderAdditionalLocations(locationQuantity, locationFieldsetType, locationFieldset, mustRepeatFieldsets, autofillRepeatFieldsets, locationRepeatOnlyFieldsets);
-                                if (checkoutInstance && typeof checkoutInstance.updateContext === 'function') {
-                                    setTimeout(function() {
-                                        checkoutInstance.updateContext({ locationCount: locationQuantity });
-                                        try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
-                                    }, 50);
-                                }
-                            }, 100);
-                        });
-                    } else {
-                        console.warn('[Member] Could not find label element in location fieldset. Fieldset children:', fieldset.children);
-                    }
-                }
-                
                 formFields.appendChild(fieldset);
             });
             
@@ -2476,10 +2521,6 @@ const MemberModule = (function() {
         
         // Render terms agreement and submit buttons after checkout options
         renderTermsAndSubmitSection();
-        
-        // REORGANIZE INTO SEPARATE CONTAINERS
-        // After rendering, move elements into their proper section containers
-        reorganizeIntoSectionContainers(locationFieldset, locationFieldsetType, mustRepeatFieldsets, locationRepeatOnlyFieldsets, autofillRepeatFieldsets, locationQuantity);
 
         // Show the form wrapper FIRST so any dependent UI (like inline auth gate) can become interactive
         // immediately (no "must click something first" sequencing bug).
@@ -2500,17 +2541,24 @@ const MemberModule = (function() {
         tabPanel.querySelectorAll('.member-section-container').forEach(function(s) { s.remove(); });
         
         // Find key elements in formFields
-        var quantityRow = formFields.querySelector('.member-location-quantity-row');
-        var explainerMsg = formFields.querySelector('.member-location-explainer');
-        var location1Header = formFields.querySelector('.member-first-location-header');
+        var quantityRow = formFields.querySelector('.formbuilder-location-quantity-row');
+        var explainerMsg = formFields.querySelector('.formbuilder-location-explainer');
         var checkoutWrapper = formFields.querySelector('.member-checkout-wrapper');
         var termsSection = formFields.querySelector('.member-terms-section, .member-submit-section');
         
         // Find location fieldset and must-repeat fieldsets in the DOM
         var locationFieldsetEl = null;
-        var locationFieldsetKey = locationFieldsetType || 'venue';
+        var locationFieldsetKey = '';
+        if (locationFieldsetType && typeof locationFieldsetType === 'string') {
+            locationFieldsetKey = locationFieldsetType.toLowerCase();
+        } else {
+            locationFieldsetKey = 'venue';
+        }
         formFields.querySelectorAll('.fieldset').forEach(function(fs) {
-            var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
+            var k = '';
+            if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                k = fs.dataset.fieldsetKey.toLowerCase();
+            }
             if (k === locationFieldsetKey || k === 'venue' || k === 'city' || k === 'address' || k === 'location') {
                 if (!locationFieldsetEl) locationFieldsetEl = fs;
             }
@@ -2539,7 +2587,13 @@ const MemberModule = (function() {
                 locationNumber: 1,
                 showDelete: false,
                 onDelete: function(container, locationNumber) {
-                    var venueName = v1ContainerData.headerText.textContent || venue1Name;
+                    var venueName = '';
+                    if (v1ContainerData && v1ContainerData.headerText && v1ContainerData.headerText.textContent) {
+                        venueName = v1ContainerData.headerText.textContent.trim();
+                    }
+                    if (!venueName) {
+                        venueName = venue1Name;
+                    }
                     if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
                         ConfirmDialogComponent.show({
                             titleText: 'Delete ' + venueName,
@@ -2553,7 +2607,7 @@ const MemberModule = (function() {
                                 container.remove();
                                 if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
                                     window._memberLocationQuantity--;
-                                    var qtyDisplay = document.querySelector('.member-location-quantity-display');
+                                    var qtyDisplay = document.querySelector('.formbuilder-location-quantity-display');
                                     if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                                     updateVenueDeleteButtons();
                                 }
@@ -2569,11 +2623,11 @@ const MemberModule = (function() {
                 onActivate: function(container, locationNumber) {
                     var tabPanel = container.parentNode;
                     if (tabPanel) {
-                        tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
-                            c.classList.remove('member-form-container--active', 'member-section-container--active');
+                        tabPanel.querySelectorAll('.formbuilder-location-container--active').forEach(function(c) {
+                            c.classList.remove('formbuilder-location-container--active');
                         });
                     }
-                    container.classList.add('member-section-container--active');
+                    container.classList.add('formbuilder-location-container--active');
                 }
             })
             : null;
@@ -2590,9 +2644,6 @@ const MemberModule = (function() {
         var v1DeleteBtn = v1ContainerData.deleteBtn;
         var v1Content = v1ContainerData.content;
         
-        // Add member-specific classes for backward compatibility
-        venue1Container.classList.add('member-form-container', 'member-section-container', 'member-section-venue');
-        v1Content.classList.add('member-venue-content');
         
         // Store references for showing/hiding based on venue count
         window._memberVenue1Arrow = v1Arrow;
@@ -2612,7 +2663,13 @@ const MemberModule = (function() {
                     var name = venueInput.value.trim();
                     if (name !== lastValue) {
                         lastValue = name;
-                        v1HeaderText.textContent = name || (venueTypeName + ' 1');
+                        var headerText = '';
+                        if (name && name.trim()) {
+                            headerText = name.trim();
+                        } else {
+                            headerText = venueTypeName + ' 1';
+                        }
+                        v1HeaderText.textContent = headerText;
                     }
                 }
                 venueInput.addEventListener('input', updateV1Header);
@@ -2630,18 +2687,35 @@ const MemberModule = (function() {
         var allRepeatKeys = {};
         if (mustRepeatFieldsets && mustRepeatFieldsets.length > 0) {
             mustRepeatFieldsets.forEach(function(f) {
-                var k = (f.fieldsetKey || f.key || f.type || '').toLowerCase();
+                var k = '';
+                if (f && f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                    k = f.fieldsetKey.toLowerCase();
+                } else if (f && f.key && typeof f.key === 'string') {
+                    k = f.key.toLowerCase();
+                } else if (f && f.type && typeof f.type === 'string') {
+                    k = f.type.toLowerCase();
+                }
                 if (k) allRepeatKeys[k] = true;
             });
         }
         if (locationRepeatOnlyFieldsets && locationRepeatOnlyFieldsets.length > 0) {
             locationRepeatOnlyFieldsets.forEach(function(f) {
-                var k = (f.fieldsetKey || f.key || f.type || '').toLowerCase();
+                var k = '';
+                if (f && f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                    k = f.fieldsetKey.toLowerCase();
+                } else if (f && f.key && typeof f.key === 'string') {
+                    k = f.key.toLowerCase();
+                } else if (f && f.type && typeof f.type === 'string') {
+                    k = f.type.toLowerCase();
+                }
                 if (k) allRepeatKeys[k] = true;
             });
         }
         formFields.querySelectorAll('.fieldset').forEach(function(fs) {
-            var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
+            var k = '';
+            if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                k = fs.dataset.fieldsetKey.toLowerCase();
+            }
             if (k === 'venue' || k === 'city' || k === 'address' || k === 'location') return;
             if (allRepeatKeys[k]) {
                 v1Content.appendChild(fs);
@@ -2698,10 +2772,10 @@ const MemberModule = (function() {
         function setupContainerFocus(container) {
             if (!container) return;
             container.addEventListener('focusin', function() {
-                tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
-                    c.classList.remove('member-form-container--active', 'member-section-container--active');
+                tabPanel.querySelectorAll('.formbuilder-location-container--active').forEach(function(c) {
+                    c.classList.remove('formbuilder-location-container--active');
                 });
-                container.classList.add('member-section-container--active');
+                container.classList.add('formbuilder-location-container--active');
             });
         }
         
@@ -2772,7 +2846,7 @@ const MemberModule = (function() {
                                         container.remove();
                                         if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
                                             window._memberLocationQuantity--;
-                                            var qtyDisplay = document.querySelector('.member-location-quantity-display');
+                                            var qtyDisplay = document.querySelector('.formbuilder-location-quantity-display');
                                             if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                                             updateVenueDeleteButtons();
                                         }
@@ -2787,7 +2861,7 @@ const MemberModule = (function() {
                             tabPanel.querySelectorAll('.member-form-container--active, .member-section-container--active').forEach(function(c) {
                                 c.classList.remove('member-form-container--active', 'member-section-container--active');
                             });
-                            container.classList.add('member-section-container--active');
+                            container.classList.add('formbuilder-location-container--active');
                         }
                     })
                     : null;
@@ -2802,9 +2876,6 @@ const MemberModule = (function() {
                 var headerText = locationContainerData.headerText;
                 var locationSection = locationContainerData.content;
                 
-                // Add member-specific classes for backward compatibility
-                locationContainer.classList.add('member-form-container', 'member-section-container', 'member-section-venue', 'member-additional-location-container');
-                locationSection.classList.add('member-venue-content', 'member-additional-location');
                 locationSection.dataset.locationNumber = locationNum;
                 
                 // Build combined list of all fieldsets in correct order
@@ -2812,12 +2883,26 @@ const MemberModule = (function() {
                 var allRepeatFieldsets = [];
                 var locationRepeatOnlyKeys = {};
                 locationRepeatOnlyFieldsets.forEach(function(f) {
-                    var k = (f && (f.fieldsetKey || f.key || f.type)) ? String(f.fieldsetKey || f.key || f.type).toLowerCase() : '';
+                    var k = '';
+                    if (f && f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                        k = f.fieldsetKey.toLowerCase();
+                    } else if (f && f.key && typeof f.key === 'string') {
+                        k = f.key.toLowerCase();
+                    } else if (f && f.type && typeof f.type === 'string') {
+                        k = f.type.toLowerCase();
+                    }
                     if (k) locationRepeatOnlyKeys[k] = f;
                 });
                 var mustRepeatKeys = {};
                 mustRepeatFieldsets.forEach(function(f) {
-                    var k = (f && (f.fieldsetKey || f.key || f.type)) ? String(f.fieldsetKey || f.key || f.type).toLowerCase() : '';
+                    var k = '';
+                    if (f && f.fieldsetKey && typeof f.fieldsetKey === 'string') {
+                        k = f.fieldsetKey.toLowerCase();
+                    } else if (f && f.key && typeof f.key === 'string') {
+                        k = f.key.toLowerCase();
+                    } else if (f && f.type && typeof f.type === 'string') {
+                        k = f.type.toLowerCase();
+                    }
                     if (k) mustRepeatKeys[k] = f;
                 });
                 
@@ -2940,7 +3025,16 @@ const MemberModule = (function() {
                 
                 // Render all repeat fieldsets in order
                 combinedFieldsets.forEach(function(fieldData, fieldIndex) {
-                var key = (fieldData && (fieldData.fieldsetKey || fieldData.key || fieldData.type)) ? String(fieldData.fieldsetKey || fieldData.key || fieldData.type).toLowerCase() : '';
+                var key = '';
+                if (fieldData) {
+                    if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+                        key = fieldData.fieldsetKey.toLowerCase();
+                    } else if (fieldData.key && typeof fieldData.key === 'string') {
+                        key = fieldData.key.toLowerCase();
+                    } else if (fieldData.type && typeof fieldData.type === 'string') {
+                        key = fieldData.type.toLowerCase();
+                    }
+                }
                 if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
                     return;
                 }
@@ -3073,7 +3167,10 @@ const MemberModule = (function() {
                         for (var j = 0; j < allFieldsets.length; j++) {
                             var fs = allFieldsets[j];
                             if (!fs || !fs.dataset) continue;
-                            var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
+                            var k = '';
+            if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                k = fs.dataset.fieldsetKey.toLowerCase();
+            }
                             if (k === fieldsetKeyLower) {
                                 return fs;
                             }
@@ -3086,7 +3183,10 @@ const MemberModule = (function() {
                             var fs = allFieldsets[j];
                             if (!fs || !fs.dataset) continue;
                             if (fs.closest && fs.closest('.member-additional-location')) continue;
-                            var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
+                            var k = '';
+            if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                k = fs.dataset.fieldsetKey.toLowerCase();
+            }
                             if (k === fieldsetKeyLower) {
                                 return fs;
                             }
@@ -3144,7 +3244,14 @@ const MemberModule = (function() {
         if (!targetFieldset) throw new Error('[Member] copyFieldsetValues: targetFieldset is required.');
         if (!fieldData) throw new Error('[Member] copyFieldsetValues: fieldData is required.');
         
-        var fieldsetKeyLower = String(fieldData.key || fieldData.fieldset_key || fieldData.fieldsetKey || '').toLowerCase();
+        var fieldsetKeyLower = '';
+        if (fieldData.key && typeof fieldData.key === 'string') {
+            fieldsetKeyLower = fieldData.key.toLowerCase();
+        } else if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
+            fieldsetKeyLower = fieldData.fieldset_key.toLowerCase();
+        } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
+            fieldsetKeyLower = fieldData.fieldsetKey.toLowerCase();
+        }
         if (!fieldsetKeyLower) throw new Error('[Member] copyFieldsetValues: fieldset key is required.');
         
         // Find the location-1 fieldset in venue 1 container
@@ -3156,7 +3263,10 @@ const MemberModule = (function() {
         for (var i = 0; i < allFieldsets.length; i++) {
             var fs = allFieldsets[i];
             if (!fs || !fs.dataset) continue;
-            var k = String(fs.dataset.fieldsetKey || '').toLowerCase();
+            var k = '';
+            if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                k = fs.dataset.fieldsetKey.toLowerCase();
+            }
             if (k === fieldsetKeyLower) {
                 sourceFieldset = fs;
                 break;
@@ -3235,7 +3345,15 @@ const MemberModule = (function() {
             function getMaxSelectedIso(fieldsetEl) {
                 if (!fieldsetEl) return null;
                 var isSessionPricing = false;
-                try { isSessionPricing = String(fieldsetEl.dataset.fieldsetKey || '') === 'session_pricing'; } catch (e0) { isSessionPricing = false; }
+                try {
+                    var datasetKey = '';
+                    if (fieldsetEl.dataset && fieldsetEl.dataset.fieldsetKey && typeof fieldsetEl.dataset.fieldsetKey === 'string') {
+                        datasetKey = fieldsetEl.dataset.fieldsetKey;
+                    }
+                    isSessionPricing = datasetKey === 'session_pricing';
+                } catch (e0) {
+                    isSessionPricing = false;
+                }
                 var selector = isSessionPricing
                     ? '.fieldset-sessionpricing-calendar-day--selected[data-iso]'
                     : '.fieldset-calendar-day.selected[data-iso]';
@@ -3430,7 +3548,15 @@ const MemberModule = (function() {
         for (var i = 0; i < fieldsetEls.length; i++) {
             var fs = fieldsetEls[i];
             if (!fs || !fs.dataset) continue;
-            var name = String(fs.dataset.fieldsetName || fs.dataset.fieldsetKey || '').trim() || 'Field';
+            var name = '';
+            if (fs.dataset && fs.dataset.fieldsetName && typeof fs.dataset.fieldsetName === 'string') {
+                name = fs.dataset.fieldsetName.trim();
+            } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                name = fs.dataset.fieldsetKey.trim();
+            }
+            if (!name) {
+                name = 'Field';
+            }
             var type = String(fs.dataset.fieldsetType || '').trim();
             var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
 
@@ -3466,7 +3592,12 @@ const MemberModule = (function() {
                 out.push('Checkout Options');
                 continue;
             }
-            var name = String(fs.dataset.fieldsetName || fs.dataset.fieldsetKey || '').trim();
+            var name = '';
+            if (fs.dataset && fs.dataset.fieldsetName && typeof fs.dataset.fieldsetName === 'string') {
+                name = fs.dataset.fieldsetName.trim();
+            } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                name = fs.dataset.fieldsetKey.trim();
+            }
             if (name) out.push(name);
         }
         
@@ -3494,7 +3625,12 @@ const MemberModule = (function() {
                     for (var j = 0; j < req.length; j++) {
                         var fs2 = req[j];
                         if (!fs2 || !fs2.dataset) continue;
-                        var nm = String(fs2.dataset.fieldsetName || fs2.dataset.fieldsetKey || '').trim();
+                        var nm = '';
+                        if (fs2.dataset && fs2.dataset.fieldsetName && typeof fs2.dataset.fieldsetName === 'string') {
+                            nm = fs2.dataset.fieldsetName.trim();
+                        } else if (fs2.dataset && fs2.dataset.fieldsetKey && typeof fs2.dataset.fieldsetKey === 'string') {
+                            nm = fs2.dataset.fieldsetKey.trim();
+                        }
                         if (nm) out.push(nm);
                     }
                 }
@@ -4652,7 +4788,12 @@ const MemberModule = (function() {
             var fs = required[i];
             if (!fs || !fs.dataset) continue;
             if (String(fs.dataset.complete || '') !== 'true') {
-                var nm = String(fs.dataset.fieldsetName || fs.dataset.fieldsetKey || '').trim();
+                var nm = '';
+                if (fs.dataset && fs.dataset.fieldsetName && typeof fs.dataset.fieldsetName === 'string') {
+                    nm = fs.dataset.fieldsetName.trim();
+                } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
+                    nm = fs.dataset.fieldsetKey.trim();
+                }
                 if (nm) out.push(nm);
             }
         }
