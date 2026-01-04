@@ -949,7 +949,6 @@ const CurrencyComponent = (function(){
             var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
             op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
-                e.stopPropagation();
                 if (countryCode) {
                     btnImg.src = flagUrl;
                     btnImg.style.display = 'block';
@@ -995,7 +994,6 @@ const CurrencyComponent = (function(){
         // (Arrow has its own handler; it stops propagation so it won't double-trigger.)
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (e) e.stopPropagation();
                 if (!menu.classList.contains('component-currencycompact-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
@@ -1007,7 +1005,6 @@ const CurrencyComponent = (function(){
 
         // Input events
         btnInput.addEventListener('focus', function(e) {
-            e.stopPropagation();
             MenuManager.closeAll(menu);
             applyOpenState(true);
             this.select();
@@ -1046,7 +1043,6 @@ const CurrencyComponent = (function(){
 
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
-            e.stopPropagation();
             if (menu.classList.contains('fieldset-menu--open')) {
                 applyOpenState(false);
             } else {
@@ -1138,7 +1134,6 @@ const CurrencyComponent = (function(){
             var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
             op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
-                e.stopPropagation();
                 if (flagUrl) {
                 btnImg.src = flagUrl;
                     btnImg.style.display = 'block';
@@ -1174,7 +1169,6 @@ const CurrencyComponent = (function(){
         // Clicking anywhere on the button opens the menu (if closed)
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (e) e.stopPropagation();
                 if (!menu.classList.contains('component-currencyfull-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
@@ -1186,7 +1180,6 @@ const CurrencyComponent = (function(){
 
         // Input events
         btnInput.addEventListener('focus', function(e) {
-            e.stopPropagation();
             MenuManager.closeAll(menu);
             applyOpenState(true);
             // Select all text for easy replacement
@@ -1226,7 +1219,6 @@ const CurrencyComponent = (function(){
 
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
-            e.stopPropagation();
             if (menu.classList.contains('component-currencyfull-menu--open')) {
                 applyOpenState(false);
             } else {
@@ -1367,7 +1359,6 @@ const LanguageMenuComponent = (function(){
             var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
             op.innerHTML = '<img class="admin-language-option-flag" src="' + flagUrl + '" alt=""><span class="admin-language-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
-                e.stopPropagation();
                 if (flagUrl) {
                     btnImg.src = flagUrl;
                     btnImg.style.display = 'block';
@@ -1410,7 +1401,6 @@ const LanguageMenuComponent = (function(){
         // (Arrow has its own handler; it stops propagation so it won't double-trigger.)
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (e) e.stopPropagation();
                 if (!menu.classList.contains('admin-language-wrapper--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
@@ -1422,7 +1412,6 @@ const LanguageMenuComponent = (function(){
 
         // Input events
         btnInput.addEventListener('focus', function(e) {
-            e.stopPropagation();
             MenuManager.closeAll(menu);
             applyOpenState(true);
             // Select all text for easy replacement
@@ -1462,7 +1451,6 @@ const LanguageMenuComponent = (function(){
 
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
-            e.stopPropagation();
             if (menu.classList.contains('admin-language-wrapper--open')) {
                 applyOpenState(false);
             } else {
@@ -1618,7 +1606,6 @@ const PhonePrefixComponent = (function(){
             var flagUrl = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.addEventListener('click', function(e) {
-                e.stopPropagation();
                 if (countryCode) {
                     btnImg.src = flagUrl;
                     btnImg.style.display = 'block';
@@ -1661,7 +1648,6 @@ const PhonePrefixComponent = (function(){
 
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (e) e.stopPropagation();
                 if (!menu.classList.contains('fieldset-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
@@ -1672,7 +1658,6 @@ const PhonePrefixComponent = (function(){
         }
 
         btnInput.addEventListener('focus', function(e) {
-            e.stopPropagation();
             MenuManager.closeAll(menu);
             applyOpenState(true);
             this.select();
@@ -1707,7 +1692,6 @@ const PhonePrefixComponent = (function(){
         });
 
         arrow.addEventListener('click', function(e) {
-            e.stopPropagation();
             if (menu.classList.contains('fieldset-menu--open')) {
                 applyOpenState(false);
             } else {
@@ -1850,7 +1834,6 @@ const CountryComponent = (function(){
             var flagUrl = window.App.getImageUrl('countries', item.filename);
             op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
-                e.stopPropagation();
                 btnImg.src = flagUrl;
                 btnImg.style.display = 'block';
                 btnInput.value = displayText;
@@ -1886,7 +1869,6 @@ const CountryComponent = (function(){
         
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (e) e.stopPropagation();
                 if (!menu.classList.contains('fieldset-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
@@ -1897,7 +1879,6 @@ const CountryComponent = (function(){
         }
         
         btnInput.addEventListener('focus', function(e) {
-            e.stopPropagation();
             MenuManager.closeAll(menu);
             applyOpenState(true);
             this.select();
@@ -1932,7 +1913,6 @@ const CountryComponent = (function(){
         });
         
         arrow.addEventListener('click', function(e) {
-            e.stopPropagation();
             if (menu.classList.contains('fieldset-menu--open')) {
                 applyOpenState(false);
             } else {
