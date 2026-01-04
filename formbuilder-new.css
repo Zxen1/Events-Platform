@@ -698,18 +698,6 @@
   width: 100%;
 }
 
-/* Divider above the location fieldset (Venue/City/Address/Location) */
-.formbuilder-location-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.12);
-  margin-bottom: 3px; /* match spacing between fieldsets */
-}
-
-/* If the location fieldset is the first item, keep spacing consistent */
-.formbuilder-location-divider--first {
-  margin-top: 3px;
-}
-
 /* Field Rows */
 .formbuilder-field {
   width: 100%;
