@@ -641,17 +641,12 @@ const CalendarComponent = (function(){
         
         scroll.appendChild(calendar);
         
-        // Wrap scroll area
+        // Wrap scroll and marker - marker overlays the scrollbar gutter
         var scrollWrapper = document.createElement('div');
         scrollWrapper.className = 'calendar-scroll-wrapper';
         scrollWrapper.appendChild(scroll);
+        scrollWrapper.appendChild(marker);
         containerEl.appendChild(scrollWrapper);
-        
-        // Create indicator track below scrollbar (consistent across all browsers)
-        var indicatorTrack = document.createElement('div');
-        indicatorTrack.className = 'calendar-indicator-track';
-        indicatorTrack.appendChild(marker);
-        containerEl.appendChild(indicatorTrack);
 
         // Add action buttons if showActions is true
         var actionsEl = null;
@@ -691,13 +686,13 @@ const CalendarComponent = (function(){
             });
         }
         
-        // Position the today marker on the indicator track
+        // Position the today marker to overlay the scrollbar gutter
         // Formula: (todayMonthIndex + 0.5) / totalMonths gives the fraction
         function positionMarker() {
-            var width = indicatorTrack.clientWidth;
+            var width = scrollWrapper.clientWidth;
             if (width > 0 && totalMonths > 0) {
                 var markerFraction = (todayMonthIndex + 0.5) / totalMonths;
-                var markerPos = markerFraction * (width - 8);
+                var markerPos = markerFraction * (width - 6);
                 marker.style.left = markerPos + 'px';
             }
         }
@@ -710,7 +705,7 @@ const CalendarComponent = (function(){
             var resizeObserver = new ResizeObserver(function() {
                 positionMarker();
             });
-            resizeObserver.observe(indicatorTrack);
+            resizeObserver.observe(scrollWrapper);
         }
         
         // Click marker to scroll to today
