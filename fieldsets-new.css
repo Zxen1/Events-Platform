@@ -1124,10 +1124,6 @@
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
-.fieldset-sessionpricing-ticketgroup-item-shield {
-    display: none;
-}
-
 .fieldset-sessionpricing-ticketgroup-button-select {
     flex: 1;
     background: transparent;
