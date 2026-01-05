@@ -485,7 +485,8 @@ const AdminModule = (function() {
                     { folder: res.settings.folder_amenities, option_group: 'amenity' },
                     { folder: res.settings.folder_currencies, option_group: 'currency' },
                     { folder: res.settings.folder_phone_prefixes, option_group: 'phone-prefix' },
-                    { folder: res.settings.folder_countries, option_group: 'country' }
+                    { folder: res.settings.folder_countries, option_group: 'country' },
+                    { folder: res.settings.folder_age_ratings, option_group: 'age-rating' }
                 ];
                 
                 // Sync each folder in parallel (non-blocking, background)

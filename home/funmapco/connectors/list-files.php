@@ -60,7 +60,7 @@ try {
         }
 
         $optionGroup = $data['option_group']; // 'system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country'
-        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country'];
+        $validGroups = ['system-image', 'category-icon', 'currency', 'phone-prefix', 'amenity', 'country', 'age-rating'];
         if (!in_array($optionGroup, $validGroups)) {
             http_response_code(400);
             echo json_encode([
@@ -77,7 +77,8 @@ try {
             'currency' => 'currencies',
             'phone-prefix' => 'phone_prefixes',
             'amenity' => 'amenities',
-            'country' => 'countries'
+            'country' => 'countries',
+            'age-rating' => 'list_age_ratings'
         ];
         $tableName = $tableMap[$optionGroup];
 
