@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 08:43 AM
+-- Generation Time: Jan 06, 2026 at 08:53 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1920,6 +1920,7 @@ CREATE TABLE `post_map_cards` (
   `longitude` decimal(10,7) NOT NULL,
   `country_code` varchar(2) DEFAULT NULL,
   `amenities` text DEFAULT NULL,
+  `age_rating` varchar(50) DEFAULT NULL,
   `website_url` varchar(500) DEFAULT NULL,
   `tickets_url` varchar(500) DEFAULT NULL,
   `coupon_code` varchar(100) DEFAULT NULL,
@@ -1996,6 +1997,7 @@ CREATE TABLE `post_ticket_pricing` (
   `id` int(11) NOT NULL,
   `map_card_id` int(11) NOT NULL,
   `ticket_group_key` varchar(50) NOT NULL,
+  `age_rating` varchar(50) DEFAULT NULL,
   `seating_area` varchar(100) DEFAULT NULL,
   `pricing_tier` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
