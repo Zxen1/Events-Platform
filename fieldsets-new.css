@@ -1120,14 +1120,20 @@
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
-.fieldset-sessionpricing-ticketgroup-item-shield {
-    position: sticky;
-    top: 0;
+.fieldset-sessionpricing-ticketgroup-item-header--sticky::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -1px;
+    right: -1px;
     height: 28px;
     background: #222;
-    z-index: 1;
-    width: 100%;
+    z-index: -1;
     pointer-events: none;
+}
+
+.fieldset-sessionpricing-ticketgroup-item-shield {
+    display: none;
 }
 
 .fieldset-sessionpricing-ticketgroup-button-select {
