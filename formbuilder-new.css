@@ -1574,8 +1574,8 @@
   background: var(--website-blue-hover-fill, #3b82f5);
 }
 
-/* When expanded - connect to content below */
-.form-location-container:not(.form-location-container--collapsed) .form-location-header {
+/* Location container headers always connect to content below */
+.form-location-header {
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -1598,23 +1598,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   line-height: 36px;
-}
-
-/* Arrow - line-height for vertical centering */
-.form-location-header-arrow {
-  width: 16px;
-  height: 36px;
-  line-height: 36px;
-  text-align: center;
-  font-size: 10px;
-  color: #888;
-  transition: transform 0.2s;
-  flex-shrink: 0;
-}
-
-/* Collapsed = arrow points down (default). Expanded = arrow rotated 180deg */
-.form-location-container:not(.form-location-container--collapsed) .form-location-header-arrow {
-  transform: rotate(180deg);
 }
 
 /* Delete button in header */
@@ -1647,11 +1630,6 @@
   border-top: none;
   border-radius: 0 0 5px 5px;
   padding: 12px;
-}
-
-/* When collapsed, content is hidden */
-.form-location-container--collapsed .form-location-content {
-  display: none;
 }
 
 /* ============================================================================

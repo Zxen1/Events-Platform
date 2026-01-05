@@ -3621,15 +3621,14 @@
     }
     
     /**
-     * Creates a location container header with text, arrow, and delete button
+     * Creates a location container header with text and delete button
      * @param {Object} options - Configuration options
      * @param {string} options.locationName - Display name (e.g., "Venue 1", "City 2")
      * @param {number} options.locationNumber - Location number (1, 2, 3, etc.)
      * @param {boolean} options.showDelete - Whether to show delete button
      * @param {Function} options.onDelete - Callback when delete is clicked
-     * @param {Function} options.onHeaderClick - Callback when header is clicked (for collapse/expand)
      * @param {Function} options.onActivate - Callback when container is activated
-     * @returns {Object} - { container, header, headerText, arrow, deleteBtn, content }
+     * @returns {Object} - { container, header, headerText, deleteBtn, content }
      */
     function createLocationContainerHeader(options) {
         options = options || {};
@@ -3637,7 +3636,6 @@
         var locationNumber = options.locationNumber || 1;
         var showDelete = options.showDelete !== false;
         var onDelete = options.onDelete || function() {};
-        var onHeaderClick = options.onHeaderClick || function() {};
         var onActivate = options.onActivate || function() {};
         
         // Create container
@@ -3655,11 +3653,6 @@
         headerText.className = 'form-location-header-text';
         headerText.textContent = locationName;
         
-        // Arrow
-        var arrow = document.createElement('span');
-        arrow.className = 'form-location-header-arrow';
-        arrow.textContent = '▼';
-        
         // Delete button
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -3676,16 +3669,14 @@
             onDelete(container, locationNumber);
         });
         
-        // Header click handler (collapse/expand, activate)
+        // Header click handler (activate only)
         header.addEventListener('click', function(e) {
             if (e.target === deleteBtn || deleteBtn.contains(e.target)) return;
-            onHeaderClick(container, locationNumber);
             onActivate(container, locationNumber);
         });
         
         // Assemble header
         header.appendChild(headerText);
-        header.appendChild(arrow);
         header.appendChild(deleteBtn);
         container.appendChild(header);
         
@@ -3698,7 +3689,6 @@
             container: container,
             header: header,
             headerText: headerText,
-            arrow: arrow,
             deleteBtn: deleteBtn,
             content: content
         };
@@ -3716,9 +3706,7 @@
      * @param {Function} options.getMessage - Function to get messages (optional)
      * @param {string} options.idPrefix - Prefix for field IDs (e.g., 'formpreview', 'memberCreate')
      * @param {Function} options.onDelete - Custom delete callback for Venue 1 (optional)
-     * @param {Function} options.onHeaderClick - Custom header click callback for Venue 1 (optional)
      * @param {Function} options.onActivate - Custom activate callback for Venue 1 (optional)
-     * @param {boolean} options.setupHeaderRenaming - Whether to set up automatic header renaming from venue input (default: false)
      * @returns {Object} - { quantityPicker, locationContainers, locationFieldsetType }
      */
     function organizeFieldsIntoLocationContainers(options) {
@@ -3730,9 +3718,7 @@
         var onQuantityChange = options.onQuantityChange || function() {};
         var getMessage = options.getMessage || null;
         var customOnDelete = options.onDelete || null;
-        var customOnHeaderClick = options.onHeaderClick || null;
         var customOnActivate = options.onActivate || null;
-        var setupHeaderRenaming = options.setupHeaderRenaming === true;
         var idPrefix = '';
         if (options && options.idPrefix && typeof options.idPrefix === 'string') {
             idPrefix = options.idPrefix;
@@ -3821,11 +3807,6 @@
             locationNumber: 1,
             showDelete: customOnDelete !== null && initialQuantity > 1,
             onDelete: customOnDelete || function() {},
-            onHeaderClick: customOnHeaderClick || function(container, locationNumber) {
-                if (initialQuantity > 1) {
-                    container.classList.toggle('form-location-container--collapsed');
-                }
-            },
             onActivate: customOnActivate || function(container, locationNumber) {
                 // Remove active from all container types
                 var parent = container.parentNode;
@@ -3839,9 +3820,8 @@
             }
         });
         
-        // Hide arrow and delete button when only one location
+        // Hide delete button when only one location
         if (initialQuantity <= 1) {
-            v1ContainerData.arrow.style.display = 'none';
             v1ContainerData.deleteBtn.style.display = 'none';
         }
         
@@ -3870,58 +3850,6 @@
                 if (!locationFieldsetEl) {
                     locationFieldsetEl = fieldset;
                     v1ContainerData.content.appendChild(fieldset);
-                    
-                    // Set up automatic header renaming from location inputs (supports Google Places autofill)
-                    if (setupHeaderRenaming && v1ContainerData.headerText) {
-                        // Find all relevant inputs based on fieldset type
-                        var inputsToWatch = [];
-                        if (fieldsetKey === 'venue') {
-                            // Venue fieldset: check venue name first, then address
-                            var allInputs = fieldset.querySelectorAll('input[type="text"].fieldset-input');
-                            if (allInputs[0]) inputsToWatch.push(allInputs[0]); // Venue name
-                            if (allInputs[1]) inputsToWatch.push(allInputs[1]); // Address
-                        } else if (fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
-                            // City/Address fieldset: single input
-                            var locationInput = fieldset.querySelector('input[type="text"].fieldset-input');
-                            if (locationInput) inputsToWatch.push(locationInput);
-                        }
-                        
-                        if (inputsToWatch.length > 0) {
-                            var lastValue = '';
-                            function updateHeader() {
-                                // Priority: venue name > address > city
-                                var headerValue = '';
-                                if (fieldsetKey === 'venue') {
-                                    var venueName = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
-                                    var address = inputsToWatch[1] ? inputsToWatch[1].value.trim() : '';
-                                    headerValue = venueName || address || '';
-                                } else {
-                                    headerValue = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
-                                }
-                                
-                                if (headerValue !== lastValue) {
-                                    lastValue = headerValue;
-                                    v1ContainerData.headerText.textContent = headerValue || venue1Name;
-                                }
-                            }
-                            
-                            // Watch all inputs for changes
-                            inputsToWatch.forEach(function(input) {
-                                if (input) {
-                                    input.addEventListener('input', updateHeader);
-                                    input.addEventListener('change', updateHeader);
-                                    // MutationObserver to catch Google Places autofill
-                                    var observer = new MutationObserver(function() { updateHeader(); });
-                                    observer.observe(input, { attributes: true, attributeFilter: ['value'] });
-                                    // Blur with delay catches Google Places autofill
-                                    input.addEventListener('blur', function() { setTimeout(updateHeader, 50); });
-                                }
-                            });
-                            
-                            // Initial update
-                            updateHeader();
-                        }
-                    }
                 }
             }
             // Location-specific fieldsets go into Venue 1 container
@@ -3959,23 +3887,20 @@
                         venue1Container: v1ContainerData.container,
                         insertBeforeElement: checkoutContainer,
                         onQuantityUpdate: function() {
-                            // Sync Venue 1 delete button visibility
+                            // Sync Venue 1 delete button visibility and renumber all containers
                             updateVenueDeleteButtons();
+                            renumberLocationContainers();
                         }
                     });
                 }
                 
-                // INTERNAL: Automatically update Venue 1 header and UI
-                if (v1ContainerData.arrow) {
-                    v1ContainerData.arrow.style.display = quantity > 1 ? '' : 'none';
-                }
+                // INTERNAL: Automatically update Venue 1 UI elements
                 if (v1ContainerData.deleteBtn) {
                     v1ContainerData.deleteBtn.style.display = quantity > 1 ? '' : 'none';
                 }
-                if (v1ContainerData.headerText) {
-                    var locTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
-                    v1ContainerData.headerText.textContent = quantity > 1 ? (locTypeName + ' 1') : locTypeName;
-                }
+                
+                // Renumber all containers (updates headers and fieldset labels)
+                renumberLocationContainers();
                 
                 // EXTERNAL: Notify receiver of quantity change (for surcharge context etc)
                 onQuantityChange(quantity, isIncrease);
@@ -4008,9 +3933,6 @@
                     locationNumber: locationNum,
                     showDelete: customOnDelete !== null,
                     onDelete: customOnDelete || function() {},
-                    onHeaderClick: customOnHeaderClick || function(container, locationNumber) {
-                        container.classList.toggle('form-location-container--collapsed');
-                    },
                     onActivate: customOnActivate || function(container, locationNumber) {
                         // Remove active from all container types
                         var parent = container.parentNode;
@@ -4041,60 +3963,6 @@
                 
                 if (additionalLocationFieldset) {
                     additionalContainerData.content.appendChild(additionalLocationFieldset);
-                    
-                    // Set up automatic header renaming from location inputs (supports Google Places autofill)
-                    if (setupHeaderRenaming && additionalContainerData.headerText) {
-                        // Find all relevant inputs based on fieldset type
-                        var inputsToWatch = [];
-                        var fieldsetKey = locationFieldsetType ? locationFieldsetType.toLowerCase() : '';
-                        
-                        if (fieldsetKey === 'venue') {
-                            // Venue fieldset: check venue name first, then address
-                            var allInputs = additionalLocationFieldset.querySelectorAll('input[type="text"].fieldset-input');
-                            if (allInputs[0]) inputsToWatch.push(allInputs[0]); // Venue name
-                            if (allInputs[1]) inputsToWatch.push(allInputs[1]); // Address
-                        } else if (fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
-                            // City/Address fieldset: single input
-                            var locationInput = additionalLocationFieldset.querySelector('input[type="text"].fieldset-input');
-                            if (locationInput) inputsToWatch.push(locationInput);
-                        }
-                        
-                        if (inputsToWatch.length > 0) {
-                            var lastValue = '';
-                            function updateHeader() {
-                                // Priority: venue name > address > city
-                                var headerValue = '';
-                                if (fieldsetKey === 'venue') {
-                                    var venueName = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
-                                    var address = inputsToWatch[1] ? inputsToWatch[1].value.trim() : '';
-                                    headerValue = venueName || address || '';
-                                } else {
-                                    headerValue = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
-                                }
-                                
-                                if (headerValue !== lastValue) {
-                                    lastValue = headerValue;
-                                    additionalContainerData.headerText.textContent = headerValue || additionalName;
-                                }
-                            }
-                            
-                            // Watch all inputs for changes
-                            inputsToWatch.forEach(function(input) {
-                                if (input) {
-                                    input.addEventListener('input', updateHeader);
-                                    input.addEventListener('change', updateHeader);
-                                    // MutationObserver to catch Google Places autofill
-                                    var observer = new MutationObserver(function() { updateHeader(); });
-                                    observer.observe(input, { attributes: true, attributeFilter: ['value'] });
-                                    // Blur with delay catches Google Places autofill
-                                    input.addEventListener('blur', function() { setTimeout(updateHeader, 50); });
-                                }
-                            });
-                            
-                            // Initial update
-                            updateHeader();
-                        }
-                    }
                 }
                 
                 // Build repeat fieldsets for this additional location
@@ -4142,7 +4010,6 @@
             locationFieldsetType: locationFieldsetType,
             venue1Container: v1ContainerData.container,
             venue1HeaderText: v1ContainerData.headerText,
-            venue1Arrow: v1ContainerData.arrow,
             venue1DeleteBtn: v1ContainerData.deleteBtn,
             checkoutContainer: checkoutContainer
         };
@@ -4235,12 +4102,10 @@
                                     container.remove();
                                     onQuantityUpdate(-1);
                                     updateVenueDeleteButtons();
+                                    renumberLocationContainers();
                                 }
                             });
                         }
-                    },
-                    onHeaderClick: function(container, locNum) {
-                        container.classList.toggle('form-location-container--collapsed');
                     },
                     onActivate: function(container, locNum) {
                         parentContainer.querySelectorAll('[data-active="true"]').forEach(function(c) {
@@ -4275,62 +4140,6 @@
                 
                 if (locationFieldsetClone) {
                     locationSection.appendChild(locationFieldsetClone);
-                    
-                    // Sync header with location inputs (supports Google Places autofill)
-                    var inputsToWatch = [];
-                    var fieldsetKey = '';
-                    if (locationFieldData.fieldset_key) {
-                        fieldsetKey = locationFieldData.fieldset_key.toLowerCase();
-                    } else if (locationFieldData.fieldsetKey) {
-                        fieldsetKey = locationFieldData.fieldsetKey.toLowerCase();
-                    }
-                    
-                    if (fieldsetKey === 'venue') {
-                        // Venue fieldset: check venue name first, then address
-                        var allInputs = locationFieldsetClone.querySelectorAll('input[type="text"].fieldset-input');
-                        if (allInputs[0]) inputsToWatch.push(allInputs[0]); // Venue name
-                        if (allInputs[1]) inputsToWatch.push(allInputs[1]); // Address
-                    } else if (fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location') {
-                        // City/Address fieldset: single input
-                        var locationInput = locationFieldsetClone.querySelector('input[type="text"].fieldset-input');
-                        if (locationInput) inputsToWatch.push(locationInput);
-                    }
-                    
-                    if (inputsToWatch.length > 0) {
-                        var lastValue = '';
-                        function updateLocHeader() {
-                            // Priority: venue name > address > city
-                            var headerValue = '';
-                            if (fieldsetKey === 'venue') {
-                                var venueName = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
-                                var address = inputsToWatch[1] ? inputsToWatch[1].value.trim() : '';
-                                headerValue = venueName || address || '';
-                            } else {
-                                headerValue = inputsToWatch[0] ? inputsToWatch[0].value.trim() : '';
-                            }
-                            
-                            if (headerValue !== lastValue) {
-                                lastValue = headerValue;
-                                headerText.textContent = headerValue || defaultName;
-                            }
-                        }
-                        
-                        // Watch all inputs for changes
-                        inputsToWatch.forEach(function(input) {
-                            if (input) {
-                                input.addEventListener('input', updateLocHeader);
-                                input.addEventListener('change', updateLocHeader);
-                                // MutationObserver to catch Google Places autofill
-                                var observer = new MutationObserver(function() { updateLocHeader(); });
-                                observer.observe(input, { attributes: true, attributeFilter: ['value'] });
-                                // Blur with delay catches Google Places autofill
-                                input.addEventListener('blur', function() { setTimeout(updateLocHeader, 50); });
-                            }
-                        });
-                        
-                        // Initial update
-                        updateLocHeader();
-                    }
                 }
                 
                 // Render all repeat fieldsets in order
@@ -4437,9 +4246,6 @@
         if (window._formbuilderVenue1DeleteBtn) {
             window._formbuilderVenue1DeleteBtn.style.display = showDelete ? '' : 'none';
         }
-        if (window._formbuilderVenue1Arrow) {
-            window._formbuilderVenue1Arrow.style.display = showDelete ? '' : 'none';
-        }
         
         // Update all venue delete buttons
         allVenueContainers.forEach(function(container) {
@@ -4447,14 +4253,61 @@
             if (deleteBtn) {
                 deleteBtn.style.display = showDelete ? '' : 'none';
             }
-            var arrow = container.querySelector('.form-location-header-arrow');
-            if (arrow) {
-                arrow.style.display = showDelete ? '' : 'none';
-            }
         });
     }
     
-    // Autofill functions removed - members now have a "Copy to all locations" button instead
+    /**
+     * Renumber all location containers sequentially after a delete
+     * Updates container data attributes, header text, and fieldset labels
+     */
+    function renumberLocationContainers() {
+        var allContainers = document.querySelectorAll('.form-location-container');
+        var count = allContainers.length;
+        
+        // Determine location type from first container's location fieldset
+        var locationType = 'Venue';
+        if (allContainers.length > 0) {
+            var firstContainer = allContainers[0];
+            var locationFieldset = firstContainer.querySelector('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"]');
+            if (locationFieldset) {
+                var key = locationFieldset.dataset.fieldsetKey || '';
+                if (key) {
+                    locationType = key.charAt(0).toUpperCase() + key.slice(1);
+                }
+            }
+        }
+        
+        allContainers.forEach(function(container, index) {
+            var newNumber = index + 1;
+            
+            // Update container data attributes
+            container.dataset.venue = String(newNumber);
+            container.dataset.locationNumber = String(newNumber);
+            
+            // Update header text - always "Type N" when multiple, just "Type" when single
+            var headerText = container.querySelector('.form-location-header-text');
+            if (headerText) {
+                headerText.textContent = count > 1 ? (locationType + ' ' + newNumber) : locationType;
+            }
+            
+            // Update all fieldset labels inside this container to include the location number
+            var fieldsets = container.querySelectorAll('.fieldset');
+            fieldsets.forEach(function(fieldset) {
+                var labelTextEl = fieldset.querySelector('.fieldset-label-text');
+                if (labelTextEl) {
+                    // Store base label if not already stored
+                    if (!fieldset.dataset.baseLabel) {
+                        fieldset.dataset.baseLabel = (labelTextEl.textContent || '').trim();
+                    }
+                    var base = fieldset.dataset.baseLabel || '';
+                    if (base) {
+                        // Add number suffix when multiple locations
+                        labelTextEl.textContent = count > 1 ? (base + ' ' + newNumber) : base;
+                    }
+                }
+            });
+        });
+    }
     
     /* --------------------------------------------------------------------------
        PUBLIC API
@@ -4471,6 +4324,7 @@
         organizeFieldsIntoLocationContainers: organizeFieldsIntoLocationContainers,
         renderAdditionalLocations: renderAdditionalLocations,
         updateVenueDeleteButtons: updateVenueDeleteButtons,
+        renumberLocationContainers: renumberLocationContainers,
         getFieldsetKey: getFieldsetKey,
         setupFormContainerClickTracking: setupFormContainerClickTracking
     };
