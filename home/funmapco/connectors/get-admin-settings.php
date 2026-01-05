@@ -299,6 +299,25 @@ try {
             // Table might not exist yet, continue
         }
         
+        // Fetch age ratings
+        try {
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `list_age_ratings` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $ageRatingRows = $stmt->fetchAll();
+            $dropdownOptions['age-rating'] = [];
+            foreach ($ageRatingRows as $row) {
+                if (empty($row['option_value']) || empty($row['option_label'])) {
+                    continue;
+                }
+                $dropdownOptions['age-rating'][] = [
+                    'value' => $row['option_value'],
+                    'label' => $row['option_label'],
+                    'filename' => $row['option_filename'] ? $row['option_filename'] : null,
+                ];
+            }
+        } catch (Throwable $e) {
+            // Table might not exist yet, continue
+        }
+        
         if (!empty($dropdownOptions)) {
             $response['dropdown_options'] = $dropdownOptions;
         }

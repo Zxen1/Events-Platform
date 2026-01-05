@@ -6587,6 +6587,221 @@ const PostCropperComponent = (function() {
 })();
 
 
+/* ============================================================================
+   AGE RATING COMPONENT
+   
+   Dropdown menu for selecting age ratings (All Ages, 7+, 12+, 15+, 18+, 21+).
+   Data loaded from list_age_ratings table via get-admin-settings API.
+   ============================================================================ */
+
+const AgeRatingComponent = (function(){
+    
+    var ageRatingData = [];
+    var dataLoaded = false;
+    var imageFolder = null;
+    
+    function getData() {
+        return ageRatingData;
+    }
+    
+    function setData(data) {
+        ageRatingData = data || [];
+        dataLoaded = true;
+    }
+    
+    function isLoaded() {
+        return dataLoaded;
+    }
+    
+    function setImageFolder(folder) {
+        imageFolder = folder;
+    }
+    
+    function getImageFolder() {
+        return imageFolder;
+    }
+    
+    // Load age rating data from database via gateway
+    function loadFromDatabase() {
+        return fetch('/gateway.php?action=get-admin-settings')
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.dropdown_options && res.dropdown_options['age-rating']) {
+                    ageRatingData = res.dropdown_options['age-rating'];
+                    dataLoaded = true;
+                }
+                if (res.settings && res.settings.folder_age_ratings) {
+                    imageFolder = res.settings.folder_age_ratings;
+                }
+                return ageRatingData;
+            });
+    }
+    
+    // Build age rating dropdown menu
+    // options: { onSelect, initialValue }
+    function buildMenu(options) {
+        options = options || {};
+        var onSelect = options.onSelect || function() {};
+        var initialValue = options.initialValue || null;
+        var selectedValue = initialValue;
+        
+        var menu = document.createElement('div');
+        menu.className = 'component-ageratingpicker';
+        
+        // Button
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'component-ageratingpicker-button';
+        
+        var buttonImage = document.createElement('img');
+        buttonImage.className = 'component-ageratingpicker-button-image';
+        buttonImage.src = '';
+        buttonImage.alt = '';
+        buttonImage.style.display = 'none';
+        
+        var buttonText = document.createElement('span');
+        buttonText.className = 'component-ageratingpicker-button-text';
+        buttonText.textContent = 'Select rating';
+        
+        var buttonArrow = document.createElement('span');
+        buttonArrow.className = 'component-ageratingpicker-button-arrow';
+        buttonArrow.textContent = '▼';
+        
+        button.appendChild(buttonImage);
+        button.appendChild(buttonText);
+        button.appendChild(buttonArrow);
+        menu.appendChild(button);
+        
+        // Options dropdown
+        var optionsDiv = document.createElement('div');
+        optionsDiv.className = 'component-ageratingpicker-options';
+        menu.appendChild(optionsDiv);
+        
+        function applyOpenState(isOpen) {
+            menu.classList.toggle('component-ageratingpicker--open', !!isOpen);
+            button.classList.toggle('component-ageratingpicker-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-ageratingpicker-button-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-ageratingpicker-options--open', !!isOpen);
+        }
+        
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-ageratingpicker--open'); };
+        menu.__menuApplyOpenState = applyOpenState;
+        
+        // Register with MenuManager
+        MenuManager.register(menu);
+        
+        // Set button from initial value
+        function setValue(value) {
+            if (!value) {
+                buttonImage.src = '';
+                buttonImage.style.display = 'none';
+                buttonText.textContent = 'Select rating';
+                selectedValue = null;
+                menu.dataset.value = '';
+                return;
+            }
+            var found = ageRatingData.find(function(item) {
+                return item.value === value;
+            });
+            if (found) {
+                selectedValue = value;
+                buttonText.textContent = found.label;
+                menu.dataset.value = value;
+                if (found.filename && imageFolder) {
+                    var folder = imageFolder.endsWith('/') ? imageFolder : imageFolder + '/';
+                    buttonImage.src = folder + found.filename;
+                    buttonImage.style.display = '';
+                } else {
+                    buttonImage.style.display = 'none';
+                }
+            }
+        }
+        
+        // Render options
+        function renderOptions() {
+            optionsDiv.innerHTML = '';
+            
+            ageRatingData.forEach(function(item) {
+                var option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'component-ageratingpicker-option';
+                option.setAttribute('data-value', item.value);
+                
+                var optImg = document.createElement('img');
+                optImg.className = 'component-ageratingpicker-option-image';
+                if (item.filename && imageFolder) {
+                    var folder = imageFolder.endsWith('/') ? imageFolder : imageFolder + '/';
+                    optImg.src = folder + item.filename;
+                }
+                optImg.alt = '';
+                
+                var optText = document.createElement('span');
+                optText.className = 'component-ageratingpicker-option-text';
+                optText.textContent = item.label;
+                
+                option.appendChild(optImg);
+                option.appendChild(optText);
+                
+                option.onclick = function(ev) {
+                    ev.stopPropagation();
+                    setValue(item.value);
+                    applyOpenState(false);
+                    onSelect(item.value, item.label, item.filename);
+                    try { menu.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                };
+                
+                optionsDiv.appendChild(option);
+            });
+        }
+        
+        // Toggle menu
+        button.onclick = function(e) {
+            e.stopPropagation();
+            var isOpen = menu.classList.contains('component-ageratingpicker--open');
+            if (isOpen) {
+                applyOpenState(false);
+            } else {
+                MenuManager.closeAll(menu);
+                applyOpenState(true);
+                
+                // Load data if not loaded
+                if (!dataLoaded || ageRatingData.length === 0) {
+                    loadFromDatabase().then(function() {
+                        renderOptions();
+                        if (initialValue) setValue(initialValue);
+                    });
+                } else {
+                    renderOptions();
+                }
+            }
+        };
+        
+        // Initialize if data already loaded
+        if (dataLoaded && ageRatingData.length > 0) {
+            if (initialValue) setValue(initialValue);
+        }
+        
+        return {
+            element: menu,
+            getValue: function() {
+                return selectedValue;
+            },
+            setValue: setValue
+        };
+    }
+    
+    return {
+        getData: getData,
+        setData: setData,
+        isLoaded: isLoaded,
+        setImageFolder: setImageFolder,
+        getImageFolder: getImageFolder,
+        loadFromDatabase: loadFromDatabase,
+        buildMenu: buildMenu
+    };
+})();
+
+
 // Expose globally
 window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;
@@ -6602,6 +6817,7 @@ window.MemberAuthFieldsetsComponent = MemberAuthFieldsetsComponent;
 window.IconPickerComponent = IconPickerComponent;
 window.SystemImagePickerComponent = SystemImagePickerComponent;
 window.AmenitiesMenuComponent = AmenitiesMenuComponent;
+window.AgeRatingComponent = AgeRatingComponent;
 window.MapControlRowComponent = MapControlRowComponent;
 window.CheckoutOptionsComponent = CheckoutOptionsComponent;
 window.ConfirmDialogComponent = ConfirmDialogComponent;
