@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 08:14 AM
+-- Generation Time: Jan 06, 2026 at 08:43 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1212,7 +1212,6 @@ CREATE TABLE `fields` (
 INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
 (1, 'title', 'text', 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
 (2, 'description', 'textarea', 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(3, 'images', 'images', NULL, NULL, 0, '2025-10-29 23:32:47', '2025-12-31 23:14:27'),
 (4, 'venue-name', 'text', 3, 200, 1, '2025-10-29 23:32:47', '2025-12-08 16:59:48'),
 (5, 'address-line', 'text', 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
 (6, 'latitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:04'),
@@ -1276,12 +1275,13 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (9, 'Address', 'address', 'subcategory', 6, '[\"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, '123 Main Street, Suburb, City', 'Search for and select your street address. The map will help you find the exact spot.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (10, 'Website (URL)', 'website-url', 'subcategory', 8, '[\"website\"]', NULL, 'www.website.com', 'Enter the full website URL (including https://) where visitors can find more information.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (11, 'Tickets (URL)', 'tickets-url', 'subcategory', 9, '[\"website\"]', NULL, 'www.tickets.com', 'Enter the full URL (including https://) where visitors can purchase tickets or make reservations.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
-(12, 'Images', 'images', 'subcategory', 10, '[\"images\"]', NULL, 'images', 'At least one image is required. Maximum ten images. Click on any image to use the crop tool. Square images will be shown everywhere on this website except in the image viewer of your post.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
+(12, 'Images', 'images', 'subcategory', 10, '[]', NULL, 'images', 'At least one image is required. Maximum ten images. Click on any image to use the crop tool. Square images will be shown everywhere on this website except in the image viewer of your post.', '2025-10-29 19:03:05', '2026-01-05 21:39:44'),
 (13, 'Coupon', 'coupon', 'subcategory', 11, '[\"text-box\"]', NULL, 'eg. FreeStuff', 'Enter a coupon or discount code if applicable. Visitors can use this code when making purchases.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (14, 'Item Pricing', 'item-pricing', 'subcategory', 12, '[\"item-name\", \"item-variant\", \"currency\", \"item-price\"]', NULL, 'eg. T-Shirt - Large Red - $29.95', 'Add pricing information for individual items. Include item name, price, and currency for each item you\'re selling.', '2025-10-29 19:03:05', '2026-01-01 08:41:37'),
 (16, 'City', 'city', 'subcategory', 5, '[\"city\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'eg. Brisbane, Sydney, Melbourne', 'Enter the city or town where your listing should appear. For online or private address listings.', '2025-12-14 15:49:27', '2026-01-01 08:41:37'),
 (17, 'Venue', 'venue', 'subcategory', 7, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', '2025-12-14 18:30:38', '2026-01-01 08:41:37'),
 (18, 'Amenities', 'amenities', 'subcategory', 14, '[\"amenities\"]', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', '2025-12-14 19:13:31', '2026-01-01 08:41:37'),
+(19, 'Age Rating', 'age_rating', 'subcategory', 16, '[]', NULL, NULL, 'Select the appropriate age rating for this listing.', '2026-01-05 21:42:49', '2026-01-05 21:42:49'),
 (21, 'Session Pricing', 'session_pricing', 'subcategory', 17, '[\"session-date\",\"session-time\",\"seating-area\",\"pricing-tier\",\"currency\",\"ticket-price\"]', NULL, 'eg. Sessions with pricing', '1. Click the first date box to show the calendar.\n2. Choose all your event dates to create the table.\n3. Fill out your 24hr starting times for each date.\n4. Click the Ticket Pricing button to set prices.\n5. Add extra pricing groups if you need them.', '2026-01-01 12:54:10', '2026-01-03 15:11:05'),
 (27, 'Public Email', 'public_email', 'subcategory', 3, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2026-01-01 07:54:19', '2026-01-01 08:41:37'),
 (100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Your login email for this website. This is how admins will contact you. ', '2025-10-29 19:03:05', '2026-01-03 06:34:01'),
