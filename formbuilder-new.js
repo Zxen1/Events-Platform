@@ -3887,9 +3887,21 @@
                         venue1Container: v1ContainerData.container,
                         insertBeforeElement: checkoutContainer,
                         onQuantityUpdate: function() {
-                            // Sync Venue 1 delete button visibility and renumber all containers
+                            // Update quantity display
+                            var allContainers = document.querySelectorAll('.form-location-container');
+                            var newQty = allContainers.length;
+                            if (quantityPicker.quantityDisplay) {
+                                quantityPicker.quantityDisplay.textContent = newQty;
+                            }
+                            // Update Location 1 delete button visibility
+                            if (v1ContainerData.deleteBtn) {
+                                v1ContainerData.deleteBtn.style.display = newQty > 1 ? '' : 'none';
+                            }
+                            // Sync all delete buttons and renumber containers
                             updateVenueDeleteButtons();
                             renumberLocationContainers();
+                            // Notify external callback of quantity change
+                            onQuantityChange(newQty, false);
                         }
                     });
                 }
