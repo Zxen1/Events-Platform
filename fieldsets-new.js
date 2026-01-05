@@ -115,7 +115,7 @@ const FieldsetBuilder = (function(){
             return '';
         }
 
-        // Fetch suggestions using new API (same as map controls - no type restrictions)
+        // Fetch suggestions using new API with type filtering
         var debounceTimer = null;
         async function fetchSuggestions(query) {
             if (!query || query.length < 2) {
@@ -124,10 +124,23 @@ const FieldsetBuilder = (function(){
             }
             
             try {
-                // Use same API call as map controls (no type restrictions)
-                var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
-                    input: query
-                });
+                // Build request with type filtering based on the 'type' parameter
+                var request = { input: query };
+                
+                // Map legacy type values to new API includedPrimaryTypes
+                if (type === '(cities)') {
+                    // Cities only - locality covers cities/towns, administrative_area_level_3 covers smaller municipalities
+                    request.includedPrimaryTypes = ['locality', 'administrative_area_level_3', 'postal_town', 'sublocality_level_1'];
+                } else if (type === 'address') {
+                    // Street addresses only
+                    request.includedPrimaryTypes = ['street_address', 'route', 'premise', 'subpremise'];
+                } else if (type === 'establishment') {
+                    // Businesses and points of interest
+                    request.includedPrimaryTypes = ['establishment'];
+                }
+                // If type is not specified or unrecognized, no filtering is applied (all results)
+                
+                var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
                 
                 dropdown.innerHTML = '';
                 
