@@ -2159,6 +2159,8 @@ const MemberModule = (function() {
                         if (!venueName) {
                             venueName = venue1Name;
                         }
+                        // Get location number before deletion for focus after renumber
+                        var deletedNum = parseInt(container.dataset.locationNumber || '0', 10);
                         if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
                             ConfirmDialogComponent.show({
                                 titleText: 'Delete ' + venueName,
@@ -2179,6 +2181,10 @@ const MemberModule = (function() {
                                         }
                                         if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
                                             FormbuilderModule.renumberLocationContainers();
+                                        }
+                                        // Focus the container that took the deleted one's place
+                                        if (window.FormbuilderModule && typeof FormbuilderModule.focusLocationContainerAfterDelete === 'function') {
+                                            FormbuilderModule.focusLocationContainerAfterDelete(deletedNum);
                                         }
                                     }
                                 }

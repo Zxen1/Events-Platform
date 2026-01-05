@@ -4115,6 +4115,8 @@
                     onDelete: function(container, locNum) {
                         var headerText = locationContainerData.headerText;
                         var deleteName = headerText.textContent || defaultName;
+                        // Get the location number before deletion for focus after renumber
+                        var deletedNum = parseInt(container.dataset.locationNumber || '0', 10);
                         if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
                             ConfirmDialogComponent.show({
                                 titleText: 'Delete ' + deleteName,
@@ -4129,6 +4131,9 @@
                                     onQuantityUpdate(-1);
                                     updateVenueDeleteButtons();
                                     renumberLocationContainers();
+                                    
+                                    // Focus the container that took the deleted one's place
+                                    focusLocationContainerAfterDelete(deletedNum, parentContainer);
                                 }
                             });
                         }
@@ -4347,6 +4352,58 @@
         });
     }
     
+    /**
+     * Focus a location container after deletion to show the user which one "moved up"
+     * @param {number} deletedNum - The location number that was deleted
+     * @param {HTMLElement} parentContainer - Parent container to search within (optional)
+     */
+    function focusLocationContainerAfterDelete(deletedNum, parentContainer) {
+        // Small delay to ensure DOM has updated
+        setTimeout(function() {
+            var searchRoot = parentContainer || document;
+            var allContainers = searchRoot.querySelectorAll('.form-location-container');
+            
+            if (allContainers.length === 0) return;
+            
+            // Find the container that now has the deleted number (it "moved up")
+            // If deleted was the last one, focus the new last container
+            var targetContainer = null;
+            for (var i = 0; i < allContainers.length; i++) {
+                var num = parseInt(allContainers[i].dataset.locationNumber || '0', 10);
+                if (num === deletedNum) {
+                    targetContainer = allContainers[i];
+                    break;
+                }
+            }
+            
+            // If no container has that number (deleted the last one), focus the last remaining
+            if (!targetContainer) {
+                targetContainer = allContainers[allContainers.length - 1];
+            }
+            
+            if (!targetContainer) return;
+            
+            // Remove active state from all containers
+            searchRoot.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                c.removeAttribute('data-active');
+            });
+            
+            // Add active state to target container
+            targetContainer.setAttribute('data-active', 'true');
+            
+            // Find and focus the location input inside
+            // For venue: focus the venue name input
+            // For city/address: focus the location input
+            var locationFieldset = targetContainer.querySelector('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"]');
+            if (locationFieldset) {
+                var input = locationFieldset.querySelector('input:not([type="hidden"])');
+                if (input && typeof input.focus === 'function') {
+                    input.focus();
+                }
+            }
+        }, 50);
+    }
+    
     /* --------------------------------------------------------------------------
        PUBLIC API
        -------------------------------------------------------------------------- */
@@ -4363,6 +4420,7 @@
         renderAdditionalLocations: renderAdditionalLocations,
         updateVenueDeleteButtons: updateVenueDeleteButtons,
         renumberLocationContainers: renumberLocationContainers,
+        focusLocationContainerAfterDelete: focusLocationContainerAfterDelete,
         getFieldsetKey: getFieldsetKey,
         setupFormContainerClickTracking: setupFormContainerClickTracking
     };
