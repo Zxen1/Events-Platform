@@ -2091,6 +2091,11 @@ const FieldsetBuilder = (function(){
                 spTicketGroupScroll.appendChild(spTicketGroupContent);
                 spPricingGroupsWrap.appendChild(spTicketGroupScroll);
 
+                // Custom sticky scroll listener
+                spTicketGroupScroll.addEventListener('scroll', function() {
+                    if (typeof spUpdateStickyPosition === 'function') spUpdateStickyPosition();
+                });
+
                 // Pop-up footer (locked like session picker)
                 var spTicketGroupFooter = document.createElement('div');
                 spTicketGroupFooter.className = 'fieldset-sessionpricing-ticketgroups-popover-footer';
@@ -2316,6 +2321,48 @@ const FieldsetBuilder = (function(){
                     spUpdateSeatingAreaButtons(seatingAreasContainer);
                 }
 
+                // Custom sticky system: tracks which header should stick and updates on scroll
+                var spStickyHeader = null;
+                var spStickyGroup = null;
+                var spStickyPlaceholder = null;
+                var spStickyThreshold = 10; // 10px from top of scroll viewport
+
+                function spUpdateStickyPosition() {
+                    if (!spStickyHeader || !spStickyGroup || !spTicketGroupScroll) return;
+                    try {
+                        var scrollTop = spTicketGroupScroll.scrollTop;
+                        var contentEl = spTicketGroupScroll.querySelector('.fieldset-sessionpricing-ticketgroups-popover-content');
+                        var contentPadding = contentEl ? 10 : 0; // matches CSS padding
+                        
+                        // Get group's position relative to scroll content
+                        var groupOffsetTop = spStickyGroup.offsetTop + contentPadding;
+                        
+                        // Calculate when header should become "stuck"
+                        var stickPoint = groupOffsetTop - spStickyThreshold;
+                        var isStuck = scrollTop > stickPoint;
+                        
+                        if (isStuck) {
+                            if (!spStickyPlaceholder) {
+                                // Create placeholder to maintain layout
+                                spStickyPlaceholder = document.createElement('div');
+                                spStickyPlaceholder.className = 'fieldset-sessionpricing-ticketgroup-item-header-placeholder';
+                                spStickyPlaceholder.style.height = spStickyHeader.offsetHeight + 'px';
+                                spStickyGroup.insertBefore(spStickyPlaceholder, spStickyHeader);
+                            }
+                            spStickyHeader.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            // Position relative to scroll container's scrolled position
+                            spStickyHeader.style.top = (scrollTop + spStickyThreshold) + 'px';
+                        } else {
+                            spStickyHeader.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            spStickyHeader.style.top = '';
+                            if (spStickyPlaceholder) {
+                                spStickyPlaceholder.remove();
+                                spStickyPlaceholder = null;
+                            }
+                        }
+                    } catch (e) {}
+                }
+
                 function spSetGroupEditorOpen(groupKey, isOpen) {
                     var g = spTicketGroups[String(groupKey || '')];
                     if (!g) return;
@@ -2324,19 +2371,28 @@ const FieldsetBuilder = (function(){
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open', !!isOpen);
 
-                    // Keep the active group's header sticky inside the scrollable popover so the user
-                    // always knows which group is being edited.
+                    // Custom sticky: remove sticky from all, set up for open group
                     try {
-                        Object.keys(spTicketGroups).forEach(function(k) {
-                            var gg = spTicketGroups[k];
-                            if (!gg) return;
-                            var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
-                            if (!hh) return;
-                            hh.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
-                        });
+                        // Clean up previous sticky
+                        if (spStickyHeader) {
+                            spStickyHeader.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            spStickyHeader.style.top = '';
+                        }
+                        if (spStickyPlaceholder) {
+                            spStickyPlaceholder.remove();
+                            spStickyPlaceholder = null;
+                        }
+                        spStickyHeader = null;
+                        spStickyGroup = null;
+                        
+                        // Set up sticky for the newly opened group
                         if (isOpen) {
                             var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
-                            if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            if (h0) {
+                                spStickyHeader = h0;
+                                spStickyGroup = g;
+                                spUpdateStickyPosition();
+                            }
                         }
                     } catch (eSticky) {}
                 }
