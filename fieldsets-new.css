@@ -1091,12 +1091,18 @@
 /* Sticky header: 46px wrapper with built-in shield */
 .fieldset-sessionpricing-ticketgroup-item-header--sticky {
     position: sticky;
-    top: 0;
-    padding-top: 10px;
-    margin-top: -10px;
-    background: #222;
-    border-radius: 0 0 4px 4px;
+    top: 10px;
     z-index: 10;
+}
+
+.fieldset-sessionpricing-ticketgroup-item-header--sticky::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: #222;
 }
 
 /* Content row inside header: the 36px button area */
