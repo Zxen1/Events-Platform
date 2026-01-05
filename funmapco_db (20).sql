@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 08:07 AM
+-- Generation Time: Jan 06, 2026 at 08:11 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1434,12 +1434,12 @@ CREATE TABLE `list_age_ratings` (
 --
 
 INSERT INTO `list_age_ratings` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
-(1, 'age-rating-12.svg', 'age-rating-12.svg', '', 0, 1),
-(2, 'age-rating-15.svg', 'age-rating-15.svg', '', 0, 1),
-(3, 'age-rating-18.svg', 'age-rating-18.svg', '', 0, 1),
-(4, 'age-rating-21.svg', 'age-rating-21.svg', '', 0, 1),
-(5, 'age-rating-7.svg', 'age-rating-7.svg', '', 0, 1),
-(6, 'age-rating-all.svg', 'age-rating-all.svg', '', 0, 1);
+(1, 'age-rating-12.svg', '12', '12+', 3, 1),
+(2, 'age-rating-15.svg', '15', '15+', 4, 1),
+(3, 'age-rating-18.svg', '18', '18+', 5, 1),
+(4, 'age-rating-21.svg', '21', '21+', 6, 1),
+(5, 'age-rating-7.svg', '7', '7+', 2, 1),
+(6, 'age-rating-all.svg', 'all', 'All Ages', 1, 1);
 
 -- --------------------------------------------------------
 
