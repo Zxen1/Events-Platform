@@ -4058,6 +4058,10 @@
                 fieldsetKey = fieldData.fieldset_key.toLowerCase();
             } else if (fieldData.fieldsetKey && typeof fieldData.fieldsetKey === 'string') {
                 fieldsetKey = fieldData.fieldsetKey.toLowerCase();
+            } else if (fieldData.key && typeof fieldData.key === 'string') {
+                fieldsetKey = fieldData.key.toLowerCase();
+            } else if (fieldData.type && typeof fieldData.type === 'string') {
+                fieldsetKey = fieldData.type.toLowerCase();
             }
             
             // Location fieldset goes into Venue 1 container
