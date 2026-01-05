@@ -4052,13 +4052,23 @@
         
         if (quantity <= 1) return;
         
-        if (!venue1Container) {
-            venue1Container = document.querySelector('.form-location-container[data-venue="1"]');
+        // Always re-query location1Container to ensure it's in the DOM
+        // (passed reference may be stale after form re-render)
+        var freshLocation1 = document.querySelector('.form-location-container[data-location-number="1"]');
+        if (freshLocation1) {
+            venue1Container = freshLocation1;
+        } else if (!venue1Container) {
+            console.warn('[FormBuilder] Location 1 container not found');
+            return;
         }
         
-        if (!venue1Container) {
-            console.warn('[FormBuilder] Venue 1 container not found');
-            return;
+        // Verify location container is actually in the DOM
+        if (!venue1Container.parentNode) {
+            venue1Container = document.querySelector('.form-location-container[data-location-number="1"]');
+            if (!venue1Container) {
+                console.warn('[FormBuilder] Location 1 container not found in DOM');
+                return;
+            }
         }
         
         if (!locationFieldsetData) {
@@ -4067,6 +4077,10 @@
         }
         
         var parentContainer = venue1Container.parentNode;
+        if (!parentContainer) {
+            console.warn('[FormBuilder] Venue 1 container has no parent');
+            return;
+        }
         var insertAfter = venue1Container;
         
         // Build lookup for repeat fieldsets
