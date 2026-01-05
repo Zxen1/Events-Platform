@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 07:57 AM
+-- Generation Time: Jan 06, 2026 at 08:04 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1417,6 +1417,21 @@ INSERT INTO `layout_tabs` (`id`, `tab_key`, `panel_key`, `tab_name`, `sort_order
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `list_age_ratings`
+--
+
+CREATE TABLE `list_age_ratings` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `logs`
 --
 
@@ -2303,6 +2318,12 @@ ALTER TABLE `layout_tabs`
   ADD KEY `idx_sort_order` (`sort_order`);
 
 --
+-- Indexes for table `list_age_ratings`
+--
+ALTER TABLE `list_age_ratings`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `logs`
 --
 ALTER TABLE `logs`
@@ -2533,6 +2554,12 @@ ALTER TABLE `layout_rows`
 --
 ALTER TABLE `layout_tabs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+
+--
+-- AUTO_INCREMENT for table `list_age_ratings`
+--
+ALTER TABLE `list_age_ratings`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `logs`
