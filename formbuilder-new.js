@@ -409,7 +409,7 @@
                         }
 
                         // Enforce repeat invariants for location fieldsets on save:
-                        // Venue/City/Address must always be location-repeat, never autofill.
+                        // Venue/City/Address must always be location-specific.
                         var repeatKeyLower = String((fieldsetDef ? fieldsetDef.key : fieldsetId) || '').toLowerCase();
                         if (repeatKeyLower === 'venue' || repeatKeyLower === 'city' || repeatKeyLower === 'address') {
                             isLocationRepeat = true;
@@ -3924,7 +3924,7 @@
                     }
                 }
             }
-            // Must-repeat and location-repeat-only fieldsets go into Venue 1 container
+            // Location-specific fieldsets go into Venue 1 container
             else if (fieldsetKey && allRepeatKeys[fieldsetKey]) {
                 v1ContainerData.content.appendChild(fieldset);
             }

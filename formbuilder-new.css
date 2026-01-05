@@ -1188,17 +1188,7 @@
   line-height: 1;
 }
 
-.formbuilder-field-indicator-repeat--location-repeat {
-  display: inline;
-}
-
-.formbuilder-field-indicator-must--must-repeat {
-  display: inline;
-}
-
-.formbuilder-field-indicator-autofill--autofill-repeat {
-  display: inline;
-}
+/* Indicator classes removed - divider line now serves as visual indicator */
 
 /* Fee Row */
 .formbuilder-fee-row {
