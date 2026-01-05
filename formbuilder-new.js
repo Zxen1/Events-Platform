@@ -4293,6 +4293,18 @@
             // Update all fieldset labels inside this container to include the location number
             var fieldsets = container.querySelectorAll('.fieldset');
             fieldsets.forEach(function(fieldset) {
+                var fieldsetKey = (fieldset.dataset.fieldsetKey || '').toLowerCase();
+                
+                // Skip location fieldsets - their label matches the container header
+                if (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address') {
+                    var labelTextEl = fieldset.querySelector('.fieldset-label-text');
+                    if (labelTextEl) {
+                        // Location fieldsets use the same name as the container header
+                        labelTextEl.textContent = count > 1 ? (locationType + ' ' + newNumber) : locationType;
+                    }
+                    return;
+                }
+                
                 var labelTextEl = fieldset.querySelector('.fieldset-label-text');
                 if (labelTextEl) {
                     // Store base label if not already stored
