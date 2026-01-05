@@ -4521,12 +4521,6 @@
                                 setupPlaceholderSync(fs, k);
                             }, 150);
                         })(fieldset, key);
-                    } else if (isAutofill) {
-                        (function(fs, fd) {
-                            setTimeout(function() {
-                                copyFieldsetValues(fs, fd);
-                            }, 100);
-                        })(fieldset, fieldData);
                     }
                 });
                 
