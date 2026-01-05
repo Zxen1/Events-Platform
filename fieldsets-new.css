@@ -1115,18 +1115,19 @@
 .fieldset-sessionpricing-ticketgroup-item-header--sticky {
     position: sticky;
     top: 10px;
-    z-index: 2;
+    z-index: 1;
     background: var(--website-blue-active-fill, #3b82f599);
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroup-item-shield {
-    position: sticky;
-    top: 0;
+    position: absolute;
+    bottom: 18px; /* Starts at midpoint of 36px header */
+    left: -1px;
+    right: -1px;
     height: 28px;
-    background: #222;
-    z-index: 1;
-    width: 100%;
+    background: var(--panel-bg, #222);
+    z-index: -1;
     pointer-events: none;
 }
 
