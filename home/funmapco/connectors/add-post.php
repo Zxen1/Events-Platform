@@ -388,6 +388,7 @@ foreach ($byLoc as $locNum => $entries) {
     'tickets_url' => null,
     'coupon_code' => null,
     'amenities' => null,
+    'age_rating' => null,
     'checkout_title' => null,
     'session_summary' => null,
     'price_summary' => null,
@@ -459,6 +460,10 @@ foreach ($byLoc as $locNum => $entries) {
     if ($baseType === 'amenities' && is_array($val)) {
       // Store as JSON for flexibility; column is TEXT.
       $card['amenities'] = json_encode($val, JSON_UNESCAPED_UNICODE);
+      continue;
+    }
+    if ($baseType === 'age_rating' && is_string($val)) {
+      $card['age_rating'] = trim($val);
       continue;
     }
 
@@ -585,8 +590,8 @@ foreach ($byLoc as $locNum => $entries) {
     $card['price_summary'] = json_encode($priceSummary, JSON_UNESCAPED_UNICODE);
   }
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, website_url, tickets_url, coupon_code, checkout_title, session_summary, price_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, age_rating, website_url, tickets_url, coupon_code, checkout_title, session_summary, price_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -607,6 +612,7 @@ foreach ($byLoc as $locNum => $entries) {
   $lngParam = (float)$card['longitude'];
   $countryCodeParam = $card['country_code'];
   $amenitiesParam = $card['amenities'];
+  $ageRatingParam = $card['age_rating'];
   $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
   $couponCodeParam = $card['coupon_code'];
@@ -625,11 +631,12 @@ foreach ($byLoc as $locNum => $entries) {
   // sss (venue_name, address_line, city)
   // dd (lat,lng)
   // ss (country_code, amenities)
+  // s (age_rating)
   // ss (website_url, tickets_url)
   // s (coupon_code)
   // sss (checkout_title, session_summary, price_summary)
   $stmtCard->bind_param(
-    'isssssssssssssssddssssssss',
+    'isssssssssssssddssssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -648,6 +655,7 @@ foreach ($byLoc as $locNum => $entries) {
     $lngParam,
     $countryCodeParam,
     $amenitiesParam,
+    $ageRatingParam,
     $websiteParam,
     $ticketsParam,
     $couponCodeParam,
@@ -672,9 +680,11 @@ foreach ($byLoc as $locNum => $entries) {
   $writeSessionPricingToNewTables = false;
 
   $pricingGroupsToWrite = null;
+  $ageRatingsToWrite = [];
   if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
     $sessionsToWrite = $sessionPricing['sessions'];
     $pricingGroupsToWrite = (isset($sessionPricing['pricing_groups']) && is_array($sessionPricing['pricing_groups'])) ? $sessionPricing['pricing_groups'] : [];
+    $ageRatingsToWrite = (isset($sessionPricing['age_ratings']) && is_array($sessionPricing['age_ratings'])) ? $sessionPricing['age_ratings'] : [];
     $writeSessionPricingToNewTables = true;
   }
 
@@ -703,13 +713,15 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Write pricing rows for each pricing group
     if (is_array($pricingGroupsToWrite)) {
-      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, seating_area, pricing_tier, price, currency, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
+      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, seating_area, pricing_tier, price, currency, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
       if ($stmtPrice) {
         foreach ($pricingGroupsToWrite as $groupKeyRaw => $seats) {
           $ticketGroupKey = trim((string)$groupKeyRaw);
           if ($ticketGroupKey === '') continue;
           if (!is_array($seats)) continue;
+          // Get age rating for this ticket group
+          $ageRating = isset($ageRatingsToWrite[$ticketGroupKey]) ? trim((string)$ageRatingsToWrite[$ticketGroupKey]) : '';
           foreach ($seats as $seat) {
             if (!is_array($seat)) continue;
             $seatName = isset($seat['seating_area']) ? (string)$seat['seating_area'] : '';
@@ -720,7 +732,7 @@ foreach ($byLoc as $locNum => $entries) {
               $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
               $amt = normalize_price_amount($tier['price'] ?? null);
               if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
-              $stmtPrice->bind_param('isssss', $mapCardId, $ticketGroupKey, $seatName, $tierName, $amt, $curr);
+              $stmtPrice->bind_param('issssss', $mapCardId, $ticketGroupKey, $ageRating, $seatName, $tierName, $amt, $curr);
               if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
             }
           }

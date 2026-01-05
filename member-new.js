@@ -2973,6 +2973,10 @@ const MemberModule = (function() {
                 var checked = el.querySelector('input[type="radio"]:checked');
                 return checked ? checked.value : '';
 
+            case 'age_rating':
+                var ageRatingMenu = el.querySelector('.component-ageratingpicker');
+                return ageRatingMenu ? String(ageRatingMenu.dataset.value || '').trim() : '';
+
             case 'public_phone':
                 // Store atomically (DB has phone_prefix + public_phone).
                 // No fallbacks: if either part is missing, return empty so required validation blocks submit.
@@ -3099,7 +3103,9 @@ const MemberModule = (function() {
                     }
 
                     // Ticket pricing groups: { [ticket_group_key]: [ { seating_area, tiers:[...] } ] }
+                    // Age ratings per group: { [ticket_group_key]: 'rating_value' }
                     var pricingGroups = {};
+                    var ageRatings = {};
                     var groupsWrap = el.querySelector('.fieldset-sessionpricing-ticketgroups-container');
                     if (groupsWrap) {
                         groupsWrap.querySelectorAll('.fieldset-sessionpricing-ticketgroup-item').forEach(function(groupEl) {
@@ -3107,6 +3113,13 @@ const MemberModule = (function() {
                             var gk = groupEl.dataset ? String(groupEl.dataset.ticketGroupKey || '').trim() : '';
                             if (!gk) return;
                             var editorEl = groupEl.querySelector('.fieldset-sessionpricing-pricing-editor') || groupEl;
+                            
+                            // Extract age rating for this ticket group
+                            var ageRatingMenu = editorEl.querySelector('.component-ageratingpicker');
+                            if (ageRatingMenu) {
+                                ageRatings[gk] = String(ageRatingMenu.dataset.value || '').trim();
+                            }
+                            
                             var seatingBlocks2 = editorEl.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                             var seatOut2 = [];
                             seatingBlocks2.forEach(function(block) {
@@ -3134,10 +3147,11 @@ const MemberModule = (function() {
 
                     return {
                         sessions: sessionsOut,
-                        pricing_groups: pricingGroups
+                        pricing_groups: pricingGroups,
+                        age_ratings: ageRatings
                     };
                 } catch (e33) {
-                    return { sessions: [], pricing_groups: {} };
+                    return { sessions: [], pricing_groups: {}, age_ratings: {} };
                 }
 
             case 'item-pricing':

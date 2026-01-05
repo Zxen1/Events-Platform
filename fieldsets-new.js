@@ -288,6 +288,19 @@ const FieldsetBuilder = (function(){
         return result.element;
     }
     
+    // Build age rating menu - uses AgeRatingComponent
+    function buildAgeRatingMenu(container) {
+        if (typeof AgeRatingComponent === 'undefined') {
+            console.error('[FieldsetBuilder] AgeRatingComponent not available');
+            return document.createElement('div');
+        }
+        var result = AgeRatingComponent.buildMenu({
+            initialValue: null,
+            container: container
+        });
+        return result.element;
+    }
+    
     // Build label with required indicator (dot) and tooltip
     function buildLabel(name, tooltip, minLength, maxLength) {
         var label = document.createElement('div');
@@ -588,6 +601,9 @@ const FieldsetBuilder = (function(){
         }
         if (data && data.country && typeof CountryComponent !== 'undefined') {
             CountryComponent.setData(data.country);
+        }
+        if (data && data['age-rating'] && typeof AgeRatingComponent !== 'undefined') {
+            AgeRatingComponent.setData(data['age-rating']);
         }
     }
     
@@ -1540,35 +1556,7 @@ const FieldsetBuilder = (function(){
             
             case 'age_rating':
                 fieldset.appendChild(buildLabel(name, tooltip));
-                
-                // Hidden input to store selected value
-                var ageRatingHidden = document.createElement('input');
-                ageRatingHidden.type = 'hidden';
-                ageRatingHidden.className = 'fieldset-agerating-value';
-                ageRatingHidden.value = '';
-                fieldset.appendChild(ageRatingHidden);
-                
-                // Build age rating menu using AgeRatingComponent
-                if (typeof AgeRatingComponent === 'undefined') {
-                    console.error('[FieldsetBuilder] AgeRatingComponent not available');
-                    var ageRatingPlaceholder = document.createElement('div');
-                    ageRatingPlaceholder.textContent = 'Age rating component not loaded';
-                    ageRatingPlaceholder.style.color = '#888';
-                    fieldset.appendChild(ageRatingPlaceholder);
-                } else {
-                    var ageRatingResult = AgeRatingComponent.buildMenu({
-                        initialValue: null,
-                        onSelect: function(value, label, filename) {
-                            ageRatingHidden.value = value || '';
-                            // Trigger change event for validation
-                            try {
-                                ageRatingHidden.dispatchEvent(new Event('change', { bubbles: true }));
-                            } catch (e) {}
-                        }
-                    });
-                    ageRatingResult.element.classList.add('fieldset-agerating-menu');
-                    fieldset.appendChild(ageRatingResult.element);
-                }
+                fieldset.appendChild(buildAgeRatingMenu(container));
                 break;
                 
             case 'item-pricing':
@@ -2395,6 +2383,17 @@ const FieldsetBuilder = (function(){
                 function spReplaceEditorFromPricing(editorEl, pricingArr) {
                     if (!editorEl) return;
                     editorEl.innerHTML = '';
+                    
+                    // Age Rating row at top of editor
+                    var ageRatingRow = document.createElement('div');
+                    ageRatingRow.className = 'fieldset-sessionpricing-pricing-agerating-row';
+                    var ageRatingLabel = document.createElement('div');
+                    ageRatingLabel.className = 'fieldset-sessionpricing-pricing-agerating-label';
+                    ageRatingLabel.textContent = 'Age Rating';
+                    ageRatingRow.appendChild(ageRatingLabel);
+                    ageRatingRow.appendChild(buildAgeRatingMenu(fieldset));
+                    editorEl.appendChild(ageRatingRow);
+                    
                     var seatingAreasContainer = document.createElement('div');
                     seatingAreasContainer.className = 'fieldset-sessionpricing-pricing-seatingareas-container';
                     editorEl.appendChild(seatingAreasContainer);
@@ -3317,8 +3316,8 @@ const FieldsetBuilder = (function(){
                         case 'amenities':
                             return !!fieldset.querySelector('.fieldset-amenities-row input[type="radio"]:checked');
                         case 'age_rating': {
-                            var ageRatingInput = fieldset.querySelector('.fieldset-agerating-value');
-                            return !!(ageRatingInput && String(ageRatingInput.value || '').trim());
+                            var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker');
+                            return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                         }
                         case 'session_pricing': {
                             var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
@@ -3618,8 +3617,8 @@ const FieldsetBuilder = (function(){
                 }
                 case 'age_rating': {
                     // Required age rating: must have a value selected (not "Select rating")
-                    var ageRatingHidden = fieldset.querySelector('.fieldset-agerating-value');
-                    return !!(ageRatingHidden && String(ageRatingHidden.value || '').trim());
+                    var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker');
+                    return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                 }
                 case 'item-pricing': {
                     // Rule: all visible boxes in this pricing UI must be filled out.
@@ -3684,7 +3683,8 @@ const FieldsetBuilder = (function(){
         isLoaded: function() { return dataLoaded; },
         loadFromDatabase: loadFromDatabase,
         buildCurrencyMenuCompact: buildCurrencyMenuCompact,
-        buildPhonePrefixMenu: buildPhonePrefixMenu
+        buildPhonePrefixMenu: buildPhonePrefixMenu,
+        buildAgeRatingMenu: buildAgeRatingMenu
     };
 })();
 

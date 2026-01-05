@@ -1319,6 +1319,23 @@
     /* Tiers container styling */
 }
 
+/* Age Rating row inside ticket group editor */
+.fieldset-sessionpricing-pricing-agerating-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid #333;
+    margin-bottom: 10px;
+}
+
+.fieldset-sessionpricing-pricing-agerating-label {
+    font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+    min-width: 80px;
+}
+
 
 /* ============================================================================
    LOCATION FIELDSET

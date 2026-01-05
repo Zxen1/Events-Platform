@@ -2734,6 +2734,14 @@ const AdminModule = (function() {
                         CurrencyComponent.setData(data.dropdown_options.currency);
                     }
 
+                    // Initialize AgeRatingComponent data if available
+                    if (window.AgeRatingComponent && data.dropdown_options && data.dropdown_options['age-rating']) {
+                        AgeRatingComponent.setData(data.dropdown_options['age-rating']);
+                        if (settingsData.folder_age_ratings) {
+                            AgeRatingComponent.setImageFolder(settingsData.folder_age_ratings);
+                        }
+                    }
+
                     // Render checkout options and register for tracking
                     if (data.checkout_options && Array.isArray(data.checkout_options)) {
                         renderCheckoutOptions(data.checkout_options, requireWebsiteCurrencyFromSettings(settingsData));
