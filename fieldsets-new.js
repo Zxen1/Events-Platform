@@ -1537,6 +1537,39 @@ const FieldsetBuilder = (function(){
                 
                 fieldset.appendChild(amenitiesGrid);
                 break;
+            
+            case 'age_rating':
+                fieldset.appendChild(buildLabel(name, tooltip));
+                
+                // Hidden input to store selected value
+                var ageRatingHidden = document.createElement('input');
+                ageRatingHidden.type = 'hidden';
+                ageRatingHidden.className = 'fieldset-agerating-value';
+                ageRatingHidden.value = '';
+                fieldset.appendChild(ageRatingHidden);
+                
+                // Build age rating menu using AgeRatingComponent
+                if (typeof AgeRatingComponent === 'undefined') {
+                    console.error('[FieldsetBuilder] AgeRatingComponent not available');
+                    var ageRatingPlaceholder = document.createElement('div');
+                    ageRatingPlaceholder.textContent = 'Age rating component not loaded';
+                    ageRatingPlaceholder.style.color = '#888';
+                    fieldset.appendChild(ageRatingPlaceholder);
+                } else {
+                    var ageRatingResult = AgeRatingComponent.buildMenu({
+                        initialValue: null,
+                        onSelect: function(value, label, filename) {
+                            ageRatingHidden.value = value || '';
+                            // Trigger change event for validation
+                            try {
+                                ageRatingHidden.dispatchEvent(new Event('change', { bubbles: true }));
+                            } catch (e) {}
+                        }
+                    });
+                    ageRatingResult.element.classList.add('fieldset-agerating-menu');
+                    fieldset.appendChild(ageRatingResult.element);
+                }
+                break;
                 
             case 'item-pricing':
                 // Item Name, Currency, Item Price (full width), then list of variants
@@ -3283,6 +3316,10 @@ const FieldsetBuilder = (function(){
                         }
                         case 'amenities':
                             return !!fieldset.querySelector('.fieldset-amenities-row input[type="radio"]:checked');
+                        case 'age_rating': {
+                            var ageRatingInput = fieldset.querySelector('.fieldset-agerating-value');
+                            return !!(ageRatingInput && String(ageRatingInput.value || '').trim());
+                        }
                         case 'session_pricing': {
                             var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                             if (selected2 && selected2.length > 0) return true;
@@ -3578,6 +3615,11 @@ const FieldsetBuilder = (function(){
                         if (!rows[i].querySelector('input[type="radio"]:checked')) return false;
                     }
                     return true;
+                }
+                case 'age_rating': {
+                    // Required age rating: must have a value selected (not "Select rating")
+                    var ageRatingHidden = fieldset.querySelector('.fieldset-agerating-value');
+                    return !!(ageRatingHidden && String(ageRatingHidden.value || '').trim());
                 }
                 case 'item-pricing': {
                     // Rule: all visible boxes in this pricing UI must be filled out.
