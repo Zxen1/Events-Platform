@@ -2525,6 +2525,11 @@ const FieldsetBuilder = (function(){
                     group.className = 'fieldset-sessionpricing-ticketgroup-item';
                     group.dataset.ticketGroupKey = key;
 
+                    // 28px Shield Rectangle (coupled to sticky header)
+                    var shield = document.createElement('div');
+                    shield.className = 'fieldset-sessionpricing-ticketgroup-item-shield';
+                    group.appendChild(shield);
+
                     // Header row: select group + edit pencil
                     var header = document.createElement('div');
                     header.className = 'fieldset-sessionpricing-ticketgroup-item-header';
