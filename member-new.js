@@ -2177,14 +2177,12 @@ const MemberModule = (function() {
                                         if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
                                             FormbuilderModule.updateVenueDeleteButtons();
                                         }
+                                        if (window.FormbuilderModule && typeof FormbuilderModule.renumberLocationContainers === 'function') {
+                                            FormbuilderModule.renumberLocationContainers();
+                                        }
                                     }
                                 }
                             });
-                        }
-                    },
-                    onHeaderClick: function(container, locationNumber) {
-                        if (window._memberLocationQuantity > 1) {
-                            container.classList.toggle('form-location-container--collapsed');
                         }
                     },
                     onActivate: function(container, locationNumber) {
@@ -2210,12 +2208,10 @@ const MemberModule = (function() {
                 
                 // Store references for both member and formbuilder access
                 if (locationData) {
-                    window._memberVenue1Arrow = locationData.venue1Arrow;
                     window._memberVenue1DeleteBtn = locationData.venue1DeleteBtn;
                     window._memberVenue1Container = locationData.venue1Container;
                     window._memberLocationQuantity = locationQuantity;
                     // Also store for formbuilder's updateVenueDeleteButtons
-                    window._formbuilderVenue1Arrow = locationData.venue1Arrow;
                     window._formbuilderVenue1DeleteBtn = locationData.venue1DeleteBtn;
                 }
             } else {
@@ -2562,8 +2558,12 @@ const MemberModule = (function() {
                 out.push('Checkout Options');
                 continue;
             }
+            // Get name from label text (includes location number if applicable)
             var name = '';
-            if (fs.dataset && fs.dataset.fieldsetName && typeof fs.dataset.fieldsetName === 'string') {
+            var labelTextEl = fs.querySelector('.fieldset-label-text');
+            if (labelTextEl && labelTextEl.textContent) {
+                name = labelTextEl.textContent.trim();
+            } else if (fs.dataset && fs.dataset.fieldsetName && typeof fs.dataset.fieldsetName === 'string') {
                 name = fs.dataset.fieldsetName.trim();
             } else if (fs.dataset && fs.dataset.fieldsetKey && typeof fs.dataset.fieldsetKey === 'string') {
                 name = fs.dataset.fieldsetKey.trim();
