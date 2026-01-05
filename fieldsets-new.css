@@ -1084,6 +1084,22 @@
 }
 
 /* Ticket Group Item */
+.fieldset-sessionpricing-ticketgroup-item {
+    position: relative;
+}
+
+.fieldset-sessionpricing-ticketgroup-item::before {
+    content: '';
+    display: block;
+    position: sticky;
+    top: 0;
+    height: 28px;
+    margin-bottom: -28px;
+    background: #222;
+    z-index: 1;
+    pointer-events: none;
+}
+
 .fieldset-sessionpricing-ticketgroup-item-header {
     width: 100%;
     height: 36px;
@@ -1118,17 +1134,6 @@
     z-index: 2;
     background: var(--website-blue-active-fill, #3b82f599);
     border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
-}
-
-.fieldset-sessionpricing-ticketgroup-item-header--sticky::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -1px;
-    right: -1px;
-    height: 10px;
-    background: #222;
-    pointer-events: none;
 }
 
 .fieldset-sessionpricing-ticketgroup-item-shield {
