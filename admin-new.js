@@ -3185,7 +3185,6 @@ const AdminModule = (function() {
                         titleText: 'Delete Checkout Option',
                         messageText: 'Delete "' + titleText + '"?',
                         confirmLabel: 'Delete',
-                        confirmClass: 'danger',
                         focusCancel: true
                     }).then(function(confirmed) {
                         if (confirmed) {
