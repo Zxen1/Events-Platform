@@ -3413,8 +3413,7 @@ const MemberModule = (function() {
                 min_length: null,
                 max_length: null,
                 required: false,
-                location_repeat: false,
-                autofill_repeat: false
+                location_specific: false
             };
         }
         var result = {
@@ -3440,8 +3439,7 @@ const MemberModule = (function() {
             min_length: null,
             max_length: null,
             required: false,
-            location_repeat: false,
-            autofill_repeat: false
+            location_specific: false
         };
         
         if (field.name && typeof field.name === 'string') {
@@ -3526,20 +3524,12 @@ const MemberModule = (function() {
         }
 
         // Preserve repeat flags if provided by backend/formbuilder
-        if (typeof field.location_repeat === 'boolean') {
-            result.location_repeat = field.location_repeat;
-        } else if (typeof field.locationRepeat === 'boolean') {
-            result.location_repeat = field.locationRepeat;
-        } else if (field.location_repeat === 1 || field.location_repeat === '1') {
-            result.location_repeat = true;
-        }
-
-        if (typeof field.autofill_repeat === 'boolean') {
-            result.autofill_repeat = field.autofill_repeat;
-        } else if (typeof field.autofillRepeat === 'boolean') {
-            result.autofill_repeat = field.autofillRepeat;
-        } else if (field.autofill_repeat === 1 || field.autofill_repeat === '1') {
-            result.autofill_repeat = true;
+        if (typeof field.location_specific === 'boolean') {
+            result.location_specific = field.location_specific;
+        } else if (typeof field.locationSpecific === 'boolean') {
+            result.location_specific = field.locationSpecific;
+        } else if (field.location_specific === 1 || field.location_specific === '1') {
+            result.location_specific = true;
         }
         
         return result;
