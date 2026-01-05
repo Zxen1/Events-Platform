@@ -406,7 +406,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     $hasSubcategoryKey = in_array('subcategory_key', $columns, true);
     $hasRequired = in_array('required', $columns, true);
     $hasLocationRepeat = in_array('location_repeat', $columns, true);
-    $hasMustRepeat = in_array('must_repeat', $columns, true);
     $hasAutofillRepeat = in_array('autofill_repeat', $columns, true);
 
     $hasFieldsetIds = in_array('fieldset_ids', $columns, true);
@@ -432,9 +431,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
     }
     if ($hasLocationRepeat) {
         $select[] = 's.`location_repeat`';
-    }
-    if ($hasMustRepeat) {
-        $select[] = 's.`must_repeat`';
     }
     if ($hasAutofillRepeat) {
         $select[] = 's.`autofill_repeat`';
@@ -542,11 +538,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             $locationRepeat = trim($row['location_repeat']);
         }
 
-        $mustRepeat = null;
-        if ($hasMustRepeat && isset($row['must_repeat']) && is_string($row['must_repeat']) && $row['must_repeat'] !== '') {
-            $mustRepeat = trim($row['must_repeat']);
-        }
-
         $autofillRepeat = null;
         if ($hasAutofillRepeat && isset($row['autofill_repeat']) && is_string($row['autofill_repeat']) && $row['autofill_repeat'] !== '') {
             $autofillRepeat = trim($row['autofill_repeat']);
@@ -563,7 +554,6 @@ function fetchSubcategories(PDO $pdo, array $columns, array $categories): array
             'subcategory_key' => $subcategoryKey,
             'required' => $required,
             'location_repeat' => $locationRepeat,
-            'must_repeat' => $mustRepeat,
             'autofill_repeat' => $autofillRepeat,
             'fieldset_ids' => $fieldsetIds,
             'fieldset_names' => $fieldsetNames,
@@ -1072,13 +1062,6 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 $locationRepeatFlags[] = (trim($part) === '1' || strtolower(trim($part)) === 'true');
             }
         }
-        $mustRepeatFlags = [];
-        if (isset($sub['must_repeat']) && is_string($sub['must_repeat']) && $sub['must_repeat'] !== '') {
-            $repeatParts = preg_split('/\s*,\s*/', trim($sub['must_repeat']));
-            foreach ($repeatParts as $part) {
-                $mustRepeatFlags[] = (trim($part) === '1' || strtolower(trim($part)) === 'true');
-            }
-        }
         $autofillRepeatFlags = [];
         if (isset($sub['autofill_repeat']) && is_string($sub['autofill_repeat']) && $sub['autofill_repeat'] !== '') {
             $repeatParts = preg_split('/\s*,\s*/', trim($sub['autofill_repeat']));
@@ -1118,7 +1101,6 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
             // Get required flag for this field (default to false if not set)
             $requiredValue = isset($requiredFlags[$index]) ? $requiredFlags[$index] : false;
             $locationRepeatValue = isset($locationRepeatFlags[$index]) ? $locationRepeatFlags[$index] : false;
-            $mustRepeatValue = isset($mustRepeatFlags[$index]) ? $mustRepeatFlags[$index] : false;
             $autofillRepeatValue = isset($autofillRepeatFlags[$index]) ? $autofillRepeatFlags[$index] : false;
             
             // Get customizations for this fieldset if it's editable (keyed by fieldset_key)
@@ -1241,7 +1223,6 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'max_length' => $matchingFieldset['max_length'] ?? null,
                     'required' => $requiredValue,
                     'location_repeat' => $locationRepeatValue,
-                    'must_repeat' => $mustRepeatValue,
                     'autofill_repeat' => $autofillRepeatValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                 ];
@@ -1302,7 +1283,6 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                     'max_length' => $matchingFieldset['max_length'] ?? null,
                     'required' => $requiredValue,
                     'location_repeat' => $locationRepeatValue,
-                    'must_repeat' => $mustRepeatValue,
                     'autofill_repeat' => $autofillRepeatValue,
                     'fieldsetKey' => $fieldsetKeyValue,
                     'fields' => [],

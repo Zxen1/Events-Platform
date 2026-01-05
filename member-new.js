@@ -3414,7 +3414,6 @@ const MemberModule = (function() {
                 max_length: null,
                 required: false,
                 location_repeat: false,
-                must_repeat: false,
                 autofill_repeat: false
             };
         }
@@ -3442,7 +3441,6 @@ const MemberModule = (function() {
             max_length: null,
             required: false,
             location_repeat: false,
-            must_repeat: false,
             autofill_repeat: false
         };
         
@@ -3534,14 +3532,6 @@ const MemberModule = (function() {
             result.location_repeat = field.locationRepeat;
         } else if (field.location_repeat === 1 || field.location_repeat === '1') {
             result.location_repeat = true;
-        }
-
-        if (typeof field.must_repeat === 'boolean') {
-            result.must_repeat = field.must_repeat;
-        } else if (typeof field.mustRepeat === 'boolean') {
-            result.must_repeat = field.mustRepeat;
-        } else if (field.must_repeat === 1 || field.must_repeat === '1') {
-            result.must_repeat = true;
         }
 
         if (typeof field.autofill_repeat === 'boolean') {

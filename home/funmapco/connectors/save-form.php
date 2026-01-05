@@ -628,7 +628,6 @@ try {
             $fieldsetIdsFromPayload = [];
             $requiredFieldsetIdsFromPayload = [];
             $locationRepeatFieldsetIdsFromPayload = [];
-            $mustRepeatFieldsetIdsFromPayload = [];
             $autofillRepeatFieldsetIdsFromPayload = [];
             
             // If fields array exists in payload (even if empty), field types should be updated
@@ -658,13 +657,9 @@ try {
                                 }
                                 // Repeat flags (stored in subcategories table aligned with fieldset_ids, same format as required)
                                 $hasLocationRepeat = !empty($fieldData['location_repeat']) || !empty($fieldData['locationRepeat']);
-                                $hasMustRepeat = !empty($fieldData['must_repeat']) || !empty($fieldData['mustRepeat']);
                                 $hasAutofillRepeat = !empty($fieldData['autofill_repeat']) || !empty($fieldData['autofillRepeat']);
                                 if ($hasLocationRepeat) {
                                     $locationRepeatFieldsetIdsFromPayload[] = $ftId;
-                                }
-                                if ($hasMustRepeat) {
-                                    $mustRepeatFieldsetIdsFromPayload[] = $ftId;
                                 }
                                 if ($hasAutofillRepeat) {
                                     $autofillRepeatFieldsetIdsFromPayload[] = $ftId;
@@ -679,7 +674,6 @@ try {
                     $fieldsetIds = $fieldsetIdsFromPayload;
                     $requiredFieldsetIds = $requiredFieldsetIdsFromPayload;
                     $locationRepeatFieldsetIds = $locationRepeatFieldsetIdsFromPayload;
-                    $mustRepeatFieldsetIds = $mustRepeatFieldsetIdsFromPayload;
                     $autofillRepeatFieldsetIds = $autofillRepeatFieldsetIdsFromPayload;
                     $hasFieldsetsForThisSub = true;
                 }
@@ -921,18 +915,14 @@ try {
 
             // Build repeat CSVs in same boolean format aligned with fieldset_ids order
             $locationRepeatBooleans = [];
-            $mustRepeatBooleans = [];
             $autofillRepeatBooleans = [];
             foreach ($fieldsetIds as $fieldsetId) {
                 $isLocationRepeat = isset($locationRepeatFieldsetIds) && in_array($fieldsetId, $locationRepeatFieldsetIds, true);
-                $isMustRepeat = isset($mustRepeatFieldsetIds) && in_array($fieldsetId, $mustRepeatFieldsetIds, true);
                 $isAutofillRepeat = isset($autofillRepeatFieldsetIds) && in_array($fieldsetId, $autofillRepeatFieldsetIds, true);
                 $locationRepeatBooleans[] = $isLocationRepeat ? '1' : '0';
-                $mustRepeatBooleans[] = $isMustRepeat ? '1' : '0';
                 $autofillRepeatBooleans[] = $isAutofillRepeat ? '1' : '0';
             }
             $locationRepeatCsv = !empty($locationRepeatBooleans) ? implode(',', $locationRepeatBooleans) : null;
-            $mustRepeatCsv = !empty($mustRepeatBooleans) ? implode(',', $mustRepeatBooleans) : null;
             $autofillRepeatCsv = !empty($autofillRepeatBooleans) ? implode(',', $autofillRepeatBooleans) : null;
 
             $updateParts = [];
@@ -1000,10 +990,6 @@ try {
                 if (in_array('location_repeat', $subcategoryColumns, true)) {
                     $updateParts[] = 'location_repeat = :location_repeat';
                     $params[':location_repeat'] = $locationRepeatCsv !== null && $locationRepeatCsv !== '' ? $locationRepeatCsv : null;
-                }
-                if (in_array('must_repeat', $subcategoryColumns, true)) {
-                    $updateParts[] = 'must_repeat = :must_repeat';
-                    $params[':must_repeat'] = $mustRepeatCsv !== null && $mustRepeatCsv !== '' ? $mustRepeatCsv : null;
                 }
                 if (in_array('autofill_repeat', $subcategoryColumns, true)) {
                     $updateParts[] = 'autofill_repeat = :autofill_repeat';

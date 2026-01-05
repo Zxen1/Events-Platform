@@ -399,7 +399,6 @@
                         var fieldName = fieldNameSpan ? fieldNameSpan.textContent.trim() : '';
                         var isRequired = requiredCheckbox ? requiredCheckbox.checked : false;
                         var isLocationRepeat = wrapper.classList.contains('formbuilder-field-wrapper--location-repeat');
-                        var isMustRepeat = wrapper.classList.contains('formbuilder-field-wrapper--must-repeat');
                         var isAutofillRepeat = wrapper.classList.contains('formbuilder-field-wrapper--autofill-repeat');
                         
                         // Find matching fieldset from loaded reference data
@@ -411,11 +410,10 @@
                         }
 
                         // Enforce repeat invariants for location fieldsets on save:
-                        // Venue/City/Address must always be location-repeat + must-repeat, never autofill.
+                        // Venue/City/Address must always be location-repeat, never autofill.
                         var repeatKeyLower = String((fieldsetDef ? fieldsetDef.key : fieldsetId) || '').toLowerCase();
                         if (repeatKeyLower === 'venue' || repeatKeyLower === 'city' || repeatKeyLower === 'address') {
                             isLocationRepeat = true;
-                            isMustRepeat = true;
                             isAutofillRepeat = false;
                         }
                         
@@ -424,7 +422,6 @@
                             name: fieldName,
                             required: isRequired,
                             location_repeat: isLocationRepeat,
-                            must_repeat: isMustRepeat,
                             autofill_repeat: isAutofillRepeat,
                             input_type: fieldsetDef ? fieldsetDef.key : fieldsetId
                         };
@@ -787,7 +784,6 @@
         var isRequired = fieldWrapper.classList.contains('formbuilder-field-wrapper--required');
         var isModified = fieldWrapper.classList.contains('formbuilder-field-wrapper--modified');
         var isLocationRepeat = fieldWrapper.classList.contains('formbuilder-field-wrapper--location-repeat');
-        var isMustRepeat = fieldWrapper.classList.contains('formbuilder-field-wrapper--must-repeat');
         var isAutofillRepeat = fieldWrapper.classList.contains('formbuilder-field-wrapper--autofill-repeat');
         
         var fieldEl = fieldWrapper.querySelector('.formbuilder-field');
@@ -796,7 +792,6 @@
         var requiredEl = fieldWrapper.querySelector('.formbuilder-field-required');
         var modifiedLabel = fieldWrapper.querySelector('.formbuilder-field-modified-label');
         var indRepeat = fieldWrapper.querySelector('.formbuilder-field-indicator-repeat');
-        var indMust = fieldWrapper.querySelector('.formbuilder-field-indicator-must');
         var indAutofill = fieldWrapper.querySelector('.formbuilder-field-indicator-autofill');
         
         if (fieldEl) fieldEl.classList.toggle('formbuilder-field--editing', !!isEditing);
@@ -805,7 +800,6 @@
         if (requiredEl) requiredEl.classList.toggle('formbuilder-field-required--required', !!isRequired);
         if (modifiedLabel) modifiedLabel.classList.toggle('formbuilder-field-modified-label--modified', !!isModified);
         if (indRepeat) indRepeat.classList.toggle('formbuilder-field-indicator-repeat--location-repeat', !!isLocationRepeat);
-        if (indMust) indMust.classList.toggle('formbuilder-field-indicator-must--must-repeat', !!isMustRepeat);
         if (indAutofill) indAutofill.classList.toggle('formbuilder-field-indicator-autofill--autofill-repeat', !!isAutofillRepeat);
     }
     
@@ -1762,32 +1756,37 @@
                     var locationRepeatLabel = wrapper.querySelector('.formbuilder-field-switch-label');
                     if (!locationRepeatSwitch || !locationRepeatLabel) continue;
                     
-                    // Fieldsets below the divider (index > dividerIndex) should have location repeat ON and locked (disabled)
-                    // Fieldsets above the divider (index < dividerIndex) should have location repeat OFF and disabled
-                    if (i > dividerIndex) {
-                        // Below divider - lock location repeat switch ON (disabled but on)
+                    // Fieldsets below the divider (index >= dividerIndex) should have location repeat ON and locked
+                    // Fieldsets above the divider (index < dividerIndex) should have location repeat OFF and locked
+                    // Autofill repeat is only enabled for fields below the divider
+                    var autofillRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[1];
+                    var autofillRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[1];
+                    
+                    if (i >= dividerIndex) {
+                        // Below divider (or is the location fieldset) - lock location repeat ON, enable autofill toggle
                         locationRepeatSwitch.classList.add('on');
                         locationRepeatLabel.classList.add('disabled');
                         locationRepeatSwitch.classList.add('disabled');
                         wrapper.classList.add('formbuilder-field-wrapper--location-repeat');
+                        
+                        // Enable autofill-repeat switch for fields below divider (admin can toggle)
+                        if (autofillRepeatLabel) autofillRepeatLabel.classList.remove('disabled');
+                        if (autofillRepeatSwitch) autofillRepeatSwitch.classList.remove('disabled');
+                        
                         syncFieldWrapperUi(wrapper);
                         notifyChange();
                     } else {
-                        // Above divider - disable location repeat switch and turn it off
+                        // Above divider - lock location repeat OFF, disable autofill
                         locationRepeatSwitch.classList.remove('on');
                         locationRepeatLabel.classList.add('disabled');
                         locationRepeatSwitch.classList.add('disabled');
                         wrapper.classList.remove('formbuilder-field-wrapper--location-repeat');
                         
-                        // Lock must-repeat and autofill-repeat switches above divider (disable but don't change values)
-                        var mustRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[1];
-                        var mustRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[1];
-                        var autofillRepeatLabel = wrapper.querySelectorAll('.formbuilder-field-switch-label')[2];
-                        var autofillRepeatSwitch = wrapper.querySelectorAll('.formbuilder-field-switch')[2];
-                        if (mustRepeatLabel) mustRepeatLabel.classList.add('disabled');
-                        if (mustRepeatSwitch) mustRepeatSwitch.classList.add('disabled');
+                        // Disable autofill-repeat switch above divider (not applicable)
                         if (autofillRepeatLabel) autofillRepeatLabel.classList.add('disabled');
                         if (autofillRepeatSwitch) autofillRepeatSwitch.classList.add('disabled');
+                        if (autofillRepeatSwitch) autofillRepeatSwitch.classList.remove('on');
+                        wrapper.classList.remove('formbuilder-field-wrapper--autofill-repeat');
                         
                         syncFieldWrapperUi(wrapper);
                         notifyChange();
@@ -2463,13 +2462,6 @@
             locationRepeatLabel.appendChild(locationRepeatSwitch);
             locationRepeatLabel.appendChild(document.createTextNode('Location Repeat'));
             
-            var mustRepeatLabel = document.createElement('label');
-            mustRepeatLabel.className = 'formbuilder-field-switch-label disabled';
-            var mustRepeatSwitch = document.createElement('div');
-            mustRepeatSwitch.className = 'formbuilder-field-switch disabled';
-            mustRepeatLabel.appendChild(mustRepeatSwitch);
-            mustRepeatLabel.appendChild(document.createTextNode('Must Repeat'));
-            
             var autofillRepeatLabel = document.createElement('label');
             autofillRepeatLabel.className = 'formbuilder-field-switch-label disabled';
             var autofillRepeatSwitch = document.createElement('div');
@@ -2479,14 +2471,10 @@
 
             // Force-lock repeat switches for location fieldsets (Venue/City/Address)
             if (isLockedLocationFieldset) {
-                // Location Repeat + Must Repeat ON
+                // Location Repeat ON
                 locationRepeatLabel.classList.add('disabled');
                 locationRepeatSwitch.classList.add('disabled', 'on');
                 fieldWrapper.classList.add('formbuilder-field-wrapper--location-repeat');
-
-                mustRepeatLabel.classList.add('disabled');
-                mustRepeatSwitch.classList.add('disabled', 'on');
-                fieldWrapper.classList.add('formbuilder-field-wrapper--must-repeat');
 
                 // Autofill OFF
                 autofillRepeatLabel.classList.add('disabled');
@@ -2502,30 +2490,12 @@
                 var isOn = locationRepeatSwitch.classList.toggle('on');
                 if (isOn) {
                     fieldWrapper.classList.add('formbuilder-field-wrapper--location-repeat');
-                    mustRepeatLabel.classList.remove('disabled');
-                    mustRepeatSwitch.classList.remove('disabled');
                     autofillRepeatLabel.classList.remove('disabled');
                     autofillRepeatSwitch.classList.remove('disabled');
                 } else {
                     fieldWrapper.classList.remove('formbuilder-field-wrapper--location-repeat');
-                    mustRepeatLabel.classList.add('disabled');
-                    mustRepeatSwitch.classList.add('disabled');
                     autofillRepeatLabel.classList.add('disabled');
                     autofillRepeatSwitch.classList.add('disabled');
-                }
-                syncFieldWrapperUi(fieldWrapper);
-                notifyChange();
-            });
-            
-            mustRepeatSwitch.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (isLockedLocationFieldset) return;
-                if (mustRepeatSwitch.classList.contains('disabled')) return;
-                var isOn = mustRepeatSwitch.classList.toggle('on');
-                if (isOn) {
-                    fieldWrapper.classList.add('formbuilder-field-wrapper--must-repeat');
-                } else {
-                    fieldWrapper.classList.remove('formbuilder-field-wrapper--must-repeat');
                 }
                 syncFieldWrapperUi(fieldWrapper);
                 notifyChange();
@@ -2546,7 +2516,6 @@
             });
             
             switchRow.appendChild(locationRepeatLabel);
-            switchRow.appendChild(mustRepeatLabel);
             switchRow.appendChild(autofillRepeatLabel);
             fieldEditPanel.appendChild(switchRow);
 
@@ -2561,14 +2530,6 @@
                         initialLocationRepeat = !!fieldData.locationRepeat;
                     }
                 }
-                var initialMustRepeat = false;
-                if (fieldData) {
-                    if (fieldData.must_repeat !== undefined) {
-                        initialMustRepeat = !!fieldData.must_repeat;
-                    } else if (fieldData.mustRepeat !== undefined) {
-                        initialMustRepeat = !!fieldData.mustRepeat;
-                    }
-                }
                 var initialAutofillRepeat = false;
                 if (fieldData) {
                     if (fieldData.autofill_repeat !== undefined) {
@@ -2581,23 +2542,14 @@
                 if (initialLocationRepeat) {
                     locationRepeatSwitch.classList.add('on');
                     fieldWrapper.classList.add('formbuilder-field-wrapper--location-repeat');
-                    mustRepeatLabel.classList.remove('disabled');
-                    mustRepeatSwitch.classList.remove('disabled');
                     autofillRepeatLabel.classList.remove('disabled');
                     autofillRepeatSwitch.classList.remove('disabled');
                 } else {
-                    mustRepeatLabel.classList.add('disabled');
-                    mustRepeatSwitch.classList.add('disabled');
                     autofillRepeatLabel.classList.add('disabled');
                     autofillRepeatSwitch.classList.add('disabled');
-                    initialMustRepeat = false;
                     initialAutofillRepeat = false;
                 }
 
-                if (initialMustRepeat) {
-                    mustRepeatSwitch.classList.add('on');
-                    fieldWrapper.classList.add('formbuilder-field-wrapper--must-repeat');
-                }
                 if (initialAutofillRepeat) {
                     autofillRepeatSwitch.classList.add('on');
                     fieldWrapper.classList.add('formbuilder-field-wrapper--autofill-repeat');
@@ -3931,8 +3883,7 @@
         // Identify location fieldset and repeat fieldsets
         var locationFieldset = null;
         var locationFieldsetType = null;
-        var mustRepeatFieldsets = [];
-        var locationRepeatOnlyFieldsets = [];
+        var locationRepeatFieldsets = [];
         
         // Parse repeat flags from field data
         fields.forEach(function(fieldData, index) {
@@ -3956,22 +3907,16 @@
                 }
             }
             
-            // Check for repeat flags
+            // Check for location_repeat flag
             var isLocationRepeat = false;
             if (fieldData.location_repeat !== undefined) {
                 isLocationRepeat = !!fieldData.location_repeat;
             }
-            var isMustRepeat = false;
-            if (fieldData.must_repeat !== undefined) {
-                isMustRepeat = !!fieldData.must_repeat;
-            }
             var isLocationKey = (fieldsetKey === 'venue' || fieldsetKey === 'city' || fieldsetKey === 'address' || fieldsetKey === 'location');
             
-            if (isMustRepeat && !isLocationKey) {
-                mustRepeatFieldsets.push(fieldData);
-            }
-            if (isLocationRepeat && !isMustRepeat && !isLocationKey) {
-                locationRepeatOnlyFieldsets.push(fieldData);
+            // Non-location fieldsets with location_repeat go into the location container
+            if (isLocationRepeat && !isLocationKey) {
+                locationRepeatFieldsets.push(fieldData);
             }
         });
         
@@ -3992,16 +3937,7 @@
         var locationFieldsetEl = null;
         var regularFieldsets = [];
         var allRepeatKeys = {};
-        mustRepeatFieldsets.forEach(function(f) {
-            var k = '';
-            if (f.fieldset_key && typeof f.fieldset_key === 'string') {
-                k = f.fieldset_key.toLowerCase();
-            } else if (f.fieldsetKey && typeof f.fieldsetKey === 'string') {
-                k = f.fieldsetKey.toLowerCase();
-            }
-            if (k) allRepeatKeys[k] = true;
-        });
-        locationRepeatOnlyFieldsets.forEach(function(f) {
+        locationRepeatFieldsets.forEach(function(f) {
             var k = '';
             if (f.fieldset_key && typeof f.fieldset_key === 'string') {
                 k = f.fieldset_key.toLowerCase();
@@ -4152,8 +4088,7 @@
                         quantity: quantity,
                         locationType: locationFieldsetType,
                         locationFieldsetData: locationFieldset,
-                        mustRepeatFieldsets: mustRepeatFieldsets,
-                        locationRepeatOnlyFieldsets: locationRepeatOnlyFieldsets,
+                        locationRepeatFieldsets: locationRepeatFieldsets,
                         buildFieldset: buildFieldset,
                         idPrefix: idPrefix,
                         venue1Container: v1ContainerData.container,
@@ -4298,8 +4233,7 @@
                 }
                 
                 // Build repeat fieldsets for this additional location
-                var combinedRepeatFieldsets = mustRepeatFieldsets.concat(locationRepeatOnlyFieldsets);
-                combinedRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
+                locationRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
                     var fieldsetKey = '';
                     if (fieldData.fieldset_key && typeof fieldData.fieldset_key === 'string') {
                         fieldsetKey = fieldData.fieldset_key.toLowerCase();
@@ -4355,9 +4289,8 @@
      * @param {number} options.quantity - Number of locations to render
      * @param {string} options.locationType - Type of location (venue, city, address)
      * @param {Object} options.locationFieldsetData - Field data for the location fieldset
-     * @param {Array} options.mustRepeatFieldsets - Fieldsets that must repeat for each location
+     * @param {Array} options.locationRepeatFieldsets - Fieldsets that repeat for each location
      * @param {Array} options.autofillRepeatFieldsets - Fieldsets that autofill from location 1
-     * @param {Array} options.locationRepeatOnlyFieldsets - Optional override fieldsets
      * @param {Function} options.buildFieldset - Function to build fieldsets (FieldsetBuilder.buildFieldset)
      * @param {string} options.idPrefix - Prefix for field IDs
      * @param {Function} options.getDefaultCurrency - Function to get default currency
@@ -4370,9 +4303,8 @@
         var quantity = options.quantity || 1;
         var locationType = options.locationType || 'venue';
         var locationFieldsetData = options.locationFieldsetData;
-        var mustRepeatFieldsets = options.mustRepeatFieldsets || [];
+        var locationRepeatFieldsets = options.locationRepeatFieldsets || [];
         var autofillRepeatFieldsets = options.autofillRepeatFieldsets || [];
-        var locationRepeatOnlyFieldsets = options.locationRepeatOnlyFieldsets || [];
         var buildFieldset = options.buildFieldset;
         var idPrefix = options.idPrefix || 'form';
         var getDefaultCurrency = options.getDefaultCurrency || function() { return 'USD'; };
@@ -4408,20 +4340,11 @@
         var insertAfter = venue1Container;
         
         // Build lookup for repeat fieldsets
-        var locationRepeatOnlyKeys = {};
-        locationRepeatOnlyFieldsets.forEach(function(f) {
+        var locationRepeatKeys = {};
+        locationRepeatFieldsets.forEach(function(f) {
             var k = getFieldsetKey(f);
-            if (k) locationRepeatOnlyKeys[k] = f;
+            if (k) locationRepeatKeys[k] = f;
         });
-        
-        var mustRepeatKeys = {};
-        mustRepeatFieldsets.forEach(function(f) {
-            var k = getFieldsetKey(f);
-            if (k) mustRepeatKeys[k] = f;
-        });
-        
-        // Combine fieldsets in order
-        var combinedFieldsets = mustRepeatFieldsets.concat(locationRepeatOnlyFieldsets);
         
         for (var i = 2; i <= quantity; i++) {
             (function(locationNum) {
@@ -4548,13 +4471,11 @@
                 }
                 
                 // Render all repeat fieldsets in order
-                combinedFieldsets.forEach(function(fieldData, fieldIndex) {
+                locationRepeatFieldsets.forEach(function(fieldData, fieldIndex) {
                     var key = getFieldsetKey(fieldData);
                     if (key === 'venue' || key === 'city' || key === 'address' || key === 'location') {
                         return;
                     }
-                    
-                    var isOptionalOverride = !!locationRepeatOnlyKeys[key];
                     
                     var fieldset = buildFieldset(fieldData, {
                         idPrefix: idPrefix,
@@ -4566,11 +4487,8 @@
                     
                     if (!fieldset) return;
                     
-                    // Mark optional override fieldsets
-                    if (isOptionalOverride) {
-                        fieldset.dataset.isOverride = 'true';
-                        fieldset.dataset.fieldsetKey = key;
-                    }
+                    // Mark location repeat fieldsets
+                    fieldset.dataset.fieldsetKey = key;
                     
                     locationSection.appendChild(fieldset);
                     
@@ -4588,23 +4506,21 @@
                     
                     // Handle autofill behavior
                     var isAutofill = autofillRepeatFieldsets.indexOf(fieldData) !== -1;
-                    if (isOptionalOverride) {
-                        if (isAutofill) {
-                            fieldset.dataset.autofillMode = 'value';
-                            (function(fs, k) {
-                                setTimeout(function() {
-                                    copyLocation1Values(fs, k);
-                                }, 150);
-                            })(fieldset, key);
-                        } else {
-                            fieldset.dataset.autofillMode = 'placeholder';
-                            fieldset.classList.add('form-location-override--placeholder');
-                            (function(fs, k) {
-                                setTimeout(function() {
-                                    setupPlaceholderSync(fs, k);
-                                }, 150);
-                            })(fieldset, key);
-                        }
+                    if (isAutofill) {
+                        fieldset.dataset.autofillMode = 'value';
+                        (function(fs, k) {
+                            setTimeout(function() {
+                                copyLocation1Values(fs, k);
+                            }, 150);
+                        })(fieldset, key);
+                    } else {
+                        fieldset.dataset.autofillMode = 'placeholder';
+                        fieldset.classList.add('form-location-override--placeholder');
+                        (function(fs, k) {
+                            setTimeout(function() {
+                                setupPlaceholderSync(fs, k);
+                            }, 150);
+                        })(fieldset, key);
                     } else if (isAutofill) {
                         (function(fs, fd) {
                             setTimeout(function() {
