@@ -1084,6 +1084,11 @@
 }
 
 /* Ticket Group Item */
+.fieldset-sessionpricing-ticketgroup-item {
+    position: relative;
+    z-index: 0;
+}
+
 .fieldset-sessionpricing-ticketgroup-item-header {
     width: 100%;
 }
