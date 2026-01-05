@@ -3800,7 +3800,7 @@
         
         // Create location container for Venue 1
         var locationTypeName = locationFieldsetType ? locationFieldsetType.charAt(0).toUpperCase() + locationFieldsetType.slice(1) : 'Venue';
-        var venue1Name = locationTypeName + ' 1';
+        var venue1Name = initialQuantity > 1 ? (locationTypeName + ' 1') : locationTypeName;
         
         var v1ContainerData = createLocationContainerHeader({
             locationName: venue1Name,
