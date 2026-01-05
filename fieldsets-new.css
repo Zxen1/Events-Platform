@@ -1126,9 +1126,8 @@
     top: -10px;
     left: -1px;
     right: -1px;
-    height: 28px;
+    height: 10px;
     background: #222;
-    z-index: -1;
     pointer-events: none;
 }
 
