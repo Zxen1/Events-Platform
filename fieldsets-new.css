@@ -1020,10 +1020,31 @@
     flex: 0 0 auto;
     padding: 10px;
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
     gap: 10px;
     border-top: 1px solid #333;
     background: #222;
+}
+
+.fieldset-sessionpricing-ticketgroups-button-add,
+.fieldset-sessionpricing-ticketgroups-button-remove {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.fieldset-sessionpricing-ticketgroups-button-add:hover,
+.fieldset-sessionpricing-ticketgroups-button-remove:hover {
+    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
 }
 
 .fieldset-sessionpricing-ticketgroups-button-ok,
@@ -1151,57 +1172,6 @@
     cursor: pointer;
     margin-left: 10px;
     padding: 0;
-}
-
-.fieldset-sessionpricing-ticketgroup-button-add,
-.fieldset-sessionpricing-ticketgroup-button-remove {
-    width: 36px;
-    min-width: 36px;
-    max-width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 18px;
-    padding: 0;
-    position: relative;
-}
-
-.fieldset-sessionpricing-ticketgroup-button-add {
-    margin-left: 10px;
-}
-
-.fieldset-sessionpricing-ticketgroup-button-remove {
-    margin-left: 10px;
-}
-
-.fieldset-sessionpricing-ticketgroup-button-add:hover,
-.fieldset-sessionpricing-ticketgroup-button-remove:hover {
-    background: transparent;
-}
-
-.fieldset-sessionpricing-ticketgroup-button-add:active::after,
-.fieldset-sessionpricing-ticketgroup-button-remove:active::after {
-    content: '';
-    position: absolute;
-    left: 3px;
-    top: 3px;
-    width: 30px;
-    height: 30px;
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-radius: 5px;
-    z-index: -1;
-}
-
-.fieldset-sessionpricing-ticketgroup-button-add:disabled,
-.fieldset-sessionpricing-ticketgroup-button-remove:disabled {
-    cursor: not-allowed;
-    opacity: 0.3;
 }
 
 /* Ticket Group Editor */
