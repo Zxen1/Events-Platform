@@ -1679,7 +1679,8 @@ const FieldsetBuilder = (function(){
                 
             case 'session_pricing':
                 // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
-                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var spLabelEl = buildLabel(name, tooltip, minLength, maxLength);
+                fieldset.appendChild(spLabelEl);
 
                 // Track selected dates:
                 // { 'YYYY-MM-DD': { times: ['19:00', ...], edited: [true,false...], groups: ['','B',...] } }
@@ -2145,13 +2146,23 @@ const FieldsetBuilder = (function(){
                     spDatePickerAnchorEl = anchorEl;
                     try { anchorEl.classList.add('fieldset-sessionpricing-session-field-label--open'); } catch (eOpen2) {}
 
-                    // Position popover BELOW the clicked date box (10px gap)
+                    // Position popover above the main session pricing label
                     try {
                         if (fieldset && fieldset.style) fieldset.style.position = 'relative';
                         var fsRect = fieldset.getBoundingClientRect();
-                        var r = anchorEl.getBoundingClientRect();
-                        var top = (r.bottom - fsRect.top) + 10;
-                        if (top < 0) top = 0;
+                        var labelRect = spLabelEl.getBoundingClientRect();
+                        
+                        // Measure popover height (must be visible but hidden to measure)
+                        spDatePickerPopover.style.visibility = 'hidden';
+                        spDatePickerPopover.style.display = 'block';
+                        spDatePickerPopover.classList.add('fieldset-sessionpricing-calendar-popover--open');
+                        var popHeight = spDatePickerPopover.offsetHeight;
+                        spDatePickerPopover.classList.remove('fieldset-sessionpricing-calendar-popover--open');
+                        spDatePickerPopover.style.display = '';
+                        spDatePickerPopover.style.visibility = '';
+                        
+                        // Calculate top: label's top relative to fieldset minus popover height minus 10px
+                        var top = (labelRect.top - fsRect.top) - popHeight - 10;
                         spDatePickerPopover.style.top = top + 'px';
                     } catch (eTop) {}
 
@@ -2176,7 +2187,7 @@ const FieldsetBuilder = (function(){
 
                 // Open date picker on click/enter/space
                 spDatePickerBox.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    try { e.preventDefault(); } catch (e0) {}
                     spOpenDatePicker(spDatePickerBox);
                 });
                 spDatePickerBox.addEventListener('keydown', function(e) {
@@ -2424,13 +2435,13 @@ const FieldsetBuilder = (function(){
 
                 // Footer buttons (OK/Cancel) for the ticket-group pop-up (locked like session picker)
                 spTicketGroupFooterOk.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    try { e.preventDefault(); } catch (e0) {}
                     spCloseAllGroupEditors();
                     spCloseTicketMenu();
                 });
 
                 spTicketGroupFooterCancel.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    try { e.preventDefault(); } catch (e0) {}
                     // Revert current open editor only, then close the menu.
                     try {
                         if (spOpenGroupKey && spOpenGroupSnapshot) {
@@ -2514,6 +2525,11 @@ const FieldsetBuilder = (function(){
                     group.className = 'fieldset-sessionpricing-ticketgroup-item';
                     group.dataset.ticketGroupKey = key;
 
+                    // 28px Shield Rectangle (coupled to sticky header)
+                    var shield = document.createElement('div');
+                    shield.className = 'fieldset-sessionpricing-ticketgroup-item-shield';
+                    group.appendChild(shield);
+
                     // Header row: select group + edit pencil
                     var header = document.createElement('div');
                     header.className = 'fieldset-sessionpricing-ticketgroup-item-header';
@@ -2537,7 +2553,6 @@ const FieldsetBuilder = (function(){
                     editBtn.title = 'Edit Ticket Group';
                     editBtn.setAttribute('aria-label', 'Edit Ticket Group');
                     editBtn.addEventListener('click', function(e) {
-                        try { e.stopPropagation(); } catch (e0) {}
                         if (spOpenGroupKey && spOpenGroupKey !== key) {
                             spCloseAllGroupEditors();
                         }
@@ -2561,7 +2576,7 @@ const FieldsetBuilder = (function(){
                     addGroupBtn.textContent = '+';
                     addGroupBtn.setAttribute('aria-label', 'Add Ticket Group');
                     addGroupBtn.addEventListener('click', function(e) {
-                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        try { e.preventDefault(); } catch (e0) {}
                         var newKey = spFirstUnusedLetter();
                         spEnsureTicketGroup(newKey);
                         spUpdateTicketGroupHeaderButtons();
@@ -2581,7 +2596,7 @@ const FieldsetBuilder = (function(){
                     removeGroupBtn.textContent = '−';
                     removeGroupBtn.setAttribute('aria-label', 'Delete Ticket Group');
                     removeGroupBtn.addEventListener('click', async function(e) {
-                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        try { e.preventDefault(); } catch (e0) {}
                         // Group A is never deletable
                         if (key === 'A') return;
                         // If only one group remains, deletion is disabled
@@ -2702,7 +2717,7 @@ const FieldsetBuilder = (function(){
                                     dateDisplay.setAttribute('role', 'button');
                                     dateDisplay.setAttribute('tabindex', '0');
                                     dateDisplay.addEventListener('click', function(ev) {
-                                        try { ev.preventDefault(); ev.stopPropagation(); } catch (e0) {}
+                                        try { ev.preventDefault(); } catch (e0) {}
                                         spOpenDatePicker(dateDisplay);
                                     });
                                 } catch (ePick) {}
@@ -2909,7 +2924,7 @@ const FieldsetBuilder = (function(){
 
                             (function(dateStr, idx, timeInput, ticketBtn, rowEl) {
                                 ticketBtn.addEventListener('click', function(e) {
-                                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                                    try { e.preventDefault(); } catch (e0) {}
                                     var picker = { dateStr: dateStr, idx: idx, timeInput: timeInput, ticketBtn: ticketBtn, rowEl: rowEl };
                                     if (spTicketMenuOpen && spActivePicker && spActivePicker.ticketBtn === ticketBtn) {
                                         spCloseTicketMenu();

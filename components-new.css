@@ -328,9 +328,16 @@
     font-size: 12px;
 }
 
+.calendar-marker-container {
+    height: 8px;
+    position: relative;
+    background: #111;
+    width: 100%;
+}
+
 .calendar-today-marker {
     position: absolute;
-    bottom: 0;
+    top: 0;
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -383,7 +390,7 @@
 }
 
 .calendar-day.today {
-    color: #ffffff;
+    color: var(--website-blue-border, #3b82f5);
     font-weight: 700;
 }
 

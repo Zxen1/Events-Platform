@@ -774,7 +774,7 @@
 }
 
 /* Location divider line - appears above location fieldset when location type is selected */
-.formbuilder-location-divider {
+.form-location-divider {
   width: 100%;
   height: 3px;
   min-height: 3px;
@@ -1509,15 +1509,263 @@
   margin-bottom: 0;
 }
 
+/* ============================================================================
+   FORM LOCATION MANAGER
+   Centralized location container infrastructure for form building.
+   This is the single source of truth for location-related UI components,
+   used by both admin form preview and member-facing forms.
+   ============================================================================ */
+
+/* Form Primary Container - matches formpicker menu styling */
+.form-primary-container {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+/* When container is active/focused - blue border */
+.form-primary-container[data-active="true"] {
+  border-color: var(--website-blue-border);
+}
+
+/* Form Location Picker - matches formpicker menu styling */
+.form-location-picker {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+/* When container is active/focused - blue border */
+.form-location-picker[data-active="true"] {
+  border-color: var(--website-blue-border);
+}
+
+/* Form Checkout Container - matches formpicker menu styling */
+.form-checkout-container {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+/* When container is active/focused - blue border */
+.form-checkout-container[data-active="true"] {
+  border-color: var(--website-blue-border);
+}
+
+/* Location container */
+.form-location-container {
+  margin-bottom: 12px;
+}
+
+/* Location header - 36px, horizontal flex, website blue background */
+.form-location-header {
+  width: 100%;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  background: var(--website-blue-active-fill, #3b82f599);
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #fff;
+  font-size: 14px;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.form-location-header:hover {
+  background: var(--website-blue-hover-fill, #3b82f5);
+}
+
+/* When expanded - connect to content below */
+.form-location-container:not(.form-location-container--collapsed) .form-location-header {
+  border-radius: 5px 5px 0 0;
+  border-bottom: none;
+}
+
+/* When container is active/focused - blue border */
+.form-location-container[data-active="true"] > .form-location-header {
+  border-color: var(--website-blue-border);
+}
+
+.form-location-container[data-active="true"] > .form-location-content {
+  border-color: var(--website-blue-border);
+}
+
+/* Header text */
+.form-location-header-text {
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 36px;
+}
+
+/* Arrow - line-height for vertical centering */
+.form-location-header-arrow {
+  width: 16px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  font-size: 10px;
+  color: #888;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+/* Collapsed = arrow points down (default). Expanded = arrow rotated 180deg */
+.form-location-container:not(.form-location-container--collapsed) .form-location-header-arrow {
+  transform: rotate(180deg);
+}
+
+/* Delete button in header */
+.form-location-header-button-delete {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 24px;
+  line-height: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.form-location-header-button-delete:hover {
+  color: #e74c3c;
+}
+
+/* Location content - styled like formpicker menu options */
+.form-location-content {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
+  padding: 12px;
+}
+
+/* When collapsed, content is hidden */
+.form-location-container--collapsed .form-location-content {
+  display: none;
+}
+
+/* ============================================================================
+   LOCATION QUANTITY PICKER
+   ============================================================================ */
+
+.form-location-quantity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.form-location-quantity-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.form-location-quantity-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-location-quantity-btn {
+  width: 36px;
+  min-width: 36px;
+  max-width: 36px;
+  height: 36px;
+  line-height: 34px;
+  text-align: center;
+  background: transparent;
+  border: 1px solid #444;
+  border-radius: 5px;
+  color: #777;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+}
+
+.form-location-quantity-btn--plus:hover {
+  border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+  color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+}
+
+.form-location-quantity-btn--minus:hover {
+  border-color: #f87171;
+  color: #f87171;
+}
+
+.form-location-quantity-btn:active {
+  background: var(--website-blue-active-fill, #3b82f599);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: #fff;
+}
+
+.form-location-quantity-btn--minus:disabled,
+.form-location-quantity-btn--plus:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.form-location-quantity-display {
+  min-width: 24px;
+  margin-right: 16px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.form-location-explainer {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* Placeholder mode: override fields show grey placeholder from location 1 */
+.form-location-override--placeholder .fieldset-input,
+.form-location-override--placeholder .fieldset-textarea {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.form-location-override--placeholder .fieldset-input:focus,
+.form-location-override--placeholder .fieldset-textarea:focus,
+.form-location-override--placeholder .fieldset-input:not(:placeholder-shown),
+.form-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
+  color: #fff;
+}
+
+.form-location-override--placeholder .fieldset-input::placeholder,
+.form-location-override--placeholder .fieldset-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
 .formbuilder-formpreview-empty {
   color: #888;
   text-align: center;
   padding: 10px;
 }
 
-.formbuilder-formpreview-checkout {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #333;
-}
 
