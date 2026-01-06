@@ -184,7 +184,7 @@ try {
     
     // Fetch system-images from system_images table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SELECT `option_filename` FROM `system_images` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $stmt = $pdo->query("SELECT `option_filename` FROM `list_system_images` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
         $systemImageRows = $stmt->fetchAll();
         
         $systemImagesBasket = [];

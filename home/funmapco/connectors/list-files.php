@@ -22,7 +22,7 @@
  * 7. Handles renamed files (old removed, new added)
  * 
  * Note: Each folder type has its own table:
- * - system-image -> system_images
+ * - system-image -> list_system_images
  * - category-icon -> list_category_icons
  * - currency -> list_currencies
  * - phone-prefix -> list_phone_prefixes
@@ -72,7 +72,7 @@ try {
 
         // Map option_group to table name
         $tableMap = [
-            'system-image' => 'system_images',
+            'system-image' => 'list_system_images',
             'category-icon' => 'list_category_icons',
             'currency' => 'list_currencies',
             'phone-prefix' => 'list_phone_prefixes',
