@@ -55,51 +55,20 @@
   to { transform: rotate(360deg); }
 }
 
-/* Filter button */
+
+/* ============================================================================
+   HEADER BUTTONS
+   
+   All use .btn-icon-a pattern from base-new.css
+   Name classes below are for specific overrides only
+   ============================================================================ */
+
+/* Filter button - position only */
 .header-filter-button {
   position: relative;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
 }
-
-.header-filter-button:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
-}
-
-.header-filter-button:hover .header-filter-button-icon {
-  background-color: #fff;
-}
-
 .header-filter-button-icon {
-  width: 30px;
-  height: 30px;
-  background-color: #888;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  /* Hide until the CDN mask-image is actually applied (prevents grey placeholders) */
-  opacity: 0;
-}
-
-/* Active filter button - blue icon */
-.header-filter-button[aria-expanded="true"] .header-filter-button-icon {
-  background-color: var(--website-blue-hover-fill, #60a5fa);
-}
-
-.header-filter-button[aria-expanded="true"]:hover .header-filter-button-icon {
-  background-color: #fff;
+  opacity: 0; /* Hidden until mask-image loaded via JS */
 }
 
 
@@ -137,61 +106,19 @@
   }
 }
 
-/* Mode switch buttons */
+/* Mode switch buttons - overrides only */
 .header-modeswitch-button {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  color: #888;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
   transition: background 0.2s, color 0.2s;
 }
-
-.header-modeswitch-button:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
-  color: #fff;
-}
-
-/* Active mode - blue text/icon */
-.header-modeswitch-button--active,
-.header-modeswitch-button[aria-pressed="true"] {
-  color: var(--website-blue-hover-fill, #60a5fa);
-}
-
-.header-modeswitch-button[aria-pressed="true"]:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
-  color: #fff;
-}
-
 .header-modeswitch-button[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
 .header-modeswitch-button[aria-disabled="true"]:hover {
   background: transparent;
 }
-
 .header-modeswitch-button-icon {
-  width: 30px;
-  height: 30px;
-  display: block;
-  background-color: currentColor;
-  /* Hide until the CDN mask-image is actually applied (prevents grey placeholders) */
-  opacity: 0;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
+  opacity: 0; /* Hidden until mask-image loaded via JS */
 }
 
 .header-modeswitch-button-icon--recent {
@@ -231,56 +158,14 @@
   }
 }
 
-/* Access buttons */
-.header-access-button {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
-.header-access-button:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
-}
-
-.header-access-button:hover .header-access-button-icon {
-  background-color: #fff;
-}
-
+/* Access buttons - overrides only */
 .header-access-button--hidden {
   display: none;
 }
-
-/* Access button icon */
 .header-access-button-icon {
-  width: 35px;
+  width: 35px;  /* Larger than default 30px */
   height: 35px;
-  background-color: #888;
-  /* Hide until the CDN mask-image is actually applied (prevents grey placeholders) */
-  opacity: 0;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-}
-
-/* Active access button icon (must come AFTER base icon styles to win cascade) */
-.header-access-button-icon.header-access-button-icon--active {
-  background-color: var(--website-blue-hover-fill, #60a5fa);
-}
-
-/* White glow on hover when active */
-.header-access-button--active:hover .header-access-button-icon.header-access-button-icon--active {
-  background-color: #fff;
+  opacity: 0; /* Hidden until mask-image loaded via JS */
 }
 
 .header-access-button-icon--member {
@@ -299,13 +184,8 @@
 }
 
 .header-access-button-icon--fullscreen-exit {
-  background-color: var(--website-blue-hover-fill, #60a5fa);
   -webkit-mask-image: var(--header-icon-fullscreen-exit);
   mask-image: var(--header-icon-fullscreen-exit);
-}
-
-.header-access-button-icon--fullscreen-exit:hover {
-  background-color: #60a5fa;
 }
 
 /* Access button avatar (for logged-in member) */
@@ -320,11 +200,10 @@
 
 /* Avatar glow when panel is open */
 .header-access-button-avatar--active {
-  border-color: var(--website-blue-hover-fill, #60a5fa);
+  border-color: var(--website-blue-light);
 }
-
 .header-access-button-avatar--active:hover {
-  border-color: #fff;
+  border-color: var(--website-white);
 }
 
 .header-access-button-avatar--hidden {

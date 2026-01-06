@@ -64,11 +64,19 @@
   --accent: #5C6FB1;
   --active: #2E3A72;
   
-  /* Colors - WebsiteBlue (single source of truth; names describe usage, not UI state) */
-  --website-blue: #305ba1;
-  --website-blue-border: #3b82f5;
-  --website-blue-hover-fill: #3b82f5;
-  --website-blue-active-fill: #305ba1;
+  /* Colors - WebsiteBlue (shades, not usage) */
+  --website-blue-dark: #305ba1;
+  --website-blue: #3b82f5;
+  --website-blue-light: #60a5fa;
+  
+  /* Colors - Neutrals */
+  --website-gray: #888;
+  --website-white: #fff;
+  
+  /* Legacy aliases (to be removed as code is updated) */
+  --website-blue-border: var(--website-blue);
+  --website-blue-hover-fill: var(--website-blue);
+  --website-blue-active-fill: var(--website-blue-dark);
 
   /* Colors - background */
   --background: rgba(0,0,0,1);
@@ -144,6 +152,58 @@
   --scrollbar-thumb-hover: rgba(255,255,255,0.6);
   --scrollbar-h: 8px;
 }
+
+
+/* ============================================================================
+   BUTTON PATTERNS
+   
+   Reusable button styles. Apply pattern class + name class to element:
+   <button class="btn-icon-a my-specific-button">
+   
+   Pattern provides behavior, name class allows specific targeting/overrides.
+   ============================================================================ */
+
+/* Pattern A: Icon button (40x40, translucent, icon via CSS mask) */
+.btn-icon-a {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--website-gray);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.btn-icon-a:hover {
+  background: var(--website-blue);
+  color: var(--website-white);
+}
+.btn-icon-a[aria-pressed="true"],
+.btn-icon-a[aria-expanded="true"],
+.btn-icon-a.btn--active {
+  color: var(--website-blue-light);
+}
+.btn-icon-a[aria-pressed="true"]:hover,
+.btn-icon-a[aria-expanded="true"]:hover,
+.btn-icon-a.btn--active:hover {
+  color: var(--website-white);
+}
+.btn-icon-a-icon {
+  width: 30px;
+  height: 30px;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
 
 /* ============================================================================
    GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)

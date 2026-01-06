@@ -34,10 +34,9 @@ const HeaderModule = (function() {
 
     function setAccessButtonActiveVisual(btn, isActive) {
         if (!btn) return;
-        btn.classList.toggle('header-access-button--active', !!isActive);
-        var icon = btn.querySelector('.header-access-button-icon');
+        btn.classList.toggle('btn--active', !!isActive);
+        // Icon uses currentColor - inherits from button, no class needed
         var avatar = btn.querySelector('.header-access-button-avatar');
-        if (icon) icon.classList.toggle('header-access-button-icon--active', !!isActive);
         if (avatar) avatar.classList.toggle('header-access-button-avatar--active', !!isActive);
     }
 
@@ -501,7 +500,7 @@ const HeaderModule = (function() {
         
         var isFull = getFullscreenElement();
         fullscreenBtn.setAttribute('aria-pressed', isFull ? 'true' : 'false');
-        fullscreenBtn.classList.toggle('header-access-button--fullscreen', !!isFull);
+        fullscreenBtn.classList.toggle('btn--active', !!isFull);
         var icon = fullscreenBtn.querySelector('.header-access-button-icon');
         if (icon) {
             icon.classList.toggle('header-access-button-icon--fullscreen-exit', !!isFull);
