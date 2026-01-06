@@ -73,6 +73,7 @@
 
 .header-filter-button:hover {
   background: rgba(255,255,255,0.1);
+  color: #fff;
 }
 
 .header-filter-button-icon {
@@ -153,6 +154,7 @@
 .header-modeswitch-button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
 }
 
 /* Active mode - blue text/icon */
@@ -246,6 +248,7 @@
 
 .header-access-button:hover {
   background: rgba(255,255,255,0.1);
+  color: #fff;
 }
 
 .header-access-button--hidden {
