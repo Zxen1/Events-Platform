@@ -217,6 +217,7 @@ const App = (function() {
   
   // Folder key to database setting key mapping
   const folderSettingKeys = {
+    ageRatings: 'folder_age_ratings',
     amenities: 'folder_amenities',
     avatars: 'folder_avatars',
     categoryIcons: 'folder_category_icons',

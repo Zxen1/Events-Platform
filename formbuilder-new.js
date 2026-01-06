@@ -1045,10 +1045,6 @@
                     if (res.dropdown_options && window.FieldsetBuilder && typeof FieldsetBuilder.setPicklist === 'function') {
                         FieldsetBuilder.setPicklist(res.dropdown_options);
                     }
-                    // Set image folder for AgeRatingComponent
-                    if (window.AgeRatingComponent && res.settings && res.settings.folder_age_ratings) {
-                        AgeRatingComponent.setImageFolder(res.settings.folder_age_ratings);
-                    }
                 } catch (e) {
                     // ignore
                 }

@@ -6598,7 +6598,6 @@ const AgeRatingComponent = (function(){
     
     var ageRatingData = [];
     var dataLoaded = false;
-    var imageFolder = null;
     
     function getData() {
         return ageRatingData;
@@ -6613,12 +6612,13 @@ const AgeRatingComponent = (function(){
         return dataLoaded;
     }
     
-    function setImageFolder(folder) {
-        imageFolder = folder;
-    }
-    
-    function getImageFolder() {
-        return imageFolder;
+    // Get image URL using central App registry (same pattern as PhonePrefixComponent)
+    function getImageUrl(filename) {
+        if (!filename) return '';
+        if (window.App && typeof window.App.getImageUrl === 'function') {
+            return window.App.getImageUrl('ageRatings', filename);
+        }
+        return '';
     }
     
     // Load age rating data from database via gateway
@@ -6629,9 +6629,6 @@ const AgeRatingComponent = (function(){
                 if (res.dropdown_options && res.dropdown_options['age-rating']) {
                     ageRatingData = res.dropdown_options['age-rating'];
                     dataLoaded = true;
-                }
-                if (res.settings && res.settings.folder_age_ratings) {
-                    imageFolder = res.settings.folder_age_ratings;
                 }
                 return ageRatingData;
             });
@@ -6707,9 +6704,9 @@ const AgeRatingComponent = (function(){
                 selectedValue = value;
                 buttonText.textContent = found.label;
                 menu.dataset.value = value;
-                if (found.filename && imageFolder) {
-                    var folder = imageFolder.endsWith('/') ? imageFolder : imageFolder + '/';
-                    buttonImage.src = folder + found.filename;
+                var imgUrl = getImageUrl(found.filename);
+                if (imgUrl) {
+                    buttonImage.src = imgUrl;
                     buttonImage.style.display = '';
                 } else {
                     buttonImage.style.display = 'none';
@@ -6729,9 +6726,9 @@ const AgeRatingComponent = (function(){
                 
                 var optImg = document.createElement('img');
                 optImg.className = 'component-ageratingpicker-option-image';
-                if (item.filename && imageFolder) {
-                    var folder = imageFolder.endsWith('/') ? imageFolder : imageFolder + '/';
-                    optImg.src = folder + item.filename;
+                var itemImgUrl = getImageUrl(item.filename);
+                if (itemImgUrl) {
+                    optImg.src = itemImgUrl;
                 }
                 optImg.alt = '';
                 
@@ -6794,8 +6791,6 @@ const AgeRatingComponent = (function(){
         getData: getData,
         setData: setData,
         isLoaded: isLoaded,
-        setImageFolder: setImageFolder,
-        getImageFolder: getImageFolder,
         loadFromDatabase: loadFromDatabase,
         buildMenu: buildMenu
     };
