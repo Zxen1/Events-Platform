@@ -261,7 +261,7 @@ try {
 
         // Fetch countries (country code dropdown)
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `countries` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `list_countries` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $countryRows = $stmt->fetchAll();
             $dropdownOptions['country'] = [];
             foreach ($countryRows as $row) {

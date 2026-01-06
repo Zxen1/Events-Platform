@@ -27,7 +27,7 @@
  * - currency -> currencies
  * - phone-prefix -> phone_prefixes
  * - amenity -> list_amenities
- * - country -> countries
+ * - country -> list_countries
  * 
  * Returns changes array so frontend can update menu if needed.
  */
@@ -77,7 +77,7 @@ try {
             'currency' => 'currencies',
             'phone-prefix' => 'phone_prefixes',
             'amenity' => 'list_amenities',
-            'country' => 'countries',
+            'country' => 'list_countries',
             'age-rating' => 'list_age_ratings'
         ];
         $tableName = $tableMap[$optionGroup];
