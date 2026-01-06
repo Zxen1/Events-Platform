@@ -2907,13 +2907,24 @@ const MapControlRowComponent = (function(){
             }
         });
         
+        // Helper to get current map (allows late binding for welcome modal)
+        function getMapInstance() {
+            // First check instance.map (may have been set at creation)
+            if (instance.map) return instance.map;
+            // Fallback to MapModule for welcome modal case
+            if (window.MapModule && MapModule.getMap) return MapModule.getMap();
+            return null;
+        }
+        
         // Geolocate button
         geolocateBtn.addEventListener('click', function() {
+            var currentMap = getMapInstance();
+            
             // If we already have cached location, use it instantly
             if (cachedLocation) {
-                if (map) {
-                    map.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: 14 });
-                    updateUserLocationMarker(cachedLocation.lat, cachedLocation.lng, map);
+                if (currentMap) {
+                    currentMap.flyTo({ center: [cachedLocation.lng, cachedLocation.lat], zoom: 14 });
+                    updateUserLocationMarker(cachedLocation.lat, cachedLocation.lng, currentMap);
                 }
                 onResult({
                     center: [cachedLocation.lng, cachedLocation.lat],
@@ -2938,9 +2949,10 @@ const MapControlRowComponent = (function(){
                     // Cache the location
                     cachedLocation = { lat: lat, lng: lng };
                     
-                    if (map) {
-                        map.flyTo({ center: [lng, lat], zoom: 14 });
-                        updateUserLocationMarker(lat, lng, map);
+                    var mapForFly = getMapInstance();
+                    if (mapForFly) {
+                        mapForFly.flyTo({ center: [lng, lat], zoom: 14 });
+                        updateUserLocationMarker(lat, lng, mapForFly);
                     }
                     
                     onResult({
@@ -2959,25 +2971,41 @@ const MapControlRowComponent = (function(){
         
         // Compass button - reset bearing on click
         compassBtn.addEventListener('click', function() {
-            if (map) {
-                map.easeTo({ bearing: 0, pitch: 0, duration: 300 });
+            var currentMap = getMapInstance();
+            if (currentMap) {
+                currentMap.easeTo({ bearing: 0, pitch: 0, duration: 300 });
             }
         });
         
         // Sync compass rotation with map bearing and pitch
-        if (map) {
-            var compassIcon = compassBtn.querySelector('.' + prefix + '-compass-icon, .' + prefix + '-compass-img');
-            function updateCompass() {
-                if (compassIcon) {
-                    var bearing = map.getBearing();
-                    var pitch = map.getPitch();
-                    compassIcon.style.transform = 'rotateX(' + pitch + 'deg) rotateZ(' + (-bearing) + 'deg)';
-                }
+        var compassIcon = compassBtn.querySelector('.' + prefix + '-compass-icon, .' + prefix + '-compass-img');
+        function updateCompass() {
+            var currentMap = getMapInstance();
+            if (compassIcon && currentMap) {
+                var bearing = currentMap.getBearing();
+                var pitch = currentMap.getPitch();
+                compassIcon.style.transform = 'rotateX(' + pitch + 'deg) rotateZ(' + (-bearing) + 'deg)';
             }
+        }
+        
+        // Bind to map events if map is available now
+        if (map) {
             map.on('rotate', updateCompass);
             map.on('pitch', updateCompass);
             map.on('load', updateCompass);
             updateCompass();
+        } else {
+            // For welcome modal, listen for map:ready event
+            if (window.App && App.on) {
+                App.on('map:ready', function(data) {
+                    if (data && data.map) {
+                        instance.map = data.map;
+                        data.map.on('rotate', updateCompass);
+                        data.map.on('pitch', updateCompass);
+                        updateCompass();
+                    }
+                });
+            }
         }
         
         // If geolocate was already active, mark this button too
@@ -4593,13 +4621,15 @@ const WelcomeModalComponent = (function() {
         // Create map controls using MapControlRowComponent if available
         if (controlsElement && window.MapControlRowComponent) {
             controlsElement.innerHTML = '';
+            
+            // Map instance will be fetched dynamically by the component
             MapControlRowComponent.create(controlsElement, {
                 variant: 'welcome',
                 placeholder: 'Search location...',
-                map: window.App && App.getMap ? App.getMap() : null,
+                map: null, // Component will get map dynamically via MapModule.getMap()
                 onResult: function(result) {
-                    if (result && result.center && window.App && App.getMap) {
-                        var map = App.getMap();
+                    if (result && result.center) {
+                        var map = window.MapModule && MapModule.getMap ? MapModule.getMap() : null;
                         if (map) {
                             map.flyTo({ center: result.center, zoom: 14 });
                         }
