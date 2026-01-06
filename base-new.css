@@ -640,3 +640,12 @@ body {
   white-space: nowrap;
   border: 0;
 }
+
+/* ============================================================================
+   LAZY-LOADED PANELS (Critical CSS)
+   Hide panels that have lazy-loaded CSS to prevent FOUC
+   ============================================================================ */
+
+.filter-panel {
+  display: none;
+}
