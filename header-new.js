@@ -279,9 +279,13 @@ const HeaderModule = (function() {
                     filterModuleLoaded = true;
                     filterModuleLoading = false;
                     // Init the filter module
-                    var filterModule = App.getModule('filter');
-                    if (filterModule && typeof filterModule.init === 'function') {
-                        filterModule.init();
+                    try {
+                        var filterModule = App.getModule('filter');
+                        if (filterModule && typeof filterModule.init === 'function') {
+                            filterModule.init();
+                        }
+                    } catch (err) {
+                        console.error('[Header] Failed to init filter module:', err);
                     }
                     resolve();
                 }

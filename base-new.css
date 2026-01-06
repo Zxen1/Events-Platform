@@ -644,8 +644,22 @@ body {
 /* ============================================================================
    LAZY-LOADED PANELS (Critical CSS)
    Hide panels that have lazy-loaded CSS to prevent FOUC
+   These rules are overridden when the full filter-new.css loads
    ============================================================================ */
 
 .filter-panel {
   display: none;
+}
+
+.filter-panel.show {
+  display: block;
+}
+
+/* Content slides in from left - ensure it's visible when shown */
+.filter-panel-content[data-side="left"] {
+  transform: translateX(-100%);
+}
+
+.filter-panel-content[data-side="left"].panel-visible {
+  transform: translateX(0);
 }

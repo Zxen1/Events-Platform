@@ -61,34 +61,41 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  border: 1px solid #333;
-  border-radius: 20px;
-  background: #333;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  transition: background 0.2s, border-color 0.2s;
 }
 
 .header-filter-button:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
-  border-color: var(--website-blue-border, #3b82f5);
+  background: rgba(255,255,255,0.1);
 }
-
-.header-filter-button--active,
-.header-filter-button[aria-expanded="true"] {
-  background: var(--website-blue-active-fill, #3b82f599);
-  border-color: var(--website-blue-border, #3b82f5);
-}
-
 
 .header-filter-button-icon {
   width: 30px;
   height: 30px;
+  background-color: #888;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   /* Hide until the CDN mask-image is actually applied (prevents grey placeholders) */
   opacity: 0;
+}
+
+/* Active filter button - blue icon */
+.header-filter-button[aria-expanded="true"] .header-filter-button-icon {
+  background-color: var(--website-blue-active-fill, #3b82f599);
+}
+
+.header-filter-button[aria-expanded="true"]:hover .header-filter-button-icon {
+  background-color: #60a5fa;
 }
 
 
@@ -97,7 +104,7 @@
   display: grid;
   grid-template-columns: repeat(3, 40px);
   height: 40px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: none;
   border-radius: 5px;
   overflow: hidden;
   margin-right: auto;
@@ -139,8 +146,8 @@
   padding: 0;
   border: none;
   border-radius: 0;
-  background: rgba(0,0,0,0.2);
-  color: #fff;
+  background: transparent;
+  color: #888;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -149,14 +156,17 @@
 }
 
 .header-modeswitch-button:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
+  background: rgba(255,255,255,0.1);
 }
 
-/* Active mode - blue background, white text */
+/* Active mode - blue text/icon */
 .header-modeswitch-button--active,
 .header-modeswitch-button[aria-pressed="true"] {
-  background: var(--website-blue-active-fill, var(--website-blue, #3b82f599));
-  color: var(--button-active-text, #fff);
+  color: var(--website-blue-active-fill, #3b82f599);
+}
+
+.header-modeswitch-button[aria-pressed="true"]:hover {
+  color: #60a5fa;
 }
 
 .header-modeswitch-button[aria-disabled="true"] {
@@ -165,11 +175,11 @@
 }
 
 .header-modeswitch-button[aria-disabled="true"]:hover {
-  background: rgba(0,0,0,0.2);
+  background: transparent;
 }
 
 .header-modeswitch-button--bordered {
-  border-left: 1px solid rgba(255,255,255,0.1);
+  /* Border removed - using transparent buttons now */
 }
 
 .header-modeswitch-button-icon {
