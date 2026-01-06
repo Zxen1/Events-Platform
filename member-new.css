@@ -463,7 +463,11 @@
 .member-panel-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.member-panel-field:last-child {
+  margin-bottom: 0;
 }
 
 .member-panel-field[hidden] {
@@ -473,7 +477,7 @@
 .member-panel-field-label {
   display: block;
   text-align: left;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
@@ -486,8 +490,8 @@
 .member-settings-field-label {
   display: block;
   text-align: left;
-  margin-bottom: 6px;
-  font-size: 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
 }
@@ -795,7 +799,7 @@
 .member-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   margin-bottom: 100px;
 }
 
@@ -817,7 +821,7 @@
 .member-create-selects {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .member-create-field {
@@ -837,13 +841,13 @@
 .member-create-fields {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 10px;
 }
 
 .member-create-checkout {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-top: 8px;
 }
 
@@ -921,7 +925,7 @@
 .member-missing-popover-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .member-missing-popover-item {
@@ -974,7 +978,7 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   color: #ffffff;
 }
 
@@ -1126,8 +1130,9 @@
 }
 
 .member-auth-panel-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
+  margin-bottom: 10px;
 }
 
 .member-auth-panel-input {
@@ -1163,7 +1168,7 @@
 .member-profile-edit {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .member-profile-save-btn {
@@ -1171,7 +1176,7 @@
 }
 
 .member-auth-profile {
-  gap: 18px;
+  gap: 10px;
 }
 
 .member-auth-tabs--logged-in {
@@ -1179,7 +1184,7 @@
 }
 
 .member-auth-panel--logged-in {
-  gap: 16px;
+  gap: 10px;
 }
 
 /* ============================================================================
@@ -1276,7 +1281,7 @@
   display: none;
   padding: 12px;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .member-profile-drawer-body--open {
@@ -1494,14 +1499,14 @@
 .member-formpicker-cats {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Formpicker dropdowns container */
 .member-formpicker-dropdowns {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* Formpicker menu (copied from filter-sort-menu pattern) */

@@ -307,16 +307,19 @@
 .admin-panel-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin: 8px 0;
+  margin: 0 0 10px 0;
   width: 100%;
   box-sizing: border-box;
+}
+
+.admin-panel-field:last-child {
+  margin-bottom: 0;
 }
 
 .admin-panel-field-label {
   display: block;
   text-align: left;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
@@ -582,15 +585,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 6px;
-  margin: 0 auto;
-  padding: 10px 0;
+  margin: 0 auto 10px auto;
+  padding: 0;
   width: 100%;
   max-width: 420px;
 }
 
+.admin-control-row:last-child {
+  margin-bottom: 0;
+}
+
 .admin-control-row-label {
   min-width: 80px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -812,7 +819,7 @@
 .admin-marker-grid {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .admin-marker-grid-select {
@@ -844,7 +851,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
 }
 
 .admin-style-controls-item {
@@ -1206,7 +1213,7 @@
 }
 
 .admin-spin-type-option-label {
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1243,7 +1250,7 @@
 }
 
 .admin-settings-countdown-mode-option-label {
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
 }
@@ -1309,7 +1316,7 @@
 .admin-slider-value {
   min-width: 40px;
   text-align: center;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
   color: #fff;
   flex-shrink: 0;
@@ -1384,6 +1391,7 @@
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
+  font-size: 13px;
 }
 
 .admin-option-group {
@@ -1415,8 +1423,8 @@
 .admin-checkout-options-tiers {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .admin-checkout-options-add {
@@ -1591,14 +1599,14 @@
 .admin-checkout-option-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .admin-checkout-option-field-label {
-  font-size: 12px;
+  font-size: 13px;
   color: #888;
   font-weight: 400;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .admin-checkout-option-field-input-number {
@@ -1819,13 +1827,13 @@
   border-radius: 0 0 5px 5px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .admin-checkout-accordion-editpanel-row {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Title row - input and more button side by side */
@@ -1940,8 +1948,9 @@
 }
 
 .admin-checkout-accordion-editpanel-label {
-  font-size: 12px;
+  font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 10px;
 }
 
 .admin-checkout-accordion-editpanel-input {
@@ -2039,7 +2048,7 @@
 .admin-messages-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   padding: 10px;
 }
 
@@ -2328,8 +2337,7 @@
 .admin-settings-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .admin-settings-field:last-child {
@@ -2340,7 +2348,7 @@
   display: block;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .admin-settings-field-description {
@@ -2610,7 +2618,7 @@
 .admin-system-image-picker-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   max-width: 400px;
   width: 100%;
   background: #222222;
@@ -2627,7 +2635,8 @@
 
 .admin-system-image-picker-field-label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -2812,7 +2821,7 @@
 .admin-moderation-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
 .admin-moderation-empty {
