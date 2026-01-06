@@ -2413,13 +2413,14 @@
 
 /* Border animation for geolocate loading */
 @keyframes mapcontrol-border-pulse {
-    0%, 100% { 
-        border-color: var(--website-blue-border, #3b82f5);
-        box-shadow: 0 0 0 0 rgba(59, 130, 245, 0.4);
+    0% { 
+        box-shadow: 0 0 4px 1px rgba(59, 130, 245, 0.4);
     }
     50% { 
-        border-color: var(--website-blue-border, #3b82f5);
-        box-shadow: 0 0 8px 2px rgba(59, 130, 245, 0.6);
+        box-shadow: 0 0 12px 4px rgba(59, 130, 245, 0.7);
+    }
+    100% { 
+        box-shadow: 0 0 4px 1px rgba(59, 130, 245, 0.4);
     }
 }
 
@@ -2427,7 +2428,8 @@
 .filter-mapcontrol-row--loading,
 .welcome-mapcontrol-row--loading {
     border-color: var(--website-blue-border, #3b82f5);
-    animation: mapcontrol-border-pulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 4px 1px rgba(59, 130, 245, 0.4);
+    animation: mapcontrol-border-pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 
