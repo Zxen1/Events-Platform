@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 11:09 AM
+-- Generation Time: Jan 06, 2026 at 11:15 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -368,115 +368,6 @@ INSERT INTO `categories` (`id`, `category_name`, `category_key`, `sort_order`, `
 (47, 'Test', 'test', 7, 0, 'opportunities.svg', NULL, '2025-11-17 04:45:27', '2025-12-22 06:25:10'),
 (7, 'Stay', 'stay', 8, 0, 'stay.svg', '#1ABC9C', '2025-12-15 00:11:53', '2025-12-22 06:25:10'),
 (8, 'Get Around', 'get-around', 9, 0, 'get-around.svg', '#34495E', '2025-12-15 00:11:53', '2025-12-22 06:25:10');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `category_icons`
---
-
-CREATE TABLE `category_icons` (
-  `id` int(11) NOT NULL,
-  `option_filename` varchar(255) DEFAULT NULL,
-  `option_value` varchar(50) NOT NULL,
-  `option_label` varchar(100) NOT NULL,
-  `sort_order` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `category_icons`
---
-
-INSERT INTO `category_icons` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
-(1, 'buy-and-sell-blue.svg', 'buy-and-sell-blue.svg', '', 0, 1),
-(2, 'buy-and-sell-cyan.svg', 'buy-and-sell-cyan.svg', '', 0, 1),
-(3, 'buy-and-sell-gray.svg', 'buy-and-sell-gray.svg', '', 0, 1),
-(4, 'buy-and-sell-green.svg', 'buy-and-sell-green.svg', '', 0, 1),
-(5, 'buy-and-sell-orange.svg', 'buy-and-sell-orange.svg', '', 0, 1),
-(6, 'buy-and-sell-pink.svg', 'buy-and-sell-pink.svg', '', 0, 1),
-(7, 'buy-and-sell-purple.svg', 'buy-and-sell-purple.svg', '', 0, 1),
-(8, 'buy-and-sell-red.svg', 'buy-and-sell-red.svg', '', 0, 1),
-(9, 'buy-and-sell-teal.svg', 'buy-and-sell-teal.svg', '', 0, 1),
-(10, 'buy-and-sell-yellow.svg', 'buy-and-sell-yellow.svg', '', 0, 1),
-(11, 'buy-and-sell.svg', 'buy-and-sell.svg', '', 0, 1),
-(12, 'eat-and-drink-blue.svg', 'eat-and-drink-blue.svg', '', 0, 1),
-(13, 'eat-and-drink-cyan.svg', 'eat-and-drink-cyan.svg', '', 0, 1),
-(14, 'eat-and-drink-gray.svg', 'eat-and-drink-gray.svg', '', 0, 1),
-(15, 'eat-and-drink-green.svg', 'eat-and-drink-green.svg', '', 0, 1),
-(16, 'eat-and-drink-orange.svg', 'eat-and-drink-orange.svg', '', 0, 1),
-(17, 'eat-and-drink-pink.svg', 'eat-and-drink-pink.svg', '', 0, 1),
-(18, 'eat-and-drink-purple.svg', 'eat-and-drink-purple.svg', '', 0, 1),
-(19, 'eat-and-drink-red.svg', 'eat-and-drink-red.svg', '', 0, 1),
-(20, 'eat-and-drink-teal.svg', 'eat-and-drink-teal.svg', '', 0, 1),
-(21, 'eat-and-drink-yellow.svg', 'eat-and-drink-yellow.svg', '', 0, 1),
-(22, 'eat-and-drink.svg', 'eat-and-drink.svg', '', 0, 1),
-(23, 'for-hire-blue.svg', 'for-hire-blue.svg', '', 0, 1),
-(24, 'for-hire-cyan.svg', 'for-hire-cyan.svg', '', 0, 1),
-(25, 'for-hire-gray.svg', 'for-hire-gray.svg', '', 0, 1),
-(26, 'for-hire-green.svg', 'for-hire-green.svg', '', 0, 1),
-(27, 'for-hire-orange.svg', 'for-hire-orange.svg', '', 0, 1),
-(28, 'for-hire-pink.svg', 'for-hire-pink.svg', '', 0, 1),
-(29, 'for-hire-purple.svg', 'for-hire-purple.svg', '', 0, 1),
-(30, 'for-hire-red.svg', 'for-hire-red.svg', '', 0, 1),
-(31, 'for-hire-teal.svg', 'for-hire-teal.svg', '', 0, 1),
-(32, 'for-hire-yellow.svg', 'for-hire-yellow.svg', '', 0, 1),
-(33, 'for-hire.svg', 'for-hire.svg', '', 0, 1),
-(34, 'get-around-blue.svg', 'get-around-blue.svg', '', 0, 1),
-(35, 'get-around-cyan.svg', 'get-around-cyan.svg', '', 0, 1),
-(36, 'get-around-gray.svg', 'get-around-gray.svg', '', 0, 1),
-(37, 'get-around-green.svg', 'get-around-green.svg', '', 0, 1),
-(38, 'get-around-orange.svg', 'get-around-orange.svg', '', 0, 1),
-(39, 'get-around-pink.svg', 'get-around-pink.svg', '', 0, 1),
-(40, 'get-around-purple.svg', 'get-around-purple.svg', '', 0, 1),
-(41, 'get-around-red.svg', 'get-around-red.svg', '', 0, 1),
-(42, 'get-around-teal.svg', 'get-around-teal.svg', '', 0, 1),
-(43, 'get-around-yellow.svg', 'get-around-yellow.svg', '', 0, 1),
-(44, 'get-around.svg', 'get-around.svg', '', 0, 1),
-(45, 'learning-blue.svg', 'learning-blue.svg', '', 0, 1),
-(46, 'learning-cyan.svg', 'learning-cyan.svg', '', 0, 1),
-(47, 'learning-gray.svg', 'learning-gray.svg', '', 0, 1),
-(48, 'learning-green.svg', 'learning-green.svg', '', 0, 1),
-(49, 'learning-orange.svg', 'learning-orange.svg', '', 0, 1),
-(50, 'learning-pink.svg', 'learning-pink.svg', '', 0, 1),
-(51, 'learning-purple.svg', 'learning-purple.svg', '', 0, 1),
-(52, 'learning-red.svg', 'learning-red.svg', '', 0, 1),
-(53, 'learning-teal.svg', 'learning-teal.svg', '', 0, 1),
-(54, 'learning-yellow.svg', 'learning-yellow.svg', '', 0, 1),
-(55, 'learning.svg', 'learning.svg', '', 0, 1),
-(56, 'opportunities-blue.svg', 'opportunities-blue.svg', '', 0, 1),
-(57, 'opportunities-cyan.svg', 'opportunities-cyan.svg', '', 0, 1),
-(58, 'opportunities-gray.svg', 'opportunities-gray.svg', '', 0, 1),
-(59, 'opportunities-green.svg', 'opportunities-green.svg', '', 0, 1),
-(60, 'opportunities-orange.svg', 'opportunities-orange.svg', '', 0, 1),
-(61, 'opportunities-pink.svg', 'opportunities-pink.svg', '', 0, 1),
-(62, 'opportunities-purple.svg', 'opportunities-purple.svg', '', 0, 1),
-(63, 'opportunities-red.svg', 'opportunities-red.svg', '', 0, 1),
-(64, 'opportunities-teal.svg', 'opportunities-teal.svg', '', 0, 1),
-(65, 'opportunities-yellow.svg', 'opportunities-yellow.svg', '', 0, 1),
-(66, 'opportunities.svg', 'opportunities.svg', '', 0, 1),
-(67, 'stay-blue.svg', 'stay-blue.svg', '', 0, 1),
-(68, 'stay-cyan.svg', 'stay-cyan.svg', '', 0, 1),
-(69, 'stay-gray.svg', 'stay-gray.svg', '', 0, 1),
-(70, 'stay-green.svg', 'stay-green.svg', '', 0, 1),
-(71, 'stay-orange.svg', 'stay-orange.svg', '', 0, 1),
-(72, 'stay-pink.svg', 'stay-pink.svg', '', 0, 1),
-(73, 'stay-purple.svg', 'stay-purple.svg', '', 0, 1),
-(74, 'stay-red.svg', 'stay-red.svg', '', 0, 1),
-(75, 'stay-teal.svg', 'stay-teal.svg', '', 0, 1),
-(76, 'stay-yellow.svg', 'stay-yellow.svg', '', 0, 1),
-(77, 'stay.svg', 'stay.svg', '', 0, 1),
-(78, 'whats-on-blue.svg', 'whats-on-blue.svg', '', 0, 1),
-(79, 'whats-on-cyan.svg', 'whats-on-cyan.svg', '', 0, 1),
-(80, 'whats-on-gray.svg', 'whats-on-gray.svg', '', 0, 1),
-(81, 'whats-on-green.svg', 'whats-on-green.svg', '', 0, 1),
-(82, 'whats-on-orange.svg', 'whats-on-orange.svg', '', 0, 1),
-(83, 'whats-on-pink.svg', 'whats-on-pink.svg', '', 0, 1),
-(84, 'whats-on-purple.svg', 'whats-on-purple.svg', '', 0, 1),
-(85, 'whats-on-red.svg', 'whats-on-red.svg', '', 0, 1),
-(86, 'whats-on-teal.svg', 'whats-on-teal.svg', '', 0, 1),
-(87, 'whats-on-yellow.svg', 'whats-on-yellow.svg', '', 0, 1),
-(88, 'whats-on.svg', 'whats-on.svg', '', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -1444,6 +1335,115 @@ INSERT INTO `list_amenities` (`id`, `option_filename`, `option_value`, `option_l
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `list_category_icons`
+--
+
+CREATE TABLE `list_category_icons` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `list_category_icons`
+--
+
+INSERT INTO `list_category_icons` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, 'buy-and-sell-blue.svg', 'buy-and-sell-blue.svg', '', 0, 1),
+(2, 'buy-and-sell-cyan.svg', 'buy-and-sell-cyan.svg', '', 0, 1),
+(3, 'buy-and-sell-gray.svg', 'buy-and-sell-gray.svg', '', 0, 1),
+(4, 'buy-and-sell-green.svg', 'buy-and-sell-green.svg', '', 0, 1),
+(5, 'buy-and-sell-orange.svg', 'buy-and-sell-orange.svg', '', 0, 1),
+(6, 'buy-and-sell-pink.svg', 'buy-and-sell-pink.svg', '', 0, 1),
+(7, 'buy-and-sell-purple.svg', 'buy-and-sell-purple.svg', '', 0, 1),
+(8, 'buy-and-sell-red.svg', 'buy-and-sell-red.svg', '', 0, 1),
+(9, 'buy-and-sell-teal.svg', 'buy-and-sell-teal.svg', '', 0, 1),
+(10, 'buy-and-sell-yellow.svg', 'buy-and-sell-yellow.svg', '', 0, 1),
+(11, 'buy-and-sell.svg', 'buy-and-sell.svg', '', 0, 1),
+(12, 'eat-and-drink-blue.svg', 'eat-and-drink-blue.svg', '', 0, 1),
+(13, 'eat-and-drink-cyan.svg', 'eat-and-drink-cyan.svg', '', 0, 1),
+(14, 'eat-and-drink-gray.svg', 'eat-and-drink-gray.svg', '', 0, 1),
+(15, 'eat-and-drink-green.svg', 'eat-and-drink-green.svg', '', 0, 1),
+(16, 'eat-and-drink-orange.svg', 'eat-and-drink-orange.svg', '', 0, 1),
+(17, 'eat-and-drink-pink.svg', 'eat-and-drink-pink.svg', '', 0, 1),
+(18, 'eat-and-drink-purple.svg', 'eat-and-drink-purple.svg', '', 0, 1),
+(19, 'eat-and-drink-red.svg', 'eat-and-drink-red.svg', '', 0, 1),
+(20, 'eat-and-drink-teal.svg', 'eat-and-drink-teal.svg', '', 0, 1),
+(21, 'eat-and-drink-yellow.svg', 'eat-and-drink-yellow.svg', '', 0, 1),
+(22, 'eat-and-drink.svg', 'eat-and-drink.svg', '', 0, 1),
+(23, 'for-hire-blue.svg', 'for-hire-blue.svg', '', 0, 1),
+(24, 'for-hire-cyan.svg', 'for-hire-cyan.svg', '', 0, 1),
+(25, 'for-hire-gray.svg', 'for-hire-gray.svg', '', 0, 1),
+(26, 'for-hire-green.svg', 'for-hire-green.svg', '', 0, 1),
+(27, 'for-hire-orange.svg', 'for-hire-orange.svg', '', 0, 1),
+(28, 'for-hire-pink.svg', 'for-hire-pink.svg', '', 0, 1),
+(29, 'for-hire-purple.svg', 'for-hire-purple.svg', '', 0, 1),
+(30, 'for-hire-red.svg', 'for-hire-red.svg', '', 0, 1),
+(31, 'for-hire-teal.svg', 'for-hire-teal.svg', '', 0, 1),
+(32, 'for-hire-yellow.svg', 'for-hire-yellow.svg', '', 0, 1),
+(33, 'for-hire.svg', 'for-hire.svg', '', 0, 1),
+(34, 'get-around-blue.svg', 'get-around-blue.svg', '', 0, 1),
+(35, 'get-around-cyan.svg', 'get-around-cyan.svg', '', 0, 1),
+(36, 'get-around-gray.svg', 'get-around-gray.svg', '', 0, 1),
+(37, 'get-around-green.svg', 'get-around-green.svg', '', 0, 1),
+(38, 'get-around-orange.svg', 'get-around-orange.svg', '', 0, 1),
+(39, 'get-around-pink.svg', 'get-around-pink.svg', '', 0, 1),
+(40, 'get-around-purple.svg', 'get-around-purple.svg', '', 0, 1),
+(41, 'get-around-red.svg', 'get-around-red.svg', '', 0, 1),
+(42, 'get-around-teal.svg', 'get-around-teal.svg', '', 0, 1),
+(43, 'get-around-yellow.svg', 'get-around-yellow.svg', '', 0, 1),
+(44, 'get-around.svg', 'get-around.svg', '', 0, 1),
+(45, 'learning-blue.svg', 'learning-blue.svg', '', 0, 1),
+(46, 'learning-cyan.svg', 'learning-cyan.svg', '', 0, 1),
+(47, 'learning-gray.svg', 'learning-gray.svg', '', 0, 1),
+(48, 'learning-green.svg', 'learning-green.svg', '', 0, 1),
+(49, 'learning-orange.svg', 'learning-orange.svg', '', 0, 1),
+(50, 'learning-pink.svg', 'learning-pink.svg', '', 0, 1),
+(51, 'learning-purple.svg', 'learning-purple.svg', '', 0, 1),
+(52, 'learning-red.svg', 'learning-red.svg', '', 0, 1),
+(53, 'learning-teal.svg', 'learning-teal.svg', '', 0, 1),
+(54, 'learning-yellow.svg', 'learning-yellow.svg', '', 0, 1),
+(55, 'learning.svg', 'learning.svg', '', 0, 1),
+(56, 'opportunities-blue.svg', 'opportunities-blue.svg', '', 0, 1),
+(57, 'opportunities-cyan.svg', 'opportunities-cyan.svg', '', 0, 1),
+(58, 'opportunities-gray.svg', 'opportunities-gray.svg', '', 0, 1),
+(59, 'opportunities-green.svg', 'opportunities-green.svg', '', 0, 1),
+(60, 'opportunities-orange.svg', 'opportunities-orange.svg', '', 0, 1),
+(61, 'opportunities-pink.svg', 'opportunities-pink.svg', '', 0, 1),
+(62, 'opportunities-purple.svg', 'opportunities-purple.svg', '', 0, 1),
+(63, 'opportunities-red.svg', 'opportunities-red.svg', '', 0, 1),
+(64, 'opportunities-teal.svg', 'opportunities-teal.svg', '', 0, 1),
+(65, 'opportunities-yellow.svg', 'opportunities-yellow.svg', '', 0, 1),
+(66, 'opportunities.svg', 'opportunities.svg', '', 0, 1),
+(67, 'stay-blue.svg', 'stay-blue.svg', '', 0, 1),
+(68, 'stay-cyan.svg', 'stay-cyan.svg', '', 0, 1),
+(69, 'stay-gray.svg', 'stay-gray.svg', '', 0, 1),
+(70, 'stay-green.svg', 'stay-green.svg', '', 0, 1),
+(71, 'stay-orange.svg', 'stay-orange.svg', '', 0, 1),
+(72, 'stay-pink.svg', 'stay-pink.svg', '', 0, 1),
+(73, 'stay-purple.svg', 'stay-purple.svg', '', 0, 1),
+(74, 'stay-red.svg', 'stay-red.svg', '', 0, 1),
+(75, 'stay-teal.svg', 'stay-teal.svg', '', 0, 1),
+(76, 'stay-yellow.svg', 'stay-yellow.svg', '', 0, 1),
+(77, 'stay.svg', 'stay.svg', '', 0, 1),
+(78, 'whats-on-blue.svg', 'whats-on-blue.svg', '', 0, 1),
+(79, 'whats-on-cyan.svg', 'whats-on-cyan.svg', '', 0, 1),
+(80, 'whats-on-gray.svg', 'whats-on-gray.svg', '', 0, 1),
+(81, 'whats-on-green.svg', 'whats-on-green.svg', '', 0, 1),
+(82, 'whats-on-orange.svg', 'whats-on-orange.svg', '', 0, 1),
+(83, 'whats-on-pink.svg', 'whats-on-pink.svg', '', 0, 1),
+(84, 'whats-on-purple.svg', 'whats-on-purple.svg', '', 0, 1),
+(85, 'whats-on-red.svg', 'whats-on-red.svg', '', 0, 1),
+(86, 'whats-on-teal.svg', 'whats-on-teal.svg', '', 0, 1),
+(87, 'whats-on-yellow.svg', 'whats-on-yellow.svg', '', 0, 1),
+(88, 'whats-on.svg', 'whats-on.svg', '', 0, 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `logs`
 --
 
@@ -2239,14 +2239,6 @@ ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `category_icons`
---
-ALTER TABLE `category_icons`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_filename` (`option_filename`),
-  ADD KEY `idx_active` (`is_active`);
-
---
 -- Indexes for table `checkout_options`
 --
 ALTER TABLE `checkout_options`
@@ -2333,6 +2325,14 @@ ALTER TABLE `list_age_ratings`
 -- Indexes for table `list_amenities`
 --
 ALTER TABLE `list_amenities`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
+-- Indexes for table `list_category_icons`
+--
+ALTER TABLE `list_category_icons`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_filename` (`option_filename`),
   ADD KEY `idx_active` (`is_active`);
@@ -2498,12 +2498,6 @@ ALTER TABLE `categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
--- AUTO_INCREMENT for table `category_icons`
---
-ALTER TABLE `category_icons`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
-
---
 -- AUTO_INCREMENT for table `checkout_options`
 --
 ALTER TABLE `checkout_options`
@@ -2574,6 +2568,12 @@ ALTER TABLE `list_age_ratings`
 --
 ALTER TABLE `list_amenities`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT for table `list_category_icons`
+--
+ALTER TABLE `list_category_icons`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT for table `logs`
