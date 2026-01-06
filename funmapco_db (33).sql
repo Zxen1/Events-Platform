@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 01:22 PM
+-- Generation Time: Jan 06, 2026 at 01:32 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -244,9 +244,9 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (50, 'paypal_client_secret', '', 'string', NULL, '2025-12-19 20:52:17', '2025-12-20 05:49:08'),
 (61, 'storage_api_key', '4e411191-8bc0-48a1-97ab6fea3ec9-404c-4810', 'string', 'Bunny Storage Zone Password (Read-Only) for API authentication', '2025-12-21 13:33:49', '2025-12-24 05:18:34'),
 (62, 'storage_zone_name', 'funmap', 'string', 'Bunny Storage Zone Name', '2025-12-21 13:33:49', '2025-12-21 13:37:03'),
-(70, 'show_time_remaining_sort', 'true', 'boolean', 'Show time remaining when using Soonest sort order', '2026-01-06 02:22:41', '2026-01-06 02:22:41'),
-(71, 'show_time_remaining_postcards', 'false', 'boolean', 'Show time remaining on postcards', '2026-01-06 02:22:41', '2026-01-06 02:22:41'),
-(72, 'show_time_remaining_posts', 'true', 'boolean', 'Show time remaining inside posts', '2026-01-06 02:22:41', '2026-01-06 02:22:41'),
+(70, 'countdown_posts', 'true', 'boolean', 'Show countdown/expired time inside posts', '2026-01-06 02:31:16', '2026-01-06 02:31:16'),
+(71, 'countdown_postcards', 'true', 'boolean', 'Show countdown/expired time on postcards', '2026-01-06 02:31:16', '2026-01-06 02:31:16'),
+(72, 'countdown_postcards_mode', 'soonest_only', 'string', 'all = all postcards, soonest_only = only when using Soonest sort order', '2026-01-06 02:31:16', '2026-01-06 02:31:16'),
 (100, 'folder_amenities', 'https://cdn.funmap.com/amenities', 'string', 'Folder path for amenity icons', '2025-12-21 11:53:19', '2025-12-29 02:44:01'),
 (101, 'folder_avatars', 'https://cdn.funmap.com/avatars', 'string', 'Folder path for user avatars', '2025-12-21 11:53:19', '2025-12-29 02:44:01'),
 (102, 'folder_category_icons', 'https://cdn.funmap.com/category-icons', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-12-29 02:44:01'),
