@@ -2412,83 +2412,91 @@
 }
 
 /* Border tracer animation for geolocate loading */
-.map-mapcontrol-row--loading {
-    border-color: transparent;
-}
-
-.map-mapcontrol-row--loading::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: 20px;
-    padding: 2px;
-    background: conic-gradient(
-        from 0deg,
-        transparent 0deg,
-        transparent 260deg,
-        var(--website-blue-border, #3b82f5) 300deg,
-        var(--website-blue-border, #3b82f5) 360deg
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    animation: mapcontrol-border-tracer 1.5s linear infinite;
-    pointer-events: none;
-}
-
 @keyframes mapcontrol-border-tracer {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
+.map-mapcontrol-row--loading,
 .filter-mapcontrol-row--loading {
     border-color: transparent;
+    overflow: visible;
 }
 
+.map-mapcontrol-row--loading::before,
 .filter-mapcontrol-row--loading::before {
     content: '';
     position: absolute;
-    inset: -2px;
+    top: 50%;
+    left: 50%;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    margin-top: calc(-50% - 2px);
+    margin-left: calc(-50% - 2px);
     border-radius: 20px;
-    padding: 2px;
     background: conic-gradient(
         from 0deg,
         transparent 0deg,
-        transparent 260deg,
-        var(--website-blue-border, #3b82f5) 300deg,
-        var(--website-blue-border, #3b82f5) 360deg
+        transparent 70%,
+        var(--website-blue-border, #3b82f5) 85%,
+        var(--website-blue-border, #3b82f5) 100%
     );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
     animation: mapcontrol-border-tracer 1.5s linear infinite;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.map-mapcontrol-row--loading::after,
+.filter-mapcontrol-row--loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 18px;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: -1;
     pointer-events: none;
 }
 
 .welcome-mapcontrol-row--loading {
     border-color: transparent;
+    overflow: visible;
 }
 
 .welcome-mapcontrol-row--loading::before {
     content: '';
     position: absolute;
-    inset: -2px;
+    top: 50%;
+    left: 50%;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    margin-top: calc(-50% - 2px);
+    margin-left: calc(-50% - 2px);
     border-radius: 16px;
-    padding: 2px;
     background: conic-gradient(
         from 0deg,
         transparent 0deg,
-        transparent 260deg,
-        var(--website-blue-border, #3b82f5) 300deg,
-        var(--website-blue-border, #3b82f5) 360deg
+        transparent 70%,
+        var(--website-blue-border, #3b82f5) 85%,
+        var(--website-blue-border, #3b82f5) 100%
     );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
     animation: mapcontrol-border-tracer 1.5s linear infinite;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.welcome-mapcontrol-row--loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: -1;
     pointer-events: none;
 }
 
