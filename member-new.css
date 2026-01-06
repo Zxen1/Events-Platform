@@ -396,9 +396,6 @@
   padding: 12px 10px 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
 }
@@ -498,14 +495,11 @@
 .member-map-settings-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 10px auto;
+  margin: 0 auto 12px auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 /* member-preferences-container removed (no language/currency filters) */
@@ -776,9 +770,7 @@
 }
 
 .member-tab-panel--active {
-  display: flex;
-  flex-direction: column;
-  /* Do NOT force full-height: it creates phantom overflow (scrollbars) on short content. */
+  display: block;
   min-height: 0;
 }
 
@@ -789,7 +781,7 @@
 .member-form-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto;
+  margin: 0 auto 12px auto;
   background: transparent;
   border: none;
   border-radius: 0;
