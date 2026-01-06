@@ -1043,7 +1043,8 @@ const CurrencyComponent = (function(){
 
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
-            if (menu.classList.contains('fieldset-menu--open')) {
+            e.stopPropagation();
+            if (menu.classList.contains('component-currencycompact-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
@@ -1219,6 +1220,7 @@ const CurrencyComponent = (function(){
 
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (menu.classList.contains('component-currencyfull-menu--open')) {
                 applyOpenState(false);
             } else {
@@ -1451,6 +1453,7 @@ const LanguageMenuComponent = (function(){
 
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (menu.classList.contains('admin-language-wrapper--open')) {
                 applyOpenState(false);
             } else {
@@ -1692,6 +1695,7 @@ const PhonePrefixComponent = (function(){
         });
 
         arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (menu.classList.contains('fieldset-menu--open')) {
                 applyOpenState(false);
             } else {
@@ -1913,6 +1917,7 @@ const CountryComponent = (function(){
         });
         
         arrow.addEventListener('click', function(e) {
+            e.stopPropagation();
             if (menu.classList.contains('fieldset-menu--open')) {
                 applyOpenState(false);
             } else {
