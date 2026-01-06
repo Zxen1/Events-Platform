@@ -1822,7 +1822,7 @@
 }
 
 .filter-mapcontrol-geolocate:hover,
-.filter-mapcontrol-geolocate:focus {
+.filter-mapcontrol-geolocate:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     outline: none;
@@ -1857,7 +1857,7 @@
 }
 
 .filter-mapcontrol-compass:hover,
-.filter-mapcontrol-compass:focus {
+.filter-mapcontrol-compass:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     outline: none;
@@ -1886,7 +1886,7 @@
 }
 
 .filter-mapcontrol-compass:hover .filter-mapcontrol-compass-img,
-.filter-mapcontrol-compass:focus .filter-mapcontrol-compass-img {
+.filter-mapcontrol-compass:focus-visible .filter-mapcontrol-compass-img {
     opacity: 1;
 }
 
@@ -2009,7 +2009,7 @@
 }
 
 .map-mapcontrol-geolocate:hover,
-.map-mapcontrol-geolocate:focus {
+.map-mapcontrol-geolocate:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     outline: none;
@@ -2044,7 +2044,7 @@
 }
 
 .map-mapcontrol-compass:hover,
-.map-mapcontrol-compass:focus {
+.map-mapcontrol-compass:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     outline: none;
@@ -2073,7 +2073,7 @@
 }
 
 .map-mapcontrol-compass:hover .map-mapcontrol-compass-img,
-.map-mapcontrol-compass:focus .map-mapcontrol-compass-img {
+.map-mapcontrol-compass:focus-visible .map-mapcontrol-compass-img {
     opacity: 1;
 }
 
@@ -2198,7 +2198,7 @@
 }
 
 .welcome-mapcontrol-geolocate:hover,
-.welcome-mapcontrol-geolocate:focus {
+.welcome-mapcontrol-geolocate:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     outline: none;
@@ -2233,7 +2233,7 @@
 }
 
 .welcome-mapcontrol-compass:hover,
-.welcome-mapcontrol-compass:focus {
+.welcome-mapcontrol-compass:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
     outline: none;
@@ -2262,7 +2262,7 @@
 }
 
 .welcome-mapcontrol-compass:hover .welcome-mapcontrol-compass-img,
-.welcome-mapcontrol-compass:focus .welcome-mapcontrol-compass-img {
+.welcome-mapcontrol-compass:focus-visible .welcome-mapcontrol-compass-img {
     opacity: 1;
 }
 
