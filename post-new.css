@@ -227,11 +227,11 @@
 }
 
 .post-card:hover {
-  background: #2e3a72;
+  background: var(--website-blue);
 }
 
 .post-card--map-highlight {
-  background-color: #2e3a72;
+  background-color: var(--website-blue);
 }
 
 /* ============================================================================
@@ -261,7 +261,7 @@
 }
 
 .recent-card:hover {
-  background: #2e3a72;
+  background: var(--website-blue);
 }
 
 .recent-card--selected {
@@ -274,7 +274,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-color: #2e3a72;
+  background-color: var(--website-blue);
   border-radius: 5px;
   z-index: -1;
 }
@@ -980,8 +980,8 @@
   flex-direction: column;
   gap: 10px;
   z-index: var(--layer-menu);
-  --button-selected-bg: #2e3a72;
-  --button-selected-border: #2e3a72;
+  --button-selected-bg: var(--website-blue);
+  --button-selected-border: var(--website-blue);
   --button-selected-text: var(--button-active-text);
 }
 
@@ -1016,9 +1016,9 @@
 }
 
 .post-venue-menu-option--selected {
-  background: #2e3a72;
+  background: var(--website-blue);
   color: var(--button-active-text);
-  border-color: #2e3a72;
+  border-color: var(--website-blue);
 }
 
 .post-venue-menu-option-name {
@@ -1100,8 +1100,8 @@
   flex-direction: column;
   gap: 10px;
   z-index: var(--layer-menu);
-  --button-selected-bg: #2e3a72;
-  --button-selected-border: #2e3a72;
+  --button-selected-bg: var(--website-blue);
+  --button-selected-border: var(--website-blue);
   --button-selected-text: var(--button-active-text);
 }
 
@@ -1135,9 +1135,9 @@
 }
 
 .post-session-menu-option--selected {
-  background: #2e3a72;
+  background: var(--website-blue);
   color: var(--button-active-text);
-  border-color: #2e3a72;
+  border-color: var(--website-blue);
 }
 
 .post-session-menu-option-date {

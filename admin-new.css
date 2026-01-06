@@ -1276,7 +1276,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #2e3a72;
+  background: var(--website-blue);
   cursor: grab;
   border: 1px solid #fff;
 }
@@ -1289,7 +1289,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #2e3a72;
+  background: var(--website-blue);
   cursor: grab;
   border: 1px solid #fff;
 }
@@ -1299,11 +1299,11 @@
 }
 
 .admin-spin-slider:hover::-webkit-slider-thumb {
-  background: #3a4a8a;
+  background: var(--website-blue-hover-fill);
 }
 
 .admin-spin-slider:hover::-moz-range-thumb {
-  background: #3a4a8a;
+  background: var(--website-blue-hover-fill);
 }
 
 .admin-slider-value {
@@ -1751,7 +1751,7 @@
   align-items: center;
   padding: 0 10px;
   cursor: pointer;
-  background: #0c4070;
+  background: var(--website-blue);
   border-radius: 5px;
   border: 1px solid transparent;
 }
@@ -2318,7 +2318,7 @@
   justify-content: space-between;
   padding: 0 10px;
   cursor: pointer;
-  background: #0c4070;
+  background: var(--website-blue);
   border-radius: 5px;
   border: 1px solid transparent;
 }
@@ -2527,12 +2527,12 @@
   align-items: center;
   padding: 0 10px;
   cursor: pointer;
-  background: #0c4070;
+  background: var(--website-blue);
   border-radius: 3px 3px 0 0;
 }
 
 .admin-messages-accordion-header:hover {
-  background: #0d4a82;
+  background: var(--website-blue-hover-fill);
 }
 
 .admin-messages-accordion-header--open,
@@ -2612,7 +2612,7 @@
 .admin-messages-accordion-editpanel {
   display: none;
   padding: 10px;
-  background: #0c4070;
+  background: var(--website-blue);
 }
 
 .admin-messages-accordion-editpanel--editing {
