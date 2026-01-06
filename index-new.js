@@ -431,8 +431,11 @@ const App = (function() {
   function loadStartupSettings() {
     if (startupSettingsPromise) return startupSettingsPromise;
 
-    startupSettingsPromise = fetch('/gateway.php?action=get-admin-settings&lite=1')
-      .then(function(response) { return response.json(); })
+    // Use prefetched promise from HTML head if available, otherwise fetch now
+    var fetchPromise = window.__settingsPromise || fetch('/gateway.php?action=get-admin-settings&lite=1')
+      .then(function(response) { return response.json(); });
+    
+    startupSettingsPromise = fetchPromise
       .then(function(data) {
         if (!data.success || !data.settings) return;
         

@@ -14,6 +14,15 @@
   <link rel="manifest" href="">
   <link rel="shortcut icon" href="">
   
+  <!-- Prefetch critical data (starts fetch before JS parses) -->
+  <link rel="preload" href="/gateway.php?action=get-admin-settings&lite=1" as="fetch" crossorigin>
+  <script>
+    // Start settings fetch immediately - will be ready by map init
+    window.__settingsPromise = fetch('/gateway.php?action=get-admin-settings&lite=1')
+      .then(function(r) { return r.json(); })
+      .catch(function() { return null; });
+  </script>
+  
   <!-- External APIs -->
   <!-- Console filter - always load (tiny file), checks localStorage internally -->
   <script src="console-filter.js"></script>

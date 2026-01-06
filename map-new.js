@@ -133,16 +133,29 @@ const MapModule = (function() {
     }
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    // Prime settings if already loaded, and start async load (non-blocking).
-    // Removes startup delay caused by waiting on network before creating the map.
+    // Wait for prefetched settings (started in HTML head) before creating map
+    // This prevents double-loading map tiles when style changes
     try {
-      if (window.App && typeof App.getState === 'function') {
+      if (window.__settingsPromise) {
+        var prefetchedData = await window.__settingsPromise;
+        if (prefetchedData && prefetchedData.success && prefetchedData.settings) {
+          adminSettings = prefetchedData.settings;
+          adminSettings.system_images = prefetchedData.system_images || {};
+          applySettings(adminSettings);
+          // Store in App state for other modules
+          if (window.App && typeof App.setState === 'function') {
+            App.setState('settings', adminSettings);
+            App.setState('system_images', adminSettings.system_images);
+          }
+        }
+      } else if (window.App && typeof App.getState === 'function') {
         adminSettings = App.getState('settings') || {};
         adminSettings.system_images = App.getState('system_images') || {};
         applySettings(adminSettings);
       }
-    } catch (_e) {}
-    loadSettings();
+    } catch (_e) {
+      console.warn('[Map] Settings prefetch failed:', _e);
+    }
     
     // Determine initial style
     // Priority: member setting > localStorage (guest's choice) > admin setting > default
