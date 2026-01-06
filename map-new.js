@@ -113,7 +113,7 @@ const MapModule = (function() {
   /**
    * Initialize the main wallpaper map
    */
-  async function initMap() {
+  function initMap() {
     const container = document.querySelector('.map-container');
     if (!container) {
       console.error('[Map] No map container found');
@@ -133,29 +133,21 @@ const MapModule = (function() {
     }
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    // Wait for prefetched settings (started in HTML head) before creating map
-    // This prevents double-loading map tiles when style changes
+    // Try to get settings synchronously if already loaded (non-blocking)
+    // Prefetch started in HTML head, so it may already be resolved
     try {
-      if (window.__settingsPromise) {
-        var prefetchedData = await window.__settingsPromise;
-        if (prefetchedData && prefetchedData.success && prefetchedData.settings) {
-          adminSettings = prefetchedData.settings;
-          adminSettings.system_images = prefetchedData.system_images || {};
+      if (window.App && typeof App.getState === 'function') {
+        var cached = App.getState('settings');
+        if (cached) {
+          adminSettings = cached;
+          adminSettings.system_images = App.getState('system_images') || {};
           applySettings(adminSettings);
-          // Store in App state for other modules
-          if (window.App && typeof App.setState === 'function') {
-            App.setState('settings', adminSettings);
-            App.setState('system_images', adminSettings.system_images);
-          }
         }
-      } else if (window.App && typeof App.getState === 'function') {
-        adminSettings = App.getState('settings') || {};
-        adminSettings.system_images = App.getState('system_images') || {};
-        applySettings(adminSettings);
       }
-    } catch (_e) {
-      console.warn('[Map] Settings prefetch failed:', _e);
-    }
+    } catch (_e) {}
+    
+    // Start async settings load (will apply later if not yet available)
+    loadSettings();
     
     // Determine initial style
     // Priority: member setting > localStorage (guest's choice) > admin setting > default
