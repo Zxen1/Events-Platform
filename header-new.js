@@ -140,13 +140,7 @@ const HeaderModule = (function() {
             var iconUrl = window.App.getImageUrl('systemImages', systemImages.icon_filter);
             filterIcon.style.webkitMaskImage = 'url(' + iconUrl + ')';
             filterIcon.style.maskImage = 'url(' + iconUrl + ')';
-            filterIcon.style.webkitMaskSize = 'contain';
-            filterIcon.style.maskSize = 'contain';
-            filterIcon.style.webkitMaskRepeat = 'no-repeat';
-            filterIcon.style.maskRepeat = 'no-repeat';
-            filterIcon.style.webkitMaskPosition = 'center';
-            filterIcon.style.maskPosition = 'center';
-            filterIcon.style.backgroundColor = '#ffffff';
+            // Let CSS control the background-color for proper state styling
             syncIconVisibility(filterIcon);
         }
         

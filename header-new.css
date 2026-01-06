@@ -296,7 +296,7 @@
 }
 
 .header-access-button-icon--fullscreen-exit {
-  background-color: var(--website-blue-active-fill, #3b82f599);
+  background-color: var(--website-blue-hover-fill, #60a5fa);
   -webkit-mask-image: var(--header-icon-fullscreen-exit);
   mask-image: var(--header-icon-fullscreen-exit);
 }
