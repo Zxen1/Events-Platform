@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 11:31 AM
+-- Generation Time: Jan 06, 2026 at 11:52 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1736,6 +1736,83 @@ INSERT INTO `list_phone_prefixes` (`id`, `option_filename`, `option_value`, `opt
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `list_system_images`
+--
+
+CREATE TABLE `list_system_images` (
+  `id` int(11) NOT NULL,
+  `option_filename` varchar(255) DEFAULT NULL,
+  `option_value` varchar(50) NOT NULL,
+  `option_label` varchar(100) NOT NULL,
+  `sort_order` int(11) DEFAULT 0,
+  `is_active` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `list_system_images`
+--
+
+INSERT INTO `list_system_images` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
+(1, '150x40-pill-2f3b73.webp', '150x40-pill-2f3b73.webp', '', 0, 1),
+(2, '150x40-pill-70.webp', '150x40-pill-70.webp', '', 0, 1),
+(3, '225x60-pill-2f3b73.webp', '225x60-pill-2f3b73.webp', '', 0, 1),
+(4, 'admin-messages.svg', 'admin-messages.svg', '', 0, 1),
+(5, 'android-chrome-192x192.png', 'android-chrome-192x192.png', '', 0, 1),
+(6, 'android-chrome-512x512.png', 'android-chrome-512x512.png', '', 0, 1),
+(7, 'apple-touch-icon.png', 'apple-touch-icon.png', '', 0, 1),
+(8, 'earth toy.png', 'earth toy.png', '', 0, 1),
+(9, 'email-messages.svg', 'email-messages.svg', '', 0, 1),
+(10, 'favicon-16x16.png', 'favicon-16x16.png', '', 0, 1),
+(11, 'favicon-32x32.png', 'favicon-32x32.png', '', 0, 1),
+(12, 'favicon.ico', 'favicon.ico', '', 0, 1),
+(13, 'fieldset-tooltips.svg', 'fieldset-tooltips.svg', '', 0, 1),
+(14, 'funmap logo square 2025-12-09.webp', 'funmap logo square 2025-12-09.webp', '', 0, 1),
+(15, 'funmap logo square 2025-12-09b.webp', 'funmap logo square 2025-12-09b.webp', '', 0, 1),
+(16, 'funmap welcome message 2025-12-10.webp', 'funmap welcome message 2025-12-10.webp', '', 0, 1),
+(17, 'funmap welcome message 2025-12-10b.webp', 'funmap welcome message 2025-12-10b.webp', '', 0, 1),
+(18, 'funmap welcome message 2025-12-10c.webp', 'funmap welcome message 2025-12-10c.webp', '', 0, 1),
+(19, 'funmap welcome message 2025-12-10d.webp', 'funmap welcome message 2025-12-10d.webp', '', 0, 1),
+(20, 'funmap welcome message 2025-12-10e.webp', 'funmap welcome message 2025-12-10e.webp', '', 0, 1),
+(21, 'funmap welcome message 2025-12-10f.webp', 'funmap welcome message 2025-12-10f.webp', '', 0, 1),
+(22, 'funmap-logo-big-1338x210.webp', 'funmap-logo-big-1338x210.webp', '', 0, 1),
+(23, 'funmap-logo-small-40x40.png', 'funmap-logo-small-40x40.png', '', 0, 1),
+(24, 'icon-admin.svg', 'icon-admin.svg', '', 0, 1),
+(25, 'icon-close.svg', 'icon-close.svg', '', 0, 1),
+(26, 'icon-discard.svg', 'icon-discard.svg', '', 0, 1),
+(27, 'icon-filter.svg', 'icon-filter.svg', '', 0, 1),
+(28, 'icon-fullscreen-exit.svg', 'icon-fullscreen-exit.svg', '', 0, 1),
+(29, 'icon-fullscreen.svg', 'icon-fullscreen.svg', '', 0, 1),
+(30, 'icon-map.svg', 'icon-map.svg', '', 0, 1),
+(31, 'icon-member.svg', 'icon-member.svg', '', 0, 1),
+(32, 'icon-posts.svg', 'icon-posts.svg', '', 0, 1),
+(33, 'icon-recents.svg', 'icon-recents.svg', '', 0, 1),
+(34, 'icon-save.svg', 'icon-save.svg', '', 0, 1),
+(36, 'member-messages.svg', 'member-messages.svg', '', 0, 1),
+(37, 'multi-post-icon-50.webp', 'multi-post-icon-50.webp', '', 0, 1),
+(38, 'red-balloon-40.png', 'red-balloon-40.png', '', 0, 1),
+(39, 'user-messages.svg', 'user-messages.svg', '', 0, 1),
+(45, 'icon-camera.svg', 'icon-camera.svg', '', 0, 1),
+(46, 'icon-chevron-down.svg', 'icon-chevron-down.svg', '', 0, 1),
+(47, 'icon-clear.svg', 'icon-clear.svg', '', 0, 1),
+(48, 'icon-compass-20.svg', 'icon-compass-20.svg', '', 0, 1),
+(49, 'icon-compass-24.svg', 'icon-compass-24.svg', '', 0, 1),
+(50, 'icon-geolocate-20.svg', 'icon-geolocate-20.svg', '', 0, 1),
+(51, 'icon-geolocate-24.svg', 'icon-geolocate-24.svg', '', 0, 1),
+(52, 'icon-minus.svg', 'icon-minus.svg', '', 0, 1),
+(53, 'icon-plus.svg', 'icon-plus.svg', '', 0, 1),
+(54, 'icon-search.svg', 'icon-search.svg', '', 0, 1),
+(55, 'icon-map-lighting-dawn.svg', 'icon-map-lighting-dawn.svg', '', 0, 1),
+(56, 'icon-map-lighting-day.svg', 'icon-map-lighting-day.svg', '', 0, 1),
+(57, 'icon-map-lighting-dusk.svg', 'icon-map-lighting-dusk.svg', '', 0, 1),
+(58, 'icon-map-lighting-night.svg', 'icon-map-lighting-night.svg', '', 0, 1),
+(59, 'icon-favourites.svg', 'icon-favourites.svg', '', 0, 1),
+(60, 'Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png', 'Firefly_cute-little-monkey-in-red-cape-pointing-up', '', 0, 1),
+(61, 'Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png', 'Firefly_cute-little-monkey-in-red-cape-with-arms-o', '', 0, 1),
+(62, 'Icon-ticket.svg', 'Icon-ticket.svg', '', 0, 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `logs`
 --
 
@@ -2090,83 +2167,6 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 -- --------------------------------------------------------
 
 --
--- Table structure for table `system_images`
---
-
-CREATE TABLE `system_images` (
-  `id` int(11) NOT NULL,
-  `option_filename` varchar(255) DEFAULT NULL,
-  `option_value` varchar(50) NOT NULL,
-  `option_label` varchar(100) NOT NULL,
-  `sort_order` int(11) DEFAULT 0,
-  `is_active` tinyint(1) DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `system_images`
---
-
-INSERT INTO `system_images` (`id`, `option_filename`, `option_value`, `option_label`, `sort_order`, `is_active`) VALUES
-(1, '150x40-pill-2f3b73.webp', '150x40-pill-2f3b73.webp', '', 0, 1),
-(2, '150x40-pill-70.webp', '150x40-pill-70.webp', '', 0, 1),
-(3, '225x60-pill-2f3b73.webp', '225x60-pill-2f3b73.webp', '', 0, 1),
-(4, 'admin-messages.svg', 'admin-messages.svg', '', 0, 1),
-(5, 'android-chrome-192x192.png', 'android-chrome-192x192.png', '', 0, 1),
-(6, 'android-chrome-512x512.png', 'android-chrome-512x512.png', '', 0, 1),
-(7, 'apple-touch-icon.png', 'apple-touch-icon.png', '', 0, 1),
-(8, 'earth toy.png', 'earth toy.png', '', 0, 1),
-(9, 'email-messages.svg', 'email-messages.svg', '', 0, 1),
-(10, 'favicon-16x16.png', 'favicon-16x16.png', '', 0, 1),
-(11, 'favicon-32x32.png', 'favicon-32x32.png', '', 0, 1),
-(12, 'favicon.ico', 'favicon.ico', '', 0, 1),
-(13, 'fieldset-tooltips.svg', 'fieldset-tooltips.svg', '', 0, 1),
-(14, 'funmap logo square 2025-12-09.webp', 'funmap logo square 2025-12-09.webp', '', 0, 1),
-(15, 'funmap logo square 2025-12-09b.webp', 'funmap logo square 2025-12-09b.webp', '', 0, 1),
-(16, 'funmap welcome message 2025-12-10.webp', 'funmap welcome message 2025-12-10.webp', '', 0, 1),
-(17, 'funmap welcome message 2025-12-10b.webp', 'funmap welcome message 2025-12-10b.webp', '', 0, 1),
-(18, 'funmap welcome message 2025-12-10c.webp', 'funmap welcome message 2025-12-10c.webp', '', 0, 1),
-(19, 'funmap welcome message 2025-12-10d.webp', 'funmap welcome message 2025-12-10d.webp', '', 0, 1),
-(20, 'funmap welcome message 2025-12-10e.webp', 'funmap welcome message 2025-12-10e.webp', '', 0, 1),
-(21, 'funmap welcome message 2025-12-10f.webp', 'funmap welcome message 2025-12-10f.webp', '', 0, 1),
-(22, 'funmap-logo-big-1338x210.webp', 'funmap-logo-big-1338x210.webp', '', 0, 1),
-(23, 'funmap-logo-small-40x40.png', 'funmap-logo-small-40x40.png', '', 0, 1),
-(24, 'icon-admin.svg', 'icon-admin.svg', '', 0, 1),
-(25, 'icon-close.svg', 'icon-close.svg', '', 0, 1),
-(26, 'icon-discard.svg', 'icon-discard.svg', '', 0, 1),
-(27, 'icon-filter.svg', 'icon-filter.svg', '', 0, 1),
-(28, 'icon-fullscreen-exit.svg', 'icon-fullscreen-exit.svg', '', 0, 1),
-(29, 'icon-fullscreen.svg', 'icon-fullscreen.svg', '', 0, 1),
-(30, 'icon-map.svg', 'icon-map.svg', '', 0, 1),
-(31, 'icon-member.svg', 'icon-member.svg', '', 0, 1),
-(32, 'icon-posts.svg', 'icon-posts.svg', '', 0, 1),
-(33, 'icon-recents.svg', 'icon-recents.svg', '', 0, 1),
-(34, 'icon-save.svg', 'icon-save.svg', '', 0, 1),
-(36, 'member-messages.svg', 'member-messages.svg', '', 0, 1),
-(37, 'multi-post-icon-50.webp', 'multi-post-icon-50.webp', '', 0, 1),
-(38, 'red-balloon-40.png', 'red-balloon-40.png', '', 0, 1),
-(39, 'user-messages.svg', 'user-messages.svg', '', 0, 1),
-(45, 'icon-camera.svg', 'icon-camera.svg', '', 0, 1),
-(46, 'icon-chevron-down.svg', 'icon-chevron-down.svg', '', 0, 1),
-(47, 'icon-clear.svg', 'icon-clear.svg', '', 0, 1),
-(48, 'icon-compass-20.svg', 'icon-compass-20.svg', '', 0, 1),
-(49, 'icon-compass-24.svg', 'icon-compass-24.svg', '', 0, 1),
-(50, 'icon-geolocate-20.svg', 'icon-geolocate-20.svg', '', 0, 1),
-(51, 'icon-geolocate-24.svg', 'icon-geolocate-24.svg', '', 0, 1),
-(52, 'icon-minus.svg', 'icon-minus.svg', '', 0, 1),
-(53, 'icon-plus.svg', 'icon-plus.svg', '', 0, 1),
-(54, 'icon-search.svg', 'icon-search.svg', '', 0, 1),
-(55, 'icon-map-lighting-dawn.svg', 'icon-map-lighting-dawn.svg', '', 0, 1),
-(56, 'icon-map-lighting-day.svg', 'icon-map-lighting-day.svg', '', 0, 1),
-(57, 'icon-map-lighting-dusk.svg', 'icon-map-lighting-dusk.svg', '', 0, 1),
-(58, 'icon-map-lighting-night.svg', 'icon-map-lighting-night.svg', '', 0, 1),
-(59, 'icon-favourites.svg', 'icon-favourites.svg', '', 0, 1),
-(60, 'Firefly_cute-little-monkey-in-red-cape-pointing-up-937096.png', 'Firefly_cute-little-monkey-in-red-cape-pointing-up', '', 0, 1),
-(61, 'Firefly_cute-little-monkey-in-red-cape-with-arms-outstretched-in-welcome-609041-600.png', 'Firefly_cute-little-monkey-in-red-cape-with-arms-o', '', 0, 1),
-(62, 'Icon-ticket.svg', 'Icon-ticket.svg', '', 0, 1);
-
--- --------------------------------------------------------
-
---
 -- Table structure for table `transactions`
 --
 
@@ -2346,6 +2346,14 @@ ALTER TABLE `list_phone_prefixes`
   ADD KEY `idx_active` (`is_active`);
 
 --
+-- Indexes for table `list_system_images`
+--
+ALTER TABLE `list_system_images`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_filename` (`option_filename`),
+  ADD KEY `idx_active` (`is_active`);
+
+--
 -- Indexes for table `logs`
 --
 ALTER TABLE `logs`
@@ -2446,14 +2454,6 @@ ALTER TABLE `post_ticket_pricing`
 ALTER TABLE `subcategories`
   ADD PRIMARY KEY (`id`),
   ADD KEY `category_id` (`category_id`);
-
---
--- Indexes for table `system_images`
---
-ALTER TABLE `system_images`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_filename` (`option_filename`),
-  ADD KEY `idx_active` (`is_active`);
 
 --
 -- Indexes for table `transactions`
@@ -2582,6 +2582,12 @@ ALTER TABLE `list_phone_prefixes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=272;
 
 --
+-- AUTO_INCREMENT for table `list_system_images`
+--
+ALTER TABLE `list_system_images`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+
+--
 -- AUTO_INCREMENT for table `logs`
 --
 ALTER TABLE `logs`
@@ -2646,12 +2652,6 @@ ALTER TABLE `post_ticket_pricing`
 --
 ALTER TABLE `subcategories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4703;
-
---
--- AUTO_INCREMENT for table `system_images`
---
-ALTER TABLE `system_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT for table `transactions`
