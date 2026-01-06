@@ -1416,6 +1416,7 @@ const AdminModule = (function() {
     function createMessageItem(message) {
         var item = document.createElement('div');
         item.className = 'admin-message-item';
+        item.setAttribute('role', 'button');
         item.dataset.messageId = message.id;
         item.dataset.messageKey = message.message_key;
         
@@ -1568,6 +1569,7 @@ const AdminModule = (function() {
     function createFieldsetTooltipItem(fieldset) {
         var item = document.createElement('div');
         item.className = 'admin-message-item';
+        item.setAttribute('role', 'button');
         item.dataset.fieldsetId = fieldset.id;
         
         var originalValue = fieldset.fieldset_tooltip || '';
