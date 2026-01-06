@@ -73,7 +73,10 @@
 
 .header-filter-button:hover {
   background: var(--website-blue-hover-fill, #3b82f5);
-  color: #fff;
+}
+
+.header-filter-button:hover .header-filter-button-icon {
+  background-color: #fff;
 }
 
 .header-filter-button-icon {
@@ -92,11 +95,11 @@
 
 /* Active filter button - blue icon */
 .header-filter-button[aria-expanded="true"] .header-filter-button-icon {
-  background-color: var(--website-blue-active-fill, #3b82f599);
+  background-color: var(--website-blue-hover-fill, #60a5fa);
 }
 
 .header-filter-button[aria-expanded="true"]:hover .header-filter-button-icon {
-  background-color: #60a5fa;
+  background-color: #fff;
 }
 
 
@@ -159,7 +162,7 @@
 /* Active mode - blue text/icon */
 .header-modeswitch-button--active,
 .header-modeswitch-button[aria-pressed="true"] {
-  color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue-hover-fill, #60a5fa);
 }
 
 .header-modeswitch-button[aria-pressed="true"]:hover {
@@ -269,7 +272,7 @@
 
 /* Active access button icon (must come AFTER base icon styles to win cascade) */
 .header-access-button-icon.header-access-button-icon--active {
-  background-color: var(--website-blue-active-fill, #3b82f599);
+  background-color: var(--website-blue-hover-fill, #60a5fa);
 }
 
 /* White glow on hover when active */
@@ -314,7 +317,7 @@
 
 /* Avatar glow when panel is open */
 .header-access-button-avatar--active {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue-hover-fill, #60a5fa);
 }
 
 .header-access-button-avatar--active:hover {
