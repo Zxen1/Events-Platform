@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 01:12 PM
+-- Generation Time: Jan 06, 2026 at 01:22 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -198,7 +198,8 @@ INSERT INTO `admin_messages` (`id`, `message_name`, `message_key`, `container_ke
 (335, 'Password Requires Uppercase', 'msg_auth_password_require_uppercase', 'msg_member', 'Password must contain an uppercase letter (A-Z).', 'Password missing uppercase', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
 (336, 'Password Requires Number', 'msg_auth_password_require_number', 'msg_member', 'Password must contain a number (0-9).', 'Password missing number', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
 (337, 'Password Requires Symbol', 'msg_auth_password_require_symbol', 'msg_member', 'Password must contain a special character (!@#$%^&*).', 'Password missing symbol', 'error', 'auth', 0, NULL, 1, 1, 0, 3000, '2026-01-03 06:44:21', '2026-01-03 06:44:21'),
-(259, 'Location Explainer Message', 'msg_post_location_explainer', 'msg_member', 'This post can appear in multiple locations around the world. \nYour second location onwards is charged at a reduced rate. ', 'Shown when user selects multiple locations in post creation', 'label', 'post', 0, NULL, 1, 1, 0, 3000, '2026-01-03 09:47:18', '2026-01-05 19:15:40');
+(259, 'Location Explainer Message', 'msg_post_location_explainer', 'msg_member', 'This post can appear in multiple locations around the world. \nYour second location onwards is charged at a reduced rate. ', 'Shown when user selects multiple locations in post creation', 'label', 'post', 0, NULL, 1, 1, 0, 3000, '2026-01-03 09:47:18', '2026-01-05 19:15:40'),
+(340, 'Timezone System Info', 'msg_timezone_info', 'msg_admin', 'Event times display exactly as entered by the poster in the event\'s local timezone. The \"Time Remaining\" and \"Time Expired\" countdowns are calculated automatically using the visitor\'s browser time. Listings remain visible until the event date ends in UTC-12 (the world\'s final timezone), giving all locations maximum visibility before expiration.', 'Explains how the timezone system works', 'label', 'timezone', 0, NULL, 1, 1, 0, NULL, '2026-01-06 02:22:41', '2026-01-06 02:22:41');
 
 -- --------------------------------------------------------
 
@@ -243,6 +244,9 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (50, 'paypal_client_secret', '', 'string', NULL, '2025-12-19 20:52:17', '2025-12-20 05:49:08'),
 (61, 'storage_api_key', '4e411191-8bc0-48a1-97ab6fea3ec9-404c-4810', 'string', 'Bunny Storage Zone Password (Read-Only) for API authentication', '2025-12-21 13:33:49', '2025-12-24 05:18:34'),
 (62, 'storage_zone_name', 'funmap', 'string', 'Bunny Storage Zone Name', '2025-12-21 13:33:49', '2025-12-21 13:37:03'),
+(70, 'show_time_remaining_sort', 'true', 'boolean', 'Show time remaining when using Soonest sort order', '2026-01-06 02:22:41', '2026-01-06 02:22:41'),
+(71, 'show_time_remaining_postcards', 'false', 'boolean', 'Show time remaining on postcards', '2026-01-06 02:22:41', '2026-01-06 02:22:41'),
+(72, 'show_time_remaining_posts', 'true', 'boolean', 'Show time remaining inside posts', '2026-01-06 02:22:41', '2026-01-06 02:22:41'),
 (100, 'folder_amenities', 'https://cdn.funmap.com/amenities', 'string', 'Folder path for amenity icons', '2025-12-21 11:53:19', '2025-12-29 02:44:01'),
 (101, 'folder_avatars', 'https://cdn.funmap.com/avatars', 'string', 'Folder path for user avatars', '2025-12-21 11:53:19', '2025-12-29 02:44:01'),
 (102, 'folder_category_icons', 'https://cdn.funmap.com/category-icons', 'string', 'Folder path for category/subcategory icons', '2025-11-13 16:17:10', '2025-12-29 02:44:01'),
@@ -2478,7 +2482,7 @@ ALTER TABLE `addons`
 -- AUTO_INCREMENT for table `admin_messages`
 --
 ALTER TABLE `admin_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=338;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=341;
 
 --
 -- AUTO_INCREMENT for table `admin_settings`
