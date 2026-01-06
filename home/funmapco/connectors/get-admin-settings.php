@@ -241,7 +241,7 @@ try {
         
         // Fetch phone-prefixes
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `phone_prefixes` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `list_phone_prefixes` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $phoneRows = $stmt->fetchAll();
             $dropdownOptions['phone-prefix'] = [];
             foreach ($phoneRows as $row) {

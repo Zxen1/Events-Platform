@@ -25,7 +25,7 @@
  * - system-image -> system_images
  * - category-icon -> list_category_icons
  * - currency -> list_currencies
- * - phone-prefix -> phone_prefixes
+ * - phone-prefix -> list_phone_prefixes
  * - amenity -> list_amenities
  * - country -> list_countries
  * 
@@ -75,7 +75,7 @@ try {
             'system-image' => 'system_images',
             'category-icon' => 'list_category_icons',
             'currency' => 'list_currencies',
-            'phone-prefix' => 'phone_prefixes',
+            'phone-prefix' => 'list_phone_prefixes',
             'amenity' => 'list_amenities',
             'country' => 'list_countries',
             'age-rating' => 'list_age_ratings'
