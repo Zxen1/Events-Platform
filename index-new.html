@@ -301,6 +301,35 @@
             </div>
           </div>
           
+          <!-- Countdown Container -->
+          <div class="admin-settings-countdown-container">
+            <p class="admin-settings-countdown-info" id="adminCountdownInfo"></p>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Countdown in Posts</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminCountdownPosts" data-setting-key="countdown_posts" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+            </div>
+            <div class="admin-settings-field admin-settings-field--toggle">
+              <span class="admin-settings-field-label admin-settings-field-label--toggle">Countdown on Postcards</span>
+              <label class="admin-settings-toggle">
+                <input type="checkbox" class="admin-settings-toggle-input" id="adminCountdownPostcards" data-setting-key="countdown_postcards" />
+                <span class="admin-settings-toggle-slider"></span>
+              </label>
+              <div id="adminCountdownPostcardsMode" class="admin-settings-countdown-mode-toggles">
+                <label class="admin-settings-countdown-mode-option">
+                  <input type="radio" name="adminCountdownPostcardsMode" value="all" class="admin-settings-countdown-mode-option-input" />
+                  <span class="admin-settings-countdown-mode-option-label">All Postcards</span>
+                </label>
+                <label class="admin-settings-countdown-mode-option">
+                  <input type="radio" name="adminCountdownPostcardsMode" value="soonest_only" class="admin-settings-countdown-mode-option-input" />
+                  <span class="admin-settings-countdown-mode-option-label">Soonest Only</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
           <div class="admin-settings-imagemanager-accordion">
             <div class="admin-settings-imagemanager-accordion-header">
               <span class="admin-settings-imagemanager-accordion-header-text">Image Files</span>

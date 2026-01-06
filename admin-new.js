@@ -2805,6 +2805,28 @@ const AdminModule = (function() {
             });
         });
         
+        // Countdown postcards mode radio buttons
+        var countdownModeRadios = settingsContainer.querySelectorAll('input[name="adminCountdownPostcardsMode"]');
+        if (countdownModeRadios.length) {
+            var initialCountdownMode = settingsData.countdown_postcards_mode || 'soonest_only';
+            countdownModeRadios.forEach(function(radio) {
+                radio.checked = (radio.value === initialCountdownMode);
+            });
+            
+            registerField('settings.countdown_postcards_mode', initialCountdownMode);
+            
+            countdownModeRadios.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    if (radio.checked) {
+                        updateField('settings.countdown_postcards_mode', radio.value);
+                    }
+                });
+            });
+        }
+        
+        // Load countdown info message from admin_messages
+        loadCountdownInfoMessage();
+        
         // Initialize image pickers (using SystemImagePickerComponent from components file)
         initImagePicker('adminBigLogoPicker', 'big_logo');
         initImagePicker('adminSmallLogoPicker', 'small_logo');
@@ -2874,6 +2896,41 @@ const AdminModule = (function() {
             'All image picker menus (System Images, Category Icons, Currencies, Phone Prefixes, Amenities) use separate database tables (system_images, category_icons, currencies, phone_prefixes, amenities) for instant menu loading. When you open an image picker menu, it displays instantly from the database tables. The system syncs with Bunny CDN when the admin panel opens (1.5 second delay, background, once per session) to add new files, remove deleted files, and handle renamed files. No API calls occur at website startup, ensuring fast page loads.';
         
         apiContainer.appendChild(explanation);
+    }
+    
+    function loadCountdownInfoMessage() {
+        var infoEl = document.getElementById('adminCountdownInfo');
+        if (!infoEl) return;
+        
+        // Fetch the timezone info message from admin_messages
+        fetch('/gateway.php?action=get-admin-settings&include_messages=true')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.messages) {
+                    // Find the timezone info message by key
+                    var timezoneMsg = null;
+                    // Messages are grouped by container
+                    for (var containerKey in data.messages) {
+                        var container = data.messages[containerKey];
+                        if (container.messages) {
+                            for (var i = 0; i < container.messages.length; i++) {
+                                if (container.messages[i].message_key === 'msg_timezone_info') {
+                                    timezoneMsg = container.messages[i];
+                                    break;
+                                }
+                            }
+                        }
+                        if (timezoneMsg) break;
+                    }
+                    
+                    if (timezoneMsg && timezoneMsg.message_text) {
+                        infoEl.textContent = timezoneMsg.message_text;
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.warn('[Admin] Could not load countdown info message:', err);
+            });
     }
     
     function initImagePicker(containerId, settingKey, folderSettingKey) {
@@ -3559,6 +3616,15 @@ const AdminModule = (function() {
                 syncSettingsToggleUi(checkbox);
             }
         });
+        
+        // Reset countdown postcards mode radio buttons
+        var countdownModeEntry = fieldRegistry['settings.countdown_postcards_mode'];
+        if (countdownModeEntry && countdownModeEntry.type === 'simple') {
+            var countdownModeRadios = settingsContainer.querySelectorAll('input[name="adminCountdownPostcardsMode"]');
+            countdownModeRadios.forEach(function(radio) {
+                radio.checked = (radio.value === countdownModeEntry.original);
+            });
+        }
         
         // Reset currency (uses CurrencyComponent from components file)
         settingsContainer.querySelectorAll('.component-currencyfull-menu[data-setting-key]').forEach(function(menu) {

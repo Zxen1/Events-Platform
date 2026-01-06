@@ -1232,6 +1232,44 @@
   white-space: nowrap;
 }
 
+/* ============================================================================
+   COUNTDOWN CONTROLS
+   ============================================================================ */
+
+.admin-settings-countdown-info {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0 0 16px 0;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.admin-settings-countdown-mode-toggles {
+  display: flex;
+  gap: 20px;
+  margin-left: 0;
+  margin-top: 8px;
+}
+
+.admin-settings-countdown-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.admin-settings-countdown-mode-option-input {
+  cursor: pointer;
+}
+
+.admin-settings-countdown-mode-option-label {
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .admin-spin-control-row {
   display: flex;
   align-items: center;
@@ -2295,6 +2333,7 @@
 
 /* Settings Containers */
 .admin-settings-general-container,
+.admin-settings-countdown-container,
 .admin-settings-folders-container,
 .admin-settings-api-container,
 .admin-checkout-paypal-container,
