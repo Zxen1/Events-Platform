@@ -592,11 +592,12 @@ const App = (function() {
     loadStartupSettings();
 
     // Initialize modules in order (they register themselves on load)
+    // Map is FIRST for fastest possible tile loading
     // Each module's init is called if it exists
     const initOrder = [
+      'map',     // First - start tile loading immediately
       'header',
       'filter', 
-      'map',
       'post'
     ];
 

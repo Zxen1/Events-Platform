@@ -224,11 +224,12 @@ const MapModule = (function() {
       antialias: false // Disable antialiasing for better performance (can enable if quality needed)
     });
 
-    // Apply lighting immediately when style loads (BEFORE tiles finish loading)
-    // This prevents the "flash" of default lighting
+    // Apply lighting and start spin on style.load (BEFORE tiles finish loading)
+    // This means the map is already spinning while tiles load in the background
     // Note: We call setConfigProperty directly here because setMapLighting() 
     // checks isStyleLoaded() which can cause issues when called from style.load
     map.once('style.load', function() {
+      // Apply lighting immediately
       if (initialLighting) {
         try {
           if (typeof map.setConfigProperty === 'function') {
@@ -237,6 +238,12 @@ const MapModule = (function() {
         } catch (e) {
           console.warn('[Map] Initial lighting failed:', e);
         }
+      }
+      
+      // Start spin immediately (while tiles are still loading)
+      // This way the map appears already spinning when first visible
+      if (spinEnabled) {
+        startSpin();
       }
     });
 
@@ -283,10 +290,8 @@ const MapModule = (function() {
       map.on('pitch', updateZoomIndicator);
       updateZoomIndicator();
       
-      // Start spin if enabled (deferred)
-      if (spinEnabled) {
-        startSpin();
-      }
+      // Spin is now started earlier on style.load (before tiles finish)
+      // so the map appears already spinning when first visible
       
       // Lighting is now applied earlier on style.load (before tiles finish)
       // This prevents the "flash" of default lighting before switching to correct value
