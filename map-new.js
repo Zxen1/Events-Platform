@@ -191,15 +191,9 @@ const MapModule = (function() {
       // else stays 'day' default
     }
 
-    // Apply waitForMapTiles setting: if false, show map immediately; if true, wait for tiles
     // CSS starts map at opacity: 0 to prevent flash
-    if (waitForMapTiles) {
-      // Add transition for fade-in after tiles load
-      container.style.transition = 'opacity 0.8s ease-in';
-    } else {
-      // Show immediately (no transition)
-      container.style.opacity = '1';
-    }
+    // The reveal (instant or fade) happens in onMapLoad after tiles are ready
+    // This ensures waitForMapTiles setting has time to load from server
 
     // Create map (pass DOM element directly, not ID)
     // Performance optimizations: renderWorldCopies=false reduces initial load, preserveDrawingBuffer only if needed
@@ -255,12 +249,15 @@ const MapModule = (function() {
    * Optimized: Defer non-critical operations to reduce requestAnimationFrame violations
    */
   function onMapLoad() {
-    // Map loaded
-    
-    // Fade in map if waitForMapTiles was enabled
-    if (waitForMapTiles) {
-      const mapEl = document.querySelector('.map-container');
-      if (mapEl) {
+    // Map loaded - reveal the map
+    const mapEl = document.querySelector('.map-container');
+    if (mapEl) {
+      if (waitForMapTiles) {
+        // Fade in smoothly
+        mapEl.style.transition = 'opacity 0.8s ease-in';
+        mapEl.style.opacity = '1';
+      } else {
+        // Show instantly
         mapEl.style.opacity = '1';
       }
     }
