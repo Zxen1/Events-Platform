@@ -248,7 +248,10 @@
 
 .header-access-button:hover {
   background: var(--website-blue-hover-fill, #3b82f5);
-  color: #fff;
+}
+
+.header-access-button:hover .header-access-button-icon {
+  background-color: #fff;
 }
 
 .header-access-button--hidden {
