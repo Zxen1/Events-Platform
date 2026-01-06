@@ -2153,7 +2153,12 @@
 }
 
 .admin-message-text-display--hidden {
-  display: none;
+  visibility: hidden;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
 
 .admin-message-type-badge {
