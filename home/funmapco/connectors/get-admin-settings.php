@@ -200,7 +200,7 @@ try {
     
     // Fetch category-icons from category_icons table (basket of available filenames)
     try {
-        $stmt = $pdo->query("SELECT `option_filename` FROM `category_icons` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
+        $stmt = $pdo->query("SELECT `option_filename` FROM `list_category_icons` WHERE `is_active` = 1 AND `option_filename` IS NOT NULL ORDER BY `option_filename` ASC");
         $categoryIconRows = $stmt->fetchAll();
         
         $categoryIconsBasket = [];

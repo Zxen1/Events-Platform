@@ -23,7 +23,7 @@
  * 
  * Note: Each folder type has its own table:
  * - system-image -> system_images
- * - category-icon -> category_icons
+ * - category-icon -> list_category_icons
  * - currency -> currencies
  * - phone-prefix -> phone_prefixes
  * - amenity -> list_amenities
@@ -73,7 +73,7 @@ try {
         // Map option_group to table name
         $tableMap = [
             'system-image' => 'system_images',
-            'category-icon' => 'category_icons',
+            'category-icon' => 'list_category_icons',
             'currency' => 'currencies',
             'phone-prefix' => 'phone_prefixes',
             'amenity' => 'list_amenities',
