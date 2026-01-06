@@ -2077,6 +2077,12 @@
     opacity: 1;
 }
 
+@media (max-width: 600px) {
+    .map-mapcontrol-row {
+        width: 100%;
+    }
+}
+
 
 /* ----------------------------------------------------------------------------
    WELCOME MODAL VARIANT
