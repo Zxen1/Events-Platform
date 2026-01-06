@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 06, 2026 at 12:55 PM
+-- Generation Time: Jan 06, 2026 at 01:12 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -54,7 +54,6 @@ CREATE TABLE `admins` (
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
-  `view_timezone` varchar(50) DEFAULT NULL,
   `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `country` varchar(100) DEFAULT NULL,
@@ -69,8 +68,8 @@ CREATE TABLE `admins` (
 -- Dumping data for table `admins`
 --
 
-INSERT INTO `admins` (`id`, `username`, `username_key`, `account_email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `view_timezone`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'dusk', 'standard', NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-10-22 01:00:41', '2026-01-06 06:27:01');
+INSERT INTO `admins` (`id`, `username`, `username_key`, `account_email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '1-avatar.png', '$2y$10$LLP8Sj0HLFnCrAHiJDZsu.PISBgL7gV/e6qabAJdaJeKSm/jmlmki', 'dusk', 'standard', '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-10-22 01:00:41', '2026-01-06 06:27:01');
 
 -- --------------------------------------------------------
 
@@ -1842,7 +1841,6 @@ CREATE TABLE `members` (
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
-  `view_timezone` varchar(50) DEFAULT NULL,
   `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
   `country` varchar(100) DEFAULT NULL,
@@ -1857,11 +1855,11 @@ CREATE TABLE `members` (
 -- Dumping data for table `members`
 --
 
-INSERT INTO `members` (`id`, `username`, `username_key`, `account_email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `view_timezone`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21'),
-(2, 'Test', 'test', 'test@funmap.com', '0-avatar.png', '$2y$10$HGrZ8HMv6aPzQVGgXUN1yu6iWyGJwlvg2QtaXvK0G530OCLgvJFlu', 'dawn', 'standard', NULL, NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 04:51:12', '2025-12-30 18:17:06'),
-(3, 'Test2', 'test2', 'test2@funmap.com', '3-avatar.png', '$2y$10$ZduCC1xwBOB.cg3xsWTIN.9WeHuoSUzMpcwHu4ckATtO.SqWjzdRS', 'day', 'standard', NULL, NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 13:49:07', '2025-12-30 14:03:37'),
-(4, 'Test 3', 'test-3', 'test3@funmap.com', '4-avatar.png', '$2y$10$Y7PMuzUA.m8AffNIx3sgke.M8MrHmPymJ7xdw5ZeN7JxciZjsGyLy', 'night', 'standard', NULL, NULL, NULL, 'au', 0, NULL, NULL, '2026-01-01 00:10:15', '2026-01-01 00:31:45');
+INSERT INTO `members` (`id`, `username`, `username_key`, `account_email`, `avatar_file`, `password_hash`, `map_lighting`, `map_style`, `favorites`, `recent`, `country`, `hidden`, `deleted_at`, `backup_json`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 'administrator', 'admin@funmap.com', '2-avatar.png', '$2a$12$8kr4zPlj7KmkePoWg5IwyuvehJmRfxFGfuM0e35Qe/NJQ6TcVcCr.', NULL, NULL, '[123,456,789]', '[{\"post_id\":456,\"viewed_at\":\"2025-12-28 12:34:56\"},{\"post_id\":123,\"viewed_at\":\"2025-12-28 11:02:10\"}]', NULL, 0, NULL, NULL, '2025-12-27 17:34:01', '2025-12-28 14:39:21'),
+(2, 'Test', 'test', 'test@funmap.com', '0-avatar.png', '$2y$10$HGrZ8HMv6aPzQVGgXUN1yu6iWyGJwlvg2QtaXvK0G530OCLgvJFlu', 'dawn', 'standard', NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 04:51:12', '2025-12-30 18:17:06'),
+(3, 'Test2', 'test2', 'test2@funmap.com', '3-avatar.png', '$2y$10$ZduCC1xwBOB.cg3xsWTIN.9WeHuoSUzMpcwHu4ckATtO.SqWjzdRS', 'day', 'standard', NULL, NULL, 'Australia', 0, NULL, NULL, '2025-12-30 13:49:07', '2025-12-30 14:03:37'),
+(4, 'Test 3', 'test-3', 'test3@funmap.com', '4-avatar.png', '$2y$10$Y7PMuzUA.m8AffNIx3sgke.M8MrHmPymJ7xdw5ZeN7JxciZjsGyLy', 'night', 'standard', NULL, NULL, 'au', 0, NULL, NULL, '2026-01-01 00:10:15', '2026-01-01 00:31:45');
 
 -- --------------------------------------------------------
 
