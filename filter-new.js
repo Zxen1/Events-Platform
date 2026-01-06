@@ -242,18 +242,29 @@ const FilterModule = (function() {
        -------------------------------------------------------------------------- */
     
     function init() {
-        // Filter initializing...
+        console.log('[Filter] Init starting...');
         
         panelEl = document.querySelector('.filter-panel');
         if (!panelEl) {
-            console.warn('[Filter] No filter panel found');
+            console.error('[Filter] No filter panel found in DOM');
             return;
         }
+        console.log('[Filter] Panel found:', panelEl);
         
         contentEl = panelEl.querySelector('.filter-panel-content');
         headerEl = panelEl.querySelector('.filter-panel-header');
         bodyEl = panelEl.querySelector('.filter-panel-body');
         summaryEl = panelEl.querySelector('.filter-panel-summary');
+        
+        console.log('[Filter] Elements found - content:', !!contentEl, 'header:', !!headerEl, 'body:', !!bodyEl);
+        
+        if (!bodyEl) {
+            console.error('[Filter] Body element not found!');
+            return;
+        }
+        
+        // Log child count
+        console.log('[Filter] Body has', bodyEl.children.length, 'child elements');
         
         initMapControls();
         initResetButtons();
@@ -269,7 +280,7 @@ const FilterModule = (function() {
         // Restore saved filters (except categories, handled in initCategoryFilter)
         restoreFilters();
         
-        // Filter initialized
+        console.log('[Filter] Init complete');
     }
     
     function initBackdropClose() {
@@ -1034,9 +1045,12 @@ const FilterModule = (function() {
                     
                     var headerToggleArea = document.createElement('div');
                     headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';
+                    var headerToggleContainer = document.createElement('div');
+                    headerToggleContainer.className = 'component-compact-switch';
                     var headerToggle = document.createElement('div');
                     headerToggle.className = 'component-compact-switch-slider component-compact-switch-slider--on filter-categoryfilter-toggle';
-                    headerToggleArea.appendChild(headerToggle);
+                    headerToggleContainer.appendChild(headerToggle);
+                    headerToggleArea.appendChild(headerToggleContainer);
                     
                     header.appendChild(headerImg);
                     header.appendChild(headerText);
@@ -1061,12 +1075,15 @@ const FilterModule = (function() {
                         optText.className = 'filter-categoryfilter-accordion-option-text';
                         optText.textContent = subName;
                         
+                        var optToggleContainer = document.createElement('div');
+                        optToggleContainer.className = 'component-compact-small-switch';
                         var optToggle = document.createElement('div');
                         optToggle.className = 'component-compact-small-switch-slider component-compact-small-switch-slider--on filter-categoryfilter-toggle';
+                        optToggleContainer.appendChild(optToggle);
                         
                         option.appendChild(optImg);
                         option.appendChild(optText);
-                        option.appendChild(optToggle);
+                        option.appendChild(optToggleContainer);
                         
                         // Click anywhere on option toggles the switch
                         option.addEventListener('click', function() {
@@ -1216,3 +1233,6 @@ const FilterModule = (function() {
 
 // Register module with App
 App.registerModule('filter', FilterModule);
+
+// Expose globally for consistency with other modules
+window.FilterModule = FilterModule;
