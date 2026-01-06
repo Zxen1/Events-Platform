@@ -2041,7 +2041,8 @@
 }
 
 .admin-messages-empty {
-  padding: 20px;
+  padding: 0;
+  margin: 10px 0 10px 0;
   text-align: center;
   color: rgba(255, 255, 255, 0.5);
   font-style: italic;
@@ -2051,16 +2052,13 @@
   background: transparent;
   border: none;
   border-radius: 0;
-  padding: 0;
   margin: 0 0 10px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 10px;
 }
 
 .admin-message-item:last-child {
   border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
+  margin: 0;
 }
 
 .admin-message-item--modified {
@@ -2085,11 +2083,11 @@
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 8px;
+  margin: 8px 0 0 0;
   background: rgba(17, 17, 17, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 5px;
-  padding: 12px;
+  padding: 10px;
   min-width: 280px;
   max-width: 400px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
@@ -2124,12 +2122,12 @@
 .admin-message-popup-placeholders-title {
   color: rgba(255, 255, 255, 0.8);
   display: block;
-  margin-bottom: 6px;
+  margin: 0 0 6px 0;
 }
 
 .admin-message-popup-placeholders-code {
   background: rgba(255, 255, 255, 0.1);
-  padding: 2px 6px;
+  padding: 0 6px;
   border-radius: 5px;
   font-size: 11px;
   color: rgba(150, 200, 255, 0.9);
@@ -2138,13 +2136,11 @@
 .admin-message-text-display {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.75);
-  padding: 4px 0;
+  margin: 0 0 10px 0;
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
   line-height: 1.5;
-  min-height: 24px;
   word-break: break-word;
 }
 
@@ -2161,7 +2157,7 @@
 
 .admin-message-type-badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 5px;
   font-size: 11px;
   text-transform: uppercase;
@@ -2199,7 +2195,8 @@
 
 .admin-message-text-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 0 12px;
+  margin: 0 0 10px 0;
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 5px;
@@ -2207,7 +2204,7 @@
   font-size: 14px;
   line-height: 1.4;
   resize: vertical;
-  min-height: 60px;
+  min-height: 24px;
   box-sizing: border-box;
   transition: all 0.2s ease;
   caret-color: #fff;
@@ -2569,13 +2566,14 @@
 .admin-messages-accordion-editpanel-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 10px;
+  margin: 0 0 10px 0;
 }
 
 .admin-messages-accordion-editpanel-input {
   flex: 1;
   height: 36px;
   padding: 0 10px;
+  margin: 0;
   background: #062038;
   border: 1px solid #222222;
   border-radius: 5px;
