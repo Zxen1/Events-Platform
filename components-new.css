@@ -1728,6 +1728,7 @@
 }
 
 .filter-mapcontrol-geocoder {
+    position: relative;
     flex: 1 1 240px;
     min-width: 0;
     max-width: 100%;
@@ -1759,7 +1760,7 @@
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
+    right: -64px;
     margin-top: 10px;
     background: #222222;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1915,6 +1916,7 @@
 }
 
 .map-mapcontrol-geocoder {
+    position: relative;
     flex: 1 1 240px;
     min-width: 0;
     max-width: 100%;
@@ -1946,7 +1948,7 @@
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
+    right: -64px;
     margin-top: 10px;
     background: #222222;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -2111,6 +2113,7 @@
 }
 
 .welcome-mapcontrol-geocoder {
+    position: relative;
     flex: 1 1 auto;
     min-width: 0;
     height: 100%;
@@ -2141,7 +2144,7 @@
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
+    right: -50px;
     margin-top: 10px;
     background: #222222;
     border: 1px solid rgba(255, 255, 255, 0.1);
