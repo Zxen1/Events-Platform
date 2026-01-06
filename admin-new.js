@@ -1035,10 +1035,34 @@ const AdminModule = (function() {
         // Clear placeholder content
         messagesContainer.innerHTML = '';
         
+        // Create search box (sticky)
+        var searchWrap = document.createElement('div');
+        searchWrap.className = 'admin-messages-search';
+        
+        var searchIcon = document.createElement('span');
+        searchIcon.className = 'admin-messages-search-icon';
+        searchIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
+        
+        var searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.className = 'admin-messages-search-input';
+        searchInput.placeholder = 'Search messages...';
+        searchInput.setAttribute('aria-label', 'Search messages');
+        
+        searchWrap.appendChild(searchIcon);
+        searchWrap.appendChild(searchInput);
+        messagesContainer.appendChild(searchWrap);
+        
         // Create container for accordions
         var accordionsWrap = document.createElement('div');
         accordionsWrap.className = 'admin-messages-container';
         messagesContainer.appendChild(accordionsWrap);
+        
+        // Search functionality
+        searchInput.addEventListener('input', function() {
+            var query = searchInput.value.toLowerCase().trim();
+            filterMessages(query, accordionsWrap);
+        });
         
         // Load category icons then render
         loadMessageCategoryIcons().then(function() {
@@ -1048,6 +1072,62 @@ const AdminModule = (function() {
         });
         
         messagesInitialized = true;
+    }
+    
+    function filterMessages(query, accordionsWrap) {
+        var accordions = accordionsWrap.querySelectorAll('.admin-messages-accordion');
+        
+        accordions.forEach(function(accordion) {
+            var content = accordion.querySelector('.admin-messages-accordion-content');
+            var header = accordion.querySelector('.admin-messages-accordion-header');
+            var messageItems = accordion.querySelectorAll('.admin-message-item');
+            var hasVisibleItems = false;
+            
+            if (!query) {
+                // No search - show all items, collapse accordions
+                messageItems.forEach(function(item) {
+                    item.style.display = '';
+                });
+                accordion.style.display = '';
+                // Collapse accordion
+                accordion.classList.remove('admin-messages-accordion--open');
+                if (content) content.classList.add('admin-messages-accordion-content--hidden');
+                if (header) {
+                    var arrow = header.querySelector('.admin-messages-accordion-header-arrow');
+                    if (arrow) arrow.classList.remove('admin-messages-accordion-header-arrow--open');
+                }
+                return;
+            }
+            
+            // Filter items
+            messageItems.forEach(function(item) {
+                var label = item.querySelector('.admin-message-label');
+                var textDisplay = item.querySelector('.admin-message-text-display');
+                var textInput = item.querySelector('.admin-message-text-input');
+                
+                var labelText = label ? label.textContent.toLowerCase() : '';
+                var displayText = textDisplay ? textDisplay.textContent.toLowerCase() : '';
+                var inputText = textInput ? textInput.value.toLowerCase() : '';
+                
+                var matches = labelText.includes(query) || displayText.includes(query) || inputText.includes(query);
+                
+                item.style.display = matches ? '' : 'none';
+                if (matches) hasVisibleItems = true;
+            });
+            
+            // Show/hide accordion based on matches
+            accordion.style.display = hasVisibleItems ? '' : 'none';
+            
+            // Open accordions with matches
+            if (hasVisibleItems) {
+                accordion.classList.add('admin-messages-accordion--open');
+                if (content) content.classList.remove('admin-messages-accordion-content--hidden');
+                if (header) {
+                    var arrow = header.querySelector('.admin-messages-accordion-header-arrow');
+                    if (arrow) arrow.classList.add('admin-messages-accordion-header-arrow--open');
+                }
+            }
+        });
     }
     
     function loadMessageCategoryIcons() {

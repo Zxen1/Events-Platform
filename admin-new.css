@@ -2030,6 +2030,61 @@
    MESSAGES TAB
    ============================================================================ */
 
+/* Messages Search Box */
+.admin-messages-search {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  height: 36px;
+  margin: 0 auto 12px auto;
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.admin-messages-search:focus-within {
+  border-color: var(--website-blue-border, #3b82f5);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.admin-messages-search-icon {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+}
+
+.admin-messages-search-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.admin-messages-search-input {
+  flex: 1;
+  height: 100%;
+  padding: 0 10px;
+  margin-left: 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 14px;
+  caret-color: #fff;
+}
+
+.admin-messages-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
 .admin-messages-container {
   width: 100%;
   max-width: 420px;
