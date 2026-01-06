@@ -1762,6 +1762,8 @@
     left: 0;
     right: -64px;
     margin-top: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     background: #222222;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
@@ -1950,6 +1952,8 @@
     left: 0;
     right: -64px;
     margin-top: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     background: #222222;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
@@ -2405,6 +2409,62 @@
 .map-mapcontrol-geolocate--active,
 .welcome-mapcontrol-geolocate--active {
     color: var(--website-blue-border, #3b82f5);
+}
+
+/* Border tracer animation for geolocate loading */
+.map-mapcontrol-row--loading {
+    border-color: transparent;
+}
+
+.map-mapcontrol-row--loading::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 20px;
+    padding: 2px;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 260deg,
+        var(--website-blue-border, #3b82f5) 300deg,
+        var(--website-blue-border, #3b82f5) 360deg
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: mapcontrol-border-tracer 1.5s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes mapcontrol-border-tracer {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.filter-mapcontrol-row--loading {
+    border-color: transparent;
+}
+
+.filter-mapcontrol-row--loading::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 20px;
+    padding: 2px;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        transparent 260deg,
+        var(--website-blue-border, #3b82f5) 300deg,
+        var(--website-blue-border, #3b82f5) 360deg
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: mapcontrol-border-tracer 1.5s linear infinite;
+    pointer-events: none;
 }
 
 
