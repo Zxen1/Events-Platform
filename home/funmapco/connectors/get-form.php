@@ -122,7 +122,7 @@ try {
     
     // Fetch currency options from currencies table
     try {
-        $stmt = $pdo->query("SELECT `option_value` FROM `currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC");
+        $stmt = $pdo->query("SELECT `option_value` FROM `list_currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC");
         $rows = $stmt->fetchAll(PDO::FETCH_COLUMN);
         if (!empty($rows)) {
             $currencyOptions = array_map('strtoupper', $rows);

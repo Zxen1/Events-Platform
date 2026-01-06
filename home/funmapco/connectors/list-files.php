@@ -24,7 +24,7 @@
  * Note: Each folder type has its own table:
  * - system-image -> system_images
  * - category-icon -> list_category_icons
- * - currency -> currencies
+ * - currency -> list_currencies
  * - phone-prefix -> phone_prefixes
  * - amenity -> list_amenities
  * - country -> list_countries
@@ -74,7 +74,7 @@ try {
         $tableMap = [
             'system-image' => 'system_images',
             'category-icon' => 'list_category_icons',
-            'currency' => 'currencies',
+            'currency' => 'list_currencies',
             'phone-prefix' => 'phone_prefixes',
             'amenity' => 'list_amenities',
             'country' => 'list_countries',
