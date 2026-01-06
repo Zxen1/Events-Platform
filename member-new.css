@@ -42,12 +42,8 @@
    SUPPORT FUNMAP (REGISTER TAB)
    ============================================================================ */
 
-.member-auth #member-auth-register > * {
-  margin-bottom: 10px;
-}
-
-.member-auth #member-auth-register > *:last-child {
-  margin-bottom: 0;
+.member-auth #member-auth-register {
+  gap: 10px;
 }
 
 .member-supporter-message {
@@ -147,14 +143,9 @@
 
 .member-supporter-join-fields {
   margin-top: 0;
-}
-
-.member-supporter-join-fields > * {
-  margin-bottom: 10px;
-}
-
-.member-supporter-join-fields > *:last-child {
-  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* ============================================================================
@@ -252,17 +243,12 @@
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   flex-shrink: 0;
   cursor: ew-resize;
   background: #222222;
-}
-
-.member-panel-header > * {
-  margin-bottom: 10px;
-}
-
-.member-panel-header > *:last-child {
-  margin-bottom: 0;
 }
 
 .member-panel-header-top {
@@ -477,11 +463,7 @@
 .member-panel-field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px;
-}
-
-.member-panel-field:last-child {
-  margin-bottom: 0;
+  gap: 10px;
 }
 
 .member-panel-field[hidden] {
@@ -491,7 +473,7 @@
 .member-panel-field-label {
   display: block;
   text-align: left;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
@@ -504,8 +486,8 @@
 .member-settings-field-label {
   display: block;
   text-align: left;
-  margin-bottom: 10px;
-  font-size: 13px;
+  margin-bottom: 6px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
 }
@@ -811,15 +793,10 @@
 }
 
 .member-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   margin-bottom: 100px;
-}
-
-.member-form > * {
-  margin-bottom: 10px;
-}
-
-.member-form > *:last-child {
-  margin-bottom: 0;
 }
 
 /* ============================================================================
@@ -840,7 +817,7 @@
 .member-create-selects {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .member-create-field {
@@ -857,24 +834,17 @@
   opacity: 0.8;
 }
 
-.member-create-fields > * {
-  margin-bottom: 10px;
-}
-
-.member-create-fields > *:last-child {
-  margin-bottom: 0;
+.member-create-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .member-create-checkout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   margin-top: 8px;
-}
-
-.member-create-checkout > * {
-  margin-bottom: 10px;
-}
-
-.member-create-checkout > *:last-child {
-  margin-bottom: 0;
 }
 
 .member-create-price-row {
@@ -894,16 +864,11 @@
 }
 
 .member-create-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   align-items: stretch;
   margin-top: 20px;
-}
-
-.member-create-actions > * {
-  margin-bottom: 10px;
-}
-
-.member-create-actions > *:last-child {
-  margin-bottom: 0;
 }
 
 .member-button-submit {
@@ -953,12 +918,10 @@
   margin-bottom: 8px;
 }
 
-.member-missing-popover-list > * {
-  margin-bottom: 10px;
-}
-
-.member-missing-popover-list > *:last-child {
-  margin-bottom: 0;
+.member-missing-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .member-missing-popover-item {
@@ -1011,7 +974,7 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
   color: #ffffff;
 }
 
@@ -1066,12 +1029,10 @@
    MEMBER AUTH CONTAINER
    ============================================================================ */
 
-.member-auth > * {
-  margin-bottom: 10px;
-}
-
-.member-auth > *:last-child {
-  margin-bottom: 0;
+.member-auth {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Profile tab: keep layout helpers, but DO NOT force it visible when inactive.
@@ -1154,12 +1115,10 @@
   outline-offset: 2px;
 }
 
-.member-auth-panel > * {
-  margin-bottom: 10px;
-}
-
-.member-auth-panel > *:last-child {
-  margin-bottom: 0;
+.member-auth-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .member-auth-panel--hidden {
@@ -1167,9 +1126,8 @@
 }
 
 .member-auth-panel-label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  margin-bottom: 10px;
 }
 
 .member-auth-panel-input {
@@ -1202,36 +1160,26 @@
   margin-bottom: 0;
 }
 
-.member-profile-edit > * {
-  margin-bottom: 10px;
-}
-
-.member-profile-edit > *:last-child {
-  margin-bottom: 0;
+.member-profile-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .member-profile-save-btn {
   align-self: flex-start;
 }
 
-.member-auth-profile > * {
-  margin-bottom: 10px;
-}
-
-.member-auth-profile > *:last-child {
-  margin-bottom: 0;
+.member-auth-profile {
+  gap: 18px;
 }
 
 .member-auth-tabs--logged-in {
   display: none;
 }
 
-.member-auth-panel--logged-in > * {
-  margin-bottom: 10px;
-}
-
-.member-auth-panel--logged-in > *:last-child {
-  margin-bottom: 0;
+.member-auth-panel--logged-in {
+  gap: 16px;
 }
 
 /* ============================================================================
@@ -1241,7 +1189,7 @@
 .member-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .member-profile-avatar {
@@ -1254,12 +1202,10 @@
   background: #111111;
 }
 
-.member-profile-details > * {
-  margin-bottom: 10px;
-}
-
-.member-profile-details > *:last-child {
-  margin-bottom: 0;
+.member-profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .member-profile-name {
@@ -1329,18 +1275,12 @@
 .member-profile-drawer-body {
   display: none;
   padding: 12px;
-}
-
-.member-profile-drawer-body > * {
-  margin-bottom: 10px;
-}
-
-.member-profile-drawer-body > *:last-child {
-  margin-bottom: 0;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .member-profile-drawer-body--open {
-  display: block;
+  display: flex;
 }
 
 /* Username row with more button */
@@ -1528,16 +1468,11 @@
   padding: 20px;
   max-width: 360px;
   width: calc(100% - 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
   color: #fff;
-}
-
-.member-unsaved-dialog > * {
-  margin-bottom: 10px;
-}
-
-.member-unsaved-dialog > *:last-child {
-  margin-bottom: 0;
 }
 
 .member-unsaved-actions {
@@ -1556,21 +1491,17 @@
   max-width: 100%;
 }
 
-.member-formpicker-cats > * {
-  margin-bottom: 10px;
-}
-
-.member-formpicker-cats > *:last-child {
-  margin-bottom: 0;
+.member-formpicker-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* Formpicker dropdowns container */
-.member-formpicker-dropdowns > * {
-  margin-bottom: 10px;
-}
-
-.member-formpicker-dropdowns > *:last-child {
-  margin-bottom: 0;
+.member-formpicker-dropdowns {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 /* Formpicker menu (copied from filter-sort-menu pattern) */
