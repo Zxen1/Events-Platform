@@ -2076,7 +2076,7 @@
   position: relative;
   cursor: help;
   user-select: none;
-  margin: 0 0 6px 0;
+  margin: 0;
   line-height: 1.2;
 }
 
@@ -2141,7 +2141,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  line-height: 1.2;
+  line-height: 1.5;
   word-break: break-word;
 }
 
@@ -2203,7 +2203,7 @@
   border-radius: 5px;
   color: var(--button-text);
   font-size: 14px;
-  line-height: 1.2;
+  line-height: 1.5;
   resize: vertical;
   min-height: 24px;
   box-sizing: border-box;
