@@ -242,29 +242,16 @@ const FilterModule = (function() {
        -------------------------------------------------------------------------- */
     
     function init() {
-        console.log('[Filter] Init starting...');
-        
         panelEl = document.querySelector('.filter-panel');
         if (!panelEl) {
-            console.error('[Filter] No filter panel found in DOM');
+            console.warn('[Filter] No filter panel found');
             return;
         }
-        console.log('[Filter] Panel found:', panelEl);
         
         contentEl = panelEl.querySelector('.filter-panel-content');
         headerEl = panelEl.querySelector('.filter-panel-header');
         bodyEl = panelEl.querySelector('.filter-panel-body');
         summaryEl = panelEl.querySelector('.filter-panel-summary');
-        
-        console.log('[Filter] Elements found - content:', !!contentEl, 'header:', !!headerEl, 'body:', !!bodyEl);
-        
-        if (!bodyEl) {
-            console.error('[Filter] Body element not found!');
-            return;
-        }
-        
-        // Log child count
-        console.log('[Filter] Body has', bodyEl.children.length, 'child elements');
         
         initMapControls();
         initResetButtons();
@@ -279,8 +266,6 @@ const FilterModule = (function() {
         
         // Restore saved filters (except categories, handled in initCategoryFilter)
         restoreFilters();
-        
-        console.log('[Filter] Init complete');
     }
     
     function initBackdropClose() {

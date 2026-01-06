@@ -280,16 +280,8 @@ const HeaderModule = (function() {
                     filterModuleLoading = false;
                     // Small delay to ensure script has executed
                     setTimeout(function() {
-                        // Init the filter module (use window.FilterModule directly)
                         if (window.FilterModule && typeof window.FilterModule.init === 'function') {
-                            try {
-                                window.FilterModule.init();
-                                console.log('[Header] Filter module initialized successfully');
-                            } catch (err) {
-                                console.error('[Header] Filter module init error:', err);
-                            }
-                        } else {
-                            console.error('[Header] FilterModule not found after script load. window.FilterModule:', window.FilterModule);
+                            window.FilterModule.init();
                         }
                         resolve();
                     }, 10);
