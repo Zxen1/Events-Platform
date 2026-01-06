@@ -411,9 +411,33 @@ image.jpg?class=thumbnail&crop=100,50,400,350
 3. If you do not want tab-switch handling, pass:
    - `enableForceOffOnTabs: false`
 
-### Non-negotiable behavior constraints (do not change without Paul’s explicit instruction)
-1. **Only two slack sizes exist**: `4000px` and `0px` (no other values, no “1px”, no “300px”, no transitions).
+### Non-negotiable behavior constraints (do not change without Paul's explicit instruction)
+1. **Only two slack sizes exist**: `4000px` and `0px` (no other values, no "1px", no "300px", no transitions).
 2. **No resizing while visible**: slack must not change size while the spacer is on-screen.
-3. **No snapping**: do not “snap back” scroll positions as a workaround.
+3. **No snapping**: do not "snap back" scroll positions as a workaround.
+
+### Fixing "jumping" when clicking non-button elements
+
+**The Problem:** TopSlack anchors to the clicked element to keep it stable. It identifies anchors using:
+```javascript
+var anchorEl = t.closest('button, [role="button"], a') || t;
+```
+If the clicked element isn't a button/link and doesn't have `role="button"`, the element itself becomes the anchor. If that element then gets `display: none` (e.g., switching from display text to input), the anchor disappears from flow and the slack calculation breaks, causing massive jumps (5000+ pixels).
+
+**The Solution:** Add `role="button"` to a **parent container that stays visible** when child elements toggle visibility.
+
+**Example (Messages tab fix - January 2026):**
+- Clicking `.admin-message-text-display` caused jumping because the text got `display: none` when editing
+- Fixed by adding `role="button"` to the parent `.admin-message-item` container
+- Now TopSlack anchors to the item (which stays visible), not the text display (which hides)
+
+```javascript
+// In createMessageItem():
+var item = document.createElement('div');
+item.className = 'admin-message-item';
+item.setAttribute('role', 'button');  // ← This fixes jumping
+```
+
+**Rule:** Any clickable element that toggles visibility (text↔input, collapsed↔expanded) should have `role="button"` on a stable parent container, not on the element that disappears.
 
 
