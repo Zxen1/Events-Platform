@@ -2260,6 +2260,7 @@
 .welcome-mapcontrol-geocoder-dropdown-item {
     padding: 8px 10px;
     cursor: pointer;
+    text-align: left;
 }
 
 .welcome-mapcontrol-geocoder-dropdown-main {
