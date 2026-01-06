@@ -2059,7 +2059,6 @@
 
 .admin-message-item:last-child {
   border-bottom: none;
-  margin: 0;
 }
 
 .admin-message-item--modified {
@@ -2077,7 +2076,7 @@
   position: relative;
   cursor: help;
   user-select: none;
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
 }
 
 .admin-message-hover-popup {
@@ -2592,7 +2591,7 @@
 
 /* Content area (for messages list) */
 .admin-messages-accordion-content {
-  padding: 10px;
+  padding: 10px 10px 0 10px;
   background: #111111;
   border-radius: 0 0 3px 3px;
 }
