@@ -88,12 +88,17 @@
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   flex-shrink: 0;
   background: #222222;
   cursor: ew-resize;
+}
+
+.admin-panel-header > * {
+  margin-bottom: 10px;
+}
+
+.admin-panel-header > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-panel-header-top {
@@ -816,10 +821,12 @@
    MARKER GRID
    ============================================================================ */
 
-.admin-marker-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.admin-marker-grid > * {
+  margin-bottom: 10px;
+}
+
+.admin-marker-grid > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-marker-grid-select {
@@ -848,10 +855,15 @@
    ============================================================================ */
 
 .admin-style-controls {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+}
+
+.admin-style-controls > * {
+  margin-bottom: 10px;
+}
+
+.admin-style-controls > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-style-controls-item {
@@ -1375,10 +1387,12 @@
    ADMIN SECTION
    ============================================================================ */
 
-.admin-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
+.admin-section > * {
+  margin-bottom: 10px;
+}
+
+.admin-section > *:last-child {
+  margin-bottom: 0;
 }
 
 /* ============================================================================
@@ -1421,10 +1435,15 @@
 }
 
 .admin-checkout-options-tiers {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   margin-bottom: 10px;
+}
+
+.admin-checkout-options-tiers > * {
+  margin-bottom: 10px;
+}
+
+.admin-checkout-options-tiers > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-checkout-options-add {
@@ -1563,9 +1582,14 @@
 
 .admin-checkout-options-edit-panel {
   margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+}
+
+.admin-checkout-options-edit-panel > * {
+  margin-bottom: 10px;
+}
+
+.admin-checkout-options-edit-panel > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-checkout-options-edit-panel--hidden {
@@ -1596,10 +1620,12 @@
   color: #555;
 }
 
-.admin-checkout-option-field {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.admin-checkout-option-field > * {
+  margin-bottom: 10px;
+}
+
+.admin-checkout-option-field > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-checkout-option-field-label {
@@ -1825,15 +1851,22 @@
   padding: 10px;
   background: #111;
   border-radius: 0 0 5px 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
-.admin-checkout-accordion-editpanel-row {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.admin-checkout-accordion-editpanel > * {
+  margin-bottom: 10px;
+}
+
+.admin-checkout-accordion-editpanel > *:last-child {
+  margin-bottom: 0;
+}
+
+.admin-checkout-accordion-editpanel-row > * {
+  margin-bottom: 10px;
+}
+
+.admin-checkout-accordion-editpanel-row > *:last-child {
+  margin-bottom: 0;
 }
 
 /* Title row - input and more button side by side */
@@ -2046,10 +2079,15 @@
 }
 
 .admin-messages-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   padding: 10px;
+}
+
+.admin-messages-list > * {
+  margin-bottom: 10px;
+}
+
+.admin-messages-list > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-messages-empty {
@@ -2064,10 +2102,15 @@
   border: none;
   border-radius: 0;
   padding: 8px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   transition: all 0.2s ease;
+}
+
+.admin-message-item > * {
+  margin-bottom: 10px;
+}
+
+.admin-message-item > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-message-item--modified {
@@ -2104,9 +2147,14 @@
   pointer-events: none;
   transform: translateY(-8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+}
+
+.admin-message-hover-popup > * {
+  margin-bottom: 10px;
+}
+
+.admin-message-hover-popup > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-message-hover-popup--visible {
@@ -2616,9 +2664,6 @@
    ============================================================================ */
 
 .admin-system-image-picker-container {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   max-width: 400px;
   width: 100%;
   background: #222222;
@@ -2627,6 +2672,14 @@
   padding: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   box-sizing: border-box;
+}
+
+.admin-system-image-picker-container > * {
+  margin-bottom: 10px;
+}
+
+.admin-system-image-picker-container > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-system-image-picker-field {
@@ -2670,11 +2723,16 @@
   padding: 20px;
   max-width: 360px;
   width: calc(100% - 40px);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
   color: #fff;
+}
+
+.admin-unsaved-dialog > * {
+  margin-bottom: 10px;
+}
+
+.admin-unsaved-dialog > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-unsaved-actions {
@@ -2818,10 +2876,12 @@
   display: block;
 }
 
-.admin-moderation-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.admin-moderation-list > * {
+  margin-bottom: 10px;
+}
+
+.admin-moderation-list > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-moderation-empty {
@@ -2859,9 +2919,14 @@
 .admin-moderation-item-info {
   flex: 1;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+}
+
+.admin-moderation-item-info > * {
+  margin-bottom: 10px;
+}
+
+.admin-moderation-item-info > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-moderation-item-name {
