@@ -4593,8 +4593,7 @@ const WelcomeModalComponent = (function() {
         // Create map controls using MapControlRowComponent if available
         if (controlsElement && window.MapControlRowComponent) {
             controlsElement.innerHTML = '';
-            MapControlRowComponent.create({
-                container: controlsElement,
+            MapControlRowComponent.create(controlsElement, {
                 variant: 'welcome',
                 placeholder: 'Search location...',
                 map: window.App && App.getMap ? App.getMap() : null,
