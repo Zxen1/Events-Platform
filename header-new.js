@@ -34,7 +34,7 @@ const HeaderModule = (function() {
 
     function setAccessButtonActiveVisual(btn, isActive) {
         if (!btn) return;
-        btn.classList.toggle('btn--active', !!isActive);
+        btn.classList.toggle('button--active', !!isActive);
         // Icon uses currentColor - inherits from button, no class needed
         var avatar = btn.querySelector('.header-access-button-avatar');
         if (avatar) avatar.classList.toggle('header-access-button-avatar--active', !!isActive);

@@ -59,8 +59,15 @@
 /* ============================================================================
    HEADER BUTTONS
    
-   All use .btn-icon-a pattern from base-new.css
-   Name classes below are for specific overrides only
+   All use .button-class-1 from base-new.css
+   
+   RULE: Name classes contain ONLY:
+   - Unique features Button Class 1 doesn't provide (mask-image, disabled state)
+   - Additive properties (transitions, positioning)
+   - Media query variations
+   
+   Name classes must NOT duplicate/override Button Class 1 properties.
+   If a button needs different base behavior, don't use Button Class 1.
    ============================================================================ */
 
 /* Filter button - position only */

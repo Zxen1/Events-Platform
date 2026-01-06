@@ -155,16 +155,16 @@
 
 
 /* ============================================================================
-   BUTTON PATTERNS
+   BUTTON CLASSES
    
-   Reusable button styles. Apply pattern class + name class to element:
-   <button class="btn-icon-a my-specific-button">
+   Reusable button styles. Apply class + name class to element:
+   <button class="button-class-1 my-specific-button">
    
-   Pattern provides behavior, name class allows specific targeting/overrides.
+   Class provides behavior, name class allows specific targeting/overrides.
    ============================================================================ */
 
-/* Pattern A: Icon button (40x40, translucent, icon via CSS mask) */
-.btn-icon-a {
+/* Button Class 1: Icon button (40x40, translucent, icon via CSS mask) */
+.button-class-1 {
   width: 40px;
   height: 40px;
   padding: 0;
@@ -178,21 +178,21 @@
   justify-content: center;
   box-sizing: border-box;
 }
-.btn-icon-a:hover {
+.button-class-1:hover {
   background: var(--website-blue);
   color: var(--website-white);
 }
-.btn-icon-a[aria-pressed="true"],
-.btn-icon-a[aria-expanded="true"],
-.btn-icon-a.btn--active {
+.button-class-1[aria-pressed="true"],
+.button-class-1[aria-expanded="true"],
+.button-class-1.button--active {
   color: var(--website-blue-light);
 }
-.btn-icon-a[aria-pressed="true"]:hover,
-.btn-icon-a[aria-expanded="true"]:hover,
-.btn-icon-a.btn--active:hover {
+.button-class-1[aria-pressed="true"]:hover,
+.button-class-1[aria-expanded="true"]:hover,
+.button-class-1.button--active:hover {
   color: var(--website-white);
 }
-.btn-icon-a-icon {
+.button-class-1-icon {
   width: 30px;
   height: 30px;
   background-color: currentColor;
