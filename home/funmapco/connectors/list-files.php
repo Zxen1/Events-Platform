@@ -26,7 +26,7 @@
  * - category-icon -> category_icons
  * - currency -> currencies
  * - phone-prefix -> phone_prefixes
- * - amenity -> amenities
+ * - amenity -> list_amenities
  * - country -> countries
  * 
  * Returns changes array so frontend can update menu if needed.
@@ -76,7 +76,7 @@ try {
             'category-icon' => 'category_icons',
             'currency' => 'currencies',
             'phone-prefix' => 'phone_prefixes',
-            'amenity' => 'amenities',
+            'amenity' => 'list_amenities',
             'country' => 'countries',
             'age-rating' => 'list_age_ratings'
         ];

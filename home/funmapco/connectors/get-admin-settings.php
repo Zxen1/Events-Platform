@@ -281,7 +281,7 @@ try {
         
         // Fetch amenities
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `amenities` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `list_amenities` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $amenityRows = $stmt->fetchAll();
             $dropdownOptions['amenity'] = [];
             foreach ($amenityRows as $row) {
