@@ -2037,9 +2037,6 @@
 }
 
 .admin-messages-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   padding: 10px;
 }
 
@@ -2054,11 +2051,16 @@
   background: transparent;
   border: none;
   border-radius: 0;
-  padding: 8px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: all 0.2s ease;
+  padding: 0;
+  margin: 0 0 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.admin-message-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .admin-message-item--modified {
@@ -2070,12 +2072,13 @@
 .admin-message-label {
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--website-blue-border, #3b82f5);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   position: relative;
   cursor: help;
   user-select: none;
+  margin: 0 0 10px 0;
 }
 
 .admin-message-hover-popup {
@@ -2454,10 +2457,15 @@
 /* Category Accordion */
 .admin-messages-accordion {
   width: 100%;
-  margin-bottom: 3px;
+  margin: 0 0 12px 0;
   background: #080808;
-  border-radius: 5px;
+  border-radius: 4px;
+  border: 1px solid var(--website-blue-border, #3b82f5);
   overflow: visible;
+}
+
+.admin-messages-accordion:last-child {
+  margin-bottom: 0;
 }
 
 .admin-messages-accordion-header {
@@ -2467,22 +2475,16 @@
   padding: 0 10px;
   cursor: pointer;
   background: #0c4070;
-  border-radius: 5px;
-  border: 1px solid transparent;
+  border-radius: 3px 3px 0 0;
 }
 
 .admin-messages-accordion-header:hover {
-  border-color: var(--website-blue-border, #3b82f5);
+  background: #0d4a82;
 }
 
 .admin-messages-accordion-header--open,
 .admin-messages-accordion-header--editing {
-  border-radius: 5px 5px 0 0;
-}
-
-.admin-messages-accordion-header--editing {
-  border-color: var(--website-blue-border, #3b82f5);
-  border-bottom: none;
+  border-radius: 3px 3px 0 0;
 }
 
 .admin-messages-accordion-header-image {
@@ -2558,9 +2560,6 @@
   display: none;
   padding: 10px;
   background: #0c4070;
-  border: 1px solid var(--website-blue-border, #3b82f5);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
 }
 
 .admin-messages-accordion-editpanel--editing {
@@ -2596,7 +2595,7 @@
 .admin-messages-accordion-content {
   padding: 10px;
   background: #111111;
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 3px 3px;
 }
 
 .admin-messages-accordion-content--hidden {
