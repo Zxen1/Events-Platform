@@ -1194,7 +1194,7 @@
 .member-profile {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 
 .member-profile-avatar {
@@ -1210,7 +1210,7 @@
 .member-profile-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 10px;
 }
 
 .member-profile-name {
@@ -1475,7 +1475,7 @@
   width: calc(100% - 40px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
   color: #fff;
 }
