@@ -1382,11 +1382,48 @@ const MapModule = (function() {
     applyLightingDirect(preset);
   }
 
+  /**
+   * Get current map state for persistence (center, zoom, pitch, bearing)
+   */
+  function getMapState() {
+    if (!map) return null;
+    try {
+      var center = map.getCenter();
+      return {
+        center: [center.lng, center.lat],
+        zoom: map.getZoom(),
+        pitch: map.getPitch(),
+        bearing: map.getBearing()
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
+   * Restore map state from persistence
+   */
+  function setMapState(state) {
+    if (!map || !state) return;
+    try {
+      map.jumpTo({
+        center: state.center,
+        zoom: state.zoom,
+        pitch: state.pitch || 0,
+        bearing: state.bearing || 0
+      });
+    } catch (e) {
+      console.warn('[Map] Failed to restore map state:', e);
+    }
+  }
+
   return {
     init,
     
     // Map instance
     getMap: () => map,
+    getMapState,
+    setMapState,
     getBounds,
     flyTo,
     handleGeocoderResult,

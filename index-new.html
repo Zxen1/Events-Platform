@@ -26,7 +26,7 @@
   <!-- CSS Files (10 total) -->
   <link rel="stylesheet" href="base-new.css?v=20251228i">
   <link rel="stylesheet" href="header-new.css?v=20251228i">
-  <link rel="stylesheet" href="filter-new.css?v=20251228i">
+  <!-- filter-new.css loaded lazily on first use -->
   <link rel="stylesheet" href="map-new.css?v=20251228i">
   <link rel="stylesheet" href="post-new.css?v=20251228i">
   <link rel="stylesheet" href="components-new.css?v=20251228i">
@@ -153,9 +153,9 @@
           </div>
           <div class="filter-expired-row">
             <span class="filter-expired-label">Show Expired Events</span>
-            <label class="filter-expired-switch">
-              <input class="filter-expired-input" type="checkbox">
-              <span class="filter-expired-slider"></span>
+            <label class="component-compact-switch">
+              <input class="component-compact-switch-input filter-expired-input" type="checkbox">
+              <span class="component-compact-switch-slider"></span>
             </label>
           </div>
           <div class="filter-calendar-container" aria-hidden="true">
@@ -1000,7 +1000,7 @@
   <script src="components-new.js?v=20251228w"></script>
   <script src="index-new.js?v=20251228w"></script>
   <script src="header-new.js?v=20251228w"></script>
-  <script src="filter-new.js?v=20251228w"></script>
+  <!-- filter-new.js loaded lazily on first use -->
   <script src="map-new.js?v=20251228w"></script>
   <script src="post-new.js?v=20251228w"></script>
   <script src="admin-new.js?v=20251228w"></script>

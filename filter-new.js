@@ -41,6 +41,200 @@ const FilterModule = (function() {
     var dateEnd = null;
     var dateRangeDraftOpen = false;
     var outsideCloseBound = false;
+    
+    // Persistence
+    var STORAGE_KEY = 'funmap_filters';
+    var saveDebounceTimer = null;
+
+
+    /* --------------------------------------------------------------------------
+       PERSISTENCE - Save/Load filter state to localStorage
+       -------------------------------------------------------------------------- */
+    
+    function saveFilters() {
+        // Debounce saves to avoid excessive writes
+        if (saveDebounceTimer) clearTimeout(saveDebounceTimer);
+        saveDebounceTimer = setTimeout(function() {
+            try {
+                var state = {
+                    keyword: keywordInput ? keywordInput.value.trim() : '',
+                    minPrice: priceMinInput ? priceMinInput.value.trim() : '',
+                    maxPrice: priceMaxInput ? priceMaxInput.value.trim() : '',
+                    dateStart: dateStart,
+                    dateEnd: dateEnd,
+                    expired: expiredInput ? expiredInput.checked : false,
+                    favourites: favouritesOn,
+                    sort: currentSort,
+                    categories: getCategoryState(),
+                    map: getMapState()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn('[Filter] Failed to save filters:', e);
+            }
+        }, 300);
+    }
+    
+    function loadFilters() {
+        try {
+            var stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) return null;
+            return JSON.parse(stored);
+        } catch (e) {
+            console.warn('[Filter] Failed to load filters:', e);
+            return null;
+        }
+    }
+    
+    function getCategoryState() {
+        var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
+        if (!container) return null;
+        
+        var state = {};
+        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
+        accordions.forEach(function(accordion) {
+            var catName = accordion.querySelector('.filter-categoryfilter-accordion-header-text');
+            if (!catName) return;
+            var catKey = catName.textContent.trim();
+            
+            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle');
+            var catEnabled = headerToggle && (
+                headerToggle.classList.contains('component-compact-switch-slider--on')
+            );
+            
+            var subs = {};
+            accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                var subName = opt.querySelector('.filter-categoryfilter-accordion-option-text');
+                if (!subName) return;
+                var subKey = subName.textContent.trim();
+                var subToggle = opt.querySelector('.filter-categoryfilter-toggle');
+                subs[subKey] = subToggle && subToggle.classList.contains('component-compact-small-switch-slider--on');
+            });
+            
+            state[catKey] = { enabled: catEnabled, subs: subs };
+        });
+        return state;
+    }
+    
+    function applyCategoryState(state) {
+        if (!state) return;
+        var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
+        if (!container) return;
+        
+        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
+        accordions.forEach(function(accordion) {
+            var catName = accordion.querySelector('.filter-categoryfilter-accordion-header-text');
+            if (!catName) return;
+            var catKey = catName.textContent.trim();
+            var catState = state[catKey];
+            if (!catState) return;
+            
+            // Apply category toggle
+            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle');
+            if (headerToggle) {
+                headerToggle.classList.toggle('component-compact-switch-slider--on', catState.enabled);
+                // Update disabled state
+                accordion.classList.toggle('filter-categoryfilter-accordion--disabled', !catState.enabled);
+                var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
+                if (header) header.classList.toggle('filter-categoryfilter-accordion-header--disabled', !catState.enabled);
+            }
+            
+            // Apply subcategory toggles
+            if (catState.subs) {
+                accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                    var subName = opt.querySelector('.filter-categoryfilter-accordion-option-text');
+                    if (!subName) return;
+                    var subKey = subName.textContent.trim();
+                    if (catState.subs.hasOwnProperty(subKey)) {
+                        var subToggle = opt.querySelector('.filter-categoryfilter-toggle');
+                        if (subToggle) {
+                            subToggle.classList.toggle('component-compact-small-switch-slider--on', catState.subs[subKey]);
+                        }
+                        opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', !catState.enabled);
+                    }
+                });
+            }
+        });
+        
+        updateResetCategoriesButton();
+    }
+    
+    function getMapState() {
+        // Get map center and zoom from the map module
+        try {
+            var mapModule = App.getModule('map');
+            if (mapModule && typeof mapModule.getMapState === 'function') {
+                return mapModule.getMapState();
+            }
+        } catch (e) {
+            // Map module not available
+        }
+        return null;
+    }
+    
+    function applyMapState(state) {
+        if (!state) return;
+        try {
+            var mapModule = App.getModule('map');
+            if (mapModule && typeof mapModule.setMapState === 'function') {
+                mapModule.setMapState(state);
+            }
+        } catch (e) {
+            // Map module not available
+        }
+    }
+    
+    function restoreFilters() {
+        var saved = loadFilters();
+        if (!saved) return;
+        
+        // Restore basic filters
+        if (keywordInput && saved.keyword) {
+            keywordInput.value = saved.keyword;
+        }
+        if (priceMinInput && saved.minPrice) {
+            priceMinInput.value = saved.minPrice;
+        }
+        if (priceMaxInput && saved.maxPrice) {
+            priceMaxInput.value = saved.maxPrice;
+        }
+        if (saved.dateStart || saved.dateEnd) {
+            dateStart = saved.dateStart || null;
+            dateEnd = saved.dateEnd || null;
+            if (daterangeInput) {
+                var parts = [];
+                if (dateStart) parts.push(dateStart);
+                if (dateEnd && dateEnd !== dateStart) parts.push(dateEnd);
+                daterangeInput.value = parts.join(' – ');
+            }
+        }
+        if (expiredInput && saved.expired !== undefined) {
+            expiredInput.checked = saved.expired;
+            syncExpiredToggleUi();
+        }
+        if (saved.favourites !== undefined) {
+            favouritesOn = saved.favourites;
+            if (favouritesBtn) {
+                favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
+            }
+        }
+        if (saved.sort) {
+            currentSort = saved.sort;
+            if (sortButtonText) {
+                var sortLabels = { az: 'A–Z', za: 'Z–A', soonest: 'Soonest', latest: 'Latest' };
+                sortButtonText.textContent = sortLabels[saved.sort] || saved.sort;
+            }
+        }
+        
+        // Map state is restored separately after map is ready
+        if (saved.map) {
+            App.on('map:ready', function() {
+                applyMapState(saved.map);
+            });
+        }
+        
+        updateClearButtons();
+    }
 
 
     /* --------------------------------------------------------------------------
@@ -66,11 +260,14 @@ const FilterModule = (function() {
         initFavouritesButton();
         initSortMenu();
         initFilterBasics();
-        initCategoryFilter();
+        initCategoryFilter(); // Categories restore their state after loading
         initHeaderDrag();
         initBackdropClose();
         initCloseButton();
         bindPanelEvents();
+        
+        // Restore saved filters (except categories, handled in initCategoryFilter)
+        restoreFilters();
         
         // Filter initialized
     }
@@ -283,16 +480,14 @@ const FilterModule = (function() {
         var container = panelEl.querySelector('.filter-categoryfilter-container');
         if (!container) return;
         
-        // Turn on all header toggles
-        var headerToggles = container.querySelectorAll('.filter-categoryfilter-accordion-header-toggle');
-        headerToggles.forEach(function(toggle) {
-            toggle.classList.add('on');
-        });
-        
-        // Turn on all option toggles
-        var optionToggles = container.querySelectorAll('.filter-categoryfilter-accordion-option-toggle');
-        optionToggles.forEach(function(toggle) {
-            toggle.classList.add('on');
+        // Turn on all toggles (both header and option)
+        var allToggles = container.querySelectorAll('.filter-categoryfilter-toggle');
+        allToggles.forEach(function(toggle) {
+            if (toggle.classList.contains('component-compact-switch-slider')) {
+                toggle.classList.add('component-compact-switch-slider--on');
+            } else if (toggle.classList.contains('component-compact-small-switch-slider')) {
+                toggle.classList.add('component-compact-small-switch-slider--on');
+            }
         });
         
         // Remove disabled state from all accordions
@@ -322,25 +517,17 @@ const FilterModule = (function() {
         var container = panelEl.querySelector('.filter-categoryfilter-container');
         if (!container) return;
         
-        // Check header toggles (categories)
-        var headerToggles = container.querySelectorAll('.filter-categoryfilter-accordion-header-toggle');
+        // Check all toggles
+        var allToggles = container.querySelectorAll('.filter-categoryfilter-toggle');
         var anyOff = false;
         
-        headerToggles.forEach(function(toggle) {
-            if (!toggle.classList.contains('on')) {
+        allToggles.forEach(function(toggle) {
+            var isOn = toggle.classList.contains('component-compact-switch-slider--on') ||
+                       toggle.classList.contains('component-compact-small-switch-slider--on');
+            if (!isOn) {
                 anyOff = true;
             }
         });
-        
-        // Check option toggles (subcategories)
-        if (!anyOff) {
-            var optionToggles = container.querySelectorAll('.filter-categoryfilter-accordion-option-toggle');
-            optionToggles.forEach(function(toggle) {
-                if (!toggle.classList.contains('on')) {
-                    anyOff = true;
-                }
-            });
-        }
         
         setResetCategoriesActive(anyOff);
     }
@@ -359,6 +546,7 @@ const FilterModule = (function() {
                 favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
                 syncFavouritesButtonUi();
                 App.emit('filter:favouritesToggle', { enabled: favouritesOn });
+                saveFilters();
             });
             syncFavouritesButtonUi();
         }
@@ -446,6 +634,7 @@ const FilterModule = (function() {
         });
         
         App.emit('filter:sortChanged', { sort: sortKey });
+        saveFilters();
     }
     
     function setSort(sortKey) {
@@ -562,7 +751,7 @@ const FilterModule = (function() {
         
         // Expired toggle
         expiredInput = container.querySelector('.filter-expired-input');
-        expiredSlider = container.querySelector('.filter-expired-slider');
+        expiredSlider = container.querySelector('.component-compact-switch-slider');
         
         if (expiredInput) {
             expiredInput.addEventListener('change', function() {
@@ -613,6 +802,7 @@ const FilterModule = (function() {
     
     function applyFilters() {
         App.emit('filter:changed', getFilterState());
+        saveFilters();
     }
     
     function getFilterState() {
@@ -770,12 +960,18 @@ const FilterModule = (function() {
         clearDateRange();
         clearGeocoder();
         updateClearButtons();
+        
+        // Clear stored filters
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (e) {}
+        
         applyFilters();
     }
     
     function syncExpiredToggleUi() {
         if (!expiredInput || !expiredSlider) return;
-        expiredSlider.classList.toggle('filter-expired-slider--on', !!expiredInput.checked);
+        expiredSlider.classList.toggle('component-compact-switch-slider--on', !!expiredInput.checked);
     }
 
 
@@ -839,7 +1035,7 @@ const FilterModule = (function() {
                     var headerToggleArea = document.createElement('div');
                     headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';
                     var headerToggle = document.createElement('div');
-                    headerToggle.className = 'filter-categoryfilter-accordion-header-toggle on';
+                    headerToggle.className = 'component-compact-switch-slider component-compact-switch-slider--on filter-categoryfilter-toggle';
                     headerToggleArea.appendChild(headerToggle);
                     
                     header.appendChild(headerImg);
@@ -866,7 +1062,7 @@ const FilterModule = (function() {
                         optText.textContent = subName;
                         
                         var optToggle = document.createElement('div');
-                        optToggle.className = 'filter-categoryfilter-accordion-option-toggle on';
+                        optToggle.className = 'component-compact-small-switch-slider component-compact-small-switch-slider--on filter-categoryfilter-toggle';
                         
                         option.appendChild(optImg);
                         option.appendChild(optText);
@@ -874,7 +1070,7 @@ const FilterModule = (function() {
                         
                         // Click anywhere on option toggles the switch
                         option.addEventListener('click', function() {
-                            optToggle.classList.toggle('on');
+                            optToggle.classList.toggle('component-compact-small-switch-slider--on');
                             applyFilters();
                             updateResetCategoriesButton();
                         });
@@ -902,8 +1098,8 @@ const FilterModule = (function() {
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        headerToggle.classList.toggle('on');
-                        if (headerToggle.classList.contains('on')) {
+                        headerToggle.classList.toggle('component-compact-switch-slider--on');
+                        if (headerToggle.classList.contains('component-compact-switch-slider--on')) {
                             setAccordionDisabled(false);
                         } else {
                             setAccordionDisabled(true);
@@ -922,7 +1118,11 @@ const FilterModule = (function() {
                     container.appendChild(accordion);
                 });
                 
-                // Category filters rendered
+                // Category filters rendered - restore saved state
+                var saved = loadFilters();
+                if (saved && saved.categories) {
+                    applyCategoryState(saved.categories);
+                }
             })
             .catch(function(err) {
                 console.error('[Filter] Failed to load categories:', err);
@@ -981,6 +1181,11 @@ const FilterModule = (function() {
             if (data.panel === 'filter') {
                 togglePanel(data.show);
             }
+        });
+        
+        // Save filters when map moves (debounced via saveFilters)
+        App.on('map:boundsChanged', function() {
+            saveFilters();
         });
     }
 

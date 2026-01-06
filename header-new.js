@@ -29,6 +29,8 @@ const HeaderModule = (function() {
     var adminBtn = null;
     var fullscreenBtn = null;
     var logoBtn = null;
+    var filterModuleLoaded = false;
+    var filterModuleLoading = false;
 
     function setAccessButtonActiveVisual(btn, isActive) {
         if (!btn) return;
@@ -260,8 +262,62 @@ const HeaderModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       FILTER BUTTON
+       FILTER BUTTON (Lazy Loading)
        -------------------------------------------------------------------------- */
+    
+    function loadFilterModule() {
+        if (filterModuleLoaded) return Promise.resolve();
+        if (filterModuleLoading) return filterModuleLoading;
+        
+        filterModuleLoading = new Promise(function(resolve, reject) {
+            // Load CSS
+            var cssLoaded = false;
+            var jsLoaded = false;
+            
+            function checkDone() {
+                if (cssLoaded && jsLoaded) {
+                    filterModuleLoaded = true;
+                    filterModuleLoading = false;
+                    // Init the filter module
+                    var filterModule = App.getModule('filter');
+                    if (filterModule && typeof filterModule.init === 'function') {
+                        filterModule.init();
+                    }
+                    resolve();
+                }
+            }
+            
+            // Load CSS
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'filter-new.css?v=' + (window.APP_VERSION || Date.now());
+            link.onload = function() {
+                cssLoaded = true;
+                checkDone();
+            };
+            link.onerror = function() {
+                console.error('[Header] Failed to load filter CSS');
+                cssLoaded = true; // Continue anyway
+                checkDone();
+            };
+            document.head.appendChild(link);
+            
+            // Load JS
+            var script = document.createElement('script');
+            script.src = 'filter-new.js?v=' + (window.APP_VERSION || Date.now());
+            script.onload = function() {
+                jsLoaded = true;
+                checkDone();
+            };
+            script.onerror = function() {
+                console.error('[Header] Failed to load filter JS');
+                reject(new Error('Failed to load filter module'));
+            };
+            document.body.appendChild(script);
+        });
+        
+        return filterModuleLoading;
+    }
     
     function initFilterButton() {
         filterBtn = document.querySelector('.header-filter-button');
@@ -273,11 +329,25 @@ const HeaderModule = (function() {
             // Update aria state
             filterBtn.setAttribute('aria-expanded', filterPanelOpen ? 'true' : 'false');
             
-            // Emit event to filter module
-            App.emit('panel:toggle', {
-                panel: 'filter',
-                show: filterPanelOpen
-            });
+            if (!filterModuleLoaded) {
+                // First click - load the module then toggle
+                loadFilterModule().then(function() {
+                    App.emit('panel:toggle', {
+                        panel: 'filter',
+                        show: filterPanelOpen
+                    });
+                }).catch(function(err) {
+                    console.error('[Header] Filter load failed:', err);
+                    filterPanelOpen = false;
+                    filterBtn.setAttribute('aria-expanded', 'false');
+                });
+            } else {
+                // Module already loaded - just toggle
+                App.emit('panel:toggle', {
+                    panel: 'filter',
+                    show: filterPanelOpen
+                });
+            }
         });
         
         // Listen for filter panel close events
