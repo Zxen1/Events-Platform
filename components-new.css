@@ -1881,7 +1881,13 @@
     display: block;
     width: 20px;
     height: 20px;
-    transition: transform 0.1s ease-out;
+    transition: transform 0.1s ease-out, opacity 0.15s ease;
+    opacity: 0.6;
+}
+
+.filter-mapcontrol-compass:hover .filter-mapcontrol-compass-img,
+.filter-mapcontrol-compass:focus .filter-mapcontrol-compass-img {
+    opacity: 1;
 }
 
 
@@ -2062,7 +2068,13 @@
     display: block;
     width: 20px;
     height: 20px;
-    transition: transform 0.1s ease-out;
+    transition: transform 0.1s ease-out, opacity 0.15s ease;
+    opacity: 0.6;
+}
+
+.map-mapcontrol-compass:hover .map-mapcontrol-compass-img,
+.map-mapcontrol-compass:focus .map-mapcontrol-compass-img {
+    opacity: 1;
 }
 
 
