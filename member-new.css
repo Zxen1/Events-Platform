@@ -1096,7 +1096,7 @@
 
 /* Main login submit button - match logout button styling */
 .member-auth-submit[data-action="login"] {
-  background: var(--website-blue-hover-fill, #3b82f5);
+  background: var(--website-blue, #305ba1);
   border-color: var(--website-blue-border, #3b82f5);
   color: #ffffff;
   width: auto;
@@ -1104,6 +1104,16 @@
   padding: 0 10px;
   white-space: nowrap;
   align-self: flex-end;
+}
+
+.member-auth-submit[data-action="login"]:hover {
+  background: var(--website-blue-hover-fill, #3b82f5);
+  border-color: var(--website-blue-border, #3b82f5);
+}
+
+.member-auth-submit[data-action="login"]:active {
+  background: var(--website-blue-active-fill, #305ba1);
+  border-color: var(--website-blue-border, #3b82f5);
 }
 
 .member-auth-submit[data-action="register"] {

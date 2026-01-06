@@ -4580,11 +4580,7 @@ const WelcomeModalComponent = (function() {
             modal.innerHTML = '<div class="welcome-modal-content">' +
                 '<div class="welcome-modal-body" id="welcomeBody">' +
                 '<img class="welcome-modal-logo" src="" alt="FunMap logo" loading="eager">' +
-                '<div class="welcome-modal-controls map-controls-welcome">' +
-                '<div id="geocoder-welcome" class="geocoder"></div>' +
-                '<div id="geolocate-welcome" class="geolocate-btn"></div>' +
-                '<div id="compass-welcome" class="compass-btn"></div>' +
-                '</div>' +
+                '<div class="welcome-modal-controls"></div>' +
                 '</div>' +
                 '</div>';
             
@@ -4593,6 +4589,26 @@ const WelcomeModalComponent = (function() {
         
         logoElement = modal.querySelector('.welcome-modal-logo');
         controlsElement = modal.querySelector('.welcome-modal-controls');
+        
+        // Create map controls using MapControlRowComponent if available
+        if (controlsElement && window.MapControlRowComponent) {
+            controlsElement.innerHTML = '';
+            MapControlRowComponent.create({
+                container: controlsElement,
+                variant: 'welcome',
+                placeholder: 'Search location...',
+                map: window.App && App.getMap ? App.getMap() : null,
+                onResult: function(result) {
+                    if (result && result.center && window.App && App.getMap) {
+                        var map = App.getMap();
+                        if (map) {
+                            map.flyTo({ center: result.center, zoom: 14 });
+                        }
+                    }
+                    close();
+                }
+            });
+        }
         
         // Close when clicking outside content
         modal.addEventListener('click', function(e) {
