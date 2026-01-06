@@ -200,10 +200,12 @@ const MapModule = (function() {
     }
 
     // Apply waitForMapTiles setting: if false, show map immediately; if true, wait for tiles
+    // CSS starts map at opacity: 0 to prevent flash
     if (waitForMapTiles) {
-      container.style.opacity = '0';
+      // Add transition for fade-in after tiles load
       container.style.transition = 'opacity 0.8s ease-in';
     } else {
+      // Show immediately (no transition)
       container.style.opacity = '1';
     }
 

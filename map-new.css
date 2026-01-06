@@ -78,7 +78,7 @@
 .map-container {
   position: absolute;
   inset: 0;
-  opacity: 1; /* Default visible - JS may override based on wait_for_map_tiles setting */
+  opacity: 0; /* Start hidden to prevent flash - JS sets to 1 */
 }
 
 .map-area {
