@@ -120,22 +120,25 @@
 /* Map controls in header (wide screens only) */
 .header-map-controls {
   display: none;
-  min-width: 0;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   height: 40px;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 
 @media (min-width: 900px) {
   .header-modeswitch {
     /* Free space for header map controls */
-    margin-right: 0;
+    margin-right: auto;
   }
 
   .header-map-controls {
     display: flex;
-    flex: 1 1 auto;
   }
 }
 
