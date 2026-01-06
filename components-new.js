@@ -2573,6 +2573,10 @@ const MapControlRowComponent = (function(){
     // Sync all geolocate buttons to loading state
     function setAllGeolocateLoading() {
         instances.forEach(function(inst) {
+            if (inst.row) {
+                var rowBase = inst.rowBaseClass;
+                inst.row.classList.add(rowBase + '--loading');
+            }
             if (inst.geolocateBtn) {
                 var btnBase = inst.geolocateBtnBaseClass;
                 inst.geolocateBtn.classList.add(btnBase + '--loading');
@@ -2589,6 +2593,10 @@ const MapControlRowComponent = (function(){
     function setAllGeolocateActive() {
         geolocateActive = true;
         instances.forEach(function(inst) {
+            if (inst.row) {
+                var rowBase = inst.rowBaseClass;
+                inst.row.classList.remove(rowBase + '--loading');
+            }
             if (inst.geolocateBtn) {
                 var btnBase = inst.geolocateBtnBaseClass;
                 inst.geolocateBtn.classList.remove(btnBase + '--loading');
@@ -2604,6 +2612,10 @@ const MapControlRowComponent = (function(){
     // Clear loading state from all geolocate buttons
     function clearAllGeolocateLoading() {
         instances.forEach(function(inst) {
+            if (inst.row) {
+                var rowBase = inst.rowBaseClass;
+                inst.row.classList.remove(rowBase + '--loading');
+            }
             if (inst.geolocateBtn) {
                 var btnBase = inst.geolocateBtnBaseClass;
                 inst.geolocateBtn.classList.remove(btnBase + '--loading');
@@ -2752,6 +2764,7 @@ const MapControlRowComponent = (function(){
         
         var instance = {
             row: row,
+            rowBaseClass: prefix + '-row',
             input: input,
             clearBtn: clearBtn,
             dropdown: dropdown,
@@ -2859,6 +2872,33 @@ const MapControlRowComponent = (function(){
             dropdown.style.display = 'none';
             input.focus();
         });
+        
+        // Map dim on search focus (only for map variant)
+        if (prefix === 'map-mapcontrol') {
+            var mapSearchDim = document.querySelector('.map-search-dim');
+            if (!mapSearchDim) {
+                // Create dim overlay if it doesn't exist
+                var mapContainer = document.querySelector('.map-container');
+                if (mapContainer) {
+                    mapSearchDim = document.createElement('div');
+                    mapSearchDim.className = 'map-search-dim';
+                    mapContainer.appendChild(mapSearchDim);
+                }
+            }
+            if (mapSearchDim) {
+                input.addEventListener('focus', function() {
+                    mapSearchDim.classList.add('map-search-dim--active');
+                });
+                input.addEventListener('blur', function() {
+                    // Delay to allow click on dropdown items
+                    setTimeout(function() {
+                        if (document.activeElement !== input) {
+                            mapSearchDim.classList.remove('map-search-dim--active');
+                        }
+                    }, 150);
+                });
+            }
+        }
         
         // Close dropdown on outside click
         document.addEventListener('click', function(e) {
