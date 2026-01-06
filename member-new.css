@@ -260,7 +260,7 @@
 }
 
 .member-panel-header-title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: #fff;
   margin: 0;
@@ -638,9 +638,9 @@
    ============================================================================ */
 
 .member-button-auth {
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  color: var(--button-text);
+  background: var(--website-blue, #305ba1);
+  border: 1px solid var(--website-blue-border, #3b82f5);
+  color: #ffffff;
   font-size: 14px;
   padding: 0 10px;
   height: var(--control-h);
@@ -658,13 +658,13 @@
 .member-button-auth:hover {
   background: var(--website-blue-hover-fill, #3b82f5);
   border-color: var(--website-blue-border, #3b82f5);
-  color: var(--button-hover-text);
+  color: #ffffff;
 }
 
 .member-button-auth:active {
-  background: var(--btn-selected-active);
-  border-color: var(--btn-selected-active);
-  color: var(--button-active-text);
+  background: var(--website-blue-active-fill, #305ba1);
+  border-color: var(--website-blue-border, #3b82f5);
+  color: #ffffff;
   transform: scale(0.97);
 }
 
@@ -1103,7 +1103,7 @@
   min-width: 0;
   padding: 0 10px;
   white-space: nowrap;
-  align-self: flex-start;
+  align-self: flex-end;
 }
 
 .member-auth-submit[data-action="register"] {
@@ -1415,7 +1415,7 @@
   position: static;
   display: flex;
   gap: 10px;
-  justify-content: flex-start;
+  justify-content: flex-end;
   margin-top: 0;
   padding: 0;
   background: transparent;
