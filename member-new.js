@@ -186,10 +186,18 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     function init() {
-        // Preload messages to prevent layout jerk when Register tab loads
+        // Preload data to prevent layout jerk when Register tab loads
+        // These are all small payloads that cache after first fetch
         if (typeof window.preloadMessages === 'function') {
             window.preloadMessages();
         }
+        if (window.MemberAuthFieldsetsComponent && typeof MemberAuthFieldsetsComponent.loadFromDatabase === 'function') {
+            MemberAuthFieldsetsComponent.loadFromDatabase();
+        }
+        if (window.CountryComponent && typeof CountryComponent.loadFromDatabase === 'function') {
+            CountryComponent.loadFromDatabase();
+        }
+        // Avatar filenames are loaded via ensureSiteAvatarFilenames() which is already called in showPanel()
         
         cacheElements();
         if (!panel) {
