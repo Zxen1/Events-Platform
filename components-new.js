@@ -6751,6 +6751,9 @@ const AgeRatingComponent = (function(){
         
         var menu = document.createElement('div');
         menu.className = 'component-ageratingpicker';
+        // Default state is "no image" until a real selection with an icon is applied.
+        // This ensures placeholder text aligns with options (only 10px left padding from the button itself).
+        menu.classList.add('component-ageratingpicker--noimage');
         
         // Button
         var button = document.createElement('button');

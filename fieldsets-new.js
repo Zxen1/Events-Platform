@@ -794,6 +794,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
                 // Custom dropdown menu (no native <select> arrow). Uses MenuManager + animated ▼ arrow like Formbuilder menus.
+                var cdPlaceholderText = (typeof placeholder === 'string') ? placeholder.trim() : '';
                 var cdMenu = document.createElement('div');
                 cdMenu.className = 'fieldset-customdropdown';
                 cdMenu.dataset.value = '';
@@ -805,7 +806,7 @@ const FieldsetBuilder = (function(){
                 
                 var cdButtonText = document.createElement('span');
                 cdButtonText.className = 'fieldset-customdropdown-button-text';
-                cdButtonText.textContent = (typeof placeholder === 'string' && placeholder.trim()) ? placeholder.trim() : 'Select an option...';
+                cdButtonText.textContent = cdPlaceholderText;
                 
                 var cdArrow = document.createElement('span');
                 cdArrow.className = 'fieldset-customdropdown-button-arrow';
@@ -839,7 +840,7 @@ const FieldsetBuilder = (function(){
                     var s = (v == null) ? '' : String(v);
                     cdMenu.dataset.value = s;
                     cdButton.dataset.value = s;
-                    cdButtonText.textContent = s ? s : ((typeof placeholder === 'string' && placeholder.trim()) ? placeholder.trim() : 'Select an option...');
+                    cdButtonText.textContent = s ? s : cdPlaceholderText;
                 }
                 
                 function cdPick(v) {
@@ -852,7 +853,7 @@ const FieldsetBuilder = (function(){
                 var clearBtn = document.createElement('button');
                 clearBtn.type = 'button';
                 clearBtn.className = 'fieldset-customdropdown-option';
-                clearBtn.textContent = 'Select an option...';
+                clearBtn.textContent = cdPlaceholderText;
                 clearBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -893,6 +894,13 @@ const FieldsetBuilder = (function(){
                 
             case 'custom_radio': // post_map_cards.custom_radio
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                // Optional placeholder prompt (no hard-coded text; uses fieldset placeholder only)
+                if (typeof placeholder === 'string' && placeholder.trim()) {
+                    var radioPlaceholder = document.createElement('div');
+                    radioPlaceholder.className = 'fieldset-sublabel';
+                    radioPlaceholder.textContent = placeholder.trim();
+                    fieldset.appendChild(radioPlaceholder);
+                }
                 var radioGroup = document.createElement('div');
                 radioGroup.className = 'fieldset-radio-group';
                 if (Array.isArray(fieldOptions)) {
