@@ -861,9 +861,6 @@
   margin-bottom: 10px;
 }
 
-.member-create-checkout > *:last-child {
-  margin-bottom: 0;
-}
 
 .member-create-price-row {
   display: flex;
@@ -893,10 +890,15 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  margin-bottom: 10px;
 }
 
 .member-checkout-actions-container > * {
   margin-bottom: 10px;
+}
+
+.member-checkout-actions-container > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-button-submit {
@@ -1095,13 +1097,14 @@
   flex-direction: column;
 }
 
+.member-profile-edit > *:last-child {
+  margin-bottom: 0;
+}
+
 .member-profile-edit > * {
   margin-bottom: 10px;
 }
 
-.member-profile-edit > *:last-child {
-  margin-bottom: 0;
-}
 
 .member-profile-save-btn {
   align-self: flex-start;
@@ -1487,13 +1490,14 @@
   flex-direction: column;
 }
 
+.member-formpicker-cats > *:last-child {
+  margin-bottom: 0;
+}
+
 .member-formpicker-cats > * {
   margin-bottom: 10px;
 }
 
-.member-formpicker-cats > *:last-child {
-  margin-bottom: 0;
-}
 
 /* Formpicker dropdowns container */
 .member-formpicker-dropdowns {
@@ -1501,13 +1505,14 @@
   flex-direction: column;
 }
 
+.member-formpicker-dropdowns > *:last-child {
+  margin-bottom: 0;
+}
+
 .member-formpicker-dropdowns > * {
   margin-bottom: 10px;
 }
 
-.member-formpicker-dropdowns > *:last-child {
-  margin-bottom: 0;
-}
 
 /* Formpicker menu (copied from filter-sort-menu pattern) */
 .member-formpicker-menu {

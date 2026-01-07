@@ -2467,24 +2467,20 @@ const MemberModule = (function() {
         submitBtn.disabled = true;
         actionsWrapper.appendChild(submitBtn);
         
-        // Admin submit button (hidden by default)
-        adminSubmitBtn = document.createElement('button');
-        adminSubmitBtn.type = 'button';
-        adminSubmitBtn.className = 'member-button-admin-submit';
-        adminSubmitBtn.textContent = 'Admin: Submit Free';
-        adminSubmitBtn.disabled = true;
-        adminSubmitBtn.hidden = true;
-        
-        // Show admin button if user is admin
+        // Admin submit button - only create if user is admin
         if (currentUser && currentUser.isAdmin) {
-            adminSubmitBtn.hidden = false;
+            adminSubmitBtn = document.createElement('button');
+            adminSubmitBtn.type = 'button';
+            adminSubmitBtn.className = 'member-button-admin-submit';
+            adminSubmitBtn.textContent = 'Admin: Submit Free';
+            adminSubmitBtn.disabled = true;
+            actionsWrapper.appendChild(adminSubmitBtn);
+            attachMissingPopoverToButton(adminSubmitBtn, function() { return getCreatePostMissingList({ mode: null }); });
         }
         
-        actionsWrapper.appendChild(adminSubmitBtn);
         checkoutContainer.appendChild(actionsWrapper);
         // Hover popover listing all missing items (no toasts; button stays truly disabled)
         attachMissingPopoverToButton(submitBtn, function() { return getCreatePostMissingList({ mode: null }); });
-        attachMissingPopoverToButton(adminSubmitBtn, function() { return getCreatePostMissingList({ mode: null }); });
         
         // Attach click handlers for submit buttons
         submitBtn.addEventListener('click', function(e) {
