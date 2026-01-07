@@ -798,7 +798,6 @@ const FieldsetBuilder = (function(){
                 var cdMenu = document.createElement('div');
                 cdMenu.className = 'fieldset-customdropdown';
                 cdMenu.dataset.value = '';
-                var cdClearBtn = null;
                 
                 var cdButton = document.createElement('button');
                 cdButton.type = 'button';
@@ -842,8 +841,6 @@ const FieldsetBuilder = (function(){
                     cdMenu.dataset.value = s;
                     cdButton.dataset.value = s;
                     cdButtonText.textContent = s ? s : cdPlaceholderText;
-                    // Match Age Rating behavior: placeholder option only exists when empty.
-                    if (cdClearBtn) cdClearBtn.style.display = s ? 'none' : '';
                 }
                 
                 function cdPick(v) {
@@ -851,18 +848,6 @@ const FieldsetBuilder = (function(){
                     cdApplyOpenState(false);
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                 }
-                
-                // Clear option (matches old <select> blank option)
-                cdClearBtn = document.createElement('button');
-                cdClearBtn.type = 'button';
-                cdClearBtn.className = 'fieldset-customdropdown-option';
-                cdClearBtn.textContent = cdPlaceholderText;
-                cdClearBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    cdPick('');
-                });
-                cdOptions.appendChild(cdClearBtn);
                 
                 if (Array.isArray(fieldOptions)) {
                     fieldOptions.forEach(function(opt) {
