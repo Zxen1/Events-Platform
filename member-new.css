@@ -156,7 +156,9 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-supporter-join-fields > *:last-child {
+  margin-bottom: 0;
+}
 
 /* ============================================================================
    PANEL BASE
@@ -763,7 +765,7 @@
 .member-form-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 12px auto;
+  margin: 0 auto;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -784,14 +786,16 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-form > *:last-child {
+  margin-bottom: 0;
+}
 
 /* ============================================================================
    MEMBER CREATE STYLES
    ============================================================================ */
 
 .member-create-intro {
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
   font-size: 15px;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.6);
@@ -804,7 +808,6 @@
 .member-create-selects {
   display: flex;
   flex-wrap: wrap;
-  margin-bottom: 10px;
 }
 
 .member-create-selects > * {
@@ -839,14 +842,15 @@
 .member-create-checkout {
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px;
 }
 
 .member-create-checkout > * {
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-create-checkout > *:last-child {
+  margin-bottom: 0;
+}
 
 .member-create-price-row {
   display: flex;
@@ -876,14 +880,15 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin-bottom: 10px;
 }
 
 .member-create-actions > * {
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-create-actions > *:last-child {
+  margin-bottom: 0;
+}
 
 .member-button-submit {
   background: var(--website-color, #3b82f5);
@@ -941,7 +946,9 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-missing-popover-list > *:last-child {
+  margin-bottom: 0;
+}
 
 .member-missing-popover-item {
   font-size: 13px;
@@ -1076,31 +1083,13 @@
   min-height: 0;
 }
 
-/* Login form in Profile tab */
-.member-login-form {
-  margin-top: 10px;
-}
+/* Login form in Profile tab - no top margin, spacing comes from container above */
 
-/* Main login submit button - match logout button styling */
-.member-auth-submit[data-action="login"] {
-  background: var(--blue-500);
-  border-color: var(--blue-500);
-  color: #ffffff;
+/* Login button - right-aligned like logout button */
+.member-login[data-action="login"] {
   width: auto;
-  min-width: 0;
-  padding: 0 10px;
-  white-space: nowrap;
   align-self: flex-end;
-}
-
-.member-auth-submit[data-action="login"]:hover {
-  background: var(--blue-500);
-  border-color: var(--blue-500);
-}
-
-.member-auth-submit[data-action="login"]:active {
-  background: var(--blue-600);
-  border-color: var(--blue-500);
+  margin-bottom: 10px;
 }
 
 .member-auth-submit[data-action="register"] {
@@ -1113,11 +1102,7 @@
   flex-direction: column;
 }
 
-.member-auth-panel > * {
-  margin-bottom: 10px;
-}
-
-/* Last child keeps margin-bottom to provide container bottom spacing */
+/* Elements have their own margin-bottom - no blanket rule */
 
 .member-auth-panel--hidden {
   display: none;
@@ -1126,6 +1111,7 @@
 .member-auth-panel-label {
   font-size: 14px;
   font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .member-auth-panel-input {
@@ -1138,6 +1124,7 @@
   box-sizing: border-box;
   caret-color: #fff;
   cursor: text;
+  margin-bottom: 10px;
 }
 
 /* Browser autofill styling uses global rule from base-new.css */
@@ -1166,7 +1153,9 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-profile-edit > *:last-child {
+  margin-bottom: 0;
+}
 
 .member-profile-save-btn {
   align-self: flex-start;
@@ -1277,7 +1266,7 @@
 
 .member-profile-drawer-body {
   display: none;
-  padding: 12px;
+  padding: 12px 12px 0;
   flex-direction: column;
 }
 
@@ -1285,7 +1274,7 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+/* Visible container - last child keeps margin for bottom spacing */
 
 .member-profile-drawer-body--open {
   display: flex;
@@ -1471,7 +1460,7 @@
   background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
   border: 1px solid var(--border);
   border-radius: 5px;
-  padding: 20px 20px 10px;
+  padding: 20px 20px 0;
   max-width: 360px;
   width: calc(100% - 40px);
   display: flex;
@@ -1484,7 +1473,7 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+/* Visible container - last child keeps margin for bottom spacing */
 
 .member-unsaved-actions {
   display: flex;
@@ -1497,7 +1486,6 @@
    ============================================================================ */
 
 .member-formpicker-container {
-  margin-bottom: 10px;
   width: 100%;
   max-width: 100%;
 }
@@ -1511,7 +1499,9 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-formpicker-cats > *:last-child {
+  margin-bottom: 0;
+}
 
 /* Formpicker dropdowns container */
 .member-formpicker-dropdowns {
@@ -1523,7 +1513,9 @@
   margin-bottom: 10px;
 }
 
-/* Last child keeps margin-bottom to provide container bottom spacing */
+.member-formpicker-dropdowns > *:last-child {
+  margin-bottom: 0;
+}
 
 /* Formpicker menu (copied from filter-sort-menu pattern) */
 .member-formpicker-menu {
@@ -1645,10 +1637,7 @@
    ADDITIONAL LOCATIONS
    ============================================================================ */
 
-/* Section containers - siblings of main form */
-.member-section-container {
-  margin-bottom: 10px;
-}
+/* Section containers - siblings of main form, elements inside handle spacing */
 
 /* Active state removed - member-form-container is now transparent wrapper */
 
