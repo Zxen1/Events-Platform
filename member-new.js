@@ -2488,10 +2488,12 @@ const MemberModule = (function() {
             handleCreatePostSubmit(false);
         });
         
-        adminSubmitBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleCreatePostSubmit(true);
-        });
+        if (adminSubmitBtn) {
+            adminSubmitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleCreatePostSubmit(true);
+            });
+        }
 
         // Now that the submit buttons exist, compute their real enabled/disabled state.
         updateSubmitButtonState();
