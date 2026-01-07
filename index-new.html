@@ -216,7 +216,7 @@
        File: admin.js, admin.css
        ======================================================================== -->
   <aside id="admin-panel" class="admin-panel" role="dialog" aria-hidden="true">
-    <div class="admin-panel-content admin-panel-content--side-right admin-panel-content--hidden">
+    <div class="admin-panel-contents admin-panel-contents--side-right admin-panel-contents--hidden">
       
       <!-- Panel Header -->
       <div class="admin-panel-header">
@@ -254,7 +254,7 @@
       <div class="admin-panel-body">
         
         <!-- Settings Tab -->
-        <section id="admin-tab-settings" class="admin-tab-panel admin-tab-panel--active" role="tabpanel" aria-labelledby="admin-tab-settings-btn">
+        <section id="admin-tab-settings" class="admin-tab-contents admin-tab-contents--active" role="tabpanel" aria-labelledby="admin-tab-settings-btn">
           <form id="adminSettingsForm" style="display: contents;" onsubmit="return false;">
           <div class="admin-settings-general-container">
             <div class="admin-settings-field">
@@ -551,12 +551,12 @@
         </section>
         
         <!-- Forms Tab -->
-        <section id="admin-tab-forms" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-forms-btn">
+        <section id="admin-tab-forms" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-forms-btn">
           <div id="admin-formbuilder" class="admin-formbuilder-container"></div>
         </section>
         
         <!-- Map Tab -->
-        <section id="admin-tab-map" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-map-btn">
+        <section id="admin-tab-map" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-map-btn">
           
           <!-- Starting Location -->
           <div class="admin-map-defaults-container">
@@ -718,12 +718,12 @@
         </section>
         
         <!-- Messages Tab -->
-        <section id="admin-tab-messages" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-messages-btn">
+        <section id="admin-tab-messages" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-messages-btn">
           <p class="admin-tab-intro">Messages content will go here.</p>
         </section>
         
         <!-- Checkout Tab -->
-        <section id="admin-tab-checkout" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
+        <section id="admin-tab-checkout" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-checkout-btn">
           <div class="admin-checkout-paypal-container">
             <div class="admin-settings-field">
               <label class="admin-settings-field-label" for="adminPaypalClientId">PayPal Client ID</label>
@@ -744,7 +744,7 @@
         </section>
         
         <!-- Moderation Tab -->
-        <section id="admin-tab-moderation" class="admin-tab-panel" role="tabpanel" aria-labelledby="admin-tab-moderation-btn">
+        <section id="admin-tab-moderation" class="admin-tab-contents" role="tabpanel" aria-labelledby="admin-tab-moderation-btn">
           
           <!-- Pending Deletion Accordion -->
           <div class="admin-moderation-accordion" id="admin-moderation-deletion">
@@ -790,7 +790,7 @@
        File: member.js, member.css
        ======================================================================== -->
   <aside id="member-panel" class="member-panel" role="dialog" aria-hidden="true">
-    <div class="member-panel-content member-panel-content--side-right member-panel-content--hidden">
+    <div class="member-panel-contents member-panel-contents--side-right member-panel-contents--hidden">
       
       <!-- Panel Header -->
       <div class="member-panel-header">
@@ -824,7 +824,7 @@
         <!-- ================================================================
              PROFILE TAB
              ================================================================ -->
-        <section id="member-tab-profile" class="member-tab-panel member-tab-panel--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
+        <section id="member-tab-profile" class="member-tab-contents member-tab-contents--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
           
           <!-- Map Settings (always visible) -->
           <div class="member-mapstyle-container">
@@ -917,7 +917,7 @@
         <!-- ================================================================
              CREATE POST TAB
              ================================================================ -->
-        <section id="member-tab-create" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-create-btn" hidden>
+        <section id="member-tab-create" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-create-btn" hidden>
           <div class="member-formpicker-container">
             <div class="member-formpicker-cats" id="member-formpicker-cats" aria-label="Categories"></div>
           </div>
@@ -929,14 +929,14 @@
         <!-- ================================================================
              MY POSTS TAB
              ================================================================ -->
-        <section id="member-tab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-myposts-btn" hidden>
+        <section id="member-tab-myposts" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-myposts-btn" hidden>
           <!-- Content loaded when logged in -->
         </section>
         
         <!-- ================================================================
              REGISTER TAB (Support FunMap - only visible when logged out)
              ================================================================ -->
-        <section id="member-tab-register" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-register-btn" hidden>
+        <section id="member-tab-register" class="member-tab-contents" role="tabpanel" aria-labelledby="member-tab-register-btn" hidden>
           <form id="memberAuthFormRegister" class="member-auth-form" autocomplete="off">
             <div id="member-supporter-message" class="member-supporter-message" data-message-key="msg_member_supporter_message"></div>
 

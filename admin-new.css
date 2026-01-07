@@ -27,7 +27,7 @@
    PANEL CONTENT
    ============================================================================ */
 
-.admin-panel-content {
+.admin-panel-contents {
   --panel-transition-duration: 0.3s;
   position: absolute;
   left: auto;
@@ -52,25 +52,25 @@
   overscroll-behavior: contain;
 }
 
-.admin-panel-content--side-left {
+.admin-panel-contents--side-left {
   transform: translateX(-100%);
 }
 
-.admin-panel-content--side-right {
+.admin-panel-contents--side-right {
   transform: translateX(100%);
 }
 
-.admin-panel-content--hidden {
+.admin-panel-contents--hidden {
   pointer-events: none;
 }
 
-.admin-panel-content--visible {
+.admin-panel-contents--visible {
   pointer-events: auto;
   transform: translateX(0);
 }
 
 @media (max-width: 440px) {
-  .admin-panel-content {
+  .admin-panel-contents {
     width: 100%;
     max-width: 100%;
     max-height: none;
@@ -522,14 +522,14 @@
 /* Admin tab buttons: .admin-tab-[name] (e.g., admin-tab-settings) */
 
 /* ============================================================================
-   TAB PANEL
+   TAB CONTENTS
    ============================================================================ */
 
-.admin-tab-panel {
+.admin-tab-contents {
   display: none;
 }
 
-.admin-tab-panel--active {
+.admin-tab-contents--active {
   display: block;
   width: 100%;
 }

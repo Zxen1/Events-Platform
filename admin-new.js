@@ -306,13 +306,13 @@ const AdminModule = (function() {
         panel = document.querySelector('.admin-panel');
         if (!panel) return;
         
-        panelContent = panel.querySelector('.admin-panel-content');
+        panelContent = panel.querySelector('.admin-panel-contents');
         closeBtn = panel.querySelector('.admin-panel-actions-icon-btn--close');
         saveBtn = panel.querySelector('.admin-panel-actions-icon-btn--save');
         discardBtn = panel.querySelector('.admin-panel-actions-icon-btn--discard');
         autosaveCheckbox = document.getElementById('admin-autosave-checkbox');
         tabButtons = panel.querySelectorAll('.admin-tab-bar > .button-class-2');
-        tabPanels = panel.querySelectorAll('.admin-tab-panel');
+        tabPanels = panel.querySelectorAll('.admin-tab-contents');
         
         // Enable horizontal scrolling with mouse wheel on tab bar
         var tabBar = panel.querySelector('.admin-tab-bar');
@@ -441,12 +441,12 @@ const AdminModule = (function() {
 
         // Show (force a frame between "off-screen" and "visible" so slide-in
         // always transitions at the same speed as slide-out)
-        panelContent.classList.remove('admin-panel-content--visible');
-        panelContent.classList.add('admin-panel-content--hidden');
+        panelContent.classList.remove('admin-panel-contents--visible');
+        panelContent.classList.add('admin-panel-contents--hidden');
         try { void panelContent.offsetWidth; } catch (e) {}
         requestAnimationFrame(function() {
-            panelContent.classList.remove('admin-panel-content--hidden');
-            panelContent.classList.add('admin-panel-content--visible');
+            panelContent.classList.remove('admin-panel-contents--hidden');
+            panelContent.classList.add('admin-panel-contents--visible');
         });
         
         // Bring panel to front of stack
@@ -558,8 +558,8 @@ const AdminModule = (function() {
     function closePanel() {
         if (!panel || !panelContent) return;
         
-        panelContent.classList.remove('admin-panel-content--visible');
-        panelContent.classList.add('admin-panel-content--hidden');
+        panelContent.classList.remove('admin-panel-contents--visible');
+        panelContent.classList.add('admin-panel-contents--hidden');
         
         // Wait for transition then hide panel
         panelContent.addEventListener('transitionend', function handler() {
@@ -596,7 +596,7 @@ const AdminModule = (function() {
         // Update tab panels
         tabPanels.forEach(function(panel) {
             var isActive = panel.id === 'admin-tab-' + tabName;
-            panel.classList.toggle('admin-tab-panel--active', isActive);
+            panel.classList.toggle('admin-tab-contents--active', isActive);
         });
         
         // Initialize tab content on first view

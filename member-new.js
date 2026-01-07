@@ -247,11 +247,11 @@ const MemberModule = (function() {
         panel = document.querySelector('.member-panel');
         if (!panel) return;
         
-        panelContent = panel.querySelector('.member-panel-content');
+        panelContent = panel.querySelector('.member-panel-contents');
         memberPanelBody = panel.querySelector('.member-panel-body');
         closeBtn = panel.querySelector('.member-panel-actions-icon-btn--close');
         tabButtons = panel.querySelectorAll('.member-tab-bar > .button-class-2');
-        tabPanels = panel.querySelectorAll('.member-tab-panel');
+        tabPanels = panel.querySelectorAll('.member-tab-contents');
         myPostsPanel = document.getElementById('member-tab-myposts');
         
         // Auth elements (Profile tab only). NOTE: Create Post also contains a .member-auth (inline auth container),
@@ -1672,12 +1672,12 @@ const MemberModule = (function() {
 
         // Show (force a frame between "off-screen" and "visible" so slide-in
         // always transitions at the same speed as slide-out)
-        panelContent.classList.remove('member-panel-content--visible');
-        panelContent.classList.add('member-panel-content--hidden');
+        panelContent.classList.remove('member-panel-contents--visible');
+        panelContent.classList.add('member-panel-contents--hidden');
         try { void panelContent.offsetWidth; } catch (e) {}
         requestAnimationFrame(function() {
-            panelContent.classList.remove('member-panel-content--hidden');
-            panelContent.classList.add('member-panel-content--visible');
+            panelContent.classList.remove('member-panel-contents--hidden');
+            panelContent.classList.add('member-panel-contents--visible');
         });
         
         // Refresh map settings buttons (in case member logged in/out)
@@ -1706,8 +1706,8 @@ const MemberModule = (function() {
             closeBtn.blur();
         }
         
-        panelContent.classList.remove('member-panel-content--visible');
-        panelContent.classList.add('member-panel-content--hidden');
+        panelContent.classList.remove('member-panel-contents--visible');
+        panelContent.classList.add('member-panel-contents--hidden');
         
         // Wait for transition to complete before hiding
         panelContent.addEventListener('transitionend', function handler() {
@@ -1745,7 +1745,7 @@ const MemberModule = (function() {
         // Update tab panels
         tabPanels.forEach(function(panel) {
             var isActive = panel.id === 'member-tab-' + tabName;
-            panel.classList.toggle('member-tab-panel--active', isActive);
+            panel.classList.toggle('member-tab-contents--active', isActive);
             panel.hidden = !isActive;
         });
         

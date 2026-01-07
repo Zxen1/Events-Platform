@@ -186,7 +186,7 @@
    PANEL CONTENT
    ============================================================================ */
 
-.member-panel-content {
+.member-panel-contents {
   --panel-transition-duration: 0.3s;
   position: absolute;
   left: auto;
@@ -211,25 +211,25 @@
   overscroll-behavior: contain;
 }
 
-.member-panel-content--side-left {
+.member-panel-contents--side-left {
   transform: translateX(-100%);
 }
 
-.member-panel-content--side-right {
+.member-panel-contents--side-right {
   transform: translateX(100%);
 }
 
-.member-panel-content--hidden {
+.member-panel-contents--hidden {
   pointer-events: none;
 }
 
-.member-panel-content--visible {
+.member-panel-contents--visible {
   pointer-events: auto;
   transform: translateX(0);
 }
 
 @media (max-width: 768px) {
-  .member-panel-content {
+  .member-panel-contents {
     width: 100%;
     max-width: 100%;
     min-width: 0;
@@ -237,7 +237,7 @@
 }
 
 @media (max-width: 440px) {
-  .member-panel-content {
+  .member-panel-contents {
     width: 100%;
     max-width: 100%;
     max-height: none;
@@ -759,14 +759,14 @@
 /* Member tab buttons: .member-tab-[name]-button-class-2 (e.g., member-tab-profile-button-class-2) */
 
 /* ============================================================================
-   TAB PANELS
+   TAB CONTENTS
    ============================================================================ */
 
-.member-tab-panel {
+.member-tab-contents {
   display: none;
 }
 
-.member-tab-panel--active {
+.member-tab-contents--active {
   display: block;
   min-height: 0;
 }
@@ -1074,7 +1074,7 @@
 }
 
 /* Profile tab: keep layout helpers, but DO NOT force it visible when inactive.
-   Visibility is controlled by `.member-tab-panel` / `.member-tab-panel--active`. */
+   Visibility is controlled by `.member-tab-contents` / `.member-tab-contents--active`. */
 #member-tab-profile {
   /* IMPORTANT: Don't force full-height here.
      When this is 100%, it consumes the panel's extra bottom scroll padding,
