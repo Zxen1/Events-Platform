@@ -904,6 +904,7 @@
 }
 
 .member-button-submit {
+  width: 100%;
   background: var(--website-color, #3b82f5);
   border: none;
   color: #ffffff;
@@ -1091,12 +1092,6 @@
 
 /* Login form in Profile tab - no top margin, spacing comes from container above */
 
-/* Login/Register submit buttons - full width like regular submit */
-.member-login[data-action="login"],
-.member-auth-body .member-login {
-  width: 100%;
-  margin-bottom: 10px;
-}
 
 
 .member-profile-edit {
@@ -1236,9 +1231,6 @@
   margin-bottom: 6px;
 }
 
-.member-loginform-container .member-login {
-  margin-bottom: 10px;
-}
 
 .member-loginform-container[hidden] {
   display: none;

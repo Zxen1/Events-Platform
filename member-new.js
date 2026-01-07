@@ -147,8 +147,8 @@ const MemberModule = (function() {
     var createAuthWrapper = null;
     var createAuthLoginTab = null;
     var createAuthRegisterTab = null;
-    var createAuthLoginPanel = null;
-    var createAuthRegisterPanel = null;
+    var createAuthLoginContainer = null;
+    var createAuthRegisterContainer = null;
     var createAuthLoginForm = null;
     var createAuthRegisterForm = null;
     var createAuthLoginEmailInput = null;
@@ -314,8 +314,8 @@ const MemberModule = (function() {
         createAuthWrapper = null;
         createAuthLoginTab = null;
         createAuthRegisterTab = null;
-        createAuthLoginPanel = null;
-        createAuthRegisterPanel = null;
+        createAuthLoginContainer = null;
+        createAuthRegisterContainer = null;
         createAuthLoginForm = null;
         createAuthRegisterForm = null;
         createAuthLoginEmailInput = null;
@@ -2576,20 +2576,20 @@ const MemberModule = (function() {
         if (mode === 'login') {
             try {
                 if (createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() === '') {
-                    var lbl = createAuthLoginPanel ? createAuthLoginPanel.querySelector('label[for="memberCreateLoginEmail"]') : null;
+                    var lbl = createAuthLoginContainer ? createAuthLoginContainer.querySelector('label[for="memberCreateLoginEmail"]') : null;
                     var txt = lbl ? String(lbl.textContent || '').trim() : '';
                     out.push(txt || 'Email');
                 }
                 if (createAuthLoginPasswordInput && String(createAuthLoginPasswordInput.value || '').trim() === '') {
-                    var lbl2 = createAuthLoginPanel ? createAuthLoginPanel.querySelector('label[for="memberCreateLoginPassword"]') : null;
+                    var lbl2 = createAuthLoginContainer ? createAuthLoginContainer.querySelector('label[for="memberCreateLoginPassword"]') : null;
                     var txt2 = lbl2 ? String(lbl2.textContent || '').trim() : '';
                     out.push(txt2 || 'Password');
                 }
             } catch (e1) {}
         } else if (mode === 'register') {
             try {
-                if (createAuthRegisterPanel) {
-                    var req = createAuthRegisterPanel.querySelectorAll('.fieldset[data-required="true"][data-complete="false"]');
+                if (createAuthRegisterContainer) {
+                    var req = createAuthRegisterContainer.querySelectorAll('.fieldset[data-required="true"][data-complete="false"]');
                     for (var j = 0; j < req.length; j++) {
                         var fs2 = req[j];
                         if (!fs2 || !fs2.dataset) continue;
@@ -3910,11 +3910,11 @@ const MemberModule = (function() {
         if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-pressed', isLogin ? 'true' : 'false');
         if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-pressed', !isLogin ? 'true' : 'false');
 
-        if (createAuthLoginPanel) {
-            createAuthLoginPanel.hidden = !isLogin;
+        if (createAuthLoginContainer) {
+            createAuthLoginContainer.hidden = !isLogin;
         }
-        if (createAuthRegisterPanel) {
-            createAuthRegisterPanel.hidden = isLogin;
+        if (createAuthRegisterContainer) {
+            createAuthRegisterContainer.hidden = isLogin;
         }
 
         createAuthWrapper.dataset.active = target;
@@ -3934,8 +3934,8 @@ const MemberModule = (function() {
         createAuthWrapper = null;
         createAuthLoginTab = null;
         createAuthRegisterTab = null;
-        createAuthLoginPanel = null;
-        createAuthRegisterPanel = null;
+        createAuthLoginContainer = null;
+        createAuthRegisterContainer = null;
         createAuthLoginForm = null;
         createAuthRegisterForm = null;
         createAuthLoginEmailInput = null;
@@ -4019,7 +4019,7 @@ const MemberModule = (function() {
         // Submit button
         var submitBtn = document.createElement('button');
         submitBtn.type = 'submit';
-        submitBtn.className = 'member-login button-class-3';
+        submitBtn.className = 'member-button-submit';
         submitBtn.dataset.action = 'login';
         submitBtn.textContent = 'Log In';
 
@@ -4098,7 +4098,7 @@ const MemberModule = (function() {
         loginForm.className = 'member-auth-form';
         loginForm.setAttribute('autocomplete', 'off');
 
-        var loginSection = document.createElement('section');
+        var loginContainer = document.createElement('section');
 
         var emailField = document.createElement('div');
         emailField.className = 'member-panel-field';
@@ -4136,10 +4136,10 @@ const MemberModule = (function() {
         loginSubmit.dataset.action = 'create-auth-login';
         loginSubmit.textContent = 'Log In & Submit';
 
-        loginSection.appendChild(emailField);
-        loginSection.appendChild(passField);
-        loginSection.appendChild(loginSubmit);
-        loginForm.appendChild(loginSection);
+        loginContainer.appendChild(emailField);
+        loginContainer.appendChild(passField);
+        loginContainer.appendChild(loginSubmit);
+        loginForm.appendChild(loginContainer);
         body.appendChild(loginForm);
 
         // Register form
@@ -4147,8 +4147,8 @@ const MemberModule = (function() {
         registerForm.className = 'member-auth-form';
         registerForm.setAttribute('autocomplete', 'off');
 
-        var registerSection = document.createElement('section');
-        registerSection.hidden = true;
+        var registerContainer = document.createElement('section');
+        registerContainer.hidden = true;
 
         var fsContainer = document.createElement('div');
         fsContainer.className = 'member-postform-fieldsets';
@@ -4168,26 +4168,26 @@ const MemberModule = (function() {
         registerSubmit.dataset.action = 'create-auth-register';
         registerSubmit.textContent = 'Register & Submit';
 
-        registerSection.appendChild(fsContainer);
-        registerSection.appendChild(avatarHost);
-        registerSection.appendChild(countryMenu);
-        registerSection.appendChild(countryHidden);
-        registerSection.appendChild(registerSubmit);
-        registerForm.appendChild(registerSection);
+        registerContainer.appendChild(fsContainer);
+        registerContainer.appendChild(avatarHost);
+        registerContainer.appendChild(countryMenu);
+        registerContainer.appendChild(countryHidden);
+        registerContainer.appendChild(registerSubmit);
+        registerForm.appendChild(registerContainer);
         body.appendChild(registerForm);
         
         // Add body to container
         wrap.appendChild(body);
 
         // Insert into checkout container (or fallback to formWrapper)
-        var checkoutSection = document.querySelector('.member-checkout-container');
-        if (checkoutSection) {
+        var checkoutContainer = document.querySelector('.member-checkout-container');
+        if (checkoutContainer) {
             // Insert before the submit buttons (member-create-actions)
-            var actionsEl = checkoutSection.querySelector('.member-create-actions');
+            var actionsEl = checkoutContainer.querySelector('.member-create-actions');
             if (actionsEl) {
-                checkoutSection.insertBefore(wrap, actionsEl);
+                checkoutContainer.insertBefore(wrap, actionsEl);
             } else {
-                checkoutSection.appendChild(wrap);
+                checkoutContainer.appendChild(wrap);
             }
         } else {
             formWrapper.appendChild(wrap);
@@ -4199,8 +4199,8 @@ const MemberModule = (function() {
         createAuthRegisterTab = btnRegister;
         createAuthLoginForm = loginForm;
         createAuthRegisterForm = registerForm;
-        createAuthLoginPanel = loginSection;
-        createAuthRegisterPanel = registerSection;
+        createAuthLoginContainer = loginContainer;
+        createAuthRegisterContainer = registerContainer;
         createAuthLoginEmailInput = loginEmail;
         createAuthLoginPasswordInput = loginPass;
         createAuthLoginSubmitBtn = loginSubmit;
@@ -4226,9 +4226,9 @@ const MemberModule = (function() {
     }
 
     function isCreateAuthRegisterComplete() {
-        if (!createAuthRegisterPanel) return false;
+        if (!createAuthRegisterContainer) return false;
         // Component-owned validity: require ALL required fieldsets to be complete.
-        var req = createAuthRegisterPanel.querySelectorAll('.fieldset[data-required="true"][data-complete]');
+        var req = createAuthRegisterContainer.querySelectorAll('.fieldset[data-required="true"][data-complete]');
         if (!req || !req.length) return false;
         for (var i = 0; i < req.length; i++) {
             var fs = req[i];
