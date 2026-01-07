@@ -1706,7 +1706,7 @@
             }
             
             // Remove existing divider if any
-            var existingDivider = fieldsContainer.querySelector('.form-location-divider');
+            var existingDivider = fieldsContainer.querySelector('.member-postform-location-divider');
             if (existingDivider) {
                 existingDivider.remove();
             }
@@ -1714,7 +1714,7 @@
             // If location type is selected and location fieldset exists, add divider above it
             if (isLocationTypeSelected && locationFieldsetWrapper) {
                 var divider = document.createElement('div');
-                divider.className = 'form-location-divider';
+                divider.className = 'member-postform-location-divider';
                 divider.title = 'Fieldsets below this line are location-specific.';
                 fieldsContainer.insertBefore(divider, locationFieldsetWrapper);
             }
@@ -1765,7 +1765,7 @@
                 // Ensure location fieldset is first below the divider
                 // Get all wrappers again (in case order changed)
                 var allWrappersAfterDivider = Array.from(fieldsContainer.children);
-                var dividerElement = fieldsContainer.querySelector('.form-location-divider');
+                var dividerElement = fieldsContainer.querySelector('.member-postform-location-divider');
                 if (dividerElement && locationFieldsetWrapper) {
                     var dividerPos = allWrappersAfterDivider.indexOf(dividerElement);
                     var locationPos = allWrappersAfterDivider.indexOf(locationFieldsetWrapper);
@@ -3549,34 +3549,34 @@
         
         // Create quantity selector row
         var quantityRow = document.createElement('div');
-        quantityRow.className = 'form-location-quantity-row';
+        quantityRow.className = 'member-postform-location-quantity-row';
         
         var quantityLabel = document.createElement('span');
-        quantityLabel.className = 'form-location-quantity-label';
+        quantityLabel.className = 'member-postform-location-quantity-label';
         quantityLabel.textContent = 'Number of locations:';
         
         var quantityControls = document.createElement('div');
-        quantityControls.className = 'form-location-quantity-controls';
+        quantityControls.className = 'member-postform-location-quantity-controls';
         
         var minusBtn = document.createElement('button');
         minusBtn.type = 'button';
-        minusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--minus';
+        minusBtn.className = 'member-postform-location-quantity-btn member-postform-location-quantity-btn--minus';
         minusBtn.setAttribute('aria-label', 'Decrease location quantity');
         var minusIcon = document.createElement('span');
-        minusIcon.className = 'form-location-quantity-btn-icon form-location-quantity-btn-icon--minus';
+        minusIcon.className = 'member-postform-location-quantity-btn-icon member-postform-location-quantity-btn-icon--minus';
         minusIcon.setAttribute('aria-hidden', 'true');
         minusBtn.appendChild(minusIcon);
         
         var quantityDisplay = document.createElement('span');
-        quantityDisplay.className = 'form-location-quantity-display';
+        quantityDisplay.className = 'member-postform-location-quantity-display';
         quantityDisplay.textContent = initialQuantity;
         
         var plusBtn = document.createElement('button');
         plusBtn.type = 'button';
-        plusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--plus';
+        plusBtn.className = 'member-postform-location-quantity-btn member-postform-location-quantity-btn--plus';
         plusBtn.setAttribute('aria-label', 'Increase location quantity');
         var plusIcon = document.createElement('span');
-        plusIcon.className = 'form-location-quantity-btn-icon form-location-quantity-btn-icon--plus';
+        plusIcon.className = 'member-postform-location-quantity-btn-icon member-postform-location-quantity-btn-icon--plus';
         plusIcon.setAttribute('aria-hidden', 'true');
         plusBtn.appendChild(plusIcon);
         
@@ -3608,7 +3608,7 @@
         
         // Explanatory message
         var explainerMsg = document.createElement('p');
-        explainerMsg.className = 'form-location-explainer';
+        explainerMsg.className = 'member-postform-location-explainer';
         
         if (getMessage && typeof getMessage === 'function') {
             getMessage('msg_post_location_explainer', {}, false).then(function(msg) {
@@ -3652,17 +3652,17 @@
         
         // Create header
         var header = document.createElement('div');
-        header.className = 'form-location-header';
+        header.className = 'member-postform-location-header';
         
         // Header text
         var headerText = document.createElement('span');
-        headerText.className = 'form-location-header-text';
+        headerText.className = 'member-postform-location-header-text';
         headerText.textContent = locationName;
         
         // Delete button
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'form-location-header-button-delete';
+        deleteBtn.className = 'member-postform-location-header-button-delete';
         deleteBtn.setAttribute('aria-label', 'Delete ' + locationName);
         if (!showDelete) {
             deleteBtn.style.display = 'none';
@@ -3687,7 +3687,7 @@
         
         // Create content wrapper
         var content = document.createElement('div');
-        content.className = 'form-location-content';
+        content.className = 'member-postform-location-content';
         container.appendChild(content);
         
         return {
@@ -4228,7 +4228,7 @@
     
     /**
      * Set up centralized click tracking for all form containers using event delegation
-     * Works automatically for any container with classes: form-primary-container, form-location-picker, member-checkout-container, member-location-container
+     * Works automatically for any container with classes: form-primary-container, member-locationpicker-container, member-checkout-container, member-location-container
      * @param {HTMLElement} container - Parent container element
      */
     function setupFormContainerClickTracking(container) {
@@ -4285,7 +4285,7 @@
         
         // Update all venue delete buttons
         allVenueContainers.forEach(function(container) {
-            var deleteBtn = container.querySelector('.form-location-header-button-delete');
+            var deleteBtn = container.querySelector('.member-postform-location-header-button-delete');
             if (deleteBtn) {
                 deleteBtn.style.display = showDelete ? '' : 'none';
             }
@@ -4321,7 +4321,7 @@
             container.dataset.locationNumber = String(newNumber);
             
             // Update header text - always "Type N" when multiple, just "Type" when single
-            var headerText = container.querySelector('.form-location-header-text');
+            var headerText = container.querySelector('.member-postform-location-header-text');
             if (headerText) {
                 headerText.textContent = count > 1 ? (locationType + ' ' + newNumber) : locationType;
             }

@@ -774,7 +774,7 @@
 }
 
 /* Location divider line - appears above location fieldset when location type is selected */
-.form-location-divider {
+.member-postform-location-divider {
   width: 100%;
   height: 3px;
   min-height: 3px;
@@ -1554,7 +1554,7 @@
 }
 
 /* Location header - 36px, horizontal flex, website blue background */
-.form-location-header {
+.member-postform-location-header {
   width: 100%;
   height: 36px;
   display: flex;
@@ -1572,27 +1572,27 @@
   position: relative;
 }
 
-.form-location-header:hover {
+.member-postform-location-header:hover {
   background: var(--blue-500);
 }
 
 /* Location container headers always connect to content below */
-.form-location-header {
+.member-postform-location-header {
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
 
 /* When container is active/focused - blue border */
-.member-location-container[data-active="true"] > .form-location-header {
+.member-location-container[data-active="true"] > .member-postform-location-header {
   border-color: var(--blue-500);
 }
 
-.member-location-container[data-active="true"] > .form-location-content {
+.member-location-container[data-active="true"] > .member-postform-location-content {
   border-color: var(--blue-500);
 }
 
 /* Header text */
-.form-location-header-text {
+.member-postform-location-header-text {
   flex: 1;
   font-size: 14px;
   color: #fff;
@@ -1603,7 +1603,7 @@
 }
 
 /* Delete button in header - positioned 10px from right, vertically centered */
-.form-location-header-button-delete {
+.member-postform-location-header-button-delete {
   position: absolute;
   right: 10px;
   top: 50%;
@@ -1624,7 +1624,7 @@
 }
 
 /* Icon via CSS mask (loaded from Bunny CDN) */
-.form-location-header-button-delete::before {
+.member-postform-location-header-button-delete::before {
   content: '';
   width: 18px;
   height: 18px;
@@ -1639,12 +1639,12 @@
   mask-position: center;
 }
 
-.form-location-header-button-delete:hover {
+.member-postform-location-header-button-delete:hover {
   color: #e74c3c;
 }
 
 /* Location content - styled like formpicker menu options */
-.form-location-content {
+.member-postform-location-content {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255,255,255,0.1);
   border-top: none;
@@ -1656,7 +1656,7 @@
    LOCATION QUANTITY PICKER
    ============================================================================ */
 
-.form-location-quantity-row {
+.member-postform-location-quantity-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1665,18 +1665,18 @@
   padding: 0;
 }
 
-.form-location-quantity-label {
+.member-postform-location-quantity-label {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.9);
 }
 
-.form-location-quantity-controls {
+.member-postform-location-quantity-controls {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.form-location-quantity-btn {
+.member-postform-location-quantity-btn {
   width: 36px;
   min-width: 36px;
   max-width: 36px;
@@ -1693,7 +1693,7 @@
 }
 
 /* Icon spans (matches header button pattern) */
-.form-location-quantity-btn-icon {
+.member-postform-location-quantity-btn-icon {
   width: 18px;
   height: 18px;
   background-color: currentColor;
@@ -1706,45 +1706,45 @@
   mask-position: center;
 }
 
-.form-location-quantity-btn-icon--plus {
+.member-postform-location-quantity-btn-icon--plus {
   -webkit-mask-image: var(--ui-icon-plus);
   mask-image: var(--ui-icon-plus);
 }
 
-.form-location-quantity-btn-icon--minus {
+.member-postform-location-quantity-btn-icon--minus {
   -webkit-mask-image: var(--ui-icon-minus);
   mask-image: var(--ui-icon-minus);
 }
 
-.form-location-quantity-btn--plus:hover {
+.member-postform-location-quantity-btn--plus:hover {
   border-color: var(--blue-500);
   color: var(--blue-500);
 }
 
-.form-location-quantity-btn--minus:hover {
+.member-postform-location-quantity-btn--minus:hover {
   border-color: #f87171;
   color: #f87171;
 }
 
-.form-location-quantity-btn:active {
+.member-postform-location-quantity-btn:active {
   background: var(--blue-600);
   border-color: var(--blue-500);
   color: #fff;
 }
 
-.form-location-quantity-btn--minus:disabled,
-.form-location-quantity-btn--plus:disabled {
+.member-postform-location-quantity-btn--minus:disabled,
+.member-postform-location-quantity-btn--plus:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-.form-location-quantity-btn--minus:disabled .form-location-quantity-btn-icon,
-.form-location-quantity-btn--plus:disabled .form-location-quantity-btn-icon {
+.member-postform-location-quantity-btn--minus:disabled .member-postform-location-quantity-btn-icon,
+.member-postform-location-quantity-btn--plus:disabled .member-postform-location-quantity-btn-icon {
   background-color: #888;
 }
 
-.form-location-quantity-display {
+.member-postform-location-quantity-display {
   min-width: 24px;
   margin-right: 16px;
   text-align: center;
@@ -1753,7 +1753,7 @@
   color: #fff;
 }
 
-.form-location-explainer {
+.member-postform-location-explainer {
   margin: 0;
   padding: 0;
   background: transparent;
@@ -1763,20 +1763,20 @@
 }
 
 /* Placeholder mode: override fields show grey placeholder from location 1 */
-.form-location-override--placeholder .fieldset-input,
-.form-location-override--placeholder .fieldset-textarea {
+.member-postform-location-override--placeholder .fieldset-input,
+.member-postform-location-override--placeholder .fieldset-textarea {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.form-location-override--placeholder .fieldset-input:focus,
-.form-location-override--placeholder .fieldset-textarea:focus,
-.form-location-override--placeholder .fieldset-input:not(:placeholder-shown),
-.form-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
+.member-postform-location-override--placeholder .fieldset-input:focus,
+.member-postform-location-override--placeholder .fieldset-textarea:focus,
+.member-postform-location-override--placeholder .fieldset-input:not(:placeholder-shown),
+.member-postform-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
   color: #fff;
 }
 
-.form-location-override--placeholder .fieldset-input::placeholder,
-.form-location-override--placeholder .fieldset-textarea::placeholder {
+.member-postform-location-override--placeholder .fieldset-input::placeholder,
+.member-postform-location-override--placeholder .fieldset-textarea::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
 

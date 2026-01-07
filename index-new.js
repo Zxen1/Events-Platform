@@ -324,17 +324,15 @@ const App = (function() {
      -------------------------------------------------------------------------- */
   const messagesCache = {
     user: null,
-    admin: null,
-    lastFetch: 0,
-    maxAge: 60000
+    admin: null
   };
 
   async function loadMessagesFromDatabase(includeAdmin = false) {
     try {
       const cacheKey = includeAdmin ? 'admin' : 'user';
-      const now = Date.now();
       
-      if (messagesCache[cacheKey] && (now - messagesCache.lastFetch) < messagesCache.maxAge) {
+      // Cache permanently - messages don't change during a session
+      if (messagesCache[cacheKey]) {
         return messagesCache[cacheKey];
       }
       
@@ -372,8 +370,6 @@ const App = (function() {
       });
       
       messagesCache[cacheKey] = messagesMap;
-      messagesCache.lastFetch = now;
-      
       return messagesMap;
     } catch (error) {
       console.error('Error loading messages from database:', error);
@@ -408,6 +404,11 @@ const App = (function() {
 
   // Make getMessage globally available
   window.getMessage = getMessage;
+  
+  // Expose preload function for early cache priming
+  window.preloadMessages = function() {
+    loadMessagesFromDatabase(false);
+  };
 
 
   /* --------------------------------------------------------------------------
@@ -546,9 +547,7 @@ const App = (function() {
        Rarely needed. Only if a tab has no expandable content below clicks.
      -------------------------------------------------------------------------- */
   var SLACK_CONFIG = {
-    'admin-tab-moderation':  { top: false },
-    'member-auth-login':     { top: false, bottom: false },
-    'member-auth-profile':   { top: false }
+    'admin-tab-moderation':  { top: false }
   };
 
   function applySlackConfig() {

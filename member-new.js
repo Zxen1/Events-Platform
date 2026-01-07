@@ -186,6 +186,11 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     function init() {
+        // Preload messages to prevent layout jerk when Register tab loads
+        if (typeof window.preloadMessages === 'function') {
+            window.preloadMessages();
+        }
+        
         cacheElements();
         if (!panel) {
             console.warn('[Member] Member panel not found');
@@ -244,16 +249,14 @@ const MemberModule = (function() {
         // Auth elements (Profile tab only). NOTE: Create Post also contains a .member-auth (inline gate),
         // so scope this to the profile tab to avoid ambiguous selectors.
         authForm = document.querySelector('#member-tab-profile .member-auth');
-        loginFormEl = document.getElementById('memberAuthFormLogin');
+        // Login form is now dynamically created - don't look for it in DOM
+        loginFormEl = null;
+        loginFormContainer = null;
+        loginInputs = [];
         registerFormEl = document.getElementById('memberAuthFormRegister');
-        loginFormContainer = document.querySelector('.member-loginform-container');
         profilePanel = document.getElementById('member-profile-container');
         registerTabBtn = document.getElementById('member-tab-register-btn');
         registerTabPanel = document.getElementById('member-tab-register');
-        
-        if (loginFormContainer) {
-            loginInputs = Array.from(loginFormContainer.querySelectorAll('input'));
-        }
         if (registerTabPanel) {
             registerInputs = Array.from(registerTabPanel.querySelectorAll('input'));
         }
@@ -499,15 +502,8 @@ const MemberModule = (function() {
         }
         
         // Form submit handlers (for Enter key support)
-        var loginForm = document.getElementById('memberAuthFormLogin');
+        // Login form is now created dynamically - handler attached in mountProfileLoginForm()
         var registerForm = document.getElementById('memberAuthFormRegister');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleLogin();
-            });
-            // Browser autofill detection handled by global initGlobalAutofillHandler() in index-new.js
-        }
         if (registerForm) {
             registerForm.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -2162,7 +2158,7 @@ const MemberModule = (function() {
                                     container.remove();
                                     if (typeof window._memberLocationQuantity === 'number' && window._memberLocationQuantity > 1) {
                                         window._memberLocationQuantity--;
-                                        var qtyDisplay = document.querySelector('.form-location-quantity-display');
+                                        var qtyDisplay = document.querySelector('.member-postform-location-quantity-display');
                                         if (qtyDisplay) qtyDisplay.textContent = window._memberLocationQuantity;
                                         if (window.FormbuilderModule && typeof FormbuilderModule.updateVenueDeleteButtons === 'function') {
                                             FormbuilderModule.updateVenueDeleteButtons();
@@ -3953,6 +3949,100 @@ const MemberModule = (function() {
         pendingCreateAuthAvatarPreviewUrl = '';
     }
 
+    // ========================================================================
+    // PROFILE TAB LOGIN FORM (dynamically created when logged out)
+    // ========================================================================
+
+    function mountProfileLoginForm() {
+        if (loginFormContainer) return; // Already mounted
+        if (hasValidLoggedInUser()) return; // Don't mount if logged in
+
+        var authWrapper = document.querySelector('#member-tab-profile .member-auth');
+        if (!authWrapper) return;
+
+        // Create container
+        var container = document.createElement('div');
+        container.className = 'member-loginform-container';
+
+        // Create form
+        var form = document.createElement('form');
+        form.id = 'memberAuthFormLogin';
+        form.autocomplete = 'off';
+
+        // Fieldsets wrapper
+        var fieldsets = document.createElement('div');
+        fieldsets.className = 'member-loginform-fieldsets';
+
+        // Email field
+        var emailField = document.createElement('div');
+        emailField.className = 'member-panel-field';
+        var emailLabel = document.createElement('label');
+        emailLabel.className = 'member-panel-field-label';
+        emailLabel.setAttribute('for', 'memberLoginEmail');
+        emailLabel.textContent = 'Account Email';
+        var emailInput = document.createElement('input');
+        emailInput.type = 'email';
+        emailInput.id = 'memberLoginEmail';
+        emailInput.className = 'member-panel-field-input';
+        emailInput.name = 'loginEmail';
+        emailInput.autocomplete = 'username';
+        emailField.appendChild(emailLabel);
+        emailField.appendChild(emailInput);
+
+        // Password field
+        var passField = document.createElement('div');
+        passField.className = 'member-panel-field';
+        var passLabel = document.createElement('label');
+        passLabel.className = 'member-panel-field-label';
+        passLabel.setAttribute('for', 'memberLoginPassword');
+        passLabel.textContent = 'Password';
+        var passInput = document.createElement('input');
+        passInput.type = 'password';
+        passInput.id = 'memberLoginPassword';
+        passInput.className = 'member-panel-field-input';
+        passInput.name = 'loginPassword';
+        passInput.autocomplete = 'current-password';
+        passField.appendChild(passLabel);
+        passField.appendChild(passInput);
+
+        fieldsets.appendChild(emailField);
+        fieldsets.appendChild(passField);
+
+        // Submit button
+        var submitBtn = document.createElement('button');
+        submitBtn.type = 'submit';
+        submitBtn.className = 'member-login button-class-3';
+        submitBtn.dataset.action = 'login';
+        submitBtn.textContent = 'Log In';
+
+        form.appendChild(fieldsets);
+        form.appendChild(submitBtn);
+        container.appendChild(form);
+
+        // Insert into auth wrapper
+        authWrapper.appendChild(container);
+
+        // Store references
+        loginFormContainer = container;
+        loginFormEl = form;
+        loginInputs = [emailInput, passInput];
+
+        // Attach submit handler
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleLogin();
+        });
+    }
+
+    function unmountProfileLoginForm() {
+        if (loginFormContainer && loginFormContainer.parentNode) {
+            loginFormContainer.parentNode.removeChild(loginFormContainer);
+        }
+        loginFormContainer = null;
+        loginFormEl = null;
+        loginInputs = [];
+    }
+
     function ensureCreateAuthGateMounted() {
         if (createAuthWrapper) return true;
         if (!formWrapper) return false;
@@ -4001,7 +4091,6 @@ const MemberModule = (function() {
         loginForm.setAttribute('autocomplete', 'off');
 
         var loginSection = document.createElement('section');
-        loginSection.className = 'member-login-section';
 
         var emailField = document.createElement('div');
         emailField.className = 'member-panel-field';
@@ -4051,7 +4140,6 @@ const MemberModule = (function() {
         registerForm.setAttribute('autocomplete', 'off');
 
         var registerSection = document.createElement('section');
-        registerSection.className = 'member-register-section';
         registerSection.hidden = true;
 
         var fsContainer = document.createElement('div');
@@ -4999,11 +5087,8 @@ const MemberModule = (function() {
             // (Login can happen via Profile tab too, so don't rely on updateSubmitButtonState being called.)
             try { hideCreateAuthGate(); } catch (e00) {}
             
-            // Hide login panel (in profile tab)
-            setAuthPanelState(loginFormContainer, false, loginInputs);
-
-            // Hide the login form to remove the blank gap
-            if (loginFormEl) loginFormEl.hidden = true;
+            // Remove login form from profile tab (it's dynamically created)
+            unmountProfileLoginForm();
             
             // Clear inputs
             clearInputs(loginInputs);
@@ -5103,9 +5188,8 @@ const MemberModule = (function() {
             // Show the Register tab button (only visible when logged out)
             if (registerTabBtn) registerTabBtn.hidden = false;
 
-            // Show login form in profile tab
-            if (loginFormEl) loginFormEl.hidden = false;
-            setAuthPanelState(loginFormContainer, true, loginInputs);
+            // Mount login form in profile tab (dynamically created)
+            mountProfileLoginForm();
             
             // Update header (no avatar)
             updateHeaderAvatar(null);

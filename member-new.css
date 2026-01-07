@@ -1093,13 +1093,6 @@
   min-height: 0;
 }
 
-/* Profile panel should behave like a column so actions can sit at bottom */
-.member-auth-profile {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
 
 /* Login form in Profile tab - no top margin, spacing comes from container above */
 
@@ -1253,6 +1246,10 @@
 
 .member-loginform-container .member-login {
   margin-bottom: 10px;
+}
+
+.member-loginform-container[hidden] {
+  display: none;
 }
 
 /* ============================================================================
