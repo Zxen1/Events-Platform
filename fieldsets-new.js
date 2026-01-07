@@ -929,6 +929,18 @@ const FieldsetBuilder = (function(){
                 //    - local path → server filesystem
                 // 4. For CDN: first request processes crop & caches globally; subsequent = instant
                 // 5. Each unique URL (class+crop combo) cached separately
+
+                function imgGetSystemClearIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_clear ? String(sys.icon_clear || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
                 
                 // Image validation settings (from admin_settings 400-402)
                 var imageMinWidth = 1000;
@@ -1128,7 +1140,14 @@ const FieldsetBuilder = (function(){
                         var removeBtn = document.createElement('button');
                         removeBtn.type = 'button';
                         removeBtn.className = 'fieldset-images-item-button-remove';
-                        removeBtn.textContent = '×';
+                        var clearIconUrl = imgGetSystemClearIconUrl();
+                        if (clearIconUrl) {
+                            var clearImg = document.createElement('img');
+                            clearImg.className = 'fieldset-images-item-button-icon';
+                            clearImg.alt = '';
+                            clearImg.src = clearIconUrl;
+                            removeBtn.appendChild(clearImg);
+                        }
                         (function(idx) {
                             removeBtn.addEventListener('click', function(e) {
                                 // Prevent thumb click from opening cropper

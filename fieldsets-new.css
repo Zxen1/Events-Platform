@@ -565,11 +565,16 @@
     border-radius: 50%;
     color: #fff;
     cursor: pointer;
-    font-size: 14px;
-    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.fieldset-images-item-button-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
 .fieldset-images-item-button-remove:hover {
