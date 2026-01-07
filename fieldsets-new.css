@@ -963,8 +963,17 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-button-icon {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.fieldset-sessionpricing-pricing-button-icon,
+.fieldset-sessionpricing-session-button-icon,
+.fieldset-sessionpricing-ticketgroups-button-icon {
+    width: 18px;
+    height: 18px;
     object-fit: contain;
     flex-shrink: 0;
 }

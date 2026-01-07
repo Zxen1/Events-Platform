@@ -1694,8 +1694,8 @@
 
 /* Icon spans (matches header button pattern) */
 .form-location-quantity-btn-icon {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   background-color: currentColor;
   opacity: 1;
   -webkit-mask-size: contain;
