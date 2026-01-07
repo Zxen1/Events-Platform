@@ -142,7 +142,7 @@
 
 .member-registrationform-container {
   width: 100%;
-  background: #080808;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 10px 0;
@@ -153,6 +153,10 @@
 
 .member-registrationform-container > * {
   margin-bottom: 10px;
+}
+
+.member-registrationform-container .member-panel-field-label {
+  margin-bottom: 6px;
 }
 
 .member-registrationform-fieldsets {
@@ -520,6 +524,14 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
   padding: 10px 10px 0;
+}
+
+.member-mapstyle-container > .member-panel-field {
+  margin-bottom: 10px;
+}
+
+.member-mapstyle-container > .member-panel-field > .member-settings-field-label {
+  margin-bottom: 6px;
 }
 
 /* member-preferences-container removed (no language/currency filters) */
@@ -1189,7 +1201,7 @@
 
 .member-profileform-container {
   width: 100%;
-  background: #080808;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 10px 0;
@@ -1200,6 +1212,10 @@
 
 .member-profileform-container > * {
   margin-bottom: 10px;
+}
+
+.member-profileform-container .member-panel-field-label {
+  margin-bottom: 6px;
 }
 
 .member-profileform-container[hidden] {
@@ -1218,7 +1234,7 @@
 
 .member-loginform-container {
   width: 100%;
-  background: #080808;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 10px 0;
@@ -1227,8 +1243,47 @@
   flex-direction: column;
 }
 
-.member-loginform-container > form > * {
+.member-loginform-container .member-panel-field {
   margin-bottom: 10px;
+}
+
+.member-loginform-container .member-panel-field-label {
+  margin-bottom: 6px;
+}
+
+.member-loginform-container .member-login {
+  margin-bottom: 10px;
+}
+
+/* ============================================================================
+   CREATE POST AUTH GATE (shown when logged-out user tries to create post)
+   ============================================================================ */
+
+/* Invisible container - no background, border, or padding */
+.member-auth-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.member-auth-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.member-auth-body .member-panel-field {
+  margin-bottom: 10px;
+}
+
+.member-auth-body .member-panel-field-label {
+  margin-bottom: 6px;
 }
 
 .member-loginform-fieldsets {

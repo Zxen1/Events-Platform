@@ -67,7 +67,7 @@ const MemberModule = (function() {
     
     // Auth elements
     var authForm = null;
-    var loginPanel = null;
+    var loginFormContainer = null;
     var profilePanel = null;
     var registerTabBtn = null;
     var registerTabPanel = null;
@@ -246,13 +246,13 @@ const MemberModule = (function() {
         authForm = document.querySelector('#member-tab-profile .member-auth');
         loginFormEl = document.getElementById('memberAuthFormLogin');
         registerFormEl = document.getElementById('memberAuthFormRegister');
-        loginPanel = document.getElementById('member-auth-login');
+        loginFormContainer = document.querySelector('.member-loginform-container');
         profilePanel = document.getElementById('member-profile-container');
         registerTabBtn = document.getElementById('member-tab-register-btn');
         registerTabPanel = document.getElementById('member-tab-register');
         
-        if (loginPanel) {
-            loginInputs = Array.from(loginPanel.querySelectorAll('input'));
+        if (loginFormContainer) {
+            loginInputs = Array.from(loginFormContainer.querySelectorAll('input'));
         }
         if (registerTabPanel) {
             registerInputs = Array.from(registerTabPanel.querySelectorAll('input'));
@@ -2264,10 +2264,10 @@ const MemberModule = (function() {
         var isEvent = subcategoryType === 'Events';
         
         // Use existing centralized checkout container
-        var wrapper = formFields.querySelector('.form-checkout-container');
+        var wrapper = formFields.querySelector('.member-checkout-container');
         if (!wrapper) {
             wrapper = document.createElement('div');
-            wrapper.className = 'form-checkout-container';
+            wrapper.className = 'member-checkout-container';
             formFields.appendChild(wrapper);
         }
         
@@ -2328,7 +2328,7 @@ const MemberModule = (function() {
 
             var result = [];
 
-            // Location 1 sessions are in the main form (not inside .form-location-container with location > 1)
+            // Location 1 sessions are in the main form (not inside .member-location-container with location > 1)
             // Use session_pricing fieldset.
             var mainSessions = formFields.querySelector('.fieldset[data-fieldset-key="session_pricing"]');
             var mainIso = getMaxSelectedIso(mainSessions);
@@ -2336,7 +2336,7 @@ const MemberModule = (function() {
 
             // Locations 2+ are in separate containers (siblings of formWrapper)
             for (var i = 2; i <= qty; i++) {
-                var container = document.querySelector('.form-location-container[data-location-number="' + i + '"]');
+                var container = document.querySelector('.member-location-container[data-location-number="' + i + '"]');
                 var fs = container ? container.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
                 var iso = getMaxSelectedIso(fs);
                 result.push(iso ? daysToIso(iso) : 0);
@@ -2414,7 +2414,7 @@ const MemberModule = (function() {
         if (!formFields) return;
         
         // Find centralized checkout container to append terms and actions inside it
-        var checkoutContainer = formFields.querySelector('.form-checkout-container');
+        var checkoutContainer = formFields.querySelector('.member-checkout-container');
         
         // Terms agreement row
         var termsWrapper = document.createElement('div');
@@ -2883,7 +2883,7 @@ const MemberModule = (function() {
             // Location grouping: main form = 1, additional locations have a wrapper with data-location-number.
             var locationNumber = 1;
             try {
-                var locWrap = el.closest ? el.closest('.form-location-container[data-location-number]') : null;
+                var locWrap = el.closest ? el.closest('.member-location-container[data-location-number]') : null;
                 if (locWrap && locWrap.dataset && locWrap.dataset.locationNumber) {
                     locationNumber = parseInt(locWrap.dataset.locationNumber, 10) || 1;
                 }
@@ -3959,20 +3959,21 @@ const MemberModule = (function() {
         if (!formFields) return false;
         if (hasValidLoggedInUser()) return false;
 
-        // Build DOM
+        // Build DOM - member-auth-container (invisible wrapper, no padding)
         var wrap = document.createElement('div');
-        wrap.id = 'member-create-auth';
-        wrap.className = 'member-auth member-create-auth';
+        wrap.id = 'member-auth-container';
+        wrap.className = 'member-auth-container';
         wrap.dataset.active = 'login';
 
-        var tabs = document.createElement('div');
-        tabs.className = 'member-auth-tabs';
-        tabs.setAttribute('role', 'group');
-        tabs.setAttribute('aria-label', 'Continue to submit');
+        // Header (tab buttons)
+        var header = document.createElement('div');
+        header.className = 'member-auth-header';
+        header.setAttribute('role', 'group');
+        header.setAttribute('aria-label', 'Continue to submit');
 
         var btnLogin = document.createElement('button');
         btnLogin.type = 'button';
-        btnLogin.className = 'button-class-2 member-auth-login-button-class-2';
+        btnLogin.className = 'member-auth-login button-class-2';
         btnLogin.dataset.target = 'login';
         btnLogin.setAttribute('role', 'tab');
         btnLogin.setAttribute('aria-selected', 'true');
@@ -3980,15 +3981,19 @@ const MemberModule = (function() {
 
         var btnRegister = document.createElement('button');
         btnRegister.type = 'button';
-        btnRegister.className = 'button-class-2 member-auth-register-button-class-2';
+        btnRegister.className = 'member-auth-register button-class-2';
         btnRegister.dataset.target = 'register';
         btnRegister.setAttribute('role', 'tab');
         btnRegister.setAttribute('aria-selected', 'false');
         btnRegister.textContent = 'Register';
 
-        tabs.appendChild(btnLogin);
-        tabs.appendChild(btnRegister);
-        wrap.appendChild(tabs);
+        header.appendChild(btnLogin);
+        header.appendChild(btnRegister);
+        wrap.appendChild(header);
+        
+        // Body (forms area)
+        var body = document.createElement('div');
+        body.className = 'member-auth-body';
 
         // Login form
         var loginForm = document.createElement('form');
@@ -4038,7 +4043,7 @@ const MemberModule = (function() {
         loginSection.appendChild(passField);
         loginSection.appendChild(loginSubmit);
         loginForm.appendChild(loginSection);
-        wrap.appendChild(loginForm);
+        body.appendChild(loginForm);
 
         // Register form
         var registerForm = document.createElement('form');
@@ -4073,10 +4078,13 @@ const MemberModule = (function() {
         registerSection.appendChild(countryHidden);
         registerSection.appendChild(registerSubmit);
         registerForm.appendChild(registerSection);
-        wrap.appendChild(registerForm);
+        body.appendChild(registerForm);
+        
+        // Add body to container
+        wrap.appendChild(body);
 
         // Insert into checkout container (or fallback to formWrapper)
-        var checkoutSection = document.querySelector('.form-checkout-container');
+        var checkoutSection = document.querySelector('.member-checkout-container');
         if (checkoutSection) {
             // Insert before the submit buttons (member-create-actions)
             var actionsEl = checkoutSection.querySelector('.member-create-actions');
@@ -4095,8 +4103,8 @@ const MemberModule = (function() {
         createAuthRegisterTab = btnRegister;
         createAuthLoginForm = loginForm;
         createAuthRegisterForm = registerForm;
-        createAuthLoginPanel = loginPanel;
-        createAuthRegisterPanel = registerPanel;
+        createAuthLoginPanel = loginSection;
+        createAuthRegisterPanel = registerSection;
         createAuthLoginEmailInput = loginEmail;
         createAuthLoginPasswordInput = loginPass;
         createAuthLoginSubmitBtn = loginSubmit;
@@ -4992,7 +5000,7 @@ const MemberModule = (function() {
             try { hideCreateAuthGate(); } catch (e00) {}
             
             // Hide login panel (in profile tab)
-            setAuthPanelState(loginPanel, false, loginInputs);
+            setAuthPanelState(loginFormContainer, false, loginInputs);
 
             // Hide the login form to remove the blank gap
             if (loginFormEl) loginFormEl.hidden = true;
@@ -5097,7 +5105,7 @@ const MemberModule = (function() {
 
             // Show login form in profile tab
             if (loginFormEl) loginFormEl.hidden = false;
-            setAuthPanelState(loginPanel, true, loginInputs);
+            setAuthPanelState(loginFormContainer, true, loginInputs);
             
             // Update header (no avatar)
             updateHeaderAvatar(null);

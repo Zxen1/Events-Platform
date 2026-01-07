@@ -3646,7 +3646,7 @@
         
         // Create container
         var container = document.createElement('div');
-        container.className = 'form-location-container';
+        container.className = 'member-location-container';
         container.dataset.venue = String(locationNumber);
         container.dataset.locationNumber = String(locationNumber);
         
@@ -3876,7 +3876,7 @@
         });
         container.appendChild(primaryContainer);
         
-        // STEP 2: Create form-location-picker container with quantity picker + message
+        // STEP 2: Create member-locationpicker-container with quantity picker + message
         var quantityPicker = createLocationQuantityPicker({
             initialQuantity: initialQuantity,
             onQuantityChange: function(quantity, isIncrease) {
@@ -3893,7 +3893,7 @@
                         insertBeforeElement: checkoutContainer,
                         onQuantityUpdate: function() {
                             // Update quantity display
-                            var allContainers = document.querySelectorAll('.form-location-container');
+                            var allContainers = document.querySelectorAll('.member-location-container');
                             var newQty = allContainers.length;
                             if (quantityPicker.quantityDisplay) {
                                 quantityPicker.quantityDisplay.textContent = newQty;
@@ -3926,7 +3926,7 @@
         });
         
         var locationPickerContainer = document.createElement('div');
-        locationPickerContainer.className = 'form-location-picker';
+        locationPickerContainer.className = 'member-locationpicker-container';
         if (quantityPicker.quantityRow) {
             locationPickerContainer.appendChild(quantityPicker.quantityRow);
         }
@@ -4015,7 +4015,7 @@
         
         // STEP 5: Create Form Checkout container (centralized source of truth)
         var checkoutContainer = document.createElement('div');
-        checkoutContainer.className = 'form-checkout-container';
+        checkoutContainer.className = 'member-checkout-container';
         container.appendChild(checkoutContainer);
         
         // Set up centralized click tracking for all form containers (event delegation)
@@ -4060,7 +4060,7 @@
         var onQuantityUpdate = options.onQuantityUpdate || function() {};
         
         // Remove existing additional location containers (keep venue 1)
-        document.querySelectorAll('.form-location-container[data-location-number]').forEach(function(el) {
+        document.querySelectorAll('.member-location-container[data-location-number]').forEach(function(el) {
             var locNum = parseInt(el.dataset.locationNumber || '0', 10);
             if (locNum > 1) {
                 el.remove();
@@ -4071,7 +4071,7 @@
         
         // Always re-query location1Container to ensure it's in the DOM
         // (passed reference may be stale after form re-render)
-        var freshLocation1 = document.querySelector('.form-location-container[data-location-number="1"]');
+        var freshLocation1 = document.querySelector('.member-location-container[data-location-number="1"]');
         if (freshLocation1) {
             venue1Container = freshLocation1;
         } else if (!venue1Container) {
@@ -4081,7 +4081,7 @@
         
         // Verify location container is actually in the DOM
         if (!venue1Container.parentNode) {
-            venue1Container = document.querySelector('.form-location-container[data-location-number="1"]');
+            venue1Container = document.querySelector('.member-location-container[data-location-number="1"]');
             if (!venue1Container) {
                 console.warn('[FormBuilder] Location 1 container not found in DOM');
                 return;
@@ -4228,7 +4228,7 @@
     
     /**
      * Set up centralized click tracking for all form containers using event delegation
-     * Works automatically for any container with classes: form-primary-container, form-location-picker, form-checkout-container, form-location-container
+     * Works automatically for any container with classes: form-primary-container, form-location-picker, member-checkout-container, member-location-container
      * @param {HTMLElement} container - Parent container element
      */
     function setupFormContainerClickTracking(container) {
@@ -4237,7 +4237,7 @@
         // Use event delegation - single handler on parent for all containers
         container.addEventListener('click', function(e) {
             // Find the clicked form container (or closest ancestor that is a form container)
-            var clickedContainer = e.target.closest('.form-primary-container, .form-location-picker, .form-checkout-container, .form-location-container');
+            var clickedContainer = e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container');
             if (!clickedContainer) return;
             
             // Remove active state from all form containers
@@ -4274,7 +4274,7 @@
      * Update delete button visibility based on venue count
      */
     function updateVenueDeleteButtons() {
-        var allVenueContainers = document.querySelectorAll('.form-location-container');
+        var allVenueContainers = document.querySelectorAll('.member-location-container');
         var venueCount = allVenueContainers.length;
         var showDelete = venueCount > 1;
         
@@ -4297,7 +4297,7 @@
      * Updates container data attributes, header text, and fieldset labels
      */
     function renumberLocationContainers() {
-        var allContainers = document.querySelectorAll('.form-location-container');
+        var allContainers = document.querySelectorAll('.member-location-container');
         var count = allContainers.length;
         
         // Determine location type from first container's location fieldset
@@ -4366,7 +4366,7 @@
         // Small delay to ensure DOM has updated
         setTimeout(function() {
             var searchRoot = parentContainer || document;
-            var allContainers = searchRoot.querySelectorAll('.form-location-container');
+            var allContainers = searchRoot.querySelectorAll('.member-location-container');
             
             if (allContainers.length === 0) return;
             
