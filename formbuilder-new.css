@@ -389,7 +389,7 @@
 
 .formbuilder-accordion-option-body {
   display: none;
-  padding: 0 10px 10px 10px;
+  padding: 10px 10px 0;
   border: 1px solid var(--blue-500);
   border-top: none;
   border-radius: 0 0 5px 5px;
@@ -963,18 +963,21 @@
 .formbuilder-field-options {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 8px;
+  padding: 10px 10px 0;
   background: #0f0f0f;
   border: 1px solid #222222;
   border-radius: 5px;
-  margin-bottom: 0;
 }
 
 .formbuilder-field-option-row {
   display: flex;
   gap: 6px;
   align-items: center;
+  margin-bottom: 10px;
+}
+
+.formbuilder-field-option-row:last-child {
+  margin-bottom: 0;
 }
 
 .formbuilder-field-option-input {
@@ -1499,6 +1502,14 @@
   margin-bottom: 0;
 }
 
+/* Elements inside visible containers should have 10px margin-bottom, last child 0 */
+.form-primary-container > .fieldset:last-child,
+.member-locationpicker-container > .fieldset:last-child,
+.member-checkout-container > .fieldset:last-child,
+.member-postform-location-content > .fieldset:last-child {
+  margin-bottom: 0;
+}
+
 /* ============================================================================
    FORM LOCATION MANAGER
    Centralized location container infrastructure for form building.
@@ -1511,7 +1522,7 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 12px;
+  padding: 10px 10px 0;
   margin-bottom: 12px;
 }
 
@@ -1525,7 +1536,7 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 12px;
+  padding: 10px 10px 0;
   margin-bottom: 12px;
 }
 
@@ -1539,7 +1550,7 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 12px;
+  padding: 10px 10px 0;
   margin-bottom: 12px;
 }
 
@@ -1645,11 +1656,11 @@
 
 /* Location content - styled like formpicker menu options */
 .member-postform-location-content {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
-  padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    padding: 10px 10px 0;
 }
 
 /* ============================================================================
@@ -1661,8 +1672,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 8px;
-  padding: 0;
+  margin-bottom: 10px;
 }
 
 .member-postform-location-quantity-label {
