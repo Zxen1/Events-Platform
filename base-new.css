@@ -214,8 +214,8 @@
   box-sizing: border-box;
 }
 .button-class-2:hover {
-  background: var(--website-blue-dark);
-  border-color: var(--website-blue-dark);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"],
