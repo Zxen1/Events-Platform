@@ -400,6 +400,7 @@
 .fieldset-radio-group {
     display: flex;
     flex-direction: column;
+    gap: 8px;
 }
 
 .fieldset-radio {
@@ -407,11 +408,6 @@
     align-items: center;
     gap: 10px;
     cursor: pointer;
-    margin-bottom: 10px;
-}
-
-.fieldset-radio:last-child {
-    margin-bottom: 0;
 }
 
 .fieldset-radio-input {
@@ -632,17 +628,14 @@
 .fieldset-amenities-container {
     display: flex;
     flex-direction: column;
+    gap: 6px;
 }
 
 .fieldset-amenities-row {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 10px;
-}
-
-.fieldset-amenities-row:last-child {
-    margin-bottom: 0;
+    padding: 6px 0;
 }
 
 .fieldset-amenities-row-image {
