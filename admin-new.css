@@ -1993,9 +1993,6 @@
 
 /* Messages Search Box */
 .admin-messages-search {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   width: 100%;
   max-width: 420px;
   height: 36px;

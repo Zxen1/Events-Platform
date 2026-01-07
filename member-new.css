@@ -1080,6 +1080,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   margin-bottom: 12px;
 }
 .member-auth-tabs > * {
@@ -1514,14 +1515,28 @@
 .member-formpicker-cats {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+}
+
+.member-formpicker-cats > * {
+  margin-bottom: 8px;
+}
+
+.member-formpicker-cats > *:last-child {
+  margin-bottom: 0;
 }
 
 /* Formpicker dropdowns container */
 .member-formpicker-dropdowns {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+}
+
+.member-formpicker-dropdowns > * {
+  margin-bottom: 12px;
+}
+
+.member-formpicker-dropdowns > *:last-child {
+  margin-bottom: 0;
 }
 
 /* Formpicker menu (copied from filter-sort-menu pattern) */
