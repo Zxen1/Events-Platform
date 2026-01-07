@@ -1744,6 +1744,30 @@ const FieldsetBuilder = (function(){
                     }
                 }
 
+                function spGetSystemPlusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_plus ? String(sys.icon_plus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function spGetSystemMinusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_minus ? String(sys.icon_minus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
                 function spFirstUnusedLetter() {
                     for (var i = 0; i < 26; i++) {
                         var key = String.fromCharCode(65 + i);
@@ -1838,7 +1862,14 @@ const FieldsetBuilder = (function(){
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
                     addBtn.className = 'fieldset-sessionpricing-pricing-button-add fieldset-row-item--no-flex';
-                    addBtn.textContent = '+';
+                    var plusIconUrl = spGetSystemPlusIconUrl();
+                    if (plusIconUrl) {
+                        var plusImg = document.createElement('img');
+                        plusImg.className = 'fieldset-sessionpricing-pricing-button-icon fieldset-sessionpricing-pricing-button-icon--plus';
+                        plusImg.alt = '';
+                        plusImg.src = plusIconUrl;
+                        addBtn.appendChild(plusImg);
+                    }
                     addBtn.addEventListener('click', function() {
                         tiersContainer.appendChild(spCreatePricingTierBlock(tiersContainer));
                         spUpdateTierButtons(tiersContainer);
@@ -1849,7 +1880,14 @@ const FieldsetBuilder = (function(){
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'fieldset-sessionpricing-pricing-button-remove fieldset-row-item--no-flex';
-                    removeBtn.textContent = '−';
+                    var minusIconUrl = spGetSystemMinusIconUrl();
+                    if (minusIconUrl) {
+                        var minusImg = document.createElement('img');
+                        minusImg.className = 'fieldset-sessionpricing-pricing-button-icon fieldset-sessionpricing-pricing-button-icon--minus';
+                        minusImg.alt = '';
+                        minusImg.src = minusIconUrl;
+                        removeBtn.appendChild(minusImg);
+                    }
                     removeBtn.addEventListener('click', function() {
                         block.remove();
                         spUpdateTierButtons(tiersContainer);
@@ -1929,7 +1967,14 @@ const FieldsetBuilder = (function(){
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
                     addBtn.className = 'fieldset-sessionpricing-pricing-button-add fieldset-row-item--no-flex';
-                    addBtn.textContent = '+';
+                    var plusIconUrl2 = spGetSystemPlusIconUrl();
+                    if (plusIconUrl2) {
+                        var plusImg2 = document.createElement('img');
+                        plusImg2.className = 'fieldset-sessionpricing-pricing-button-icon fieldset-sessionpricing-pricing-button-icon--plus';
+                        plusImg2.alt = '';
+                        plusImg2.src = plusIconUrl2;
+                        addBtn.appendChild(plusImg2);
+                    }
                     addBtn.addEventListener('click', function() {
                         seatingAreasContainer.appendChild(spCreateSeatingAreaBlock(seatingAreasContainer));
                         spUpdateSeatingAreaButtons(seatingAreasContainer);
@@ -1940,7 +1985,14 @@ const FieldsetBuilder = (function(){
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'fieldset-sessionpricing-pricing-button-remove fieldset-row-item--no-flex';
-                    removeBtn.textContent = '−';
+                    var minusIconUrl2 = spGetSystemMinusIconUrl();
+                    if (minusIconUrl2) {
+                        var minusImg2 = document.createElement('img');
+                        minusImg2.className = 'fieldset-sessionpricing-pricing-button-icon fieldset-sessionpricing-pricing-button-icon--minus';
+                        minusImg2.alt = '';
+                        minusImg2.src = minusIconUrl2;
+                        removeBtn.appendChild(minusImg2);
+                    }
                     removeBtn.addEventListener('click', function() {
                         block.remove();
                         spUpdateSeatingAreaButtons(seatingAreasContainer);
@@ -2069,7 +2121,14 @@ const FieldsetBuilder = (function(){
                 var spPickerAddBtn = document.createElement('button');
                 spPickerAddBtn.type = 'button';
                 spPickerAddBtn.className = 'fieldset-sessionpricing-session-button-add';
-                spPickerAddBtn.textContent = '+';
+                var pickerPlusIconUrl = spGetSystemPlusIconUrl();
+                if (pickerPlusIconUrl) {
+                    var pickerPlusImg = document.createElement('img');
+                    pickerPlusImg.className = 'fieldset-sessionpricing-session-button-icon fieldset-sessionpricing-session-button-icon--plus';
+                    pickerPlusImg.alt = '';
+                    pickerPlusImg.src = pickerPlusIconUrl;
+                    spPickerAddBtn.appendChild(pickerPlusImg);
+                }
                 spPickerAddBtn.disabled = true;
                 spPickerAddBtn.style.opacity = '0.3';
                 spPickerAddBtn.style.cursor = 'not-allowed';
@@ -2078,7 +2137,14 @@ const FieldsetBuilder = (function(){
                 var spPickerRemoveBtn = document.createElement('button');
                 spPickerRemoveBtn.type = 'button';
                 spPickerRemoveBtn.className = 'fieldset-sessionpricing-session-button-remove';
-                spPickerRemoveBtn.textContent = '−';
+                var pickerMinusIconUrl = spGetSystemMinusIconUrl();
+                if (pickerMinusIconUrl) {
+                    var pickerMinusImg = document.createElement('img');
+                    pickerMinusImg.className = 'fieldset-sessionpricing-session-button-icon fieldset-sessionpricing-session-button-icon--minus';
+                    pickerMinusImg.alt = '';
+                    pickerMinusImg.src = pickerMinusIconUrl;
+                    spPickerRemoveBtn.appendChild(pickerMinusImg);
+                }
                 spPickerRemoveBtn.disabled = true;
                 spPickerRemoveBtn.style.opacity = '0.3';
                 spPickerRemoveBtn.style.cursor = 'not-allowed';
@@ -2133,7 +2199,14 @@ const FieldsetBuilder = (function(){
                 var spFooterAddBtn = document.createElement('button');
                 spFooterAddBtn.type = 'button';
                 spFooterAddBtn.className = 'fieldset-sessionpricing-ticketgroups-button-add';
-                spFooterAddBtn.textContent = '+';
+                var footerPlusIconUrl = spGetSystemPlusIconUrl();
+                if (footerPlusIconUrl) {
+                    var footerPlusImg = document.createElement('img');
+                    footerPlusImg.className = 'fieldset-sessionpricing-ticketgroups-button-icon fieldset-sessionpricing-ticketgroups-button-icon--plus';
+                    footerPlusImg.alt = '';
+                    footerPlusImg.src = footerPlusIconUrl;
+                    spFooterAddBtn.appendChild(footerPlusImg);
+                }
                 spFooterAddBtn.setAttribute('aria-label', 'Add Ticket Group');
                 spFooterAddBtn.addEventListener('click', function(e) {
                     try { e.preventDefault(); } catch (e0) {}
@@ -2152,7 +2225,14 @@ const FieldsetBuilder = (function(){
                 var spFooterRemoveBtn = document.createElement('button');
                 spFooterRemoveBtn.type = 'button';
                 spFooterRemoveBtn.className = 'fieldset-sessionpricing-ticketgroups-button-remove';
-                spFooterRemoveBtn.textContent = '−';
+                var footerMinusIconUrl = spGetSystemMinusIconUrl();
+                if (footerMinusIconUrl) {
+                    var footerMinusImg = document.createElement('img');
+                    footerMinusImg.className = 'fieldset-sessionpricing-ticketgroups-button-icon fieldset-sessionpricing-ticketgroups-button-icon--minus';
+                    footerMinusImg.alt = '';
+                    footerMinusImg.src = footerMinusIconUrl;
+                    spFooterRemoveBtn.appendChild(footerMinusImg);
+                }
                 spFooterRemoveBtn.setAttribute('aria-label', 'Remove Last Ticket Group');
                 spFooterRemoveBtn.addEventListener('click', async function(e) {
                     try { e.preventDefault(); } catch (e0) {}
@@ -2887,7 +2967,14 @@ const FieldsetBuilder = (function(){
                             var addBtn = document.createElement('button');
                             addBtn.type = 'button';
                             addBtn.className = 'fieldset-sessionpricing-session-button-add';
-                            addBtn.textContent = '+';
+                            var rowPlusIconUrl = spGetSystemPlusIconUrl();
+                            if (rowPlusIconUrl) {
+                                var rowPlusImg = document.createElement('img');
+                                rowPlusImg.className = 'fieldset-sessionpricing-session-button-icon fieldset-sessionpricing-session-button-icon--plus';
+                                rowPlusImg.alt = '';
+                                rowPlusImg.src = rowPlusIconUrl;
+                                addBtn.appendChild(rowPlusImg);
+                            }
                             if (data.times.length >= spMaxTimesPerDate) {
                                 addBtn.disabled = true;
                                 addBtn.style.opacity = '0.3';
@@ -2913,7 +3000,14 @@ const FieldsetBuilder = (function(){
                             var removeBtn = document.createElement('button');
                             removeBtn.type = 'button';
                             removeBtn.className = 'fieldset-sessionpricing-session-button-remove';
-                            removeBtn.textContent = '−';
+                            var rowMinusIconUrl = spGetSystemMinusIconUrl();
+                            if (rowMinusIconUrl) {
+                                var rowMinusImg = document.createElement('img');
+                                rowMinusImg.className = 'fieldset-sessionpricing-session-button-icon fieldset-sessionpricing-session-button-icon--minus';
+                                rowMinusImg.alt = '';
+                                rowMinusImg.src = rowMinusIconUrl;
+                                removeBtn.appendChild(rowMinusImg);
+                            }
                             if (data.times.length === 1) {
                                 removeBtn.disabled = true;
                                 removeBtn.style.opacity = '0.3';
