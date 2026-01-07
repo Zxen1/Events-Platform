@@ -139,53 +139,6 @@
     transform: translateX(20px);
 }
 
-/* Size: Small */
-.component-small-switch {
-    position: relative;
-    display: inline-block;
-    width: 32px;
-    height: 18px;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-
-.component-small-switch-input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.component-small-switch-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 9px;
-    transition: background 0.2s;
-}
-
-.component-small-switch-slider::before {
-    content: '';
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    left: 2px;
-    bottom: 2px;
-    background: #fff;
-    border-radius: 50%;
-    transition: transform 0.2s;
-}
-
-.component-small-switch-slider--on {
-    background: var(--website-blue-active-fill, #3b82f599);
-}
-
-.component-small-switch-slider--on::before {
-    transform: translateX(14px);
-}
-
 /* Size: Large */
 .component-large-switch {
     position: relative;
@@ -233,7 +186,7 @@
     transform: translateX(24px);
 }
 
-/* Style: Big (gray background, usable anywhere) */
+/* Size: Big (gray background, 36x20) */
 .component-big-switch {
     position: relative;
     display: inline-block;
@@ -281,7 +234,7 @@
     background: #fff;
 }
 
-/* Style: Small (gray background, smaller size) */
+/* Size: Small (gray background, 32x18) */
 .component-small-switch {
     position: relative;
     display: inline-block;
