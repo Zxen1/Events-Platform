@@ -187,11 +187,6 @@
 .button-class-1.button--active {
   color: var(--website-blue-light);
 }
-.button-class-1[aria-pressed="true"]:hover,
-.button-class-1[aria-expanded="true"]:hover,
-.button-class-1.button--active:hover {
-  color: var(--website-white);
-}
 .button-class-1-icon {
   width: 30px;
   height: 30px;
