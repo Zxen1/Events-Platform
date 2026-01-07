@@ -215,13 +215,13 @@
 }
 .button-class-2:hover {
   background: #1c1c1c;
-  border-color: #1c1c1c;
+  border-color: var(--website-blue-light);
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
   background: var(--website-blue-dark);
-  border-color: var(--website-blue-dark);
+  border-color: var(--website-blue-light);
   color: var(--website-white);
 }
 .button-class-2:focus-visible {
@@ -245,13 +245,13 @@
 }
 .button-class-3:hover {
   background: #1c1c1c;
-  border-color: #1c1c1c;
+  border-color: var(--website-blue-light);
   color: var(--website-white);
 }
 .button-class-3[aria-selected="true"],
 .button-class-3.button--selected {
   background: var(--website-blue-dark);
-  border-color: var(--website-blue-dark);
+  border-color: var(--website-blue-light);
   color: var(--website-white);
 }
 .button-class-3:focus-visible {
