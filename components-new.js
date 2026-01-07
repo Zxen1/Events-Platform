@@ -429,11 +429,12 @@ const SwitchComponent = (function(){
             throw new Error('SwitchComponent.create: options parameter is required');
         }
         
-        var size = options.size;
+        var size = options.size || 'medium';
         var checked = options.checked;
         
         // Build class prefix based on size
-        var prefix = size === 'medium' ? 'component-switch' : 'component-' + size + '-switch';
+        // Supported sizes: 'small', 'big'
+        var prefix = 'component-' + size + '-switch';
         
         var label = document.createElement('label');
         label.className = prefix;

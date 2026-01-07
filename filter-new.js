@@ -97,18 +97,16 @@ const FilterModule = (function() {
             if (!catName) return;
             var catKey = catName.textContent.trim();
             
-            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle');
-            var catEnabled = headerToggle && (
-                headerToggle.classList.contains('component-compact-switch-slider--on')
-            );
+            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle input');
+            var catEnabled = headerToggle && headerToggle.checked;
             
             var subs = {};
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
                 var subName = opt.querySelector('.filter-categoryfilter-accordion-option-text');
                 if (!subName) return;
                 var subKey = subName.textContent.trim();
-                var subToggle = opt.querySelector('.filter-categoryfilter-toggle');
-                subs[subKey] = subToggle && subToggle.classList.contains('component-compact-small-switch-slider--on');
+                var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
+                subs[subKey] = subToggle && subToggle.checked;
             });
             
             state[catKey] = { enabled: catEnabled, subs: subs };
@@ -130,9 +128,12 @@ const FilterModule = (function() {
             if (!catState) return;
             
             // Apply category toggle
-            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle');
-            if (headerToggle) {
-                headerToggle.classList.toggle('component-compact-switch-slider--on', catState.enabled);
+            var headerToggleLabel = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle');
+            var headerToggleInput = headerToggleLabel ? headerToggleLabel.querySelector('input') : null;
+            var headerToggleSlider = headerToggleLabel ? headerToggleLabel.querySelector('span') : null;
+            if (headerToggleInput && headerToggleSlider) {
+                headerToggleInput.checked = catState.enabled;
+                headerToggleSlider.classList.toggle('component-big-switch-slider--on', catState.enabled);
                 // Update disabled state
                 accordion.classList.toggle('filter-categoryfilter-accordion--disabled', !catState.enabled);
                 var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
@@ -146,9 +147,12 @@ const FilterModule = (function() {
                     if (!subName) return;
                     var subKey = subName.textContent.trim();
                     if (catState.subs.hasOwnProperty(subKey)) {
-                        var subToggle = opt.querySelector('.filter-categoryfilter-toggle');
-                        if (subToggle) {
-                            subToggle.classList.toggle('component-compact-small-switch-slider--on', catState.subs[subKey]);
+                        var subToggleLabel = opt.querySelector('.filter-categoryfilter-toggle');
+                        var subToggleInput = subToggleLabel ? subToggleLabel.querySelector('input') : null;
+                        var subToggleSlider = subToggleLabel ? subToggleLabel.querySelector('span') : null;
+                        if (subToggleInput && subToggleSlider) {
+                            subToggleInput.checked = catState.subs[subKey];
+                            subToggleSlider.classList.toggle('component-small-switch-slider--on', catState.subs[subKey]);
                         }
                         opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', !catState.enabled);
                     }
@@ -479,10 +483,12 @@ const FilterModule = (function() {
         // Turn on all toggles (both header and option)
         var allToggles = container.querySelectorAll('.filter-categoryfilter-toggle');
         allToggles.forEach(function(toggle) {
-            if (toggle.classList.contains('component-compact-switch-slider')) {
-                toggle.classList.add('component-compact-switch-slider--on');
-            } else if (toggle.classList.contains('component-compact-small-switch-slider')) {
-                toggle.classList.add('component-compact-small-switch-slider--on');
+            var input = toggle.querySelector('input');
+            var slider = toggle.querySelector('span');
+            if (input) input.checked = true;
+            if (slider) {
+                slider.classList.add('component-big-switch-slider--on');
+                slider.classList.add('component-small-switch-slider--on');
             }
         });
         
@@ -520,9 +526,8 @@ const FilterModule = (function() {
         var anyOff = false;
         
         allToggles.forEach(function(toggle) {
-            var isOn = toggle.classList.contains('component-compact-switch-slider--on') ||
-                       toggle.classList.contains('component-compact-small-switch-slider--on');
-            if (!isOn) {
+            var input = toggle.querySelector('input');
+            if (input && !input.checked) {
                 anyOff = true;
             }
         });
@@ -749,7 +754,7 @@ const FilterModule = (function() {
         
         // Expired toggle
         expiredInput = container.querySelector('.filter-expired-input');
-        expiredSlider = container.querySelector('.component-compact-switch-slider');
+        expiredSlider = container.querySelector('.component-big-switch-slider');
         
         if (expiredInput) {
             expiredInput.addEventListener('change', function() {
@@ -969,7 +974,7 @@ const FilterModule = (function() {
     
     function syncExpiredToggleUi() {
         if (!expiredInput || !expiredSlider) return;
-        expiredSlider.classList.toggle('component-compact-switch-slider--on', !!expiredInput.checked);
+        expiredSlider.classList.toggle('component-big-switch-slider--on', !!expiredInput.checked);
     }
 
 
@@ -1032,12 +1037,12 @@ const FilterModule = (function() {
                     
                     var headerToggleArea = document.createElement('div');
                     headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';
-                    var headerToggleContainer = document.createElement('div');
-                    headerToggleContainer.className = 'component-compact-switch';
-                    var headerToggle = document.createElement('div');
-                    headerToggle.className = 'component-compact-switch-slider component-compact-switch-slider--on filter-categoryfilter-toggle';
-                    headerToggleContainer.appendChild(headerToggle);
-                    headerToggleArea.appendChild(headerToggleContainer);
+                    var headerSwitch = SwitchComponent.create({
+                        size: 'big',
+                        checked: true
+                    });
+                    headerSwitch.element.classList.add('filter-categoryfilter-toggle');
+                    headerToggleArea.appendChild(headerSwitch.element);
                     
                     header.appendChild(headerImg);
                     header.appendChild(headerText);
@@ -1062,21 +1067,24 @@ const FilterModule = (function() {
                         optText.className = 'filter-categoryfilter-accordion-option-text';
                         optText.textContent = subName;
                         
-                        var optToggleContainer = document.createElement('div');
-                        optToggleContainer.className = 'component-compact-small-switch';
-                        var optToggle = document.createElement('div');
-                        optToggle.className = 'component-compact-small-switch-slider component-compact-small-switch-slider--on filter-categoryfilter-toggle';
-                        optToggleContainer.appendChild(optToggle);
+                        var optSwitch = SwitchComponent.create({
+                            size: 'small',
+                            checked: true,
+                            onChange: function() {
+                                applyFilters();
+                                updateResetCategoriesButton();
+                            }
+                        });
+                        optSwitch.element.classList.add('filter-categoryfilter-toggle');
                         
                         option.appendChild(optImg);
                         option.appendChild(optText);
-                        option.appendChild(optToggleContainer);
+                        option.appendChild(optSwitch.element);
                         
                         // Click anywhere on option toggles the switch
-                        option.addEventListener('click', function() {
-                            optToggle.classList.toggle('component-compact-small-switch-slider--on');
-                            applyFilters();
-                            updateResetCategoriesButton();
+                        option.addEventListener('click', function(e) {
+                            if (e.target === optSwitch.element || optSwitch.element.contains(e.target)) return;
+                            optSwitch.toggle();
                         });
                         
                         body.appendChild(option);
@@ -1102,8 +1110,8 @@ const FilterModule = (function() {
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
                         e.stopPropagation();
-                        headerToggle.classList.toggle('component-compact-switch-slider--on');
-                        if (headerToggle.classList.contains('component-compact-switch-slider--on')) {
+                        headerSwitch.toggle();
+                        if (headerSwitch.isChecked()) {
                             setAccordionDisabled(false);
                         } else {
                             setAccordionDisabled(true);
