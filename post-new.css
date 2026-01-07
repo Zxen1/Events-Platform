@@ -227,11 +227,11 @@
 }
 
 .post-card:hover {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .post-card--map-highlight {
-  background-color: var(--website-blue);
+  background-color: var(--blue-500);
 }
 
 /* ============================================================================
@@ -261,7 +261,7 @@
 }
 
 .recent-card:hover {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .recent-card--selected {
@@ -274,7 +274,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--website-blue);
+  background-color: var(--blue-500);
   border-radius: 5px;
   z-index: -1;
 }
@@ -980,8 +980,8 @@
   flex-direction: column;
   gap: 10px;
   z-index: var(--layer-menu);
-  --button-selected-bg: var(--website-blue);
-  --button-selected-border: var(--website-blue);
+  --button-selected-bg: var(--blue-500);
+  --button-selected-border: var(--blue-500);
   --button-selected-text: var(--button-active-text);
 }
 
@@ -1016,9 +1016,9 @@
 }
 
 .post-venue-menu-option--selected {
-  background: var(--website-blue);
+  background: var(--blue-500);
   color: var(--button-active-text);
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .post-venue-menu-option-name {
@@ -1100,8 +1100,8 @@
   flex-direction: column;
   gap: 10px;
   z-index: var(--layer-menu);
-  --button-selected-bg: var(--website-blue);
-  --button-selected-border: var(--website-blue);
+  --button-selected-bg: var(--blue-500);
+  --button-selected-border: var(--blue-500);
   --button-selected-text: var(--button-active-text);
 }
 
@@ -1135,9 +1135,9 @@
 }
 
 .post-session-menu-option--selected {
-  background: var(--website-blue);
+  background: var(--blue-500);
   color: var(--button-active-text);
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .post-session-menu-option-date {
@@ -1209,8 +1209,8 @@
 
 /* Thumbnail active state */
 .post-open-thumbnail--active {
-  border-color: var(--website-blue);
-  box-shadow: 0 0 0 2px var(--website-blue);
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 2px var(--blue-500);
 }
 
 .post-member-avatar-image {

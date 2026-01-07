@@ -132,7 +132,7 @@
 
 /* States */
 .component-switch-slider--on {
-    background: var(--website-blue-dark);
+    background: var(--blue-600);
 }
 
 .component-switch-slider--on::before {
@@ -179,7 +179,7 @@
 }
 
 .component-large-switch-slider--on {
-    background: var(--website-blue-dark);
+    background: var(--blue-600);
 }
 
 .component-large-switch-slider--on::before {
@@ -226,7 +226,7 @@
 }
 
 .component-big-switch-slider--on {
-    background: var(--website-blue-dark);
+    background: var(--blue-600);
 }
 
 .component-big-switch-slider--on::before {
@@ -274,7 +274,7 @@
 }
 
 .component-small-switch-slider--on {
-    background: var(--website-blue-dark);
+    background: var(--blue-600);
 }
 
 .component-small-switch-slider--on::before {
@@ -391,7 +391,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--website-blue);
+    background: var(--blue-500);
     cursor: pointer;
     z-index: 10;
 }
@@ -415,7 +415,7 @@
 }
 
 .calendar-ok {
-    background: var(--website-blue);
+    background: var(--blue-500);
     color: #fff;
 }
 
@@ -440,25 +440,25 @@
 }
 
 .calendar-day.today {
-    color: var(--website-blue);
+    color: var(--blue-500);
     font-weight: 700;
 }
 
 .calendar-day:not(.selected):not(.empty):hover {
-    background: var(--website-blue);
-    border-color: var(--website-blue);
+    background: var(--blue-500);
+    border-color: var(--blue-500);
     color: #fff;
 }
 
 .calendar-day:not(.selected):not(.empty):active {
-    background: var(--website-blue-dark);
-    border-color: var(--website-blue);
+    background: var(--blue-600);
+    border-color: var(--blue-500);
     color: #fff;
 }
 
 .calendar-day.selected {
-    background: var(--website-blue-dark);
-    border-color: var(--website-blue);
+    background: var(--blue-600);
+    border-color: var(--blue-500);
     color: #fff;
 }
 
@@ -475,8 +475,8 @@
 }
 
 .calendar-day.in-range {
-    background: var(--website-blue, #3b82f599);
-    border-color: var(--website-blue);
+    background: var(--blue-500);
+    border-color: var(--blue-500);
     color: #fff;
     border-radius: 0;
 }
@@ -559,7 +559,7 @@
     left: 0;
     width: 250px;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
@@ -750,7 +750,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -767,7 +767,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -863,7 +863,7 @@
 .fieldset-currency-button--open,
 .component-currencyfull-menu-button--open,
 .admin-language-button--open {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
 }
 
 .component-currencyfull-menu-button--open,
@@ -890,7 +890,7 @@
 .component-currencyfull-menu-option.menu-option--highlighted,
 .admin-language-option:hover,
 .admin-language-option.menu-option--highlighted {
-    background: var(--website-blue);
+    background: var(--blue-500);
 }
 
 
@@ -964,7 +964,7 @@
     left: 0;
     width: 250px;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
@@ -1017,7 +1017,7 @@
 }
 
 .component-currencycompact-menu-button--open {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
 }
 
 .component-currencycompact-menu-button-arrow--open {
@@ -1030,7 +1030,7 @@
 
 .component-currencycompact-menu-option:hover,
 .component-currencycompact-menu-option.menu-option--highlighted {
-    background: var(--website-blue);
+    background: var(--blue-500);
 }
 
 
@@ -1165,13 +1165,13 @@
 }
 
 .phoneprefix-option:focus-visible {
-    outline: 2px solid var(--website-blue);
+    outline: 2px solid var(--blue-500);
     outline-offset: -2px;
 }
 
 .phoneprefix-input:focus {
     outline: none;
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
 }
 
 
@@ -1239,7 +1239,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -1299,7 +1299,7 @@
 }
 
 .component-iconpicker-button--open {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -1319,7 +1319,7 @@
 }
 
 .component-iconpicker-option:hover {
-    background: var(--website-blue);
+    background: var(--blue-500);
 }
 
 
@@ -1387,7 +1387,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -1447,7 +1447,7 @@
 }
 
 .component-systemimagepicker-button--open {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -1467,7 +1467,7 @@
 }
 
 .component-systemimagepicker-option:hover {
-    background: var(--website-blue);
+    background: var(--blue-500);
 }
 
 
@@ -1524,7 +1524,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 600px;
@@ -1596,7 +1596,7 @@
 }
 
 .component-amenitiespicker-button--open {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -1610,7 +1610,7 @@
 }
 
 .component-amenitiespicker-option:hover {
-    background: var(--website-blue);
+    background: var(--blue-500);
 }
 
 
@@ -1675,7 +1675,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid var(--website-blue);
+    border: 1px solid var(--blue-500);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -1727,7 +1727,7 @@
 }
 
 .component-ageratingpicker-button--open {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -1741,7 +1741,7 @@
 }
 
 .component-ageratingpicker-option:hover {
-    background: var(--website-blue);
+    background: var(--blue-500);
 }
 
 
@@ -1772,7 +1772,7 @@
 }
 
 .filter-mapcontrol-row:focus-within {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     background-color: rgba(0, 0, 0, 0.45);
 }
 
@@ -1962,7 +1962,7 @@
 }
 
 .map-mapcontrol-row:focus-within {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     background-color: rgba(0, 0, 0, 0.45);
 }
 
@@ -2160,7 +2160,7 @@
 }
 
 .welcome-mapcontrol-row:focus-within {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     background-color: rgba(0, 0, 0, 0.45);
 }
 
@@ -2340,7 +2340,7 @@
 .map-mapcontrol-geocoder-input:focus,
 .welcome-mapcontrol-geocoder-input:focus {
     outline: none;
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
 }
 
 .filter-mapcontrol-geocoder-dropdown-item:hover {
@@ -2379,7 +2379,7 @@
 .user-location-marker-dot {
     width: 16px;
     height: 16px;
-    background-color: var(--website-blue);
+    background-color: var(--blue-500);
     border: 2px solid #ffffff;
     border-radius: 50%;
     box-shadow: 0 0 0 rgba(59, 130, 246, 0.4);
@@ -2460,7 +2460,7 @@
 .filter-mapcontrol-geolocate--active,
 .map-mapcontrol-geolocate--active,
 .welcome-mapcontrol-geolocate--active {
-    color: var(--website-blue);
+    color: var(--blue-500);
 }
 
 /* Border animation for geolocate loading */
@@ -2479,7 +2479,7 @@
 .map-mapcontrol-row--loading,
 .filter-mapcontrol-row--loading,
 .welcome-mapcontrol-row--loading {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     box-shadow: 0 0 4px 1px rgba(59, 130, 245, 0.4);
     animation: mapcontrol-border-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -2615,13 +2615,13 @@
 
 /* States - Option Card */
 .member-checkout-option:hover {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     background: rgba(59, 130, 245, 0.05);
     color: #fff;
 }
 
 .member-checkout-option--selected {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     /* Match selected duration button intensity */
     background: rgba(59, 130, 245, 0.15);
     color: #fff;
@@ -2647,12 +2647,12 @@
 
 /* States - Duration Option */
 .member-checkout-duration-option:hover {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     color: #fff;
 }
 
 .member-checkout-duration-option--selected {
-    border-color: var(--website-blue);
+    border-color: var(--blue-500);
     background: rgba(59, 130, 245, 0.15);
     color: #fff;
 }

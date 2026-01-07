@@ -208,7 +208,7 @@
 
 /* Avatar glow when panel is open */
 .header-access-button-avatar--active {
-  border-color: var(--website-blue-light);
+  border-color: var(--blue-400);
 }
 .header-access-button-avatar--active:hover {
   border-color: var(--website-white);

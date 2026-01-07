@@ -897,7 +897,7 @@
 .admin-lighting-button:hover,
 .admin-style-button:hover {
   background: rgba(0, 0, 0, 0.2);
-  color: var(--website-blue);
+  color: var(--blue-500);
 }
 
 .admin-lighting-button--active,
@@ -905,7 +905,7 @@
 .admin-style-button--active,
 .admin-style-button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.2);
-  color: var(--website-blue);
+  color: var(--blue-500);
 }
 
 .admin-lighting-button-icon {
@@ -1237,7 +1237,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--website-blue);
+  background: var(--blue-500);
   cursor: grab;
   border: 1px solid #fff;
 }
@@ -1250,7 +1250,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--website-blue);
+  background: var(--blue-500);
   cursor: grab;
   border: 1px solid #fff;
 }
@@ -1260,11 +1260,11 @@
 }
 
 .admin-spin-slider:hover::-webkit-slider-thumb {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .admin-spin-slider:hover::-moz-range-thumb {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .admin-slider-value {
@@ -1712,7 +1712,7 @@
   align-items: center;
   padding: 0 10px;
   cursor: pointer;
-  background: var(--website-blue);
+  background: var(--blue-500);
   border-radius: 5px;
   border: 1px solid transparent;
 }
@@ -1722,7 +1722,7 @@
 }
 
 .admin-checkout-accordion-header:hover {
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 
@@ -1823,8 +1823,8 @@
 }
 
 .admin-checkout-accordion-editpanel-more:hover {
-  border-color: var(--website-blue);
-  color: var(--website-blue);
+  border-color: var(--blue-500);
+  color: var(--blue-500);
 }
 
 
@@ -1834,7 +1834,7 @@
   right: 0;
   width: 180px;
   background: #111;
-  border: 1px solid var(--website-blue);
+  border: 1px solid var(--blue-500);
   border-radius: 5px;
   padding: 5px 0;
   display: none;
@@ -1885,7 +1885,7 @@
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on::after {
@@ -1918,7 +1918,7 @@
 
 .admin-checkout-accordion-editpanel-input:focus {
   outline: none;
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .admin-checkout-accordion-editpanel-textarea {
@@ -1935,7 +1935,7 @@
 
 .admin-checkout-accordion-editpanel-textarea:focus {
   outline: none;
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .admin-checkout-accordion-editpanel-checkbox {
@@ -1951,7 +1951,7 @@
 .admin-checkout-option-sidebar {
   width: 16px;
   height: 16px;
-  accent-color: var(--website-blue);
+  accent-color: var(--blue-500);
   cursor: pointer;
 }
 
@@ -2009,7 +2009,7 @@
 }
 
 .admin-messages-search:focus-within {
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
   background: rgba(0, 0, 0, 0.45);
 }
 
@@ -2086,7 +2086,7 @@
 .admin-message-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--website-blue);
+  color: var(--blue-500);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   position: relative;
@@ -2279,7 +2279,7 @@
   justify-content: space-between;
   padding: 0 10px;
   cursor: pointer;
-  background: var(--website-blue);
+  background: var(--blue-500);
   border-radius: 5px;
   border: 1px solid transparent;
 }
@@ -2291,7 +2291,7 @@
 }
 
 .admin-settings-imagemanager-accordion-header:hover {
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .admin-settings-imagemanager-accordion-header-text {
@@ -2394,7 +2394,7 @@
 
 .admin-settings-field-input:focus {
   outline: none;
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .admin-settings-field-input::placeholder {
@@ -2456,7 +2456,7 @@
 }
 
 .admin-settings-toggle-slider--on {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .admin-settings-toggle-slider--on::before {
@@ -2474,7 +2474,7 @@
   margin: 0 0 12px 0;
   background: #080808;
   border-radius: 4px;
-  border: 1px solid var(--website-blue);
+  border: 1px solid var(--blue-500);
   overflow: visible;
 }
 
@@ -2488,12 +2488,12 @@
   align-items: center;
   padding: 0 10px;
   cursor: pointer;
-  background: var(--website-blue);
+  background: var(--blue-500);
   border-radius: 3px 3px 0 0;
 }
 
 .admin-messages-accordion-header:hover {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .admin-messages-accordion-header--open,
@@ -2566,14 +2566,14 @@
 
 .admin-messages-accordion-header-editarea:hover,
 .admin-messages-accordion-header-editarea--editing {
-  color: var(--website-blue);
+  color: var(--blue-500);
 }
 
 /* Edit Panel */
 .admin-messages-accordion-editpanel {
   display: none;
   padding: 10px;
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .admin-messages-accordion-editpanel--editing {
@@ -2603,7 +2603,7 @@
 .admin-messages-accordion-editpanel-input:hover,
 .admin-messages-accordion-editpanel-input:focus {
   outline: none;
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 /* Content area (for messages list) */
@@ -2762,7 +2762,7 @@
 }
 
 .admin-moderation-accordion-header:hover {
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .admin-moderation-accordion-header--open {
@@ -2915,7 +2915,7 @@
 
 .admin-moderation-item-btn:hover {
   background: rgba(255, 255, 255, 0.15);
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
 }
 
 .admin-moderation-item-btn--reactivate:hover {
@@ -2932,6 +2932,55 @@
 
 .admin-moderation-item-btn--view:hover {
   background: rgba(59, 130, 245, 0.2);
-  border-color: var(--website-blue);
-  color: var(--website-blue);
+  border-color: var(--blue-500);
+  color: var(--blue-500);
+}
+
+/* ============================================================================
+   COLOR SWATCHES (Development Reference)
+   ============================================================================ */
+
+.admin-settings-color-swatches {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto 12px auto;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.admin-settings-color-swatches-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.admin-settings-color-swatches-grid {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  gap: 4px;
+}
+
+.admin-settings-color-swatch {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #000;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.admin-settings-color-swatch:nth-child(n+6) {
+  color: #fff;
+}
+
+@media (max-width: 480px) {
+  .admin-settings-color-swatches-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
 }

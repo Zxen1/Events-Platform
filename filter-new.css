@@ -292,8 +292,8 @@
 }
 
 .filter-favourites-btn[aria-pressed="true"] {
-  background: var(--website-blue-dark);
-  border-color: var(--website-blue);
+  background: var(--blue-600);
+  border-color: var(--blue-500);
 }
 
 .filter-favourites-icon--active {
@@ -340,7 +340,7 @@
 }
 
 .filter-sort-menu-button--open {
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
@@ -377,7 +377,7 @@
   left: 0;
   width: 100%;
   background: #222;
-  border: 1px solid var(--website-blue);
+  border: 1px solid var(--blue-500);
   border-top: none;
   border-radius: 0 0 5px 5px;
   max-height: 300px;
@@ -402,7 +402,7 @@
 }
 
 .filter-sort-menu-option:hover {
-  background: var(--website-blue);
+  background: var(--blue-500);
 }
 
 .filter-sort-menu-option--selected {

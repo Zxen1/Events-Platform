@@ -64,10 +64,18 @@
   --accent: #5C6FB1;
   --active: #2E3A72;
   
-  /* Colors - WebsiteBlue (shades, not usage) */
-  --website-blue-dark: #305ba1;
-  --website-blue: #3b82f5;
-  --website-blue-light: #60a5fa;
+  /* Colors - Blue (Tailwind scale) */
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f5;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+  --blue-950: #172554;
   
   /* Colors - Neutrals */
   --website-gray: #888;
@@ -98,14 +106,14 @@
   --btn-hover: #4d4d4d;
   --btn-active: #1a1a1a;
   /* Selected/toggled fill should use WebsiteBlue (active fill) */
-  --btn-selected: var(--website-blue-dark);
+  --btn-selected: var(--blue-600);
   --btn-selected-hover: #60a5fa;
   --btn-selected-active: #2563eb;
   --btn-disabled: #bbbbbb;
 
   /* Colors - borders */
   --border: rgba(173,173,173,0.31);
-  --border-hover: var(--website-blue);
+  --border-hover: var(--blue-500);
   --border-active: rgba(255,200,0,0.45);
 
   /* Colors - dropdowns */
@@ -128,7 +136,7 @@
   --calendar-past-bg: #222222;
   --calendar-future-bg: #222222;
   --session-available: #888888;
-  --session-selected: #305ba1;
+  --session-selected: var(--blue-600);
   --today: #ff0000;
 
   /* Colors - special */
@@ -180,7 +188,7 @@
 .button-class-1[aria-pressed="true"],
 .button-class-1[aria-expanded="true"],
 .button-class-1.button--active {
-  color: var(--website-blue);
+  color: var(--blue-500);
 }
 .button-class-1-icon {
   width: 30px;
@@ -210,13 +218,13 @@
 }
 .button-class-2:hover {
   background: #1c1c1c;
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
-  background: var(--website-blue-dark);
-  border-color: var(--website-blue);
+  background: var(--blue-600);
+  border-color: var(--blue-500);
   color: var(--website-white);
 }
 .button-class-2:focus-visible {
@@ -240,13 +248,13 @@
 }
 .button-class-3:hover {
   background: #1c1c1c;
-  border-color: var(--website-blue);
+  border-color: var(--blue-500);
   color: var(--website-white);
 }
 .button-class-3[aria-selected="true"],
 .button-class-3.button--selected {
-  background: var(--website-blue-dark);
-  border-color: var(--website-blue);
+  background: var(--blue-600);
+  border-color: var(--blue-500);
   color: var(--website-white);
 }
 .button-class-3:focus-visible {
