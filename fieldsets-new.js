@@ -798,6 +798,7 @@ const FieldsetBuilder = (function(){
                 var cdMenu = document.createElement('div');
                 cdMenu.className = 'fieldset-customdropdown';
                 cdMenu.dataset.value = '';
+                var cdClearBtn = null;
                 
                 var cdButton = document.createElement('button');
                 cdButton.type = 'button';
@@ -841,6 +842,8 @@ const FieldsetBuilder = (function(){
                     cdMenu.dataset.value = s;
                     cdButton.dataset.value = s;
                     cdButtonText.textContent = s ? s : cdPlaceholderText;
+                    // Match Age Rating behavior: placeholder option only exists when empty.
+                    if (cdClearBtn) cdClearBtn.style.display = s ? 'none' : '';
                 }
                 
                 function cdPick(v) {
@@ -850,16 +853,16 @@ const FieldsetBuilder = (function(){
                 }
                 
                 // Clear option (matches old <select> blank option)
-                var clearBtn = document.createElement('button');
-                clearBtn.type = 'button';
-                clearBtn.className = 'fieldset-customdropdown-option';
-                clearBtn.textContent = cdPlaceholderText;
-                clearBtn.addEventListener('click', function(e) {
+                cdClearBtn = document.createElement('button');
+                cdClearBtn.type = 'button';
+                cdClearBtn.className = 'fieldset-customdropdown-option';
+                cdClearBtn.textContent = cdPlaceholderText;
+                cdClearBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
                     cdPick('');
                 });
-                cdOptions.appendChild(clearBtn);
+                cdOptions.appendChild(cdClearBtn);
                 
                 if (Array.isArray(fieldOptions)) {
                     fieldOptions.forEach(function(opt) {
@@ -894,13 +897,6 @@ const FieldsetBuilder = (function(){
                 
             case 'custom_radio': // post_map_cards.custom_radio
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
-                // Optional placeholder prompt (no hard-coded text; uses fieldset placeholder only)
-                if (typeof placeholder === 'string' && placeholder.trim()) {
-                    var radioPlaceholder = document.createElement('div');
-                    radioPlaceholder.className = 'fieldset-sublabel';
-                    radioPlaceholder.textContent = placeholder.trim();
-                    fieldset.appendChild(radioPlaceholder);
-                }
                 var radioGroup = document.createElement('div');
                 radioGroup.className = 'fieldset-radio-group';
                 if (Array.isArray(fieldOptions)) {
