@@ -210,18 +210,14 @@
 }
 .button-class-2:hover {
   background: #1c1c1c;
-  border-color: var(--website-blue-light);
+  border-color: var(--website-blue);
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
-  background: #3b82f5;
-  border-color: #3b82f5;
-  color: var(--website-white);
-}
-.button-class-2[aria-selected="true"]:hover,
-.button-class-2.button--selected:hover {
+  background: var(--website-blue-dark);
   border-color: var(--website-blue);
+  color: var(--website-white);
 }
 .button-class-2:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.85);
@@ -244,18 +240,14 @@
 }
 .button-class-3:hover {
   background: #1c1c1c;
-  border-color: var(--website-blue-light);
+  border-color: var(--website-blue);
   color: var(--website-white);
 }
 .button-class-3[aria-selected="true"],
 .button-class-3.button--selected {
-  background: #3b82f5;
-  border-color: #3b82f5;
-  color: var(--website-white);
-}
-.button-class-3[aria-selected="true"]:hover,
-.button-class-3.button--selected:hover {
+  background: var(--website-blue-dark);
   border-color: var(--website-blue);
+  color: var(--website-white);
 }
 .button-class-3:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.85);
