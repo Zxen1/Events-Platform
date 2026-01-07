@@ -1705,6 +1705,11 @@
     white-space: nowrap;
 }
 
+/* Placeholder: no image => remove extra padding so total left padding stays 10px (button padding only) */
+.component-ageratingpicker--noimage .component-ageratingpicker-button-text {
+    padding-left: 0;
+}
+
 .component-ageratingpicker-button-arrow {
     width: 16px;
     height: 36px;

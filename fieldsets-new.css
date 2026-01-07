@@ -368,12 +368,6 @@
     font-size: 13px;
     cursor: pointer;
     appearance: none;
-    background-image:
-        linear-gradient(45deg, transparent 50%, #888 50%),
-        linear-gradient(-45deg, transparent 50%, #888 50%);
-    background-repeat: no-repeat, no-repeat;
-    background-size: 6px 6px, 6px 6px;
-    background-position: calc(100% - 16px) 50%, calc(100% - 10px) 50%;
 }
 
 .fieldset-select option {
@@ -394,6 +388,118 @@
 .fieldset-select:focus {
     outline: none;
     border-color: var(--blue-500);
+}
+
+/* ============================================================================
+   CUSTOM DROPDOWN FIELDSET (MenuManager dropdown with animated ▼ arrow)
+   ============================================================================ */
+
+.fieldset-customdropdown {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.fieldset-customdropdown-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    font: inherit;
+}
+
+.fieldset-customdropdown-button:hover {
+    border-color: #555;
+}
+
+.fieldset-customdropdown-button--open {
+    border-color: var(--blue-500);
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.fieldset-customdropdown-button-text {
+    flex: 1;
+    text-align: left;
+    font-size: 13px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fieldset-customdropdown-button-arrow {
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+}
+
+.fieldset-customdropdown-button-arrow--open {
+    transform: rotate(180deg);
+}
+
+.fieldset-customdropdown-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: #222;
+    border: 1px solid var(--blue-500);
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.fieldset-customdropdown-options--open {
+    display: block;
+}
+
+.fieldset-customdropdown-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.fieldset-customdropdown-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.fieldset-customdropdown-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+.fieldset-customdropdown-option:hover,
+.fieldset-customdropdown-option.menu-option--highlighted {
+    background: var(--blue-500);
 }
 
 /* Radio */

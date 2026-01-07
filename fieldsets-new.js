@@ -792,18 +792,103 @@ const FieldsetBuilder = (function(){
                 
             case 'custom_dropdown': // post_map_cards.custom_dropdown
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
-                var select = document.createElement('select');
-                select.className = 'fieldset-select';
-                select.innerHTML = '<option value="">Select an option...</option>';
+                
+                // Custom dropdown menu (no native <select> arrow). Uses MenuManager + animated ▼ arrow like Formbuilder menus.
+                var cdMenu = document.createElement('div');
+                cdMenu.className = 'fieldset-customdropdown';
+                cdMenu.dataset.value = '';
+                
+                var cdButton = document.createElement('button');
+                cdButton.type = 'button';
+                cdButton.className = 'fieldset-customdropdown-button form-preview-select';
+                cdButton.dataset.value = '';
+                
+                var cdButtonText = document.createElement('span');
+                cdButtonText.className = 'fieldset-customdropdown-button-text';
+                cdButtonText.textContent = (typeof placeholder === 'string' && placeholder.trim()) ? placeholder.trim() : 'Select an option...';
+                
+                var cdArrow = document.createElement('span');
+                cdArrow.className = 'fieldset-customdropdown-button-arrow';
+                cdArrow.textContent = '▼';
+                
+                cdButton.appendChild(cdButtonText);
+                cdButton.appendChild(cdArrow);
+                cdMenu.appendChild(cdButton);
+                
+                var cdOptions = document.createElement('div');
+                cdOptions.className = 'fieldset-customdropdown-options';
+                cdMenu.appendChild(cdOptions);
+                
+                function cdApplyOpenState(isOpen) {
+                    cdMenu.classList.toggle('fieldset-customdropdown--open', !!isOpen);
+                    cdButton.classList.toggle('fieldset-customdropdown-button--open', !!isOpen);
+                    cdArrow.classList.toggle('fieldset-customdropdown-button-arrow--open', !!isOpen);
+                    cdOptions.classList.toggle('fieldset-customdropdown-options--open', !!isOpen);
+                }
+                
+                cdMenu.__menuIsOpen = function() { return cdMenu.classList.contains('fieldset-customdropdown--open'); };
+                cdMenu.__menuApplyOpenState = cdApplyOpenState;
+                
+                try {
+                    if (window.MenuManager && typeof window.MenuManager.register === 'function') {
+                        window.MenuManager.register(cdMenu);
+                    }
+                } catch (e0) {}
+                
+                function cdSetValue(v) {
+                    var s = (v == null) ? '' : String(v);
+                    cdMenu.dataset.value = s;
+                    cdButton.dataset.value = s;
+                    cdButtonText.textContent = s ? s : ((typeof placeholder === 'string' && placeholder.trim()) ? placeholder.trim() : 'Select an option...');
+                }
+                
+                function cdPick(v) {
+                    cdSetValue(v);
+                    cdApplyOpenState(false);
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                }
+                
+                // Clear option (matches old <select> blank option)
+                var clearBtn = document.createElement('button');
+                clearBtn.type = 'button';
+                clearBtn.className = 'fieldset-customdropdown-option';
+                clearBtn.textContent = 'Select an option...';
+                clearBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    cdPick('');
+                });
+                cdOptions.appendChild(clearBtn);
+                
                 if (Array.isArray(fieldOptions)) {
                     fieldOptions.forEach(function(opt) {
-                        var option = document.createElement('option');
-                        option.value = opt;
-                        option.textContent = opt;
-                        select.appendChild(option);
+                        var label = String(opt == null ? '' : opt);
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'fieldset-customdropdown-option';
+                        btn.textContent = label;
+                        btn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            cdPick(label);
+                        });
+                        cdOptions.appendChild(btn);
                     });
                 }
-                fieldset.appendChild(select);
+                
+                cdButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var isOpen = cdMenu.classList.contains('fieldset-customdropdown--open');
+                    try {
+                        if (window.MenuManager && typeof window.MenuManager.closeAll === 'function') {
+                            window.MenuManager.closeAll(cdMenu);
+                        }
+                    } catch (e2) {}
+                    cdApplyOpenState(!isOpen);
+                });
+                
+                fieldset.appendChild(cdMenu);
                 break;
                 
             case 'custom_radio': // post_map_cards.custom_radio
@@ -3452,8 +3537,8 @@ const FieldsetBuilder = (function(){
                         case 'custom_radio':
                             return !!fieldset.querySelector('input[type="radio"]:checked');
                         case 'custom_dropdown': {
-                            var sel = fieldset.querySelector('select');
-                            return !!(sel && String(sel.value || '').trim());
+                            var menu = fieldset.querySelector('.fieldset-customdropdown');
+                            return !!(menu && String(menu.dataset.value || '').trim());
                         }
                         case 'images': {
                             var meta = fieldset.querySelector('input.fieldset-images-meta');
@@ -3650,8 +3735,8 @@ const FieldsetBuilder = (function(){
                     return isValidUrl(u.value);
                 }
                 case 'custom_dropdown': {
-                    var sel = fieldset.querySelector('select');
-                    var v = sel ? String(sel.value || '').trim() : '';
+                    var menu = fieldset.querySelector('.fieldset-customdropdown');
+                    var v = menu ? String(menu.dataset.value || '').trim() : '';
                     return !!v;
                 }
                 case 'custom_radio': {

@@ -6802,6 +6802,8 @@ const AgeRatingComponent = (function(){
                 buttonText.textContent = 'Select rating';
                 selectedValue = null;
                 menu.dataset.value = '';
+                // Placeholder state: no icon, so remove extra left padding before text
+                menu.classList.add('component-ageratingpicker--noimage');
                 return;
             }
             var found = ageRatingData.find(function(item) {
@@ -6815,8 +6817,10 @@ const AgeRatingComponent = (function(){
                 if (imgUrl) {
                     buttonImage.src = imgUrl;
                     buttonImage.style.display = '';
+                    menu.classList.remove('component-ageratingpicker--noimage');
                 } else {
                     buttonImage.style.display = 'none';
+                    menu.classList.add('component-ageratingpicker--noimage');
                 }
             }
         }
