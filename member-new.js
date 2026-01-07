@@ -1890,7 +1890,6 @@ const MemberModule = (function() {
         var categoryLabel = document.createElement('label');
         categoryLabel.className = 'member-panel-field-label';
         categoryLabel.textContent = 'Category / Subcategory';
-        categoryLabel.style.marginBottom = '6px';
         
         var categoryMenu = document.createElement('div');
         categoryMenu.className = 'member-formpicker-menu';

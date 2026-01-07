@@ -43,7 +43,7 @@
    ============================================================================ */
 
 .member-auth #member-auth-register {
-  /* No gap - elements use margin-bottom: 12px */
+  /* No gap - elements use margin-bottom: 10px */
 }
 
 .member-supporter-message {
@@ -55,7 +55,7 @@
 
 .member-supporter-payment {
   margin: 0;
-  padding: 10px;
+  padding: 10px 10px 0;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
@@ -64,8 +64,12 @@
 .member-supporter-payment-presets {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  column-gap: 10px;
   margin-bottom: 0;
+}
+
+.member-supporter-payment-presets > * {
+  margin-bottom: 10px;
 }
 
 /* Payment preset buttons: allowed single new class (no base class overlap) */
@@ -148,7 +152,7 @@
 }
 
 .member-supporter-join-fields > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-supporter-join-fields > *:last-child {
@@ -246,7 +250,7 @@
 .member-panel-header {
   position: sticky;
   top: 0;
-  padding: 10px 10px 12px;
+  padding: 10px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   z-index: 1;
@@ -405,7 +409,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 10px;
+  padding: 12px 10px 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -475,7 +479,7 @@
 .member-panel-field {
   display: flex;
   flex-direction: column;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-panel-field:last-child {
@@ -489,7 +493,7 @@
 .member-panel-field-label {
   display: block;
   text-align: left;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
@@ -511,11 +515,11 @@
 .member-map-settings-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 12px auto;
+  margin: 0 auto 10px auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 10px;
+  padding: 10px 10px 0;
 }
 
 /* member-preferences-container removed (no language/currency filters) */
@@ -780,7 +784,7 @@
 }
 
 .member-form > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-form > *:last-child {
@@ -805,12 +809,12 @@
 .member-create-selects {
   display: flex;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-create-selects > * {
   margin-right: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-create-selects > *:last-child {
@@ -840,11 +844,11 @@
 .member-create-checkout {
   display: flex;
   flex-direction: column;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-create-checkout > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-create-checkout > *:last-child {
@@ -879,11 +883,11 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-create-actions > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-create-actions > *:last-child {
@@ -940,7 +944,14 @@
 .member-missing-popover-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+}
+
+.member-missing-popover-list > * {
+  margin-bottom: 10px;
+}
+
+.member-missing-popover-list > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-missing-popover-item {
@@ -1081,7 +1092,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .member-auth-tabs > * {
   flex: 1 1 0;  /* Children fill space equally */
@@ -1113,7 +1124,7 @@
 }
 
 .member-auth-submit[data-action="register"] {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 
@@ -1123,7 +1134,7 @@
 }
 
 .member-auth-panel > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-auth-panel > *:last-child {
@@ -1175,7 +1186,7 @@
 }
 
 .member-profile-edit > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-profile-edit > *:last-child {
@@ -1187,7 +1198,7 @@
 }
 
 .member-auth-profile {
-  /* No gap - elements use margin-bottom: 12px */
+  /* No gap - elements use margin-bottom: 10px */
 }
 
 .member-auth-tabs--logged-in {
@@ -1195,7 +1206,7 @@
 }
 
 .member-auth-panel--logged-in {
-  /* No gap - elements use margin-bottom: 12px */
+  /* No gap - elements use margin-bottom: 10px */
 }
 
 /* ============================================================================
@@ -1205,7 +1216,7 @@
 .member-profile {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-profile-avatar {
@@ -1295,7 +1306,7 @@
 }
 
 .member-profile-drawer-body > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-profile-drawer-body > *:last-child {
@@ -1437,7 +1448,7 @@
   position: static;
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   padding: 0;
   background: transparent;
 }
@@ -1486,14 +1497,21 @@
   background: var(--dropdown-bg, rgba(17, 17, 17, 0.96));
   border: 1px solid var(--border);
   border-radius: 5px;
-  padding: 20px;
+  padding: 20px 20px 10px;
   max-width: 360px;
   width: calc(100% - 40px);
   display: flex;
   flex-direction: column;
-  gap: 14px;
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
   color: #fff;
+}
+
+.member-unsaved-dialog > * {
+  margin-bottom: 10px;
+}
+
+.member-unsaved-dialog > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-unsaved-actions {
@@ -1507,7 +1525,7 @@
    ============================================================================ */
 
 .member-formpicker-container {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   width: 100%;
   max-width: 100%;
 }
@@ -1518,7 +1536,7 @@
 }
 
 .member-formpicker-cats > * {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .member-formpicker-cats > *:last-child {
@@ -1532,7 +1550,7 @@
 }
 
 .member-formpicker-dropdowns > * {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .member-formpicker-dropdowns > *:last-child {
@@ -1661,7 +1679,7 @@
 
 /* Section containers - siblings of main form */
 .member-section-container {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 /* Active state removed - member-form-container is now transparent wrapper */
