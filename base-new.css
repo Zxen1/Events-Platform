@@ -179,7 +179,7 @@
   box-sizing: border-box;
 }
 .button-class-1:hover {
-  background: var(--website-blue);
+  background: #888;
   color: var(--website-white);
 }
 .button-class-1[aria-pressed="true"],
