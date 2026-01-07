@@ -1608,7 +1608,7 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background: transparent;
+  background: rgba(255, 0, 0, 0.5); /* DEBUG: visible background */
   border: none;
   color: rgba(255, 255, 255, 0.5);
   width: 36px;
