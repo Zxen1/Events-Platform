@@ -143,6 +143,8 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 10px 0;
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
 }
 
 .member-registrationform-container > * {
@@ -1184,6 +1186,8 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 10px 0;
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
 }
 
 .member-profileform-container > * {
@@ -1215,6 +1219,8 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 10px 10px 0;
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
 }
 
 .member-loginform-container .member-panel-field {

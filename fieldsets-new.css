@@ -16,20 +16,21 @@
     width: 100%;
     display: flex;
     flex-direction: column;
+    gap: 16px;
 }
 
 .fieldset-header {
     font-size: 14px;
     font-weight: bold;
     color: var(--blue-500);
-    margin-bottom: 10px;
+    margin-bottom: 16px;
     padding-bottom: 8px;
     border-bottom: 1px solid #333;
 }
 
 .fieldset {
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 16px;
 }
 
 .fieldset-divider {
@@ -43,7 +44,7 @@
 .fieldset-label {
     display: flex;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
     position: relative;
 }
 
@@ -106,7 +107,7 @@
 .fieldset-sublabel {
     font-size: 13px;
     color: #fff;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
 }
 
 /* Input */
@@ -717,7 +718,7 @@
 }
 
 .fieldset-itempricing-sublabel-itemvariants {
-    /* spacing comes from margin-bottom of element above */
+    margin-top: 10px;
 }
 
 .fieldset-itempricing-input-itemname,
@@ -774,10 +775,6 @@
 .fieldset-itempricing-container-itemvariants {
     display: flex;
     flex-direction: column;
-}
-
-.fieldset-itempricing-row-itemvariant:last-child {
-    margin-bottom: 0;
 }
 
 .fieldset-itempricing-button-icon {
@@ -858,16 +855,13 @@
 .fieldset-sessionpricing-sessions-container {
     display: flex;
     flex-direction: column;
+    gap: 8px;
 }
 
 .fieldset-sessionpricing-session-container-item {
     display: flex;
     flex-direction: column;
-    margin-bottom: 10px;
-}
-
-.fieldset-sessionpricing-session-container-item:last-child {
-    margin-bottom: 0;
+    gap: 8px;
 }
 
 .fieldset-sessionpricing-session-row {
@@ -1137,14 +1131,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-}
-
-.fieldset-sessionpricing-ticketgroup-item {
-    margin-bottom: 10px;
-}
-
-.fieldset-sessionpricing-ticketgroup-item:last-child {
-    margin-bottom: 0;
+    gap: 10px;
 }
 
 /* Ticket Group Item */
