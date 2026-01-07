@@ -897,7 +897,7 @@
 .admin-lighting-button:hover,
 .admin-style-button:hover {
   background: rgba(0, 0, 0, 0.2);
-  color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue);
 }
 
 .admin-lighting-button--active,
@@ -905,7 +905,7 @@
 .admin-style-button--active,
 .admin-style-button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.2);
-  color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue);
 }
 
 .admin-lighting-button-icon {
@@ -1260,11 +1260,11 @@
 }
 
 .admin-spin-slider:hover::-webkit-slider-thumb {
-  background: var(--website-blue-hover-fill);
+  background: var(--website-blue);
 }
 
 .admin-spin-slider:hover::-moz-range-thumb {
-  background: var(--website-blue-hover-fill);
+  background: var(--website-blue);
 }
 
 .admin-slider-value {
@@ -1722,7 +1722,7 @@
 }
 
 .admin-checkout-accordion-header:hover {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 
@@ -1823,8 +1823,8 @@
 }
 
 .admin-checkout-accordion-editpanel-more:hover {
-  border-color: var(--website-blue-border, #3b82f5);
-  color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
+  color: var(--website-blue);
 }
 
 
@@ -1834,7 +1834,7 @@
   right: 0;
   width: 180px;
   background: #111;
-  border: 1px solid var(--website-blue-border, #3b82f5);
+  border: 1px solid var(--website-blue);
   border-radius: 5px;
   padding: 5px 0;
   display: none;
@@ -1885,7 +1885,7 @@
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on {
-  background: var(--website-blue-active-fill, #3b82f599);
+  background: var(--website-blue);
 }
 
 .admin-checkout-accordion-editpanel-more-switch.on::after {
@@ -1918,7 +1918,7 @@
 
 .admin-checkout-accordion-editpanel-input:focus {
   outline: none;
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 .admin-checkout-accordion-editpanel-textarea {
@@ -1935,7 +1935,7 @@
 
 .admin-checkout-accordion-editpanel-textarea:focus {
   outline: none;
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 .admin-checkout-accordion-editpanel-checkbox {
@@ -1951,7 +1951,7 @@
 .admin-checkout-option-sidebar {
   width: 16px;
   height: 16px;
-  accent-color: var(--website-blue-border, #3b82f5);
+  accent-color: var(--website-blue);
   cursor: pointer;
 }
 
@@ -2009,7 +2009,7 @@
 }
 
 .admin-messages-search:focus-within {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
   background: rgba(0, 0, 0, 0.45);
 }
 
@@ -2086,7 +2086,7 @@
 .admin-message-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   position: relative;
@@ -2291,7 +2291,7 @@
 }
 
 .admin-settings-imagemanager-accordion-header:hover {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 .admin-settings-imagemanager-accordion-header-text {
@@ -2394,7 +2394,7 @@
 
 .admin-settings-field-input:focus {
   outline: none;
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 .admin-settings-field-input::placeholder {
@@ -2456,7 +2456,7 @@
 }
 
 .admin-settings-toggle-slider--on {
-  background: var(--website-blue-active-fill, #3b82f599);
+  background: var(--website-blue);
 }
 
 .admin-settings-toggle-slider--on::before {
@@ -2474,7 +2474,7 @@
   margin: 0 0 12px 0;
   background: #080808;
   border-radius: 4px;
-  border: 1px solid var(--website-blue-border, #3b82f5);
+  border: 1px solid var(--website-blue);
   overflow: visible;
 }
 
@@ -2493,7 +2493,7 @@
 }
 
 .admin-messages-accordion-header:hover {
-  background: var(--website-blue-hover-fill);
+  background: var(--website-blue);
 }
 
 .admin-messages-accordion-header--open,
@@ -2566,7 +2566,7 @@
 
 .admin-messages-accordion-header-editarea:hover,
 .admin-messages-accordion-header-editarea--editing {
-  color: var(--website-blue-border, #3b82f5);
+  color: var(--website-blue);
 }
 
 /* Edit Panel */
@@ -2603,7 +2603,7 @@
 .admin-messages-accordion-editpanel-input:hover,
 .admin-messages-accordion-editpanel-input:focus {
   outline: none;
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 /* Content area (for messages list) */
@@ -2762,7 +2762,7 @@
 }
 
 .admin-moderation-accordion-header:hover {
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 .admin-moderation-accordion-header--open {
@@ -2915,7 +2915,7 @@
 
 .admin-moderation-item-btn:hover {
   background: rgba(255, 255, 255, 0.15);
-  border-color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
 }
 
 .admin-moderation-item-btn--reactivate:hover {
@@ -2932,6 +2932,6 @@
 
 .admin-moderation-item-btn--view:hover {
   background: rgba(59, 130, 245, 0.2);
-  border-color: var(--website-blue-border, #3b82f5);
-  color: var(--website-blue-border, #3b82f5);
+  border-color: var(--website-blue);
+  color: var(--website-blue);
 }

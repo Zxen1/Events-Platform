@@ -22,7 +22,7 @@
 .fieldset-header {
     font-size: 14px;
     font-weight: bold;
-    color: var(--website-blue-border, #3b82f5);
+    color: var(--website-blue);
     margin-bottom: 16px;
     padding-bottom: 8px;
     border-bottom: 1px solid #333;
@@ -144,7 +144,7 @@
 
 .fieldset-input:focus {
     outline: none;
-    border-color: var(--website-blue-border, #3b82f5);
+    border-color: var(--website-blue);
 }
 
 /* Browser autofill styling uses global rule from base-new.css */
@@ -198,7 +198,7 @@
 
 .fieldset-textarea:focus {
     outline: none;
-    border-color: var(--website-blue-border, #3b82f5);
+    border-color: var(--website-blue);
 }
 
 .fieldset-textarea.fieldset-input--invalid {
@@ -233,7 +233,7 @@
 }
 
 .fieldset-menu-button--open {
-    border-color: var(--website-blue-border, #3b82f5);
+    border-color: var(--website-blue);
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
@@ -300,7 +300,7 @@
     left: 0;
     width: 100%;
     background: #222;
-    border: 1px solid var(--website-blue-border, #3b82f5);
+    border: 1px solid var(--website-blue);
     border-top: none;
     border-radius: 0 0 5px 5px;
     max-height: 300px;
@@ -339,7 +339,7 @@
 
 .fieldset-menu-option:hover,
 .fieldset-menu-option.menu-option--highlighted {
-    background: var(--website-blue-hover-fill, #3b82f5);
+    background: var(--website-blue);
 }
 
 .fieldset-menu-option-image {
@@ -384,7 +384,7 @@
 
 .fieldset-select option:checked,
 .fieldset-select option:focus {
-    background: var(--website-blue-active-fill, #3b82f599);
+    background: var(--website-blue-dark);
     color: #fff;
 }
 
@@ -394,7 +394,7 @@
 
 .fieldset-select:focus {
     outline: none;
-    border-color: var(--website-blue-border, #3b82f5);
+    border-color: var(--website-blue);
 }
 
 /* Radio */
@@ -414,7 +414,7 @@
 .fieldset-radio-input {
     width: 18px;
     height: 18px;
-    accent-color: var(--website-blue-border, #3b82f5);
+    accent-color: var(--website-blue);
     cursor: pointer;
 }
 
@@ -482,7 +482,7 @@
 .fieldset-date:focus,
 .fieldset-time:focus {
     outline: none;
-    border-color: var(--website-blue-border, #3b82f5);
+    border-color: var(--website-blue);
 }
 
 /* Compact Currency/Phone Prefix */
@@ -506,7 +506,7 @@
     width: 250px;
     left: 0;
     right: auto;
-    border-top: 1px solid var(--website-blue-border, #3b82f5);
+    border-top: 1px solid var(--website-blue);
     border-radius: 5px;
     z-index: var(--layer-menu, 85);
 }
@@ -618,7 +618,7 @@
 }
 
 .fieldset-images:hover {
-    border-color: var(--website-blue-border, #3b82f5);
+    border-color: var(--website-blue);
 }
 
 
@@ -687,7 +687,7 @@
 
 .fieldset-amenities-option-radio {
     cursor: pointer;
-    accent-color: var(--website-blue-border, #3b82f5);
+    accent-color: var(--website-blue);
 }
 
 .fieldset-amenities-option-text {
@@ -751,7 +751,7 @@
 .fieldset-itempricing-input-itemprice:focus,
 .fieldset-itempricing-input-itemvariantname:focus {
     outline: none;
-    border-color: var(--website-blue-border, #3b82f5);
+    border-color: var(--website-blue);
 }
 
 .fieldset-itempricing-input-itemname {
@@ -803,8 +803,8 @@
 }
 
 .fieldset-itempricing-button-itemvariantadd:hover {
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
-    color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue);
+    color: var(--website-blue);
 }
 
 .fieldset-itempricing-button-itemvariantremove:hover {
@@ -814,8 +814,8 @@
 
 .fieldset-itempricing-button-itemvariantadd:active,
 .fieldset-itempricing-button-itemvariantremove:active {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
     color: #fff;
 }
 
@@ -848,7 +848,7 @@
 
 .fieldset-sessionpricing-sessions-time-input:focus {
     outline: none;
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue);
 }
 
 /* Sessions Container */
@@ -884,17 +884,17 @@
 }
 
 .fieldset-sessionpricing-session-field-label:hover {
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-session-field-label--picker:hover {
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue);
     cursor: pointer;
 }
 
 .fieldset-sessionpricing-session-field-label--open {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
     color: #fff;
 }
 
@@ -930,8 +930,8 @@
 
 .fieldset-sessionpricing-sessions-add:hover,
 .fieldset-sessionpricing-pricing-add:hover {
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
-    color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue);
+    color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-sessions-remove:hover,
@@ -942,8 +942,8 @@
 
 .fieldset-sessionpricing-sessions-add:active,
 .fieldset-sessionpricing-pricing-add:active {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
     color: #fff;
 }
 
@@ -966,12 +966,12 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-button-toggle:hover {
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroup-button-toggle--open {
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
-    background: var(--website-blue-active-fill, #3b82f599);
+    border-color: var(--website-blue);
+    background: var(--website-blue-dark);
 }
 
 .fieldset-sessionpricing-ticketgroup-button-icon {
@@ -1001,8 +1001,8 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-button:active {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
 }
 
 /* Ticket Groups Popover */
@@ -1010,7 +1010,7 @@
     width: 100%;
     margin-top: 0;
     background: #222;
-    border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
+    border: 1px solid var(--website-blue);
     border-radius: 4px;
     padding: 0;
     box-sizing: border-box;
@@ -1073,8 +1073,8 @@
 
 .fieldset-sessionpricing-ticketgroups-button-add:hover,
 .fieldset-sessionpricing-ticketgroups-button-remove:hover {
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
-    color: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
+    border-color: var(--website-blue);
+    color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroups-button-ok,
@@ -1091,14 +1091,14 @@
 
 .fieldset-sessionpricing-ticketgroups-button-ok:hover,
 .fieldset-sessionpricing-ticketgroups-button-cancel:hover {
-    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroup-footer-ok:active,
 .fieldset-sessionpricing-ticketgroup-footer-cancel:active {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroups-button-create {
@@ -1118,13 +1118,13 @@
 }
 
 .fieldset-sessionpricing-ticketgroups-button-create:hover {
-    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroup-create:active {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroups-container-list {
@@ -1165,14 +1165,14 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-item-header-content:hover {
-    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroup-item-header--selected .fieldset-sessionpricing-ticketgroup-item-header-content,
 .fieldset-sessionpricing-ticketgroup-item-header--sticky .fieldset-sessionpricing-ticketgroup-item-header-content {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroup-button-select {
@@ -1214,8 +1214,8 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
     border-radius: 4px 4px 0 0;
     border-bottom: none;
 }
@@ -1223,7 +1223,7 @@
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     margin-top: 0;
     padding: 10px;
-    border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
+    border: 1px solid var(--website-blue);
     border-top: none;
     border-radius: 0 0 4px 4px;
 }
@@ -1249,8 +1249,8 @@
 
 .fieldset-sessionpricing-ticketgroup-button-apply:hover,
 .fieldset-sessionpricing-ticketgroup-button-cancel:hover {
-    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-ticketgroup-button-delete {
@@ -1280,7 +1280,7 @@
     right: 0;
     margin-top: 0;
     background: #222;
-    border: 1px solid var(--website-blue-border, var(--website-blue, #3b82f5));
+    border: 1px solid var(--website-blue);
     border-radius: 4px;
     display: none;
     overflow: hidden;
@@ -1317,14 +1317,14 @@
 
 .fieldset-sessionpricing-calendar-button-ok:hover,
 .fieldset-sessionpricing-calendar-button-cancel:hover {
-    background: var(--website-blue-hover-fill, var(--website-blue, #3b82f5));
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue);
+    border-color: var(--website-blue);
 }
 
 .fieldset-sessionpricing-datepicker-ok:active,
 .fieldset-sessionpricing-datepicker-cancel:active {
-    background: var(--website-blue-active-fill, #3b82f599);
-    border-color: var(--website-blue-border, var(--website-blue, #3b82f5));
+    background: var(--website-blue-dark);
+    border-color: var(--website-blue);
 }
 
 /* Pricing Tier Block */
@@ -1383,7 +1383,7 @@
 
 .pac-container {
     background: #222;
-    border: 1px solid var(--website-blue-border, #3b82f5);
+    border: 1px solid var(--website-blue);
     border-top: none;
     border-radius: 0 0 5px 5px;
     font-size: 13px;
@@ -1402,12 +1402,12 @@
 }
 
 .pac-item:hover {
-    background: var(--website-blue-hover-fill, #3b82f5);
+    background: var(--website-blue);
     color: #fff;
 }
 
 .pac-item-selected {
-    background: var(--website-blue-active-fill, #3b82f599);
+    background: var(--website-blue-dark);
     color: #fff;
 }
 
@@ -1417,7 +1417,7 @@
 }
 
 .pac-matched {
-    color: var(--website-blue-border, #3b82f5);
+    color: var(--website-blue);
 }
 
 .pac-icon {

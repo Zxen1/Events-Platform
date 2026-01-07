@@ -73,10 +73,6 @@
   --website-gray: #888;
   --website-white: #fff;
   
-  /* Legacy aliases (to be removed as code is updated) */
-  --website-blue-border: var(--website-blue);
-  --website-blue-hover-fill: var(--website-blue);
-  --website-blue-active-fill: var(--website-blue-dark);
 
   /* Colors - background */
   --background: rgba(0,0,0,1);
@@ -102,14 +98,14 @@
   --btn-hover: #4d4d4d;
   --btn-active: #1a1a1a;
   /* Selected/toggled fill should use WebsiteBlue (active fill) */
-  --btn-selected: var(--website-blue-active-fill, #305ba1);
+  --btn-selected: var(--website-blue-dark);
   --btn-selected-hover: #60a5fa;
   --btn-selected-active: #2563eb;
   --btn-disabled: #bbbbbb;
 
   /* Colors - borders */
   --border: rgba(173,173,173,0.31);
-  --border-hover: var(--website-blue-border, #3b82f5);
+  --border-hover: var(--website-blue);
   --border-active: rgba(255,200,0,0.45);
 
   /* Colors - dropdowns */
@@ -137,7 +133,6 @@
 
   /* Colors - special */
   --filter-active-color: #cc6600;
-  --category-switch-active: var(--website-blue-active-fill, #305ba1);
   --keyword-bg: #FFFFFF;
   --date-range-bg: rgba(74,74,74,0.9);
   --date-range-text: rgba(255,255,255,1);
@@ -185,7 +180,7 @@
 .button-class-1[aria-pressed="true"],
 .button-class-1[aria-expanded="true"],
 .button-class-1.button--active {
-  color: var(--website-blue-light);
+  color: var(--website-blue);
 }
 .button-class-1-icon {
   width: 30px;
@@ -220,8 +215,8 @@
 }
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
-  background: #3b82f599;
-  border-color: #3b82f599;
+  background: #3b82f5;
+  border-color: #3b82f5;
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"]:hover,
@@ -254,8 +249,8 @@
 }
 .button-class-3[aria-selected="true"],
 .button-class-3.button--selected {
-  background: #3b82f599;
-  border-color: #3b82f599;
+  background: #3b82f5;
+  border-color: #3b82f5;
   color: var(--website-white);
 }
 .button-class-3[aria-selected="true"]:hover,
