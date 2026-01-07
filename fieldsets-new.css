@@ -636,11 +636,6 @@
     column-gap: 12px;
 }
 
-/* Exactly 6px between rows. End-of-field spacing is handled by `.fieldset { margin-bottom: 10px; }` */
-.fieldset-amenities-row:not(:last-child) {
-    margin-bottom: 6px;
-}
-
 .fieldset-amenities-row:last-child {
     margin-bottom: 0;
 }
