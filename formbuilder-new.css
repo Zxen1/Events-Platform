@@ -976,10 +976,6 @@
   margin-bottom: 10px;
 }
 
-.formbuilder-field-option-row:last-child {
-  margin-bottom: 0;
-}
-
 .formbuilder-field-option-input {
   flex: 1;
   height: 36px;
@@ -1498,17 +1494,6 @@
   margin-bottom: 10px;
 }
 
-.fieldset--formbuilder-preview:last-child {
-  margin-bottom: 0;
-}
-
-/* Elements inside visible containers should have 10px margin-bottom, last child 0 */
-.form-primary-container > .fieldset:last-child,
-.member-locationpicker-container > .fieldset:last-child,
-.member-checkout-container > .fieldset:last-child,
-.member-postform-location-content > .fieldset:last-child {
-  margin-bottom: 0;
-}
 
 /* ============================================================================
    FORM LOCATION MANAGER
