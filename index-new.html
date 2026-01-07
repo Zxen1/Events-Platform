@@ -827,7 +827,7 @@
         <section id="member-tab-profile" class="member-tab-panel member-tab-panel--active" role="tabpanel" aria-labelledby="member-tab-profile-btn">
           
           <!-- Map Settings (always visible) -->
-          <div class="member-map-settings-container">
+          <div class="member-mapstyle-container">
             <div class="member-panel-field">
               <label class="member-settings-field-label">Map Lighting</label>
               <div class="member-lighting-buttons">
@@ -864,8 +864,8 @@
           
           <div class="member-auth" data-state="logged-out">
             
-            <!-- Profile Panel (shown when logged in) -->
-            <section id="member-auth-profile" class="member-auth-panel member-auth-profile member-auth-panel--hidden" role="region" aria-live="polite" hidden>
+            <!-- Profile Container (shown when logged in) -->
+            <section id="member-profile-container" class="member-profile-container" role="region" aria-live="polite" hidden>
               <!-- Profile Header -->
               <div class="member-profile">
                 <img id="member-profile-avatar" class="member-profile-avatar" alt="">
@@ -875,34 +875,31 @@
                 </div>
               </div>
               
-              <!-- Update Profile Drawer (Accordion) -->
-              <div id="member-profile-drawer" class="member-profile-drawer">
-                <div class="member-profile-drawer-header" id="member-profile-drawer-header">
-                  <span class="member-profile-drawer-title">Update Profile</span>
-                  <span class="member-profile-drawer-arrow">▼</span>
-                </div>
-                <div class="member-profile-drawer-body">
-                  <div id="member-avatar-grid-profile" aria-label="Avatar choices"></div>
-                  <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
-                    <div id="member-profile-fieldsets" class="fieldset-container"></div>
-                    <div class="member-profile-edit-row">
-                      <button type="button" id="member-profile-more-btn" class="member-profile-more-btn" aria-label="More options" aria-haspopup="true" aria-expanded="false">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>
-                      </button>
-                      <!-- More Menu (Hidden by default) -->
-                      <div id="member-profile-more-menu" class="member-profile-more-menu" hidden>
-                        <div class="member-profile-more-item">
-                          <span class="member-profile-more-item-text">Hide Account</span>
-                          <div id="member-profile-hide-switch" class="member-profile-more-switch" role="switch" aria-checked="false" tabindex="0"></div>
-                        </div>
-                        <button type="button" id="member-profile-delete-btn" class="member-profile-more-item member-profile-more-delete">
-                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
-                          <span>Delete Account</span>
-                        </button>
+              <!-- Update Profile Button -->
+              <button type="button" id="member-profileform-toggle" class="member-profileform-toggle">Update Profile</button>
+              
+              <!-- Profile Form Container (hidden by default) -->
+              <div id="member-profileform-container" class="member-profileform-container" hidden>
+                <div id="member-avatar-grid-profile" aria-label="Avatar choices"></div>
+                <form id="memberProfileEditForm" class="member-profile-edit" autocomplete="off">
+                  <div id="member-profileform-fieldsets" class="member-profileform-fieldsets"></div>
+                  <div class="member-profile-edit-row">
+                    <button type="button" id="member-profile-more-btn" class="member-profile-more-btn" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="3" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="8" cy="13" r="1.5"/></svg>
+                    </button>
+                    <!-- More Menu (Hidden by default) -->
+                    <div id="member-profile-more-menu" class="member-profile-more-menu" hidden>
+                      <div class="member-profile-more-item">
+                        <span class="member-profile-more-item-text">Hide Account</span>
+                        <div id="member-profile-hide-switch" class="member-profile-more-switch" role="switch" aria-checked="false" tabindex="0"></div>
                       </div>
+                      <button type="button" id="member-profile-delete-btn" class="member-profile-more-item member-profile-more-delete">
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                        <span>Delete Account</span>
+                      </button>
                     </div>
-                  </form>
-                </div>
+                  </div>
+                </form>
               </div>
               
               <!-- Logout Button (outside drawer) -->
@@ -911,16 +908,22 @@
               </div>
             </section>
             
-            <!-- Login Panel (shown when logged out) -->
-            <form id="memberAuthFormLogin" class="member-auth-form member-login-form" autocomplete="off">
-              <section id="member-auth-login" class="member-auth-panel" role="region">
-                <label class="member-auth-panel-label" for="memberLoginEmail">Account Email</label>
-                <input type="email" id="memberLoginEmail" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
-                <label class="member-auth-panel-label" for="memberLoginPassword">Password</label>
-                <input type="password" id="memberLoginPassword" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
+            <!-- Login Form (shown when logged out) -->
+            <div class="member-loginform-container">
+              <form id="memberAuthFormLogin" autocomplete="off">
+                <div class="member-loginform-fieldsets">
+                  <div class="member-panel-field">
+                    <label class="member-panel-field-label" for="memberLoginEmail">Account Email</label>
+                    <input type="email" id="memberLoginEmail" class="member-panel-field-input" name="loginEmail" autocomplete="username">
+                  </div>
+                  <div class="member-panel-field">
+                    <label class="member-panel-field-label" for="memberLoginPassword">Password</label>
+                    <input type="password" id="memberLoginPassword" class="member-panel-field-input" name="loginPassword" autocomplete="current-password">
+                  </div>
+                </div>
                 <button type="submit" class="member-login button-class-3" data-action="login">Log In</button>
-              </section>
-            </form>
+              </form>
+            </div>
 
           </div>
           
@@ -933,8 +936,8 @@
           <div class="member-formpicker-container">
             <div class="member-formpicker-cats" id="member-formpicker-cats" aria-label="Categories"></div>
           </div>
-          <div id="member-create-form-wrapper" class="member-form-container" hidden>
-            <div id="member-create-fields" class="member-create-fields" role="group" aria-live="polite"></div>
+          <div class="member-postform-container" hidden>
+            <div id="member-postform-fieldsets" class="member-postform-fieldsets" role="group" aria-live="polite"></div>
           </div>
         </section>
         
@@ -952,7 +955,7 @@
           <form id="memberAuthFormRegister" class="member-auth-form" autocomplete="off">
             <div id="member-supporter-message" class="member-supporter-message" data-message-key="msg_member_supporter_message"></div>
 
-            <div class="member-supporter-payment">
+            <div id="member-registrationform-container" class="member-registrationform-container">
               <div class="member-supporter-payment-presets" aria-label="Support amount presets">
                 <button type="button" class="member-supporterpayment-button" data-amount="2" aria-pressed="false">$2</button>
                 <button type="button" class="member-supporterpayment-button" data-amount="5" aria-pressed="false">$5</button>
@@ -960,10 +963,7 @@
                 <input type="text" id="member-supporter-payment-custom" class="member-supporterpayment-input" inputmode="decimal" autocomplete="off" placeholder="Custom">
               </div>
               <input type="hidden" id="member-supporter-payment-amount" name="supportAmount" value="">
-            </div>
-
-            <div id="member-supporter-join-fields" class="member-supporter-join-fields">
-              <div id="member-register-fieldsets" class="fieldset-container"></div>
+              <div id="member-registrationform-fieldsets" class="member-registrationform-fieldsets"></div>
               <div id="member-avatar-grid-register" aria-label="Avatar choices"></div>
               <div id="member-supporter-country-menu"></div>
               <input type="hidden" id="member-supporter-country" name="country" value="">

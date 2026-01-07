@@ -112,11 +112,9 @@ const MemberModule = (function() {
     var profileEditForm = null;
     var profileOriginalName = '';
     
-    // Profile drawer (accordion)
-    var profileDrawer = null;
-    var profileDrawerHeader = null;
-    var profileDrawerArrow = null;
-    var profileDrawerBody = null;
+    // Profile form toggle and container
+    var profileFormToggle = null;
+    var profileFormContainer = null;
     
     // Profile more menu (3-dot button)
     var profileMoreBtn = null;
@@ -249,7 +247,7 @@ const MemberModule = (function() {
         loginFormEl = document.getElementById('memberAuthFormLogin');
         registerFormEl = document.getElementById('memberAuthFormRegister');
         loginPanel = document.getElementById('member-auth-login');
-        profilePanel = document.getElementById('member-auth-profile');
+        profilePanel = document.getElementById('member-profile-container');
         registerTabBtn = document.getElementById('member-tab-register-btn');
         registerTabPanel = document.getElementById('member-tab-register');
         
@@ -262,8 +260,8 @@ const MemberModule = (function() {
 
         // Supporter UI (register tab)
         supporterMessageEl = document.getElementById('member-supporter-message');
-        supporterJoinFieldsEl = document.getElementById('member-supporter-join-fields');
-        registerFieldsetsContainer = document.getElementById('member-register-fieldsets');
+        supporterJoinFieldsEl = document.getElementById('member-registrationform-container');
+        registerFieldsetsContainer = document.getElementById('member-registrationform-fieldsets');
         supporterCustomAmountInput = document.getElementById('member-supporter-payment-custom');
         supporterAmountHiddenInput = document.getElementById('member-supporter-payment-amount');
         supporterPresetButtons = Array.from(panel.querySelectorAll('.member-supporterpayment-button'));
@@ -280,18 +278,16 @@ const MemberModule = (function() {
         headerSaveBtn = panel.querySelector('#member-panel-save-btn');
         headerDiscardBtn = panel.querySelector('#member-panel-discard-btn');
         
-        profileFieldsetsContainer = document.getElementById('member-profile-fieldsets');
+        profileFieldsetsContainer = document.getElementById('member-profileform-fieldsets');
         profileEditNameInput = null;
         profileEditPasswordInput = null;
         profileEditConfirmInput = null;
         profileEditForm = document.getElementById('memberProfileEditForm');
         profileSaveBtn = document.getElementById('member-profile-save-btn'); // legacy (removed in HTML; may be null)
         
-        // Profile drawer (accordion)
-        profileDrawer = document.getElementById('member-profile-drawer');
-        profileDrawerHeader = document.getElementById('member-profile-drawer-header');
-        profileDrawerArrow = profileDrawer ? profileDrawer.querySelector('.member-profile-drawer-arrow') : null;
-        profileDrawerBody = profileDrawer ? profileDrawer.querySelector('.member-profile-drawer-body') : null;
+        // Profile form toggle button and container
+        profileFormToggle = document.getElementById('member-profileform-toggle');
+        profileFormContainer = document.getElementById('member-profileform-container');
         
         // Profile more menu
         profileMoreBtn = document.getElementById('member-profile-more-btn');
@@ -557,10 +553,10 @@ const MemberModule = (function() {
             });
         }
         
-        // Profile drawer toggle (accordion)
-        if (profileDrawerHeader) {
-            profileDrawerHeader.addEventListener('click', function() {
-                toggleProfileDrawer();
+        // Profile form toggle button
+        if (profileFormToggle) {
+            profileFormToggle.addEventListener('click', function() {
+                toggleProfileForm();
             });
         }
         
@@ -1520,13 +1516,14 @@ const MemberModule = (function() {
         }
     }
     
-    function toggleProfileDrawer() {
-        if (!profileDrawer) return;
-        var isOpen = profileDrawer.classList.contains('member-profile-drawer--open');
-        profileDrawer.classList.toggle('member-profile-drawer--open', !isOpen);
-        if (profileDrawerHeader) profileDrawerHeader.classList.toggle('member-profile-drawer-header--open', !isOpen);
-        if (profileDrawerArrow) profileDrawerArrow.classList.toggle('member-profile-drawer-arrow--open', !isOpen);
-        if (profileDrawerBody) profileDrawerBody.classList.toggle('member-profile-drawer-body--open', !isOpen);
+    function toggleProfileForm() {
+        if (!profileFormContainer) return;
+        var isOpen = !profileFormContainer.hidden;
+        profileFormContainer.hidden = isOpen;
+        if (profileFormToggle) {
+            profileFormToggle.textContent = isOpen ? 'Update Profile' : 'Hide Profile Form';
+            profileFormToggle.setAttribute('aria-expanded', (!isOpen).toString());
+        }
     }
     
     function saveProfileHiddenState(hidden) {
@@ -1782,8 +1779,8 @@ const MemberModule = (function() {
         var container = document.getElementById('member-formpicker-cats');
         if (!container) return;
         
-        formWrapper = document.getElementById('member-create-form-wrapper');
-        formFields = document.getElementById('member-create-fields');
+        formWrapper = document.querySelector('.member-postform-container');
+        formFields = document.getElementById('member-postform-fieldsets');
         
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
@@ -3910,11 +3907,9 @@ const MemberModule = (function() {
         if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-pressed', !isLogin ? 'true' : 'false');
 
         if (createAuthLoginPanel) {
-            createAuthLoginPanel.classList.toggle('member-auth-panel--hidden', !isLogin);
             createAuthLoginPanel.hidden = !isLogin;
         }
         if (createAuthRegisterPanel) {
-            createAuthRegisterPanel.classList.toggle('member-auth-panel--hidden', isLogin);
             createAuthRegisterPanel.hidden = isLogin;
         }
 
@@ -4000,32 +3995,38 @@ const MemberModule = (function() {
         loginForm.className = 'member-auth-form';
         loginForm.setAttribute('autocomplete', 'off');
 
-        var loginPanel = document.createElement('section');
-        loginPanel.className = 'member-auth-panel';
+        var loginSection = document.createElement('section');
+        loginSection.className = 'member-login-section';
 
+        var emailField = document.createElement('div');
+        emailField.className = 'member-panel-field';
         var loginLabelEmail = document.createElement('label');
-        loginLabelEmail.className = 'member-auth-panel-label';
+        loginLabelEmail.className = 'member-panel-field-label';
         loginLabelEmail.setAttribute('for', 'memberCreateLoginEmail');
         loginLabelEmail.textContent = 'Account Email';
-
         var loginEmail = document.createElement('input');
         loginEmail.type = 'email';
         loginEmail.id = 'memberCreateLoginEmail';
-        loginEmail.className = 'member-auth-panel-input';
+        loginEmail.className = 'member-panel-field-input';
         loginEmail.name = 'loginEmail';
         loginEmail.autocomplete = 'username';
+        emailField.appendChild(loginLabelEmail);
+        emailField.appendChild(loginEmail);
 
+        var passField = document.createElement('div');
+        passField.className = 'member-panel-field';
         var loginLabelPass = document.createElement('label');
-        loginLabelPass.className = 'member-auth-panel-label';
+        loginLabelPass.className = 'member-panel-field-label';
         loginLabelPass.setAttribute('for', 'memberCreateLoginPassword');
         loginLabelPass.textContent = 'Password';
-
         var loginPass = document.createElement('input');
         loginPass.type = 'password';
         loginPass.id = 'memberCreateLoginPassword';
-        loginPass.className = 'member-auth-panel-input';
+        loginPass.className = 'member-panel-field-input';
         loginPass.name = 'loginPassword';
         loginPass.autocomplete = 'current-password';
+        passField.appendChild(loginLabelPass);
+        passField.appendChild(loginPass);
 
         var loginSubmit = document.createElement('button');
         loginSubmit.type = 'submit';
@@ -4033,12 +4034,10 @@ const MemberModule = (function() {
         loginSubmit.dataset.action = 'create-auth-login';
         loginSubmit.textContent = 'Log In & Submit';
 
-        loginPanel.appendChild(loginLabelEmail);
-        loginPanel.appendChild(loginEmail);
-        loginPanel.appendChild(loginLabelPass);
-        loginPanel.appendChild(loginPass);
-        loginPanel.appendChild(loginSubmit);
-        loginForm.appendChild(loginPanel);
+        loginSection.appendChild(emailField);
+        loginSection.appendChild(passField);
+        loginSection.appendChild(loginSubmit);
+        loginForm.appendChild(loginSection);
         wrap.appendChild(loginForm);
 
         // Register form
@@ -4046,12 +4045,12 @@ const MemberModule = (function() {
         registerForm.className = 'member-auth-form';
         registerForm.setAttribute('autocomplete', 'off');
 
-        var registerPanel = document.createElement('section');
-        registerPanel.className = 'member-auth-panel member-auth-panel--hidden';
-        registerPanel.hidden = true;
+        var registerSection = document.createElement('section');
+        registerSection.className = 'member-register-section';
+        registerSection.hidden = true;
 
         var fsContainer = document.createElement('div');
-        fsContainer.className = 'fieldset-container';
+        fsContainer.className = 'member-postform-fieldsets';
 
         var avatarHost = document.createElement('div');
         avatarHost.setAttribute('aria-label', 'Avatar choices');
@@ -4068,12 +4067,12 @@ const MemberModule = (function() {
         registerSubmit.dataset.action = 'create-auth-register';
         registerSubmit.textContent = 'Register & Submit';
 
-        registerPanel.appendChild(fsContainer);
-        registerPanel.appendChild(avatarHost);
-        registerPanel.appendChild(countryMenu);
-        registerPanel.appendChild(countryHidden);
-        registerPanel.appendChild(registerSubmit);
-        registerForm.appendChild(registerPanel);
+        registerSection.appendChild(fsContainer);
+        registerSection.appendChild(avatarHost);
+        registerSection.appendChild(countryMenu);
+        registerSection.appendChild(countryHidden);
+        registerSection.appendChild(registerSubmit);
+        registerForm.appendChild(registerSection);
         wrap.appendChild(registerForm);
 
         // Insert into checkout container (or fallback to formWrapper)
@@ -4381,8 +4380,7 @@ const MemberModule = (function() {
             submitBtn.disabled = !isActive;
         }
         
-        // Show/hide panel
-        panelEl.classList.toggle('member-auth-panel--hidden', !isActive);
+        // Show/hide section
         panelEl.hidden = !isActive;
         panelEl.setAttribute('aria-hidden', (!isActive).toString());
         
@@ -5006,9 +5004,8 @@ const MemberModule = (function() {
             // Hide the Register tab button when logged in
             if (registerTabBtn) registerTabBtn.hidden = true;
             
-            // Show profile panel
+            // Show profile content
             if (profilePanel) {
-                profilePanel.classList.remove('member-auth-panel--hidden');
                 profilePanel.hidden = false;
                 profilePanel.removeAttribute('inert');
             }
@@ -5065,9 +5062,8 @@ const MemberModule = (function() {
             // Profile tab label is always "Profile" (never changes to "Log In")
             if (profileTabBtn) profileTabBtn.textContent = 'Profile';
             
-            // Hide profile panel
+            // Hide profile content
             if (profilePanel) {
-                profilePanel.classList.add('member-auth-panel--hidden');
                 profilePanel.hidden = true;
                 profilePanel.setAttribute('inert', '');
             }

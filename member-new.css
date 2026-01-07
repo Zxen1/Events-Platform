@@ -54,13 +54,7 @@
   line-height: 1.35;
 }
 
-.member-supporter-payment {
-  margin: 0 0 10px 0;
-  padding: 10px 10px 0;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-}
+/* member-supporter-payment container removed - elements now inside registrationform-container */
 
 .member-supporter-payment-presets {
   display: grid;
@@ -131,7 +125,7 @@
 }
 
 .member-supporterpayment-input:focus {
-  outline: 2px solid var(--btn-selected);
+  outline: 2px solid var(--blue-500);
   outline-offset: 2px;
 }
 
@@ -146,18 +140,25 @@
   border-color: rgba(59, 130, 245, 0.6);
 }
 
-.member-supporter-join-fields {
-  margin-top: 0;
+.member-registrationform-container {
+  width: 100%;
+  background: #080808;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 10px 0;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
 }
 
-.member-supporter-join-fields > * {
+.member-registrationform-container > * {
   margin-bottom: 10px;
 }
 
-.member-supporter-join-fields > *:last-child {
-  margin-bottom: 0;
+.member-registrationform-fieldsets {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 /* ============================================================================
@@ -511,7 +512,7 @@
   font-weight: 500;
 }
 
-.member-map-settings-container {
+.member-mapstyle-container {
   width: 100%;
   max-width: 420px;
   margin: 0 auto 12px auto;
@@ -612,6 +613,11 @@
   padding: 8px 12px;
   color: var(--input-text, #fff);
   font-size: 14px;
+}
+
+.member-panel-field-input:focus {
+  outline: 2px solid var(--blue-500);
+  outline-offset: 2px;
 }
 
 .member-panel-field-textarea {
@@ -762,7 +768,7 @@
    MEMBER FORM CONTAINER
    ============================================================================ */
 
-.member-form-container {
+.member-postform-container {
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
@@ -772,7 +778,7 @@
   padding: 0;
 }
 
-.member-form-container[hidden] {
+.member-postform-container[hidden] {
   display: none;
 }
 
@@ -833,7 +839,7 @@
   opacity: 0.8;
 }
 
-.member-create-fields {
+.member-postform-fieldsets {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1096,54 +1102,6 @@
   margin-bottom: 10px;
 }
 
-
-.member-auth-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Elements have their own margin-bottom - no blanket rule */
-
-.member-auth-panel--hidden {
-  display: none;
-}
-
-.member-auth-panel-label {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.member-auth-panel-input {
-  height: 36px;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #1c1c1c;
-  color: #fff;
-  padding: 0 12px;
-  box-sizing: border-box;
-  caret-color: #fff;
-  cursor: text;
-  margin-bottom: 10px;
-}
-
-/* Browser autofill styling uses global rule from base-new.css */
-/* Animation name: global-autofill-detected */
-
-.member-auth-panel-input:focus {
-  outline: 2px solid var(--btn-selected);
-  outline-offset: 2px;
-  background: #1c1c1c;
-}
-
-/* Support FunMap custom amount input uses its own class: .member-supporterpayment-input */
-
-.member-auth-submit {
-  width: 100%;
-  align-self: stretch;
-  margin-bottom: 10px;
-}
-
 .member-profile-edit {
   display: flex;
   flex-direction: column;
@@ -1161,17 +1119,9 @@
   align-self: flex-start;
 }
 
-.member-auth-profile {
-  /* No gap - elements use margin-bottom: 10px */
-}
-
 /* Register tab button hidden when logged in (controlled by JS) */
 #member-tab-register-btn[hidden] {
   display: none;
-}
-
-.member-auth-panel--logged-in {
-  /* No gap - elements use margin-bottom: 10px */
 }
 
 /* ============================================================================
@@ -1213,71 +1163,78 @@
 }
 
 /* ============================================================================
-   UPDATE PROFILE DRAWER (Accordion style - copied from admin settings)
+   UPDATE PROFILE BUTTON AND FORM CONTAINER
    ============================================================================ */
 
-.member-profile-drawer {
+.member-profileform-toggle {
   width: 100%;
-  background: #080808;
-  border-radius: 5px;
-  overflow: visible;
-  border: 1px solid transparent;
-}
-
-.member-profile-drawer:hover {
-  border-color: var(--blue-500);
-}
-
-.member-profile-drawer-header {
   height: 36px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   padding: 0 10px;
   background: rgba(59, 130, 245, 0.15);
+  border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
-}
-
-.member-profile-drawer--open .member-profile-drawer-header {
-  border-radius: 4px 4px 0 0;
-}
-
-.member-profile-drawer-title {
-  flex: 1;
   font-size: 13px;
   font-weight: bold;
   color: #fff;
+  margin-bottom: 12px;
 }
 
-.member-profile-drawer-arrow {
-  width: 20px;
-  height: 20px;
+.member-profileform-toggle:hover {
+  border-color: var(--blue-500);
+}
+
+.member-profileform-container {
+  width: 100%;
+  background: #080808;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 10px 0;
+  margin-bottom: 12px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  transition: transform 0.2s;
-}
-
-.member-profile-drawer-arrow--open {
-  transform: rotate(180deg);
-}
-
-.member-profile-drawer-body {
-  display: none;
-  padding: 12px 12px 0;
   flex-direction: column;
 }
 
-.member-profile-drawer-body > * {
+.member-profileform-container > * {
   margin-bottom: 10px;
 }
 
-/* Visible container - last child keeps margin for bottom spacing */
+.member-profileform-container[hidden] {
+  display: none;
+}
 
-.member-profile-drawer-body--open {
+.member-profileform-fieldsets {
   display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ============================================================================
+   LOGIN FORM CONTAINER
+   ============================================================================ */
+
+.member-loginform-container {
+  width: 100%;
+  background: #080808;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 10px 0;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-loginform-container > form > * {
+  margin-bottom: 10px;
+}
+
+.member-loginform-fieldsets {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 /* Username row with more button */
@@ -1488,6 +1445,7 @@
 .member-formpicker-container {
   width: 100%;
   max-width: 100%;
+  margin-bottom: 12px;
 }
 
 .member-formpicker-cats {
@@ -1639,7 +1597,7 @@
 
 /* Section containers - siblings of main form, elements inside handle spacing */
 
-/* Active state removed - member-form-container is now transparent wrapper */
+/* Active state removed - member-postform-container is now transparent wrapper */
 
 /* Checkout section active state */
 .member-section-checkout.member-section-container--active {
