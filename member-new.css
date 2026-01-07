@@ -145,7 +145,14 @@
   margin-top: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+}
+
+.member-supporter-join-fields > * {
+  margin-bottom: 12px;
+}
+
+.member-supporter-join-fields > *:last-child {
+  margin-bottom: 0;
 }
 
 /* ============================================================================
@@ -773,7 +780,7 @@
    ============================================================================ */
 
 .member-create-intro {
-  margin: 0;
+  margin: 0 0 12px 0;
   font-size: 15px;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.6);
@@ -787,10 +794,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  margin-bottom: 12px;
 }
 
 .member-create-field {
-  margin: 0;
+  margin: 0 0 12px 0;
 }
 
 .member-create-select {
@@ -812,8 +820,15 @@
 .member-create-checkout {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.member-create-checkout > * {
+  margin-bottom: 12px;
+}
+
+.member-create-checkout > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-create-price-row {
@@ -835,9 +850,16 @@
 .member-create-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
   align-items: stretch;
-  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.member-create-actions > * {
+  margin-bottom: 12px;
+}
+
+.member-create-actions > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-button-submit {
