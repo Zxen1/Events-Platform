@@ -214,8 +214,8 @@
   box-sizing: border-box;
 }
 .button-class-2:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: #1c1c1c;
+  border-color: #1c1c1c;
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"],
@@ -244,8 +244,8 @@
   box-sizing: border-box;
 }
 .button-class-3:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: #1c1c1c;
+  border-color: #1c1c1c;
   color: var(--website-white);
 }
 .button-class-3[aria-selected="true"],
