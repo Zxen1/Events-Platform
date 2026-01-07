@@ -852,16 +852,6 @@
   gap: 0;
 }
 
-.member-create-checkout {
-  display: flex;
-  flex-direction: column;
-}
-
-.member-create-checkout > * {
-  margin-bottom: 10px;
-}
-
-
 .member-create-price-row {
   display: flex;
   flex-wrap: wrap;
