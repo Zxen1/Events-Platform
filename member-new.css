@@ -42,7 +42,8 @@
    SUPPORT FUNMAP (REGISTER TAB)
    ============================================================================ */
 
-.member-auth #member-auth-register {
+/* Register tab panel (Support FunMap) */
+#member-tab-register {
   /* No gap - elements use margin-bottom: 10px */
 }
 
@@ -1087,19 +1088,10 @@
   min-height: 0;
 }
 
-.member-auth-tabs {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-bottom: 10px;
+/* Login form in Profile tab */
+.member-login-form {
+  margin-top: 10px;
 }
-.member-auth-tabs > * {
-  flex: 1 1 0;  /* Children fill space equally */
-  min-width: 0;
-}
-
-/* Auth subtabs: .member-auth-[name]-button-class-2 (e.g., member-auth-login-button-class-2) */
 
 /* Main login submit button - match logout button styling */
 .member-auth-submit[data-action="login"] {
@@ -1201,7 +1193,8 @@
   /* No gap - elements use margin-bottom: 10px */
 }
 
-.member-auth-tabs--logged-in {
+/* Register tab button hidden when logged in (controlled by JS) */
+#member-tab-register-btn[hidden] {
   display: none;
 }
 

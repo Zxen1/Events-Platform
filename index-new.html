@@ -814,6 +814,7 @@
           <button type="button" id="member-tab-profile-btn" class="member-tab-profile button-class-2" data-tab="profile" role="tab" aria-selected="true" aria-controls="member-tab-profile">Profile</button>
           <button type="button" id="member-tab-create-btn" class="member-tab-create button-class-2" data-tab="create" role="tab" aria-selected="false" aria-controls="member-tab-create">Create Post</button>
           <button type="button" id="member-tab-myposts-btn" class="member-tab-myposts button-class-2" data-tab="myposts" role="tab" aria-selected="false" aria-controls="member-tab-myposts">My Posts</button>
+          <button type="button" id="member-tab-register-btn" class="member-tab-register button-class-2" data-tab="register" role="tab" aria-selected="false" aria-controls="member-tab-register">Support FunMap</button>
         </div>
       </div>
       
@@ -863,50 +864,6 @@
           
           <div class="member-auth" data-state="logged-out">
             
-            <!-- Login/Register Subtabs -->
-            <div class="member-auth-tabs" role="tablist" aria-label="Member access modes">
-              <button type="button" class="member-auth-login button-class-2" data-target="login" role="tab" aria-selected="true" aria-controls="member-auth-login">Log In</button>
-              <button type="button" class="member-auth-register button-class-2" data-target="register" role="tab" aria-selected="false" aria-controls="member-auth-register">Support FunMap</button>
-            </div>
-            
-            <!-- Login Panel -->
-            <form id="memberAuthFormLogin" class="member-auth-form" autocomplete="off">
-              <section id="member-auth-login" class="member-auth-panel" role="tabpanel">
-                <label class="member-auth-panel-label" for="memberLoginEmail">Account Email</label>
-                <input type="email" id="memberLoginEmail" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
-                <label class="member-auth-panel-label" for="memberLoginPassword">Password</label>
-                <input type="password" id="memberLoginPassword" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
-                <button type="submit" class="member-login button-class-3" data-action="login">Log In</button>
-              </section>
-            </form>
-            
-            <!-- Register Panel -->
-            <form id="memberAuthFormRegister" class="member-auth-form" autocomplete="off">
-              <section id="member-auth-register" class="member-auth-panel member-auth-panel--hidden" role="tabpanel" hidden>
-                <div id="member-supporter-message" class="member-supporter-message" data-message-key="msg_member_supporter_message"></div>
-
-                <div class="member-supporter-payment">
-                  <div class="member-supporter-payment-presets" aria-label="Support amount presets">
-                    <button type="button" class="member-supporterpayment-button" data-amount="2" aria-pressed="false">$2</button>
-                    <button type="button" class="member-supporterpayment-button" data-amount="5" aria-pressed="false">$5</button>
-                    <button type="button" class="member-supporterpayment-button" data-amount="10" aria-pressed="false">$10</button>
-                    <input type="text" id="member-supporter-payment-custom" class="member-supporterpayment-input" inputmode="decimal" autocomplete="off" placeholder="Custom">
-                  </div>
-                  <input type="hidden" id="member-supporter-payment-amount" name="supportAmount" value="">
-                </div>
-
-                <div id="member-supporter-join-fields" class="member-supporter-join-fields">
-                  <div id="member-register-fieldsets" class="fieldset-container"></div>
-                  <div id="member-avatar-grid-register" aria-label="Avatar choices"></div>
-                  <div id="member-supporter-country-menu"></div>
-                  <input type="hidden" id="member-supporter-country" name="country" value="">
-                </div>
-
-                <button type="submit" class="member-button-submit member-auth-submit" data-action="register">Supporter payment gateway</button>
-                <!-- Spacer workaround removed (testing if no longer needed) -->
-              </section>
-            </form>
-            
             <!-- Profile Panel (shown when logged in) -->
             <section id="member-auth-profile" class="member-auth-panel member-auth-profile member-auth-panel--hidden" role="region" aria-live="polite" hidden>
               <!-- Profile Header -->
@@ -954,7 +911,16 @@
               </div>
             </section>
             
-            <!-- Avatar tools removed (no separate library container; avatar choices are in the 4-tile grids) -->
+            <!-- Login Panel (shown when logged out) -->
+            <form id="memberAuthFormLogin" class="member-auth-form member-login-form" autocomplete="off">
+              <section id="member-auth-login" class="member-auth-panel" role="region">
+                <label class="member-auth-panel-label" for="memberLoginEmail">Account Email</label>
+                <input type="email" id="memberLoginEmail" class="member-auth-panel-input" name="loginEmail" autocomplete="username">
+                <label class="member-auth-panel-label" for="memberLoginPassword">Password</label>
+                <input type="password" id="memberLoginPassword" class="member-auth-panel-input" name="loginPassword" autocomplete="current-password">
+                <button type="submit" class="member-login button-class-3" data-action="login">Log In</button>
+              </section>
+            </form>
 
           </div>
           
@@ -977,6 +943,34 @@
              ================================================================ -->
         <section id="member-tab-myposts" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-myposts-btn" hidden>
           <!-- Content loaded when logged in -->
+        </section>
+        
+        <!-- ================================================================
+             REGISTER TAB (Support FunMap - only visible when logged out)
+             ================================================================ -->
+        <section id="member-tab-register" class="member-tab-panel" role="tabpanel" aria-labelledby="member-tab-register-btn" hidden>
+          <form id="memberAuthFormRegister" class="member-auth-form" autocomplete="off">
+            <div id="member-supporter-message" class="member-supporter-message" data-message-key="msg_member_supporter_message"></div>
+
+            <div class="member-supporter-payment">
+              <div class="member-supporter-payment-presets" aria-label="Support amount presets">
+                <button type="button" class="member-supporterpayment-button" data-amount="2" aria-pressed="false">$2</button>
+                <button type="button" class="member-supporterpayment-button" data-amount="5" aria-pressed="false">$5</button>
+                <button type="button" class="member-supporterpayment-button" data-amount="10" aria-pressed="false">$10</button>
+                <input type="text" id="member-supporter-payment-custom" class="member-supporterpayment-input" inputmode="decimal" autocomplete="off" placeholder="Custom">
+              </div>
+              <input type="hidden" id="member-supporter-payment-amount" name="supportAmount" value="">
+            </div>
+
+            <div id="member-supporter-join-fields" class="member-supporter-join-fields">
+              <div id="member-register-fieldsets" class="fieldset-container"></div>
+              <div id="member-avatar-grid-register" aria-label="Avatar choices"></div>
+              <div id="member-supporter-country-menu"></div>
+              <input type="hidden" id="member-supporter-country" name="country" value="">
+            </div>
+
+            <button type="submit" class="member-button-submit member-auth-submit" data-action="register">Supporter payment gateway</button>
+          </form>
         </section>
         
         <div class="bottomSlack" aria-hidden="true"></div>

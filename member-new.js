@@ -67,12 +67,10 @@ const MemberModule = (function() {
     
     // Auth elements
     var authForm = null;
-    var authTabs = null;
-    var loginTab = null;
-    var registerTab = null;
     var loginPanel = null;
-    var registerPanel = null;
     var profilePanel = null;
+    var registerTabBtn = null;
+    var registerTabPanel = null;
     var loginInputs = [];
     var registerInputs = [];
     var supporterMessageEl = null;
@@ -250,18 +248,16 @@ const MemberModule = (function() {
         authForm = document.querySelector('#member-tab-profile .member-auth');
         loginFormEl = document.getElementById('memberAuthFormLogin');
         registerFormEl = document.getElementById('memberAuthFormRegister');
-        authTabs = authForm ? authForm.querySelector('.member-auth-tabs') : null;
-        loginTab = authForm ? authForm.querySelector('.member-auth-login') : null;
-        registerTab = authForm ? authForm.querySelector('.member-auth-register') : null;
         loginPanel = document.getElementById('member-auth-login');
-        registerPanel = document.getElementById('member-auth-register');
         profilePanel = document.getElementById('member-auth-profile');
+        registerTabBtn = document.getElementById('member-tab-register-btn');
+        registerTabPanel = document.getElementById('member-tab-register');
         
         if (loginPanel) {
             loginInputs = Array.from(loginPanel.querySelectorAll('input'));
         }
-        if (registerPanel) {
-            registerInputs = Array.from(registerPanel.querySelectorAll('input'));
+        if (registerTabPanel) {
+            registerInputs = Array.from(registerTabPanel.querySelectorAll('input'));
         }
 
         // Supporter UI (register tab)
@@ -380,17 +376,7 @@ const MemberModule = (function() {
             });
         }
         
-        // Auth subtab switching (Login / Register)
-        if (loginTab) {
-            loginTab.addEventListener('click', function() {
-                setAuthPanel('login');
-            });
-        }
-        if (registerTab) {
-            registerTab.addEventListener('click', function() {
-                setAuthPanel('register');
-            });
-        }
+        // Register tab is now a main tab, not a subtab - no special click handler needed
 
         if (supporterPresetButtons && supporterPresetButtons.length) {
             supporterPresetButtons.forEach(function(btn) {
@@ -1765,6 +1751,11 @@ const MemberModule = (function() {
         // Lazy load Create Post tab content
         if (tabName === 'create') {
             loadFormpicker();
+        }
+        
+        // Initialize Register tab content when activated
+        if (tabName === 'register') {
+            initRegisterTab();
         }
     }
 
@@ -3571,56 +3562,43 @@ const MemberModule = (function() {
        AUTH PANEL SWITCHING (Login/Register)
        -------------------------------------------------------------------------- */
     
-    function setAuthPanel(target) {
-        if (!authForm || authForm.dataset.state === 'logged-in') return;
+    // Called when the Register tab becomes active
+    function initRegisterTab() {
+        if (authForm && authForm.dataset.state === 'logged-in') return;
         
-        var isLogin = target === 'login';
-        
-        // Update subtab buttons
-        // Button Class 2 uses aria-selected for styling
-        if (loginTab) loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
-        if (registerTab) registerTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
-        if (loginTab) loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
-        if (registerTab) registerTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
-        
-        // Update panels
-        setAuthPanelState(loginPanel, isLogin, loginInputs);
-        setAuthPanelState(registerPanel, !isLogin, registerInputs);
+        // Initialize Register tab content
+        loadSupporterMessage();
+        syncSupporterCurrencyUi();
+        initSupporterCountryMenu();
+        // Ensure avatar grid is rendered with first avatar selected
+        ensureAvatarChoicesReady();
+        renderRegisterFieldsets();
+        // Default to the first preset amount if none selected yet (no hardcoding).
+        try {
+            if (supporterAmountHiddenInput && String(supporterAmountHiddenInput.value || '').trim() === '') {
+                if (supporterPresetButtons && supporterPresetButtons.length) {
+                    var firstAmt = String(supporterPresetButtons[0].getAttribute('data-amount') || '').trim();
+                    if (firstAmt) setSupporterAmount(firstAmt);
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
 
-        if (!isLogin) {
-            // Support tab opened
-            loadSupporterMessage();
-            syncSupporterCurrencyUi();
-            initSupporterCountryMenu();
-            // Ensure avatar grid is rendered with first avatar selected
-            ensureAvatarChoicesReady();
-            renderRegisterFieldsets();
-            // Default to the first preset amount if none selected yet (no hardcoding).
-            try {
-                if (supporterAmountHiddenInput && String(supporterAmountHiddenInput.value || '').trim() === '') {
-                    if (supporterPresetButtons && supporterPresetButtons.length) {
-                        var firstAmt = String(supporterPresetButtons[0].getAttribute('data-amount') || '').trim();
-                        if (firstAmt) setSupporterAmount(firstAmt);
+        // Focus first payment option (first preset button)
+        try {
+            if (supporterPresetButtons && supporterPresetButtons.length && supporterPresetButtons[0]) {
+                requestAnimationFrame(function() {
+                    try {
+                        supporterPresetButtons[0].focus();
+                    } catch (e) {
+                        // ignore
                     }
-                }
-            } catch (e) {
-                // ignore
+                });
             }
-
-            // Focus first payment option (first preset button)
-            try {
-                if (supporterPresetButtons && supporterPresetButtons.length && supporterPresetButtons[0]) {
-                    requestAnimationFrame(function() {
-                        try {
-                            supporterPresetButtons[0].focus();
-                        } catch (e) {
-                            // ignore
-                        }
-                    });
-                }
-            } catch (e) {
-                // ignore
-            }
+        } catch (e) {
+            // ignore
+        }
         }
         
         authForm.dataset.active = target;
@@ -3679,8 +3657,8 @@ const MemberModule = (function() {
 
         // Ensure the submit button always shows currency context.
         try {
-            if (!registerPanel) return;
-            var submitBtn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
+            if (!registerTabPanel) return;
+            var submitBtn = registerTabPanel.querySelector('.member-auth-submit[data-action="register"]');
             if (!submitBtn) return;
             var baseLabel = submitBtn.getAttribute('data-base-label');
             if (!baseLabel) {
@@ -3773,8 +3751,8 @@ const MemberModule = (function() {
 
     function updateRegisterSubmitButtonState() {
         try {
-            if (!registerPanel) return;
-            var btn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
+            if (!registerTabPanel) return;
+            var btn = registerTabPanel.querySelector('.member-auth-submit[data-action="register"]');
             if (!btn) return;
             var complete = isRegisterFormComplete();
             btn.disabled = !complete;
@@ -3786,7 +3764,7 @@ const MemberModule = (function() {
     }
 
     function renderRegisterFieldsets() {
-        if (!registerPanel || !registerFieldsetsContainer) return;
+        if (!registerTabPanel || !registerFieldsetsContainer) return;
         if (!window.MemberAuthFieldsetsComponent || typeof MemberAuthFieldsetsComponent.renderRegister !== 'function') return;
         if (authFieldsetsReady) return;
 
@@ -3802,7 +3780,7 @@ const MemberModule = (function() {
 
             // Refresh registerInputs list (used for enable/disable + clearing)
             try {
-                registerInputs = Array.from(registerPanel.querySelectorAll('input, textarea, select'));
+                registerInputs = Array.from(registerTabPanel.querySelectorAll('input, textarea, select'));
             } catch (e) {}
 
             // Registration submit button is disabled until all required fieldsets are complete.
@@ -3891,8 +3869,8 @@ const MemberModule = (function() {
 
         // Keep submit button label in sync with the current amount.
         try {
-            if (!registerPanel) return;
-            var submitBtn = registerPanel.querySelector('.member-auth-submit[data-action="register"]');
+            if (!registerTabPanel) return;
+            var submitBtn = registerTabPanel.querySelector('.member-auth-submit[data-action="register"]');
             if (!submitBtn) return;
             var baseLabel = submitBtn.getAttribute('data-base-label');
             if (!baseLabel) {
@@ -5039,17 +5017,18 @@ const MemberModule = (function() {
             // (Login can happen via Profile tab too, so don't rely on updateSubmitButtonState being called.)
             try { hideCreateAuthGate(); } catch (e00) {}
             
-            // Hide login/register panels
+            // Hide login panel (in profile tab)
             setAuthPanelState(loginPanel, false, loginInputs);
-            setAuthPanelState(registerPanel, false, registerInputs);
 
-            // Hide the forms themselves to remove the large blank gap
+            // Hide the login form to remove the blank gap
             if (loginFormEl) loginFormEl.hidden = true;
-            if (registerFormEl) registerFormEl.hidden = true;
             
             // Clear inputs
             clearInputs(loginInputs);
             clearInputs(registerInputs);
+            
+            // Hide the Register tab button when logged in
+            if (registerTabBtn) registerTabBtn.hidden = true;
             
             // Show profile panel
             if (profilePanel) {
@@ -5085,8 +5064,10 @@ const MemberModule = (function() {
             updateProfileSaveState();
             renderAvatarPickers();
             
-            // Hide auth tabs when logged in
-            if (authTabs) authTabs.classList.add('member-auth-tabs--logged-in');
+            // If user is on Register tab when they log in, switch to Profile tab
+            if (registerTabPanel && !registerTabPanel.hidden) {
+                switchTab('profile');
+            }
             
             // Update header avatar
             updateHeaderAvatar(currentUser);
@@ -5139,15 +5120,12 @@ const MemberModule = (function() {
             updateProfileSaveState();
             renderAvatarPickers();
             
-            // Show auth tabs
-            if (authTabs) authTabs.classList.remove('member-auth-tabs--logged-in');
+            // Show the Register tab button (only visible when logged out)
+            if (registerTabBtn) registerTabBtn.hidden = false;
 
+            // Show login form in profile tab
             if (loginFormEl) loginFormEl.hidden = false;
-            if (registerFormEl) registerFormEl.hidden = false;
-            
-            // Show appropriate auth panel
-            var active = authForm.dataset.active === 'register' ? 'register' : 'login';
-            setAuthPanel(active);
+            setAuthPanelState(loginPanel, true, loginInputs);
             
             // Update header (no avatar)
             updateHeaderAvatar(null);
