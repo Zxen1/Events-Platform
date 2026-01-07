@@ -1994,12 +1994,12 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function getModeButton(mode) {
-    return document.querySelector('.header-modeswitch-button[data-mode="' + mode + '"]');
+    return document.querySelector('.header-modeswitch > .button-class-1[data-mode="' + mode + '"]');
   }
 
   function inferCurrentModeFromHeader() {
     try {
-      var active = document.querySelector('.header-modeswitch-button[aria-pressed="true"]');
+      var active = document.querySelector('.header-modeswitch > .button-class-1[aria-pressed="true"]');
       return active && active.dataset ? active.dataset.mode : null;
     } catch (e) {
       return null;

@@ -71,7 +71,7 @@
    ============================================================================ */
 
 /* Filter button - position only */
-.header-filter-button {
+.header-filter-button-class-1 {
   position: relative;
 }
 .header-filter-button-icon {
@@ -114,14 +114,15 @@
 }
 
 /* Mode switch buttons - overrides only */
-.header-modeswitch-button {
+/* Individual names: header-modeswitch-recent-button-class-1, header-modeswitch-posts-button-class-1, header-modeswitch-map-button-class-1 */
+.header-modeswitch > .button-class-1 {
   transition: background 0.2s, color 0.2s;
 }
-.header-modeswitch-button[aria-disabled="true"] {
+.header-modeswitch > .button-class-1[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.header-modeswitch-button[aria-disabled="true"]:hover {
+.header-modeswitch > .button-class-1[aria-disabled="true"]:hover {
   background: transparent;
 }
 .header-modeswitch-button-icon {
@@ -150,7 +151,7 @@
 }
 
 @media (min-width: 601px) {
-  .header-modeswitch-button {
+  .header-modeswitch > .button-class-1 {
     width: auto;
     height: 36px;
     padding: 0 14px;

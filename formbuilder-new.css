@@ -1560,6 +1560,7 @@
   display: flex;
   align-items: center;
   padding: 0 10px;
+  padding-right: 46px; /* Space for absolutely positioned delete button */
   background: var(--website-blue-active-fill, #3b82f599);
   border: 1px solid transparent;
   border-radius: 5px;
@@ -1568,6 +1569,7 @@
   font-size: 14px;
   user-select: none;
   box-sizing: border-box;
+  position: relative;
 }
 
 .form-location-header:hover {
@@ -1600,8 +1602,12 @@
   line-height: 36px;
 }
 
-/* Delete button in header */
+/* Delete button in header - positioned 10px from right, vertically centered */
 .form-location-header-button-delete {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.5);
@@ -1616,8 +1622,6 @@
   cursor: pointer;
   transition: color 0.15s ease;
   padding: 0;
-  flex-shrink: 0;
-  margin-left: 4px;
 }
 
 .form-location-header-button-delete:hover {

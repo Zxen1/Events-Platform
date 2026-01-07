@@ -199,7 +199,7 @@ const HeaderModule = (function() {
     var currentMode = 'map'; // Default mode
     
     function initModeSwitch() {
-        modeSwitchButtons = document.querySelectorAll('.header-modeswitch-button');
+        modeSwitchButtons = document.querySelectorAll('.header-modeswitch > .button-class-1');
         if (!modeSwitchButtons.length) return;
         
         modeSwitchButtons.forEach(function(btn) {
@@ -314,7 +314,7 @@ const HeaderModule = (function() {
     }
     
     function initFilterButton() {
-        filterBtn = document.querySelector('.header-filter-button');
+        filterBtn = document.querySelector('.header-filter-button-class-1');
         if (!filterBtn) return;
         
         filterBtn.addEventListener('click', function() {
@@ -358,7 +358,7 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function initMemberButton() {
-        memberBtn = document.querySelector('.header-access-button[data-panel="member"]');
+        memberBtn = document.querySelector('.header-access-member-button-class-1');
         if (!memberBtn) return;
         
         // Click only opens panel (like live site) - close via panel's close button
@@ -392,7 +392,7 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function initAdminButton() {
-        adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
+        adminBtn = document.querySelector('.header-access-admin-button-class-1');
         if (!adminBtn) return;
         
         // Click only opens panel (like live site) - close via panel's close button
@@ -450,7 +450,7 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function initFullscreenButton() {
-        fullscreenBtn = document.querySelector('.header-access-button[data-action="fullscreen"]');
+        fullscreenBtn = document.querySelector('.header-access-fullscreen-button-class-1');
         if (!fullscreenBtn) return;
         
         var docEl = document.documentElement;

@@ -5186,7 +5186,7 @@ const MemberModule = (function() {
     }
 
     function updateHeaderAvatar(user) {
-        var memberBtn = document.querySelector('.header-access-button[data-panel="member"]');
+        var memberBtn = document.querySelector('.header-access-member-button-class-1');
         if (!memberBtn) return;
         
         var avatarImg = memberBtn.querySelector('.header-access-button-avatar');
@@ -5330,7 +5330,7 @@ window.MemberModule = MemberModule;
             var user = getStoredUser();
             if (!user) return;
             
-            var memberBtn = document.querySelector('.header-access-button[data-panel="member"]');
+            var memberBtn = document.querySelector('.header-access-member-button-class-1');
             if (!memberBtn) return;
             
             var avatarImg = memberBtn.querySelector('.header-access-button-avatar');
@@ -5384,7 +5384,7 @@ window.MemberModule = MemberModule;
         
         try {
             var user = getStoredUser();
-            var adminBtn = document.querySelector('.header-access-button[data-panel="admin"]');
+            var adminBtn = document.querySelector('.header-access-admin-button-class-1');
             if (!adminBtn) return;
             
             adminButtonUpdated = true;
