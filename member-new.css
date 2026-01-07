@@ -48,14 +48,14 @@
 }
 
 .member-supporter-message {
-  margin: 0;
+  margin: 0 0 10px 0;
   color: #ddd;
   font-size: 13px;
   line-height: 1.35;
 }
 
 .member-supporter-payment {
-  margin: 0;
+  margin: 0 0 10px 0;
   padding: 10px 10px 0;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -116,7 +116,7 @@
 }
 
 .member-supporterpayment-input {
-  margin: 0;
+  margin: 0 0 10px 0;
   width: 100%;
   height: 44px;
   padding: 0 10px;
@@ -141,7 +141,7 @@
 }
 
 .member-supporter-join-toggle {
-  margin: 10px 0;
+  margin: 0 0 10px 0;
   height: 44px;
   border-color: rgba(59, 130, 245, 0.6);
 }
@@ -156,9 +156,7 @@
   margin-bottom: 10px;
 }
 
-.member-supporter-join-fields > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 /* ============================================================================
    PANEL BASE
@@ -483,9 +481,7 @@
   margin-bottom: 10px;
 }
 
-.member-panel-field:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-panel-field[hidden] {
   display: none;
@@ -516,7 +512,7 @@
 .member-map-settings-container {
   width: 100%;
   max-width: 420px;
-  margin: 0 auto 10px auto;
+  margin: 0 auto 12px auto;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
@@ -788,9 +784,7 @@
   margin-bottom: 10px;
 }
 
-.member-form > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 /* ============================================================================
    MEMBER CREATE STYLES
@@ -823,7 +817,7 @@
 }
 
 .member-create-field {
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
 }
 
 .member-create-select {
@@ -852,9 +846,7 @@
   margin-bottom: 10px;
 }
 
-.member-create-checkout > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-create-price-row {
   display: flex;
@@ -891,9 +883,7 @@
   margin-bottom: 10px;
 }
 
-.member-create-actions > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-button-submit {
   background: var(--website-color, #3b82f5);
@@ -951,9 +941,7 @@
   margin-bottom: 10px;
 }
 
-.member-missing-popover-list > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-missing-popover-item {
   font-size: 13px;
@@ -1129,9 +1117,7 @@
   margin-bottom: 10px;
 }
 
-.member-auth-panel > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-auth-panel--hidden {
   display: none;
@@ -1168,8 +1154,7 @@
 .member-auth-submit {
   width: 100%;
   align-self: stretch;
-  /* Spacing is controlled by the panel gap (10px) */
-  margin-bottom: 0;
+  margin-bottom: 10px;
 }
 
 .member-profile-edit {
@@ -1181,9 +1166,7 @@
   margin-bottom: 10px;
 }
 
-.member-profile-edit > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-profile-save-btn {
   align-self: flex-start;
@@ -1302,9 +1285,7 @@
   margin-bottom: 10px;
 }
 
-.member-profile-drawer-body > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-profile-drawer-body--open {
   display: flex;
@@ -1503,9 +1484,7 @@
   margin-bottom: 10px;
 }
 
-.member-unsaved-dialog > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 .member-unsaved-actions {
   display: flex;
@@ -1532,9 +1511,7 @@
   margin-bottom: 10px;
 }
 
-.member-formpicker-cats > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 /* Formpicker dropdowns container */
 .member-formpicker-dropdowns {
@@ -1546,9 +1523,7 @@
   margin-bottom: 10px;
 }
 
-.member-formpicker-dropdowns > *:last-child {
-  margin-bottom: 0;
-}
+/* Last child keeps margin-bottom to provide container bottom spacing */
 
 /* Formpicker menu (copied from filter-sort-menu pattern) */
 .member-formpicker-menu {
