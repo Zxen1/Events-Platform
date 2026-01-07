@@ -142,7 +142,7 @@ const MemberModule = (function() {
     var siteAvatarFilenames = [];  // all filenames in site avatars folder
     var siteAvatarChoices = [];    // 3 picked: [{ filename, url }]
 
-    // Create Post inline auth gate (under the Create Post form)
+    // Create Post inline auth container (under the Create Post form)
     // IMPORTANT: must be mounted/unmounted on demand (should not exist in DOM when logged in).
     var createAuthWrapper = null;
     var createAuthLoginTab = null;
@@ -254,7 +254,7 @@ const MemberModule = (function() {
         tabPanels = panel.querySelectorAll('.member-tab-panel');
         myPostsPanel = document.getElementById('member-tab-myposts');
         
-        // Auth elements (Profile tab only). NOTE: Create Post also contains a .member-auth (inline gate),
+        // Auth elements (Profile tab only). NOTE: Create Post also contains a .member-auth (inline auth container),
         // so scope this to the profile tab to avoid ambiguous selectors.
         authForm = document.querySelector('#member-tab-profile .member-auth');
         // Login form is now dynamically created - don't look for it in DOM
@@ -310,7 +310,7 @@ const MemberModule = (function() {
         avatarGridRegister = document.getElementById('member-avatar-grid-register');
         avatarGridProfile = document.getElementById('member-avatar-grid-profile');
 
-        // Create Post inline auth gate is mounted on demand (not in HTML).
+        // Create Post inline auth container is mounted on demand (not in HTML).
         createAuthWrapper = null;
         createAuthLoginTab = null;
         createAuthRegisterTab = null;
@@ -519,8 +519,8 @@ const MemberModule = (function() {
             });
         }
 
-        // Create Post inline auth gate is mounted on demand (after the create form is shown),
-        // so its events are attached inside ensureCreateAuthGateMounted().
+        // Create Post inline auth container is mounted on demand (after the create form is shown),
+        // so its events are attached inside ensureCreateAuthMounted().
         
         // Login button click
         var loginBtn = panel.querySelector('.member-login[data-action="login"]');
@@ -2234,7 +2234,7 @@ const MemberModule = (function() {
         // Render terms agreement and submit buttons after checkout options (member-specific)
         renderTermsAndSubmitSection();
 
-        // Show the form wrapper FIRST so any dependent UI (like inline auth gate) can become interactive
+        // Show the form wrapper FIRST so any dependent UI (like inline auth container) can become interactive
         // immediately (no "must click something first" sequencing bug).
         if (formWrapper) formWrapper.hidden = false;
 
@@ -2420,16 +2420,16 @@ const MemberModule = (function() {
         // Find centralized checkout container to append terms and actions inside it
         var checkoutContainer = formFields.querySelector('.member-checkout-container');
         
-        // Terms agreement row
+        // Terms container
         var termsWrapper = document.createElement('div');
-        termsWrapper.className = 'fieldset member-terms-agreement';
+        termsWrapper.className = 'fieldset member-terms';
         
         var checkboxWrapper = document.createElement('label');
-        checkboxWrapper.className = 'member-terms-agreement-label';
+        checkboxWrapper.className = 'member-terms-label';
         
         formTermsCheckbox = document.createElement('input');
         formTermsCheckbox.type = 'checkbox';
-        formTermsCheckbox.className = 'member-terms-agreement-checkbox';
+        formTermsCheckbox.className = 'member-terms-checkbox';
         formTermsCheckbox.checked = termsAgreed;
         formTermsCheckbox.addEventListener('change', function() {
             termsAgreed = formTermsCheckbox.checked;
@@ -2437,12 +2437,12 @@ const MemberModule = (function() {
         });
         
         var labelText = document.createElement('span');
-        labelText.className = 'member-terms-agreement-text';
+        labelText.className = 'member-terms-text';
         labelText.textContent = 'I agree to the ';
         
         var termsLinkInline = document.createElement('a');
         termsLinkInline.href = '#';
-        termsLinkInline.className = 'member-terms-agreement-link';
+        termsLinkInline.className = 'member-terms-link';
         termsLinkInline.textContent = 'Terms and Conditions';
         termsLinkInline.addEventListener('click', function(e) {
             e.preventDefault();
@@ -2728,11 +2728,11 @@ const MemberModule = (function() {
 
         // Logged-out users: mount/unmount inline auth submit UI on demand (no hidden subtree).
         // Only mount once the create form exists/visible.
-        var showGate = (!loggedIn && formWrapper && formWrapper.hidden === false);
-        if (showGate) {
-            ensureCreateAuthGateMounted();
+        var showAuth = (!loggedIn && formWrapper && formWrapper.hidden === false);
+        if (showAuth) {
+            ensureCreateAuthMounted();
         } else {
-            if (createAuthWrapper) unmountCreateAuthGate();
+            if (createAuthWrapper) unmountCreateAuth();
         }
 
         var active = createAuthWrapper ? String(createAuthWrapper.dataset.active || 'login') : 'login';
@@ -2762,7 +2762,7 @@ const MemberModule = (function() {
         // Posting requires a real member session (posts.member_id is NOT NULL).
         // When logged out, show inline Login/Register under the form so drafts are not lost.
         if (!hasValidLoggedInUser()) {
-            showCreateAuthGate(isAdminFree);
+            showCreateAuth(isAdminFree);
             return;
         }
         
@@ -3890,7 +3890,7 @@ const MemberModule = (function() {
     }
 
     /* --------------------------------------------------------------------------
-       CREATE POST INLINE AUTH GATE (Login/Register under create form)
+       CREATE POST INLINE AUTH CONTAINER (Login/Register under create form)
        -------------------------------------------------------------------------- */
 
     function hasValidLoggedInUser() {
@@ -3925,7 +3925,7 @@ const MemberModule = (function() {
         updateSubmitButtonState();
     }
 
-    function unmountCreateAuthGate() {
+    function unmountCreateAuth() {
         try {
             if (createAuthWrapper && createAuthWrapper.parentNode) {
                 createAuthWrapper.parentNode.removeChild(createAuthWrapper);
@@ -4051,7 +4051,7 @@ const MemberModule = (function() {
         loginInputs = [];
     }
 
-    function ensureCreateAuthGateMounted() {
+    function ensureCreateAuthMounted() {
         if (createAuthWrapper) return true;
         if (!formWrapper) return false;
         if (!formFields) return false;
@@ -4238,17 +4238,17 @@ const MemberModule = (function() {
         return true;
     }
 
-    function showCreateAuthGate(isAdminFree) {
-        if (!ensureCreateAuthGateMounted()) return;
+    function showCreateAuth(isAdminFree) {
+        if (!ensureCreateAuthMounted()) return;
         createAuthPendingSubmit = true;
         createAuthPendingSubmitIsAdminFree = !!isAdminFree;
         setCreateAuthPanel('login');
         try { createAuthWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e0) {}
     }
 
-    function hideCreateAuthGate() {
-        // Remove the gate entirely (no hidden auth subtree allowed).
-        unmountCreateAuthGate();
+    function hideCreateAuth() {
+        // Remove the auth container entirely (no hidden auth subtree allowed).
+        unmountCreateAuth();
     }
 
     function ensureCreateAuthRegisterReady() {
@@ -4356,7 +4356,7 @@ const MemberModule = (function() {
             // Disarm immediately so a later auth cannot "surprise-submit".
             createAuthPendingSubmit = false;
             createAuthPendingSubmitIsAdminFree = false;
-            hideCreateAuthGate();
+            hideCreateAuth();
             updateSubmitButtonState();
 
             // Toast: login success (message system)
@@ -4449,7 +4449,7 @@ const MemberModule = (function() {
                 // Disarm immediately so a later auth cannot "surprise-submit".
                 createAuthPendingSubmit = false;
                 createAuthPendingSubmitIsAdminFree = false;
-                hideCreateAuthGate();
+                hideCreateAuth();
                 updateSubmitButtonState();
 
                 // Toast: registration success (message system)
@@ -5093,7 +5093,7 @@ const MemberModule = (function() {
 
             // Create Post inline auth must never be visible while logged in.
             // (Login can happen via Profile tab too, so don't rely on updateSubmitButtonState being called.)
-            try { hideCreateAuthGate(); } catch (e00) {}
+            try { hideCreateAuth(); } catch (e00) {}
             
             // Remove login form from profile tab (it's dynamically created)
             unmountProfileLoginForm();
@@ -5216,7 +5216,7 @@ const MemberModule = (function() {
     function refreshAuthDependentTabs() {
         // Create Post:
         // - Ensure we don't leave stale inline auth UI or stale submit buttons around when auth changes.
-        try { unmountCreateAuthGate(); } catch (e0) {}
+        try { unmountCreateAuth(); } catch (e0) {}
         try { updateSubmitButtonState(); } catch (e1) {}
 
         // My Posts:

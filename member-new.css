@@ -129,10 +129,6 @@
   outline-offset: 2px;
 }
 
-.member-auth-submit[data-action="register"] {
-  width: 100%;
-  /* Use the same sizing/states as `.member-button-submit` (Create Post submit). */
-}
 
 .member-supporter-join-toggle {
   margin: 0 0 10px 0;
@@ -474,8 +470,7 @@
 }
 
 .member-panel-form {
-  padding: 10px;
-  padding-bottom: 100px;
+  padding: 10px 10px 0;
 }
 
 /* ============================================================================
@@ -1004,16 +999,16 @@
 
 
 /* ============================================================================
-   TERMS AGREEMENT ROW (on form)
+   TERMS (checkbox row on form)
    ============================================================================ */
 
-.member-terms-agreement {
-  margin-top: 20px;
-  padding-top: 20px;
+.member-terms {
+  margin-bottom: 10px;
+  padding-top: 10px;
   border-top: 1px solid #333;
 }
 
-.member-terms-agreement-label {
+.member-terms-label {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1022,7 +1017,7 @@
   color: #ffffff;
 }
 
-.member-terms-agreement-checkbox {
+.member-terms-checkbox {
   width: 18px;
   height: 18px;
   cursor: pointer;
@@ -1030,17 +1025,17 @@
   flex-shrink: 0;
 }
 
-.member-terms-agreement-text {
+.member-terms-text {
   color: #ffffff;
 }
 
-.member-terms-agreement-link {
+.member-terms-link {
   color: var(--blue-500);
   text-decoration: underline;
   cursor: pointer;
 }
 
-.member-terms-agreement-link:hover {
+.member-terms-link:hover {
   color: #60a5fa;
 }
 
@@ -1103,9 +1098,6 @@
   margin-bottom: 10px;
 }
 
-.member-auth-submit[data-action="register"] {
-  margin-bottom: 10px;
-}
 
 .member-profile-edit {
   display: flex;
