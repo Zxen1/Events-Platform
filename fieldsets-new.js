@@ -741,6 +741,7 @@ const FieldsetBuilder = (function(){
                 var titleInput = document.createElement('input');
                 titleInput.type = 'text';
                 titleInput.className = 'fieldset-input';
+                titleInput.autocomplete = 'off';
                 applyPlaceholder(titleInput, placeholder);
                 var titleValidation = addInputValidation(titleInput, minLength, maxLength, null);
                 fieldset.appendChild(titleInput);
@@ -827,6 +828,7 @@ const FieldsetBuilder = (function(){
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
                 emailInput.className = 'fieldset-input';
+                if (fieldType === 'public_email') emailInput.autocomplete = 'off';
                 applyPlaceholder(emailInput, placeholder);
                 var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
                 fieldset.appendChild(emailInput);
