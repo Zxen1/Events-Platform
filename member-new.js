@@ -2542,16 +2542,18 @@ const MemberModule = (function() {
         var mode = options.mode || null; // 'login' | 'register' | null
         var out = [];
         if (isSubmittingPost) return out;
-        if (!selectedCategory || !selectedSubcategory) out.push('Category / Subcategory');
         if (!formFields) return out;
 
         // Incomplete/invalid items in on-screen order (DOM order).
         // - Fieldsets own their own completeness via data-complete
         // - Checkout uses .member-checkout-group[data-complete]
+        // - Skip auth container fieldsets (handled separately below)
         var fieldsets = formFields.querySelectorAll('.fieldset[data-complete="false"], .member-checkout-group[data-complete="false"]');
         for (var i = 0; i < fieldsets.length; i++) {
             var fs = fieldsets[i];
             if (!fs || !fs.dataset) continue;
+            // Skip fieldsets inside auth container (we add those separately after terms)
+            if (fs.closest('.member-auth-container')) continue;
             if (fs.classList.contains('member-checkout-group')) {
                 out.push('Checkout Options');
                 continue;
@@ -2569,10 +2571,10 @@ const MemberModule = (function() {
             if (name) out.push(name);
         }
         
-        // Terms appear near the bottom of the form, just before the submit buttons.
+        // Terms appear before auth fields.
         if (!termsAgreed) out.push('Terms and Conditions');
 
-        // Auth fields (login/register) appear AFTER Terms when those panels are in the submit flow.
+        // Auth fields (login/register) appear after Terms.
         if (mode === 'login') {
             try {
                 if (createAuthLoginEmailInput && String(createAuthLoginEmailInput.value || '').trim() === '') {
