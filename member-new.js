@@ -2457,7 +2457,7 @@ const MemberModule = (function() {
         
         // Submit buttons container
         var actionsWrapper = document.createElement('div');
-        actionsWrapper.className = 'member-create-actions';
+        actionsWrapper.className = 'member-checkout-actions-container';
         
         // Main submit button
         submitBtn = document.createElement('button');
@@ -4184,8 +4184,8 @@ const MemberModule = (function() {
         // Insert into checkout container (or fallback to formWrapper)
         var checkoutContainer = document.querySelector('.member-checkout-container');
         if (checkoutContainer) {
-            // Insert before the submit buttons (member-create-actions)
-            var actionsEl = checkoutContainer.querySelector('.member-create-actions');
+            // Insert before the submit buttons (member-checkout-actions-container)
+            var actionsEl = checkoutContainer.querySelector('.member-checkout-actions-container');
             if (actionsEl) {
                 checkoutContainer.insertBefore(wrap, actionsEl);
             } else {

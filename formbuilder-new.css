@@ -1661,7 +1661,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 8px;
+  margin: 0 0 10px 0;
   padding: 0;
 }
 
@@ -1754,7 +1754,7 @@
 }
 
 .member-postform-location-explainer {
-  margin: 0;
+  margin: 0 0 10px 0;
   padding: 0;
   background: transparent;
   font-size: 13px;
