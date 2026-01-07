@@ -828,7 +828,7 @@ const FieldsetBuilder = (function(){
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
                 emailInput.className = 'fieldset-input';
-                if (fieldType === 'public_email') emailInput.autocomplete = 'off';
+                if (key === 'public_email') emailInput.autocomplete = 'off';
                 applyPlaceholder(emailInput, placeholder);
                 var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
                 fieldset.appendChild(emailInput);
