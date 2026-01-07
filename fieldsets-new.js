@@ -1563,6 +1563,30 @@ const FieldsetBuilder = (function(){
                 // Item Name, Currency, Item Price (full width), then list of variants
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
 
+                function ipGetSystemPlusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_plus ? String(sys.icon_plus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function ipGetSystemMinusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_minus ? String(sys.icon_minus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
                 // Item Name sublabel
                 var itemNameSub = document.createElement('div');
                 itemNameSub.className = 'fieldset-itempricing-sublabel-itemname';
@@ -1657,7 +1681,14 @@ const FieldsetBuilder = (function(){
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
                     addBtn.className = 'fieldset-itempricing-button-itemvariantadd';
-                    addBtn.textContent = '+';
+                    var ipPlusIconUrl = ipGetSystemPlusIconUrl();
+                    if (ipPlusIconUrl) {
+                        var ipPlusImg = document.createElement('img');
+                        ipPlusImg.className = 'fieldset-itempricing-button-icon fieldset-itempricing-button-icon--plus';
+                        ipPlusImg.alt = '';
+                        ipPlusImg.src = ipPlusIconUrl;
+                        addBtn.appendChild(ipPlusImg);
+                    }
                     addBtn.addEventListener('click', function() {
                         itemVariantsContainer.appendChild(createItemVariantRow());
                         updateItemVariantButtons();
@@ -1668,7 +1699,14 @@ const FieldsetBuilder = (function(){
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'fieldset-itempricing-button-itemvariantremove';
-                    removeBtn.textContent = '−';
+                    var ipMinusIconUrl = ipGetSystemMinusIconUrl();
+                    if (ipMinusIconUrl) {
+                        var ipMinusImg = document.createElement('img');
+                        ipMinusImg.className = 'fieldset-itempricing-button-icon fieldset-itempricing-button-icon--minus';
+                        ipMinusImg.alt = '';
+                        ipMinusImg.src = ipMinusIconUrl;
+                        removeBtn.appendChild(ipMinusImg);
+                    }
                     removeBtn.addEventListener('click', function() {
                         variantRow.remove();
                         updateItemVariantButtons();

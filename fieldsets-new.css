@@ -772,6 +772,13 @@
     flex-direction: column;
 }
 
+.fieldset-itempricing-button-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
 .fieldset-itempricing-button-itemvariantadd,
 .fieldset-itempricing-button-itemvariantremove {
     width: 36px;
