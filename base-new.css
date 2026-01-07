@@ -220,8 +220,8 @@
 }
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
-  background: var(--website-blue-dark);
-  border-color: var(--website-blue-dark);
+  background: #3b82f599;
+  border-color: #3b82f599;
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"]:hover,
@@ -254,8 +254,8 @@
 }
 .button-class-3[aria-selected="true"],
 .button-class-3.button--selected {
-  background: var(--website-blue-dark);
-  border-color: var(--website-blue-dark);
+  background: #3b82f599;
+  border-color: #3b82f599;
   color: var(--website-white);
 }
 .button-class-3[aria-selected="true"]:hover,
