@@ -3562,6 +3562,10 @@
         minusBtn.type = 'button';
         minusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--minus';
         minusBtn.setAttribute('aria-label', 'Decrease location quantity');
+        var minusIcon = document.createElement('span');
+        minusIcon.className = 'form-location-quantity-btn-icon form-location-quantity-btn-icon--minus';
+        minusIcon.setAttribute('aria-hidden', 'true');
+        minusBtn.appendChild(minusIcon);
         
         var quantityDisplay = document.createElement('span');
         quantityDisplay.className = 'form-location-quantity-display';
@@ -3571,6 +3575,10 @@
         plusBtn.type = 'button';
         plusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--plus';
         plusBtn.setAttribute('aria-label', 'Increase location quantity');
+        var plusIcon = document.createElement('span');
+        plusIcon.className = 'form-location-quantity-btn-icon form-location-quantity-btn-icon--plus';
+        plusIcon.setAttribute('aria-hidden', 'true');
+        plusBtn.appendChild(plusIcon);
         
         quantityControls.appendChild(quantityDisplay);
         quantityControls.appendChild(minusBtn);

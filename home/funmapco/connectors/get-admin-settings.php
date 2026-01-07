@@ -163,6 +163,7 @@ try {
         'icon_save', 'icon_discard', 'icon_close', 'icon_clear', 'icon_favourites',
         'icon_add_image',
         'icon_ticket',
+        'icon_plus', 'icon_minus',
         // Post/Recents panels (empty-state / reminder illustrations)
         'post_panel_empty_image', 'recent_panel_footer_image'
     ];
