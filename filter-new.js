@@ -500,6 +500,8 @@ const FilterModule = (function() {
         if (resetFiltersBtn) {
             resetFiltersBtn.disabled = !active;
         }
+        // Notify header to update filter icon color
+        App.emit('filter:activeState', { active: active });
     }
     
     function setResetCategoriesActive(active) {

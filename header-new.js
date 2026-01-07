@@ -351,6 +351,18 @@ const HeaderModule = (function() {
                 filterBtn.setAttribute('aria-expanded', 'false');
             }
         });
+        
+        // Listen for filter active state changes (show orange icon when filters active)
+        App.on('filter:activeState', function(data) {
+            var filterIcon = document.querySelector('.header-filter-button-icon');
+            if (filterIcon) {
+                if (data.active) {
+                    filterIcon.style.backgroundColor = '#cc6600';
+                } else {
+                    filterIcon.style.backgroundColor = '';
+                }
+            }
+        });
     }
 
     /* --------------------------------------------------------------------------
