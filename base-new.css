@@ -205,6 +205,36 @@
 }
 
 
+/* Button Class 2: Tab button (text, translucent, bordered) */
+.button-class-2 {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--website-white);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.button-class-2:hover {
+  background: var(--website-blue);
+  border-color: var(--website-blue);
+  color: var(--website-white);
+}
+.button-class-2[aria-selected="true"],
+.button-class-2.button--selected {
+  background: var(--website-blue);
+  border-color: var(--website-blue);
+  color: var(--website-white);
+}
+.button-class-2:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 2px;
+}
+
+
 /* ============================================================================
    GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)
    1) SCROLLBARS

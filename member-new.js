@@ -241,7 +241,7 @@ const MemberModule = (function() {
         panelContent = panel.querySelector('.member-panel-content');
         memberPanelBody = panel.querySelector('.member-panel-body');
         closeBtn = panel.querySelector('.member-panel-actions-icon-btn--close');
-        tabButtons = panel.querySelectorAll('.member-tab-bar-button');
+        tabButtons = panel.querySelectorAll('.member-tab-bar > .button-class-2');
         tabPanels = panel.querySelectorAll('.member-tab-panel');
         myPostsPanel = document.getElementById('member-tab-myposts');
         
@@ -251,8 +251,8 @@ const MemberModule = (function() {
         loginFormEl = document.getElementById('memberAuthFormLogin');
         registerFormEl = document.getElementById('memberAuthFormRegister');
         authTabs = authForm ? authForm.querySelector('.member-auth-tabs') : null;
-        loginTab = authForm ? authForm.querySelector('.member-auth-tab[data-target="login"]') : null;
-        registerTab = authForm ? authForm.querySelector('.member-auth-tab[data-target="register"]') : null;
+        loginTab = authForm ? authForm.querySelector('.member-auth-login-button-class-2') : null;
+        registerTab = authForm ? authForm.querySelector('.member-auth-register-button-class-2') : null;
         loginPanel = document.getElementById('member-auth-login');
         registerPanel = document.getElementById('member-auth-register');
         profilePanel = document.getElementById('member-auth-profile');
@@ -1751,7 +1751,7 @@ const MemberModule = (function() {
         // Update tab buttons
         tabButtons.forEach(function(btn) {
             var isSelected = btn.dataset.tab === tabName;
-            btn.classList.toggle('member-tab-bar-button--selected', isSelected);
+            // Button Class 2 uses aria-selected for styling - no class toggle needed
             btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
         });
         
@@ -3577,8 +3577,9 @@ const MemberModule = (function() {
         var isLogin = target === 'login';
         
         // Update subtab buttons
-        if (loginTab) loginTab.classList.toggle('member-auth-tab--selected', isLogin);
-        if (registerTab) registerTab.classList.toggle('member-auth-tab--selected', !isLogin);
+        // Button Class 2 uses aria-selected for styling
+        if (loginTab) loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+        if (registerTab) registerTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
         if (loginTab) loginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
         if (registerTab) registerTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
         
@@ -3947,8 +3948,9 @@ const MemberModule = (function() {
         target = (target === 'register') ? 'register' : 'login';
         var isLogin = target === 'login';
 
-        if (createAuthLoginTab) createAuthLoginTab.classList.toggle('member-auth-tab--selected', isLogin);
-        if (createAuthRegisterTab) createAuthRegisterTab.classList.toggle('member-auth-tab--selected', !isLogin);
+        // Button Class 2 uses aria-selected for styling
+        if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-selected', isLogin ? 'true' : 'false');
+        if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-selected', !isLogin ? 'true' : 'false');
         // These are not role="tab" (to allow click-hold bottom slack), so use aria-pressed for toggle state.
         if (createAuthLoginTab) createAuthLoginTab.setAttribute('aria-pressed', isLogin ? 'true' : 'false');
         if (createAuthRegisterTab) createAuthRegisterTab.setAttribute('aria-pressed', !isLogin ? 'true' : 'false');
@@ -4021,18 +4023,18 @@ const MemberModule = (function() {
 
         var btnLogin = document.createElement('button');
         btnLogin.type = 'button';
-        btnLogin.className = 'member-auth-tab member-auth-tab--selected';
+        btnLogin.className = 'button-class-2 member-auth-login-button-class-2';
         btnLogin.dataset.target = 'login';
-        btnLogin.setAttribute('role', 'button');
-        btnLogin.setAttribute('aria-pressed', 'true');
+        btnLogin.setAttribute('role', 'tab');
+        btnLogin.setAttribute('aria-selected', 'true');
         btnLogin.textContent = 'Log In';
 
         var btnRegister = document.createElement('button');
         btnRegister.type = 'button';
-        btnRegister.className = 'member-auth-tab';
+        btnRegister.className = 'button-class-2 member-auth-register-button-class-2';
         btnRegister.dataset.target = 'register';
-        btnRegister.setAttribute('role', 'button');
-        btnRegister.setAttribute('aria-pressed', 'false');
+        btnRegister.setAttribute('role', 'tab');
+        btnRegister.setAttribute('aria-selected', 'false');
         btnRegister.textContent = 'Register';
 
         tabs.appendChild(btnLogin);

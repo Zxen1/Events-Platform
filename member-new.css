@@ -720,46 +720,11 @@
   display: flex;
   gap: 6px;
 }
-
-.member-tab-bar-button {
-  flex: 1;
-  height: var(--control-h);
-  min-height: var(--control-h);
-  padding: 0 10px 1px;
-  border-radius: 5px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow: none;
-  color: var(--button-text);
-  cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+.member-tab-bar > * {
+  flex: 1;  /* Children fill space equally */
 }
 
-.member-tab-bar-button:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
-  border-color: var(--website-blue-border, #3b82f5);
-  color: var(--button-active-text);
-}
-
-.member-tab-bar-button:active {
-  transform: none;
-}
-
-.member-tab-bar-button--selected {
-  background: var(--website-blue-active-fill, #3b82f599);
-  border-color: var(--website-blue-border, #3b82f5);
-  box-shadow: none;
-  color: var(--button-active-text);
-}
-
-.member-tab-bar-button:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.85);
-  outline-offset: 2px;
-}
+/* Member tab buttons: .member-tab-[name]-button-class-2 (e.g., member-tab-profile-button-class-2) */
 
 /* ============================================================================
    TAB PANELS
@@ -1064,35 +1029,12 @@
   justify-content: center;
   gap: 10px;
 }
-
-.member-auth-tab {
-  flex: 1 1 0;
+.member-auth-tabs > * {
+  flex: 1 1 0;  /* Children fill space equally */
   min-width: 0;
-  height: 36px;
-  border-radius: 5px;
-  border: 1px solid var(--btn);
-  background: var(--btn);
-  color: var(--button-text);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.member-auth-tab:hover {
-  background: var(--website-blue-hover-fill, #3b82f5);
-  border-color: var(--website-blue-border, #3b82f5);
-  color: var(--button-active-text);
-}
-
-.member-auth-tab:active {
-  transform: none;
-}
-
-.member-auth-tab--selected {
-  background: var(--website-blue-active-fill, #3b82f599);
-  border-color: var(--website-blue-border, #3b82f5);
-  color: var(--button-active-text);
-}
+/* Auth subtabs: .member-auth-[name]-button-class-2 (e.g., member-auth-login-button-class-2) */
 
 /* Main login submit button - match logout button styling */
 .member-auth-submit[data-action="login"] {
@@ -1120,10 +1062,6 @@
   margin-bottom: 12px;
 }
 
-.member-auth-tab:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.85);
-  outline-offset: 2px;
-}
 
 .member-auth-panel {
   display: flex;

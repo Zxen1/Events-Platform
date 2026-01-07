@@ -311,7 +311,7 @@ const AdminModule = (function() {
         saveBtn = panel.querySelector('.admin-panel-actions-icon-btn--save');
         discardBtn = panel.querySelector('.admin-panel-actions-icon-btn--discard');
         autosaveCheckbox = document.getElementById('admin-autosave-checkbox');
-        tabButtons = panel.querySelectorAll('.admin-tab-bar-button');
+        tabButtons = panel.querySelectorAll('.admin-tab-bar > .button-class-2');
         tabPanels = panel.querySelectorAll('.admin-tab-panel');
         
         // Enable horizontal scrolling with mouse wheel on tab bar
@@ -589,7 +589,7 @@ const AdminModule = (function() {
         // Update tab buttons
         tabButtons.forEach(function(btn) {
             var isSelected = btn.dataset.tab === tabName;
-            btn.classList.toggle('admin-tab-bar-button--selected', isSelected);
+            // Button Class 2 uses aria-selected for styling - no class toggle needed
             btn.setAttribute('aria-selected', isSelected ? 'true' : 'false');
         });
 
