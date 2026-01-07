@@ -1511,7 +1511,7 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 12px;
+  padding: 10px 12px 0 12px;
   margin-bottom: 12px;
 }
 
@@ -1525,7 +1525,7 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 12px;
+  padding: 10px 12px 0 12px;
   margin-bottom: 12px;
 }
 
@@ -1539,7 +1539,7 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 12px;
+  padding: 10px 12px 0 12px;
   margin-bottom: 12px;
 }
 
@@ -1649,7 +1649,7 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-top: none;
   border-radius: 0 0 5px 5px;
-  padding: 12px;
+  padding: 10px 12px 0 12px;
 }
 
 /* ============================================================================

@@ -16,7 +16,6 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 16px;
 }
 
 .fieldset-header {
@@ -30,7 +29,7 @@
 
 .fieldset {
     width: 100%;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
 }
 
 .fieldset-divider {
@@ -44,7 +43,7 @@
 .fieldset-label {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
     position: relative;
 }
 
@@ -107,7 +106,7 @@
 .fieldset-sublabel {
     font-size: 13px;
     color: #fff;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 /* Input */
@@ -401,7 +400,7 @@
 .fieldset-radio-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .fieldset-radio {
@@ -718,7 +717,7 @@
 }
 
 .fieldset-itempricing-sublabel-itemvariants {
-    margin-top: 10px;
+    /* margin handled by element above */
 }
 
 .fieldset-itempricing-input-itemname,
