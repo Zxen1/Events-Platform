@@ -1608,20 +1608,35 @@
   right: 10px;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255, 0, 0, 0.5); /* DEBUG: visible background */
+  background: transparent;
   border: none;
   color: rgba(255, 255, 255, 0.5);
   width: 36px;
   height: 36px;
   min-width: 36px;
   min-height: 36px;
-  font-size: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: color 0.15s ease;
   padding: 0;
+}
+
+/* Icon via CSS mask (loaded from Bunny CDN) */
+.form-location-header-button-delete::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-clear);
+  mask-image: var(--ui-icon-clear);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .form-location-header-button-delete:hover {
@@ -1674,8 +1689,32 @@
   border-radius: 5px;
   color: #777;
   cursor: pointer;
-  font-size: 18px;
   padding: 0;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Icon via CSS mask (loaded from Bunny CDN) */
+.form-location-quantity-btn::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.form-location-quantity-btn--plus::before {
+  -webkit-mask-image: var(--ui-icon-plus);
+  mask-image: var(--ui-icon-plus);
+}
+
+.form-location-quantity-btn--minus::before {
+  -webkit-mask-image: var(--ui-icon-minus);
+  mask-image: var(--ui-icon-minus);
 }
 
 .form-location-quantity-btn--plus:hover {

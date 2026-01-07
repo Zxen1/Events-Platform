@@ -3561,7 +3561,6 @@
         var minusBtn = document.createElement('button');
         minusBtn.type = 'button';
         minusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--minus';
-        minusBtn.innerHTML = '−';
         minusBtn.setAttribute('aria-label', 'Decrease location quantity');
         
         var quantityDisplay = document.createElement('span');
@@ -3571,7 +3570,6 @@
         var plusBtn = document.createElement('button');
         plusBtn.type = 'button';
         plusBtn.className = 'form-location-quantity-btn form-location-quantity-btn--plus';
-        plusBtn.innerHTML = '+';
         plusBtn.setAttribute('aria-label', 'Increase location quantity');
         
         quantityControls.appendChild(quantityDisplay);
@@ -3657,7 +3655,6 @@
         var deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'form-location-header-button-delete';
-        deleteBtn.innerHTML = '&times;';
         deleteBtn.setAttribute('aria-label', 'Delete ' + locationName);
         if (!showDelete) {
             deleteBtn.style.display = 'none';
