@@ -643,6 +643,7 @@
 .filter-categoryfilter-accordion-body {
   display: none;
   padding: 5px;
+  background: #111111;
 }
 
 .filter-categoryfilter-accordion-body--open {
