@@ -43,7 +43,7 @@
    ============================================================================ */
 
 .member-auth #member-auth-register {
-  gap: 10px;
+  /* No gap - elements use margin-bottom: 12px */
 }
 
 .member-supporter-message {
@@ -463,7 +463,11 @@
 .member-panel-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.member-panel-field:last-child {
+  margin-bottom: 0;
 }
 
 .member-panel-field[hidden] {
@@ -997,7 +1001,6 @@
 .member-auth {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 /* Profile tab: keep layout helpers, but DO NOT force it visible when inactive.
@@ -1028,6 +1031,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+  margin-bottom: 12px;
 }
 .member-auth-tabs > * {
   flex: 1 1 0;  /* Children fill space equally */
@@ -1066,7 +1070,14 @@
 .member-auth-panel {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+}
+
+.member-auth-panel > * {
+  margin-bottom: 12px;
+}
+
+.member-auth-panel > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-auth-panel--hidden {
@@ -1111,7 +1122,14 @@
 .member-profile-edit {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+}
+
+.member-profile-edit > * {
+  margin-bottom: 12px;
+}
+
+.member-profile-edit > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-profile-save-btn {
@@ -1119,7 +1137,7 @@
 }
 
 .member-auth-profile {
-  gap: 18px;
+  /* No gap - elements use margin-bottom: 12px */
 }
 
 .member-auth-tabs--logged-in {
@@ -1127,7 +1145,7 @@
 }
 
 .member-auth-panel--logged-in {
-  gap: 16px;
+  /* No gap - elements use margin-bottom: 12px */
 }
 
 /* ============================================================================
@@ -1224,7 +1242,14 @@
   display: none;
   padding: 12px;
   flex-direction: column;
-  gap: 12px;
+}
+
+.member-profile-drawer-body > * {
+  margin-bottom: 12px;
+}
+
+.member-profile-drawer-body > *:last-child {
+  margin-bottom: 0;
 }
 
 .member-profile-drawer-body--open {
@@ -1364,7 +1389,7 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 0;
+  margin-bottom: 12px;
   padding: 0;
   background: transparent;
 }
