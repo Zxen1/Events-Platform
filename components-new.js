@@ -2151,7 +2151,23 @@ const MemberAuthFieldsetsComponent = (function(){
         var usernameValue = typeof options.usernameValue === 'string' ? options.usernameValue : '';
 
         return loadFromDatabase().then(function() {
+            // Preserve the more button/menu before clearing (they may have been moved into the container)
+            var moreBtnPreserve = document.getElementById('member-profile-more-btn');
+            var moreMenuPreserve = document.getElementById('member-profile-more-menu');
+            var tempFragment = null;
+            if (moreBtnPreserve && containerEl.contains(moreBtnPreserve)) {
+                tempFragment = document.createDocumentFragment();
+                tempFragment.appendChild(moreBtnPreserve);
+                if (moreMenuPreserve) tempFragment.appendChild(moreMenuPreserve);
+            }
+
             containerEl.innerHTML = '';
+
+            // Restore the button/menu to the form (they'll be repositioned after username fieldset is built)
+            if (tempFragment && moreBtnPreserve) {
+                var form = containerEl.closest('form');
+                if (form) form.appendChild(tempFragment);
+            }
 
             function addFieldset(fieldsetKey, patchInput) {
                 var fd = getFieldset(fieldsetKey);

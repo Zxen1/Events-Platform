@@ -754,7 +754,7 @@ const FilterModule = (function() {
         
         // Expired toggle
         expiredInput = container.querySelector('.filter-expired-input');
-        expiredSlider = container.querySelector('.component-big-switch-slider');
+        expiredSlider = container.querySelector('.component-bigorange-switch-slider');
         
         if (expiredInput) {
             expiredInput.addEventListener('change', function() {
@@ -974,7 +974,7 @@ const FilterModule = (function() {
     
     function syncExpiredToggleUi() {
         if (!expiredInput || !expiredSlider) return;
-        expiredSlider.classList.toggle('component-big-switch-slider--on', !!expiredInput.checked);
+        expiredSlider.classList.toggle('component-bigorange-switch-slider--on', !!expiredInput.checked);
     }
 
 

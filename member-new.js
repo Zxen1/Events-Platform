@@ -532,7 +532,7 @@ const MemberModule = (function() {
         }
         
         // Register button click
-        var registerBtn = panel.querySelector('.member-auth-submit[data-action="register"]');
+        var registerBtn = panel.querySelector('.member-button-submit[data-action="register"]');
         if (registerBtn) {
             registerBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -3635,7 +3635,7 @@ const MemberModule = (function() {
         // Ensure the submit button always shows currency context.
         try {
             if (!registerTabPanel) return;
-            var submitBtn = registerTabPanel.querySelector('.member-auth-submit[data-action="register"]');
+            var submitBtn = registerTabPanel.querySelector('.member-button-submit[data-action="register"]');
             if (!submitBtn) return;
             var baseLabel = submitBtn.getAttribute('data-base-label');
             if (!baseLabel) {
@@ -3729,7 +3729,7 @@ const MemberModule = (function() {
     function updateRegisterSubmitButtonState() {
         try {
             if (!registerTabPanel) return;
-            var btn = registerTabPanel.querySelector('.member-auth-submit[data-action="register"]');
+            var btn = registerTabPanel.querySelector('.member-button-submit[data-action="register"]');
             if (!btn) return;
             var complete = isRegisterFormComplete();
             btn.disabled = !complete;
@@ -3847,7 +3847,7 @@ const MemberModule = (function() {
         // Keep submit button label in sync with the current amount.
         try {
             if (!registerTabPanel) return;
-            var submitBtn = registerTabPanel.querySelector('.member-auth-submit[data-action="register"]');
+            var submitBtn = registerTabPanel.querySelector('.member-button-submit[data-action="register"]');
             if (!submitBtn) return;
             var baseLabel = submitBtn.getAttribute('data-base-label');
             if (!baseLabel) {
@@ -4132,7 +4132,7 @@ const MemberModule = (function() {
 
         var loginSubmit = document.createElement('button');
         loginSubmit.type = 'submit';
-        loginSubmit.className = 'member-button-submit member-auth-submit';
+        loginSubmit.className = 'member-button-submit';
         loginSubmit.dataset.action = 'create-auth-login';
         loginSubmit.textContent = 'Log In & Submit';
 
@@ -4164,7 +4164,7 @@ const MemberModule = (function() {
 
         var registerSubmit = document.createElement('button');
         registerSubmit.type = 'submit';
-        registerSubmit.className = 'member-button-submit member-auth-submit';
+        registerSubmit.className = 'member-button-submit';
         registerSubmit.dataset.action = 'create-auth-register';
         registerSubmit.textContent = 'Register & Submit';
 
@@ -4479,7 +4479,7 @@ const MemberModule = (function() {
         }
         
         // Enable/disable submit button
-        var submitBtn = panelEl.querySelector('.member-auth-submit');
+        var submitBtn = panelEl.querySelector('.member-button-submit');
         if (submitBtn) {
             submitBtn.disabled = !isActive;
         }
