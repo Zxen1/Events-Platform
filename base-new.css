@@ -219,14 +219,14 @@
   box-sizing: border-box;
 }
 .button-class-2:hover {
-  background: var(--website-blue);
-  border-color: var(--website-blue);
+  background: var(--website-blue-dark);
+  border-color: var(--website-blue-dark);
   color: var(--website-white);
 }
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
-  background: var(--website-blue);
-  border-color: var(--website-blue);
+  background: var(--website-blue-dark);
+  border-color: var(--website-blue-dark);
   color: var(--website-white);
 }
 .button-class-2:focus-visible {
