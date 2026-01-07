@@ -285,7 +285,7 @@ const FilterModule = (function() {
             if (!panelEl || !contentEl) return;
             if (!panelEl.classList.contains('show')) return;
             if (!e || !e.target) return;
-            if (e.target.closest && e.target.closest('.header-filter-button-class-1')) return;
+            if (e.target.closest && e.target.closest('.header-filter')) return;
             if (contentEl.contains(e.target)) return;
             
             closePanel();

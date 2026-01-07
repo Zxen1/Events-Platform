@@ -519,7 +519,7 @@
   background: rgba(255, 255, 255, 0.5);
 }
 
-/* Admin tab buttons: .admin-tab-[name]-button-class-2 (e.g., admin-tab-settings-button-class-2) */
+/* Admin tab buttons: .admin-tab-[name] (e.g., admin-tab-settings) */
 
 /* ============================================================================
    TAB PANEL

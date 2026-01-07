@@ -314,7 +314,7 @@ const HeaderModule = (function() {
     }
     
     function initFilterButton() {
-        filterBtn = document.querySelector('.header-filter-button-class-1');
+        filterBtn = document.querySelector('.header-filter');
         if (!filterBtn) return;
         
         filterBtn.addEventListener('click', function() {
@@ -370,7 +370,7 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function initMemberButton() {
-        memberBtn = document.querySelector('.header-access-member-button-class-1');
+        memberBtn = document.querySelector('.header-access-member');
         if (!memberBtn) return;
         
         // Click only opens panel (like live site) - close via panel's close button
@@ -404,7 +404,7 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function initAdminButton() {
-        adminBtn = document.querySelector('.header-access-admin-button-class-1');
+        adminBtn = document.querySelector('.header-access-admin');
         if (!adminBtn) return;
         
         // Click only opens panel (like live site) - close via panel's close button
@@ -462,7 +462,7 @@ const HeaderModule = (function() {
        -------------------------------------------------------------------------- */
     
     function initFullscreenButton() {
-        fullscreenBtn = document.querySelector('.header-access-fullscreen-button-class-1');
+        fullscreenBtn = document.querySelector('.header-access-fullscreen');
         if (!fullscreenBtn) return;
         
         var docEl = document.documentElement;

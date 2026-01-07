@@ -251,8 +251,8 @@ const MemberModule = (function() {
         loginFormEl = document.getElementById('memberAuthFormLogin');
         registerFormEl = document.getElementById('memberAuthFormRegister');
         authTabs = authForm ? authForm.querySelector('.member-auth-tabs') : null;
-        loginTab = authForm ? authForm.querySelector('.member-auth-login-button-class-2') : null;
-        registerTab = authForm ? authForm.querySelector('.member-auth-register-button-class-2') : null;
+        loginTab = authForm ? authForm.querySelector('.member-auth-login') : null;
+        registerTab = authForm ? authForm.querySelector('.member-auth-register') : null;
         loginPanel = document.getElementById('member-auth-login');
         registerPanel = document.getElementById('member-auth-register');
         profilePanel = document.getElementById('member-auth-profile');
@@ -537,7 +537,7 @@ const MemberModule = (function() {
         // so its events are attached inside ensureCreateAuthGateMounted().
         
         // Login button click
-        var loginBtn = panel.querySelector('.member-auth-submit[data-action="login"]');
+        var loginBtn = panel.querySelector('.member-login[data-action="login"]');
         if (loginBtn) {
             loginBtn.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -5186,7 +5186,7 @@ const MemberModule = (function() {
     }
 
     function updateHeaderAvatar(user) {
-        var memberBtn = document.querySelector('.header-access-member-button-class-1');
+        var memberBtn = document.querySelector('.header-access-member');
         if (!memberBtn) return;
         
         var avatarImg = memberBtn.querySelector('.header-access-button-avatar');
@@ -5330,7 +5330,7 @@ window.MemberModule = MemberModule;
             var user = getStoredUser();
             if (!user) return;
             
-            var memberBtn = document.querySelector('.header-access-member-button-class-1');
+            var memberBtn = document.querySelector('.header-access-member');
             if (!memberBtn) return;
             
             var avatarImg = memberBtn.querySelector('.header-access-button-avatar');
@@ -5384,7 +5384,7 @@ window.MemberModule = MemberModule;
         
         try {
             var user = getStoredUser();
-            var adminBtn = document.querySelector('.header-access-admin-button-class-1');
+            var adminBtn = document.querySelector('.header-access-admin');
             if (!adminBtn) return;
             
             adminButtonUpdated = true;

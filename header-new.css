@@ -71,7 +71,7 @@
    ============================================================================ */
 
 /* Filter button - position only */
-.header-filter-button-class-1 {
+.header-filter {
   position: relative;
 }
 .header-filter-button-icon {
@@ -114,7 +114,7 @@
 }
 
 /* Mode switch buttons - overrides only */
-/* Individual names: header-modeswitch-recent-button-class-1, header-modeswitch-posts-button-class-1, header-modeswitch-map-button-class-1 */
+/* Individual names: header-modeswitch-recent, header-modeswitch-posts, header-modeswitch-map */
 .header-modeswitch > .button-class-1 {
   transition: background 0.2s, color 0.2s;
 }

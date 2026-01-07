@@ -269,6 +269,42 @@ The naming formula is `.{section}-{name}-{type}-{part}-{subpart}--{state}`.
 
 ---
 
+### Button Classes: Using Registry Classes from base-new.css
+
+**Purpose:** `base-new.css` contains reusable button classes (`button-class-1`, `button-class-2`, `button-class-3`, etc.) that provide standard button behavior and appearance. When applying these to buttons, follow this pattern.
+
+**The Pattern:**
+1. **Name class FIRST:** A simple name for targeting: `{section}-{purpose}` (e.g., `member-login`, `member-tab-profile`)
+2. **Base class SECOND:** The button class from base-new.css (e.g., `button-class-2`, `button-class-3`)
+3. **No redundancy:** Do NOT repeat the button class number in the name class
+
+**Example:**
+```html
+<!-- WRONG: Old classes cause conflicts -->
+<button class="member-button-auth member-auth-submit">Log In</button>
+
+<!-- WRONG: Redundant - button-class-3 repeated in name -->
+<button class="member-login-button-class-3 button-class-3">Log In</button>
+
+<!-- CORRECT: Name first, then base class -->
+<button class="member-login button-class-3">Log In</button>
+<button class="member-tab-profile button-class-2">Profile</button>
+```
+
+**CRITICAL RULES:**
+1. **Name first:** The button name is more important than the class - put it first for readability.
+2. **No global overrides:** The button class provides ALL styling. No other classes should add button styles.
+3. **No legacy classes:** Do not keep old classes like `member-button-auth` that have their own button styles.
+4. **No redundancy:** The name class should NOT include the button-class number.
+4. **Update JS selectors:** When renaming classes, update any JavaScript that queries for the old class names.
+
+**Button Class Summary:**
+- `button-class-1`: Icon button (40x40, translucent, icon via CSS mask)
+- `button-class-2`: Tab button (text, translucent, bordered)
+- `button-class-3`: Submit/action button (text, translucent, bordered)
+
+---
+
 ## ⚠️ CRITICAL: TIMEZONE POLICY (UTC-12) ⚠️
 
 **Purpose:** Give users the maximum benefit of the doubt for all date-related features.
