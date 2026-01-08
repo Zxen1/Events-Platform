@@ -3273,6 +3273,8 @@
 
 .member-postform-location-content--locationwallpaper {
     position: relative;
+    /* When wallpaper is used, ensure short containers still have enough vertical area. */
+    min-height: var(--locationwallpaper-minh, 0px);
 }
 
 /* Lift normal content above wallpaper without impacting menu z-index logic */
@@ -3286,6 +3288,7 @@
     z-index: 0;
     pointer-events: none;
     border-radius: 0 0 5px 5px;
+    opacity: var(--locationwallpaper-opacity, 0.5);
 }
 
 .component-locationwallpaper-mapmount,

@@ -6927,6 +6927,7 @@ const LocationWallpaperComponent = (function() {
     var activeCtrl = null;
     var activeContainerEl = null;
     var docListenerInstalled = false;
+    var didPrewarm = false;
 
     function safeNum(v) {
         var n = parseFloat(String(v || '').trim());
@@ -6985,16 +6986,20 @@ const LocationWallpaperComponent = (function() {
         return null;
     }
 
-    function getStyleForWallpaper() {
-        // Prefer mirroring the current main map style exactly.
-        var main = getMainMap();
-        if (main && typeof main.getStyle === 'function') {
-            try {
-                return JSON.parse(JSON.stringify(main.getStyle()));
-            } catch (e) {}
-        }
-        // Fallback to Mapbox Standard (matches new site defaults).
-        return 'mapbox://styles/mapbox/standard';
+    function getStyleUrlForWallpaper() {
+        // Match MapModule's style selection (member > localStorage > default).
+        var style = 'standard';
+        try {
+            var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
+            if (member && member.map_style) style = member.map_style;
+        } catch (e1) {}
+        try {
+            var storedStyle = localStorage.getItem('map_style');
+            if (storedStyle) style = storedStyle;
+        } catch (e2) {}
+        return (style === 'standard-satellite')
+            ? 'mapbox://styles/mapbox/standard-satellite'
+            : 'mapbox://styles/mapbox/standard';
     }
 
     function getLightingPresetForWallpaper() {
@@ -7055,7 +7060,9 @@ const LocationWallpaperComponent = (function() {
             reducedMotion: prefersReducedMotion(),
             pendingRevealTimer: null,
             resizeObs: null,
-            resizeRaf: 0
+            resizeRaf: 0,
+            prewarmDone: false,
+            minHeightLocked: false
         };
 
         function clearRevealTimers() {
@@ -7161,6 +7168,94 @@ const LocationWallpaperComponent = (function() {
             try { st.resizeObs.observe(contentEl); } catch (e) {}
         }
 
+        function ensureMinHeightLocked() {
+            // One-time: lock min-height to the current width (prevents tiny 36px tall containers).
+            // We intentionally do NOT keep updating this on resize to avoid jitter.
+            if (st.minHeightLocked) return;
+            var w = 0;
+            try { w = contentEl.getBoundingClientRect().width || 0; } catch (e) { w = 0; }
+            w = Math.max(0, Math.round(w));
+            if (!w) {
+                // Try again next frame (layout may not be settled yet on activation).
+                requestAnimationFrame(function() {
+                    if (st.minHeightLocked) return;
+                    var w2 = 0;
+                    try { w2 = contentEl.getBoundingClientRect().width || 0; } catch (e2) { w2 = 0; }
+                    w2 = Math.max(0, Math.round(w2));
+                    if (w2) {
+                        try { contentEl.style.setProperty('--locationwallpaper-minh', w2 + 'px'); } catch (e3) {}
+                        st.minHeightLocked = true;
+                    }
+                });
+                return;
+            }
+            try { contentEl.style.setProperty('--locationwallpaper-minh', w + 'px'); } catch (e4) {}
+            st.minHeightLocked = true;
+        }
+
+        function getPrewarmCamera() {
+            // Use main map camera if available; otherwise a safe default.
+            try {
+                if (window.MapModule && typeof MapModule.getMapState === 'function') {
+                    var s = MapModule.getMapState();
+                    if (s && Array.isArray(s.center) && s.center.length === 2) {
+                        return {
+                            center: s.center,
+                            zoom: Math.max(1, (typeof s.zoom === 'number' ? s.zoom : 2)),
+                            pitch: 0,
+                            bearing: 0
+                        };
+                    }
+                }
+            } catch (e) {}
+            return { center: [0, 0], zoom: 1.5, pitch: 0, bearing: 0 };
+        }
+
+        function ensurePrewarmMap() {
+            // Create a hidden map ASAP on container activation to warm style/tiles/WebGL.
+            if (st.prewarmDone) return;
+            st.prewarmDone = true;
+            if (!window.mapboxgl) return;
+            if (!mapboxgl.accessToken) return;
+
+            // No visual reveal here; we just warm caches.
+            showImage();
+
+            if (!st.map) {
+                mapMount.innerHTML = '';
+                var pre = getPrewarmCamera();
+                try {
+                    st.map = new mapboxgl.Map({
+                        container: mapMount,
+                        style: getStyleUrlForWallpaper(),
+                        projection: 'globe',
+                        center: pre.center,
+                        zoom: pre.zoom,
+                        pitch: pre.pitch || 0,
+                        bearing: pre.bearing || 0,
+                        interactive: false,
+                        attributionControl: false,
+                        renderWorldCopies: false,
+                        antialias: false,
+                        preserveDrawingBuffer: true
+                    });
+                } catch (eMap) {
+                    st.map = null;
+                    return;
+                }
+
+                ensureResizeObserver();
+
+                st.map.once('style.load', function() {
+                    try {
+                        if (st.map && typeof st.map.setConfigProperty === 'function') {
+                            st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
+                        }
+                    } catch (eLP) {}
+                });
+            }
+        }
+
         function ensureMapAndStart(lat, lng) {
             if (!window.mapboxgl) return;
             if (!mapboxgl.accessToken) return;
@@ -7168,14 +7263,12 @@ const LocationWallpaperComponent = (function() {
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var desired = getDefaultCameraForType(locationType, [lng, lat]);
 
-            // If we have a saved camera for this exact lat/lng, prefer it.
+            // If we have a saved camera for this exact lat/lng, resume ONLY the bearing.
+            // Zoom + pitch stay standardized to defaults (user requested 17 zoom / 70° pitch).
             if (st.savedCamera && st.lastLat === lat && st.lastLng === lng) {
-                desired = {
-                    center: st.savedCamera.center || desired.center,
-                    zoom: (typeof st.savedCamera.zoom === 'number') ? st.savedCamera.zoom : desired.zoom,
-                    pitch: (typeof st.savedCamera.pitch === 'number') ? st.savedCamera.pitch : desired.pitch,
-                    bearing: (typeof st.savedCamera.bearing === 'number') ? st.savedCamera.bearing : desired.bearing
-                };
+                if (typeof st.savedCamera.bearing === 'number') {
+                    desired.bearing = st.savedCamera.bearing;
+                }
             }
 
             // Keep the location image visible while we (re)create the map hidden.
@@ -7187,7 +7280,7 @@ const LocationWallpaperComponent = (function() {
                 try {
                     st.map = new mapboxgl.Map({
                         container: mapMount,
-                        style: getStyleForWallpaper(),
+                        style: getStyleUrlForWallpaper(),
                         projection: 'globe',
                         center: desired.center,
                         zoom: Math.max(0, (desired.zoom || 0) - 0.25),
@@ -7238,7 +7331,6 @@ const LocationWallpaperComponent = (function() {
             clearRevealTimers();
 
             if (!st.map) {
-                showImage();
                 return;
             }
 
@@ -7247,39 +7339,49 @@ const LocationWallpaperComponent = (function() {
 
             var canvas = null;
             try { canvas = st.map.getCanvas(); } catch (e) { canvas = null; }
-            if (!canvas || !canvas.toBlob) {
+            if (!canvas) {
                 try { st.map.remove(); } catch (e2) {}
                 st.map = null;
                 showImage();
                 return;
             }
 
+            // IMPORTANT: Do not keep this map alive while encoding an image.
+            // On container switches, two live wallpaper maps would overlap and can spike GPU.
+            // So we synchronously capture a dataURL (fast at container size), then immediately remove the map.
+            var dataUrl = '';
             try {
-                canvas.toBlob(function(blob) {
-                    // Even if blob fails, still remove the map (wallpaper must stop).
-                    if (blob) {
-                        try {
-                            var url = URL.createObjectURL(blob);
-                            setImageUrl(url);
-                        } catch (eURL) {}
-                    }
-                    try { if (st.map) st.map.remove(); } catch (eRM) {}
-                    st.map = null;
-                    showImage();
-                }, 'image/webp', 0.85);
-            } catch (eTB) {
-                try { st.map.remove(); } catch (eRM2) {}
-                st.map = null;
-                showImage();
+                dataUrl = canvas.toDataURL('image/webp', 0.82);
+            } catch (eDU1) {
+                dataUrl = '';
             }
+            if (!dataUrl) {
+                try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (eDU2) { dataUrl = ''; }
+            }
+
+            // Swap to location image if we successfully captured one (otherwise keep previous image if any).
+            if (dataUrl && dataUrl.indexOf('data:image') === 0) {
+                setImageUrl(dataUrl);
+            }
+
+            try { if (st.map) st.map.remove(); } catch (eRM) {}
+            st.map = null;
+            showImage();
         }
 
         function refreshFromFieldsIfActive() {
             // Only start while this container is active.
             if (locationContainerEl.getAttribute('data-active') !== 'true') return;
 
+            // Lock min-height on first activation so the wallpaper has enough vertical room.
+            ensureMinHeightLocked();
+
             var ll = readLatLng(locationContainerEl);
-            if (!ll) return;
+            if (!ll) {
+                // Still prewarm immediately on activation (faster when lat/lng arrives).
+                ensurePrewarmMap();
+                return;
+            }
 
             var lat = ll.lat;
             var lng = ll.lng;
@@ -7358,6 +7460,16 @@ const LocationWallpaperComponent = (function() {
             if (rootEl.__locationWallpaperInstalled) return;
             rootEl.__locationWallpaperInstalled = true;
         } catch (e) {}
+
+        // One-time Mapbox prewarm (if supported) to speed up first map creation.
+        if (!didPrewarm) {
+            didPrewarm = true;
+            try {
+                if (window.mapboxgl && typeof mapboxgl.prewarm === 'function') {
+                    mapboxgl.prewarm();
+                }
+            } catch (_ePW) {}
+        }
 
         // Global: clicking anywhere outside the active location container freezes the wallpaper.
         // We intentionally ignore Google Places dropdown clicks (pac-container lives in <body>).
