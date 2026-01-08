@@ -1212,6 +1212,10 @@
   flex-direction: column;
 }
 
+.member-loginform-container > * {
+  margin-bottom: 10px;
+}
+
 .member-loginform-container .member-panel-field {
   margin-bottom: 10px;
 }
