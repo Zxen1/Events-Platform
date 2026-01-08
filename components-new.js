@@ -7420,6 +7420,9 @@ const LocationWallpaperComponent = (function() {
                 // Map already exists: just jump to new location and keep it live.
                 try { st.map.jumpTo(desired); } catch (eJ2) {}
                 revealMapCrossfade();
+                // If this map came from prewarm, orbit may not have started yet.
+                stopOrbit();
+                startOrbit(desired.zoom);
             }
         }
 

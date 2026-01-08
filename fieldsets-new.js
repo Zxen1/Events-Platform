@@ -277,6 +277,13 @@ const FieldsetBuilder = (function(){
         
         inputElement.addEventListener('keydown', function(e) {
             var key = e && e.key ? e.key : '';
+            // Key fallback for older/odd environments
+            if (!key && e && typeof e.keyCode === 'number') {
+                if (e.keyCode === 40) key = 'ArrowDown';
+                else if (e.keyCode === 38) key = 'ArrowUp';
+                else if (e.keyCode === 13) key = 'Enter';
+                else if (e.keyCode === 27) key = 'Escape';
+            }
             if (!dropdownIsOpen()) return;
             if (!dropdownItems || dropdownItems.length === 0) return;
             if (key === 'ArrowDown') {
@@ -3698,6 +3705,13 @@ const FieldsetBuilder = (function(){
                     
                     inputEl.addEventListener('keydown', function(e) {
                         var key = e && e.key ? e.key : '';
+                        // Key fallback for older/odd environments
+                        if (!key && e && typeof e.keyCode === 'number') {
+                            if (e.keyCode === 40) key = 'ArrowDown';
+                            else if (e.keyCode === 38) key = 'ArrowUp';
+                            else if (e.keyCode === 13) key = 'Enter';
+                            else if (e.keyCode === 27) key = 'Escape';
+                        }
                         if (!dropdownIsOpen()) return;
                         if (!dropdownItems || dropdownItems.length === 0) return;
                         if (key === 'ArrowDown') {
