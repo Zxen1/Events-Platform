@@ -7097,9 +7097,53 @@ const LocationWallpaperComponent = (function() {
     }
 
     function getLightingPresetForWallpaper() {
-        // Wallpaper is a subtle background effect; keep it consistent and predictable.
-        // Force daytime regardless of member/admin preference to control background appearance.
-        return 'day';
+        // Wallpaper is a background effect; keep it consistent and predictable.
+        // Requested: night-time wallpaper.
+        return 'night';
+    }
+
+    function applyWallpaperNoTextNoRoads(map) {
+        if (!map) return;
+        // Prefer Mapbox Standard basemap config toggles when available.
+        // Then, as a safety net, hide any remaining label/road layers by style inspection.
+        try {
+            if (typeof map.setConfigProperty === 'function') {
+                // Hide all labels.
+                try { map.setConfigProperty('basemap', 'showPlaceLabels', false); } catch (_e1) {}
+                try { map.setConfigProperty('basemap', 'showRoadLabels', false); } catch (_e2) {}
+                try { map.setConfigProperty('basemap', 'showPointOfInterestLabels', false); } catch (_e3) {}
+                try { map.setConfigProperty('basemap', 'showTransitLabels', false); } catch (_e4) {}
+                // Hide roads/streets if supported.
+                try { map.setConfigProperty('basemap', 'showRoads', false); } catch (_e5) {}
+                // Hide traffic if supported.
+                try { map.setConfigProperty('basemap', 'showTraffic', false); } catch (_e6) {}
+            }
+        } catch (_eCfg) {}
+
+        // Safety net: hide obvious label + road/traffic layers by ID/type.
+        // This keeps behavior consistent even if config properties change upstream.
+        try {
+            var style = map.getStyle && map.getStyle();
+            var layers = style && style.layers ? style.layers : null;
+            if (!layers || !layers.length) return;
+            for (var i = 0; i < layers.length; i++) {
+                var l = layers[i];
+                if (!l || !l.id) continue;
+                var id = String(l.id).toLowerCase();
+                var isLabel = (l.type === 'symbol') || id.indexOf('label') !== -1 || id.indexOf('place') !== -1 || id.indexOf('poi') !== -1;
+                var isRoadish = (l.type === 'line') && (
+                    id.indexOf('road') !== -1 ||
+                    id.indexOf('street') !== -1 ||
+                    id.indexOf('bridge') !== -1 ||
+                    id.indexOf('tunnel') !== -1 ||
+                    id.indexOf('traffic') !== -1 ||
+                    id.indexOf('transit') !== -1
+                );
+                if (isLabel || isRoadish) {
+                    try { map.setLayoutProperty(l.id, 'visibility', 'none'); } catch (_eHide) {}
+                }
+            }
+        } catch (_eLayers) {}
     }
 
     function attachToLocationContainer(locationContainerEl) {
@@ -7130,6 +7174,9 @@ const LocationWallpaperComponent = (function() {
         // Insert as first child so z-index rules can lift everything else above it.
         contentEl.insertBefore(root, contentEl.firstChild || null);
         contentEl.classList.add('member-postform-location-content--locationwallpaper');
+
+        // Requested: wallpaper at full strength (no transparency).
+        try { contentEl.style.setProperty('--locationwallpaper-opacity', '1'); } catch (_eOp) {}
 
         var st = {
             map: null,
@@ -7352,6 +7399,7 @@ const LocationWallpaperComponent = (function() {
                             st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
                         }
                     } catch (eLP) {}
+                    try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNW1) {}
                 });
             }
         }
@@ -7408,6 +7456,7 @@ const LocationWallpaperComponent = (function() {
                             st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
                         }
                     } catch (eLP) {}
+                    try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNW2) {}
                 });
 
                 // Position at desired camera (no animation) before reveal.
