@@ -579,7 +579,8 @@
     width: 30px;
     height: 30px;
     transform: translate(-50%, -50%);
-    margin-top: -3px;
+    margin-top: -1px;
+    margin-left: 2px;
     display: block;
     object-fit: contain;
     /* Selected checkmark color: blue-600 */
