@@ -60,16 +60,6 @@ const FieldsetBuilder = (function(){
         var dropdown = document.createElement('div');
         dropdown.className = 'fieldset-location-dropdown';
         dropdown.style.display = 'none';
-        dropdown.style.position = 'absolute';
-        dropdown.style.zIndex = '1000';
-        dropdown.style.backgroundColor = '#fff';
-        dropdown.style.border = '1px solid #ccc';
-        dropdown.style.borderRadius = '4px';
-        dropdown.style.maxHeight = '200px';
-        dropdown.style.overflowY = 'auto';
-        dropdown.style.width = '100%';
-        dropdown.style.marginTop = '2px';
-        dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
         
         // Insert dropdown after input element
         var parent = inputElement.parentNode;
@@ -155,24 +145,21 @@ const FieldsetBuilder = (function(){
                     
                     var item = document.createElement('div');
                     item.className = 'fieldset-location-dropdown-item';
-                    item.style.padding = '8px 12px';
-                    item.style.cursor = 'pointer';
-                    item.style.borderBottom = '1px solid #eee';
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
-                    
-                    item.innerHTML = 
-                        '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
-                        (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
-                    
-                    // Hover effect
-                    item.addEventListener('mouseenter', function() {
-                        item.style.backgroundColor = '#f5f5f5';
-                    });
-                    item.addEventListener('mouseleave', function() {
-                        item.style.backgroundColor = 'transparent';
-                    });
+
+                    var mainEl = document.createElement('div');
+                    mainEl.className = 'fieldset-location-dropdown-item-main';
+                    mainEl.textContent = mainText;
+                    item.appendChild(mainEl);
+
+                    if (secondaryText) {
+                        var secEl = document.createElement('div');
+                        secEl.className = 'fieldset-location-dropdown-item-secondary';
+                        secEl.textContent = secondaryText;
+                        item.appendChild(secEl);
+                    }
                     
                     item.addEventListener('click', async function() {
                         try {
@@ -3521,16 +3508,6 @@ const FieldsetBuilder = (function(){
                     var dropdown = document.createElement('div');
                     dropdown.className = 'fieldset-location-dropdown';
                     dropdown.style.display = 'none';
-                    dropdown.style.position = 'absolute';
-                    dropdown.style.zIndex = '1000';
-                    dropdown.style.backgroundColor = '#fff';
-                    dropdown.style.border = '1px solid #ccc';
-                    dropdown.style.borderRadius = '4px';
-                    dropdown.style.maxHeight = '200px';
-                    dropdown.style.overflowY = 'auto';
-                    dropdown.style.width = '100%';
-                    dropdown.style.marginTop = '2px';
-                    dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
                     
                     var parent = inputEl.parentNode;
                     if (parent) {
@@ -3565,23 +3542,21 @@ const FieldsetBuilder = (function(){
                                 
                                 var item = document.createElement('div');
                                 item.className = 'fieldset-location-dropdown-item';
-                                item.style.padding = '8px 12px';
-                                item.style.cursor = 'pointer';
-                                item.style.borderBottom = '1px solid #eee';
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                                 var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
-                                
-                                item.innerHTML = 
-                                    '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
-                                    (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
-                                
-                                item.addEventListener('mouseenter', function() {
-                                    item.style.backgroundColor = '#f5f5f5';
-                                });
-                                item.addEventListener('mouseleave', function() {
-                                    item.style.backgroundColor = 'transparent';
-                                });
+
+                                var mainEl = document.createElement('div');
+                                mainEl.className = 'fieldset-location-dropdown-item-main';
+                                mainEl.textContent = mainText;
+                                item.appendChild(mainEl);
+
+                                if (secondaryText) {
+                                    var secEl = document.createElement('div');
+                                    secEl.className = 'fieldset-location-dropdown-item-secondary';
+                                    secEl.textContent = secondaryText;
+                                    item.appendChild(secEl);
+                                }
                                 
                                 item.addEventListener('click', async function() {
                                     try {
