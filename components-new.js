@@ -7465,6 +7465,32 @@ const LocationWallpaperComponent = (function() {
                 try {
                     if (st.map && typeof st.map.areTilesLoaded === 'function' && !st.map.areTilesLoaded()) return '';
                 } catch (eTl) {}
+
+                // Extra guard: Mapbox can report "loaded" but the drawn frame can still be empty/black.
+                // Sample pixels from a downscaled copy; if it's basically black, treat as failed capture.
+                try {
+                    var tmp = document.createElement('canvas');
+                    tmp.width = 24;
+                    tmp.height = 24;
+                    var ctx = tmp.getContext('2d', { willReadFrequently: true });
+                    if (ctx) {
+                        ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+                        var imgd = ctx.getImageData(0, 0, tmp.width, tmp.height).data;
+                        var sum = 0;
+                        var count = 0;
+                        // sample every ~6 pixels (performance)
+                        for (var i = 0; i < imgd.length; i += 24) {
+                            var r = imgd[i] || 0;
+                            var g = imgd[i + 1] || 0;
+                            var b = imgd[i + 2] || 0;
+                            // perceived luminance (rough)
+                            sum += (0.2126 * r + 0.7152 * g + 0.0722 * b);
+                            count++;
+                        }
+                        var avg = count ? (sum / count) : 0;
+                        if (avg < 3) return '';
+                    }
+                } catch (_ePx) {}
                 var dataUrl = '';
                 try { dataUrl = canvas.toDataURL('image/webp', 0.82); } catch (eDU1) { dataUrl = ''; }
                 if (!dataUrl) {
