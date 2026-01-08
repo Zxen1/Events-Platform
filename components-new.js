@@ -6589,6 +6589,19 @@ const LocationThumbnailPickerComponent = (function() {
                     antialias: false,
                     preserveDrawingBuffer: true
                 });
+
+                // Make mouse-wheel zoom much less "sloppy"/slow.
+                // Default rates are very conservative; bump for desktop mouse wheels.
+                try {
+                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setWheelZoomRate === 'function') {
+                        // Higher rate => faster zoom per wheel tick.
+                        st.map.scrollZoom.setWheelZoomRate(1 / 120);
+                    }
+                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setZoomRate === 'function') {
+                        // Affects "non-wheel" zoom interactions in some environments.
+                        st.map.scrollZoom.setZoomRate(0.9);
+                    }
+                } catch (eZ) {}
                 st.map.once('style.load', function() {
                     applyLighting(st.map, getLightingPreset());
                 });
@@ -6612,8 +6625,13 @@ const LocationThumbnailPickerComponent = (function() {
                     } catch (e0) {}
                 });
 
-                // Simple rotation/pitch control: left-drag rotates + tilts (center remains locked)
+                // Simple rotation/pitch control: left-drag rotates + tilts (center remains locked).
+                // We bind to the Mapbox canvas container (more reliable than the outer mount).
                 (function bindDragRotatePitch() {
+                    var canvasContainer = null;
+                    try { canvasContainer = st.map.getCanvasContainer(); } catch (e0) { canvasContainer = null; }
+                    if (!canvasContainer) return;
+
                     var dragging = false;
                     var startX = 0;
                     var startY = 0;
@@ -6631,26 +6649,7 @@ const LocationThumbnailPickerComponent = (function() {
                         pauseLive('Save or discard');
                     }
 
-                    mapMount.addEventListener('pointerdown', function(e) {
-                        if (!e) return;
-                        if (!st.map || st.locked) return;
-                        if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-                        dragging = true;
-                        startX = e.clientX;
-                        startY = e.clientY;
-                        try { startBearing = st.map.getBearing(); } catch (e0) { startBearing = st.bearing || 0; }
-                        try { startPitch = st.map.getPitch(); } catch (e1) { startPitch = st.pitch || 0; }
-                        markInteracted();
-
-                        try { mapMount.setPointerCapture(e.pointerId); } catch (e2) {}
-                        // Prevent text selection / stray drags (mouse only)
-                        if (e.pointerType === 'mouse') {
-                            try { e.preventDefault(); } catch (e3) {}
-                        }
-                    }, { passive: false });
-
-                    mapMount.addEventListener('pointermove', function(e) {
+                    function onMouseMove(e) {
                         if (!dragging) return;
                         if (!st.map || st.locked) return;
                         var dx = (e.clientX - startX) || 0;
@@ -6660,16 +6659,35 @@ const LocationThumbnailPickerComponent = (function() {
                         st.bearing = bearing;
                         st.pitch = pitch;
                         try { st.map.jumpTo({ bearing: bearing, pitch: pitch }); } catch (e0) {}
-                    });
+                    }
 
-                    function endDrag(e) {
+                    function endDrag() {
                         if (!dragging) return;
                         dragging = false;
-                        try { if (e && typeof e.pointerId !== 'undefined') mapMount.releasePointerCapture(e.pointerId); } catch (e0) {}
+                        try { window.removeEventListener('mousemove', onMouseMove, true); } catch (e0) {}
+                        try { window.removeEventListener('mouseup', endDrag, true); } catch (e1) {}
                     }
-                    mapMount.addEventListener('pointerup', endDrag);
-                    mapMount.addEventListener('pointercancel', endDrag);
-                    mapMount.addEventListener('pointerleave', endDrag);
+
+                    canvasContainer.addEventListener('mousedown', function(e) {
+                        if (!e) return;
+                        if (!st.map || st.locked) return;
+                        // Left mouse only
+                        if (e.button !== 0) return;
+
+                        dragging = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        try { startBearing = st.map.getBearing(); } catch (e0) { startBearing = st.bearing || 0; }
+                        try { startPitch = st.map.getPitch(); } catch (e1) { startPitch = st.pitch || 0; }
+                        markInteracted();
+
+                        // Capture at window to survive pointer leaving the canvas.
+                        try { window.addEventListener('mousemove', onMouseMove, true); } catch (e2) {}
+                        try { window.addEventListener('mouseup', endDrag, true); } catch (e3) {}
+
+                        // Prevent text selection / dragging images
+                        try { e.preventDefault(); } catch (e4) {}
+                    }, { passive: false });
                 })();
             } catch (e) {
                 st.map = null;

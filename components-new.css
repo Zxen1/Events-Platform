@@ -3183,6 +3183,9 @@
     gap: 10px;
     margin-top: -2px;
     margin-bottom: 10px;
+    max-width: 399px; /* dev test: trigger Mapbox small-logo rules (<400px) */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .component-locationthumb-footer-info {
@@ -3211,7 +3214,7 @@
     padding: 2px 4px;
     background: rgba(0,0,0,0.35);
     border-radius: 4px;
-    max-width: 155px;
+    max-width: 120px;
     text-align: right;
 }
 
@@ -3228,10 +3231,8 @@
     display: none;
 }
 
-.component-locationthumb .mapboxgl-ctrl-logo {
-    transform: scale(1.25);
-    transform-origin: bottom right;
-}
+/* Let Mapbox manage its own logo sizing/compact logic. */
+.component-locationthumb .mapboxgl-ctrl-logo { transform: none; }
 
 .component-locationthumb .mapboxgl-ctrl-attrib a {
     color: rgba(255,255,255,0.75);
@@ -3246,6 +3247,9 @@
     aspect-ratio: 2 / 1;
     margin-top: 10px;
     margin-bottom: 10px;
+    max-width: 399px; /* dev test: trigger Mapbox small-logo rules (<400px) */
+    margin-left: auto;
+    margin-right: auto;
     border-radius: 4px;
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.18);
