@@ -7455,22 +7455,71 @@ const LocationWallpaperComponent = (function() {
             // Stop any camera transition immediately so we capture a stable frame.
             try { if (st.map && typeof st.map.stop === 'function') st.map.stop(); } catch (eStop) {}
 
-            // Capture on the next animation frame to avoid freezing a "not yet rendered" frame (black).
-            // This is still fast enough to guarantee we never run two wallpaper maps concurrently.
-            requestAnimationFrame(function() {
-                if (!canvas) return;
+            function captureDataUrl() {
+                if (!canvas) return '';
                 var dataUrl = '';
                 try { dataUrl = canvas.toDataURL('image/webp', 0.82); } catch (eDU1) { dataUrl = ''; }
                 if (!dataUrl) {
                     try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (eDU2) { dataUrl = ''; }
                 }
-                if (dataUrl && dataUrl.indexOf('data:image') === 0) {
-                    setImageUrl(dataUrl);
-                }
+                if (dataUrl && dataUrl.indexOf('data:image') === 0) return dataUrl;
+                return '';
+            }
+
+            function finalizeFreeze(dataUrl) {
+                // If capture fails, keep the previous good image (prevents black).
+                if (dataUrl) setImageUrl(dataUrl);
                 try { if (st.map) st.map.remove(); } catch (eRM) {}
                 st.map = null;
                 showImage();
-            });
+            }
+
+            // If the map hasn't produced a visible frame yet, wait for a render before freezing.
+            if (!st.didReveal) {
+                var didRun = false;
+                try {
+                    st.map.once('render', function() {
+                        if (didRun) return;
+                        didRun = true;
+                        freezeToLocationImage();
+                    });
+                } catch (eW) {}
+                // Fallback: don't hang forever if render never fires for some reason.
+                setTimeout(function() {
+                    if (didRun) return;
+                    didRun = true;
+                    // proceed to capture attempt below (may still fail, but will keep last image)
+                    requestAnimationFrame(function() {
+                        requestAnimationFrame(function() {
+                            finalizeFreeze(captureDataUrl());
+                        });
+                    });
+                }, 500);
+                return;
+            }
+
+            // If tiles aren't ready yet, wait a short moment before capture (still stays fast).
+            var startWait = Date.now();
+            (function waitForTilesThenCapture() {
+                if (!st.map) return;
+                var tilesOk = true;
+                try {
+                    if (typeof st.map.areTilesLoaded === 'function') {
+                        tilesOk = !!st.map.areTilesLoaded();
+                    }
+                } catch (eTL) { tilesOk = true; }
+                var timedOut = (Date.now() - startWait) > 650;
+                if (!tilesOk && !timedOut) {
+                    setTimeout(waitForTilesThenCapture, 60);
+                    return;
+                }
+                // Capture on the next two animation frames to avoid freezing a not-yet-painted frame (black).
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        finalizeFreeze(captureDataUrl());
+                    });
+                });
+            })();
         }
 
         function refreshFromFieldsIfActive() {
