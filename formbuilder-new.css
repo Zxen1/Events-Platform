@@ -1652,6 +1652,7 @@
   border-top: none;
   border-radius: 0 0 5px 5px;
   padding: 10px 12px 10px 12px;
+  position: relative;
 }
 
 /* ============================================================================

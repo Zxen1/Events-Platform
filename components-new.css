@@ -3205,7 +3205,7 @@
     border-radius: 4px;
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(0,0,0,0.10);
+    background: rgba(0,0,0,0.00); /* frame only; map is behind */
     padding: 0;
     position: relative;
     cursor: default;
@@ -3234,14 +3234,72 @@
 .component-locationthumb-placeholder {
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), rgba(255,255,255,0.00) 55%),
-        radial-gradient(circle at 80% 40%, rgba(255,255,255,0.04), rgba(255,255,255,0.00) 60%),
-        rgba(0,0,0,0.12);
+    background: transparent;
+    pointer-events: none;
 }
 
 /* No on-image hint/instructions (tooltip-only). */
 .component-locationthumb-hint { display: none; }
+
+/* Background map mount fills the entire location container */
+.component-locationthumb-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+/* Ensure normal field content sits above the background map */
+.member-postform-location-content > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Dim layer outside the 2:1 frame (same map, lower opacity outside) */
+.component-locationthumb-dimlayer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.component-locationthumb-dim {
+    position: absolute;
+    background: rgba(0,0,0,0.55);
+}
+
+.component-locationthumb-dim--top {
+    left: 0;
+    right: 0;
+    top: 0;
+    height: var(--locationthumb-frame-y, 0px);
+}
+
+.component-locationthumb-dim--bottom {
+    left: 0;
+    right: 0;
+    top: calc(var(--locationthumb-frame-y, 0px) + var(--locationthumb-frame-h, 0px));
+    bottom: 0;
+}
+
+.component-locationthumb-dim--left {
+    left: 0;
+    top: var(--locationthumb-frame-y, 0px);
+    width: var(--locationthumb-frame-x, 0px);
+    height: var(--locationthumb-frame-h, 0px);
+}
+
+.component-locationthumb-dim--right {
+    left: calc(var(--locationthumb-frame-x, 0px) + var(--locationthumb-frame-w, 0px));
+    right: 0;
+    top: var(--locationthumb-frame-y, 0px);
+    height: var(--locationthumb-frame-h, 0px);
+}
+
+/* Mapbox logo padding inside the container */
+.component-locationthumb-bg .mapboxgl-ctrl-bottom-left {
+    margin-left: 8px;
+    margin-bottom: 6px;
+}
 
 
 /* ============================================================================

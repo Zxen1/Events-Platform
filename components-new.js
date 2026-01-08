@@ -6328,9 +6328,11 @@ const AvatarPickerComponent = (function() {
 
 /* ============================================================================
    LOCATION THUMBNAIL PICKER COMPONENT (single tile)
-   TEMPORARILY DISABLED (no map)
-   - Keep the 2:1 rectangle tile + Save/Discard buttons only.
-   - No Mapbox, no animation, no interaction, no capture, no bleed.
+   SIMPLIFIED (single live map + dim outside frame)
+   - One Mapbox map fills the entire location container (no second map, no snapshots).
+   - The existing 2:1 rectangle acts as the frame; outside it is the SAME map at lower opacity.
+   - No member controls (non-interactive). Save/Discard only.
+   - Mapbox accreditation matches main map behavior: attributionControl disabled (no "i"), logo bottom-left.
    ============================================================================ */
 
 const LocationThumbnailPickerComponent = (function() {
@@ -6339,11 +6341,21 @@ const LocationThumbnailPickerComponent = (function() {
         return isFinite(n) ? n : null;
     }
 
+    function getBleedTargetEl(hostEl) {
+        try {
+            return hostEl.closest('.member-postform-location-content') || hostEl.closest('.member-location-container') || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     function attach(hostEl, options) {
         if (!hostEl) throw new Error('[LocationThumbnailPickerComponent] hostEl is required.');
         options = options || {};
 
         var onChange = typeof options.onChange === 'function' ? options.onChange : function() {};
+        var locationType = String(options.locationType || '').trim().toLowerCase();
+        if (!locationType) locationType = 'address';
 
         // DOM
         hostEl.innerHTML = '';
@@ -6355,6 +6367,7 @@ const LocationThumbnailPickerComponent = (function() {
         tile.setAttribute('role', 'group');
         tile.setAttribute('aria-label', 'Location thumbnail selector');
 
+        // Frame is just the rectangle itself; the map is attached to the container, not inside this tile.
         var placeholder = document.createElement('div');
         placeholder.className = 'component-locationthumb-placeholder';
         tile.appendChild(placeholder);
@@ -6395,7 +6408,13 @@ const LocationThumbnailPickerComponent = (function() {
             locked: false,
             lat: null,
             lng: null,
-            label: ''
+            label: '',
+            map: null,
+            mapMount: null,
+            dimLayer: null,
+            ro: null,
+            defaultZoom: (locationType === 'city') ? 12 : 17,
+            defaultPitch: 70
         };
 
         function setCompleteFlag() {
@@ -6437,6 +6456,123 @@ const LocationThumbnailPickerComponent = (function() {
             try { hostEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
         }
 
+        function clearContainerFrameVars() {
+            var target = getBleedTargetEl(hostEl);
+            if (!target || !target.style) return;
+            try {
+                target.style.removeProperty('--locationthumb-frame-x');
+                target.style.removeProperty('--locationthumb-frame-y');
+                target.style.removeProperty('--locationthumb-frame-w');
+                target.style.removeProperty('--locationthumb-frame-h');
+            } catch (e0) {}
+        }
+
+        function updateFrameVars() {
+            var target = getBleedTargetEl(hostEl);
+            if (!target) return;
+            try {
+                var tRect = target.getBoundingClientRect();
+                var frameRect = tile.getBoundingClientRect();
+                var x = Math.round(frameRect.left - tRect.left);
+                var y = Math.round(frameRect.top - tRect.top);
+                var w = Math.round(frameRect.width);
+                var h = Math.round(frameRect.height);
+                target.style.setProperty('--locationthumb-frame-x', x + 'px');
+                target.style.setProperty('--locationthumb-frame-y', y + 'px');
+                target.style.setProperty('--locationthumb-frame-w', w + 'px');
+                target.style.setProperty('--locationthumb-frame-h', h + 'px');
+            } catch (e) {}
+        }
+
+        function ensureBackgroundMap() {
+            if (st.map) return st.map;
+            var target = getBleedTargetEl(hostEl);
+            if (!target) return null;
+            if (!window.mapboxgl) return null;
+
+            // Ensure container is a positioning context (CSS also enforces this).
+            try { if (target.style && !target.style.position) target.style.position = 'relative'; } catch (e0) {}
+
+            // Create mount that fills the entire location container.
+            st.mapMount = document.createElement('div');
+            st.mapMount.className = 'component-locationthumb-bg';
+            target.insertBefore(st.mapMount, target.firstChild);
+
+            // Dim layer outside the frame (same live map, dimmed).
+            st.dimLayer = document.createElement('div');
+            st.dimLayer.className = 'component-locationthumb-dimlayer';
+            st.dimLayer.innerHTML =
+                '<div class="component-locationthumb-dim component-locationthumb-dim--top"></div>' +
+                '<div class="component-locationthumb-dim component-locationthumb-dim--left"></div>' +
+                '<div class="component-locationthumb-dim component-locationthumb-dim--right"></div>' +
+                '<div class="component-locationthumb-dim component-locationthumb-dim--bottom"></div>';
+            target.insertBefore(st.dimLayer, st.mapMount.nextSibling);
+
+            // Build map (match main map attribution behavior)
+            st.map = new mapboxgl.Map({
+                container: st.mapMount,
+                style: 'mapbox://styles/mapbox/standard',
+                projection: 'globe',
+                center: [0, 0],
+                zoom: 1.5,
+                pitch: 0,
+                bearing: 0,
+                interactive: false,        // no member controls
+                attributionControl: false, // no "i"
+                logoPosition: 'bottom-left',
+                renderWorldCopies: false,
+                antialias: false
+            });
+
+            // Keep frame vars up-to-date
+            try {
+                updateFrameVars();
+                if (typeof ResizeObserver !== 'undefined') {
+                    st.ro = new ResizeObserver(function() {
+                        updateFrameVars();
+                        alignMapCenterToFrame();
+                    });
+                    st.ro.observe(target);
+                    st.ro.observe(tile);
+                } else {
+                    window.addEventListener('resize', function() {
+                        updateFrameVars();
+                        alignMapCenterToFrame();
+                    });
+                }
+            } catch (e1) {}
+
+            return st.map;
+        }
+
+        function alignMapCenterToFrame() {
+            if (!st.map) return;
+            if (st.lat === null || st.lng === null) return;
+            var target = getBleedTargetEl(hostEl);
+            if (!target) return;
+            try {
+                updateFrameVars();
+                // Reset camera to the requested defaults, then pan so the chosen lat/lng sits at frame center.
+                st.map.jumpTo({
+                    center: [st.lng, st.lat],
+                    zoom: st.defaultZoom,
+                    pitch: st.defaultPitch,
+                    bearing: 0
+                });
+
+                var tRect = target.getBoundingClientRect();
+                var frameRect = tile.getBoundingClientRect();
+                var containerCenterX = tRect.left + (tRect.width / 2);
+                var containerCenterY = tRect.top + (tRect.height / 2);
+                var frameCenterX = frameRect.left + (frameRect.width / 2);
+                var frameCenterY = frameRect.top + (frameRect.height / 2);
+
+                var dx = Math.round(frameCenterX - containerCenterX);
+                var dy = Math.round(frameCenterY - containerCenterY);
+                if (dx || dy) st.map.panBy([dx, dy], { duration: 0 });
+            } catch (e) {}
+        }
+
         function clear() {
             st.locked = false;
             st.lat = null;
@@ -6446,6 +6582,7 @@ const LocationThumbnailPickerComponent = (function() {
             tile.classList.remove('component-locationthumb-tile--locked');
             footer.style.display = 'none';
             setButtonsEnabled(false, false);
+            clearContainerFrameVars();
             emitChange();
         }
 
@@ -6465,22 +6602,35 @@ const LocationThumbnailPickerComponent = (function() {
             tile.classList.remove('component-locationthumb-tile--empty');
             tile.classList.remove('component-locationthumb-tile--locked');
             footer.style.display = '';
-            // No map, no interaction: allow Save/Discard immediately (Save marks complete).
+            // No member controls: allow Save/Discard immediately (Save marks complete).
             setButtonsEnabled(true, true);
+            ensureBackgroundMap();
+            try {
+                if (st.map && typeof st.map.once === 'function') {
+                    st.map.once('load', function() {
+                        alignMapCenterToFrame();
+                    });
+                }
+            } catch (e0) {}
+            alignMapCenterToFrame();
             emitChange();
         }
 
         function unloadIfNotLocked() {
-            // No map to unload. Keep the UI stable.
-            if (st.locked) return;
-            if (st.lat === null || st.lng === null) {
-                footer.style.display = 'none';
-                setButtonsEnabled(false, false);
-            } else {
-                footer.style.display = '';
-                setButtonsEnabled(true, true);
+            // If container goes inactive, remove the map to avoid background GPU usage.
+            if (st.map) {
+                try { st.map.remove(); } catch (e0) {}
+                st.map = null;
             }
-            emitChange();
+            if (st.ro) {
+                try { st.ro.disconnect(); } catch (e1) {}
+                st.ro = null;
+            }
+            if (st.dimLayer && st.dimLayer.parentNode) st.dimLayer.parentNode.removeChild(st.dimLayer);
+            st.dimLayer = null;
+            if (st.mapMount && st.mapMount.parentNode) st.mapMount.parentNode.removeChild(st.mapMount);
+            st.mapMount = null;
+            clearContainerFrameVars();
         }
 
         saveBtn.addEventListener('click', function(e) {
@@ -6514,6 +6664,7 @@ const LocationThumbnailPickerComponent = (function() {
                 return { locked: st.locked, lat: st.lat, lng: st.lng };
             },
             destroy: function() {
+                unloadIfNotLocked();
                 hostEl.innerHTML = '';
             }
         };
