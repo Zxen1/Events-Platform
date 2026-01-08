@@ -7145,7 +7145,8 @@ const LocationWallpaperComponent = (function() {
             prewarmDone: false,
             minHeightLocked: false,
             didReveal: false,
-            revealTimeout: null
+            revealTimeout: null,
+            stillNonce: 0
         };
 
         function clearRevealTimers() {
@@ -7449,12 +7450,19 @@ const LocationWallpaperComponent = (function() {
             clearRevealTimers();
             if (!st.map) return;
 
+            // Cancel any prior still scheduling for this container.
+            st.stillNonce++;
+            var nonce = st.stillNonce;
+
             var start = Date.now();
-            var minMs = 2200;  // allow detail to refine
-            var maxMs = 7000;  // never hang forever
+            // Human timing: user will likely move on within ~7 seconds.
+            // Give tiles time to sharpen, but ensure we freeze within that window.
+            var minMs = 3400;  // allow detail to refine (avoid blurry first pass)
+            var maxMs = 7200;  // never hang forever
 
             (function tick() {
                 if (!st.map) return;
+                if (nonce !== st.stillNonce) return;
                 var elapsed = Date.now() - start;
 
                 var loadedOk = true;
@@ -7466,6 +7474,7 @@ const LocationWallpaperComponent = (function() {
                 var timedOut = elapsed >= maxMs;
 
                 if (ready || timedOut) {
+                    if (nonce !== st.stillNonce) return;
                     freezeToLocationImage();
                     return;
                 }
@@ -7667,7 +7676,13 @@ const LocationWallpaperComponent = (function() {
             var changed = (st.lastLat !== lat || st.lastLng !== lng);
             st.lastLat = lat;
             st.lastLng = lng;
-            if (changed) st.savedCamera = null;
+            if (changed) {
+                st.savedCamera = null;
+                // Human UX: keep the previous location image visible while the new address resolves,
+                // then cross-fade to the new live map and re-freeze.
+                // Cancel any pending still capture from the previous location.
+                st.stillNonce++;
+            }
 
             ensureMapAndStart(lat, lng);
         }
@@ -7675,6 +7690,7 @@ const LocationWallpaperComponent = (function() {
         function destroy() {
             clearRevealTimers();
             stopOrbit();
+            st.stillNonce++;
             try { if (st.map) st.map.remove(); } catch (e) {}
             st.map = null;
             try {
