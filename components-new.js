@@ -6341,7 +6341,7 @@ const LocationThumbnailPickerComponent = (function() {
         return isFinite(n) ? n : null;
     }
 
-    function getBleedTargetEl(hostEl) {
+    function getContainerEl(hostEl) {
         try {
             return hostEl.closest('.member-postform-location-content') || hostEl.closest('.member-location-container') || null;
         } catch (e) {
@@ -6457,7 +6457,7 @@ const LocationThumbnailPickerComponent = (function() {
         }
 
         function clearContainerFrameVars() {
-            var target = getBleedTargetEl(hostEl);
+            var target = getContainerEl(hostEl);
             if (!target || !target.style) return;
             try {
                 target.style.removeProperty('--locationthumb-frame-x');
@@ -6465,10 +6465,13 @@ const LocationThumbnailPickerComponent = (function() {
                 target.style.removeProperty('--locationthumb-frame-w');
                 target.style.removeProperty('--locationthumb-frame-h');
             } catch (e0) {}
+            try {
+                target.classList.remove('member-postform-location-content--locationthumbmap');
+            } catch (e1) {}
         }
 
         function updateFrameVars() {
-            var target = getBleedTargetEl(hostEl);
+            var target = getContainerEl(hostEl);
             if (!target) return;
             try {
                 var tRect = target.getBoundingClientRect();
@@ -6486,12 +6489,11 @@ const LocationThumbnailPickerComponent = (function() {
 
         function ensureBackgroundMap() {
             if (st.map) return st.map;
-            var target = getBleedTargetEl(hostEl);
+            var target = getContainerEl(hostEl);
             if (!target) return null;
             if (!window.mapboxgl) return null;
 
-            // Ensure container is a positioning context (CSS also enforces this).
-            try { if (target.style && !target.style.position) target.style.position = 'relative'; } catch (e0) {}
+            try { target.classList.add('member-postform-location-content--locationthumbmap'); } catch (e0) {}
 
             // Create mount that fills the entire location container.
             st.mapMount = document.createElement('div');
@@ -6507,6 +6509,9 @@ const LocationThumbnailPickerComponent = (function() {
                 '<div class="component-locationthumb-dim component-locationthumb-dim--right"></div>' +
                 '<div class="component-locationthumb-dim component-locationthumb-dim--bottom"></div>';
             target.insertBefore(st.dimLayer, st.mapMount.nextSibling);
+
+            // Set frame vars immediately so the dim layer doesn't cover the whole container.
+            updateFrameVars();
 
             // Build map (match main map attribution behavior)
             st.map = new mapboxgl.Map({
@@ -6548,7 +6553,7 @@ const LocationThumbnailPickerComponent = (function() {
         function alignMapCenterToFrame() {
             if (!st.map) return;
             if (st.lat === null || st.lng === null) return;
-            var target = getBleedTargetEl(hostEl);
+            var target = getContainerEl(hostEl);
             if (!target) return;
             try {
                 updateFrameVars();

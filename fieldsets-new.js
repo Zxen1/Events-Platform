@@ -1077,11 +1077,6 @@ const FieldsetBuilder = (function(){
                         var latV = parseFloat(String(addrLatInput.value || ''));
                         var lngV = parseFloat(String(addrLngInput.value || ''));
                         var labelV = String(addrInputEl.value || '').trim();
-                        // If the tile is already live/ready, don't reset the camera (prevents "bounce back" while interacting).
-                        try {
-                            var tile = addrThumbHost.querySelector('.component-locationthumb-tile');
-                            if (tile && !tile.classList.contains('component-locationthumb-tile--empty')) return;
-                        } catch (e0) {}
                         if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV, labelV);
                         else addrThumbCtrl.clear();
                     };
@@ -1168,11 +1163,6 @@ const FieldsetBuilder = (function(){
                         var latV = parseFloat(String(cityLatInput.value || ''));
                         var lngV = parseFloat(String(cityLngInput.value || ''));
                         var labelV = String(cityInputEl.value || '').trim();
-                        // If the tile is already live/ready, don't reset the camera (prevents "bounce back" while interacting).
-                        try {
-                            var tile = cityThumbHost.querySelector('.component-locationthumb-tile');
-                            if (tile && !tile.classList.contains('component-locationthumb-tile--empty')) return;
-                        } catch (e0) {}
                         if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV, labelV);
                         else cityThumbCtrl.clear();
                     };
@@ -3514,11 +3504,6 @@ const FieldsetBuilder = (function(){
                         var latV = parseFloat(String(smartLatInput.value || ''));
                         var lngV = parseFloat(String(smartLngInput.value || ''));
                         var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
-                        // If the tile is already live/ready, don't reset the camera (prevents "bounce back" while interacting).
-                        try {
-                            var tile = venueThumbHost.querySelector('.component-locationthumb-tile');
-                            if (tile && !tile.classList.contains('component-locationthumb-tile--empty')) return;
-                        } catch (e0) {}
                         if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
                         else venueThumbCtrl.clear();
                     };

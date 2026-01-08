@@ -3248,8 +3248,12 @@
     z-index: 0;
 }
 
-/* Ensure normal field content sits above the background map */
-.member-postform-location-content > * {
+/* Ensure normal field content sits above the background map (scoped; no global overrides). */
+.member-postform-location-content--locationthumbmap {
+    position: relative;
+}
+
+.member-postform-location-content--locationthumbmap > * {
     position: relative;
     z-index: 1;
 }
