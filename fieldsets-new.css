@@ -574,10 +574,11 @@
 
 .fieldset-customchecklist-row-check {
     position: absolute;
-    left: 0;
-    top: 0;
-    width: 24px;
-    height: 24px;
+    left: 50%;
+    top: 50%;
+    width: 30px;
+    height: 30px;
+    transform: translate(-50%, -50%);
     display: block;
     object-fit: contain;
     /* Selected checkmark color: blue-500 (match existing blue icon treatment) */
