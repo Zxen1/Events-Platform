@@ -7084,23 +7084,8 @@ const LocationWallpaperComponent = (function() {
     }
 
     function getLightingPresetForWallpaper() {
-        // Prefer mirroring the current main map lighting preset.
-        var main = getMainMap();
-        if (main && typeof main.getConfigProperty === 'function') {
-            try {
-                var preset = main.getConfigProperty('basemap', 'lightPreset');
-                if (preset) return preset;
-            } catch (e) {}
-        }
-        // Next: member setting, then localStorage, then 'day' default (same as MapModule).
-        try {
-            var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
-            if (member && member.map_lighting) return member.map_lighting;
-        } catch (e) {}
-        try {
-            var stored = localStorage.getItem('map_lighting');
-            if (stored) return stored;
-        } catch (e) {}
+        // Wallpaper is a subtle background effect; keep it consistent and predictable.
+        // Force daytime regardless of member/admin preference to control background appearance.
         return 'day';
     }
 
@@ -7325,7 +7310,9 @@ const LocationWallpaperComponent = (function() {
                         attributionControl: false,
                         renderWorldCopies: false,
                         antialias: false,
-                        pixelRatio: 1,
+                        // Lower than default devicePixelRatio to reduce GPU load for wallpaper.
+                        // If Mapbox clamps this internally, it will behave like 1.
+                        pixelRatio: 0.75,
                         preserveDrawingBuffer: true
                     });
                 } catch (eMap) {
@@ -7379,7 +7366,7 @@ const LocationWallpaperComponent = (function() {
                         attributionControl: false,
                         renderWorldCopies: false,
                         antialias: false,
-                        pixelRatio: 1,
+                        pixelRatio: 0.75,
                         preserveDrawingBuffer: true
                     });
                 } catch (eMap) {
