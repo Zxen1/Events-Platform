@@ -6328,13 +6328,9 @@ const AvatarPickerComponent = (function() {
 
 /* ============================================================================
    LOCATION THUMBNAIL PICKER COMPONENT (single tile)
-   Used inside location fieldsets (Venue / City / Address).
-   - Single 2:1 tile (full width)
-   - No visible on-image controls (mouse/touch gestures only)
-   - Short auto-rotate on initial load; any user interaction stops animation
-   - Tap/click to lock (captures to image + shuts down map). Tap/click again to choose again.
-   - Outputs camera JSON (center/zoom/pitch/bearing/style/lighting) to parent via onChange
-   Class pattern: component-locationthumb-{part}--{state}
+   TEMPORARILY DISABLED (no map)
+   - Keep the 2:1 rectangle tile + Save/Discard buttons only.
+   - No Mapbox, no animation, no interaction, no capture, no bleed.
    ============================================================================ */
 
 const LocationThumbnailPickerComponent = (function() {
@@ -6343,59 +6339,29 @@ const LocationThumbnailPickerComponent = (function() {
         return isFinite(n) ? n : null;
     }
 
-    function getLightingPreset() {
-        try {
-            var v = localStorage.getItem('map_lighting');
-            if (v && typeof v === 'string' && v.trim()) return v.trim();
-        } catch (e) {}
-        return 'dusk';
-    }
-
-    function applyLighting(m, preset) {
-        if (!m || !preset) return;
-        try {
-            if (typeof m.setConfigProperty === 'function') {
-                m.setConfigProperty('basemap', 'lightPreset', preset);
-            } else if (typeof m.setConfig === 'function') {
-                m.setConfig({ basemap: { lightPreset: preset } });
-            }
-        } catch (e) {}
-    }
-
     function attach(hostEl, options) {
         if (!hostEl) throw new Error('[LocationThumbnailPickerComponent] hostEl is required.');
         options = options || {};
 
         var onChange = typeof options.onChange === 'function' ? options.onChange : function() {};
-        var locationType = String(options.locationType || '').trim().toLowerCase();
-        if (!locationType) locationType = 'address';
 
         // DOM
         hostEl.innerHTML = '';
         var root = document.createElement('div');
         root.className = 'component-locationthumb';
 
-        // Main tile (NOT a button) so the Mapbox canvas can receive pointer events for mouse/touch control.
         var tile = document.createElement('div');
         tile.className = 'component-locationthumb-tile component-locationthumb-tile--empty';
         tile.setAttribute('role', 'group');
         tile.setAttribute('aria-label', 'Location thumbnail selector');
 
-        var mapMount = document.createElement('div');
-        mapMount.className = 'component-locationthumb-map';
-        tile.appendChild(mapMount);
-
-        var imgEl = document.createElement('img');
-        imgEl.className = 'component-locationthumb-image';
-        imgEl.alt = '';
-        imgEl.style.display = 'none';
-        tile.appendChild(imgEl);
-
-        // No on-screen hint/instructions (user prefers tooltip-only messaging).
+        var placeholder = document.createElement('div');
+        placeholder.className = 'component-locationthumb-placeholder';
+        tile.appendChild(placeholder);
 
         root.appendChild(tile);
 
-        // Footer row (under the tile): location/coords (left) + Save/Discard buttons (right)
+        // Footer (buttons). Fieldsets mount this into the lat/lng status row.
         var footer = document.createElement('div');
         footer.className = 'component-locationthumb-footer';
         footer.style.display = 'none';
@@ -6403,7 +6369,6 @@ const LocationThumbnailPickerComponent = (function() {
         var footerActions = document.createElement('div');
         footerActions.className = 'component-locationthumb-footer-actions';
 
-        // Reuse member panel icon button styling (same icons as panel header)
         var saveBtn = document.createElement('button');
         saveBtn.type = 'button';
         saveBtn.className = 'member-panel-actions-icon-btn member-panel-actions-icon-btn--save member-panel-actions-icon-btn--disabled';
@@ -6426,70 +6391,15 @@ const LocationThumbnailPickerComponent = (function() {
         root.appendChild(footer);
         hostEl.appendChild(root);
 
-        // State
         var st = {
-            map: null,
-            orbiting: false,
-            orbitHandler: null,
-            isAutoAnimating: false,
             locked: false,
             lat: null,
             lng: null,
-            label: '',
-            defaultZoom: (locationType === 'city') ? 12 : 17,
-            defaultPitch: 70,
-            zoom: (locationType === 'city') ? 12 : 17,
-            pitch: 70,
-            bearing: 0,
-            requestId: 0,
-            demoTimer: 0,
-            userControlled: false,
-            lockedBlob: null,
-            lockedUrl: '',
-            lastLockedBlob: null,
-            lastLockedUrl: '',
-            bleedUrl: '',
-            didInteractRecently: false,
-            interactTimer: 0
+            label: ''
         };
 
         function setCompleteFlag() {
             try { hostEl.dataset.complete = st.locked ? 'true' : 'false'; } catch (e) {}
-        }
-
-        function getBleedTargetEl() {
-            try {
-                // Prefer the location container content area (not the header).
-                return hostEl.closest('.member-postform-location-content') || hostEl.closest('.member-location-container') || null;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        function cssUrlValue(u) {
-            var s = String(u || '').trim();
-            if (!s) return 'none';
-            // Basic escaping for quotes.
-            return 'url("' + s.replace(/"/g, '\\"') + '")';
-        }
-
-        function setBleedImage(urlOrNone) {
-            var target = getBleedTargetEl();
-            if (!target || !target.style) return;
-            var cssV = cssUrlValue(urlOrNone);
-            try {
-                if (cssV === 'none') target.style.removeProperty('--locationthumb-bleed-image');
-                else target.style.setProperty('--locationthumb-bleed-image', cssV);
-            } catch (e0) {}
-        }
-
-        function clearBleed() {
-            // Clear CSS var and revoke any preview URL we created.
-            setBleedImage('');
-            if (st.bleedUrl && st.bleedUrl !== st.lockedUrl) {
-                try { URL.revokeObjectURL(st.bleedUrl); } catch (e0) {}
-            }
-            st.bleedUrl = '';
         }
 
         function setButtonsEnabled(saveEnabled, discardEnabled) {
@@ -6513,227 +6423,27 @@ const LocationThumbnailPickerComponent = (function() {
             } catch (e0) {}
         }
 
-        function updateFooterInfo() {
-            // Intentionally blank: Google Places already shows lat/lng in the fieldset UI.
-        }
-
         function emitChange() {
             setCompleteFlag();
-            updateFooterInfo();
             onChange({
                 locked: st.locked,
                 lat: st.lat,
                 lng: st.lng,
-                zoom: st.zoom,
-                pitch: st.pitch,
-                bearing: st.bearing,
-                camera: (st.lat !== null && st.lng !== null && st.locked) ? {
-                    center: [st.lng, st.lat],
-                    zoom: st.zoom,
-                    pitch: st.pitch,
-                    bearing: st.bearing,
-                    style: 'mapbox://styles/mapbox/standard',
-                    lighting: getLightingPreset()
-                } : null,
-                imageBlob: st.lockedBlob || null,
-                imagePreviewUrl: st.lockedUrl || '',
+                camera: null,
+                imageBlob: null,
+                imagePreviewUrl: '',
                 label: st.label || ''
             });
             try { hostEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
         }
 
-        function stopOrbit() {
-            if (!st.map) return;
-            st.orbiting = false;
-            st.isAutoAnimating = false;
-            if (st.orbitHandler) {
-                try { st.map.off('moveend', st.orbitHandler); } catch (e) {}
-            }
-            st.orbitHandler = null;
-            try { st.map.stop(); } catch (e2) {}
-        }
-
-        function pauseLive(reasonText) {
-            // Stop motion but keep current frame visible (does not lock/complete).
-            try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
-            st.demoTimer = 0;
-            stopOrbit();
-            emitChange();
-        }
-
-        function unloadIfNotLocked() {
-            if (st.locked) return;
-            try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
-            st.demoTimer = 0;
-            stopOrbit();
-            clearBleed();
-            if (st.map) {
-                try { st.map.remove(); } catch (e1) {}
-                st.map = null;
-            }
-            // Keep the tile visible but revert to "needs load" state.
-            tile.classList.add('component-locationthumb-tile--empty');
-            tile.classList.remove('component-locationthumb-tile--loading');
-            tile.classList.remove('component-locationthumb-tile--ready');
-            tile.classList.remove('component-locationthumb-tile--locked');
-            imgEl.style.display = 'none';
-            mapMount.style.display = '';
-            footer.style.display = 'none';
-            setButtonsEnabled(false, false);
-            emitChange();
-        }
-
-        function startOrbit() {
-            if (!st.map) return;
-            stopOrbit();
-            st.orbiting = true;
-            st.isAutoAnimating = false;
-            st.orbitHandler = function() {
-                if (!st.orbiting || !st.map || st.locked) return;
-                // The previous auto animation has finished (this handler is called on moveend).
-                st.isAutoAnimating = false;
-                var b = 0;
-                try { b = st.map.getBearing(); } catch (e) { b = st.bearing || 0; }
-                st.bearing = (b + 2) % 360;
-                try {
-                    // Mark that the upcoming rotatestart is programmatic (avoid self-cancelling orbit).
-                    st.isAutoAnimating = true;
-                    st.map.easeTo({
-                        bearing: st.bearing,
-                        duration: 250,
-                        easing: function(t) { return t; }
-                    });
-                } catch (e2) {}
-            };
-            try { st.map.on('moveend', st.orbitHandler); } catch (e3) {}
-            try { st.orbitHandler(); } catch (e4) {}
-        }
-
-        function scheduleBleedCapture() {
-            if (!st.map || st.locked) return;
-            if (st._bleedTimer) return;
-            st._bleedTimer = setTimeout(function() {
-                st._bleedTimer = 0;
-                try {
-                    var canvas = st.map.getCanvas && st.map.getCanvas();
-                    if (!canvas || !canvas.width || !canvas.height) return;
-                    var bw = Math.min(520, canvas.width || 0);
-                    var bh = Math.round(bw / 2);
-                    var out = document.createElement('canvas');
-                    out.width = bw;
-                    out.height = bh;
-                    var ctx = out.getContext('2d');
-                    if (!ctx) return;
-                    // Center-crop to 2:1
-                    var srcW = canvas.width;
-                    var srcH = canvas.height;
-                    var cropW = srcW;
-                    var cropH = Math.round(srcW / 2);
-                    if (cropH > srcH) {
-                        cropH = srcH;
-                        cropW = Math.round(srcH * 2);
-                    }
-                    var sx = Math.max(0, Math.round((srcW - cropW) / 2));
-                    var sy = Math.max(0, Math.round((srcH - cropH) / 2));
-                    ctx.drawImage(canvas, sx, sy, cropW, cropH, 0, 0, bw, bh);
-                    out.toBlob(function(blob) {
-                        if (!blob) return;
-                        if (st.bleedUrl && st.bleedUrl !== st.lockedUrl) {
-                            try { URL.revokeObjectURL(st.bleedUrl); } catch (e0) {}
-                        }
-                        try { st.bleedUrl = URL.createObjectURL(blob); } catch (e1) { st.bleedUrl = ''; }
-                        if (!st.locked) setBleedImage(st.bleedUrl);
-                    }, 'image/jpeg', 0.6);
-                } catch (eBleed) {}
-            }, 120);
-        }
-
-        function ensureMap() {
-            if (st.map) return st.map;
-            if (!window.mapboxgl) return null;
-            try {
-                st.map = new mapboxgl.Map({
-                    container: mapMount,
-                    style: 'mapbox://styles/mapbox/standard',
-                    projection: 'globe',
-                    center: [0, 0],
-                    zoom: 1.5,
-                    pitch: 0,
-                    bearing: 0,
-                    // Match the main map interaction model (Mapbox defaults).
-                    // We only specify non-interaction options here.
-                    interactive: true,
-                    // We'll add a compact attribution control in a safer position.
-                    attributionControl: false,
-                    logoPosition: 'bottom-left',
-                    renderWorldCopies: false,
-                    antialias: false,
-                    preserveDrawingBuffer: true
-                });
-                
-                // Faster wheel zoom (keeps the same control model, just more responsive).
-                try {
-                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setWheelZoomRate === 'function') {
-                        st.map.scrollZoom.setWheelZoomRate(1 / 45);
-                    }
-                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setZoomRate === 'function') {
-                        st.map.scrollZoom.setZoomRate(1.35);
-                    }
-                } catch (eZ) {}
-                st.map.once('style.load', function() {
-                    applyLighting(st.map, getLightingPreset());
-                });
-
-                // Match the main map: do not add Mapbox AttributionControl (no "i" button).
-
-                // Any user interaction kills the auto-rotation immediately.
-                ['dragstart','zoomstart','rotatestart','pitchstart'].forEach(function(ev){
-                    try {
-                        st.map.on(ev, function() {
-                            if (ev === 'rotatestart' && st.isAutoAnimating) return;
-                            st.userControlled = true;
-                            try { if (st.interactTimer) clearTimeout(st.interactTimer); } catch (e0) {}
-                            st.didInteractRecently = true;
-                            st.interactTimer = setTimeout(function() { st.didInteractRecently = false; }, 350);
-                            setButtonsEnabled(true, true);
-                            pauseLive('Save or discard');
-                        });
-                    } catch (e0) {}
-                });
-
-                // Keep the container "bleed" in sync with the live map view.
-                try {
-                    st.map.on('moveend', function() { scheduleBleedCapture(); });
-                } catch (e1) {}
-
-                // NOTE: We intentionally do NOT remap gestures here.
-                // The thumbnail must behave like the main map; only pan is disabled to keep center locked.
-            } catch (e) {
-                st.map = null;
-            }
-            return st.map;
-        }
-
         function clear() {
-            st.requestId++;
-            try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
-            st.demoTimer = 0;
-            try { if (st.interactTimer) clearTimeout(st.interactTimer); } catch (e1) {}
-            st.interactTimer = 0;
-            st.didInteractRecently = false;
-            // Reset state but keep the DOM in place.
             st.locked = false;
             st.lat = null;
             st.lng = null;
             st.label = '';
-            st.bearing = 0;
-            clearBleed();
             tile.classList.add('component-locationthumb-tile--empty');
-            tile.classList.remove('component-locationthumb-tile--loading');
-            tile.classList.remove('component-locationthumb-tile--ready');
             tile.classList.remove('component-locationthumb-tile--locked');
-            tile.setAttribute('aria-pressed', 'false');
-            stopOrbit();
             footer.style.display = 'none';
             setButtonsEnabled(false, false);
             emitChange();
@@ -6747,218 +6457,63 @@ const LocationThumbnailPickerComponent = (function() {
                 return;
             }
 
-            st.requestId++;
-            var myReq = st.requestId;
-
             st.lat = lat;
             st.lng = lng;
             st.label = (typeof label === 'string') ? label : String(label || '');
-            st.locked = false;
-            st.bearing = 0;
-            st.userControlled = false;
-            st.zoom = st.defaultZoom;
-            st.pitch = st.defaultPitch;
 
+            st.locked = false;
             tile.classList.remove('component-locationthumb-tile--empty');
             tile.classList.remove('component-locationthumb-tile--locked');
-            tile.classList.add('component-locationthumb-tile--loading');
-            tile.classList.remove('component-locationthumb-tile--ready');
             footer.style.display = '';
-            setButtonsEnabled(false, true); // Save requires a user interaction; discard is allowed
-
-            var m = ensureMap();
-            if (!m) return;
-
-            stopOrbit();
-            try {
-                m.stop();
-                m.easeTo({
-                    center: [lng, lat],
-                    zoom: st.zoom,
-                    pitch: st.pitch,
-                    bearing: 0,
-                    duration: 2000,
-                    essential: true
-                });
-            } catch (e) {}
-
-            try {
-                m.once('idle', function() {
-                    // Ignore stale completions (user changed location again).
-                    if (myReq !== st.requestId) return;
-                    tile.classList.remove('component-locationthumb-tile--loading');
-                    tile.classList.add('component-locationthumb-tile--ready');
-
-                    // Sync bleed to the live view after the first render.
-                    scheduleBleedCapture();
-
-                    // Short demo orbit only until the user interacts.
-                    startOrbit();
-                    try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
-                    st.demoTimer = setTimeout(function() {
-                        if (myReq !== st.requestId) return;
-                        if (st.locked) return;
-                        if (st.userControlled) return;
-                        pauseLive();
-                    }, 2000);
-                    setButtonsEnabled(false, true);
-                    emitChange();
-                });
-            } catch (e2) {}
+            // No map, no interaction: allow Save/Discard immediately (Save marks complete).
+            setButtonsEnabled(true, true);
+            emitChange();
         }
 
-        function getIsLocked() {
-            return !!st.locked;
-        }
-
-        function syncFromMapCamera() {
-            if (!st.map) return;
-            try {
-                st.zoom = st.map.getZoom();
-                st.pitch = st.map.getPitch();
-                st.bearing = st.map.getBearing();
-            } catch (e) {}
-        }
-
-        // Capture + lock as an image and shut down the map completely.
-        function captureAndLock() {
-            if (!st.map || st.lat === null || st.lng === null) return;
-            stopOrbit();
-            syncFromMapCamera();
-
-            // Capture: center crop to 2:1
-            var canvas = null;
-            try { canvas = st.map.getCanvas(); } catch (e0) { canvas = null; }
-            if (!canvas) return;
-
-            var srcW = canvas.width || 0;
-            var srcH = canvas.height || 0;
-            if (!srcW || !srcH) return;
-
-            var targetW = Math.min(1000, srcW);
-            var targetH = Math.round(targetW / 2);
-
-            var cropW = srcW;
-            var cropH = Math.round(srcW / 2);
-            if (cropH > srcH) {
-                cropH = srcH;
-                cropW = Math.round(srcH * 2);
+        function unloadIfNotLocked() {
+            // No map to unload. Keep the UI stable.
+            if (st.locked) return;
+            if (st.lat === null || st.lng === null) {
+                footer.style.display = 'none';
+                setButtonsEnabled(false, false);
+            } else {
+                footer.style.display = '';
+                setButtonsEnabled(true, true);
             }
-            var sx = Math.max(0, Math.round((srcW - cropW) / 2));
-            var sy = Math.max(0, Math.round((srcH - cropH) / 2));
-
-            var out = document.createElement('canvas');
-            out.width = targetW;
-            out.height = targetH;
-            var ctx = out.getContext('2d');
-            if (!ctx) return;
-            try {
-                ctx.drawImage(canvas, sx, sy, cropW, cropH, 0, 0, targetW, targetH);
-            } catch (e1) {}
-
-            // Stash previous locked image for cancel.
-            if (st.lockedUrl) {
-                st.lastLockedUrl = st.lockedUrl;
-                st.lastLockedBlob = st.lockedBlob;
-            }
-
-            out.toBlob(function(blob) {
-                if (!blob) return;
-                if (st.lockedUrl) {
-                    try { URL.revokeObjectURL(st.lockedUrl); } catch (e2) {}
-                }
-                st.lockedBlob = blob;
-                try { st.lockedUrl = URL.createObjectURL(blob); } catch (e3) { st.lockedUrl = ''; }
-
-                st.locked = true;
-                tile.classList.add('component-locationthumb-tile--locked');
-                imgEl.src = st.lockedUrl || '';
-                imgEl.style.display = '';
-                mapMount.style.display = 'none';
-                setButtonsEnabled(false, true);
-
-                // Use the saved image for the full-container bleed wallpaper.
-                setBleedImage(st.lockedUrl || '');
-
-                // Shutdown map completely
-                try { st.map.remove(); } catch (e4) {}
-                st.map = null;
-
-                emitChange();
-            }, 'image/jpeg', 0.85);
+            emitChange();
         }
 
-        // Save / Discard buttons (under the tile)
         saveBtn.addEventListener('click', function(e) {
             try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
             if (saveBtn.disabled) return;
-            captureAndLock();
+            st.locked = true;
+            tile.classList.add('component-locationthumb-tile--locked');
+            setButtonsEnabled(false, true);
+            emitChange();
         });
 
         discardBtn.addEventListener('click', function(e) {
             try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-
-            function doChooseAgain() {
-                if (st.lockedUrl) {
-                    try { URL.revokeObjectURL(st.lockedUrl); } catch (e1) {}
-                }
-                st.lockedUrl = '';
-                st.lockedBlob = null;
-                st.locked = false;
-                imgEl.style.display = 'none';
-                mapMount.style.display = '';
-                tile.classList.remove('component-locationthumb-tile--locked');
-                clearBleed();
-                // Re-load current location if available
-                if (st.lat !== null && st.lng !== null) setLocation(st.lat, st.lng, st.label);
-                else clear();
-            }
-
-            if (st.locked) {
-                if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
-                    ConfirmDialogComponent.show({
-                        titleText: 'Discard this image?',
-                        messageText: 'This will allow you to choose a new view.',
-                        confirmLabel: 'Discard',
-                        cancelLabel: 'Cancel',
-                        focusCancel: true
-                    }).then(function(confirmed) {
-                        if (confirmed) doChooseAgain();
-                    });
-                } else {
-                    doChooseAgain();
-                }
-                return;
-            }
-
-            unloadIfNotLocked();
+            // Discard just un-saves (keeps rectangle visible).
+            st.locked = false;
+            tile.classList.remove('component-locationthumb-tile--locked');
+            setButtonsEnabled(true, true);
+            emitChange();
         });
 
-        // Init flags
         clear();
 
         return {
             element: root,
             setLocation: setLocation,
-            pauseLive: pauseLive,
+            pauseLive: function() {},
             unloadIfNotLocked: unloadIfNotLocked,
-            isLocked: getIsLocked,
+            isLocked: function() { return !!st.locked; },
             clear: clear,
             getState: function() {
-                return {
-                    locked: st.locked,
-                    lat: st.lat,
-                    lng: st.lng,
-                    zoom: st.zoom,
-                    pitch: st.pitch,
-                    bearing: st.bearing
-                };
+                return { locked: st.locked, lat: st.lat, lng: st.lng };
             },
             destroy: function() {
-                stopOrbit();
-                if (st.map) {
-                    try { st.map.remove(); } catch (e) {}
-                }
                 hostEl.innerHTML = '';
             }
         };

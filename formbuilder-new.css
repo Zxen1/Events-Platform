@@ -1652,28 +1652,6 @@
   border-top: none;
   border-radius: 0 0 5px 5px;
   padding: 10px 12px 10px 12px;
-  position: relative;
-  overflow: hidden; /* keep bleed inside the container */
-}
-
-/* Location wallpaper bleed (set per-container via --locationthumb-bleed-image) */
-.member-postform-location-content::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: var(--locationthumb-bleed-image, none);
-  background-size: cover;
-  background-position: center;
-  opacity: var(--locationthumb-bleed-opacity, 0.22);
-  filter: none; /* no blur */
-  transform: none;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.member-postform-location-content > * {
-  position: relative;
-  z-index: 1;
 }
 
 /* ============================================================================

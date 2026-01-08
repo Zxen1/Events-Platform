@@ -3197,49 +3197,6 @@
     gap: 6px;
 }
 
-/* Mapbox attribution/logo: bottom-right and compact without the "i" button */
-.component-locationthumb .mapboxgl-ctrl-bottom-right,
-.component-locationthumb .mapboxgl-ctrl-bottom-left,
-.component-locationthumb .mapboxgl-ctrl-top-right,
-.component-locationthumb .mapboxgl-ctrl-top-left {
-    z-index: 2;
-}
-
-.component-locationthumb .mapboxgl-ctrl-bottom-left {
-    margin-left: 8px;
-    margin-bottom: 6px;
-}
-
-.component-locationthumb .mapboxgl-ctrl-bottom-right {
-    margin-right: 8px;
-    margin-bottom: 6px;
-}
-
-.component-locationthumb .mapboxgl-ctrl-attrib {
-    display: none;
-    font-size: 10px;
-    line-height: 1.1;
-    padding: 2px 4px;
-    background: rgba(0,0,0,0.35);
-    border-radius: 4px;
-    max-width: 120px;
-    text-align: right;
-}
-
-/* Allow Mapbox's default compact attribution behavior (the little "i"). */
-
-.component-locationthumb .mapboxgl-ctrl-logo {
-    transform: none;
-}
-
-.component-locationthumb .mapboxgl-ctrl-attrib a {
-    color: rgba(255,255,255,0.75);
-}
-
-.component-locationthumb .mapboxgl-ctrl-attrib a:hover {
-    color: rgba(255,255,255,0.95);
-}
-
 .component-locationthumb-tile {
     width: 100%;
     aspect-ratio: 2 / 1;
@@ -3251,7 +3208,7 @@
     background: rgba(0,0,0,0.10);
     padding: 0;
     position: relative;
-    cursor: grab;
+    cursor: default;
     transition: opacity 0.5s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
@@ -3273,18 +3230,14 @@
     box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
 }
 
-.component-locationthumb-map {
+/* No map/image right now; keep a simple placeholder inside the rectangle. */
+.component-locationthumb-placeholder {
     position: absolute;
     inset: 0;
-    /* Allow map gestures */
-    pointer-events: auto;
-}
-
-.component-locationthumb-image {
-    width: 100%;
-    height: 100%;
-    display: block;
-    object-fit: cover;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), rgba(255,255,255,0.00) 55%),
+        radial-gradient(circle at 80% 40%, rgba(255,255,255,0.04), rgba(255,255,255,0.00) 60%),
+        rgba(0,0,0,0.12);
 }
 
 /* No on-image hint/instructions (tooltip-only). */
