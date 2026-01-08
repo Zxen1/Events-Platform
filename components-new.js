@@ -7172,8 +7172,16 @@ const LocationWallpaperComponent = (function() {
         }
 
         function showImage() {
-            root.classList.remove('component-locationwallpaper--map-visible');
-            img.style.display = st.imageUrl ? '' : 'none';
+            // Only hide the map if we have a location image to show.
+            // If we don't have an image yet, hiding the map makes the whole wallpaper go black.
+            if (st.imageUrl) {
+                root.classList.remove('component-locationwallpaper--map-visible');
+                img.style.display = '';
+            } else {
+                // Keep map visible as the fallback (even if it's still loading).
+                root.classList.add('component-locationwallpaper--map-visible');
+                img.style.display = 'none';
+            }
         }
 
         function revealMapCrossfade() {
