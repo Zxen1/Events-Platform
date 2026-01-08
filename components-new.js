@@ -6954,7 +6954,7 @@ const LocationWallpaperComponent = (function() {
 
     function getDefaultCameraForType(locationType, centerLngLat) {
         var t = String(locationType || '').toLowerCase();
-        var zoom = (t === 'city') ? 12 : 17;
+        var zoom = (t === 'city') ? 12 : 15;
         return {
             center: centerLngLat,
             zoom: zoom,
@@ -7346,27 +7346,25 @@ const LocationWallpaperComponent = (function() {
                 return;
             }
 
-            // IMPORTANT: Do not keep this map alive while encoding an image.
-            // On container switches, two live wallpaper maps would overlap and can spike GPU.
-            // So we synchronously capture a dataURL (fast at container size), then immediately remove the map.
-            var dataUrl = '';
-            try {
-                dataUrl = canvas.toDataURL('image/webp', 0.82);
-            } catch (eDU1) {
-                dataUrl = '';
-            }
-            if (!dataUrl) {
-                try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (eDU2) { dataUrl = ''; }
-            }
+            // Stop any camera transition immediately so we capture a stable frame.
+            try { if (st.map && typeof st.map.stop === 'function') st.map.stop(); } catch (eStop) {}
 
-            // Swap to location image if we successfully captured one (otherwise keep previous image if any).
-            if (dataUrl && dataUrl.indexOf('data:image') === 0) {
-                setImageUrl(dataUrl);
-            }
-
-            try { if (st.map) st.map.remove(); } catch (eRM) {}
-            st.map = null;
-            showImage();
+            // Capture on the next animation frame to avoid freezing a "not yet rendered" frame (black).
+            // This is still fast enough to guarantee we never run two wallpaper maps concurrently.
+            requestAnimationFrame(function() {
+                if (!canvas) return;
+                var dataUrl = '';
+                try { dataUrl = canvas.toDataURL('image/webp', 0.82); } catch (eDU1) { dataUrl = ''; }
+                if (!dataUrl) {
+                    try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (eDU2) { dataUrl = ''; }
+                }
+                if (dataUrl && dataUrl.indexOf('data:image') === 0) {
+                    setImageUrl(dataUrl);
+                }
+                try { if (st.map) st.map.remove(); } catch (eRM) {}
+                st.map = null;
+                showImage();
+            });
         }
 
         function refreshFromFieldsIfActive() {
@@ -7439,6 +7437,12 @@ const LocationWallpaperComponent = (function() {
                 nextLocationContainer = clickedContainerEl;
             }
         } catch (e) {}
+
+        // Clicking inside the already-active container should NOT re-refresh the wallpaper,
+        // otherwise the camera gets jumpTo()'d back to defaults (looks like "reset orbit").
+        if (nextLocationContainer && activeContainerEl && nextLocationContainer === activeContainerEl && activeCtrl) {
+            return;
+        }
 
         if (activeCtrl && (!nextLocationContainer || activeCtrl !== (nextLocationContainer.__locationWallpaperCtrl || null))) {
             try { activeCtrl.freeze(); } catch (e2) {}
