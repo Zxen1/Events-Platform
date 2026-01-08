@@ -1652,6 +1652,42 @@
   border-top: none;
   border-radius: 0 0 5px 5px;
   padding: 10px 12px 10px 12px;
+  position: relative; /* required for wallpaper absolute positioning */
+  overflow: hidden;   /* clip square wallpaper overflow */
+}
+
+/* ============================================================================
+   LOCATION CONTAINER WALLPAPER (Mapbox background)
+   - Full container background at ~0.3 opacity
+   - "At least square": square wrapper can overflow and is clipped by content
+   ============================================================================ */
+
+.member-location-wallpaper {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none; /* never block typing/clicking */
+  opacity: 0.3;
+}
+
+.member-location-wallpaper-square {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--member-location-wallpaper-size, 100%);
+  height: var(--member-location-wallpaper-size, 100%);
+}
+
+.member-location-wallpaper-map {
+  width: 100%;
+  height: 100%;
+}
+
+/* Keep all real form content above the wallpaper */
+.member-postform-location-content > :not(.member-location-wallpaper) {
+  position: relative;
+  z-index: 1;
 }
 
 /* ============================================================================
