@@ -4250,114 +4250,21 @@
      */
     function setupFormContainerClickTracking(container) {
         if (!container) return;
-
-        function updateLocationThumbsForActiveState() {
-            // Only location containers should drive map lifecycle.
-            var allLoc = container.querySelectorAll('.member-location-container[data-location-number]');
-            allLoc.forEach(function(loc) {
-                var isActive = String(loc.getAttribute('data-active') || '') === 'true';
-                var hosts = loc.querySelectorAll('.fieldset-locationthumb-host');
-                hosts.forEach(function(host) {
-                    var ctrl = host && host.__locationThumbCtrl ? host.__locationThumbCtrl : null;
-                    if (!ctrl) return;
-                    if (isActive) {
-                        if (typeof host.__locationThumbRefresh === 'function') {
-                            host.__locationThumbRefresh();
-                        }
-                    } else {
-                        if (typeof ctrl.unloadIfNotLocked === 'function') {
-                            ctrl.unloadIfNotLocked();
-                        }
-                    }
-                });
-            });
-        }
         
         // Use event delegation - single handler on parent for all containers
-        // IMPORTANT: Use capturing pointerdown so *any* click/tap inside the location container
-        // activates it, even if a child widget stops event bubbling.
-        container.addEventListener('pointerdown', function(e) {
-            // Ignore pointer events inside modal dialogs/overlays.
-            try {
-                var t0 = e && e.target ? e.target : null;
-                if (t0 && t0.closest && t0.closest('.component-confirm-dialog-overlay, .component-confirm-dialog, [aria-modal="true"]')) {
-                    return;
-                }
-            } catch (e0) {}
-
-            var clickedContainer = e && e.target && e.target.closest
-                ? e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container')
-                : null;
-            if (!clickedContainer) return;
-
-            var currentActive = container.querySelector('[data-active="true"]');
-            if (currentActive === clickedContainer) return;
-
-            container.querySelectorAll('[data-active="true"]').forEach(function(c) {
-                c.removeAttribute('data-active');
-            });
-            clickedContainer.setAttribute('data-active', 'true');
-            updateLocationThumbsForActiveState();
-        }, true);
-
         container.addEventListener('click', function(e) {
-            // Ignore clicks inside modal dialogs/overlays. These live outside the active container
-            // and should NOT clear active state (otherwise we unload maps and the user sees blank).
-            try {
-                var t0 = e && e.target ? e.target : null;
-                if (t0 && t0.closest && t0.closest('.component-confirm-dialog-overlay, .component-confirm-dialog, [aria-modal="true"]')) {
-                    return;
-                }
-            } catch (e0) {}
-
             // Find the clicked form container (or closest ancestor that is a form container)
             var clickedContainer = e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container');
-            if (!clickedContainer) {
-                // Clicked outside any container => clear active state and unload inactive location maps.
-                container.querySelectorAll('[data-active="true"]').forEach(function(c) {
-                    c.removeAttribute('data-active');
-                });
-                updateLocationThumbsForActiveState();
-                return;
-            }
+            if (!clickedContainer) return;
             
-            // If clicking inside an already-active container, do nothing.
-            // This prevents location thumbnail maps from being "refreshed" (re-centered) during map interaction.
-            var currentActive = container.querySelector('[data-active="true"]');
-            if (currentActive === clickedContainer) return;
-
             // Remove active state from all form containers
             container.querySelectorAll('[data-active="true"]').forEach(function(c) {
                 c.removeAttribute('data-active');
             });
-
+            
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
-            updateLocationThumbsForActiveState();
         });
-
-        // Keyboard focus should also activate the correct container (not just clicks).
-        container.addEventListener('focusin', function(e) {
-            // Ignore focus inside modal dialogs/overlays.
-            try {
-                var t0 = e && e.target ? e.target : null;
-                if (t0 && t0.closest && t0.closest('.component-confirm-dialog-overlay, .component-confirm-dialog, [aria-modal="true"]')) {
-                    return;
-                }
-            } catch (e0) {}
-
-            var focusedContainer = e && e.target && e.target.closest
-                ? e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container')
-                : null;
-            if (!focusedContainer) return;
-            var currentActive = container.querySelector('[data-active="true"]');
-            if (currentActive === focusedContainer) return;
-            container.querySelectorAll('[data-active="true"]').forEach(function(c) {
-                c.removeAttribute('data-active');
-            });
-            focusedContainer.setAttribute('data-active', 'true');
-            updateLocationThumbsForActiveState();
-        }, true);
     }
     
     /**

@@ -60,17 +60,22 @@ const FieldsetBuilder = (function(){
         var dropdown = document.createElement('div');
         dropdown.className = 'fieldset-location-dropdown';
         dropdown.style.display = 'none';
+        dropdown.style.position = 'absolute';
+        dropdown.style.zIndex = '1000';
+        dropdown.style.backgroundColor = '#fff';
+        dropdown.style.border = '1px solid #ccc';
+        dropdown.style.borderRadius = '4px';
+        dropdown.style.maxHeight = '200px';
+        dropdown.style.overflowY = 'auto';
+        dropdown.style.width = '100%';
+        dropdown.style.marginTop = '2px';
+        dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
         
-        // Wrap input in a positioning context so the dropdown can sit exactly under the input
-        // (and overlay the map tile that comes later in the fieldset).
+        // Insert dropdown after input element
         var parent = inputElement.parentNode;
-        var wrap = null;
         if (parent) {
-            wrap = document.createElement('div');
-            wrap.className = 'fieldset-location-inputwrap';
-            parent.insertBefore(wrap, inputElement);
-            wrap.appendChild(inputElement);
-            wrap.appendChild(dropdown);
+            parent.style.position = 'relative';
+            parent.appendChild(dropdown);
         }
         
         // Track whether the current value is confirmed from Google Places (required for "complete")
@@ -150,21 +155,24 @@ const FieldsetBuilder = (function(){
                     
                     var item = document.createElement('div');
                     item.className = 'fieldset-location-dropdown-item';
+                    item.style.padding = '8px 12px';
+                    item.style.cursor = 'pointer';
+                    item.style.borderBottom = '1px solid #eee';
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
-
-                    var mainEl = document.createElement('div');
-                    mainEl.className = 'fieldset-location-dropdown-item-main';
-                    mainEl.textContent = mainText;
-                    item.appendChild(mainEl);
-
-                    if (secondaryText) {
-                        var secEl = document.createElement('div');
-                        secEl.className = 'fieldset-location-dropdown-item-secondary';
-                        secEl.textContent = secondaryText;
-                        item.appendChild(secEl);
-                    }
+                    
+                    item.innerHTML = 
+                        '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
+                        (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
+                    
+                    // Hover effect
+                    item.addEventListener('mouseenter', function() {
+                        item.style.backgroundColor = '#f5f5f5';
+                    });
+                    item.addEventListener('mouseleave', function() {
+                        item.style.backgroundColor = 'transparent';
+                    });
                     
                     item.addEventListener('click', async function() {
                         try {
@@ -1047,41 +1055,6 @@ const FieldsetBuilder = (function(){
                 addrInputEl.className = 'fieldset-input';
                 applyPlaceholder(addrInputEl, placeholder);
                 fieldset.appendChild(addrInputEl);
-
-                // Location thumbnail picker (single 2:1 tile)
-                var addrThumbHost = document.createElement('div');
-                addrThumbHost.className = 'fieldset-locationthumb-host';
-                fieldset.appendChild(addrThumbHost);
-                var addrThumbMeta = document.createElement('input');
-                addrThumbMeta.type = 'hidden';
-                addrThumbMeta.className = 'fieldset-locationthumb-meta';
-                fieldset.appendChild(addrThumbMeta);
-                var addrThumbCtrl = null;
-                if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
-                    addrThumbCtrl = LocationThumbnailPickerComponent.attach(addrThumbHost, {
-                        locationType: 'address',
-                        onChange: function(state) {
-                            try {
-                                addrThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
-                            } catch (e) {
-                                addrThumbMeta.value = '';
-                            }
-                        }
-                    });
-                }
-                // Expose controller to location-container infrastructure (FormbuilderModule)
-                try {
-                    addrThumbHost.__locationThumbCtrl = addrThumbCtrl;
-                    addrThumbHost.__locationThumbRefresh = function() {
-                        if (!addrThumbCtrl || typeof addrThumbCtrl.setLocation !== 'function') return;
-                        var latV = parseFloat(String(addrLatInput.value || ''));
-                        var lngV = parseFloat(String(addrLngInput.value || ''));
-                        var labelV = String(addrInputEl.value || '').trim();
-                        if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV, labelV);
-                        else if (typeof addrThumbCtrl.activateEmpty === 'function') addrThumbCtrl.activateEmpty();
-                        else addrThumbCtrl.clear();
-                    };
-                } catch (eRH) {}
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
                 addrLatInput.type = 'hidden';
@@ -1095,36 +1068,12 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(addrLatInput);
                 fieldset.appendChild(addrLngInput);
                 fieldset.appendChild(addrCountryInput);
-                // Status indicator + Save/Discard buttons (same row)
-                var addrStatusRow = document.createElement('div');
-                addrStatusRow.className = 'fieldset-location-actionsrow';
+                // Status indicator
                 var addrStatus = document.createElement('div');
                 addrStatus.className = 'fieldset-location-status';
-                addrStatusRow.appendChild(addrStatus);
-                var addrStatusActions = document.createElement('div');
-                addrStatusActions.className = 'fieldset-location-actionsright';
-                addrStatusRow.appendChild(addrStatusActions);
-                fieldset.appendChild(addrStatusRow);
-
-                // Mount the component's Save/Discard buttons into this row (right side)
-                try {
-                    var footerEl = addrThumbHost.querySelector('.component-locationthumb-footer');
-                    if (footerEl) addrStatusActions.appendChild(footerEl);
-                } catch (e0) {}
+                fieldset.appendChild(addrStatus);
                 // Init Google Places
                 initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus);
-
-                // Drive thumbnail picker from Google-confirmed lat/lng
-                addrInputEl.addEventListener('change', function() {
-                    if (!addrThumbCtrl || !addrLatInput || !addrLngInput) return;
-                    var latV = parseFloat(String(addrLatInput.value || ''));
-                    var lngV = parseFloat(String(addrLngInput.value || ''));
-                if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV, String(addrInputEl.value || ''));
-                    else addrThumbCtrl.clear();
-                });
-                addrInputEl.addEventListener('input', function() {
-                    if (addrThumbCtrl) addrThumbCtrl.clear();
-                });
                 break;
                 
             case 'city':
@@ -1134,41 +1083,6 @@ const FieldsetBuilder = (function(){
                 cityInputEl.className = 'fieldset-input';
                 applyPlaceholder(cityInputEl, placeholder);
                 fieldset.appendChild(cityInputEl);
-
-                // Location thumbnail picker (single 2:1 tile)
-                var cityThumbHost = document.createElement('div');
-                cityThumbHost.className = 'fieldset-locationthumb-host';
-                fieldset.appendChild(cityThumbHost);
-                var cityThumbMeta = document.createElement('input');
-                cityThumbMeta.type = 'hidden';
-                cityThumbMeta.className = 'fieldset-locationthumb-meta';
-                fieldset.appendChild(cityThumbMeta);
-                var cityThumbCtrl = null;
-                if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
-                    cityThumbCtrl = LocationThumbnailPickerComponent.attach(cityThumbHost, {
-                        locationType: 'city',
-                        onChange: function(state) {
-                            try {
-                                cityThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
-                            } catch (e) {
-                                cityThumbMeta.value = '';
-                            }
-                        }
-                    });
-                }
-                // Expose controller to location-container infrastructure (FormbuilderModule)
-                try {
-                    cityThumbHost.__locationThumbCtrl = cityThumbCtrl;
-                    cityThumbHost.__locationThumbRefresh = function() {
-                        if (!cityThumbCtrl || typeof cityThumbCtrl.setLocation !== 'function') return;
-                        var latV = parseFloat(String(cityLatInput.value || ''));
-                        var lngV = parseFloat(String(cityLngInput.value || ''));
-                        var labelV = String(cityInputEl.value || '').trim();
-                        if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV, labelV);
-                        else if (typeof cityThumbCtrl.activateEmpty === 'function') cityThumbCtrl.activateEmpty();
-                        else cityThumbCtrl.clear();
-                    };
-                } catch (eRH2) {}
                 // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
                 cityLatInput.type = 'hidden';
@@ -1182,36 +1096,12 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(cityLatInput);
                 fieldset.appendChild(cityLngInput);
                 fieldset.appendChild(cityCountryInput);
-                // Status indicator + Save/Discard buttons (same row)
-                var cityStatusRow = document.createElement('div');
-                cityStatusRow.className = 'fieldset-location-actionsrow';
+                // Status indicator
                 var cityStatus = document.createElement('div');
                 cityStatus.className = 'fieldset-location-status';
-                cityStatusRow.appendChild(cityStatus);
-                var cityStatusActions = document.createElement('div');
-                cityStatusActions.className = 'fieldset-location-actionsright';
-                cityStatusRow.appendChild(cityStatusActions);
-                fieldset.appendChild(cityStatusRow);
-
-                // Mount the component's Save/Discard buttons into this row (right side)
-                try {
-                    var footerEl = cityThumbHost.querySelector('.component-locationthumb-footer');
-                    if (footerEl) cityStatusActions.appendChild(footerEl);
-                } catch (e0) {}
+                fieldset.appendChild(cityStatus);
                 // Init Google Places (cities only)
                 initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityCountryInput, cityStatus);
-
-                // Drive thumbnail picker from Google-confirmed lat/lng
-                cityInputEl.addEventListener('change', function() {
-                    if (!cityThumbCtrl || !cityLatInput || !cityLngInput) return;
-                    var latV = parseFloat(String(cityLatInput.value || ''));
-                    var lngV = parseFloat(String(cityLngInput.value || ''));
-                if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV, String(cityInputEl.value || ''));
-                    else cityThumbCtrl.clear();
-                });
-                cityInputEl.addEventListener('input', function() {
-                    if (cityThumbCtrl) cityThumbCtrl.clear();
-                });
                 break;
                 
             case 'website-url':
@@ -3477,60 +3367,13 @@ const FieldsetBuilder = (function(){
                 smartAddrInput.style.marginBottom = '4px';
                 fieldset.appendChild(smartAddrInput);
 
-                // Location thumbnail picker (single 2:1 tile)
-                var venueThumbHost = document.createElement('div');
-                venueThumbHost.className = 'fieldset-locationthumb-host';
-                fieldset.appendChild(venueThumbHost);
-                var venueThumbMeta = document.createElement('input');
-                venueThumbMeta.type = 'hidden';
-                venueThumbMeta.className = 'fieldset-locationthumb-meta';
-                fieldset.appendChild(venueThumbMeta);
-                var venueThumbCtrl = null;
-                if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
-                    venueThumbCtrl = LocationThumbnailPickerComponent.attach(venueThumbHost, {
-                        locationType: 'venue',
-                        onChange: function(state) {
-                            try {
-                                venueThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
-                            } catch (e) {
-                                venueThumbMeta.value = '';
-                            }
-                        }
-                    });
-                }
-                // Expose controller to location-container infrastructure (FormbuilderModule)
-                try {
-                    venueThumbHost.__locationThumbCtrl = venueThumbCtrl;
-                    venueThumbHost.__locationThumbRefresh = function() {
-                        if (!venueThumbCtrl || typeof venueThumbCtrl.setLocation !== 'function') return;
-                        var latV = parseFloat(String(smartLatInput.value || ''));
-                        var lngV = parseFloat(String(smartLngInput.value || ''));
-                        var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
-                        if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
-                        else if (typeof venueThumbCtrl.activateEmpty === 'function') venueThumbCtrl.activateEmpty();
-                        else venueThumbCtrl.clear();
-                    };
-                } catch (eRH3) {}
-
                 // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
                 try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e0) {}
                 
-                // Status indicator + Save/Discard buttons (same row)
-                var smartStatusRow = document.createElement('div');
-                smartStatusRow.className = 'fieldset-location-actionsrow';
+                // Status indicator
                 var smartStatus = document.createElement('div');
                 smartStatus.className = 'fieldset-location-status';
-                smartStatusRow.appendChild(smartStatus);
-                var smartStatusActions = document.createElement('div');
-                smartStatusActions.className = 'fieldset-location-actionsright';
-                smartStatusRow.appendChild(smartStatusActions);
-                fieldset.appendChild(smartStatusRow);
-
-                // Mount the component's Save/Discard buttons into this row (right side)
-                try {
-                    var footerEl = venueThumbHost.querySelector('.component-locationthumb-footer');
-                    if (footerEl) smartStatusActions.appendChild(footerEl);
-                } catch (e0) {}
+                fieldset.appendChild(smartStatus);
                 
                 fieldset.appendChild(smartLatInput);
                 fieldset.appendChild(smartLngInput);
@@ -3552,15 +3395,21 @@ const FieldsetBuilder = (function(){
                     var dropdown = document.createElement('div');
                     dropdown.className = 'fieldset-location-dropdown';
                     dropdown.style.display = 'none';
+                    dropdown.style.position = 'absolute';
+                    dropdown.style.zIndex = '1000';
+                    dropdown.style.backgroundColor = '#fff';
+                    dropdown.style.border = '1px solid #ccc';
+                    dropdown.style.borderRadius = '4px';
+                    dropdown.style.maxHeight = '200px';
+                    dropdown.style.overflowY = 'auto';
+                    dropdown.style.width = '100%';
+                    dropdown.style.marginTop = '2px';
+                    dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
                     
                     var parent = inputEl.parentNode;
-                    var wrap = null;
                     if (parent) {
-                        wrap = document.createElement('div');
-                        wrap.className = 'fieldset-location-inputwrap';
-                        parent.insertBefore(wrap, inputEl);
-                        wrap.appendChild(inputEl);
-                        wrap.appendChild(dropdown);
+                        parent.style.position = 'relative';
+                        parent.appendChild(dropdown);
                     }
                     
                     // Fetch suggestions using new API (unrestricted - finds both venues and addresses)
@@ -3590,21 +3439,23 @@ const FieldsetBuilder = (function(){
                                 
                                 var item = document.createElement('div');
                                 item.className = 'fieldset-location-dropdown-item';
+                                item.style.padding = '8px 12px';
+                                item.style.cursor = 'pointer';
+                                item.style.borderBottom = '1px solid #eee';
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                                 var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
-
-                                var mainEl = document.createElement('div');
-                                mainEl.className = 'fieldset-location-dropdown-item-main';
-                                mainEl.textContent = mainText;
-                                item.appendChild(mainEl);
-
-                                if (secondaryText) {
-                                    var secEl = document.createElement('div');
-                                    secEl.className = 'fieldset-location-dropdown-item-secondary';
-                                    secEl.textContent = secondaryText;
-                                    item.appendChild(secEl);
-                                }
+                                
+                                item.innerHTML = 
+                                    '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
+                                    (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
+                                
+                                item.addEventListener('mouseenter', function() {
+                                    item.style.backgroundColor = '#f5f5f5';
+                                });
+                                item.addEventListener('mouseleave', function() {
+                                    item.style.backgroundColor = 'transparent';
+                                });
                                 
                                 item.addEventListener('click', async function() {
                                     try {
@@ -3717,20 +3568,6 @@ const FieldsetBuilder = (function(){
                 // Init both inputs with smart autofill
                 initSmartVenueAutocomplete(smartVenueInput, smartAddrInput, true);
                 initSmartVenueAutocomplete(smartAddrInput, smartVenueInput, false);
-
-                // Drive thumbnail picker from Google-confirmed lat/lng (smart venue writes into hidden lat/lng and
-                // dispatches change on smartAddrInput).
-                smartAddrInput.addEventListener('change', function() {
-                    if (!venueThumbCtrl || !smartLatInput || !smartLngInput) return;
-                    var latV = parseFloat(String(smartLatInput.value || ''));
-                    var lngV = parseFloat(String(smartLngInput.value || ''));
-                    var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
-                    if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
-                    else venueThumbCtrl.clear();
-                });
-                smartAddrInput.addEventListener('input', function() {
-                    if (venueThumbCtrl) venueThumbCtrl.clear();
-                });
                 break;
                 
             default:
@@ -4054,11 +3891,7 @@ const FieldsetBuilder = (function(){
                     if (!addr || !lat || !lng) return false;
                     if (!strLenOk(addr.value, minLength, maxLength)) return false;
                     if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
-                    if (!(String(lat.value || '').trim() && String(lng.value || '').trim())) return false;
-                    // Must also lock the thumbnail picker view.
-                    var host = fieldset.querySelector('.fieldset-locationthumb-host');
-                    if (!host) return false;
-                    return String(host.dataset.complete || '') === 'true';
+                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
                 }
                 case 'venue': {
                     // Venue requires:
@@ -4073,11 +3906,7 @@ const FieldsetBuilder = (function(){
                     if (!addr || !lat || !lng) return false;
                     if (!strLenOk(String(addr.value || ''), minLength, maxLength)) return false;
                     if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
-                    if (!(String(lat.value || '').trim() && String(lng.value || '').trim())) return false;
-                    // Must also lock the thumbnail picker view.
-                    var host = fieldset.querySelector('.fieldset-locationthumb-host');
-                    if (!host) return false;
-                    return String(host.dataset.complete || '') === 'true';
+                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
                 }
                 case 'session_pricing': {
                     var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
