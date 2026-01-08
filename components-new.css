@@ -3205,7 +3205,18 @@
     z-index: 2;
 }
 
+.component-locationthumb .mapboxgl-ctrl-bottom-left {
+    margin-left: 8px;
+    margin-bottom: 6px;
+}
+
+.component-locationthumb .mapboxgl-ctrl-bottom-right {
+    margin-right: 8px;
+    margin-bottom: 6px;
+}
+
 .component-locationthumb .mapboxgl-ctrl-attrib {
+    display: none;
     font-size: 10px;
     line-height: 1.1;
     padding: 2px 4px;
@@ -3217,13 +3228,8 @@
 
 /* Allow Mapbox's default compact attribution behavior (the little "i"). */
 
-.component-locationthumb .mapboxgl-ctrl-attrib .mapbox-improve-map {
-    display: none;
-}
-
 .component-locationthumb .mapboxgl-ctrl-logo {
-    transform: scale(1.15);
-    transform-origin: bottom right;
+    transform: none;
 }
 
 .component-locationthumb .mapboxgl-ctrl-attrib a {

@@ -6431,6 +6431,7 @@ const LocationThumbnailPickerComponent = (function() {
             map: null,
             orbiting: false,
             orbitHandler: null,
+            isAutoAnimating: false,
             locked: false,
             lat: null,
             lng: null,
@@ -6447,6 +6448,7 @@ const LocationThumbnailPickerComponent = (function() {
             lockedUrl: '',
             lastLockedBlob: null,
             lastLockedUrl: '',
+            bleedUrl: '',
             didInteractRecently: false,
             interactTimer: 0
         };
@@ -6543,6 +6545,7 @@ const LocationThumbnailPickerComponent = (function() {
         function stopOrbit() {
             if (!st.map) return;
             st.orbiting = false;
+            st.isAutoAnimating = false;
             if (st.orbitHandler) {
                 try { st.map.off('moveend', st.orbitHandler); } catch (e) {}
             }
@@ -6584,12 +6587,17 @@ const LocationThumbnailPickerComponent = (function() {
             if (!st.map) return;
             stopOrbit();
             st.orbiting = true;
+            st.isAutoAnimating = false;
             st.orbitHandler = function() {
                 if (!st.orbiting || !st.map || st.locked) return;
+                // The previous auto animation has finished (this handler is called on moveend).
+                st.isAutoAnimating = false;
                 var b = 0;
                 try { b = st.map.getBearing(); } catch (e) { b = st.bearing || 0; }
                 st.bearing = (b + 2) % 360;
                 try {
+                    // Mark that the upcoming rotatestart is programmatic (avoid self-cancelling orbit).
+                    st.isAutoAnimating = true;
                     st.map.easeTo({
                         bearing: st.bearing,
                         duration: 250,
@@ -6599,6 +6607,45 @@ const LocationThumbnailPickerComponent = (function() {
             };
             try { st.map.on('moveend', st.orbitHandler); } catch (e3) {}
             try { st.orbitHandler(); } catch (e4) {}
+        }
+
+        function scheduleBleedCapture() {
+            if (!st.map || st.locked) return;
+            if (st._bleedTimer) return;
+            st._bleedTimer = setTimeout(function() {
+                st._bleedTimer = 0;
+                try {
+                    var canvas = st.map.getCanvas && st.map.getCanvas();
+                    if (!canvas || !canvas.width || !canvas.height) return;
+                    var bw = Math.min(520, canvas.width || 0);
+                    var bh = Math.round(bw / 2);
+                    var out = document.createElement('canvas');
+                    out.width = bw;
+                    out.height = bh;
+                    var ctx = out.getContext('2d');
+                    if (!ctx) return;
+                    // Center-crop to 2:1
+                    var srcW = canvas.width;
+                    var srcH = canvas.height;
+                    var cropW = srcW;
+                    var cropH = Math.round(srcW / 2);
+                    if (cropH > srcH) {
+                        cropH = srcH;
+                        cropW = Math.round(srcH * 2);
+                    }
+                    var sx = Math.max(0, Math.round((srcW - cropW) / 2));
+                    var sy = Math.max(0, Math.round((srcH - cropH) / 2));
+                    ctx.drawImage(canvas, sx, sy, cropW, cropH, 0, 0, bw, bh);
+                    out.toBlob(function(blob) {
+                        if (!blob) return;
+                        if (st.bleedUrl && st.bleedUrl !== st.lockedUrl) {
+                            try { URL.revokeObjectURL(st.bleedUrl); } catch (e0) {}
+                        }
+                        try { st.bleedUrl = URL.createObjectURL(blob); } catch (e1) { st.bleedUrl = ''; }
+                        if (!st.locked) setBleedImage(st.bleedUrl);
+                    }, 'image/jpeg', 0.6);
+                } catch (eBleed) {}
+            }, 120);
         }
 
         function ensureMap() {
@@ -6623,19 +6670,27 @@ const LocationThumbnailPickerComponent = (function() {
                     antialias: false,
                     preserveDrawingBuffer: true
                 });
+                
+                // Faster wheel zoom (keeps the same control model, just more responsive).
+                try {
+                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setWheelZoomRate === 'function') {
+                        st.map.scrollZoom.setWheelZoomRate(1 / 45);
+                    }
+                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setZoomRate === 'function') {
+                        st.map.scrollZoom.setZoomRate(1.35);
+                    }
+                } catch (eZ) {}
                 st.map.once('style.load', function() {
                     applyLighting(st.map, getLightingPreset());
                 });
 
-                // Add compact attribution control (keep it visible, but small and out of the way).
-                try {
-                    st.map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
-                } catch (eAt) {}
+                // Match the main map: do not add Mapbox AttributionControl (no "i" button).
 
                 // Any user interaction kills the auto-rotation immediately.
                 ['dragstart','zoomstart','rotatestart','pitchstart'].forEach(function(ev){
                     try {
                         st.map.on(ev, function() {
+                            if (ev === 'rotatestart' && st.isAutoAnimating) return;
                             st.userControlled = true;
                             try { if (st.interactTimer) clearTimeout(st.interactTimer); } catch (e0) {}
                             st.didInteractRecently = true;
@@ -6645,6 +6700,11 @@ const LocationThumbnailPickerComponent = (function() {
                         });
                     } catch (e0) {}
                 });
+
+                // Keep the container "bleed" in sync with the live map view.
+                try {
+                    st.map.on('moveend', function() { scheduleBleedCapture(); });
+                } catch (e1) {}
 
                 // NOTE: We intentionally do NOT remap gestures here.
                 // The thumbnail must behave like the main map; only pan is disabled to keep center locked.
@@ -6729,41 +6789,8 @@ const LocationThumbnailPickerComponent = (function() {
                     tile.classList.remove('component-locationthumb-tile--loading');
                     tile.classList.add('component-locationthumb-tile--ready');
 
-                    // Apply a lightweight "bleed" wallpaper across the whole location container.
-                    // This is a single capture (not continuous) to keep performance predictable.
-                    try {
-                        var canvas = m.getCanvas && m.getCanvas();
-                        if (canvas && canvas.width && canvas.height) {
-                            var bw = Math.min(520, canvas.width || 0);
-                            var bh = Math.round(bw / 2);
-                            var out = document.createElement('canvas');
-                            out.width = bw;
-                            out.height = bh;
-                            var ctx = out.getContext('2d');
-                            if (ctx) {
-                                // Center-crop to 2:1
-                                var srcW = canvas.width;
-                                var srcH = canvas.height;
-                                var cropW = srcW;
-                                var cropH = Math.round(srcW / 2);
-                                if (cropH > srcH) {
-                                    cropH = srcH;
-                                    cropW = Math.round(srcH * 2);
-                                }
-                                var sx = Math.max(0, Math.round((srcW - cropW) / 2));
-                                var sy = Math.max(0, Math.round((srcH - cropH) / 2));
-                                ctx.drawImage(canvas, sx, sy, cropW, cropH, 0, 0, bw, bh);
-                                out.toBlob(function(blob) {
-                                    if (!blob) return;
-                                    if (st.bleedUrl && st.bleedUrl !== st.lockedUrl) {
-                                        try { URL.revokeObjectURL(st.bleedUrl); } catch (e0) {}
-                                    }
-                                    try { st.bleedUrl = URL.createObjectURL(blob); } catch (e1) { st.bleedUrl = ''; }
-                                    if (!st.locked) setBleedImage(st.bleedUrl);
-                                }, 'image/jpeg', 0.6);
-                            }
-                        }
-                    } catch (eBleed) {}
+                    // Sync bleed to the live view after the first render.
+                    scheduleBleedCapture();
 
                     // Short demo orbit only until the user interacts.
                     startOrbit();
