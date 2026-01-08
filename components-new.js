@@ -6413,6 +6413,8 @@ const LocationThumbnailPickerComponent = (function() {
             mapMount: null,
             dimLayer: null,
             ro: null,
+            spinning: false,
+            spinHandler: null,
             defaultZoom: (locationType === 'city') ? 12 : 17,
             defaultPitch: 70
         };
@@ -6550,6 +6552,37 @@ const LocationThumbnailPickerComponent = (function() {
             return st.map;
         }
 
+        function stopSpin() {
+            if (!st.map) return;
+            if (!st.spinning) return;
+            st.spinning = false;
+            if (st.spinHandler) {
+                try { st.map.off('moveend', st.spinHandler); } catch (e0) {}
+            }
+            st.spinHandler = null;
+            try { st.map.stop(); } catch (e1) {}
+        }
+
+        function startSpin() {
+            if (!st.map) return;
+            if (st.spinning) return;
+            st.spinning = true;
+            st.spinHandler = function() {
+                if (!st.spinning || !st.map) return;
+                try {
+                    var c = st.map.getCenter();
+                    var nextLng = (c.lng + 2) % 360;
+                    st.map.easeTo({
+                        center: [nextLng, c.lat],
+                        duration: 250,
+                        easing: function(t) { return t; }
+                    });
+                } catch (e0) {}
+            };
+            try { st.map.on('moveend', st.spinHandler); } catch (e1) {}
+            try { st.spinHandler(); } catch (e2) {}
+        }
+
         function alignMapCenterToFrame() {
             if (!st.map) return;
             if (st.lat === null || st.lng === null) return;
@@ -6557,6 +6590,7 @@ const LocationThumbnailPickerComponent = (function() {
             if (!target) return;
             try {
                 updateFrameVars();
+                stopSpin();
                 // Reset camera to the requested defaults, then pan so the chosen lat/lng sits at frame center.
                 st.map.jumpTo({
                     center: [st.lng, st.lat],
@@ -6621,9 +6655,27 @@ const LocationThumbnailPickerComponent = (function() {
             emitChange();
         }
 
+        function activateEmpty() {
+            // Show a spinning globe background when the location container becomes active,
+            // even before lat/lng are chosen.
+            ensureBackgroundMap();
+            if (!st.map) return;
+            try {
+                // Start spin once the style is ready.
+                st.map.once('style.load', function() {
+                    // Keep it at a wide view.
+                    try { st.map.jumpTo({ zoom: 1.5, pitch: 0, bearing: 0 }); } catch (e0) {}
+                    startSpin();
+                });
+            } catch (e1) {
+                startSpin();
+            }
+        }
+
         function unloadIfNotLocked() {
             // If container goes inactive, remove the map to avoid background GPU usage.
             if (st.map) {
+                stopSpin();
                 try { st.map.remove(); } catch (e0) {}
                 st.map = null;
             }
@@ -6663,6 +6715,7 @@ const LocationThumbnailPickerComponent = (function() {
             setLocation: setLocation,
             pauseLive: function() {},
             unloadIfNotLocked: unloadIfNotLocked,
+            activateEmpty: activateEmpty,
             isLocked: function() { return !!st.locked; },
             clear: clear,
             getState: function() {

@@ -1078,6 +1078,7 @@ const FieldsetBuilder = (function(){
                         var lngV = parseFloat(String(addrLngInput.value || ''));
                         var labelV = String(addrInputEl.value || '').trim();
                         if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV, labelV);
+                        else if (typeof addrThumbCtrl.activateEmpty === 'function') addrThumbCtrl.activateEmpty();
                         else addrThumbCtrl.clear();
                     };
                 } catch (eRH) {}
@@ -1164,6 +1165,7 @@ const FieldsetBuilder = (function(){
                         var lngV = parseFloat(String(cityLngInput.value || ''));
                         var labelV = String(cityInputEl.value || '').trim();
                         if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV, labelV);
+                        else if (typeof cityThumbCtrl.activateEmpty === 'function') cityThumbCtrl.activateEmpty();
                         else cityThumbCtrl.clear();
                     };
                 } catch (eRH2) {}
@@ -3505,6 +3507,7 @@ const FieldsetBuilder = (function(){
                         var lngV = parseFloat(String(smartLngInput.value || ''));
                         var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
                         if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
+                        else if (typeof venueThumbCtrl.activateEmpty === 'function') venueThumbCtrl.activateEmpty();
                         else venueThumbCtrl.clear();
                     };
                 } catch (eRH3) {}
