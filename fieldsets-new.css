@@ -663,7 +663,10 @@
     width: 100%;
     height: 36px;
     padding: 0 10px;
-    background: #222;
+    /* Must sit directly on panel (same as amenities/radio): no background fill */
+    background: transparent;
+    /* Must sit directly on panel (same as amenities): no background fill */
+    background: transparent;
     border: 1px solid #333;
     border-radius: 5px;
     color: #fff;

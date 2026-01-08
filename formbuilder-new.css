@@ -1512,8 +1512,9 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 10px 12px 0 12px;
-  margin-bottom: 12px;
+  /* Bottom padding is required so the last child doesn't touch the container. */
+  padding: 10px 12px 10px 12px;
+  margin-bottom: 10px;
 }
 
 /* When container is active/focused - blue border */
@@ -1526,8 +1527,8 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 10px 12px 0 12px;
-  margin-bottom: 12px;
+  padding: 10px 12px 10px 12px;
+  margin-bottom: 10px;
 }
 
 /* When container is active/focused - blue border */
@@ -1540,8 +1541,8 @@
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
-  padding: 10px 12px 0 12px;
-  margin-bottom: 12px;
+  padding: 10px 12px 10px 12px;
+  margin-bottom: 10px;
 }
 
 /* When container is active/focused - blue border */
@@ -1551,7 +1552,7 @@
 
 /* Location container */
 .member-location-container {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 /* Location header - 36px, horizontal flex, website blue background */
@@ -1650,7 +1651,7 @@
   border: 1px solid rgba(255,255,255,0.1);
   border-top: none;
   border-radius: 0 0 5px 5px;
-  padding: 10px 12px 0 12px;
+  padding: 10px 12px 10px 12px;
 }
 
 /* ============================================================================
