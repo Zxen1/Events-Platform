@@ -3696,7 +3696,8 @@ const FieldsetBuilder = (function(){
                     if (!venueThumbCtrl || !smartLatInput || !smartLngInput) return;
                     var latV = parseFloat(String(smartLatInput.value || ''));
                     var lngV = parseFloat(String(smartLngInput.value || ''));
-                if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, String(venueInputEl.value || ''));
+                    var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
+                    if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
                     else venueThumbCtrl.clear();
                 });
                 smartAddrInput.addEventListener('input', function() {
@@ -3709,7 +3710,8 @@ const FieldsetBuilder = (function(){
                     if (!smartLatInput || !smartLngInput) return;
                     var latV = parseFloat(String(smartLatInput.value || ''));
                     var lngV = parseFloat(String(smartLngInput.value || ''));
-                if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, String(venueInputEl.value || ''));
+                    var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
+                    if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
                 });
 
                 // Unload map when leaving the fieldset (unless locked) to avoid background GPU usage.
