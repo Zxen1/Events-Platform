@@ -541,7 +541,9 @@
     height: 24px;
     position: relative;
     flex: 0 0 24px;
-    margin-left: -2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .fieldset-customchecklist-row-boximg {
@@ -570,8 +572,8 @@
     margin-top: -1px;
     display: block;
     object-fit: contain;
-    /* Selected checkmark color: blue-900 */
-    filter: brightness(0) saturate(100%) invert(18%) sepia(98%) saturate(2200%) hue-rotate(205deg) brightness(70%) contrast(120%);
+    /* Selected checkmark color: blue-500 */
+    filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
 }
 
 .fieldset-customchecklist-row-text {
