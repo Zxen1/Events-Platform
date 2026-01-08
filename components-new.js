@@ -6398,11 +6398,6 @@ const LocationThumbnailPickerComponent = (function() {
         footer.className = 'component-locationthumb-footer';
         footer.style.display = 'none';
 
-        var footerInfo = document.createElement('div');
-        footerInfo.className = 'component-locationthumb-footer-info';
-        footerInfo.textContent = '';
-        footer.appendChild(footerInfo);
-
         var footerActions = document.createElement('div');
         footerActions.className = 'component-locationthumb-footer-actions';
 
@@ -6478,14 +6473,7 @@ const LocationThumbnailPickerComponent = (function() {
         }
 
         function updateFooterInfo() {
-            if (st.lat === null || st.lng === null) {
-                footerInfo.textContent = '';
-                return;
-            }
-            var label = String(st.label || '').trim();
-            var latS = (typeof st.lat === 'number') ? st.lat.toFixed(6) : String(st.lat);
-            var lngS = (typeof st.lng === 'number') ? st.lng.toFixed(6) : String(st.lng);
-            footerInfo.textContent = (label ? (label + ' • ') : '') + latS + ', ' + lngS;
+            // Intentionally blank: Google Places already shows lat/lng in the fieldset UI.
         }
 
         function emitChange() {
@@ -6589,7 +6577,8 @@ const LocationThumbnailPickerComponent = (function() {
                     interactive: true,
                     dragPan: false,
                     scrollZoom: true,
-                    dragRotate: true,
+                    // We'll handle rotate/pitch with simple left-drag (no pan), and keep pinch zoom.
+                    dragRotate: false,
                     touchZoomRotate: true,
                     doubleClickZoom: false,
                     keyboard: false,
@@ -6622,6 +6611,66 @@ const LocationThumbnailPickerComponent = (function() {
                         });
                     } catch (e0) {}
                 });
+
+                // Simple rotation/pitch control: left-drag rotates + tilts (center remains locked)
+                (function bindDragRotatePitch() {
+                    var dragging = false;
+                    var startX = 0;
+                    var startY = 0;
+                    var startBearing = 0;
+                    var startPitch = 0;
+
+                    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+                    function markInteracted() {
+                        st.userControlled = true;
+                        try { if (st.interactTimer) clearTimeout(st.interactTimer); } catch (e0) {}
+                        st.didInteractRecently = true;
+                        st.interactTimer = setTimeout(function() { st.didInteractRecently = false; }, 350);
+                        setButtonsEnabled(true, true);
+                        pauseLive('Save or discard');
+                    }
+
+                    mapMount.addEventListener('pointerdown', function(e) {
+                        if (!e) return;
+                        if (!st.map || st.locked) return;
+                        if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+                        dragging = true;
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        try { startBearing = st.map.getBearing(); } catch (e0) { startBearing = st.bearing || 0; }
+                        try { startPitch = st.map.getPitch(); } catch (e1) { startPitch = st.pitch || 0; }
+                        markInteracted();
+
+                        try { mapMount.setPointerCapture(e.pointerId); } catch (e2) {}
+                        // Prevent text selection / stray drags (mouse only)
+                        if (e.pointerType === 'mouse') {
+                            try { e.preventDefault(); } catch (e3) {}
+                        }
+                    }, { passive: false });
+
+                    mapMount.addEventListener('pointermove', function(e) {
+                        if (!dragging) return;
+                        if (!st.map || st.locked) return;
+                        var dx = (e.clientX - startX) || 0;
+                        var dy = (e.clientY - startY) || 0;
+                        var bearing = (startBearing - (dx * 0.25)) % 360;
+                        var pitch = clamp(startPitch + (dy * 0.12), 0, 85);
+                        st.bearing = bearing;
+                        st.pitch = pitch;
+                        try { st.map.jumpTo({ bearing: bearing, pitch: pitch }); } catch (e0) {}
+                    });
+
+                    function endDrag(e) {
+                        if (!dragging) return;
+                        dragging = false;
+                        try { if (e && typeof e.pointerId !== 'undefined') mapMount.releasePointerCapture(e.pointerId); } catch (e0) {}
+                    }
+                    mapMount.addEventListener('pointerup', endDrag);
+                    mapMount.addEventListener('pointercancel', endDrag);
+                    mapMount.addEventListener('pointerleave', endDrag);
+                })();
             } catch (e) {
                 st.map = null;
             }

@@ -3179,21 +3179,14 @@
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 10px;
     margin-top: -2px;
     margin-bottom: 10px;
 }
 
 .component-locationthumb-footer-info {
-    flex: 1 1 auto;
-    min-width: 0;
-    font-size: 12px;
-    line-height: 1.2;
-    color: rgba(255,255,255,0.75);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
 }
 
 .component-locationthumb-footer-actions {
@@ -3218,6 +3211,8 @@
     padding: 2px 4px;
     background: rgba(0,0,0,0.35);
     border-radius: 4px;
+    max-width: 155px;
+    text-align: right;
 }
 
 .component-locationthumb .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-button {
@@ -3226,6 +3221,16 @@
 
 .component-locationthumb .mapboxgl-ctrl-attrib.mapboxgl-compact .mapboxgl-ctrl-attrib-inner {
     display: block !important;
+    white-space: normal !important;
+}
+
+.component-locationthumb .mapboxgl-ctrl-attrib .mapbox-improve-map {
+    display: none;
+}
+
+.component-locationthumb .mapboxgl-ctrl-logo {
+    transform: scale(1.25);
+    transform-origin: bottom right;
 }
 
 .component-locationthumb .mapboxgl-ctrl-attrib a {
@@ -3257,7 +3262,7 @@
 }
 
 .component-locationthumb-tile--loading {
-    opacity: 0.18;
+    opacity: 1;
 }
 
 .component-locationthumb-tile--ready {
