@@ -1055,6 +1055,27 @@ const FieldsetBuilder = (function(){
                 addrInputEl.className = 'fieldset-input';
                 applyPlaceholder(addrInputEl, placeholder);
                 fieldset.appendChild(addrInputEl);
+
+                // Location thumbnail picker (single 2:1 tile)
+                var addrThumbHost = document.createElement('div');
+                addrThumbHost.className = 'fieldset-locationthumb-host';
+                fieldset.appendChild(addrThumbHost);
+                var addrThumbMeta = document.createElement('input');
+                addrThumbMeta.type = 'hidden';
+                addrThumbMeta.className = 'fieldset-locationthumb-meta';
+                fieldset.appendChild(addrThumbMeta);
+                var addrThumbCtrl = null;
+                if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
+                    addrThumbCtrl = LocationThumbnailPickerComponent.attach(addrThumbHost, {
+                        onChange: function(state) {
+                            try {
+                                addrThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
+                            } catch (e) {
+                                addrThumbMeta.value = '';
+                            }
+                        }
+                    });
+                }
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
                 addrLatInput.type = 'hidden';
@@ -1074,6 +1095,18 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(addrStatus);
                 // Init Google Places
                 initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus);
+
+                // Drive thumbnail picker from Google-confirmed lat/lng
+                addrInputEl.addEventListener('change', function() {
+                    if (!addrThumbCtrl || !addrLatInput || !addrLngInput) return;
+                    var latV = parseFloat(String(addrLatInput.value || ''));
+                    var lngV = parseFloat(String(addrLngInput.value || ''));
+                    if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV);
+                    else addrThumbCtrl.clear();
+                });
+                addrInputEl.addEventListener('input', function() {
+                    if (addrThumbCtrl) addrThumbCtrl.clear();
+                });
                 break;
                 
             case 'city':
@@ -1083,6 +1116,27 @@ const FieldsetBuilder = (function(){
                 cityInputEl.className = 'fieldset-input';
                 applyPlaceholder(cityInputEl, placeholder);
                 fieldset.appendChild(cityInputEl);
+
+                // Location thumbnail picker (single 2:1 tile)
+                var cityThumbHost = document.createElement('div');
+                cityThumbHost.className = 'fieldset-locationthumb-host';
+                fieldset.appendChild(cityThumbHost);
+                var cityThumbMeta = document.createElement('input');
+                cityThumbMeta.type = 'hidden';
+                cityThumbMeta.className = 'fieldset-locationthumb-meta';
+                fieldset.appendChild(cityThumbMeta);
+                var cityThumbCtrl = null;
+                if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
+                    cityThumbCtrl = LocationThumbnailPickerComponent.attach(cityThumbHost, {
+                        onChange: function(state) {
+                            try {
+                                cityThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
+                            } catch (e) {
+                                cityThumbMeta.value = '';
+                            }
+                        }
+                    });
+                }
                 // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
                 cityLatInput.type = 'hidden';
@@ -1102,6 +1156,18 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(cityStatus);
                 // Init Google Places (cities only)
                 initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityCountryInput, cityStatus);
+
+                // Drive thumbnail picker from Google-confirmed lat/lng
+                cityInputEl.addEventListener('change', function() {
+                    if (!cityThumbCtrl || !cityLatInput || !cityLngInput) return;
+                    var latV = parseFloat(String(cityLatInput.value || ''));
+                    var lngV = parseFloat(String(cityLngInput.value || ''));
+                    if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV);
+                    else cityThumbCtrl.clear();
+                });
+                cityInputEl.addEventListener('input', function() {
+                    if (cityThumbCtrl) cityThumbCtrl.clear();
+                });
                 break;
                 
             case 'website-url':
@@ -3367,6 +3433,27 @@ const FieldsetBuilder = (function(){
                 smartAddrInput.style.marginBottom = '4px';
                 fieldset.appendChild(smartAddrInput);
 
+                // Location thumbnail picker (single 2:1 tile)
+                var venueThumbHost = document.createElement('div');
+                venueThumbHost.className = 'fieldset-locationthumb-host';
+                fieldset.appendChild(venueThumbHost);
+                var venueThumbMeta = document.createElement('input');
+                venueThumbMeta.type = 'hidden';
+                venueThumbMeta.className = 'fieldset-locationthumb-meta';
+                fieldset.appendChild(venueThumbMeta);
+                var venueThumbCtrl = null;
+                if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
+                    venueThumbCtrl = LocationThumbnailPickerComponent.attach(venueThumbHost, {
+                        onChange: function(state) {
+                            try {
+                                venueThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
+                            } catch (e) {
+                                venueThumbMeta.value = '';
+                            }
+                        }
+                    });
+                }
+
                 // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
                 try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e0) {}
                 
@@ -3568,6 +3655,19 @@ const FieldsetBuilder = (function(){
                 // Init both inputs with smart autofill
                 initSmartVenueAutocomplete(smartVenueInput, smartAddrInput, true);
                 initSmartVenueAutocomplete(smartAddrInput, smartVenueInput, false);
+
+                // Drive thumbnail picker from Google-confirmed lat/lng (smart venue writes into hidden lat/lng and
+                // dispatches change on smartAddrInput).
+                smartAddrInput.addEventListener('change', function() {
+                    if (!venueThumbCtrl || !smartLatInput || !smartLngInput) return;
+                    var latV = parseFloat(String(smartLatInput.value || ''));
+                    var lngV = parseFloat(String(smartLngInput.value || ''));
+                    if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV);
+                    else venueThumbCtrl.clear();
+                });
+                smartAddrInput.addEventListener('input', function() {
+                    if (venueThumbCtrl) venueThumbCtrl.clear();
+                });
                 break;
                 
             default:
@@ -3891,7 +3991,11 @@ const FieldsetBuilder = (function(){
                     if (!addr || !lat || !lng) return false;
                     if (!strLenOk(addr.value, minLength, maxLength)) return false;
                     if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
-                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
+                    if (!(String(lat.value || '').trim() && String(lng.value || '').trim())) return false;
+                    // Must also lock the thumbnail picker view.
+                    var host = fieldset.querySelector('.fieldset-locationthumb-host');
+                    if (!host) return false;
+                    return String(host.dataset.complete || '') === 'true';
                 }
                 case 'venue': {
                     // Venue requires:
@@ -3906,7 +4010,11 @@ const FieldsetBuilder = (function(){
                     if (!addr || !lat || !lng) return false;
                     if (!strLenOk(String(addr.value || ''), minLength, maxLength)) return false;
                     if (String(addr.dataset.placesConfirmed || '') !== 'true') return false;
-                    return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
+                    if (!(String(lat.value || '').trim() && String(lng.value || '').trim())) return false;
+                    // Must also lock the thumbnail picker view.
+                    var host = fieldset.querySelector('.fieldset-locationthumb-host');
+                    if (!host) return false;
+                    return String(host.dataset.complete || '') === 'true';
                 }
                 case 'session_pricing': {
                     var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');

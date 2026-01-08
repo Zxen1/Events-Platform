@@ -6327,6 +6327,284 @@ const AvatarPickerComponent = (function() {
 
 
 /* ============================================================================
+   LOCATION THUMBNAIL PICKER COMPONENT (single tile)
+   Used inside location fieldsets (Venue / City / Address).
+   - Single 2:1 tile (full width)
+   - Shows a live rotating Mapbox view for the confirmed lat/lng
+   - Click toggles "locked" (stops rotation) vs live
+   - Outputs camera JSON (center/zoom/pitch/bearing/style/lighting) to parent via onChange
+   Class pattern: component-locationthumb-{part}--{state}
+   ============================================================================ */
+
+const LocationThumbnailPickerComponent = (function() {
+    function safeNum(v) {
+        var n = parseFloat(v);
+        return isFinite(n) ? n : null;
+    }
+
+    function getLightingPreset() {
+        try {
+            var v = localStorage.getItem('map_lighting');
+            if (v && typeof v === 'string' && v.trim()) return v.trim();
+        } catch (e) {}
+        return 'dusk';
+    }
+
+    function applyLighting(m, preset) {
+        if (!m || !preset) return;
+        try {
+            if (typeof m.setConfigProperty === 'function') {
+                m.setConfigProperty('basemap', 'lightPreset', preset);
+            } else if (typeof m.setConfig === 'function') {
+                m.setConfig({ basemap: { lightPreset: preset } });
+            }
+        } catch (e) {}
+    }
+
+    function attach(hostEl, options) {
+        if (!hostEl) throw new Error('[LocationThumbnailPickerComponent] hostEl is required.');
+        options = options || {};
+
+        var onChange = typeof options.onChange === 'function' ? options.onChange : function() {};
+
+        // DOM
+        hostEl.innerHTML = '';
+        var root = document.createElement('div');
+        root.className = 'component-locationthumb';
+
+        var tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'component-locationthumb-tile component-locationthumb-tile--empty';
+        tile.setAttribute('aria-pressed', 'false');
+
+        var mapMount = document.createElement('div');
+        mapMount.className = 'component-locationthumb-map';
+        tile.appendChild(mapMount);
+
+        var hint = document.createElement('div');
+        hint.className = 'component-locationthumb-hint';
+        hint.textContent = 'Choose a view after selecting an address';
+        tile.appendChild(hint);
+
+        root.appendChild(tile);
+        hostEl.appendChild(root);
+
+        // State
+        var st = {
+            map: null,
+            orbiting: false,
+            orbitHandler: null,
+            locked: false,
+            lat: null,
+            lng: null,
+            zoom: 18,
+            pitch: 70,
+            bearing: 0,
+            requestId: 0
+        };
+
+        function setCompleteFlag() {
+            try { hostEl.dataset.complete = st.locked ? 'true' : 'false'; } catch (e) {}
+        }
+
+        function emitChange() {
+            setCompleteFlag();
+            onChange({
+                locked: st.locked,
+                lat: st.lat,
+                lng: st.lng,
+                zoom: st.zoom,
+                pitch: st.pitch,
+                bearing: st.bearing,
+                camera: (st.lat !== null && st.lng !== null && st.locked) ? {
+                    center: [st.lng, st.lat],
+                    zoom: st.zoom,
+                    pitch: st.pitch,
+                    bearing: st.bearing,
+                    style: 'mapbox://styles/mapbox/standard',
+                    lighting: getLightingPreset()
+                } : null
+            });
+            try { hostEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+        }
+
+        function stopOrbit() {
+            if (!st.map) return;
+            st.orbiting = false;
+            if (st.orbitHandler) {
+                try { st.map.off('moveend', st.orbitHandler); } catch (e) {}
+            }
+            st.orbitHandler = null;
+            try { st.map.stop(); } catch (e2) {}
+        }
+
+        function startOrbit() {
+            if (!st.map) return;
+            stopOrbit();
+            st.orbiting = true;
+            st.orbitHandler = function() {
+                if (!st.orbiting || !st.map || st.locked) return;
+                var b = 0;
+                try { b = st.map.getBearing(); } catch (e) { b = st.bearing || 0; }
+                st.bearing = (b + 2) % 360;
+                try {
+                    st.map.easeTo({
+                        bearing: st.bearing,
+                        duration: 250,
+                        easing: function(t) { return t; }
+                    });
+                } catch (e2) {}
+            };
+            try { st.map.on('moveend', st.orbitHandler); } catch (e3) {}
+            try { st.orbitHandler(); } catch (e4) {}
+        }
+
+        function ensureMap() {
+            if (st.map) return st.map;
+            if (!window.mapboxgl) return null;
+            try {
+                st.map = new mapboxgl.Map({
+                    container: mapMount,
+                    style: 'mapbox://styles/mapbox/standard',
+                    projection: 'globe',
+                    center: [0, 0],
+                    zoom: 1.5,
+                    pitch: 0,
+                    bearing: 0,
+                    interactive: false,
+                    attributionControl: false,
+                    renderWorldCopies: false,
+                    antialias: false
+                });
+                st.map.once('style.load', function() {
+                    applyLighting(st.map, getLightingPreset());
+                });
+            } catch (e) {
+                st.map = null;
+            }
+            return st.map;
+        }
+
+        function clear() {
+            st.requestId++;
+            // Reset state but keep the DOM in place.
+            st.locked = false;
+            st.lat = null;
+            st.lng = null;
+            st.bearing = 0;
+            tile.classList.add('component-locationthumb-tile--empty');
+            tile.classList.remove('component-locationthumb-tile--loading');
+            tile.classList.remove('component-locationthumb-tile--ready');
+            tile.classList.remove('component-locationthumb-tile--locked');
+            tile.setAttribute('aria-pressed', 'false');
+            hint.textContent = 'Choose a view after selecting an address';
+            stopOrbit();
+            emitChange();
+        }
+
+        function setLocation(lat, lng) {
+            lat = safeNum(lat);
+            lng = safeNum(lng);
+            if (lat === null || lng === null) {
+                clear();
+                return;
+            }
+
+            st.requestId++;
+            var myReq = st.requestId;
+
+            st.lat = lat;
+            st.lng = lng;
+            st.locked = false;
+            st.bearing = 0;
+
+            tile.classList.remove('component-locationthumb-tile--empty');
+            tile.classList.remove('component-locationthumb-tile--locked');
+            tile.classList.add('component-locationthumb-tile--loading');
+            tile.classList.remove('component-locationthumb-tile--ready');
+            tile.setAttribute('aria-pressed', 'false');
+            hint.textContent = 'Loading view...';
+
+            var m = ensureMap();
+            if (!m) return;
+
+            stopOrbit();
+            try {
+                m.stop();
+                m.easeTo({
+                    center: [lng, lat],
+                    zoom: st.zoom,
+                    pitch: st.pitch,
+                    bearing: 0,
+                    duration: 2000,
+                    essential: true
+                });
+            } catch (e) {}
+
+            try {
+                m.once('idle', function() {
+                    // Ignore stale completions (user changed location again).
+                    if (myReq !== st.requestId) return;
+                    tile.classList.remove('component-locationthumb-tile--loading');
+                    tile.classList.add('component-locationthumb-tile--ready');
+                    hint.textContent = 'Click to lock';
+                    startOrbit();
+                    emitChange();
+                });
+            } catch (e2) {}
+        }
+
+        // Click: lock/unlock
+        tile.addEventListener('click', function() {
+            if (st.lat === null || st.lng === null) return;
+            if (!st.map) return;
+
+            st.locked = !st.locked;
+            tile.classList.toggle('component-locationthumb-tile--locked', st.locked);
+            tile.setAttribute('aria-pressed', st.locked ? 'true' : 'false');
+
+            if (st.locked) {
+                hint.textContent = 'Locked';
+                stopOrbit();
+            } else {
+                hint.textContent = 'Click to lock';
+                startOrbit();
+            }
+            emitChange();
+        });
+
+        // Init flags
+        clear();
+
+        return {
+            element: root,
+            setLocation: setLocation,
+            clear: clear,
+            getState: function() {
+                return {
+                    locked: st.locked,
+                    lat: st.lat,
+                    lng: st.lng,
+                    zoom: st.zoom,
+                    pitch: st.pitch,
+                    bearing: st.bearing
+                };
+            },
+            destroy: function() {
+                stopOrbit();
+                if (st.map) {
+                    try { st.map.remove(); } catch (e) {}
+                }
+                hostEl.innerHTML = '';
+            }
+        };
+    }
+
+    return { attach: attach };
+})();
+
+
+/* ============================================================================
    POST CROPPER COMPONENT
    Standalone reusable post image cropper (non-destructive - stores crop coords).
    Outputs crop coordinates for use with Bunny Dynamic Image API.
@@ -6914,6 +7192,7 @@ const AgeRatingComponent = (function(){
 // Expose globally
 window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;
+window.LocationThumbnailPickerComponent = LocationThumbnailPickerComponent;
 window.PostCropperComponent = PostCropperComponent;
 window.ClearButtonComponent = ClearButtonComponent;
 window.SwitchComponent = SwitchComponent;

@@ -3167,6 +3167,70 @@
     font-weight: 600;
 }
 
+/* ============================================================================
+   LOCATION THUMBNAIL PICKER (single tile)
+   ============================================================================ */
+
+.component-locationthumb {
+    width: 100%;
+}
+
+.component-locationthumb-tile {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(0,0,0,0.10);
+    padding: 0;
+    position: relative;
+    cursor: pointer;
+    transition: opacity 0.5s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.component-locationthumb-tile--empty {
+    opacity: 0.18;
+    cursor: default;
+}
+
+.component-locationthumb-tile--loading {
+    opacity: 0.18;
+}
+
+.component-locationthumb-tile--ready {
+    opacity: 1;
+}
+
+.component-locationthumb-tile--locked {
+    border-color: var(--blue-500);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
+}
+
+.component-locationthumb-map {
+    position: absolute;
+    inset: 0;
+}
+
+.component-locationthumb-hint {
+    position: absolute;
+    left: 10px;
+    bottom: 8px;
+    margin: 0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 1.2;
+    background: rgba(0,0,0,0.55);
+    color: rgba(255,255,255,0.9);
+    max-width: calc(100% - 20px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
 
 /* ============================================================================
    POST CROPPER TOOL
