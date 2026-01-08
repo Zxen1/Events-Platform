@@ -4037,6 +4037,13 @@
         
         // Set up centralized click tracking for all form containers (event delegation)
         setupFormContainerClickTracking(container);
+
+        // Location wallpaper: install non-invasive listeners (lat/lng change -> refresh active wallpaper)
+        try {
+            if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.install === 'function') {
+                LocationWallpaperComponent.install(container);
+            }
+        } catch (_eLWI) {}
         
         return {
             quantityPicker: quantityPicker,
@@ -4264,6 +4271,13 @@
             
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
+
+            // Location wallpaper: manage lifecycle based on active container
+            try {
+                if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+                    LocationWallpaperComponent.handleActiveContainerChange(container, clickedContainer);
+                }
+            } catch (_eLW) {}
         });
     }
     

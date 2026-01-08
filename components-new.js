@@ -6911,6 +6911,493 @@ const AgeRatingComponent = (function(){
 })();
 
 
+/* ============================================================================
+   LOCATION WALLPAPER (Member-only, location containers)
+   ============================================================================
+   - One Mapbox instance at a time (only the active location container).
+   - When container deactivates: capture a "location image" (in-browser only),
+     store camera, remove the map.
+   - When container reactivates: recreate map hidden, jumpTo camera, wait idle,
+     then cross-fade from the location image to the live map (no black flash).
+   ============================================================================ */
+
+const LocationWallpaperComponent = (function() {
+    'use strict';
+
+    var activeCtrl = null;
+    var activeContainerEl = null;
+    var docListenerInstalled = false;
+
+    function safeNum(v) {
+        var n = parseFloat(String(v || '').trim());
+        return isFinite(n) ? n : null;
+    }
+
+    function prefersReducedMotion() {
+        try {
+            return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function getLocationTypeFromContainer(containerEl) {
+        if (!containerEl) return 'venue';
+        try {
+            if (containerEl.querySelector('.fieldset[data-fieldset-key="city"]')) return 'city';
+            if (containerEl.querySelector('.fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]')) return 'address';
+            if (containerEl.querySelector('.fieldset[data-fieldset-key="venue"]')) return 'venue';
+        } catch (e) {}
+        return 'venue';
+    }
+
+    function getDefaultCameraForType(locationType, centerLngLat) {
+        var t = String(locationType || '').toLowerCase();
+        var zoom = (t === 'city') ? 12 : 17;
+        return {
+            center: centerLngLat,
+            zoom: zoom,
+            pitch: 70,
+            bearing: 0
+        };
+    }
+
+    function readLatLng(containerEl) {
+        if (!containerEl) return null;
+        try {
+            var latEl = containerEl.querySelector('.fieldset-lat');
+            var lngEl = containerEl.querySelector('.fieldset-lng');
+            var lat = latEl ? safeNum(latEl.value) : null;
+            var lng = lngEl ? safeNum(lngEl.value) : null;
+            if (lat === null || lng === null) return null;
+            return { lat: lat, lng: lng };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getMainMap() {
+        try {
+            if (window.MapModule && typeof MapModule.getMap === 'function') {
+                return MapModule.getMap();
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    function getStyleForWallpaper() {
+        // Prefer mirroring the current main map style exactly.
+        var main = getMainMap();
+        if (main && typeof main.getStyle === 'function') {
+            try {
+                return JSON.parse(JSON.stringify(main.getStyle()));
+            } catch (e) {}
+        }
+        // Fallback to Mapbox Standard (matches new site defaults).
+        return 'mapbox://styles/mapbox/standard';
+    }
+
+    function getLightingPresetForWallpaper() {
+        // Prefer mirroring the current main map lighting preset.
+        var main = getMainMap();
+        if (main && typeof main.getConfigProperty === 'function') {
+            try {
+                var preset = main.getConfigProperty('basemap', 'lightPreset');
+                if (preset) return preset;
+            } catch (e) {}
+        }
+        // Next: member setting, then localStorage, then 'day' default (same as MapModule).
+        try {
+            var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
+            if (member && member.map_lighting) return member.map_lighting;
+        } catch (e) {}
+        try {
+            var stored = localStorage.getItem('map_lighting');
+            if (stored) return stored;
+        } catch (e) {}
+        return 'day';
+    }
+
+    function attachToLocationContainer(locationContainerEl) {
+        if (!locationContainerEl) throw new Error('[LocationWallpaperComponent] locationContainerEl is required.');
+
+        var contentEl = locationContainerEl.querySelector('.member-postform-location-content');
+        if (!contentEl) throw new Error('[LocationWallpaperComponent] .member-postform-location-content not found.');
+
+        // Root sits behind content; pointer-events none (wallpaper only).
+        var root = document.createElement('div');
+        root.className = 'component-locationwallpaper';
+        root.setAttribute('aria-hidden', 'true');
+
+        var mapMount = document.createElement('div');
+        mapMount.className = 'component-locationwallpaper-mapmount';
+
+        var img = document.createElement('img');
+        img.className = 'component-locationwallpaper-image';
+        img.alt = '';
+        img.decoding = 'async';
+        img.loading = 'lazy';
+
+        root.appendChild(mapMount);
+        root.appendChild(img);
+
+        // Insert as first child so z-index rules can lift everything else above it.
+        contentEl.insertBefore(root, contentEl.firstChild || null);
+        contentEl.classList.add('member-postform-location-content--locationwallpaper');
+
+        var st = {
+            map: null,
+            orbiting: false,
+            lastLat: null,
+            lastLng: null,
+            savedCamera: null,
+            imageUrl: '',
+            reducedMotion: prefersReducedMotion(),
+            pendingRevealTimer: null,
+            resizeObs: null,
+            resizeRaf: 0
+        };
+
+        function clearRevealTimers() {
+            if (st.pendingRevealTimer) {
+                clearTimeout(st.pendingRevealTimer);
+                st.pendingRevealTimer = null;
+            }
+        }
+
+        function setImageUrl(url) {
+            try {
+                if (st.imageUrl) URL.revokeObjectURL(st.imageUrl);
+            } catch (e) {}
+            st.imageUrl = url || '';
+            if (st.imageUrl) {
+                img.src = st.imageUrl;
+                img.style.display = '';
+            } else {
+                img.removeAttribute('src');
+                img.style.display = 'none';
+            }
+        }
+
+        function showImage() {
+            root.classList.remove('component-locationwallpaper--map-visible');
+            img.style.display = st.imageUrl ? '' : 'none';
+        }
+
+        function revealMapCrossfade() {
+            // Cross-fade: keep location image visible while map loads hidden, then fade map in.
+            root.classList.add('component-locationwallpaper--map-visible');
+            clearRevealTimers();
+            st.pendingRevealTimer = setTimeout(function() {
+                // Once map is visible, hide the image (keeps DOM stable).
+                try { if (img) img.style.display = 'none'; } catch (e) {}
+            }, 260);
+        }
+
+        function getMapCamera() {
+            if (!st.map) return null;
+            try {
+                var c = st.map.getCenter();
+                return {
+                    center: [c.lng, c.lat],
+                    zoom: st.map.getZoom(),
+                    pitch: st.map.getPitch(),
+                    bearing: st.map.getBearing()
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function stopOrbit() {
+            st.orbiting = false;
+        }
+
+        function startOrbit(baseZoom) {
+            if (!st.map) return;
+            if (st.reducedMotion) return;
+            st.orbiting = true;
+
+            function step(firstStep) {
+                if (!st.map || !st.orbiting) return;
+                var b = 0;
+                try { b = st.map.getBearing() || 0; } catch (e) { b = 0; }
+
+                var opts = {
+                    bearing: b + 12,
+                    duration: 6500,
+                    easing: function(t) { return t; },
+                    essential: true
+                };
+                if (firstStep && typeof baseZoom === 'number') {
+                    opts.zoom = baseZoom;
+                }
+                try {
+                    st.map.easeTo(opts);
+                } catch (e2) {
+                    // If easeTo fails (rare), stop orbit rather than thrash.
+                    st.orbiting = false;
+                    return;
+                }
+                st.map.once('moveend', function() {
+                    if (!st.orbiting) return;
+                    step(false);
+                });
+            }
+
+            step(true);
+        }
+
+        function ensureResizeObserver() {
+            if (st.resizeObs || !window.ResizeObserver) return;
+            st.resizeObs = new ResizeObserver(function() {
+                if (!st.map) return;
+                if (st.resizeRaf) cancelAnimationFrame(st.resizeRaf);
+                st.resizeRaf = requestAnimationFrame(function() {
+                    st.resizeRaf = 0;
+                    try { if (st.map) st.map.resize(); } catch (e) {}
+                });
+            });
+            try { st.resizeObs.observe(contentEl); } catch (e) {}
+        }
+
+        function ensureMapAndStart(lat, lng) {
+            if (!window.mapboxgl) return;
+            if (!mapboxgl.accessToken) return;
+
+            var locationType = getLocationTypeFromContainer(locationContainerEl);
+            var desired = getDefaultCameraForType(locationType, [lng, lat]);
+
+            // If we have a saved camera for this exact lat/lng, prefer it.
+            if (st.savedCamera && st.lastLat === lat && st.lastLng === lng) {
+                desired = {
+                    center: st.savedCamera.center || desired.center,
+                    zoom: (typeof st.savedCamera.zoom === 'number') ? st.savedCamera.zoom : desired.zoom,
+                    pitch: (typeof st.savedCamera.pitch === 'number') ? st.savedCamera.pitch : desired.pitch,
+                    bearing: (typeof st.savedCamera.bearing === 'number') ? st.savedCamera.bearing : desired.bearing
+                };
+            }
+
+            // Keep the location image visible while we (re)create the map hidden.
+            showImage();
+
+            // Recreate map if missing
+            if (!st.map) {
+                mapMount.innerHTML = '';
+                try {
+                    st.map = new mapboxgl.Map({
+                        container: mapMount,
+                        style: getStyleForWallpaper(),
+                        projection: 'globe',
+                        center: desired.center,
+                        zoom: Math.max(0, (desired.zoom || 0) - 0.25),
+                        pitch: desired.pitch || 0,
+                        bearing: desired.bearing || 0,
+                        interactive: false,
+                        attributionControl: false,
+                        renderWorldCopies: false,
+                        antialias: false,
+                        preserveDrawingBuffer: true
+                    });
+                } catch (eMap) {
+                    st.map = null;
+                    return;
+                }
+
+                ensureResizeObserver();
+
+                // Apply lighting preset early on style.load (mirrors MapModule approach).
+                st.map.once('style.load', function() {
+                    try {
+                        if (st.map && typeof st.map.setConfigProperty === 'function') {
+                            st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
+                        }
+                    } catch (eLP) {}
+                });
+
+                // Position at desired camera (no animation) before reveal.
+                try { st.map.jumpTo(desired); } catch (eJT) {}
+
+                // Reveal only when tiles are ready (idle).
+                st.map.once('idle', function() {
+                    if (!st.map) return;
+                    revealMapCrossfade();
+                    // Begin gentle orbit + slight zoom-in (first orbit step carries zoom).
+                    stopOrbit();
+                    startOrbit(desired.zoom);
+                });
+            } else {
+                // Map already exists: just jump to new location and keep it live.
+                try { st.map.jumpTo(desired); } catch (eJ2) {}
+                revealMapCrossfade();
+            }
+        }
+
+        function freezeToLocationImage() {
+            stopOrbit();
+            clearRevealTimers();
+
+            if (!st.map) {
+                showImage();
+                return;
+            }
+
+            // Store camera now (for seamless resume).
+            st.savedCamera = getMapCamera();
+
+            var canvas = null;
+            try { canvas = st.map.getCanvas(); } catch (e) { canvas = null; }
+            if (!canvas || !canvas.toBlob) {
+                try { st.map.remove(); } catch (e2) {}
+                st.map = null;
+                showImage();
+                return;
+            }
+
+            try {
+                canvas.toBlob(function(blob) {
+                    // Even if blob fails, still remove the map (wallpaper must stop).
+                    if (blob) {
+                        try {
+                            var url = URL.createObjectURL(blob);
+                            setImageUrl(url);
+                        } catch (eURL) {}
+                    }
+                    try { if (st.map) st.map.remove(); } catch (eRM) {}
+                    st.map = null;
+                    showImage();
+                }, 'image/webp', 0.85);
+            } catch (eTB) {
+                try { st.map.remove(); } catch (eRM2) {}
+                st.map = null;
+                showImage();
+            }
+        }
+
+        function refreshFromFieldsIfActive() {
+            // Only start while this container is active.
+            if (locationContainerEl.getAttribute('data-active') !== 'true') return;
+
+            var ll = readLatLng(locationContainerEl);
+            if (!ll) return;
+
+            var lat = ll.lat;
+            var lng = ll.lng;
+
+            // If location changed, reset saved camera (new anchor).
+            var changed = (st.lastLat !== lat || st.lastLng !== lng);
+            st.lastLat = lat;
+            st.lastLng = lng;
+            if (changed) st.savedCamera = null;
+
+            ensureMapAndStart(lat, lng);
+        }
+
+        function destroy() {
+            clearRevealTimers();
+            stopOrbit();
+            try { if (st.map) st.map.remove(); } catch (e) {}
+            st.map = null;
+            try {
+                if (st.resizeObs) st.resizeObs.disconnect();
+            } catch (e2) {}
+            st.resizeObs = null;
+            if (st.resizeRaf) cancelAnimationFrame(st.resizeRaf);
+            st.resizeRaf = 0;
+            setImageUrl('');
+            try { contentEl.classList.remove('member-postform-location-content--locationwallpaper'); } catch (e3) {}
+            try { if (root && root.parentNode) root.parentNode.removeChild(root); } catch (e4) {}
+        }
+
+        return {
+            element: root,
+            refresh: refreshFromFieldsIfActive,
+            freeze: freezeToLocationImage,
+            destroy: destroy
+        };
+    }
+
+    function getOrCreateCtrl(locationContainerEl) {
+        if (!locationContainerEl) return null;
+        try {
+            if (locationContainerEl.__locationWallpaperCtrl) return locationContainerEl.__locationWallpaperCtrl;
+        } catch (e) {}
+        var ctrl = attachToLocationContainer(locationContainerEl);
+        try { locationContainerEl.__locationWallpaperCtrl = ctrl; } catch (e2) {}
+        return ctrl;
+    }
+
+    function handleActiveContainerChange(rootEl, clickedContainerEl) {
+        // Called from FormBuilder's centralized container click tracking.
+        // If a location container is active -> ensure wallpaper starts/resumes there.
+        // Otherwise -> freeze the previously active wallpaper (if any).
+        var nextLocationContainer = null;
+        try {
+            if (clickedContainerEl && clickedContainerEl.classList && clickedContainerEl.classList.contains('member-location-container')) {
+                nextLocationContainer = clickedContainerEl;
+            }
+        } catch (e) {}
+
+        if (activeCtrl && (!nextLocationContainer || activeCtrl !== (nextLocationContainer.__locationWallpaperCtrl || null))) {
+            try { activeCtrl.freeze(); } catch (e2) {}
+            activeCtrl = null;
+            activeContainerEl = null;
+        }
+
+        if (nextLocationContainer) {
+            var ctrl = getOrCreateCtrl(nextLocationContainer);
+            activeCtrl = ctrl;
+            activeContainerEl = nextLocationContainer;
+            try { if (ctrl) ctrl.refresh(); } catch (e3) {}
+        }
+    }
+
+    function install(rootEl) {
+        if (!rootEl) return;
+        try {
+            if (rootEl.__locationWallpaperInstalled) return;
+            rootEl.__locationWallpaperInstalled = true;
+        } catch (e) {}
+
+        // Global: clicking anywhere outside the active location container freezes the wallpaper.
+        // We intentionally ignore Google Places dropdown clicks (pac-container lives in <body>).
+        if (!docListenerInstalled) {
+            docListenerInstalled = true;
+            document.addEventListener('click', function(e) {
+                if (!activeCtrl || !activeContainerEl) return;
+                var t = e && e.target ? e.target : null;
+                if (!t || !(t instanceof Element)) return;
+                if (t.closest && t.closest('.pac-container')) return;
+                if (activeContainerEl.contains(t)) return;
+                try { activeCtrl.freeze(); } catch (_eF) {}
+                activeCtrl = null;
+                activeContainerEl = null;
+            }, true);
+        }
+
+        // When lat/lng are confirmed/updated, refresh the active container wallpaper.
+        rootEl.addEventListener('change', function(e) {
+            if (!activeCtrl) return;
+            var t = e && e.target ? e.target : null;
+            if (!t || !(t instanceof Element)) return;
+            // Only react to changes coming from inside the active location container.
+            var activeContainer = t.closest('.member-location-container[data-active="true"]');
+            if (!activeContainer) return;
+            if (activeCtrl !== (activeContainer.__locationWallpaperCtrl || null)) return;
+            // Only refresh when relevant fields change (lat/lng).
+            if (t.classList && (t.classList.contains('fieldset-lat') || t.classList.contains('fieldset-lng'))) {
+                try { activeCtrl.refresh(); } catch (e2) {}
+            }
+        }, true);
+    }
+
+    return {
+        install: install,
+        handleActiveContainerChange: handleActiveContainerChange
+    };
+})();
+
+
 // Expose globally
 window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;
@@ -6936,5 +7423,6 @@ window.WelcomeModalComponent = WelcomeModalComponent;
 window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
+window.LocationWallpaperComponent = LocationWallpaperComponent;
 
 

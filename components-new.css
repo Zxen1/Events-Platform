@@ -3265,3 +3265,67 @@
     opacity: 0.5;
     pointer-events: none;
 }
+
+
+/* ============================================================================
+   LOCATION WALLPAPER (Member location containers)
+   ============================================================================ */
+
+.member-postform-location-content--locationwallpaper {
+    position: relative;
+}
+
+/* Lift normal content above wallpaper without impacting menu z-index logic */
+.member-postform-location-content--locationwallpaper > :not(.component-locationwallpaper) {
+    position: relative;
+    z-index: 1;
+}
+
+.component-locationwallpaper {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 0 0 5px 5px;
+}
+
+.component-locationwallpaper-mapmount,
+.component-locationwallpaper-image {
+    position: absolute;
+    inset: 0;
+}
+
+.component-locationwallpaper-mapmount {
+    opacity: 0;
+    transition: opacity 0.24s ease;
+}
+
+.component-locationwallpaper-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 1;
+    transition: opacity 0.24s ease;
+    display: none; /* Only shown when we have a location image */
+}
+
+.component-locationwallpaper--map-visible .component-locationwallpaper-mapmount {
+    opacity: 1;
+}
+
+.component-locationwallpaper--map-visible .component-locationwallpaper-image {
+    opacity: 0;
+}
+
+/* Keep Mapbox logo tidy in this background context */
+.component-locationwallpaper .mapboxgl-ctrl-bottom-left,
+.component-locationwallpaper .mapboxgl-ctrl-bottom-right {
+    padding: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .component-locationwallpaper-mapmount,
+    .component-locationwallpaper-image {
+        transition: none;
+    }
+}
