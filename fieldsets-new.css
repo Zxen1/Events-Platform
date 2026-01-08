@@ -554,6 +554,7 @@
     height: 24px;
     position: relative;
     flex: 0 0 24px;
+    transform: translateY(-3px);
 }
 
 .fieldset-customchecklist-row-boximg {
