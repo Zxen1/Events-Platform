@@ -1675,8 +1675,12 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: var(--member-location-wallpaper-size, 100%);
-  height: var(--member-location-wallpaper-size, 100%);
+  /* Always fill the container... */
+  width: 100%;
+  height: 100%;
+  /* ...but if the container is too short (e.g. 36px), ensure the wallpaper area is at least "square"
+     by forcing a minimum height equal to the container width. */
+  min-height: var(--member-location-wallpaper-min, 0px);
 }
 
 .member-location-wallpaper-map {

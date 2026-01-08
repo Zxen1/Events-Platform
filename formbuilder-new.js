@@ -4295,7 +4295,11 @@
     }
 
     /**
-     * Ensure each location container wallpaper is at least square (size = max(content width, content height)).
+     * Location container wallpaper sizing:
+     * - Always fill the entire container (100% x 100%)
+     * - If the container is too short, ensure the wallpaper has a minimum height equal to container width
+     *   so it doesn't collapse into a thin strip.
+     *
      * This only sets CSS variables; MapModule is responsible for rendering the wallpaper map itself.
      */
     function updateLocationWallpaperSizing(rootEl) {
@@ -4305,11 +4309,9 @@
             var square = contentEl.querySelector('.member-location-wallpaper-square');
             if (!square) return;
             var w = contentEl.clientWidth || 0;
-            var h = contentEl.clientHeight || 0;
-            var size = Math.max(w, h);
-            if (!size) return;
+            if (!w) return;
             try {
-                square.style.setProperty('--member-location-wallpaper-size', size + 'px');
+                square.style.setProperty('--member-location-wallpaper-min', w + 'px');
             } catch (e) {}
         });
     }
