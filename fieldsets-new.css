@@ -1592,6 +1592,10 @@
     width: 100%;
 }
 
+.fieldset-location-inputwrap--open {
+    z-index: var(--layer-menu, 85);
+}
+
 /* Location dropdown (New Google Places AutocompleteSuggestion UI) */
 .fieldset-location-dropdown {
     display: none;

@@ -3278,7 +3278,6 @@
 /* Lift normal content above wallpaper without impacting menu z-index logic */
 .member-postform-location-content--locationwallpaper > :not(.component-locationwallpaper) {
     position: relative;
-    z-index: 1;
 }
 
 .component-locationwallpaper {

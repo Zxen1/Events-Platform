@@ -109,6 +109,7 @@ const FieldsetBuilder = (function(){
         async function fetchSuggestions(query) {
             if (!query || query.length < 2) {
                 dropdown.style.display = 'none';
+                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
                 return;
             }
             
@@ -135,6 +136,7 @@ const FieldsetBuilder = (function(){
                 
                 if (!response || !response.suggestions || response.suggestions.length === 0) {
                     dropdown.style.display = 'none';
+                    try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0b) {}
                     return;
                 }
                 
@@ -196,9 +198,11 @@ const FieldsetBuilder = (function(){
                 });
                 
                 dropdown.style.display = 'block';
+                try { if (parent) parent.classList.add('fieldset-location-inputwrap--open'); } catch (e0c) {}
             } catch (err) {
                 console.error('Autocomplete error:', err);
                 dropdown.style.display = 'none';
+                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0d) {}
             }
         }
         
@@ -211,6 +215,7 @@ const FieldsetBuilder = (function(){
             
             if (query.length < 2) {
                 dropdown.style.display = 'none';
+                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0e) {}
                 return;
             }
             
@@ -223,6 +228,7 @@ const FieldsetBuilder = (function(){
         document.addEventListener('click', function(e) {
             if (!inputElement.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.style.display = 'none';
+                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0f) {}
             }
         });
         
@@ -232,6 +238,7 @@ const FieldsetBuilder = (function(){
                 if (dropdown && dropdown.parentNode) {
                     dropdown.parentNode.removeChild(dropdown);
                 }
+                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0g) {}
             }
         };
     }
@@ -3396,6 +3403,7 @@ const FieldsetBuilder = (function(){
                     async function fetchSuggestions(query) {
                         if (!query || query.length < 2) {
                             dropdown.style.display = 'none';
+                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
                             return;
                         }
                         
@@ -3409,6 +3417,7 @@ const FieldsetBuilder = (function(){
                             
                             if (!response || !response.suggestions || response.suggestions.length === 0) {
                                 dropdown.style.display = 'none';
+                                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0b) {}
                                 return;
                             }
                             
@@ -3497,9 +3506,11 @@ const FieldsetBuilder = (function(){
                             });
                             
                             dropdown.style.display = 'block';
+                            try { if (parent) parent.classList.add('fieldset-location-inputwrap--open'); } catch (e0c) {}
                         } catch (err) {
                             console.error('Autocomplete error:', err);
                             dropdown.style.display = 'none';
+                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0d) {}
                         }
                     }
                     
@@ -3518,6 +3529,7 @@ const FieldsetBuilder = (function(){
                         
                         if (query.length < 2) {
                             dropdown.style.display = 'none';
+                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0e) {}
                             return;
                         }
                         
@@ -3530,6 +3542,7 @@ const FieldsetBuilder = (function(){
                     document.addEventListener('click', function(e) {
                         if (!inputEl.contains(e.target) && !dropdown.contains(e.target)) {
                             dropdown.style.display = 'none';
+                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0f) {}
                         }
                     });
                 }
