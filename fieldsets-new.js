@@ -32,6 +32,138 @@ const FieldsetBuilder = (function(){
             });
         return loadPromise;
     }
+
+    // Shared dropdown keyboard navigation (single source of truth)
+    // Used by: initGooglePlaces (address/city) + initSmartVenueAutocomplete (venue fieldset)
+    function installLocationDropdownKeyboard(inputEl, dropdownEl, parentWrapEl) {
+        var activeIndex = -1;
+
+        function getKeyName(e) {
+            if (!e) return '';
+            var k = (typeof e.key === 'string') ? e.key : '';
+            if (!k && typeof e.code === 'string') k = e.code;
+            var n = (typeof e.which === 'number') ? e.which : (typeof e.keyCode === 'number' ? e.keyCode : 0);
+            if ((!k || k === 'Unidentified') && n) {
+                if (n === 40) k = 'ArrowDown';
+                else if (n === 38) k = 'ArrowUp';
+                else if (n === 13) k = 'Enter';
+                else if (n === 27) k = 'Escape';
+                else if (n === 9) k = 'Tab';
+            }
+            // Some browsers report "Up/Down" instead of "ArrowUp/ArrowDown"
+            if (k === 'Up') k = 'ArrowUp';
+            if (k === 'Down') k = 'ArrowDown';
+            return k;
+        }
+
+        function getItems() {
+            try {
+                return Array.prototype.slice.call(dropdownEl.querySelectorAll('.fieldset-location-dropdown-item'));
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function isOpen() {
+            return dropdownEl && dropdownEl.style && dropdownEl.style.display !== 'none';
+        }
+
+        function syncActiveClass(items) {
+            items.forEach(function(el, idx) {
+                try { el.classList.toggle('fieldset-location-dropdown-item--active', idx === activeIndex); } catch (e) {}
+            });
+        }
+
+        function setActiveIndex(nextIdx) {
+            var items = getItems();
+            if (!items.length) {
+                activeIndex = -1;
+                return;
+            }
+            var i = nextIdx;
+            if (i < 0) i = items.length - 1;
+            if (i >= items.length) i = 0;
+            activeIndex = i;
+            syncActiveClass(items);
+            try {
+                var el0 = items[activeIndex];
+                if (el0 && typeof el0.scrollIntoView === 'function') el0.scrollIntoView({ block: 'nearest' });
+            } catch (e2) {}
+        }
+
+        function open() {
+            dropdownEl.style.display = 'block';
+            try { if (parentWrapEl) parentWrapEl.classList.add('fieldset-location-inputwrap--open'); } catch (e0) {}
+            activeIndex = -1;
+            setActiveIndex(0);
+        }
+
+        function close() {
+            dropdownEl.style.display = 'none';
+            activeIndex = -1;
+            try { if (parentWrapEl) parentWrapEl.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
+        }
+
+        function selectActive() {
+            var items = getItems();
+            if (!items.length) return false;
+            if (activeIndex < 0) setActiveIndex(0);
+            var el = items[activeIndex];
+            if (!el) return false;
+            try { el.click(); return true; } catch (e) { return false; }
+        }
+
+        // Hover highlight via event delegation
+        dropdownEl.addEventListener('mouseover', function(e) {
+            var t = e && e.target ? e.target : null;
+            if (!t || !(t instanceof Element)) return;
+            var item = t.closest('.fieldset-location-dropdown-item');
+            if (!item || !dropdownEl.contains(item)) return;
+            var items = getItems();
+            var idx = items.indexOf(item);
+            if (idx >= 0) {
+                activeIndex = idx;
+                syncActiveClass(items);
+            }
+        });
+
+        // Keydown on input (capture) so other handlers can't swallow Enter/arrows first.
+        inputEl.addEventListener('keydown', function(e) {
+            var key = getKeyName(e);
+            if (!isOpen()) return;
+            if (!getItems().length) return;
+
+            if (key === 'ArrowDown') {
+                try { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); } catch (e0) {}
+                setActiveIndex(activeIndex + 1);
+                return;
+            }
+            if (key === 'ArrowUp') {
+                try { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); } catch (e1) {}
+                setActiveIndex(activeIndex - 1);
+                return;
+            }
+            if (key === 'Enter') {
+                try { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); } catch (e2) {}
+                selectActive();
+                return;
+            }
+            if (key === 'Escape') {
+                try { e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); } catch (e3) {}
+                close();
+                return;
+            }
+            if (key === 'Tab') {
+                close();
+                return;
+            }
+        }, true);
+
+        return {
+            open: open,
+            close: close
+        };
+    }
     
     // Google Places Autocomplete helper - Uses new API (AutocompleteSuggestion)
     // type: 'address' | 'establishment' | '(cities)'
@@ -66,43 +198,7 @@ const FieldsetBuilder = (function(){
         if (parent) {
             parent.appendChild(dropdown);
         }
-        
-        // Keyboard navigation
-        var dropdownItems = [];
-        var activeIndex = -1;
-        function dropdownIsOpen() {
-            return dropdown && dropdown.style && dropdown.style.display !== 'none';
-        }
-        function closeDropdown() {
-            dropdown.style.display = 'none';
-            dropdownItems = [];
-            activeIndex = -1;
-            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
-        }
-        function setActiveIndex(nextIdx) {
-            if (!dropdownItems || dropdownItems.length === 0) {
-                activeIndex = -1;
-                return;
-            }
-            var i = nextIdx;
-            if (i < 0) i = dropdownItems.length - 1;
-            if (i >= dropdownItems.length) i = 0;
-            activeIndex = i;
-            dropdownItems.forEach(function(el, idx) {
-                try { el.classList.toggle('fieldset-location-dropdown-item--active', idx === activeIndex); } catch (e) {}
-            });
-            try {
-                var el0 = dropdownItems[activeIndex];
-                if (el0 && typeof el0.scrollIntoView === 'function') el0.scrollIntoView({ block: 'nearest' });
-            } catch (e2) {}
-        }
-        function selectActive() {
-            if (!dropdownItems || dropdownItems.length === 0) return false;
-            if (activeIndex < 0) setActiveIndex(0);
-            var el = dropdownItems[activeIndex];
-            if (!el) return false;
-            try { el.click(); return true; } catch (e) { return false; }
-        }
+        var kb = installLocationDropdownKeyboard(inputElement, dropdown, parent);
         
         // Track whether the current value is confirmed from Google Places (required for "complete")
         try { inputElement.dataset.placesConfirmed = 'false'; } catch (e0) {}
@@ -145,7 +241,7 @@ const FieldsetBuilder = (function(){
         var debounceTimer = null;
         async function fetchSuggestions(query) {
             if (!query || query.length < 2) {
-                closeDropdown();
+                kb.close();
                 return;
             }
             
@@ -169,11 +265,9 @@ const FieldsetBuilder = (function(){
                 var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
                 
                 dropdown.innerHTML = '';
-                dropdownItems = [];
-                activeIndex = -1;
                 
                 if (!response || !response.suggestions || response.suggestions.length === 0) {
-                    closeDropdown();
+                    kb.close();
                     return;
                 }
                 
@@ -183,10 +277,6 @@ const FieldsetBuilder = (function(){
                     
                     var item = document.createElement('div');
                     item.className = 'fieldset-location-dropdown-item';
-                    item.addEventListener('mouseenter', function() {
-                        var idx = dropdownItems.indexOf(item);
-                        if (idx >= 0) setActiveIndex(idx);
-                    });
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
@@ -206,7 +296,7 @@ const FieldsetBuilder = (function(){
                                 var cc = extractCountryCode(place);
                                 
                                 inputElement.value = place.displayName || place.formattedAddress || mainText;
-                                dropdown.style.display = 'none';
+                                kb.close();
                                 
                                 if (latInput) latInput.value = lat;
                                 if (lngInput) lngInput.value = lng;
@@ -239,15 +329,12 @@ const FieldsetBuilder = (function(){
                     });
                     
                     dropdown.appendChild(item);
-                    dropdownItems.push(item);
                 });
                 
-                dropdown.style.display = 'block';
-                try { if (parent) parent.classList.add('fieldset-location-inputwrap--open'); } catch (e0c) {}
-                setActiveIndex(0);
+                kb.open();
             } catch (err) {
                 console.error('Autocomplete error:', err);
-                closeDropdown();
+                kb.close();
             }
         }
         
@@ -259,7 +346,7 @@ const FieldsetBuilder = (function(){
             var query = inputElement.value.trim();
             
             if (query.length < 2) {
-                closeDropdown();
+                kb.close();
                 return;
             }
             
@@ -271,44 +358,7 @@ const FieldsetBuilder = (function(){
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (!inputElement.contains(e.target) && !dropdown.contains(e.target)) {
-                closeDropdown();
-            }
-        });
-        
-        inputElement.addEventListener('keydown', function(e) {
-            var key = e && e.key ? e.key : '';
-            // Key fallback for older/odd environments
-            if (!key && e && typeof e.keyCode === 'number') {
-                if (e.keyCode === 40) key = 'ArrowDown';
-                else if (e.keyCode === 38) key = 'ArrowUp';
-                else if (e.keyCode === 13) key = 'Enter';
-                else if (e.keyCode === 27) key = 'Escape';
-            }
-            if (!dropdownIsOpen()) return;
-            if (!dropdownItems || dropdownItems.length === 0) return;
-            if (key === 'ArrowDown') {
-                try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                setActiveIndex(activeIndex + 1);
-                return;
-            }
-            if (key === 'ArrowUp') {
-                try { e.preventDefault(); e.stopPropagation(); } catch (e1) {}
-                setActiveIndex(activeIndex - 1);
-                return;
-            }
-            if (key === 'Enter') {
-                try { e.preventDefault(); e.stopPropagation(); } catch (e2) {}
-                selectActive();
-                return;
-            }
-            if (key === 'Escape') {
-                try { e.preventDefault(); e.stopPropagation(); } catch (e3) {}
-                closeDropdown();
-                return;
-            }
-            if (key === 'Tab') {
-                closeDropdown();
-                return;
+                kb.close();
             }
         });
         
@@ -318,7 +368,7 @@ const FieldsetBuilder = (function(){
                 if (dropdown && dropdown.parentNode) {
                     dropdown.parentNode.removeChild(dropdown);
                 }
-                closeDropdown();
+                kb.close();
             }
         };
     }
@@ -3501,49 +3551,13 @@ const FieldsetBuilder = (function(){
                     if (parent) {
                         parent.appendChild(dropdown);
                     }
-                    
-                    // Keyboard navigation (per input instance)
-                    var dropdownItems = [];
-                    var activeIndex = -1;
-                    function dropdownIsOpen() {
-                        return dropdown && dropdown.style && dropdown.style.display !== 'none';
-                    }
-                    function closeDropdown() {
-                        dropdown.style.display = 'none';
-                        dropdownItems = [];
-                        activeIndex = -1;
-                        try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
-                    }
-                    function setActiveIndex(nextIdx) {
-                        if (!dropdownItems || dropdownItems.length === 0) {
-                            activeIndex = -1;
-                            return;
-                        }
-                        var i = nextIdx;
-                        if (i < 0) i = dropdownItems.length - 1;
-                        if (i >= dropdownItems.length) i = 0;
-                        activeIndex = i;
-                        dropdownItems.forEach(function(el, idx) {
-                            try { el.classList.toggle('fieldset-location-dropdown-item--active', idx === activeIndex); } catch (e) {}
-                        });
-                        try {
-                            var el0 = dropdownItems[activeIndex];
-                            if (el0 && typeof el0.scrollIntoView === 'function') el0.scrollIntoView({ block: 'nearest' });
-                        } catch (e2) {}
-                    }
-                    function selectActive() {
-                        if (!dropdownItems || dropdownItems.length === 0) return false;
-                        if (activeIndex < 0) setActiveIndex(0);
-                        var el = dropdownItems[activeIndex];
-                        if (!el) return false;
-                        try { el.click(); return true; } catch (e) { return false; }
-                    }
+                    var kb = installLocationDropdownKeyboard(inputEl, dropdown, parent);
                     
                     // Fetch suggestions using new API (unrestricted - finds both venues and addresses)
                     var debounceTimer = null;
                     async function fetchSuggestions(query) {
                         if (!query || query.length < 2) {
-                            closeDropdown();
+                            kb.close();
                             return;
                         }
                         
@@ -3554,11 +3568,9 @@ const FieldsetBuilder = (function(){
                             });
                             
                             dropdown.innerHTML = '';
-                            dropdownItems = [];
-                            activeIndex = -1;
                             
                             if (!response || !response.suggestions || response.suggestions.length === 0) {
-                                closeDropdown();
+                                kb.close();
                                 return;
                             }
                             
@@ -3568,10 +3580,6 @@ const FieldsetBuilder = (function(){
                                 
                                 var item = document.createElement('div');
                                 item.className = 'fieldset-location-dropdown-item';
-                                item.addEventListener('mouseenter', function() {
-                                    var idx = dropdownItems.indexOf(item);
-                                    if (idx >= 0) setActiveIndex(idx);
-                                });
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                                 var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
@@ -3636,10 +3644,7 @@ const FieldsetBuilder = (function(){
                                         }
                                         
                                         inputEl.value = isVenueBox ? (isEstablishment ? venueName : address) : address;
-                                        dropdown.style.display = 'none';
-                                        try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (eCls0) {}
-                                        dropdownItems = [];
-                                        activeIndex = -1;
+                                        kb.close();
                                         
                                         // After a confirmed selection, return address to display-mode.
                                         if (!isVenueBox) {
@@ -3664,12 +3669,10 @@ const FieldsetBuilder = (function(){
                                 dropdown.appendChild(item);
                             });
                             
-                            dropdown.style.display = 'block';
-                            try { if (parent) parent.classList.add('fieldset-location-inputwrap--open'); } catch (e0c) {}
-                            setActiveIndex(0);
+                            kb.open();
                         } catch (err) {
                             console.error('Autocomplete error:', err);
-                            closeDropdown();
+                            kb.close();
                         }
                     }
                     
@@ -3687,7 +3690,7 @@ const FieldsetBuilder = (function(){
                         var query = inputEl.value.trim();
                         
                         if (query.length < 2) {
-                            closeDropdown();
+                            kb.close();
                             return;
                         }
                         
@@ -3699,44 +3702,7 @@ const FieldsetBuilder = (function(){
                     // Close dropdown when clicking outside
                     document.addEventListener('click', function(e) {
                         if (!inputEl.contains(e.target) && !dropdown.contains(e.target)) {
-                            closeDropdown();
-                        }
-                    });
-                    
-                    inputEl.addEventListener('keydown', function(e) {
-                        var key = e && e.key ? e.key : '';
-                        // Key fallback for older/odd environments
-                        if (!key && e && typeof e.keyCode === 'number') {
-                            if (e.keyCode === 40) key = 'ArrowDown';
-                            else if (e.keyCode === 38) key = 'ArrowUp';
-                            else if (e.keyCode === 13) key = 'Enter';
-                            else if (e.keyCode === 27) key = 'Escape';
-                        }
-                        if (!dropdownIsOpen()) return;
-                        if (!dropdownItems || dropdownItems.length === 0) return;
-                        if (key === 'ArrowDown') {
-                            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                            setActiveIndex(activeIndex + 1);
-                            return;
-                        }
-                        if (key === 'ArrowUp') {
-                            try { e.preventDefault(); e.stopPropagation(); } catch (e1) {}
-                            setActiveIndex(activeIndex - 1);
-                            return;
-                        }
-                        if (key === 'Enter') {
-                            try { e.preventDefault(); e.stopPropagation(); } catch (e2) {}
-                            selectActive();
-                            return;
-                        }
-                        if (key === 'Escape') {
-                            try { e.preventDefault(); e.stopPropagation(); } catch (e3) {}
-                            closeDropdown();
-                            return;
-                        }
-                        if (key === 'Tab') {
-                            closeDropdown();
-                            return;
+                            kb.close();
                         }
                     });
                 }

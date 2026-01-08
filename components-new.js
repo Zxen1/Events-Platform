@@ -7035,7 +7035,7 @@ const LocationWallpaperComponent = (function() {
 
     function getDefaultCameraForType(locationType, centerLngLat) {
         var t = String(locationType || '').toLowerCase();
-        var zoom = (t === 'city') ? 12 : 15;
+        var zoom = (t === 'city') ? 12 : 16;
         return {
             center: centerLngLat,
             zoom: zoom,
@@ -7325,6 +7325,7 @@ const LocationWallpaperComponent = (function() {
                         attributionControl: false,
                         renderWorldCopies: false,
                         antialias: false,
+                        pixelRatio: 1,
                         preserveDrawingBuffer: true
                     });
                 } catch (eMap) {
@@ -7378,6 +7379,7 @@ const LocationWallpaperComponent = (function() {
                         attributionControl: false,
                         renderWorldCopies: false,
                         antialias: false,
+                        pixelRatio: 1,
                         preserveDrawingBuffer: true
                     });
                 } catch (eMap) {
