@@ -554,7 +554,6 @@
     height: 24px;
     position: relative;
     flex: 0 0 24px;
-    transform: translateY(-3px);
 }
 
 .fieldset-customchecklist-row-boximg {
@@ -580,6 +579,7 @@
     width: 30px;
     height: 30px;
     transform: translate(-50%, -50%);
+    margin-top: -3px;
     display: block;
     object-fit: contain;
     /* Selected checkmark color: blue-600 */
