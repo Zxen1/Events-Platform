@@ -374,6 +374,7 @@ foreach ($byLoc as $locNum => $entries) {
     'custom_text' => null,
     'custom_textarea' => null,
     'custom_dropdown' => null,
+    'custom_checklist' => null,
     'custom_radio' => null,
     'public_email' => null,
     'phone_prefix' => null,
@@ -441,6 +442,18 @@ foreach ($byLoc as $locNum => $entries) {
     }
     if ($baseType === 'custom_dropdown' && is_string($val)) {
       $card['custom_dropdown'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
+    }
+    if ($baseType === 'custom_checklist' && is_array($val)) {
+      // Store as label-prefixed string for map card readability (same as other custom_* columns).
+      // Value is a list of selected options.
+      $items = [];
+      foreach ($val as $v0) {
+        $s0 = trim((string)$v0);
+        if ($s0 !== '') $items[] = $s0;
+      }
+      $items = array_values(array_unique($items));
+      $joined = implode(', ', $items);
+      $card['custom_checklist'] = $fieldLabel !== '' ? $fieldLabel . ': ' . $joined : $joined;
     }
     if ($baseType === 'custom_radio' && is_string($val)) {
       $card['custom_radio'] = $fieldLabel !== '' ? $fieldLabel . ': ' . trim($val) : trim($val);
@@ -590,8 +603,8 @@ foreach ($byLoc as $locNum => $entries) {
     $card['price_summary'] = json_encode($priceSummary, JSON_UNESCAPED_UNICODE);
   }
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, age_rating, website_url, tickets_url, coupon_code, checkout_title, session_summary, price_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, age_rating, website_url, tickets_url, coupon_code, checkout_title, session_summary, price_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -601,6 +614,7 @@ foreach ($byLoc as $locNum => $entries) {
   $customTextParam = $card['custom_text'];
   $customTextareaParam = $card['custom_textarea'];
   $customDropdownParam = $card['custom_dropdown'];
+  $customChecklistParam = $card['custom_checklist'];
   $customRadioParam = $card['custom_radio'];
   $emailParam = $card['public_email'];
   $phonePrefixParam = $card['phone_prefix'];
@@ -626,7 +640,7 @@ foreach ($byLoc as $locNum => $entries) {
   // s (subcategory_key)
   // s (title)
   // s (description)
-  // ssss (custom_*)
+  // sssss (custom_*)
   // sss (public_email, phone_prefix, public_phone)
   // sss (venue_name, address_line, city)
   // dd (lat,lng)
@@ -636,7 +650,7 @@ foreach ($byLoc as $locNum => $entries) {
   // s (coupon_code)
   // sss (checkout_title, session_summary, price_summary)
   $stmtCard->bind_param(
-    'isssssssssssssddssssssssss',
+    'issssssssssssssddsssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -644,6 +658,7 @@ foreach ($byLoc as $locNum => $entries) {
     $customTextParam,
     $customTextareaParam,
     $customDropdownParam,
+    $customChecklistParam,
     $customRadioParam,
     $emailParam,
     $phonePrefixParam,

@@ -2443,6 +2443,7 @@
             var needsOptions = (
                 fieldType === 'custom_dropdown' ||
                 fieldType === 'custom_radio' ||
+                fieldType === 'custom_checklist' ||
                 fieldType === 'dropdown' ||
                 fieldType === 'radio' ||
                 fieldType === 'select'

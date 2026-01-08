@@ -895,6 +895,127 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(radioGroup);
                 break;
                 
+            case 'custom_checklist': // post_map_cards.custom_checklist
+                fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                // Checkbox/checkmark icons from Admin Settings (system_images)
+                function ccGetSystemIconUrl(settingKey) {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys[settingKey] ? String(sys[settingKey] || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e0) {
+                        return '';
+                    }
+                }
+                
+                var checkboxUrl = ccGetSystemIconUrl('icon_checkbox');
+                var checkmarkUrl = ccGetSystemIconUrl('icon_checkmark');
+                
+                var checklist = document.createElement('div');
+                checklist.className = 'fieldset-customchecklist';
+                checklist.dataset.value = '[]'; // JSON array of selected labels
+                
+                function ccGetSelected() {
+                    try {
+                        var raw = String(checklist.dataset.value || '').trim();
+                        var arr = raw ? JSON.parse(raw) : [];
+                        return Array.isArray(arr) ? arr : [];
+                    } catch (e1) {
+                        return [];
+                    }
+                }
+                
+                function ccSetSelected(arr) {
+                    try {
+                        var clean = (Array.isArray(arr) ? arr : [])
+                            .map(function(v){ return String(v || '').trim(); })
+                            .filter(function(v){ return v !== ''; });
+                        // de-dupe while preserving order
+                        var seen = {};
+                        var uniq = [];
+                        clean.forEach(function(v){
+                            var k = v.toLowerCase();
+                            if (seen[k]) return;
+                            seen[k] = true;
+                            uniq.push(v);
+                        });
+                        checklist.dataset.value = JSON.stringify(uniq);
+                    } catch (e2) {}
+                }
+                
+                function ccSyncUi() {
+                    var selected = ccGetSelected();
+                    var sel = {};
+                    selected.forEach(function(v){ sel[String(v).toLowerCase()] = true; });
+                    var rows = checklist.querySelectorAll('.fieldset-customchecklist-row');
+                    rows.forEach(function(row) {
+                        var v = String(row.dataset.value || '').toLowerCase();
+                        var isOn = !!sel[v];
+                        row.classList.toggle('fieldset-customchecklist-row--selected', isOn);
+                        var checkImg = row.querySelector('.fieldset-customchecklist-row-check');
+                        if (checkImg) checkImg.style.display = isOn ? '' : 'none';
+                    });
+                }
+                
+                if (Array.isArray(fieldOptions)) {
+                    fieldOptions.forEach(function(opt) {
+                        var label = String(opt == null ? '' : opt).trim();
+                        if (!label) return;
+                        
+                        var row = document.createElement('button');
+                        row.type = 'button';
+                        row.className = 'fieldset-customchecklist-row';
+                        row.dataset.value = label;
+                        
+                        var boxWrap = document.createElement('span');
+                        boxWrap.className = 'fieldset-customchecklist-row-box';
+                        
+                        var boxImg = document.createElement('img');
+                        boxImg.className = 'fieldset-customchecklist-row-boximg';
+                        boxImg.alt = '';
+                        boxImg.src = checkboxUrl;
+                        boxWrap.appendChild(boxImg);
+                        
+                        var checkImg = document.createElement('img');
+                        checkImg.className = 'fieldset-customchecklist-row-check';
+                        checkImg.alt = '';
+                        checkImg.src = checkmarkUrl;
+                        checkImg.style.display = 'none';
+                        boxWrap.appendChild(checkImg);
+                        
+                        var text = document.createElement('span');
+                        text.className = 'fieldset-customchecklist-row-text';
+                        text.textContent = label;
+                        
+                        row.appendChild(boxWrap);
+                        row.appendChild(text);
+                        
+                        row.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            var selected = ccGetSelected();
+                            var lower = label.toLowerCase();
+                            var idx = -1;
+                            for (var i0 = 0; i0 < selected.length; i0++) {
+                                if (String(selected[i0] || '').toLowerCase() === lower) { idx = i0; break; }
+                            }
+                            if (idx >= 0) selected.splice(idx, 1);
+                            else selected.push(label);
+                            ccSetSelected(selected);
+                            ccSyncUi();
+                            try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e3) {}
+                        });
+                        
+                        checklist.appendChild(row);
+                    });
+                }
+                
+                fieldset.appendChild(checklist);
+                break;
+                
             case 'email':
             case 'account_email':
             case 'public_email':
@@ -3529,6 +3650,16 @@ const FieldsetBuilder = (function(){
                             var menu = fieldset.querySelector('.fieldset-customdropdown');
                             return !!(menu && String(menu.dataset.value || '').trim());
                         }
+                        case 'custom_checklist': {
+                            var list = fieldset.querySelector('.fieldset-customchecklist');
+                            if (!list) return false;
+                            try {
+                                var arr = JSON.parse(String(list.dataset.value || '[]'));
+                                return Array.isArray(arr) && arr.length > 0;
+                            } catch (eC) {
+                                return false;
+                            }
+                        }
                         case 'images': {
                             var meta = fieldset.querySelector('input.fieldset-images-meta');
                             var raw = meta ? String(meta.value || '').trim() : '';
@@ -3727,6 +3858,16 @@ const FieldsetBuilder = (function(){
                     var menu = fieldset.querySelector('.fieldset-customdropdown');
                     var v = menu ? String(menu.dataset.value || '').trim() : '';
                     return !!v;
+                }
+                case 'custom_checklist': {
+                    var list = fieldset.querySelector('.fieldset-customchecklist');
+                    if (!list) return false;
+                    try {
+                        var arr = JSON.parse(String(list.dataset.value || '[]'));
+                        return Array.isArray(arr) && arr.length > 0;
+                    } catch (eC2) {
+                        return false;
+                    }
                 }
                 case 'custom_radio': {
                     var checked = fieldset.querySelector('input[type="radio"]:checked');

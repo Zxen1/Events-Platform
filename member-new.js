@@ -2525,6 +2525,7 @@ const MemberModule = (function() {
             // Choose the most appropriate existing message key.
             var msgKey = 'msg_post_validation_required';
             if (baseType === 'custom_dropdown') msgKey = 'msg_post_validation_select';
+            if (baseType === 'custom_checklist') msgKey = 'msg_post_validation_choose';
             if (baseType === 'custom_radio' || baseType === 'checkout') msgKey = 'msg_post_validation_choose';
             if (baseType === 'images') msgKey = 'msg_post_validation_file_required';
             if (baseType === 'item-pricing' || baseType === 'session_pricing') msgKey = 'msg_post_validation_pricing';
@@ -2960,6 +2961,17 @@ const MemberModule = (function() {
                 if (menuBtn) return menuBtn.dataset.value || '';
                 if (select) return select.value || '';
                 return '';
+                
+            case 'custom_checklist': {
+                var list = el.querySelector('.fieldset-customchecklist');
+                if (!list) return [];
+                try {
+                    var arr = JSON.parse(String(list.dataset.value || '[]'));
+                    return Array.isArray(arr) ? arr : [];
+                } catch (eC) {
+                    return [];
+                }
+            }
                 
             case 'custom_radio':
                 var checked = el.querySelector('input[type="radio"]:checked');

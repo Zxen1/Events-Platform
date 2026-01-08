@@ -2936,6 +2936,8 @@ const AdminModule = (function() {
         initImagePicker('adminIconFavouritesPicker', 'icon_favourites');
         initImagePicker('adminIconPlusPicker', 'icon_plus');
         initImagePicker('adminIconMinusPicker', 'icon_minus');
+        initImagePicker('adminIconCheckmarkPicker', 'icon_checkmark');
+        initImagePicker('adminIconCheckboxPicker', 'icon_checkbox');
         initImagePicker('adminPostPanelEmptyImagePicker', 'post_panel_empty_image', 'folder_post_system_images');
         initImagePicker('adminRecentPanelEmptyImagePicker', 'recent_panel_footer_image', 'folder_recent_system_images');
         
