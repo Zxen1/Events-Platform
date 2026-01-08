@@ -6330,8 +6330,9 @@ const AvatarPickerComponent = (function() {
    LOCATION THUMBNAIL PICKER COMPONENT (single tile)
    Used inside location fieldsets (Venue / City / Address).
    - Single 2:1 tile (full width)
-   - Shows a live rotating Mapbox view for the confirmed lat/lng
-   - Click toggles "locked" (stops rotation) vs live
+   - No visible on-image controls (mouse/touch gestures only)
+   - Short auto-rotate on initial load; any user interaction stops animation
+   - Tap/click to lock (captures to image + shuts down map). Tap/click again to choose again.
    - Outputs camera JSON (center/zoom/pitch/bearing/style/lighting) to parent via onChange
    Class pattern: component-locationthumb-{part}--{state}
    ============================================================================ */
@@ -6388,96 +6389,44 @@ const LocationThumbnailPickerComponent = (function() {
         imgEl.style.display = 'none';
         tile.appendChild(imgEl);
 
-        // Controls overlay (zoom/pitch + rotate + play)
-        var controls = document.createElement('div');
-        controls.className = 'component-locationthumb-controls';
-        controls.style.display = 'none';
-
-        var btnRotateLeft = document.createElement('button');
-        btnRotateLeft.type = 'button';
-        btnRotateLeft.className = 'component-locationthumb-controlbtn component-locationthumb-controlbtn--left';
-        btnRotateLeft.textContent = '⟲';
-        btnRotateLeft.title = 'Rotate left';
-        controls.appendChild(btnRotateLeft);
-
-        var btnRotateRight = document.createElement('button');
-        btnRotateRight.type = 'button';
-        btnRotateRight.className = 'component-locationthumb-controlbtn component-locationthumb-controlbtn--right';
-        btnRotateRight.textContent = '⟳';
-        btnRotateRight.title = 'Rotate right';
-        controls.appendChild(btnRotateRight);
-
-        var btnPlay = document.createElement('button');
-        btnPlay.type = 'button';
-        btnPlay.className = 'component-locationthumb-controlbtn component-locationthumb-controlbtn--play';
-        btnPlay.textContent = '▶';
-        btnPlay.title = 'Play/stop rotation';
-        controls.appendChild(btnPlay);
-
-        var sliders = document.createElement('div');
-        sliders.className = 'component-locationthumb-sliders';
-
-        var zoomLabel = document.createElement('label');
-        zoomLabel.className = 'component-locationthumb-sliderlabel';
-        zoomLabel.textContent = 'Zoom';
-        var zoomInput = document.createElement('input');
-        zoomInput.type = 'range';
-        zoomInput.className = 'component-locationthumb-slider';
-        zoomInput.min = '16';
-        zoomInput.max = '18.5';
-        zoomInput.step = '0.1';
-        zoomInput.value = '18';
-        zoomLabel.appendChild(zoomInput);
-        sliders.appendChild(zoomLabel);
-
-        var pitchLabel = document.createElement('label');
-        pitchLabel.className = 'component-locationthumb-sliderlabel';
-        pitchLabel.textContent = 'Pitch';
-        var pitchInput = document.createElement('input');
-        pitchInput.type = 'range';
-        pitchInput.className = 'component-locationthumb-slider';
-        pitchInput.min = '60';
-        pitchInput.max = '80';
-        pitchInput.step = '1';
-        pitchInput.value = '70';
-        pitchLabel.appendChild(pitchInput);
-        sliders.appendChild(pitchLabel);
-
-        controls.appendChild(sliders);
-        tile.appendChild(controls);
-
-        // Actions
-        var actions = document.createElement('div');
-        actions.className = 'component-locationthumb-actions';
-        actions.style.display = 'none';
-
-        var okBtn = document.createElement('button');
-        okBtn.type = 'button';
-        okBtn.className = 'component-locationthumb-actionbtn component-locationthumb-actionbtn--ok';
-        okBtn.textContent = 'OK';
-        actions.appendChild(okBtn);
-
-        var cancelBtn = document.createElement('button');
-        cancelBtn.type = 'button';
-        cancelBtn.className = 'component-locationthumb-actionbtn component-locationthumb-actionbtn--cancel';
-        cancelBtn.textContent = 'Cancel';
-        actions.appendChild(cancelBtn);
-
-        var chooseAgainBtn = document.createElement('button');
-        chooseAgainBtn.type = 'button';
-        chooseAgainBtn.className = 'component-locationthumb-actionbtn component-locationthumb-actionbtn--again';
-        chooseAgainBtn.textContent = 'Choose Again';
-        chooseAgainBtn.style.display = 'none';
-        actions.appendChild(chooseAgainBtn);
-
-        tile.appendChild(actions);
-
-        var hint = document.createElement('div');
-        hint.className = 'component-locationthumb-hint';
-        hint.textContent = 'Choose a view after selecting an address';
-        tile.appendChild(hint);
+        // No on-screen hint/instructions (user prefers tooltip-only messaging).
 
         root.appendChild(tile);
+
+        // Footer row (under the tile): location/coords (left) + Save/Discard buttons (right)
+        var footer = document.createElement('div');
+        footer.className = 'component-locationthumb-footer';
+        footer.style.display = 'none';
+
+        var footerInfo = document.createElement('div');
+        footerInfo.className = 'component-locationthumb-footer-info';
+        footerInfo.textContent = '';
+        footer.appendChild(footerInfo);
+
+        var footerActions = document.createElement('div');
+        footerActions.className = 'component-locationthumb-footer-actions';
+
+        // Reuse member panel icon button styling (same icons as panel header)
+        var saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'member-panel-actions-icon-btn member-panel-actions-icon-btn--save member-panel-actions-icon-btn--disabled';
+        saveBtn.title = 'Save';
+        saveBtn.setAttribute('aria-label', 'Save');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span class="member-panel-actions-icon-btn-icon member-panel-actions-icon-btn-icon--save member-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>';
+        footerActions.appendChild(saveBtn);
+
+        var discardBtn = document.createElement('button');
+        discardBtn.type = 'button';
+        discardBtn.className = 'member-panel-actions-icon-btn member-panel-actions-icon-btn--discard member-panel-actions-icon-btn--disabled';
+        discardBtn.title = 'Discard';
+        discardBtn.setAttribute('aria-label', 'Discard');
+        discardBtn.disabled = true;
+        discardBtn.innerHTML = '<span class="member-panel-actions-icon-btn-icon member-panel-actions-icon-btn-icon--discard member-panel-actions-icon-btn-icon--disabled" aria-hidden="true"></span>';
+        footerActions.appendChild(discardBtn);
+
+        footer.appendChild(footerActions);
+        root.appendChild(footer);
         hostEl.appendChild(root);
 
         // State
@@ -6488,6 +6437,7 @@ const LocationThumbnailPickerComponent = (function() {
             locked: false,
             lat: null,
             lng: null,
+            label: '',
             zoom: 18,
             pitch: 70,
             bearing: 0,
@@ -6497,15 +6447,50 @@ const LocationThumbnailPickerComponent = (function() {
             lockedBlob: null,
             lockedUrl: '',
             lastLockedBlob: null,
-            lastLockedUrl: ''
+            lastLockedUrl: '',
+            didInteractRecently: false,
+            interactTimer: 0
         };
 
         function setCompleteFlag() {
             try { hostEl.dataset.complete = st.locked ? 'true' : 'false'; } catch (e) {}
         }
 
+        function setButtonsEnabled(saveEnabled, discardEnabled) {
+            try {
+                saveBtn.disabled = !saveEnabled;
+                discardBtn.disabled = !discardEnabled;
+
+                saveBtn.classList.toggle('member-panel-actions-icon-btn--disabled', !saveEnabled);
+                discardBtn.classList.toggle('member-panel-actions-icon-btn--disabled', !discardEnabled);
+
+                var sIcon = saveBtn.querySelector('.member-panel-actions-icon-btn-icon--save');
+                var dIcon = discardBtn.querySelector('.member-panel-actions-icon-btn-icon--discard');
+                if (sIcon) {
+                    sIcon.classList.toggle('member-panel-actions-icon-btn-icon--disabled', !saveEnabled);
+                    sIcon.classList.toggle('member-panel-actions-icon-btn-icon--save-enabled', !!saveEnabled);
+                }
+                if (dIcon) {
+                    dIcon.classList.toggle('member-panel-actions-icon-btn-icon--disabled', !discardEnabled);
+                    dIcon.classList.toggle('member-panel-actions-icon-btn-icon--discard-enabled', !!discardEnabled);
+                }
+            } catch (e0) {}
+        }
+
+        function updateFooterInfo() {
+            if (st.lat === null || st.lng === null) {
+                footerInfo.textContent = '';
+                return;
+            }
+            var label = String(st.label || '').trim();
+            var latS = (typeof st.lat === 'number') ? st.lat.toFixed(6) : String(st.lat);
+            var lngS = (typeof st.lng === 'number') ? st.lng.toFixed(6) : String(st.lng);
+            footerInfo.textContent = (label ? (label + ' • ') : '') + latS + ', ' + lngS;
+        }
+
         function emitChange() {
             setCompleteFlag();
+            updateFooterInfo();
             onChange({
                 locked: st.locked,
                 lat: st.lat,
@@ -6520,7 +6505,10 @@ const LocationThumbnailPickerComponent = (function() {
                     bearing: st.bearing,
                     style: 'mapbox://styles/mapbox/standard',
                     lighting: getLightingPreset()
-                } : null
+                } : null,
+                imageBlob: st.lockedBlob || null,
+                imagePreviewUrl: st.lockedUrl || '',
+                label: st.label || ''
             });
             try { hostEl.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
         }
@@ -6540,9 +6528,6 @@ const LocationThumbnailPickerComponent = (function() {
             try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
             st.demoTimer = 0;
             stopOrbit();
-            if (!st.locked) {
-                hint.textContent = reasonText || 'Click to lock';
-            }
             emitChange();
         }
 
@@ -6560,11 +6545,10 @@ const LocationThumbnailPickerComponent = (function() {
             tile.classList.remove('component-locationthumb-tile--loading');
             tile.classList.remove('component-locationthumb-tile--ready');
             tile.classList.remove('component-locationthumb-tile--locked');
-            controls.style.display = 'none';
-            actions.style.display = 'none';
             imgEl.style.display = 'none';
             mapMount.style.display = '';
-            hint.textContent = 'Click into this fieldset to load the view';
+            footer.style.display = 'none';
+            setButtonsEnabled(false, false);
             emitChange();
         }
 
@@ -6611,7 +6595,7 @@ const LocationThumbnailPickerComponent = (function() {
                     keyboard: false,
                     // We'll add a compact attribution control in a safer position.
                     attributionControl: false,
-                    logoPosition: 'top-right',
+                    logoPosition: 'bottom-right',
                     renderWorldCopies: false,
                     antialias: false,
                     preserveDrawingBuffer: true
@@ -6622,7 +6606,7 @@ const LocationThumbnailPickerComponent = (function() {
 
                 // Add compact attribution control (keep it visible, but small and out of the way).
                 try {
-                    st.map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'top-right');
+                    st.map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
                 } catch (eAt) {}
 
                 // Any user interaction kills the auto-rotation immediately.
@@ -6630,7 +6614,11 @@ const LocationThumbnailPickerComponent = (function() {
                     try {
                         st.map.on(ev, function() {
                             st.userControlled = true;
-                            pauseLive('Adjust view, then OK');
+                            try { if (st.interactTimer) clearTimeout(st.interactTimer); } catch (e0) {}
+                            st.didInteractRecently = true;
+                            st.interactTimer = setTimeout(function() { st.didInteractRecently = false; }, 350);
+                            setButtonsEnabled(true, true);
+                            pauseLive('Save or discard');
                         });
                     } catch (e0) {}
                 });
@@ -6644,22 +6632,27 @@ const LocationThumbnailPickerComponent = (function() {
             st.requestId++;
             try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
             st.demoTimer = 0;
+            try { if (st.interactTimer) clearTimeout(st.interactTimer); } catch (e1) {}
+            st.interactTimer = 0;
+            st.didInteractRecently = false;
             // Reset state but keep the DOM in place.
             st.locked = false;
             st.lat = null;
             st.lng = null;
+            st.label = '';
             st.bearing = 0;
             tile.classList.add('component-locationthumb-tile--empty');
             tile.classList.remove('component-locationthumb-tile--loading');
             tile.classList.remove('component-locationthumb-tile--ready');
             tile.classList.remove('component-locationthumb-tile--locked');
             tile.setAttribute('aria-pressed', 'false');
-            hint.textContent = 'Choose a view after selecting an address';
             stopOrbit();
+            footer.style.display = 'none';
+            setButtonsEnabled(false, false);
             emitChange();
         }
 
-        function setLocation(lat, lng) {
+        function setLocation(lat, lng, label) {
             lat = safeNum(lat);
             lng = safeNum(lng);
             if (lat === null || lng === null) {
@@ -6672,24 +6665,19 @@ const LocationThumbnailPickerComponent = (function() {
 
             st.lat = lat;
             st.lng = lng;
+            st.label = (typeof label === 'string') ? label : String(label || '');
             st.locked = false;
             st.bearing = 0;
             st.userControlled = false;
             st.zoom = 18;
             st.pitch = 70;
-            zoomInput.value = String(st.zoom);
-            pitchInput.value = String(st.pitch);
 
             tile.classList.remove('component-locationthumb-tile--empty');
             tile.classList.remove('component-locationthumb-tile--locked');
             tile.classList.add('component-locationthumb-tile--loading');
             tile.classList.remove('component-locationthumb-tile--ready');
-            hint.textContent = 'Loading view...';
-            controls.style.display = 'none';
-            actions.style.display = 'none';
-            chooseAgainBtn.style.display = 'none';
-            okBtn.style.display = '';
-            cancelBtn.style.display = '';
+            footer.style.display = '';
+            setButtonsEnabled(false, true); // Save requires a user interaction; discard is allowed
 
             var m = ensureMap();
             if (!m) return;
@@ -6714,17 +6702,15 @@ const LocationThumbnailPickerComponent = (function() {
                     tile.classList.remove('component-locationthumb-tile--loading');
                     tile.classList.add('component-locationthumb-tile--ready');
                     // Short demo orbit only until the user interacts.
-                    hint.textContent = 'Adjust view, then OK';
-                    controls.style.display = '';
-                    actions.style.display = '';
                     startOrbit();
                     try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
                     st.demoTimer = setTimeout(function() {
                         if (myReq !== st.requestId) return;
                         if (st.locked) return;
                         if (st.userControlled) return;
-                        pauseLive('Adjust view, then OK');
+                        pauseLive();
                     }, 2000);
+                    setButtonsEnabled(false, true);
                     emitChange();
                 });
             } catch (e2) {}
@@ -6740,63 +6726,8 @@ const LocationThumbnailPickerComponent = (function() {
                 st.zoom = st.map.getZoom();
                 st.pitch = st.map.getPitch();
                 st.bearing = st.map.getBearing();
-                zoomInput.value = String(st.zoom);
-                pitchInput.value = String(st.pitch);
             } catch (e) {}
         }
-
-        function rotateBy(delta) {
-            if (!st.map) return;
-            st.userControlled = true;
-            pauseLive('Adjust view, then OK');
-            try {
-                var b = st.map.getBearing();
-                st.bearing = (b + delta) % 360;
-                st.map.easeTo({ bearing: st.bearing, duration: 180, easing: function(t){ return t; } });
-            } catch (e) {}
-        }
-
-        btnRotateLeft.addEventListener('click', function(e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-            rotateBy(-10);
-            syncFromMapCamera();
-        });
-        btnRotateRight.addEventListener('click', function(e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-            rotateBy(10);
-            syncFromMapCamera();
-        });
-        btnPlay.addEventListener('click', function(e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-            if (!st.map) return;
-            if (st.orbiting) {
-                pauseLive('Adjust view, then OK');
-            } else {
-                st.userControlled = false;
-                startOrbit();
-            }
-        });
-
-        zoomInput.addEventListener('input', function(e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-            if (!st.map) return;
-            st.userControlled = true;
-            pauseLive('Adjust view, then OK');
-            var z = parseFloat(zoomInput.value || '18');
-            if (!isFinite(z)) return;
-            st.zoom = z;
-            try { st.map.easeTo({ zoom: st.zoom, duration: 120 }); } catch (e1) {}
-        });
-        pitchInput.addEventListener('input', function(e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-            if (!st.map) return;
-            st.userControlled = true;
-            pauseLive('Adjust view, then OK');
-            var p = parseFloat(pitchInput.value || '70');
-            if (!isFinite(p)) return;
-            st.pitch = p;
-            try { st.map.easeTo({ pitch: st.pitch, duration: 120 }); } catch (e1) {}
-        });
 
         // Capture + lock as an image and shut down the map completely.
         function captureAndLock() {
@@ -6853,10 +6784,7 @@ const LocationThumbnailPickerComponent = (function() {
                 imgEl.src = st.lockedUrl || '';
                 imgEl.style.display = '';
                 mapMount.style.display = 'none';
-                controls.style.display = 'none';
-                actions.style.display = 'none';
-                chooseAgainBtn.style.display = '';
-                hint.textContent = 'Locked';
+                setButtonsEnabled(false, true);
 
                 // Shutdown map completely
                 try { st.map.remove(); } catch (e4) {}
@@ -6866,55 +6794,49 @@ const LocationThumbnailPickerComponent = (function() {
             }, 'image/jpeg', 0.85);
         }
 
-        okBtn.addEventListener('click', function(e) {
+        // Save / Discard buttons (under the tile)
+        saveBtn.addEventListener('click', function(e) {
             try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            if (saveBtn.disabled) return;
             captureAndLock();
         });
 
-        cancelBtn.addEventListener('click', function(e) {
+        discardBtn.addEventListener('click', function(e) {
             try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-            // If we had a previous locked image, revert to it; otherwise unload.
-            if (st.lastLockedUrl) {
+
+            function doChooseAgain() {
                 if (st.lockedUrl) {
                     try { URL.revokeObjectURL(st.lockedUrl); } catch (e1) {}
                 }
-                st.lockedUrl = st.lastLockedUrl;
-                st.lockedBlob = st.lastLockedBlob;
-                st.lastLockedUrl = '';
-                st.lastLockedBlob = null;
-                st.locked = true;
-                imgEl.src = st.lockedUrl;
-                imgEl.style.display = '';
-                mapMount.style.display = 'none';
-                controls.style.display = 'none';
-                actions.style.display = 'none';
-                chooseAgainBtn.style.display = '';
-                hint.textContent = 'Locked';
-                emitChange();
-            } else {
-                unloadIfNotLocked();
+                st.lockedUrl = '';
+                st.lockedBlob = null;
+                st.locked = false;
+                imgEl.style.display = 'none';
+                mapMount.style.display = '';
+                tile.classList.remove('component-locationthumb-tile--locked');
+                // Re-load current location if available
+                if (st.lat !== null && st.lng !== null) setLocation(st.lat, st.lng, st.label);
+                else clear();
             }
-        });
 
-        chooseAgainBtn.addEventListener('click', function(e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-            // Unlock and re-load map (discard image)
-            if (st.lockedUrl) {
-                try { URL.revokeObjectURL(st.lockedUrl); } catch (e1) {}
+            if (st.locked) {
+                if (window.ConfirmDialogComponent && typeof ConfirmDialogComponent.show === 'function') {
+                    ConfirmDialogComponent.show({
+                        titleText: 'Discard this image?',
+                        messageText: 'This will allow you to choose a new view.',
+                        confirmLabel: 'Discard',
+                        cancelLabel: 'Cancel',
+                        focusCancel: true
+                    }).then(function(confirmed) {
+                        if (confirmed) doChooseAgain();
+                    });
+                } else {
+                    doChooseAgain();
+                }
+                return;
             }
-            st.lockedUrl = '';
-            st.lockedBlob = null;
-            st.locked = false;
-            imgEl.style.display = 'none';
-            mapMount.style.display = '';
-            tile.classList.remove('component-locationthumb-tile--locked');
-            chooseAgainBtn.style.display = 'none';
-            // Re-load current location if available
-            if (st.lat !== null && st.lng !== null) {
-                setLocation(st.lat, st.lng);
-            } else {
-                clear();
-            }
+
+            unloadIfNotLocked();
         });
 
         // Init flags
