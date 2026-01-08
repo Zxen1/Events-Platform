@@ -7119,8 +7119,10 @@ const LocationWallpaperComponent = (function() {
         var img = document.createElement('img');
         img.className = 'component-locationwallpaper-image';
         img.alt = '';
-        img.decoding = 'async';
-        img.loading = 'lazy';
+        // IMPORTANT: this is not a normal content image; it is a UI state snapshot.
+        // Using lazy here can cause brief flashes / placeholder replacement in some browsers (Edge intervention).
+        img.decoding = 'sync';
+        img.loading = 'eager';
 
         root.appendChild(mapMount);
         root.appendChild(img);
@@ -7484,7 +7486,7 @@ const LocationWallpaperComponent = (function() {
                     if (ctx) {
                         ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
                         var imgd = ctx.getImageData(0, 0, tmp.width, tmp.height).data;
-                        var sum = 0;
+                        var bright = 0;
                         var count = 0;
                         // sample every ~6 pixels (performance)
                         for (var i = 0; i < imgd.length; i += 24) {
@@ -7492,11 +7494,13 @@ const LocationWallpaperComponent = (function() {
                             var g = imgd[i + 1] || 0;
                             var b = imgd[i + 2] || 0;
                             // perceived luminance (rough)
-                            sum += (0.2126 * r + 0.7152 * g + 0.0722 * b);
+                            var lum = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+                            if (lum > 10) bright++;
                             count++;
                         }
-                        var avg = count ? (sum / count) : 0;
-                        if (avg < 3) return '';
+                        // If the frame is "mostly black" (e.g., only a few logo pixels), don't accept it.
+                        var ratio = count ? (bright / count) : 0;
+                        if (ratio < 0.02) return '';
                     }
                 } catch (_ePx) {}
                 var dataUrl = '';
