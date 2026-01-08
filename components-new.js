@@ -7421,7 +7421,7 @@ const LocationWallpaperComponent = (function() {
                         revealMapCrossfade();
                         stopOrbit();
                     if (mode === 'orbit') startOrbit(desired.zoom);
-                    else if (mode === 'still') freezeToLocationImage();
+                    else if (mode === 'still') scheduleStillFreeze();
                     });
                 } catch (eR0) {}
                 st.revealTimeout = setTimeout(function() {
@@ -7429,7 +7429,7 @@ const LocationWallpaperComponent = (function() {
                     revealMapCrossfade();
                     stopOrbit();
                 if (mode === 'orbit') startOrbit(desired.zoom);
-                else if (mode === 'still') freezeToLocationImage();
+                else if (mode === 'still') scheduleStillFreeze();
                 }, 1200);
             } else {
                 // Map already exists: just jump to new location and keep it live.
@@ -7438,8 +7438,39 @@ const LocationWallpaperComponent = (function() {
                 // If this map came from prewarm, orbit may not have started yet.
                 stopOrbit();
             if (mode === 'orbit') startOrbit(desired.zoom);
-            else if (mode === 'still') freezeToLocationImage();
+            else if (mode === 'still') scheduleStillFreeze();
             }
+        }
+
+        function scheduleStillFreeze() {
+            // Still mode needs a few seconds after first paint for higher-detail tiles to stream in.
+            // We wait until tiles are loaded (if possible) AND a minimum delay has passed.
+            stopOrbit();
+            clearRevealTimers();
+            if (!st.map) return;
+
+            var start = Date.now();
+            var minMs = 2200;  // allow detail to refine
+            var maxMs = 7000;  // never hang forever
+
+            (function tick() {
+                if (!st.map) return;
+                var elapsed = Date.now() - start;
+
+                var loadedOk = true;
+                var tilesOk = true;
+                try { if (st.map && typeof st.map.loaded === 'function') loadedOk = !!st.map.loaded(); } catch (e1) { loadedOk = true; }
+                try { if (st.map && typeof st.map.areTilesLoaded === 'function') tilesOk = !!st.map.areTilesLoaded(); } catch (e2) { tilesOk = true; }
+
+                var ready = loadedOk && tilesOk && elapsed >= minMs;
+                var timedOut = elapsed >= maxMs;
+
+                if (ready || timedOut) {
+                    freezeToLocationImage();
+                    return;
+                }
+                setTimeout(tick, 160);
+            })();
         }
 
         function freezeToLocationImage() {
