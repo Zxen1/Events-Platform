@@ -67,6 +67,8 @@ const MapModule = (function() {
   
   let map = null;                    // Main Mapbox map instance
   let postMaps = new Map();          // Post mini-maps: postId -> map instance
+  let currentStyleUrl = '';          // Track active style URL to avoid unnecessary reload/flicker
+  let styleChangeToken = 0;          // Increment to cancel stale async callbacks
   
   // Geocoders
   let geocoders = {
@@ -172,6 +174,7 @@ const MapModule = (function() {
     var styleUrl = initialStyle === 'standard-satellite' 
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
+    currentStyleUrl = styleUrl;
     
     // Determine initial lighting BEFORE map creation
     // Priority: member setting > localStorage (guest's choice) > admin setting > default
@@ -1330,6 +1333,12 @@ const MapModule = (function() {
       ? 'mapbox://styles/mapbox/standard-satellite'
       : 'mapbox://styles/mapbox/standard';
     logDebug('[Map] Setting style to:', styleUrl);
+
+    // If the requested style is already active, do nothing (prevents flicker).
+    if (currentStyleUrl === styleUrl) {
+      logDebug('[Map] setMapStyle: style already active, skipping reload');
+      return;
+    }
     
     // Store current lighting to re-apply after style loads
     var currentLighting = adminSettings.map_lighting || localStorage.getItem('map_lighting') || 'day';
@@ -1340,12 +1349,51 @@ const MapModule = (function() {
       }
     }
     
-    map.setStyle(styleUrl);
+    // Fade out only if we're actually changing styles.
+    var mapEl = document.querySelector('.map-container');
+    if (mapEl) {
+      try {
+        mapEl.style.transition = 'opacity 0.25s ease';
+        mapEl.style.opacity = '0';
+      } catch (_eFadeOut) {}
+    }
+
+    // Update style tracking + token (cancels stale callbacks if style changes again quickly)
+    currentStyleUrl = styleUrl;
+    styleChangeToken++;
+    var token = styleChangeToken;
+
+    // Swap the style after fade-out completes (no flash).
+    setTimeout(function() {
+      if (!map) return;
+      if (token !== styleChangeToken) return;
+      map.setStyle(styleUrl);
+    }, 260);
     
     // Re-apply lighting after style loads
     map.once('style.load', function() {
+      if (token !== styleChangeToken) return;
       logDebug('[Map] Style loaded, re-applying lighting:', currentLighting);
       applyLightingDirect(currentLighting);
+      
+      // Fade back in on first render of the new style (fast; avoids waiting for full tile idle).
+      try {
+        map.once('render', function() {
+          if (token !== styleChangeToken) return;
+          var el = document.querySelector('.map-container');
+          if (el) {
+            el.style.transition = 'opacity 0.8s ease-in';
+            el.style.opacity = '1';
+          }
+        });
+      } catch (_eFadeIn) {
+        // Fallback: ensure visible even if render event isn't available
+        var el2 = document.querySelector('.map-container');
+        if (el2) {
+          el2.style.transition = 'opacity 0.8s ease-in';
+          el2.style.opacity = '1';
+        }
+      }
     });
   }
 

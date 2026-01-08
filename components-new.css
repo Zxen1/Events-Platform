@@ -3297,7 +3297,7 @@
     z-index: 0;
     pointer-events: none;
     border-radius: 0 0 5px 5px;
-    opacity: var(--locationwallpaper-opacity, 0.5);
+    opacity: var(--locationwallpaper-opacity, 0.2);
 }
 
 .component-locationwallpaper-mapmount,
