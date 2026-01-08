@@ -118,6 +118,15 @@
 .header-modeswitch > .button-class-1 {
   transition: background 0.2s, color 0.2s;
 }
+
+/* Active header buttons use blue-500 (text + icons inherit from currentColor) */
+.header-bar .button-class-1[aria-pressed="true"],
+.header-bar .button-class-1[aria-expanded="true"],
+.header-bar .button-class-1.button--active,
+.header-bar .button-class-1.btn--active,
+.header-bar .button-class-1.header-modeswitch-button--active {
+  color: var(--blue-500);
+}
 .header-modeswitch > .button-class-1[aria-disabled="true"] {
   opacity: 0.4;
   cursor: not-allowed;
@@ -208,10 +217,10 @@
 
 /* Avatar glow when panel is open */
 .header-access-button-avatar--active {
-  border-color: var(--blue-400);
+  border-color: var(--blue-500);
 }
 .header-access-button-avatar--active:hover {
-  border-color: var(--website-white);
+  border-color: var(--blue-500);
 }
 
 .header-access-button-avatar--hidden {
