@@ -7044,6 +7044,19 @@ const LocationWallpaperComponent = (function() {
         };
     }
 
+    function getWallpaperMode() {
+        // Source of truth: admin_settings -> App state -> get-admin-settings payload
+        try {
+            if (window.App && typeof App.getState === 'function') {
+                var s = App.getState('settings');
+                var v = s ? String(s.location_wallpaper_mode || '').trim().toLowerCase() : '';
+                if (v) return v;
+            }
+        } catch (e) {}
+        // Default to off if not available yet
+        return 'off';
+    }
+
     function readLatLng(containerEl) {
         if (!containerEl) return null;
         try {
@@ -7338,6 +7351,7 @@ const LocationWallpaperComponent = (function() {
 
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var desired = getDefaultCameraForType(locationType, [lng, lat]);
+            var mode = getWallpaperMode();
 
             // If we have a saved camera for this exact lat/lng, resume ONLY the bearing.
             // Zoom + pitch stay standardized to defaults (user requested 17 zoom / 70° pitch).
@@ -7396,14 +7410,16 @@ const LocationWallpaperComponent = (function() {
                         if (!st.map || st.didReveal) return;
                         revealMapCrossfade();
                         stopOrbit();
-                        startOrbit(desired.zoom);
+                    if (mode === 'orbit') startOrbit(desired.zoom);
+                    else if (mode === 'still') freezeToLocationImage();
                     });
                 } catch (eR0) {}
                 st.revealTimeout = setTimeout(function() {
                     if (!st.map || st.didReveal) return;
                     revealMapCrossfade();
                     stopOrbit();
-                    startOrbit(desired.zoom);
+                if (mode === 'orbit') startOrbit(desired.zoom);
+                else if (mode === 'still') freezeToLocationImage();
                 }, 1200);
             } else {
                 // Map already exists: just jump to new location and keep it live.
@@ -7411,7 +7427,8 @@ const LocationWallpaperComponent = (function() {
                 revealMapCrossfade();
                 // If this map came from prewarm, orbit may not have started yet.
                 stopOrbit();
-                startOrbit(desired.zoom);
+            if (mode === 'orbit') startOrbit(desired.zoom);
+            else if (mode === 'still') freezeToLocationImage();
             }
         }
 
@@ -7459,6 +7476,20 @@ const LocationWallpaperComponent = (function() {
         function refreshFromFieldsIfActive() {
             // Only start while this container is active.
             if (locationContainerEl.getAttribute('data-active') !== 'true') return;
+
+            // Respect admin setting
+            var mode = getWallpaperMode();
+            if (mode === 'off') {
+                // Hard disable: remove map + image and hide wallpaper layer.
+                stopOrbit();
+                clearRevealTimers();
+                try { if (st.map) st.map.remove(); } catch (e0) {}
+                st.map = null;
+                setImageUrl('');
+                try { root.style.display = 'none'; } catch (e1) {}
+                return;
+            }
+            try { root.style.display = ''; } catch (e2) {}
 
             // Lock min-height on first activation so the wallpaper has enough vertical room.
             ensureMinHeightLocked();
