@@ -61,11 +61,16 @@ const FieldsetBuilder = (function(){
         dropdown.className = 'fieldset-location-dropdown';
         dropdown.style.display = 'none';
         
-        // Insert dropdown after input element
+        // Wrap input in a positioning context so the dropdown can sit exactly under the input
+        // (and overlay the map tile that comes later in the fieldset).
         var parent = inputElement.parentNode;
+        var wrap = null;
         if (parent) {
-            parent.style.position = 'relative';
-            parent.appendChild(dropdown);
+            wrap = document.createElement('div');
+            wrap.className = 'fieldset-location-inputwrap';
+            parent.insertBefore(wrap, inputElement);
+            wrap.appendChild(inputElement);
+            wrap.appendChild(dropdown);
         }
         
         // Track whether the current value is confirmed from Google Places (required for "complete")
@@ -3510,9 +3515,13 @@ const FieldsetBuilder = (function(){
                     dropdown.style.display = 'none';
                     
                     var parent = inputEl.parentNode;
+                    var wrap = null;
                     if (parent) {
-                        parent.style.position = 'relative';
-                        parent.appendChild(dropdown);
+                        wrap = document.createElement('div');
+                        wrap.className = 'fieldset-location-inputwrap';
+                        parent.insertBefore(wrap, inputEl);
+                        wrap.appendChild(inputEl);
+                        wrap.appendChild(dropdown);
                     }
                     
                     // Fetch suggestions using new API (unrestricted - finds both venues and addresses)

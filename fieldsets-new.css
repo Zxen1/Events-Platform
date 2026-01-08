@@ -1566,13 +1566,18 @@
     color: #ef4444;
 }
 
+.fieldset-location-inputwrap {
+    position: relative;
+    width: 100%;
+}
+
 /* Location dropdown (New Google Places AutocompleteSuggestion UI) */
 .fieldset-location-dropdown {
     display: none;
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(100% + 2px);
+    top: calc(100% + 10px);
     z-index: var(--layer-menu, 85);
     background: #222;
     border: 1px solid #444;
@@ -1613,12 +1618,14 @@
    ============================================================================ */
 
 .pac-container {
+    /* Match .fieldset-input styling */
     background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
+    border: 1px solid #444;
+    border-radius: 5px;
     font-size: 13px;
-    z-index: var(--layer-modal, 90);
+    z-index: var(--layer-menu, 85);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    transform: translateY(10px);
 }
 
 .pac-item {
