@@ -192,16 +192,6 @@ const FieldsetBuilder = (function(){
                                 if (countryInput) countryInput.value = cc;
                                 try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
                                 try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e4) {}
-
-                                // Location container wallpaper: confirmed coordinates (lat/lng) for fly + orbit.
-                                try {
-                                    var locContainer = inputElement.closest('.member-location-container');
-                                    if (locContainer) {
-                                        document.dispatchEvent(new CustomEvent('locationwallpaper:confirmed', {
-                                            detail: { container: locContainer, lat: lat, lng: lng }
-                                        }));
-                                    }
-                                } catch (e5w) {}
                                 
                                 if (statusElement) {
                                     statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
@@ -236,16 +226,6 @@ const FieldsetBuilder = (function(){
         
         // If the user types, the location is no longer confirmed (must pick from Google again).
         inputElement.addEventListener('input', function() {
-            // Location container wallpaper: typing stops the spin/orbit immediately (visual only).
-            try {
-                var locContainer = inputElement.closest('.member-location-container');
-                if (locContainer) {
-                    document.dispatchEvent(new CustomEvent('locationwallpaper:typing', {
-                        detail: { container: locContainer }
-                    }));
-                }
-            } catch (e0w) {}
-
             // Manual typing invalidates confirmation, but must not re-dispatch input (would recurse).
             clearConfirmedLocation(false);
             clearTimeout(debounceTimer);
@@ -3535,16 +3515,6 @@ const FieldsetBuilder = (function(){
                                         try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
                                         // Use change so we don't trigger the address input handler.
                                         try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
-
-                                        // Location container wallpaper: confirmed coordinates (lat/lng) for fly + orbit.
-                                        try {
-                                            var locContainer = smartAddrInput.closest('.member-location-container');
-                                            if (locContainer) {
-                                                document.dispatchEvent(new CustomEvent('locationwallpaper:confirmed', {
-                                                    detail: { container: locContainer, lat: lat, lng: lng }
-                                                }));
-                                            }
-                                        } catch (e2w) {}
                                         
                                         // Update status
                                         smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
@@ -3566,16 +3536,6 @@ const FieldsetBuilder = (function(){
                     
                     // Input event handler with debounce
                     inputEl.addEventListener('input', function() {
-                        // Location container wallpaper: typing stops the spin/orbit immediately (visual only).
-                        try {
-                            var locContainer = smartAddrInput.closest('.member-location-container');
-                            if (locContainer) {
-                                document.dispatchEvent(new CustomEvent('locationwallpaper:typing', {
-                                    detail: { container: locContainer }
-                                }));
-                            }
-                        } catch (e0w) {}
-
                         // Manual typing invalidates Places confirmation for the address field.
                         // Venue name can be typed freely, but the address must be confirmed via Google.
                         if (!isVenueBox) {

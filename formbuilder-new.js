@@ -3705,24 +3705,6 @@
         // Create content wrapper
         var content = document.createElement('div');
         content.className = 'member-postform-location-content';
-
-        // Map wallpaper (background layer inside the location container)
-        // This is purely visual and must not capture clicks/typing.
-        var wallpaper = document.createElement('div');
-        wallpaper.className = 'member-location-wallpaper';
-        wallpaper.setAttribute('aria-hidden', 'true');
-
-        // Square wrapper (at least square; can overflow & be clipped)
-        var wallpaperSquare = document.createElement('div');
-        wallpaperSquare.className = 'member-location-wallpaper-square';
-
-        // Mapbox mount point (filled by MapModule when enabled)
-        var wallpaperMap = document.createElement('div');
-        wallpaperMap.className = 'member-location-wallpaper-map';
-        wallpaperSquare.appendChild(wallpaperMap);
-        wallpaper.appendChild(wallpaperSquare);
-        content.appendChild(wallpaper);
-
         container.appendChild(content);
         
         return {
@@ -3730,9 +3712,7 @@
             header: header,
             headerText: headerText,
             deleteBtn: deleteBtn,
-            content: content,
-            wallpaperEl: wallpaper,
-            wallpaperMapEl: wallpaperMap
+            content: content
         };
     }
     
@@ -4057,9 +4037,6 @@
         
         // Set up centralized click tracking for all form containers (event delegation)
         setupFormContainerClickTracking(container);
-
-        // Ensure wallpaper squares are sized after initial render
-        updateLocationWallpaperSizing(container);
         
         return {
             quantityPicker: quantityPicker,
@@ -4176,7 +4153,6 @@
                                     onQuantityUpdate(-1);
                                     updateVenueDeleteButtons();
                                     renumberLocationContainers();
-                                    updateLocationWallpaperSizing(parentContainer);
                                     
                                     // Focus the container that took the deleted one's place
                                     focusLocationContainerAfterDelete(deletedNum, parentContainer);
@@ -4265,9 +4241,6 @@
                 // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
             })(i);
         }
-
-        // Ensure wallpaper squares are sized after rendering new containers
-        updateLocationWallpaperSizing(parentContainer);
     }
     
     /**
@@ -4291,28 +4264,6 @@
             
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
-        });
-    }
-
-    /**
-     * Location container wallpaper sizing:
-     * - Always fill the entire container (100% x 100%)
-     * - If the container is too short, ensure the wallpaper has a minimum height equal to container width
-     *   so it doesn't collapse into a thin strip.
-     *
-     * This only sets CSS variables; MapModule is responsible for rendering the wallpaper map itself.
-     */
-    function updateLocationWallpaperSizing(rootEl) {
-        var root = rootEl || document;
-        var contents = root.querySelectorAll('.member-location-container .member-postform-location-content');
-        contents.forEach(function(contentEl) {
-            var square = contentEl.querySelector('.member-location-wallpaper-square');
-            if (!square) return;
-            var w = contentEl.clientWidth || 0;
-            if (!w) return;
-            try {
-                square.style.setProperty('--member-location-wallpaper-min', w + 'px');
-            } catch (e) {}
         });
     }
     
@@ -4421,9 +4372,6 @@
                 }
             });
         });
-
-        // Recompute wallpaper sizing (header text changes can affect height)
-        updateLocationWallpaperSizing(document);
     }
     
     /**
@@ -4496,8 +4444,7 @@
         renumberLocationContainers: renumberLocationContainers,
         focusLocationContainerAfterDelete: focusLocationContainerAfterDelete,
         getFieldsetKey: getFieldsetKey,
-        setupFormContainerClickTracking: setupFormContainerClickTracking,
-        updateLocationWallpaperSizing: updateLocationWallpaperSizing
+        setupFormContainerClickTracking: setupFormContainerClickTracking
     };
     
     // Register module with App

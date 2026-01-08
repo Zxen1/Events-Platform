@@ -2135,11 +2135,6 @@ const MemberModule = (function() {
                             checkoutInstance.updateContext({ locationCount: quantity });
                             try { formFields.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e) {}
                         }
-
-                        // Location container wallpaper: re-scan new containers after quantity changes
-                        if (window.MapModule && typeof MapModule.initLocationContainerWallpapers === 'function') {
-                            MapModule.initLocationContainerWallpapers(formFields);
-                        }
                     },
                     getMessage: function(key, params, fallback) {
                         if (typeof window.getMessage === 'function') {
@@ -2199,11 +2194,6 @@ const MemberModule = (function() {
                     },
                     idPrefix: 'memberCreate'
                 });
-
-                // Location container wallpaper: initialize background maps after containers render
-                if (window.MapModule && typeof MapModule.initLocationContainerWallpapers === 'function') {
-                    MapModule.initLocationContainerWallpapers(formFields);
-                }
                 
                 // Store location type name for callbacks
                 if (locationData && locationData.locationFieldsetType) {
