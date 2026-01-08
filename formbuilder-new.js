@@ -4250,12 +4250,41 @@
      */
     function setupFormContainerClickTracking(container) {
         if (!container) return;
+
+        function updateLocationThumbsForActiveState() {
+            // Only location containers should drive map lifecycle.
+            var allLoc = container.querySelectorAll('.member-location-container[data-location-number]');
+            allLoc.forEach(function(loc) {
+                var isActive = String(loc.getAttribute('data-active') || '') === 'true';
+                var hosts = loc.querySelectorAll('.fieldset-locationthumb-host');
+                hosts.forEach(function(host) {
+                    var ctrl = host && host.__locationThumbCtrl ? host.__locationThumbCtrl : null;
+                    if (!ctrl) return;
+                    if (isActive) {
+                        if (typeof host.__locationThumbRefresh === 'function') {
+                            host.__locationThumbRefresh();
+                        }
+                    } else {
+                        if (typeof ctrl.unloadIfNotLocked === 'function') {
+                            ctrl.unloadIfNotLocked();
+                        }
+                    }
+                });
+            });
+        }
         
         // Use event delegation - single handler on parent for all containers
         container.addEventListener('click', function(e) {
             // Find the clicked form container (or closest ancestor that is a form container)
             var clickedContainer = e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container');
-            if (!clickedContainer) return;
+            if (!clickedContainer) {
+                // Clicked outside any container => clear active state and unload inactive location maps.
+                container.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                    c.removeAttribute('data-active');
+                });
+                updateLocationThumbsForActiveState();
+                return;
+            }
             
             // Remove active state from all form containers
             container.querySelectorAll('[data-active="true"]').forEach(function(c) {
@@ -4264,7 +4293,21 @@
             
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
+            updateLocationThumbsForActiveState();
         });
+
+        // Keyboard focus should also activate the correct container (not just clicks).
+        container.addEventListener('focusin', function(e) {
+            var focusedContainer = e && e.target && e.target.closest
+                ? e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container')
+                : null;
+            if (!focusedContainer) return;
+            container.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                c.removeAttribute('data-active');
+            });
+            focusedContainer.setAttribute('data-active', 'true');
+            updateLocationThumbsForActiveState();
+        }, true);
     }
     
     /**

@@ -6367,6 +6367,8 @@ const LocationThumbnailPickerComponent = (function() {
         options = options || {};
 
         var onChange = typeof options.onChange === 'function' ? options.onChange : function() {};
+        var locationType = String(options.locationType || '').trim().toLowerCase();
+        if (!locationType) locationType = 'address';
 
         // DOM
         hostEl.innerHTML = '';
@@ -6433,7 +6435,9 @@ const LocationThumbnailPickerComponent = (function() {
             lat: null,
             lng: null,
             label: '',
-            zoom: 18,
+            defaultZoom: (locationType === 'city') ? 12 : 17,
+            defaultPitch: 70,
+            zoom: (locationType === 'city') ? 12 : 17,
             pitch: 70,
             bearing: 0,
             requestId: 0,
@@ -6449,6 +6453,41 @@ const LocationThumbnailPickerComponent = (function() {
 
         function setCompleteFlag() {
             try { hostEl.dataset.complete = st.locked ? 'true' : 'false'; } catch (e) {}
+        }
+
+        function getBleedTargetEl() {
+            try {
+                // Prefer the location container content area (not the header).
+                return hostEl.closest('.member-postform-location-content') || hostEl.closest('.member-location-container') || null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function cssUrlValue(u) {
+            var s = String(u || '').trim();
+            if (!s) return 'none';
+            // Basic escaping for quotes.
+            return 'url("' + s.replace(/"/g, '\\"') + '")';
+        }
+
+        function setBleedImage(urlOrNone) {
+            var target = getBleedTargetEl();
+            if (!target || !target.style) return;
+            var cssV = cssUrlValue(urlOrNone);
+            try {
+                if (cssV === 'none') target.style.removeProperty('--locationthumb-bleed-image');
+                else target.style.setProperty('--locationthumb-bleed-image', cssV);
+            } catch (e0) {}
+        }
+
+        function clearBleed() {
+            // Clear CSS var and revoke any preview URL we created.
+            setBleedImage('');
+            if (st.bleedUrl && st.bleedUrl !== st.lockedUrl) {
+                try { URL.revokeObjectURL(st.bleedUrl); } catch (e0) {}
+            }
+            st.bleedUrl = '';
         }
 
         function setButtonsEnabled(saveEnabled, discardEnabled) {
@@ -6524,6 +6563,7 @@ const LocationThumbnailPickerComponent = (function() {
             try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
             st.demoTimer = 0;
             stopOrbit();
+            clearBleed();
             if (st.map) {
                 try { st.map.remove(); } catch (e1) {}
                 st.map = null;
@@ -6708,6 +6748,7 @@ const LocationThumbnailPickerComponent = (function() {
             st.lng = null;
             st.label = '';
             st.bearing = 0;
+            clearBleed();
             tile.classList.add('component-locationthumb-tile--empty');
             tile.classList.remove('component-locationthumb-tile--loading');
             tile.classList.remove('component-locationthumb-tile--ready');
@@ -6736,8 +6777,8 @@ const LocationThumbnailPickerComponent = (function() {
             st.locked = false;
             st.bearing = 0;
             st.userControlled = false;
-            st.zoom = 18;
-            st.pitch = 70;
+            st.zoom = st.defaultZoom;
+            st.pitch = st.defaultPitch;
 
             tile.classList.remove('component-locationthumb-tile--empty');
             tile.classList.remove('component-locationthumb-tile--locked');
@@ -6768,6 +6809,43 @@ const LocationThumbnailPickerComponent = (function() {
                     if (myReq !== st.requestId) return;
                     tile.classList.remove('component-locationthumb-tile--loading');
                     tile.classList.add('component-locationthumb-tile--ready');
+
+                    // Apply a lightweight "bleed" wallpaper across the whole location container.
+                    // This is a single capture (not continuous) to keep performance predictable.
+                    try {
+                        var canvas = m.getCanvas && m.getCanvas();
+                        if (canvas && canvas.width && canvas.height) {
+                            var bw = Math.min(520, canvas.width || 0);
+                            var bh = Math.round(bw / 2);
+                            var out = document.createElement('canvas');
+                            out.width = bw;
+                            out.height = bh;
+                            var ctx = out.getContext('2d');
+                            if (ctx) {
+                                // Center-crop to 2:1
+                                var srcW = canvas.width;
+                                var srcH = canvas.height;
+                                var cropW = srcW;
+                                var cropH = Math.round(srcW / 2);
+                                if (cropH > srcH) {
+                                    cropH = srcH;
+                                    cropW = Math.round(srcH * 2);
+                                }
+                                var sx = Math.max(0, Math.round((srcW - cropW) / 2));
+                                var sy = Math.max(0, Math.round((srcH - cropH) / 2));
+                                ctx.drawImage(canvas, sx, sy, cropW, cropH, 0, 0, bw, bh);
+                                out.toBlob(function(blob) {
+                                    if (!blob) return;
+                                    if (st.bleedUrl && st.bleedUrl !== st.lockedUrl) {
+                                        try { URL.revokeObjectURL(st.bleedUrl); } catch (e0) {}
+                                    }
+                                    try { st.bleedUrl = URL.createObjectURL(blob); } catch (e1) { st.bleedUrl = ''; }
+                                    if (!st.locked) setBleedImage(st.bleedUrl);
+                                }, 'image/jpeg', 0.6);
+                            }
+                        }
+                    } catch (eBleed) {}
+
                     // Short demo orbit only until the user interacts.
                     startOrbit();
                     try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
@@ -6853,6 +6931,9 @@ const LocationThumbnailPickerComponent = (function() {
                 mapMount.style.display = 'none';
                 setButtonsEnabled(false, true);
 
+                // Use the saved image for the full-container bleed wallpaper.
+                setBleedImage(st.lockedUrl || '');
+
                 // Shutdown map completely
                 try { st.map.remove(); } catch (e4) {}
                 st.map = null;
@@ -6881,6 +6962,7 @@ const LocationThumbnailPickerComponent = (function() {
                 imgEl.style.display = 'none';
                 mapMount.style.display = '';
                 tile.classList.remove('component-locationthumb-tile--locked');
+                clearBleed();
                 // Re-load current location if available
                 if (st.lat !== null && st.lng !== null) setLocation(st.lat, st.lng, st.label);
                 else clear();

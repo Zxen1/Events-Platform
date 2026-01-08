@@ -1067,6 +1067,7 @@ const FieldsetBuilder = (function(){
                 var addrThumbCtrl = null;
                 if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
                     addrThumbCtrl = LocationThumbnailPickerComponent.attach(addrThumbHost, {
+                        locationType: 'address',
                         onChange: function(state) {
                             try {
                                 addrThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
@@ -1076,6 +1077,18 @@ const FieldsetBuilder = (function(){
                         }
                     });
                 }
+                // Expose controller to location-container infrastructure (FormbuilderModule)
+                try {
+                    addrThumbHost.__locationThumbCtrl = addrThumbCtrl;
+                    addrThumbHost.__locationThumbRefresh = function() {
+                        if (!addrThumbCtrl || typeof addrThumbCtrl.setLocation !== 'function') return;
+                        var latV = parseFloat(String(addrLatInput.value || ''));
+                        var lngV = parseFloat(String(addrLngInput.value || ''));
+                        var labelV = String(addrInputEl.value || '').trim();
+                        if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV, labelV);
+                        else addrThumbCtrl.clear();
+                    };
+                } catch (eRH) {}
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
                 addrLatInput.type = 'hidden';
@@ -1107,23 +1120,6 @@ const FieldsetBuilder = (function(){
                 addrInputEl.addEventListener('input', function() {
                     if (addrThumbCtrl) addrThumbCtrl.clear();
                 });
-
-                // Lazy-load only when the fieldset is focused (and we already have confirmed lat/lng).
-                fieldset.addEventListener('focusin', function() {
-                    if (!addrThumbCtrl || typeof addrThumbCtrl.setLocation !== 'function') return;
-                    if (!addrLatInput || !addrLngInput) return;
-                    var latV = parseFloat(String(addrLatInput.value || ''));
-                    var lngV = parseFloat(String(addrLngInput.value || ''));
-                if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV, String(addrInputEl.value || ''));
-                });
-
-                // Unload map when leaving the fieldset (unless locked) to avoid background GPU usage.
-                fieldset.addEventListener('focusout', function(e) {
-                    if (!addrThumbCtrl || typeof addrThumbCtrl.unloadIfNotLocked !== 'function') return;
-                    var next = e && e.relatedTarget ? e.relatedTarget : null;
-                    if (next && fieldset.contains(next)) return;
-                    addrThumbCtrl.unloadIfNotLocked();
-                });
                 break;
                 
             case 'city':
@@ -1145,6 +1141,7 @@ const FieldsetBuilder = (function(){
                 var cityThumbCtrl = null;
                 if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
                     cityThumbCtrl = LocationThumbnailPickerComponent.attach(cityThumbHost, {
+                        locationType: 'city',
                         onChange: function(state) {
                             try {
                                 cityThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
@@ -1154,6 +1151,18 @@ const FieldsetBuilder = (function(){
                         }
                     });
                 }
+                // Expose controller to location-container infrastructure (FormbuilderModule)
+                try {
+                    cityThumbHost.__locationThumbCtrl = cityThumbCtrl;
+                    cityThumbHost.__locationThumbRefresh = function() {
+                        if (!cityThumbCtrl || typeof cityThumbCtrl.setLocation !== 'function') return;
+                        var latV = parseFloat(String(cityLatInput.value || ''));
+                        var lngV = parseFloat(String(cityLngInput.value || ''));
+                        var labelV = String(cityInputEl.value || '').trim();
+                        if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV, labelV);
+                        else cityThumbCtrl.clear();
+                    };
+                } catch (eRH2) {}
                 // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
                 cityLatInput.type = 'hidden';
@@ -1184,23 +1193,6 @@ const FieldsetBuilder = (function(){
                 });
                 cityInputEl.addEventListener('input', function() {
                     if (cityThumbCtrl) cityThumbCtrl.clear();
-                });
-
-                // Lazy-load only when the fieldset is focused (and we already have confirmed lat/lng).
-                fieldset.addEventListener('focusin', function() {
-                    if (!cityThumbCtrl || typeof cityThumbCtrl.setLocation !== 'function') return;
-                    if (!cityLatInput || !cityLngInput) return;
-                    var latV = parseFloat(String(cityLatInput.value || ''));
-                    var lngV = parseFloat(String(cityLngInput.value || ''));
-                if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV, String(cityInputEl.value || ''));
-                });
-
-                // Unload map when leaving the fieldset (unless locked) to avoid background GPU usage.
-                fieldset.addEventListener('focusout', function(e) {
-                    if (!cityThumbCtrl || typeof cityThumbCtrl.unloadIfNotLocked !== 'function') return;
-                    var next = e && e.relatedTarget ? e.relatedTarget : null;
-                    if (next && fieldset.contains(next)) return;
-                    cityThumbCtrl.unloadIfNotLocked();
                 });
                 break;
                 
@@ -3478,6 +3470,7 @@ const FieldsetBuilder = (function(){
                 var venueThumbCtrl = null;
                 if (window.LocationThumbnailPickerComponent && typeof LocationThumbnailPickerComponent.attach === 'function') {
                     venueThumbCtrl = LocationThumbnailPickerComponent.attach(venueThumbHost, {
+                        locationType: 'venue',
                         onChange: function(state) {
                             try {
                                 venueThumbMeta.value = state && state.camera ? JSON.stringify(state.camera) : '';
@@ -3487,6 +3480,18 @@ const FieldsetBuilder = (function(){
                         }
                     });
                 }
+                // Expose controller to location-container infrastructure (FormbuilderModule)
+                try {
+                    venueThumbHost.__locationThumbCtrl = venueThumbCtrl;
+                    venueThumbHost.__locationThumbRefresh = function() {
+                        if (!venueThumbCtrl || typeof venueThumbCtrl.setLocation !== 'function') return;
+                        var latV = parseFloat(String(smartLatInput.value || ''));
+                        var lngV = parseFloat(String(smartLngInput.value || ''));
+                        var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
+                        if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
+                        else venueThumbCtrl.clear();
+                    };
+                } catch (eRH3) {}
 
                 // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
                 try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e0) {}
@@ -3702,24 +3707,6 @@ const FieldsetBuilder = (function(){
                 });
                 smartAddrInput.addEventListener('input', function() {
                     if (venueThumbCtrl) venueThumbCtrl.clear();
-                });
-
-                // Lazy-load only when the fieldset is focused (and we already have confirmed lat/lng).
-                fieldset.addEventListener('focusin', function() {
-                    if (!venueThumbCtrl || typeof venueThumbCtrl.setLocation !== 'function') return;
-                    if (!smartLatInput || !smartLngInput) return;
-                    var latV = parseFloat(String(smartLatInput.value || ''));
-                    var lngV = parseFloat(String(smartLngInput.value || ''));
-                    var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
-                    if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
-                });
-
-                // Unload map when leaving the fieldset (unless locked) to avoid background GPU usage.
-                fieldset.addEventListener('focusout', function(e) {
-                    if (!venueThumbCtrl || typeof venueThumbCtrl.unloadIfNotLocked !== 'function') return;
-                    var next = e && e.relatedTarget ? e.relatedTarget : null;
-                    if (next && fieldset.contains(next)) return;
-                    venueThumbCtrl.unloadIfNotLocked();
                 });
                 break;
                 
