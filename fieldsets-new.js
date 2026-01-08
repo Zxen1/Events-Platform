@@ -60,21 +60,10 @@ const FieldsetBuilder = (function(){
         var dropdown = document.createElement('div');
         dropdown.className = 'fieldset-location-dropdown';
         dropdown.style.display = 'none';
-        dropdown.style.position = 'absolute';
-        dropdown.style.zIndex = '1000';
-        dropdown.style.backgroundColor = '#fff';
-        dropdown.style.border = '1px solid #ccc';
-        dropdown.style.borderRadius = '4px';
-        dropdown.style.maxHeight = '200px';
-        dropdown.style.overflowY = 'auto';
-        dropdown.style.width = '100%';
-        dropdown.style.marginTop = '2px';
-        dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
         
         // Insert dropdown after input element
         var parent = inputElement.parentNode;
         if (parent) {
-            parent.style.position = 'relative';
             parent.appendChild(dropdown);
         }
         
@@ -155,24 +144,13 @@ const FieldsetBuilder = (function(){
                     
                     var item = document.createElement('div');
                     item.className = 'fieldset-location-dropdown-item';
-                    item.style.padding = '8px 12px';
-                    item.style.cursor = 'pointer';
-                    item.style.borderBottom = '1px solid #eee';
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
                     
                     item.innerHTML = 
-                        '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
-                        (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
-                    
-                    // Hover effect
-                    item.addEventListener('mouseenter', function() {
-                        item.style.backgroundColor = '#f5f5f5';
-                    });
-                    item.addEventListener('mouseleave', function() {
-                        item.style.backgroundColor = 'transparent';
-                    });
+                        '<div class="fieldset-location-dropdown-item-main">' + mainText + '</div>' +
+                        (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary">' + secondaryText + '</div>' : '');
                     
                     item.addEventListener('click', async function() {
                         try {
@@ -1050,11 +1028,14 @@ const FieldsetBuilder = (function(){
             case 'address':
             case 'location': // legacy support
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var addrWrap = document.createElement('div');
+                addrWrap.className = 'fieldset-location-inputwrap';
                 var addrInputEl = document.createElement('input');
                 addrInputEl.type = 'text';
                 addrInputEl.className = 'fieldset-input';
                 applyPlaceholder(addrInputEl, placeholder);
-                fieldset.appendChild(addrInputEl);
+                addrWrap.appendChild(addrInputEl);
+                fieldset.appendChild(addrWrap);
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
                 addrLatInput.type = 'hidden';
@@ -1078,11 +1059,14 @@ const FieldsetBuilder = (function(){
                 
             case 'city':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                var cityWrap = document.createElement('div');
+                cityWrap.className = 'fieldset-location-inputwrap';
                 var cityInputEl = document.createElement('input');
                 cityInputEl.type = 'text';
                 cityInputEl.className = 'fieldset-input';
                 applyPlaceholder(cityInputEl, placeholder);
-                fieldset.appendChild(cityInputEl);
+                cityWrap.appendChild(cityInputEl);
+                fieldset.appendChild(cityWrap);
                 // Hidden lat/lng fields
                 var cityLatInput = document.createElement('input');
                 cityLatInput.type = 'hidden';
@@ -3353,7 +3337,10 @@ const FieldsetBuilder = (function(){
                 smartVenueInput.className = 'fieldset-input';
                 smartVenueInput.placeholder = 'Search or type venue name...';
                 smartVenueInput.style.marginBottom = '8px';
-                fieldset.appendChild(smartVenueInput);
+                var smartVenueWrap = document.createElement('div');
+                smartVenueWrap.className = 'fieldset-location-inputwrap';
+                smartVenueWrap.appendChild(smartVenueInput);
+                fieldset.appendChild(smartVenueWrap);
                 
                 // Address row
                 var smartAddrSub = document.createElement('div');
@@ -3365,7 +3352,10 @@ const FieldsetBuilder = (function(){
                 smartAddrInput.className = 'fieldset-input';
                 smartAddrInput.placeholder = 'Search or type address...';
                 smartAddrInput.style.marginBottom = '4px';
-                fieldset.appendChild(smartAddrInput);
+                var smartAddrWrap = document.createElement('div');
+                smartAddrWrap.className = 'fieldset-location-inputwrap';
+                smartAddrWrap.appendChild(smartAddrInput);
+                fieldset.appendChild(smartAddrWrap);
 
                 // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
                 try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e0) {}
@@ -3395,20 +3385,9 @@ const FieldsetBuilder = (function(){
                     var dropdown = document.createElement('div');
                     dropdown.className = 'fieldset-location-dropdown';
                     dropdown.style.display = 'none';
-                    dropdown.style.position = 'absolute';
-                    dropdown.style.zIndex = '1000';
-                    dropdown.style.backgroundColor = '#fff';
-                    dropdown.style.border = '1px solid #ccc';
-                    dropdown.style.borderRadius = '4px';
-                    dropdown.style.maxHeight = '200px';
-                    dropdown.style.overflowY = 'auto';
-                    dropdown.style.width = '100%';
-                    dropdown.style.marginTop = '2px';
-                    dropdown.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
                     
                     var parent = inputEl.parentNode;
                     if (parent) {
-                        parent.style.position = 'relative';
                         parent.appendChild(dropdown);
                     }
                     
@@ -3439,23 +3418,13 @@ const FieldsetBuilder = (function(){
                                 
                                 var item = document.createElement('div');
                                 item.className = 'fieldset-location-dropdown-item';
-                                item.style.padding = '8px 12px';
-                                item.style.cursor = 'pointer';
-                                item.style.borderBottom = '1px solid #eee';
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                                 var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
                                 
                                 item.innerHTML = 
-                                    '<div style="font-weight: 500; color: #333;">' + mainText + '</div>' +
-                                    (secondaryText ? '<div style="font-size: 0.9em; color: #666; margin-top: 2px;">' + secondaryText + '</div>' : '');
-                                
-                                item.addEventListener('mouseenter', function() {
-                                    item.style.backgroundColor = '#f5f5f5';
-                                });
-                                item.addEventListener('mouseleave', function() {
-                                    item.style.backgroundColor = 'transparent';
-                                });
+                                    '<div class="fieldset-location-dropdown-item-main">' + mainText + '</div>' +
+                                    (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary">' + secondaryText + '</div>' : '');
                                 
                                 item.addEventListener('click', async function() {
                                     try {
