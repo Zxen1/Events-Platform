@@ -6343,10 +6343,17 @@ const LocationThumbnailPickerComponent = (function() {
 
     function getContainerEl(hostEl) {
         try {
-            return hostEl.closest('.member-postform-location-content') || hostEl.closest('.member-location-container') || null;
-        } catch (e) {
-            return null;
-        }
+            // The "location container" content area is the correct mount target.
+            // Never fall back to broader ancestors (that can cause absolute positioning to anchor to the panel).
+            var content = hostEl.closest('.member-postform-location-content');
+            if (content) return content;
+            var locContainer = hostEl.closest('.member-location-container');
+            if (locContainer && locContainer.querySelector) {
+                content = locContainer.querySelector('.member-postform-location-content');
+                if (content) return content;
+            }
+        } catch (e) {}
+        return null;
     }
 
     function attach(hostEl, options) {
