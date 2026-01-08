@@ -6489,6 +6489,8 @@ const LocationThumbnailPickerComponent = (function() {
                 var y = Math.round(frameRect.top - tRect.top);
                 var w = Math.round(frameRect.width);
                 var h = Math.round(frameRect.height);
+                // If layout isn't ready (collapsed/offscreen), don't write bogus 0,0 coords.
+                if (!w || !h) return;
                 target.style.setProperty('--locationthumb-frame-x', x + 'px');
                 target.style.setProperty('--locationthumb-frame-y', y + 'px');
                 target.style.setProperty('--locationthumb-frame-w', w + 'px');
@@ -6521,6 +6523,9 @@ const LocationThumbnailPickerComponent = (function() {
 
             // Set frame vars immediately so the dim layer doesn't cover the whole container.
             updateFrameVars();
+            // Also force post-layout updates (some browsers/layout states report 0-size initially).
+            try { requestAnimationFrame(updateFrameVars); } catch (e0) {}
+            try { setTimeout(updateFrameVars, 0); } catch (e1) {}
 
             // Build map (match main map attribution behavior)
             st.map = new mapboxgl.Map({
@@ -6667,6 +6672,7 @@ const LocationThumbnailPickerComponent = (function() {
             // even before lat/lng are chosen.
             ensureBackgroundMap();
             if (!st.map) return;
+            try { requestAnimationFrame(updateFrameVars); } catch (e0) {}
             try {
                 // Start spin once the style is ready.
                 st.map.once('style.load', function() {
