@@ -1077,6 +1077,11 @@ const FieldsetBuilder = (function(){
                         var latV = parseFloat(String(addrLatInput.value || ''));
                         var lngV = parseFloat(String(addrLngInput.value || ''));
                         var labelV = String(addrInputEl.value || '').trim();
+                        // If the tile is already live/ready, don't reset the camera (prevents "bounce back" while interacting).
+                        try {
+                            var tile = addrThumbHost.querySelector('.component-locationthumb-tile');
+                            if (tile && !tile.classList.contains('component-locationthumb-tile--empty')) return;
+                        } catch (e0) {}
                         if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV, labelV);
                         else addrThumbCtrl.clear();
                     };
@@ -1094,10 +1099,22 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(addrLatInput);
                 fieldset.appendChild(addrLngInput);
                 fieldset.appendChild(addrCountryInput);
-                // Status indicator
+                // Status indicator + Save/Discard buttons (same row)
+                var addrStatusRow = document.createElement('div');
+                addrStatusRow.className = 'fieldset-location-actionsrow';
                 var addrStatus = document.createElement('div');
                 addrStatus.className = 'fieldset-location-status';
-                fieldset.appendChild(addrStatus);
+                addrStatusRow.appendChild(addrStatus);
+                var addrStatusActions = document.createElement('div');
+                addrStatusActions.className = 'fieldset-location-actionsright';
+                addrStatusRow.appendChild(addrStatusActions);
+                fieldset.appendChild(addrStatusRow);
+
+                // Mount the component's Save/Discard buttons into this row (right side)
+                try {
+                    var footerEl = addrThumbHost.querySelector('.component-locationthumb-footer');
+                    if (footerEl) addrStatusActions.appendChild(footerEl);
+                } catch (e0) {}
                 // Init Google Places
                 initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus);
 
@@ -1151,6 +1168,11 @@ const FieldsetBuilder = (function(){
                         var latV = parseFloat(String(cityLatInput.value || ''));
                         var lngV = parseFloat(String(cityLngInput.value || ''));
                         var labelV = String(cityInputEl.value || '').trim();
+                        // If the tile is already live/ready, don't reset the camera (prevents "bounce back" while interacting).
+                        try {
+                            var tile = cityThumbHost.querySelector('.component-locationthumb-tile');
+                            if (tile && !tile.classList.contains('component-locationthumb-tile--empty')) return;
+                        } catch (e0) {}
                         if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV, labelV);
                         else cityThumbCtrl.clear();
                     };
@@ -1168,10 +1190,22 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(cityLatInput);
                 fieldset.appendChild(cityLngInput);
                 fieldset.appendChild(cityCountryInput);
-                // Status indicator
+                // Status indicator + Save/Discard buttons (same row)
+                var cityStatusRow = document.createElement('div');
+                cityStatusRow.className = 'fieldset-location-actionsrow';
                 var cityStatus = document.createElement('div');
                 cityStatus.className = 'fieldset-location-status';
-                fieldset.appendChild(cityStatus);
+                cityStatusRow.appendChild(cityStatus);
+                var cityStatusActions = document.createElement('div');
+                cityStatusActions.className = 'fieldset-location-actionsright';
+                cityStatusRow.appendChild(cityStatusActions);
+                fieldset.appendChild(cityStatusRow);
+
+                // Mount the component's Save/Discard buttons into this row (right side)
+                try {
+                    var footerEl = cityThumbHost.querySelector('.component-locationthumb-footer');
+                    if (footerEl) cityStatusActions.appendChild(footerEl);
+                } catch (e0) {}
                 // Init Google Places (cities only)
                 initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityCountryInput, cityStatus);
 
@@ -3480,6 +3514,11 @@ const FieldsetBuilder = (function(){
                         var latV = parseFloat(String(smartLatInput.value || ''));
                         var lngV = parseFloat(String(smartLngInput.value || ''));
                         var labelV = String((smartVenueInput && smartVenueInput.value) || (smartAddrInput && smartAddrInput.value) || '').trim();
+                        // If the tile is already live/ready, don't reset the camera (prevents "bounce back" while interacting).
+                        try {
+                            var tile = venueThumbHost.querySelector('.component-locationthumb-tile');
+                            if (tile && !tile.classList.contains('component-locationthumb-tile--empty')) return;
+                        } catch (e0) {}
                         if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV, labelV);
                         else venueThumbCtrl.clear();
                     };
@@ -3488,10 +3527,22 @@ const FieldsetBuilder = (function(){
                 // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
                 try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e0) {}
                 
-                // Status indicator
+                // Status indicator + Save/Discard buttons (same row)
+                var smartStatusRow = document.createElement('div');
+                smartStatusRow.className = 'fieldset-location-actionsrow';
                 var smartStatus = document.createElement('div');
                 smartStatus.className = 'fieldset-location-status';
-                fieldset.appendChild(smartStatus);
+                smartStatusRow.appendChild(smartStatus);
+                var smartStatusActions = document.createElement('div');
+                smartStatusActions.className = 'fieldset-location-actionsright';
+                smartStatusRow.appendChild(smartStatusActions);
+                fieldset.appendChild(smartStatusRow);
+
+                // Mount the component's Save/Discard buttons into this row (right side)
+                try {
+                    var footerEl = venueThumbHost.querySelector('.component-locationthumb-footer');
+                    if (footerEl) smartStatusActions.appendChild(footerEl);
+                } catch (e0) {}
                 
                 fieldset.appendChild(smartLatInput);
                 fieldset.appendChild(smartLngInput);

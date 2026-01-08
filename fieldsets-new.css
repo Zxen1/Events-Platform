@@ -1558,6 +1558,38 @@
     margin-top: 4px;
 }
 
+.fieldset-location-actionsrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.fieldset-location-actionsrow .fieldset-location-status {
+    margin-top: 0;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.fieldset-location-actionsright {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* The Save/Discard footer is normally under the tile; when mounted into the status row it should be inline. */
+.fieldset-location-actionsright .component-locationthumb-footer {
+    display: block !important;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+.fieldset-location-actionsright .component-locationthumb-footer-actions {
+    gap: 8px;
+}
+
 .fieldset-location-status.success {
     color: #22c55e;
 }

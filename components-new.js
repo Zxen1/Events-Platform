@@ -6613,35 +6613,16 @@ const LocationThumbnailPickerComponent = (function() {
                     zoom: 1.5,
                     pitch: 0,
                     bearing: 0,
-                    // Allow rotate/zoom/pitch, but keep center locked by disabling pan.
+                    // Match the main map interaction model (Mapbox defaults).
+                    // We only specify non-interaction options here.
                     interactive: true,
-                    dragPan: false,
-                    scrollZoom: true,
-                    // We'll handle rotate/pitch with simple left-drag (no pan), and keep pinch zoom.
-                    dragRotate: false,
-                    touchZoomRotate: true,
-                    doubleClickZoom: false,
-                    keyboard: false,
                     // We'll add a compact attribution control in a safer position.
                     attributionControl: false,
-                    logoPosition: 'bottom-right',
+                    logoPosition: 'bottom-left',
                     renderWorldCopies: false,
                     antialias: false,
                     preserveDrawingBuffer: true
                 });
-
-                // Make mouse-wheel zoom much less "sloppy"/slow.
-                // Default rates are very conservative; bump for desktop mouse wheels.
-                try {
-                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setWheelZoomRate === 'function') {
-                        // Higher rate => faster zoom per wheel tick.
-                        st.map.scrollZoom.setWheelZoomRate(1 / 120);
-                    }
-                    if (st.map.scrollZoom && typeof st.map.scrollZoom.setZoomRate === 'function') {
-                        // Affects "non-wheel" zoom interactions in some environments.
-                        st.map.scrollZoom.setZoomRate(0.9);
-                    }
-                } catch (eZ) {}
                 st.map.once('style.load', function() {
                     applyLighting(st.map, getLightingPreset());
                 });
@@ -6665,70 +6646,8 @@ const LocationThumbnailPickerComponent = (function() {
                     } catch (e0) {}
                 });
 
-                // Simple rotation/pitch control: left-drag rotates + tilts (center remains locked).
-                // We bind to the Mapbox canvas container (more reliable than the outer mount).
-                (function bindDragRotatePitch() {
-                    var canvasContainer = null;
-                    try { canvasContainer = st.map.getCanvasContainer(); } catch (e0) { canvasContainer = null; }
-                    if (!canvasContainer) return;
-
-                    var dragging = false;
-                    var startX = 0;
-                    var startY = 0;
-                    var startBearing = 0;
-                    var startPitch = 0;
-
-                    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-
-                    function markInteracted() {
-                        st.userControlled = true;
-                        try { if (st.interactTimer) clearTimeout(st.interactTimer); } catch (e0) {}
-                        st.didInteractRecently = true;
-                        st.interactTimer = setTimeout(function() { st.didInteractRecently = false; }, 350);
-                        setButtonsEnabled(true, true);
-                        pauseLive('Save or discard');
-                    }
-
-                    function onMouseMove(e) {
-                        if (!dragging) return;
-                        if (!st.map || st.locked) return;
-                        var dx = (e.clientX - startX) || 0;
-                        var dy = (e.clientY - startY) || 0;
-                        var bearing = (startBearing - (dx * 0.25)) % 360;
-                        var pitch = clamp(startPitch + (dy * 0.12), 0, 85);
-                        st.bearing = bearing;
-                        st.pitch = pitch;
-                        try { st.map.jumpTo({ bearing: bearing, pitch: pitch }); } catch (e0) {}
-                    }
-
-                    function endDrag() {
-                        if (!dragging) return;
-                        dragging = false;
-                        try { window.removeEventListener('mousemove', onMouseMove, true); } catch (e0) {}
-                        try { window.removeEventListener('mouseup', endDrag, true); } catch (e1) {}
-                    }
-
-                    canvasContainer.addEventListener('mousedown', function(e) {
-                        if (!e) return;
-                        if (!st.map || st.locked) return;
-                        // Left mouse only
-                        if (e.button !== 0) return;
-
-                        dragging = true;
-                        startX = e.clientX;
-                        startY = e.clientY;
-                        try { startBearing = st.map.getBearing(); } catch (e0) { startBearing = st.bearing || 0; }
-                        try { startPitch = st.map.getPitch(); } catch (e1) { startPitch = st.pitch || 0; }
-                        markInteracted();
-
-                        // Capture at window to survive pointer leaving the canvas.
-                        try { window.addEventListener('mousemove', onMouseMove, true); } catch (e2) {}
-                        try { window.addEventListener('mouseup', endDrag, true); } catch (e3) {}
-
-                        // Prevent text selection / dragging images
-                        try { e.preventDefault(); } catch (e4) {}
-                    }, { passive: false });
-                })();
+                // NOTE: We intentionally do NOT remap gestures here.
+                // The thumbnail must behave like the main map; only pan is disabled to keep center locked.
             } catch (e) {
                 st.map = null;
             }

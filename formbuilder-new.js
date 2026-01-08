@@ -4275,6 +4275,15 @@
         
         // Use event delegation - single handler on parent for all containers
         container.addEventListener('click', function(e) {
+            // Ignore clicks inside modal dialogs/overlays. These live outside the active container
+            // and should NOT clear active state (otherwise we unload maps and the user sees blank).
+            try {
+                var t0 = e && e.target ? e.target : null;
+                if (t0 && t0.closest && t0.closest('.component-confirm-dialog-overlay, .component-confirm-dialog, [aria-modal="true"]')) {
+                    return;
+                }
+            } catch (e0) {}
+
             // Find the clicked form container (or closest ancestor that is a form container)
             var clickedContainer = e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container');
             if (!clickedContainer) {
@@ -4286,11 +4295,16 @@
                 return;
             }
             
+            // If clicking inside an already-active container, do nothing.
+            // This prevents location thumbnail maps from being "refreshed" (re-centered) during map interaction.
+            var currentActive = container.querySelector('[data-active="true"]');
+            if (currentActive === clickedContainer) return;
+
             // Remove active state from all form containers
             container.querySelectorAll('[data-active="true"]').forEach(function(c) {
                 c.removeAttribute('data-active');
             });
-            
+
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
             updateLocationThumbsForActiveState();
@@ -4298,10 +4312,20 @@
 
         // Keyboard focus should also activate the correct container (not just clicks).
         container.addEventListener('focusin', function(e) {
+            // Ignore focus inside modal dialogs/overlays.
+            try {
+                var t0 = e && e.target ? e.target : null;
+                if (t0 && t0.closest && t0.closest('.component-confirm-dialog-overlay, .component-confirm-dialog, [aria-modal="true"]')) {
+                    return;
+                }
+            } catch (e0) {}
+
             var focusedContainer = e && e.target && e.target.closest
                 ? e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container')
                 : null;
             if (!focusedContainer) return;
+            var currentActive = container.querySelector('[data-active="true"]');
+            if (currentActive === focusedContainer) return;
             container.querySelectorAll('[data-active="true"]').forEach(function(c) {
                 c.removeAttribute('data-active');
             });

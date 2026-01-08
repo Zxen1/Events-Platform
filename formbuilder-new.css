@@ -1660,13 +1660,13 @@
 .member-postform-location-content::before {
   content: '';
   position: absolute;
-  inset: -20px; /* allow blur to extend past edges */
+  inset: 0;
   background-image: var(--locationthumb-bleed-image, none);
   background-size: cover;
   background-position: center;
   opacity: var(--locationthumb-bleed-opacity, 0.22);
-  filter: blur(12px) saturate(1.1) contrast(1.05);
-  transform: scale(1.06);
+  filter: none; /* no blur */
+  transform: none;
   pointer-events: none;
   z-index: 0;
 }
