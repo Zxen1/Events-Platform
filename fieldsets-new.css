@@ -1626,6 +1626,10 @@
     background: rgba(255,255,255,0.06);
 }
 
+.fieldset-location-dropdown-item--active {
+    background: rgba(255,255,255,0.10);
+}
+
 .fieldset-location-dropdown-item-main {
     font-weight: 600;
     color: #fff;
@@ -1635,6 +1639,34 @@
     margin-top: 2px;
     font-size: 12px;
     color: #aaa;
+}
+
+/* Venue fieldset: address "secret input" (click to edit) */
+.fieldset-venue-address-display {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    color: rgba(255,255,255,0.75);
+    cursor: pointer;
+    user-select: none;
+    background: transparent;
+    border: none;
+}
+
+.fieldset-venue-address-display:hover {
+    color: rgba(255,255,255,0.9);
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-decoration-color: rgba(255,255,255,0.3);
+}
+
+.fieldset-venue-address-display--hidden {
+    display: none;
+}
+
+.fieldset-venue-address-input--hidden {
+    display: none;
 }
 
 

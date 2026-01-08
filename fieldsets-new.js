@@ -67,6 +67,43 @@ const FieldsetBuilder = (function(){
             parent.appendChild(dropdown);
         }
         
+        // Keyboard navigation
+        var dropdownItems = [];
+        var activeIndex = -1;
+        function dropdownIsOpen() {
+            return dropdown && dropdown.style && dropdown.style.display !== 'none';
+        }
+        function closeDropdown() {
+            dropdown.style.display = 'none';
+            dropdownItems = [];
+            activeIndex = -1;
+            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
+        }
+        function setActiveIndex(nextIdx) {
+            if (!dropdownItems || dropdownItems.length === 0) {
+                activeIndex = -1;
+                return;
+            }
+            var i = nextIdx;
+            if (i < 0) i = dropdownItems.length - 1;
+            if (i >= dropdownItems.length) i = 0;
+            activeIndex = i;
+            dropdownItems.forEach(function(el, idx) {
+                try { el.classList.toggle('fieldset-location-dropdown-item--active', idx === activeIndex); } catch (e) {}
+            });
+            try {
+                var el0 = dropdownItems[activeIndex];
+                if (el0 && typeof el0.scrollIntoView === 'function') el0.scrollIntoView({ block: 'nearest' });
+            } catch (e2) {}
+        }
+        function selectActive() {
+            if (!dropdownItems || dropdownItems.length === 0) return false;
+            if (activeIndex < 0) setActiveIndex(0);
+            var el = dropdownItems[activeIndex];
+            if (!el) return false;
+            try { el.click(); return true; } catch (e) { return false; }
+        }
+        
         // Track whether the current value is confirmed from Google Places (required for "complete")
         try { inputElement.dataset.placesConfirmed = 'false'; } catch (e0) {}
 
@@ -108,8 +145,7 @@ const FieldsetBuilder = (function(){
         var debounceTimer = null;
         async function fetchSuggestions(query) {
             if (!query || query.length < 2) {
-                dropdown.style.display = 'none';
-                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
+                closeDropdown();
                 return;
             }
             
@@ -133,10 +169,11 @@ const FieldsetBuilder = (function(){
                 var response = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
                 
                 dropdown.innerHTML = '';
+                dropdownItems = [];
+                activeIndex = -1;
                 
                 if (!response || !response.suggestions || response.suggestions.length === 0) {
-                    dropdown.style.display = 'none';
-                    try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0b) {}
+                    closeDropdown();
                     return;
                 }
                 
@@ -146,6 +183,10 @@ const FieldsetBuilder = (function(){
                     
                     var item = document.createElement('div');
                     item.className = 'fieldset-location-dropdown-item';
+                    item.addEventListener('mouseenter', function() {
+                        var idx = dropdownItems.indexOf(item);
+                        if (idx >= 0) setActiveIndex(idx);
+                    });
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
@@ -172,6 +213,9 @@ const FieldsetBuilder = (function(){
                                 if (countryInput) countryInput.value = cc;
                                 try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
                                 try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e4) {}
+                                // Also notify listeners bound to lat/lng fields (e.g. wallpaper)
+                                try { if (latInput) latInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e5) {}
+                                try { if (lngInput) lngInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e6) {}
                                 
                                 if (statusElement) {
                                     statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
@@ -195,14 +239,15 @@ const FieldsetBuilder = (function(){
                     });
                     
                     dropdown.appendChild(item);
+                    dropdownItems.push(item);
                 });
                 
                 dropdown.style.display = 'block';
                 try { if (parent) parent.classList.add('fieldset-location-inputwrap--open'); } catch (e0c) {}
+                setActiveIndex(0);
             } catch (err) {
                 console.error('Autocomplete error:', err);
-                dropdown.style.display = 'none';
-                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0d) {}
+                closeDropdown();
             }
         }
         
@@ -214,8 +259,7 @@ const FieldsetBuilder = (function(){
             var query = inputElement.value.trim();
             
             if (query.length < 2) {
-                dropdown.style.display = 'none';
-                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0e) {}
+                closeDropdown();
                 return;
             }
             
@@ -227,8 +271,37 @@ const FieldsetBuilder = (function(){
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (!inputElement.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.style.display = 'none';
-                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0f) {}
+                closeDropdown();
+            }
+        });
+        
+        inputElement.addEventListener('keydown', function(e) {
+            var key = e && e.key ? e.key : '';
+            if (!dropdownIsOpen()) return;
+            if (!dropdownItems || dropdownItems.length === 0) return;
+            if (key === 'ArrowDown') {
+                try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                setActiveIndex(activeIndex + 1);
+                return;
+            }
+            if (key === 'ArrowUp') {
+                try { e.preventDefault(); e.stopPropagation(); } catch (e1) {}
+                setActiveIndex(activeIndex - 1);
+                return;
+            }
+            if (key === 'Enter') {
+                try { e.preventDefault(); e.stopPropagation(); } catch (e2) {}
+                selectActive();
+                return;
+            }
+            if (key === 'Escape') {
+                try { e.preventDefault(); e.stopPropagation(); } catch (e3) {}
+                closeDropdown();
+                return;
+            }
+            if (key === 'Tab') {
+                closeDropdown();
+                return;
             }
         });
         
@@ -238,7 +311,7 @@ const FieldsetBuilder = (function(){
                 if (dropdown && dropdown.parentNode) {
                     dropdown.parentNode.removeChild(dropdown);
                 }
-                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0g) {}
+                closeDropdown();
             }
         };
     }
@@ -3362,6 +3435,30 @@ const FieldsetBuilder = (function(){
                 var smartAddrWrap = document.createElement('div');
                 smartAddrWrap.className = 'fieldset-location-inputwrap';
                 smartAddrWrap.appendChild(smartAddrInput);
+                
+                // Address "secret input" display (click-to-edit, like Messages tab)
+                var smartAddrDisplay = document.createElement('div');
+                smartAddrDisplay.className = 'fieldset-venue-address-display';
+                smartAddrDisplay.title = 'Click to edit address';
+                smartAddrWrap.insertBefore(smartAddrDisplay, smartAddrInput);
+                smartAddrInput.classList.add('fieldset-venue-address-input--hidden');
+                
+                function syncSmartAddrDisplay() {
+                    var v = String(smartAddrInput.value || '').trim();
+                    smartAddrDisplay.textContent = v ? v : 'Address';
+                }
+                syncSmartAddrDisplay();
+                
+                smartAddrDisplay.addEventListener('click', function() {
+                    smartAddrDisplay.classList.add('fieldset-venue-address-display--hidden');
+                    smartAddrInput.classList.remove('fieldset-venue-address-input--hidden');
+                    try { smartAddrInput.focus(); } catch (e0) {}
+                });
+                smartAddrInput.addEventListener('blur', function() {
+                    syncSmartAddrDisplay();
+                    smartAddrDisplay.classList.remove('fieldset-venue-address-display--hidden');
+                    smartAddrInput.classList.add('fieldset-venue-address-input--hidden');
+                });
                 fieldset.appendChild(smartAddrWrap);
 
                 // Address must be confirmed via Google Places (lat/lng set). Typing alone is not enough.
@@ -3398,12 +3495,48 @@ const FieldsetBuilder = (function(){
                         parent.appendChild(dropdown);
                     }
                     
+                    // Keyboard navigation (per input instance)
+                    var dropdownItems = [];
+                    var activeIndex = -1;
+                    function dropdownIsOpen() {
+                        return dropdown && dropdown.style && dropdown.style.display !== 'none';
+                    }
+                    function closeDropdown() {
+                        dropdown.style.display = 'none';
+                        dropdownItems = [];
+                        activeIndex = -1;
+                        try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
+                    }
+                    function setActiveIndex(nextIdx) {
+                        if (!dropdownItems || dropdownItems.length === 0) {
+                            activeIndex = -1;
+                            return;
+                        }
+                        var i = nextIdx;
+                        if (i < 0) i = dropdownItems.length - 1;
+                        if (i >= dropdownItems.length) i = 0;
+                        activeIndex = i;
+                        dropdownItems.forEach(function(el, idx) {
+                            try { el.classList.toggle('fieldset-location-dropdown-item--active', idx === activeIndex); } catch (e) {}
+                        });
+                        try {
+                            var el0 = dropdownItems[activeIndex];
+                            if (el0 && typeof el0.scrollIntoView === 'function') el0.scrollIntoView({ block: 'nearest' });
+                        } catch (e2) {}
+                    }
+                    function selectActive() {
+                        if (!dropdownItems || dropdownItems.length === 0) return false;
+                        if (activeIndex < 0) setActiveIndex(0);
+                        var el = dropdownItems[activeIndex];
+                        if (!el) return false;
+                        try { el.click(); return true; } catch (e) { return false; }
+                    }
+                    
                     // Fetch suggestions using new API (unrestricted - finds both venues and addresses)
                     var debounceTimer = null;
                     async function fetchSuggestions(query) {
                         if (!query || query.length < 2) {
-                            dropdown.style.display = 'none';
-                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
+                            closeDropdown();
                             return;
                         }
                         
@@ -3414,10 +3547,11 @@ const FieldsetBuilder = (function(){
                             });
                             
                             dropdown.innerHTML = '';
+                            dropdownItems = [];
+                            activeIndex = -1;
                             
                             if (!response || !response.suggestions || response.suggestions.length === 0) {
-                                dropdown.style.display = 'none';
-                                try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0b) {}
+                                closeDropdown();
                                 return;
                             }
                             
@@ -3427,6 +3561,10 @@ const FieldsetBuilder = (function(){
                                 
                                 var item = document.createElement('div');
                                 item.className = 'fieldset-location-dropdown-item';
+                                item.addEventListener('mouseenter', function() {
+                                    var idx = dropdownItems.indexOf(item);
+                                    if (idx >= 0) setActiveIndex(idx);
+                                });
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                                 var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
@@ -3452,6 +3590,8 @@ const FieldsetBuilder = (function(){
                                         // Always update lat/lng
                                         smartLatInput.value = lat;
                                         smartLngInput.value = lng;
+                                        try { smartLatInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (eLatCh) {}
+                                        try { smartLngInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (eLngCh) {}
                                         
                                         // Country code (2-letter)
                                         try {
@@ -3476,10 +3616,12 @@ const FieldsetBuilder = (function(){
                                             }
                                             // Address: ALWAYS use the Google-confirmed formatted address.
                                             smartAddrInput.value = address;
+                                            syncSmartAddrDisplay();
                                         } else {
                                             // User searched in address box
                                             // Address: strip to just address (in case Google added extra)
                                             smartAddrInput.value = address;
+                                            syncSmartAddrDisplay();
                                             // Venue name: fill only if empty AND result is an establishment
                                             if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
                                                 smartVenueInput.value = venueName;
@@ -3488,6 +3630,16 @@ const FieldsetBuilder = (function(){
                                         
                                         inputEl.value = isVenueBox ? (isEstablishment ? venueName : address) : address;
                                         dropdown.style.display = 'none';
+                                        try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (eCls0) {}
+                                        dropdownItems = [];
+                                        activeIndex = -1;
+                                        
+                                        // After a confirmed selection, return address to display-mode.
+                                        if (!isVenueBox) {
+                                            syncSmartAddrDisplay();
+                                            smartAddrDisplay.classList.remove('fieldset-venue-address-display--hidden');
+                                            smartAddrInput.classList.add('fieldset-venue-address-input--hidden');
+                                        }
 
                                         // Mark address as Places-confirmed (required for completion)
                                         try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
@@ -3507,10 +3659,10 @@ const FieldsetBuilder = (function(){
                             
                             dropdown.style.display = 'block';
                             try { if (parent) parent.classList.add('fieldset-location-inputwrap--open'); } catch (e0c) {}
+                            setActiveIndex(0);
                         } catch (err) {
                             console.error('Autocomplete error:', err);
-                            dropdown.style.display = 'none';
-                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0d) {}
+                            closeDropdown();
                         }
                     }
                     
@@ -3528,8 +3680,7 @@ const FieldsetBuilder = (function(){
                         var query = inputEl.value.trim();
                         
                         if (query.length < 2) {
-                            dropdown.style.display = 'none';
-                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0e) {}
+                            closeDropdown();
                             return;
                         }
                         
@@ -3541,8 +3692,37 @@ const FieldsetBuilder = (function(){
                     // Close dropdown when clicking outside
                     document.addEventListener('click', function(e) {
                         if (!inputEl.contains(e.target) && !dropdown.contains(e.target)) {
-                            dropdown.style.display = 'none';
-                            try { if (parent) parent.classList.remove('fieldset-location-inputwrap--open'); } catch (e0f) {}
+                            closeDropdown();
+                        }
+                    });
+                    
+                    inputEl.addEventListener('keydown', function(e) {
+                        var key = e && e.key ? e.key : '';
+                        if (!dropdownIsOpen()) return;
+                        if (!dropdownItems || dropdownItems.length === 0) return;
+                        if (key === 'ArrowDown') {
+                            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                            setActiveIndex(activeIndex + 1);
+                            return;
+                        }
+                        if (key === 'ArrowUp') {
+                            try { e.preventDefault(); e.stopPropagation(); } catch (e1) {}
+                            setActiveIndex(activeIndex - 1);
+                            return;
+                        }
+                        if (key === 'Enter') {
+                            try { e.preventDefault(); e.stopPropagation(); } catch (e2) {}
+                            selectActive();
+                            return;
+                        }
+                        if (key === 'Escape') {
+                            try { e.preventDefault(); e.stopPropagation(); } catch (e3) {}
+                            closeDropdown();
+                            return;
+                        }
+                        if (key === 'Tab') {
+                            closeDropdown();
+                            return;
                         }
                     });
                 }

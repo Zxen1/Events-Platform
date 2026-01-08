@@ -2793,6 +2793,47 @@ const MapControlRowComponent = (function(){
             map: map
         };
         
+        // Dropdown keyboard navigation
+        var dropdownItems = [];
+        var activeIndex = -1;
+        function dropdownIsOpen() {
+            return dropdown && dropdown.style && dropdown.style.display !== 'none';
+        }
+        function closeDropdown() {
+            if (!dropdown) return;
+            dropdown.style.display = 'none';
+            dropdownItems = [];
+            activeIndex = -1;
+        }
+        function setActiveIndex(nextIdx) {
+            if (!dropdownItems || dropdownItems.length === 0) {
+                activeIndex = -1;
+                return;
+            }
+            var i = nextIdx;
+            if (i < 0) i = dropdownItems.length - 1;
+            if (i >= dropdownItems.length) i = 0;
+            activeIndex = i;
+            dropdownItems.forEach(function(el, idx) {
+                try {
+                    el.classList.toggle(prefix + '-geocoder-dropdown-item--active', idx === activeIndex);
+                } catch (e) {}
+            });
+            try {
+                var el0 = dropdownItems[activeIndex];
+                if (el0 && typeof el0.scrollIntoView === 'function') {
+                    el0.scrollIntoView({ block: 'nearest' });
+                }
+            } catch (e2) {}
+        }
+        function selectActive() {
+            if (!dropdownItems || dropdownItems.length === 0) return false;
+            if (activeIndex < 0) setActiveIndex(0);
+            var el = dropdownItems[activeIndex];
+            if (!el) return false;
+            try { el.click(); return true; } catch (e) { return false; }
+        }
+        
         // Fetch and display suggestions using new Google Places API
         async function fetchSuggestions(query) {
             if (typeof google === 'undefined' || !google.maps || !google.maps.places) return;
@@ -2803,9 +2844,11 @@ const MapControlRowComponent = (function(){
                 });
                 
                 dropdown.innerHTML = '';
+                dropdownItems = [];
+                activeIndex = -1;
                 
                 if (!response || !response.suggestions || response.suggestions.length === 0) {
-                    dropdown.style.display = 'none';
+                    closeDropdown();
                     return;
                 }
                 
@@ -2815,6 +2858,10 @@ const MapControlRowComponent = (function(){
                     
                     var item = document.createElement('div');
                     item.className = prefix + '-geocoder-dropdown-item';
+                    item.addEventListener('mouseenter', function() {
+                        var idx = dropdownItems.indexOf(item);
+                        if (idx >= 0) setActiveIndex(idx);
+                    });
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : prediction.text.text;
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
@@ -2833,7 +2880,7 @@ const MapControlRowComponent = (function(){
                                 var lng = place.location.lng();
                                 
                                 input.value = place.displayName || mainText;
-                                dropdown.style.display = 'none';
+                                closeDropdown();
                                 clearBtn.style.display = 'flex';
                                 
                                 var result = {
@@ -2858,12 +2905,14 @@ const MapControlRowComponent = (function(){
                     });
                     
                     dropdown.appendChild(item);
+                    dropdownItems.push(item);
                 });
                 
                 dropdown.style.display = 'block';
+                setActiveIndex(0);
             } catch (err) {
                 console.error('Autocomplete error:', err);
-                dropdown.style.display = 'none';
+                closeDropdown();
             }
         }
         
@@ -2874,7 +2923,7 @@ const MapControlRowComponent = (function(){
             
             clearTimeout(debounceTimer);
             if (input.value.length < 2) {
-                dropdown.style.display = 'none';
+                closeDropdown();
                 return;
             }
             
@@ -2883,10 +2932,42 @@ const MapControlRowComponent = (function(){
             }, 300);
         });
         
+        input.addEventListener('keydown', function(e) {
+            var key = e && e.key ? e.key : '';
+            if (!dropdownIsOpen()) return;
+            if (!dropdownItems || dropdownItems.length === 0) return;
+            
+            if (key === 'ArrowDown') {
+                try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                setActiveIndex(activeIndex + 1);
+                return;
+            }
+            if (key === 'ArrowUp') {
+                try { e.preventDefault(); e.stopPropagation(); } catch (e1) {}
+                setActiveIndex(activeIndex - 1);
+                return;
+            }
+            if (key === 'Enter') {
+                // Prevent submit when dropdown is open; choose active item instead.
+                try { e.preventDefault(); e.stopPropagation(); } catch (e2) {}
+                selectActive();
+                return;
+            }
+            if (key === 'Escape') {
+                try { e.preventDefault(); e.stopPropagation(); } catch (e3) {}
+                closeDropdown();
+                return;
+            }
+            if (key === 'Tab') {
+                closeDropdown();
+                return;
+            }
+        });
+        
         clearBtn.addEventListener('click', function() {
             input.value = '';
             clearBtn.style.display = 'none';
-            dropdown.style.display = 'none';
+            closeDropdown();
             input.focus();
         });
         
@@ -2920,7 +3001,7 @@ const MapControlRowComponent = (function(){
         // Close dropdown on outside click
         document.addEventListener('click', function(e) {
             if (!geocoderEl.contains(e.target)) {
-                dropdown.style.display = 'none';
+                closeDropdown();
             }
         });
         
@@ -7062,13 +7143,19 @@ const LocationWallpaperComponent = (function() {
             resizeObs: null,
             resizeRaf: 0,
             prewarmDone: false,
-            minHeightLocked: false
+            minHeightLocked: false,
+            didReveal: false,
+            revealTimeout: null
         };
 
         function clearRevealTimers() {
             if (st.pendingRevealTimer) {
                 clearTimeout(st.pendingRevealTimer);
                 st.pendingRevealTimer = null;
+            }
+            if (st.revealTimeout) {
+                clearTimeout(st.revealTimeout);
+                st.revealTimeout = null;
             }
         }
 
@@ -7093,6 +7180,7 @@ const LocationWallpaperComponent = (function() {
 
         function revealMapCrossfade() {
             // Cross-fade: keep location image visible while map loads hidden, then fade map in.
+            st.didReveal = true;
             root.classList.add('component-locationwallpaper--map-visible');
             clearRevealTimers();
             st.pendingRevealTimer = setTimeout(function() {
@@ -7311,14 +7399,23 @@ const LocationWallpaperComponent = (function() {
                 // Position at desired camera (no animation) before reveal.
                 try { st.map.jumpTo(desired); } catch (eJT) {}
 
-                // Reveal only when tiles are ready (idle).
-                st.map.once('idle', function() {
-                    if (!st.map) return;
+                // Reveal quickly: waiting for `idle` can take 20-30s on slow connections.
+                // We reveal on first render (first painted frame), with a short timeout fallback.
+                st.didReveal = false;
+                try {
+                    st.map.once('render', function() {
+                        if (!st.map || st.didReveal) return;
+                        revealMapCrossfade();
+                        stopOrbit();
+                        startOrbit(desired.zoom);
+                    });
+                } catch (eR0) {}
+                st.revealTimeout = setTimeout(function() {
+                    if (!st.map || st.didReveal) return;
                     revealMapCrossfade();
-                    // Begin gentle orbit + slight zoom-in (first orbit step carries zoom).
                     stopOrbit();
                     startOrbit(desired.zoom);
-                });
+                }, 1200);
             } else {
                 // Map already exists: just jump to new location and keep it live.
                 try { st.map.jumpTo(desired); } catch (eJ2) {}

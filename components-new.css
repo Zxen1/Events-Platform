@@ -2400,8 +2400,17 @@
     background-color: rgba(255,255,255,0.1);
 }
 
+.filter-mapcontrol-geocoder-dropdown-item--active {
+    background-color: rgba(255,255,255,0.1);
+}
+
 .map-mapcontrol-geocoder-dropdown-item:hover,
 .welcome-mapcontrol-geocoder-dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.map-mapcontrol-geocoder-dropdown-item--active,
+.welcome-mapcontrol-geocoder-dropdown-item--active {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
