@@ -4274,6 +4274,32 @@
         }
         
         // Use event delegation - single handler on parent for all containers
+        // IMPORTANT: Use capturing pointerdown so *any* click/tap inside the location container
+        // activates it, even if a child widget stops event bubbling.
+        container.addEventListener('pointerdown', function(e) {
+            // Ignore pointer events inside modal dialogs/overlays.
+            try {
+                var t0 = e && e.target ? e.target : null;
+                if (t0 && t0.closest && t0.closest('.component-confirm-dialog-overlay, .component-confirm-dialog, [aria-modal="true"]')) {
+                    return;
+                }
+            } catch (e0) {}
+
+            var clickedContainer = e && e.target && e.target.closest
+                ? e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container')
+                : null;
+            if (!clickedContainer) return;
+
+            var currentActive = container.querySelector('[data-active="true"]');
+            if (currentActive === clickedContainer) return;
+
+            container.querySelectorAll('[data-active="true"]').forEach(function(c) {
+                c.removeAttribute('data-active');
+            });
+            clickedContainer.setAttribute('data-active', 'true');
+            updateLocationThumbsForActiveState();
+        }, true);
+
         container.addEventListener('click', function(e) {
             // Ignore clicks inside modal dialogs/overlays. These live outside the active container
             // and should NOT clear active state (otherwise we unload maps and the user sees blank).
