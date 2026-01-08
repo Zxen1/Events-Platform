@@ -561,6 +561,15 @@
     height: 24px;
     display: block;
     object-fit: contain;
+    /* Default: checkbox looks "disabled"/unselected (gray on dark UI) */
+    filter: brightness(0) invert(0.45);
+    opacity: 0.9;
+}
+
+.fieldset-customchecklist-row--selected .fieldset-customchecklist-row-boximg {
+    /* Selected: checkbox becomes white */
+    filter: brightness(0) invert(1);
+    opacity: 1;
 }
 
 .fieldset-customchecklist-row-check {
@@ -571,6 +580,8 @@
     height: 24px;
     display: block;
     object-fit: contain;
+    /* Selected checkmark color: blue-500 (match existing blue icon treatment) */
+    filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
 }
 
 .fieldset-customchecklist-row-text {
