@@ -581,8 +581,8 @@
     transform: translate(-50%, -50%);
     display: block;
     object-fit: contain;
-    /* Selected checkmark color: blue-500 (match existing blue icon treatment) */
-    filter: brightness(0) saturate(100%) invert(45%) sepia(95%) saturate(1000%) hue-rotate(200deg) brightness(100%);
+    /* Selected checkmark color: blue-600 */
+    filter: brightness(0) saturate(100%) invert(35%) sepia(95%) saturate(1400%) hue-rotate(200deg) brightness(92%) contrast(105%);
 }
 
 .fieldset-customchecklist-row-text {
