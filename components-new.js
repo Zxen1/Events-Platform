@@ -7457,6 +7457,14 @@ const LocationWallpaperComponent = (function() {
 
             function captureDataUrl() {
                 if (!canvas) return '';
+                // Avoid freezing a valid-but-black frame (common if capture happens before tiles/style are ready).
+                // If not ready, return '' so caller retries or falls back to keeping the live map visible.
+                try {
+                    if (st.map && typeof st.map.loaded === 'function' && !st.map.loaded()) return '';
+                } catch (eLd) {}
+                try {
+                    if (st.map && typeof st.map.areTilesLoaded === 'function' && !st.map.areTilesLoaded()) return '';
+                } catch (eTl) {}
                 var dataUrl = '';
                 try { dataUrl = canvas.toDataURL('image/webp', 0.82); } catch (eDU1) { dataUrl = ''; }
                 if (!dataUrl) {
@@ -7469,6 +7477,17 @@ const LocationWallpaperComponent = (function() {
             function finalizeFreeze(dataUrl) {
                 // If capture fails, keep the previous good image (prevents black).
                 if (dataUrl) setImageUrl(dataUrl);
+
+                // Never remove the map unless we have an image to show.
+                // This prevents "still = blank" when capture fails early (before first real frame).
+                var haveAnyImage = !!(st.imageUrl && String(st.imageUrl).indexOf('data:image') === 0);
+                if (!haveAnyImage) {
+                    // Keep a static live map visible as the fallback (still = no orbit).
+                    revealMapCrossfade();
+                    stopOrbit();
+                    return;
+                }
+
                 try { if (st.map) st.map.remove(); } catch (eRM) {}
                 st.map = null;
                 showImage();
@@ -7499,7 +7518,10 @@ const LocationWallpaperComponent = (function() {
             }
 
             // If tiles aren't ready yet, wait a short moment before capture (still stays fast).
+            // Then retry capture for a few frames if needed (first capture can be blank).
             var startWait = Date.now();
+            var captureStart = Date.now();
+            var attempts = 0;
             (function waitForTilesThenCapture() {
                 if (!st.map) return;
                 var tilesOk = true;
@@ -7513,12 +7535,31 @@ const LocationWallpaperComponent = (function() {
                     setTimeout(waitForTilesThenCapture, 60);
                     return;
                 }
-                // Capture on the next two animation frames to avoid freezing a not-yet-painted frame (black).
-                requestAnimationFrame(function() {
+                (function attemptCapture() {
+                    if (!st.map) return;
+                    attempts++;
+                    // Capture on the next two animation frames to avoid freezing a not-yet-painted frame (black).
                     requestAnimationFrame(function() {
-                        finalizeFreeze(captureDataUrl());
+                        requestAnimationFrame(function() {
+                            var url = captureDataUrl();
+                            // Heuristic: a valid map capture should not be tiny.
+                            var ok = !!(url && url.length > 5000);
+                            if (ok) {
+                                finalizeFreeze(url);
+                                return;
+                            }
+                            var tooMany = attempts >= 10;
+                            var tooLong = (Date.now() - captureStart) > 900;
+                            if (tooMany || tooLong) {
+                                // Give up capturing; fallback will keep live map if no previous image exists.
+                                finalizeFreeze('');
+                                return;
+                            }
+                            // Try again shortly (next render frames).
+                            setTimeout(attemptCapture, 60);
+                        });
                     });
-                });
+                })();
             })();
         }
 
