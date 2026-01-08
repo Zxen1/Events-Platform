@@ -1107,6 +1107,23 @@ const FieldsetBuilder = (function(){
                 addrInputEl.addEventListener('input', function() {
                     if (addrThumbCtrl) addrThumbCtrl.clear();
                 });
+
+                // Lazy-load only when the fieldset is focused (and we already have confirmed lat/lng).
+                fieldset.addEventListener('focusin', function() {
+                    if (!addrThumbCtrl || typeof addrThumbCtrl.setLocation !== 'function') return;
+                    if (!addrLatInput || !addrLngInput) return;
+                    var latV = parseFloat(String(addrLatInput.value || ''));
+                    var lngV = parseFloat(String(addrLngInput.value || ''));
+                    if (isFinite(latV) && isFinite(lngV)) addrThumbCtrl.setLocation(latV, lngV);
+                });
+
+                // Unload map when leaving the fieldset (unless locked) to avoid background GPU usage.
+                fieldset.addEventListener('focusout', function(e) {
+                    if (!addrThumbCtrl || typeof addrThumbCtrl.unloadIfNotLocked !== 'function') return;
+                    var next = e && e.relatedTarget ? e.relatedTarget : null;
+                    if (next && fieldset.contains(next)) return;
+                    addrThumbCtrl.unloadIfNotLocked();
+                });
                 break;
                 
             case 'city':
@@ -1167,6 +1184,23 @@ const FieldsetBuilder = (function(){
                 });
                 cityInputEl.addEventListener('input', function() {
                     if (cityThumbCtrl) cityThumbCtrl.clear();
+                });
+
+                // Lazy-load only when the fieldset is focused (and we already have confirmed lat/lng).
+                fieldset.addEventListener('focusin', function() {
+                    if (!cityThumbCtrl || typeof cityThumbCtrl.setLocation !== 'function') return;
+                    if (!cityLatInput || !cityLngInput) return;
+                    var latV = parseFloat(String(cityLatInput.value || ''));
+                    var lngV = parseFloat(String(cityLngInput.value || ''));
+                    if (isFinite(latV) && isFinite(lngV)) cityThumbCtrl.setLocation(latV, lngV);
+                });
+
+                // Unload map when leaving the fieldset (unless locked) to avoid background GPU usage.
+                fieldset.addEventListener('focusout', function(e) {
+                    if (!cityThumbCtrl || typeof cityThumbCtrl.unloadIfNotLocked !== 'function') return;
+                    var next = e && e.relatedTarget ? e.relatedTarget : null;
+                    if (next && fieldset.contains(next)) return;
+                    cityThumbCtrl.unloadIfNotLocked();
                 });
                 break;
                 
@@ -3667,6 +3701,23 @@ const FieldsetBuilder = (function(){
                 });
                 smartAddrInput.addEventListener('input', function() {
                     if (venueThumbCtrl) venueThumbCtrl.clear();
+                });
+
+                // Lazy-load only when the fieldset is focused (and we already have confirmed lat/lng).
+                fieldset.addEventListener('focusin', function() {
+                    if (!venueThumbCtrl || typeof venueThumbCtrl.setLocation !== 'function') return;
+                    if (!smartLatInput || !smartLngInput) return;
+                    var latV = parseFloat(String(smartLatInput.value || ''));
+                    var lngV = parseFloat(String(smartLngInput.value || ''));
+                    if (isFinite(latV) && isFinite(lngV)) venueThumbCtrl.setLocation(latV, lngV);
+                });
+
+                // Unload map when leaving the fieldset (unless locked) to avoid background GPU usage.
+                fieldset.addEventListener('focusout', function(e) {
+                    if (!venueThumbCtrl || typeof venueThumbCtrl.unloadIfNotLocked !== 'function') return;
+                    var next = e && e.relatedTarget ? e.relatedTarget : null;
+                    if (next && fieldset.contains(next)) return;
+                    venueThumbCtrl.unloadIfNotLocked();
                 });
                 break;
                 

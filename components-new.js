@@ -6372,14 +6372,105 @@ const LocationThumbnailPickerComponent = (function() {
         var root = document.createElement('div');
         root.className = 'component-locationthumb';
 
-        var tile = document.createElement('button');
-        tile.type = 'button';
+        // Main tile (NOT a button) so the Mapbox canvas can receive pointer events for mouse/touch control.
+        var tile = document.createElement('div');
         tile.className = 'component-locationthumb-tile component-locationthumb-tile--empty';
-        tile.setAttribute('aria-pressed', 'false');
+        tile.setAttribute('role', 'group');
+        tile.setAttribute('aria-label', 'Location thumbnail selector');
 
         var mapMount = document.createElement('div');
         mapMount.className = 'component-locationthumb-map';
         tile.appendChild(mapMount);
+
+        var imgEl = document.createElement('img');
+        imgEl.className = 'component-locationthumb-image';
+        imgEl.alt = '';
+        imgEl.style.display = 'none';
+        tile.appendChild(imgEl);
+
+        // Controls overlay (zoom/pitch + rotate + play)
+        var controls = document.createElement('div');
+        controls.className = 'component-locationthumb-controls';
+        controls.style.display = 'none';
+
+        var btnRotateLeft = document.createElement('button');
+        btnRotateLeft.type = 'button';
+        btnRotateLeft.className = 'component-locationthumb-controlbtn component-locationthumb-controlbtn--left';
+        btnRotateLeft.textContent = '⟲';
+        btnRotateLeft.title = 'Rotate left';
+        controls.appendChild(btnRotateLeft);
+
+        var btnRotateRight = document.createElement('button');
+        btnRotateRight.type = 'button';
+        btnRotateRight.className = 'component-locationthumb-controlbtn component-locationthumb-controlbtn--right';
+        btnRotateRight.textContent = '⟳';
+        btnRotateRight.title = 'Rotate right';
+        controls.appendChild(btnRotateRight);
+
+        var btnPlay = document.createElement('button');
+        btnPlay.type = 'button';
+        btnPlay.className = 'component-locationthumb-controlbtn component-locationthumb-controlbtn--play';
+        btnPlay.textContent = '▶';
+        btnPlay.title = 'Play/stop rotation';
+        controls.appendChild(btnPlay);
+
+        var sliders = document.createElement('div');
+        sliders.className = 'component-locationthumb-sliders';
+
+        var zoomLabel = document.createElement('label');
+        zoomLabel.className = 'component-locationthumb-sliderlabel';
+        zoomLabel.textContent = 'Zoom';
+        var zoomInput = document.createElement('input');
+        zoomInput.type = 'range';
+        zoomInput.className = 'component-locationthumb-slider';
+        zoomInput.min = '16';
+        zoomInput.max = '18.5';
+        zoomInput.step = '0.1';
+        zoomInput.value = '18';
+        zoomLabel.appendChild(zoomInput);
+        sliders.appendChild(zoomLabel);
+
+        var pitchLabel = document.createElement('label');
+        pitchLabel.className = 'component-locationthumb-sliderlabel';
+        pitchLabel.textContent = 'Pitch';
+        var pitchInput = document.createElement('input');
+        pitchInput.type = 'range';
+        pitchInput.className = 'component-locationthumb-slider';
+        pitchInput.min = '60';
+        pitchInput.max = '80';
+        pitchInput.step = '1';
+        pitchInput.value = '70';
+        pitchLabel.appendChild(pitchInput);
+        sliders.appendChild(pitchLabel);
+
+        controls.appendChild(sliders);
+        tile.appendChild(controls);
+
+        // Actions
+        var actions = document.createElement('div');
+        actions.className = 'component-locationthumb-actions';
+        actions.style.display = 'none';
+
+        var okBtn = document.createElement('button');
+        okBtn.type = 'button';
+        okBtn.className = 'component-locationthumb-actionbtn component-locationthumb-actionbtn--ok';
+        okBtn.textContent = 'OK';
+        actions.appendChild(okBtn);
+
+        var cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'component-locationthumb-actionbtn component-locationthumb-actionbtn--cancel';
+        cancelBtn.textContent = 'Cancel';
+        actions.appendChild(cancelBtn);
+
+        var chooseAgainBtn = document.createElement('button');
+        chooseAgainBtn.type = 'button';
+        chooseAgainBtn.className = 'component-locationthumb-actionbtn component-locationthumb-actionbtn--again';
+        chooseAgainBtn.textContent = 'Choose Again';
+        chooseAgainBtn.style.display = 'none';
+        actions.appendChild(chooseAgainBtn);
+
+        tile.appendChild(actions);
 
         var hint = document.createElement('div');
         hint.className = 'component-locationthumb-hint';
@@ -6400,7 +6491,13 @@ const LocationThumbnailPickerComponent = (function() {
             zoom: 18,
             pitch: 70,
             bearing: 0,
-            requestId: 0
+            requestId: 0,
+            demoTimer: 0,
+            userControlled: false,
+            lockedBlob: null,
+            lockedUrl: '',
+            lastLockedBlob: null,
+            lastLockedUrl: ''
         };
 
         function setCompleteFlag() {
@@ -6438,6 +6535,39 @@ const LocationThumbnailPickerComponent = (function() {
             try { st.map.stop(); } catch (e2) {}
         }
 
+        function pauseLive(reasonText) {
+            // Stop motion but keep current frame visible (does not lock/complete).
+            try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
+            st.demoTimer = 0;
+            stopOrbit();
+            if (!st.locked) {
+                hint.textContent = reasonText || 'Click to lock';
+            }
+            emitChange();
+        }
+
+        function unloadIfNotLocked() {
+            if (st.locked) return;
+            try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
+            st.demoTimer = 0;
+            stopOrbit();
+            if (st.map) {
+                try { st.map.remove(); } catch (e1) {}
+                st.map = null;
+            }
+            // Keep the tile visible but revert to "needs load" state.
+            tile.classList.add('component-locationthumb-tile--empty');
+            tile.classList.remove('component-locationthumb-tile--loading');
+            tile.classList.remove('component-locationthumb-tile--ready');
+            tile.classList.remove('component-locationthumb-tile--locked');
+            controls.style.display = 'none';
+            actions.style.display = 'none';
+            imgEl.style.display = 'none';
+            mapMount.style.display = '';
+            hint.textContent = 'Click into this fieldset to load the view';
+            emitChange();
+        }
+
         function startOrbit() {
             if (!st.map) return;
             stopOrbit();
@@ -6471,13 +6601,38 @@ const LocationThumbnailPickerComponent = (function() {
                     zoom: 1.5,
                     pitch: 0,
                     bearing: 0,
-                    interactive: false,
+                    // Allow rotate/zoom/pitch, but keep center locked by disabling pan.
+                    interactive: true,
+                    dragPan: false,
+                    scrollZoom: true,
+                    dragRotate: true,
+                    touchZoomRotate: true,
+                    doubleClickZoom: false,
+                    keyboard: false,
+                    // We'll add a compact attribution control in a safer position.
                     attributionControl: false,
+                    logoPosition: 'top-right',
                     renderWorldCopies: false,
-                    antialias: false
+                    antialias: false,
+                    preserveDrawingBuffer: true
                 });
                 st.map.once('style.load', function() {
                     applyLighting(st.map, getLightingPreset());
+                });
+
+                // Add compact attribution control (keep it visible, but small and out of the way).
+                try {
+                    st.map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'top-right');
+                } catch (eAt) {}
+
+                // Any user interaction kills the auto-rotation immediately.
+                ['dragstart','zoomstart','rotatestart','pitchstart'].forEach(function(ev){
+                    try {
+                        st.map.on(ev, function() {
+                            st.userControlled = true;
+                            pauseLive('Adjust view, then OK');
+                        });
+                    } catch (e0) {}
                 });
             } catch (e) {
                 st.map = null;
@@ -6487,6 +6642,8 @@ const LocationThumbnailPickerComponent = (function() {
 
         function clear() {
             st.requestId++;
+            try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
+            st.demoTimer = 0;
             // Reset state but keep the DOM in place.
             st.locked = false;
             st.lat = null;
@@ -6517,13 +6674,22 @@ const LocationThumbnailPickerComponent = (function() {
             st.lng = lng;
             st.locked = false;
             st.bearing = 0;
+            st.userControlled = false;
+            st.zoom = 18;
+            st.pitch = 70;
+            zoomInput.value = String(st.zoom);
+            pitchInput.value = String(st.pitch);
 
             tile.classList.remove('component-locationthumb-tile--empty');
             tile.classList.remove('component-locationthumb-tile--locked');
             tile.classList.add('component-locationthumb-tile--loading');
             tile.classList.remove('component-locationthumb-tile--ready');
-            tile.setAttribute('aria-pressed', 'false');
             hint.textContent = 'Loading view...';
+            controls.style.display = 'none';
+            actions.style.display = 'none';
+            chooseAgainBtn.style.display = 'none';
+            okBtn.style.display = '';
+            cancelBtn.style.display = '';
 
             var m = ensureMap();
             if (!m) return;
@@ -6547,30 +6713,208 @@ const LocationThumbnailPickerComponent = (function() {
                     if (myReq !== st.requestId) return;
                     tile.classList.remove('component-locationthumb-tile--loading');
                     tile.classList.add('component-locationthumb-tile--ready');
-                    hint.textContent = 'Click to lock';
+                    // Short demo orbit only until the user interacts.
+                    hint.textContent = 'Adjust view, then OK';
+                    controls.style.display = '';
+                    actions.style.display = '';
                     startOrbit();
+                    try { if (st.demoTimer) clearTimeout(st.demoTimer); } catch (e0) {}
+                    st.demoTimer = setTimeout(function() {
+                        if (myReq !== st.requestId) return;
+                        if (st.locked) return;
+                        if (st.userControlled) return;
+                        pauseLive('Adjust view, then OK');
+                    }, 2000);
                     emitChange();
                 });
             } catch (e2) {}
         }
 
-        // Click: lock/unlock
-        tile.addEventListener('click', function() {
-            if (st.lat === null || st.lng === null) return;
+        function getIsLocked() {
+            return !!st.locked;
+        }
+
+        function syncFromMapCamera() {
             if (!st.map) return;
+            try {
+                st.zoom = st.map.getZoom();
+                st.pitch = st.map.getPitch();
+                st.bearing = st.map.getBearing();
+                zoomInput.value = String(st.zoom);
+                pitchInput.value = String(st.pitch);
+            } catch (e) {}
+        }
 
-            st.locked = !st.locked;
-            tile.classList.toggle('component-locationthumb-tile--locked', st.locked);
-            tile.setAttribute('aria-pressed', st.locked ? 'true' : 'false');
+        function rotateBy(delta) {
+            if (!st.map) return;
+            st.userControlled = true;
+            pauseLive('Adjust view, then OK');
+            try {
+                var b = st.map.getBearing();
+                st.bearing = (b + delta) % 360;
+                st.map.easeTo({ bearing: st.bearing, duration: 180, easing: function(t){ return t; } });
+            } catch (e) {}
+        }
 
-            if (st.locked) {
-                hint.textContent = 'Locked';
-                stopOrbit();
+        btnRotateLeft.addEventListener('click', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            rotateBy(-10);
+            syncFromMapCamera();
+        });
+        btnRotateRight.addEventListener('click', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            rotateBy(10);
+            syncFromMapCamera();
+        });
+        btnPlay.addEventListener('click', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            if (!st.map) return;
+            if (st.orbiting) {
+                pauseLive('Adjust view, then OK');
             } else {
-                hint.textContent = 'Click to lock';
+                st.userControlled = false;
                 startOrbit();
             }
-            emitChange();
+        });
+
+        zoomInput.addEventListener('input', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            if (!st.map) return;
+            st.userControlled = true;
+            pauseLive('Adjust view, then OK');
+            var z = parseFloat(zoomInput.value || '18');
+            if (!isFinite(z)) return;
+            st.zoom = z;
+            try { st.map.easeTo({ zoom: st.zoom, duration: 120 }); } catch (e1) {}
+        });
+        pitchInput.addEventListener('input', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            if (!st.map) return;
+            st.userControlled = true;
+            pauseLive('Adjust view, then OK');
+            var p = parseFloat(pitchInput.value || '70');
+            if (!isFinite(p)) return;
+            st.pitch = p;
+            try { st.map.easeTo({ pitch: st.pitch, duration: 120 }); } catch (e1) {}
+        });
+
+        // Capture + lock as an image and shut down the map completely.
+        function captureAndLock() {
+            if (!st.map || st.lat === null || st.lng === null) return;
+            stopOrbit();
+            syncFromMapCamera();
+
+            // Capture: center crop to 2:1
+            var canvas = null;
+            try { canvas = st.map.getCanvas(); } catch (e0) { canvas = null; }
+            if (!canvas) return;
+
+            var srcW = canvas.width || 0;
+            var srcH = canvas.height || 0;
+            if (!srcW || !srcH) return;
+
+            var targetW = Math.min(1000, srcW);
+            var targetH = Math.round(targetW / 2);
+
+            var cropW = srcW;
+            var cropH = Math.round(srcW / 2);
+            if (cropH > srcH) {
+                cropH = srcH;
+                cropW = Math.round(srcH * 2);
+            }
+            var sx = Math.max(0, Math.round((srcW - cropW) / 2));
+            var sy = Math.max(0, Math.round((srcH - cropH) / 2));
+
+            var out = document.createElement('canvas');
+            out.width = targetW;
+            out.height = targetH;
+            var ctx = out.getContext('2d');
+            if (!ctx) return;
+            try {
+                ctx.drawImage(canvas, sx, sy, cropW, cropH, 0, 0, targetW, targetH);
+            } catch (e1) {}
+
+            // Stash previous locked image for cancel.
+            if (st.lockedUrl) {
+                st.lastLockedUrl = st.lockedUrl;
+                st.lastLockedBlob = st.lockedBlob;
+            }
+
+            out.toBlob(function(blob) {
+                if (!blob) return;
+                if (st.lockedUrl) {
+                    try { URL.revokeObjectURL(st.lockedUrl); } catch (e2) {}
+                }
+                st.lockedBlob = blob;
+                try { st.lockedUrl = URL.createObjectURL(blob); } catch (e3) { st.lockedUrl = ''; }
+
+                st.locked = true;
+                tile.classList.add('component-locationthumb-tile--locked');
+                imgEl.src = st.lockedUrl || '';
+                imgEl.style.display = '';
+                mapMount.style.display = 'none';
+                controls.style.display = 'none';
+                actions.style.display = 'none';
+                chooseAgainBtn.style.display = '';
+                hint.textContent = 'Locked';
+
+                // Shutdown map completely
+                try { st.map.remove(); } catch (e4) {}
+                st.map = null;
+
+                emitChange();
+            }, 'image/jpeg', 0.85);
+        }
+
+        okBtn.addEventListener('click', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            captureAndLock();
+        });
+
+        cancelBtn.addEventListener('click', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            // If we had a previous locked image, revert to it; otherwise unload.
+            if (st.lastLockedUrl) {
+                if (st.lockedUrl) {
+                    try { URL.revokeObjectURL(st.lockedUrl); } catch (e1) {}
+                }
+                st.lockedUrl = st.lastLockedUrl;
+                st.lockedBlob = st.lastLockedBlob;
+                st.lastLockedUrl = '';
+                st.lastLockedBlob = null;
+                st.locked = true;
+                imgEl.src = st.lockedUrl;
+                imgEl.style.display = '';
+                mapMount.style.display = 'none';
+                controls.style.display = 'none';
+                actions.style.display = 'none';
+                chooseAgainBtn.style.display = '';
+                hint.textContent = 'Locked';
+                emitChange();
+            } else {
+                unloadIfNotLocked();
+            }
+        });
+
+        chooseAgainBtn.addEventListener('click', function(e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+            // Unlock and re-load map (discard image)
+            if (st.lockedUrl) {
+                try { URL.revokeObjectURL(st.lockedUrl); } catch (e1) {}
+            }
+            st.lockedUrl = '';
+            st.lockedBlob = null;
+            st.locked = false;
+            imgEl.style.display = 'none';
+            mapMount.style.display = '';
+            tile.classList.remove('component-locationthumb-tile--locked');
+            chooseAgainBtn.style.display = 'none';
+            // Re-load current location if available
+            if (st.lat !== null && st.lng !== null) {
+                setLocation(st.lat, st.lng);
+            } else {
+                clear();
+            }
         });
 
         // Init flags
@@ -6579,6 +6923,9 @@ const LocationThumbnailPickerComponent = (function() {
         return {
             element: root,
             setLocation: setLocation,
+            pauseLive: pauseLive,
+            unloadIfNotLocked: unloadIfNotLocked,
+            isLocked: getIsLocked,
             clear: clear,
             getState: function() {
                 return {
