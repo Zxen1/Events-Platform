@@ -76,8 +76,14 @@
         if (!container) return null;
         if (scrollContainer && scrollContainer.isConnected) return scrollContainer;
         
-        // Admin panel body is the intended scroll container in the new site
-        scrollContainer = container.closest('.admin-panel-body') || container.closest('.admin-panel-content');
+        // Admin panel body is the intended scroll container in the new site.
+        // No fallbacks: if markup is wrong, throw so the problem is visible immediately.
+        scrollContainer =
+            container.closest('.admin-panel-body') ||
+            container.closest('.admin-panel-contents');
+        if (!scrollContainer) {
+            throw new Error('[Formbuilder] Expected admin scroll container (.admin-panel-body or .admin-panel-contents) not found.');
+        }
         if (!scrollContainer) {
             scrollContainer = document.scrollingElement || document.documentElement;
         }
@@ -3514,11 +3520,21 @@
             }
         }
         
-        // Add to admin panel content
-        var adminPanelContent = document.querySelector('.admin-panel-content');
-        if (adminPanelContent) {
-            adminPanelContent.appendChild(modal);
+        // Add to admin panel contents (new site uses .admin-panel-contents; keep legacy fallback)
+        var adminPanelContent = document.querySelector('.admin-panel-contents') || document.querySelector('.admin-panel-content');
+        if (adminPanelContent) adminPanelContent.appendChild(modal);
+        // Add to admin panel contents (new site uses .admin-panel-contents). No fallbacks.
+        var adminPanelContent = document.querySelector('.admin-panel-contents');
+        if (!adminPanelContent) {
+            throw new Error('[Formbuilder] Expected .admin-panel-contents not found (cannot mount calculator modal).');
         }
+        adminPanelContent.appendChild(modal);
+        // Add to admin panel contents (new site uses .admin-panel-contents). No fallbacks.
+        var adminPanelContent = document.querySelector('.admin-panel-contents');
+        if (!adminPanelContent) {
+            throw new Error('[Formbuilder] Expected .admin-panel-contents not found (cannot mount form preview modal).');
+        }
+        adminPanelContent.appendChild(modal);
     }
     
     /* ============================================================================
