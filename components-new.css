@@ -722,7 +722,9 @@
 
 .component-currencyfull-menu-button-input {
     flex: 1;
+    text-align: left;
     padding-left: 10px;
+    font-size: 14px;
     min-width: 0;
 }
 
@@ -757,6 +759,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 10px;
     cursor: pointer;
 }
 
@@ -848,7 +851,9 @@
 
 .component-currencyfull-menu-option-text {
     flex: 1;
+    text-align: left;
     padding-left: 10px;
+    font-size: 14px;
 }
 
 .admin-language-option-text {
@@ -927,7 +932,9 @@
 
 .component-currencycompact-menu-button-input {
     flex: 1;
+    text-align: left;
     padding-left: 6px;
+    font-size: 12px;
     min-width: 0;
 }
 
@@ -941,6 +948,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 10px;
     cursor: pointer;
 }
 
@@ -973,7 +981,9 @@
 
 .component-currencycompact-menu-option-text {
     flex: 1;
+    text-align: left;
     padding-left: 10px;
+    font-size: 13px;
 }
 
 /* Compact states */
