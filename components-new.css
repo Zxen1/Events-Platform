@@ -1102,19 +1102,15 @@
 }
 
 .phoneprefix-button {
+    /* Appearance from menu-button-class-2 */
+    /* Layout only */
     display: flex;
     align-items: center;
     gap: 6px;
     width: 100px;
     height: 36px;
     padding: 0 10px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
-    background: rgba(0,0,0,0.35);
-    color: #fff;
-    font: inherit;
     font-size: 14px;
-    cursor: pointer;
     flex-shrink: 0;
 }
 
@@ -1134,6 +1130,27 @@
     flex: 1;
 }
 
+.phoneprefix-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 6px;
+    font-size: 12px;
+    color: #fff;
+    caret-color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    min-width: 0;
+}
+
+.phoneprefix-button-input::placeholder {
+    color: #666;
+}
+
+.phoneprefix-button-wrapper:not(.phoneprefix--open) .phoneprefix-button-input {
+    pointer-events: none;
+}
+
 .phoneprefix-button-arrow {
     margin-left: auto;
     font-size: 10px;
@@ -1142,17 +1159,19 @@
 }
 
 .phoneprefix-options {
+    /* Appearance from menu-options-class-2 */
+    /* Layout only */
     position: absolute;
     top: 100%;
     left: 0;
     width: 280px;
     max-height: 300px;
     overflow-y: auto;
-    background: #222;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
     margin-top: 4px;
     z-index: var(--layer-menu, 85);
+    /* Override connected style to separated */
+    border-top: 1px solid rgba(255,255,255,0.2);
+    border-radius: 5px;
 }
 
 .phoneprefix-options[hidden] {
@@ -1160,17 +1179,14 @@
 }
 
 .phoneprefix-option {
+    /* Appearance from menu-option-class-2 */
+    /* Layout only */
     display: flex;
     align-items: center;
     gap: 8px;
     width: 100%;
-    padding: 10px 10px;
-    border: none;
-    background: transparent;
-    color: #fff;
-    font: inherit;
+    padding: 10px;
     text-align: left;
-    cursor: pointer;
 }
 
 .phoneprefix-option-flag {
@@ -1200,10 +1216,6 @@
 }
 
 /* States */
-.phoneprefix-button:hover {
-    border-color: rgba(255,255,255,0.4);
-}
-
 .phoneprefix-button-arrow--open {
     transform: rotate(180deg);
 }
