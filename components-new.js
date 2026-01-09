@@ -1022,7 +1022,8 @@ const CurrencyComponent = (function(){
                 var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
                 var displayText = item.value + ' - ' + item.label;
 
-                var op = document.createElement('div');
+                var op = document.createElement('button');
+                op.type = 'button';
                 op.className = 'component-currencycompact-menu-option menu-option';
                 var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
                 op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text menu-text">' + displayText + '</span>';
@@ -1238,7 +1239,8 @@ const CurrencyComponent = (function(){
                 var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
                 var displayText = item.value + ' - ' + item.label;
                 
-                var op = document.createElement('div');
+                var op = document.createElement('button');
+                op.type = 'button';
                 op.className = 'component-currencyfull-menu-option menu-option';
                 var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
                 op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text menu-text">' + displayText + '</span>';

@@ -358,7 +358,7 @@
 .menu-class-1 .menu-options {
   /* Match button's focus background so colors align when open */
   background: var(--menu-bg-focus);
-  border: 1px solid var(--menu-options-border);
+  border: 1px solid var(--menu-border-focus);
   border-top: none;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);

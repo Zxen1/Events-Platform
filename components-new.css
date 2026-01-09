@@ -981,21 +981,7 @@
     display: block;
 }
 
-/* Compact override: narrow button (120px) with wide dropdown (250px).
-   - Top-right corner is rounded (extends beyond button)
-   - Pseudo-element draws top border only for the extending portion */
-.component-currencycompact-menu.menu-class-1 .menu-options {
-    border-radius: 0 var(--menu-radius) var(--menu-radius) var(--menu-radius);
-}
-
-.component-currencycompact-menu.menu-class-1 .menu-options::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 120px;
-    right: 0;
-    border-top: 1px solid var(--menu-options-border);
-}
+/* TODO: Compact menus need menu-class-2 for proper narrow-button-wide-dropdown styling */
 
 
 /* ----------------------------------------------------------------------------
