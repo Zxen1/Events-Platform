@@ -230,6 +230,25 @@ const MenuManager = (function(){
                 return;
             }
 
+            // Arrow/Enter navigation should work even when the menu "button" is a <div>
+            // (no focus). Route these keys to the open menu options list.
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
+                try {
+                    var opts = getOptionsEl(menu);
+                    var sel = null;
+                    try {
+                        if (typeof menu.__menuGetOptionSelector === 'function') sel = menu.__menuGetOptionSelector();
+                    } catch (eSel0) {}
+                    if (!sel && typeof menu.__menuOptionSelector === 'string') sel = menu.__menuOptionSelector;
+                    if (!sel) sel = '.menu-option';
+                    if (opts) {
+                        // Uses shared helper (also used by input-driven menus)
+                        menuArrowKeyNav(e, opts, sel, function(opt) { opt.click(); });
+                    }
+                } catch (eNav0) {}
+                return;
+            }
+
             var input = getMenuTypingInput(menu);
             if (!input) return;
             applyTypingKeyToInput(input, e);
@@ -936,6 +955,7 @@ const CurrencyComponent = (function(){
         };
         menu.__menuApplyOpenState = applyOpenState;
         menu.__menuGetOptionsEl = function() { return opts; };
+        menu.__menuOptionSelector = '.component-currencycompact-menu-option';
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1122,6 +1142,7 @@ const CurrencyComponent = (function(){
         };
         menu.__menuApplyOpenState = applyOpenState;
         menu.__menuGetOptionsEl = function() { return opts; };
+        menu.__menuOptionSelector = '.component-currencyfull-menu-option';
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1349,6 +1370,7 @@ const LanguageMenuComponent = (function(){
         };
         menu.__menuApplyOpenState = applyOpenState;
         menu.__menuGetOptionsEl = function() { return opts; };
+        menu.__menuOptionSelector = '.admin-language-option';
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1568,10 +1590,11 @@ const PhonePrefixComponent = (function(){
 
         // Match the Currency compact menu pattern (component-* menu system)
         var menu = document.createElement('div');
-        menu.className = 'component-phoneprefixcompact-menu';
+        // Opt-in skin test: menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-phoneprefixcompact-menu menu-class-1';
 
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-phoneprefixcompact-menu-button"><img class="component-phoneprefixcompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefixcompact-menu-button-input" placeholder="Search" autocomplete="off"><span class="component-phoneprefixcompact-menu-button-arrow">▼</span></div><div class="component-phoneprefixcompact-menu-options"></div>';
+        menu.innerHTML = '<div class="component-phoneprefixcompact-menu-button menu-button"><img class="component-phoneprefixcompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefixcompact-menu-button-input menu-input" placeholder="Search" autocomplete="off"><span class="component-phoneprefixcompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-phoneprefixcompact-menu-options menu-options"></div>';
 
         var btn = menu.querySelector('.component-phoneprefixcompact-menu-button');
         var opts = menu.querySelector('.component-phoneprefixcompact-menu-options');
@@ -1584,12 +1607,17 @@ const PhonePrefixComponent = (function(){
             if (btn) btn.classList.toggle('component-phoneprefixcompact-menu-button--open', !!isOpen);
             if (arrow) arrow.classList.toggle('component-phoneprefixcompact-menu-button-arrow--open', !!isOpen);
             if (opts) opts.classList.toggle('component-phoneprefixcompact-menu-options--open', !!isOpen);
+            // Generic hooks for base menu skins
+            if (btn) btn.classList.toggle('menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('menu-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('menu-options--open', !!isOpen);
         }
 
         // Required by MenuManager (strict)
         menu.__menuIsOpen = function() { return menu.classList.contains('component-phoneprefixcompact-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
         menu.__menuGetOptionsEl = function() { return opts; };
+        menu.__menuOptionSelector = '.component-phoneprefixcompact-menu-option';
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1632,9 +1660,9 @@ const PhonePrefixComponent = (function(){
 
             var op = document.createElement('button');
             op.type = 'button';
-            op.className = 'component-phoneprefixcompact-menu-option';
+            op.className = 'component-phoneprefixcompact-menu-option menu-option';
             var flagUrl = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="component-phoneprefixcompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-phoneprefixcompact-menu-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-phoneprefixcompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-phoneprefixcompact-menu-option-text menu-text">' + displayText + '</span>';
             op.addEventListener('click', function(e) {
                 if (countryCode) {
                     btnImg.src = flagUrl;
@@ -1815,6 +1843,7 @@ const CountryComponent = (function(){
         };
         menu.__menuApplyOpenState = applyOpenState;
         menu.__menuGetOptionsEl = function() { return opts; };
+        menu.__menuOptionSelector = '.component-country-menu-option';
         
         // Store all option elements for filtering
         var allOptions = [];
@@ -2490,6 +2519,7 @@ const IconPickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
+        menu.__menuOptionSelector = '.component-iconpicker-option';
         
         // NO PRELOADING - menu only loads when opened (admin only, doesn't affect page load speed)
         
@@ -3927,6 +3957,7 @@ const SystemImagePickerComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
+        menu.__menuOptionSelector = '.component-systemimagepicker-option';
         
         // Set button if database value exists (NO API CALL - just construct URL from folder + filename)
         // Ensure folder and system_images are loaded from settings if not already set
@@ -4165,6 +4196,7 @@ const AmenitiesMenuComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
+        menu.__menuOptionSelector = '.component-amenitiespicker-option';
         
         // Update button text based on selected count
         function updateButtonText() {
@@ -7055,6 +7087,7 @@ const AgeRatingComponent = (function(){
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
+        menu.__menuOptionSelector = '.component-ageratingpicker-option';
         
         // Set button from initial value
         function setValue(value) {

@@ -1100,9 +1100,6 @@
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -1118,8 +1115,6 @@
     text-align: left;
     padding-left: 6px;
     font-size: 12px;
-    color: #fff;
-    caret-color: #fff;
     background: transparent;
     border: none;
     outline: none;
@@ -1131,7 +1126,7 @@
 }
 
 .component-phoneprefixcompact-menu-button-input::placeholder {
-    color: #666;
+    /* color is owned by base menu classes when used */
 }
 
 .component-phoneprefixcompact-menu-button-arrow {
@@ -1141,7 +1136,6 @@
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
     transition: transform 0.2s;
     cursor: pointer;
 }
@@ -1152,9 +1146,6 @@
     top: 36px;
     left: 0;
     width: 250px;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
@@ -1179,7 +1170,6 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    color: #fff;
     font-size: 13px;
     background: transparent;
     border: none;
@@ -1197,18 +1187,16 @@
     text-align: left;
     padding-left: 10px;
     font-size: 13px;
-    color: #fff;
+    /* color is owned by base menu classes when used */
 }
 
 /* Compact states */
 .component-phoneprefixcompact-menu-button:hover {
-    border-color: #555;
+    /* border hover is owned by base menu classes when used */
 }
 
 .component-phoneprefixcompact-menu-button--open {
-    border-color: var(--blue-500);
-    border-radius: 5px 5px 0 0;
-    border-bottom: none;
+    /* open state border/radius is owned by base menu classes when used */
 }
 
 .component-phoneprefixcompact-menu-button-arrow--open {
@@ -1221,7 +1209,7 @@
 
 .component-phoneprefixcompact-menu-option:hover,
 .component-phoneprefixcompact-menu-option.menu-option--highlighted {
-    background: var(--blue-500);
+    /* hover/highlight background is owned by base menu classes when used */
 }
 
 

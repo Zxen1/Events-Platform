@@ -284,6 +284,7 @@
   --menu-muted: rgba(255, 255, 255, 0.5);
   --menu-hover: rgba(255, 255, 255, 0.1);
   --menu-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --menu-radius: 5px;
 }
 
 /* Menu part hooks (appearance only)
@@ -296,13 +297,20 @@
    - .menu-text     (option/trigger label text) */
 .menu-class-1 .menu-button {
   background-color: var(--menu-bg);
-  border-color: var(--menu-border);
+  border: 1px solid var(--menu-border);
+  border-radius: var(--menu-radius);
   color: var(--menu-text);
 }
 
 .menu-class-1:focus-within .menu-button {
   background-color: var(--menu-bg-focus);
   border-color: var(--menu-border-focus);
+}
+
+.menu-class-1 .menu-button--open {
+  border-color: var(--menu-border-focus);
+  border-bottom: none;
+  border-radius: var(--menu-radius) var(--menu-radius) 0 0;
 }
 
 .menu-class-1 .menu-text,
@@ -319,9 +327,14 @@
   color: var(--menu-muted);
 }
 
+.menu-class-1 .menu-arrow--open {
+  transform: rotate(180deg);
+}
+
 .menu-class-1 .menu-options {
   background: var(--menu-bg);
-  border-color: var(--menu-border);
+  border: 1px solid var(--menu-border);
+  border-radius: 0 0 var(--menu-radius) var(--menu-radius);
   box-shadow: var(--menu-shadow);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
