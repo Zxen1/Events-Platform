@@ -559,9 +559,9 @@ const FieldsetBuilder = (function(){
             }
             
             if (!isValid) {
-                input.classList.add('fieldset-input--invalid');
+                input.classList.add('input-class-2--invalid');
             } else {
-                input.classList.remove('fieldset-input--invalid');
+                input.classList.remove('input-class-2--invalid');
             }
         }
         
@@ -841,7 +841,7 @@ const FieldsetBuilder = (function(){
                 
                 var pwInput = document.createElement('input');
                 pwInput.type = 'password';
-                pwInput.className = 'fieldset-input';
+                pwInput.className = 'input-class-2';
                 
                 // Dynamic placeholder showing min length
                 var pwPlaceholder = placeholder || ('Min ' + pwMinLength + ' characters');
@@ -857,7 +857,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var titleInput = document.createElement('input');
                 titleInput.type = 'text';
-                titleInput.className = 'fieldset-input';
+                titleInput.className = 'input-class-2';
                 titleInput.autocomplete = 'off';
                 applyPlaceholder(titleInput, placeholder);
                 var titleValidation = addInputValidation(titleInput, minLength, maxLength, null);
@@ -869,7 +869,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var couponInput = document.createElement('input');
                 couponInput.type = 'text';
-                couponInput.className = 'fieldset-input';
+                couponInput.className = 'input-class-2';
                 applyPlaceholder(couponInput, placeholder);
                 var couponValidation = addInputValidation(couponInput, minLength, maxLength, null);
                 fieldset.appendChild(couponInput);
@@ -890,7 +890,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var textBoxInput = document.createElement('input');
                 textBoxInput.type = 'text';
-                textBoxInput.className = 'fieldset-input';
+                textBoxInput.className = 'input-class-2';
                 applyPlaceholder(textBoxInput, placeholder);
                 var textBoxValidation = addInputValidation(textBoxInput, minLength, maxLength, null);
                 fieldset.appendChild(textBoxInput);
@@ -1139,7 +1139,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
-                emailInput.className = 'fieldset-input';
+                emailInput.className = 'input-class-2';
                 if (key === 'public_email') emailInput.autocomplete = 'off';
                 applyPlaceholder(emailInput, placeholder);
                 var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
@@ -1154,7 +1154,7 @@ const FieldsetBuilder = (function(){
                 phoneRow.appendChild(buildPhonePrefixMenu(container));
                 var phoneInput = document.createElement('input');
                 phoneInput.type = 'tel';
-                phoneInput.className = 'fieldset-input';
+                phoneInput.className = 'input-class-2';
                 applyPlaceholder(phoneInput, placeholder);
                 makePhoneDigitsOnly(phoneInput);
                 var phoneValidation = addInputValidation(phoneInput, minLength, maxLength, null);
@@ -1171,7 +1171,7 @@ const FieldsetBuilder = (function(){
                 addrWrap.className = 'fieldset-location-inputwrap';
                 var addrInputEl = document.createElement('input');
                 addrInputEl.type = 'text';
-                addrInputEl.className = 'fieldset-input';
+                addrInputEl.className = 'input-class-2';
                 applyPlaceholder(addrInputEl, placeholder);
                 addrWrap.appendChild(addrInputEl);
                 fieldset.appendChild(addrWrap);
@@ -1202,7 +1202,7 @@ const FieldsetBuilder = (function(){
                 cityWrap.className = 'fieldset-location-inputwrap';
                 var cityInputEl = document.createElement('input');
                 cityInputEl.type = 'text';
-                cityInputEl.className = 'fieldset-input';
+                cityInputEl.className = 'input-class-2';
                 applyPlaceholder(cityInputEl, placeholder);
                 cityWrap.appendChild(cityInputEl);
                 fieldset.appendChild(cityWrap);
@@ -1232,7 +1232,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var urlInput = document.createElement('input');
                 urlInput.type = 'text'; // text not url, we handle protocol
-                urlInput.className = 'fieldset-input';
+                urlInput.className = 'input-class-2';
                 applyPlaceholder(urlInput, placeholder);
                 autoUrlProtocol(urlInput);
                 var urlValidation = addInputValidation(urlInput, minLength, maxLength, isValidUrl);
@@ -2230,7 +2230,7 @@ const FieldsetBuilder = (function(){
                     tierSub.className = 'fieldset-sublabel';
                     tierSub.textContent = 'Pricing Tier';
                     var tierInput = document.createElement('input');
-                    tierInput.className = 'fieldset-input';
+                    tierInput.className = 'input-class-2';
                     tierInput.placeholder = 'eg. Adult';
                     tierCol.appendChild(tierSub);
                     tierCol.appendChild(tierInput);
@@ -2294,7 +2294,7 @@ const FieldsetBuilder = (function(){
                     priceSub.className = 'fieldset-sublabel';
                     priceSub.textContent = 'Price';
                     var priceInput = document.createElement('input');
-                    priceInput.className = 'fieldset-input';
+                    priceInput.className = 'input-class-2';
                     priceInput.placeholder = '0.00';
                     spAttachMoneyInputBehavior(priceInput);
                     priceCol.appendChild(priceSub);
@@ -2335,7 +2335,7 @@ const FieldsetBuilder = (function(){
                     seatSub.textContent = 'Seating Area';
                     var seatInput = document.createElement('input');
                     seatInput.type = 'text';
-                    seatInput.className = 'fieldset-input';
+                    seatInput.className = 'input-class-2';
                     seatInput.placeholder = 'eg. Orchestra';
                     seatCol.appendChild(seatSub);
                     seatCol.appendChild(seatInput);
@@ -2814,17 +2814,17 @@ const FieldsetBuilder = (function(){
                         var seatOut = [];
                         seatingBlocks.forEach(function(block) {
                             var seatName = '';
-                            var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                            var seatInput = block.querySelector('.fieldset-row input.input-class-2');
                             if (seatInput) seatName = String(seatInput.value || '').trim();
                             var tiers = [];
                             block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
                                 var tierName = '';
-                                var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
+                                var tierInput = tier.querySelector('.fieldset-row input.input-class-2');
                                 if (tierInput) tierName = String(tierInput.value || '').trim();
                                 var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
                                 var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
                                 var priceInput = null;
-                                var inputs = tier.querySelectorAll('input.fieldset-input');
+                                var inputs = tier.querySelectorAll('input.input-class-2');
                                 if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
                                 var price = priceInput ? String(priceInput.value || '').trim() : '';
                                 tiers.push({ pricing_tier: tierName, currency: curr, price: price });
@@ -2859,7 +2859,7 @@ const FieldsetBuilder = (function(){
                     seats.forEach(function(seat) {
                         var block = spCreateSeatingAreaBlock(seatingAreasContainer);
                         seatingAreasContainer.appendChild(block);
-                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                        var seatInput = block.querySelector('.fieldset-row input.input-class-2');
                         if (seatInput) seatInput.value = String((seat && seat.seating_area) || '');
                         var tiersContainer = block.querySelector('.fieldset-sessionpricing-pricing-tiers-container');
                         if (tiersContainer) tiersContainer.innerHTML = '';
@@ -2868,7 +2868,7 @@ const FieldsetBuilder = (function(){
                         tiers.forEach(function(tierObj) {
                             var tierBlock = spCreatePricingTierBlock(tiersContainer);
                             tiersContainer.appendChild(tierBlock);
-                            var tierNameInput = tierBlock.querySelector('.fieldset-row input.fieldset-input');
+                            var tierNameInput = tierBlock.querySelector('.fieldset-row input.input-class-2');
                             if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
                             // IMPORTANT: do not clear the currency input directly (that causes "flag + Search").
                             // Only set currency when we actually have a saved value, and do it via the component API.
@@ -2887,7 +2887,7 @@ const FieldsetBuilder = (function(){
                                     }
                                 } catch (eCur) {}
                             }
-                            var inputs = tierBlock.querySelectorAll('input.fieldset-input');
+                            var inputs = tierBlock.querySelectorAll('input.input-class-2');
                             var priceInput = inputs && inputs.length ? inputs[inputs.length - 1] : null;
                             if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
                         });
@@ -3720,7 +3720,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var input = document.createElement('input');
                 input.type = 'text';
-                input.className = 'fieldset-input';
+                input.className = 'input-class-2';
                 applyPlaceholder(input, placeholder);
                 var validation = addInputValidation(input, minLength, maxLength, null);
                 fieldset.appendChild(input);
@@ -3843,7 +3843,7 @@ const FieldsetBuilder = (function(){
                         }
                         case 'public_phone': {
                             var pfx = fieldset.querySelector('.fieldset-menu-button-input');
-                            var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
+                            var tel = fieldset.querySelector('input[type="tel"].input-class-2');
                             if (pfx && String(pfx.value || '').trim()) return true;
                             if (tel && String(tel.value || '').trim()) return true;
                             return false;
@@ -3923,7 +3923,7 @@ const FieldsetBuilder = (function(){
                 case 'username':
                 case 'password':
                 case 'new-password': {
-                    var inp = fieldset.querySelector('input.fieldset-input');
+                    var inp = fieldset.querySelector('input.input-class-2');
                     if (!inp) return false;
                     var val = String(inp.value || '');
                     // Use password settings from dataset (set during fieldset build)
@@ -3938,7 +3938,7 @@ const FieldsetBuilder = (function(){
                     return true;
                 }
                 case 'confirm-password': {
-                    var confirmInput = fieldset.querySelector('input.fieldset-input');
+                    var confirmInput = fieldset.querySelector('input.input-class-2');
                     if (!confirmInput) return false;
                     var confirmVal = String(confirmInput.value || '');
 
@@ -3962,7 +3962,7 @@ const FieldsetBuilder = (function(){
                         }
                     } catch (e0) {}
 
-                    var pwInput = pwFieldset ? pwFieldset.querySelector('input.fieldset-input') : null;
+                    var pwInput = pwFieldset ? pwFieldset.querySelector('input.input-class-2') : null;
                     if (!pwInput) return false;
 
                     // Use password settings from the password fieldset for validation
@@ -3987,14 +3987,14 @@ const FieldsetBuilder = (function(){
                 case 'email':
                 case 'account_email':
                 case 'public_email': {
-                    var e = fieldset.querySelector('input.fieldset-input');
+                    var e = fieldset.querySelector('input.input-class-2');
                     if (!e) return false;
                     if (!strLenOk(e.value, minLength, maxLength)) return false;
                     return isValidEmail(e.value);
                 }
                 case 'website-url':
                 case 'tickets-url': {
-                    var u = fieldset.querySelector('input.fieldset-input');
+                    var u = fieldset.querySelector('input.input-class-2');
                     if (!u) return false;
                     if (!strLenOk(u.value, minLength, maxLength)) return false;
                     return isValidUrl(u.value);
@@ -4020,7 +4020,7 @@ const FieldsetBuilder = (function(){
                 }
                 case 'public_phone': {
                     var prefixInput = fieldset.querySelector('.fieldset-menu-button-input');
-                    var phoneInput = fieldset.querySelector('input[type="tel"].fieldset-input');
+                    var phoneInput = fieldset.querySelector('input[type="tel"].input-class-2');
                     if (!prefixInput || !phoneInput) return false;
                     var pfx = String(prefixInput.value || '').trim();
                     if (!pfx) return false;
@@ -4030,7 +4030,7 @@ const FieldsetBuilder = (function(){
                 case 'city':
                 case 'location': {
                     // Address/City must be Google Places confirmed (not manual typing).
-                    var addr = fieldset.querySelector('input.fieldset-input');
+                    var addr = fieldset.querySelector('input.input-class-2');
                     var lat = fieldset.querySelector('input.fieldset-lat');
                     var lng = fieldset.querySelector('input.fieldset-lng');
                     if (!addr || !lat || !lng) return false;
