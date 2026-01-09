@@ -275,16 +275,22 @@
 
 /* Menu Class 1: Map-control palette (translucent dark + soft white borders) */
 .menu-class-1 {
+  /* Keep the original Menu Class 1 look (map-control palette) */
   --menu-bg: rgba(0, 0, 0, 0.35);
   --menu-bg-focus: rgba(0, 0, 0, 0.45);
   --menu-border: rgba(255, 255, 255, 0.2);
+  /* Match form input hover border color (fieldset input hover) */
+  --menu-border-hover: #666;
+  /* Blue border for focus/open (no flicker) */
   --menu-border-focus: var(--blue-500);
   --menu-text: #ffffff;
   --menu-placeholder: rgba(255, 255, 255, 0.4);
   --menu-muted: rgba(255, 255, 255, 0.5);
   --menu-hover: rgba(255, 255, 255, 0.1);
   --menu-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  /* Compliance */
   --menu-radius: 5px;
+  --menu-options-border: var(--blue-500);
 }
 
 /* Menu part hooks (appearance only)
@@ -300,6 +306,11 @@
   border: 1px solid var(--menu-border);
   border-radius: var(--menu-radius);
   color: var(--menu-text);
+}
+
+/* Hover border should match form inputs, but must NOT override open/focus blue border */
+.menu-class-1:not(:focus-within) .menu-button:not(.menu-button--open):hover {
+  border-color: var(--menu-border-hover);
 }
 
 .menu-class-1:focus-within .menu-button {
@@ -333,11 +344,10 @@
 
 .menu-class-1 .menu-options {
   background: var(--menu-bg);
-  border: 1px solid var(--menu-border);
+  border: 1px solid var(--menu-options-border);
+  border-top: none;
   border-radius: 0 0 var(--menu-radius) var(--menu-radius);
   box-shadow: var(--menu-shadow);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .menu-class-1 .menu-option:hover,

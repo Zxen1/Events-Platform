@@ -887,6 +887,7 @@ const CurrencyComponent = (function(){
     // Data loaded from database - no hardcoded fallback
     var currencyData = [];
     var dataLoaded = false;
+    var loadPromise = null;
     
     function parseCurrencyValue(optionValue) {
         // No longer needs parsing - option_value is just the currency code
@@ -909,7 +910,8 @@ const CurrencyComponent = (function(){
     
     // Load currency data from database via gateway
     function loadFromDatabase() {
-        return fetch('/gateway.php?action=get-admin-settings')
+        if (loadPromise) return loadPromise;
+        loadPromise = fetch('/gateway.php?action=get-admin-settings')
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (res.dropdown_options && res.dropdown_options.currency) {
@@ -917,7 +919,13 @@ const CurrencyComponent = (function(){
                     dataLoaded = true;
                 }
                 return currencyData;
+            })
+            .catch(function(err) {
+                // Allow retry after failure.
+                loadPromise = null;
+                throw err;
             });
+        return loadPromise;
     }
     
     // Build a compact currency menu (100px, code only)
@@ -962,6 +970,14 @@ const CurrencyComponent = (function(){
 
         // Find and set value
         function setValue(code) {
+            if (!code) {
+                btnImg.src = '';
+                btnImg.style.display = 'none';
+                btnInput.value = '';
+                selectedCode = null;
+                try { menu.dataset.value = ''; } catch (e0) {}
+                return;
+            }
             var found = currencyData.find(function(item) {
                 return item.value === code;
             });
@@ -976,6 +992,7 @@ const CurrencyComponent = (function(){
                 }
                 btnInput.value = found.value;
                 selectedCode = code;
+                try { menu.dataset.value = String(code || '').trim(); } catch (e1) {}
             }
         }
 
@@ -988,39 +1005,54 @@ const CurrencyComponent = (function(){
             });
         }
 
-        // Build options
-        currencyData.forEach(function(item) {
-            var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
-            var displayText = item.value + ' - ' + item.label;
+        function renderOptions() {
+            try { opts.innerHTML = ''; } catch (e0) {}
+            allOptions = [];
+            currencyData.forEach(function(item) {
+                var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
+                var displayText = item.value + ' - ' + item.label;
 
-            var op = document.createElement('div');
-            op.className = 'component-currencycompact-menu-option';
-            var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text">' + displayText + '</span>';
-            op.onclick = function(e) {
-                if (countryCode) {
-                    btnImg.src = flagUrl;
-                    btnImg.style.display = 'block';
-                } else {
-                    btnImg.src = '';
-                    btnImg.style.display = 'none';
-                }
-                btnInput.value = item.value;
-                selectedCode = item.value;
-                applyOpenState(false);
-                filterOptions('');
-                onSelect(item.value, item.label, countryCode);
-            };
-            opts.appendChild(op);
+                var op = document.createElement('div');
+                op.className = 'component-currencycompact-menu-option';
+                var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
+                op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text">' + displayText + '</span>';
+                op.onclick = function(e) {
+                    if (countryCode) {
+                        btnImg.src = flagUrl;
+                        btnImg.style.display = 'block';
+                    } else {
+                        btnImg.src = '';
+                        btnImg.style.display = 'none';
+                    }
+                    btnInput.value = item.value;
+                    selectedCode = item.value;
+                    try { menu.dataset.value = String(item.value || '').trim(); } catch (e1) {}
+                    applyOpenState(false);
+                    filterOptions('');
+                    onSelect(item.value, item.label, countryCode);
+                    try { menu.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                };
+                opts.appendChild(op);
 
-            // Store for filtering (prefix-first, word-start matching)
-            allOptions.push({
-                element: op,
-                valueLower: String(item.value || '').toLowerCase(),
-                labelLower: String(item.label || '').toLowerCase(),
-                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+                // Store for filtering (prefix-first, word-start matching)
+                allOptions.push({
+                    element: op,
+                    valueLower: String(item.value || '').toLowerCase(),
+                    labelLower: String(item.label || '').toLowerCase(),
+                    labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+                });
             });
-        });
+        }
+
+        // Build options (lazy: if data isn't loaded yet, menu will populate when it arrives)
+        renderOptions();
+        if ((!dataLoaded || currencyData.length === 0) && typeof loadFromDatabase === 'function') {
+            loadFromDatabase().then(function() {
+                renderOptions();
+                // Re-apply current selection if any
+                if (selectedCode) setValue(selectedCode);
+            }).catch(function() {});
+        }
 
         // Set initial value
         if (initialValue) {
@@ -1149,6 +1181,14 @@ const CurrencyComponent = (function(){
 
         // Find and set initial value
         function setValue(code) {
+            if (!code) {
+                btnImg.src = '';
+                btnImg.style.display = 'none';
+                btnInput.value = '';
+                selectedCode = null;
+                try { menu.dataset.value = ''; } catch (e0) {}
+                return;
+            }
             var found = currencyData.find(function(item) {
                 return item.value === code;
             });
@@ -1163,6 +1203,7 @@ const CurrencyComponent = (function(){
                 }
                 btnInput.value = found.value + ' - ' + found.label;
                 selectedCode = code;
+                try { menu.dataset.value = String(code || '').trim(); } catch (e1) {}
             }
         }
 
@@ -1175,40 +1216,54 @@ const CurrencyComponent = (function(){
             });
         }
 
-        // Build options
-        var currencies = currencyData;
-        currencies.forEach(function(item) {
-            var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
-            var displayText = item.value + ' - ' + item.label;
-            
-            var op = document.createElement('div');
-            op.className = 'component-currencyfull-menu-option';
-            var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text">' + displayText + '</span>';
-            op.onclick = function(e) {
-                if (flagUrl) {
-                btnImg.src = flagUrl;
-                    btnImg.style.display = 'block';
-                } else {
-                    btnImg.src = '';
-                    btnImg.style.display = 'none';
-                }
-                btnInput.value = displayText;
-                selectedCode = item.value;
-                applyOpenState(false);
-                filterOptions(''); // Reset filter
-                onSelect(item.value, item.label, countryCode);
-            };
-            opts.appendChild(op);
-            
-            // Store for filtering
-            allOptions.push({
-                element: op,
-                valueLower: String(item.value || '').toLowerCase(),
-                labelLower: String(item.label || '').toLowerCase(),
-                labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+        function renderOptions() {
+            try { opts.innerHTML = ''; } catch (e0) {}
+            allOptions = [];
+            var currencies = currencyData;
+            currencies.forEach(function(item) {
+                var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
+                var displayText = item.value + ' - ' + item.label;
+                
+                var op = document.createElement('div');
+                op.className = 'component-currencyfull-menu-option';
+                var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
+                op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text">' + displayText + '</span>';
+                op.onclick = function(e) {
+                    if (flagUrl) {
+                        btnImg.src = flagUrl;
+                        btnImg.style.display = 'block';
+                    } else {
+                        btnImg.src = '';
+                        btnImg.style.display = 'none';
+                    }
+                    btnInput.value = displayText;
+                    selectedCode = item.value;
+                    try { menu.dataset.value = String(item.value || '').trim(); } catch (e1) {}
+                    applyOpenState(false);
+                    filterOptions(''); // Reset filter
+                    onSelect(item.value, item.label, countryCode);
+                    try { menu.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                };
+                opts.appendChild(op);
+                
+                // Store for filtering
+                allOptions.push({
+                    element: op,
+                    valueLower: String(item.value || '').toLowerCase(),
+                    labelLower: String(item.label || '').toLowerCase(),
+                    labelWords: String(item.label || '').toLowerCase().split(/[^a-z0-9+]+/).filter(Boolean)
+                });
             });
-        });
+        }
+
+        // Build options (lazy: if data isn't loaded yet, menu will populate when it arrives)
+        renderOptions();
+        if ((!dataLoaded || currencyData.length === 0) && typeof loadFromDatabase === 'function') {
+            loadFromDatabase().then(function() {
+                renderOptions();
+                if (selectedCode) setValue(selectedCode);
+            }).catch(function() {});
+        }
 
         // Set initial value (only if provided)
         if (initialValue) {
