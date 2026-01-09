@@ -7182,7 +7182,7 @@ const LocationWallpaperComponent = (function() {
             st.imageUrl = url || '';
             if (st.imageUrl) {
                 img.src = st.imageUrl;
-                img.style.display = '';
+                img.style.display = 'block';
             } else {
                 img.removeAttribute('src');
                 img.style.display = 'none';
@@ -7192,7 +7192,7 @@ const LocationWallpaperComponent = (function() {
         function showImage() {
             // Show image layer, hide map layer
             root.classList.remove('component-locationwallpaper--map-visible');
-            img.style.display = st.imageUrl ? '' : 'none';
+            img.style.display = st.imageUrl ? 'block' : 'none';
         }
 
         function showMap() {
