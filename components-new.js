@@ -939,10 +939,11 @@ const CurrencyComponent = (function(){
         var selectedCode = initialValue;
 
         var menu = document.createElement('div');
-        menu.className = 'component-currencycompact-menu';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-currencycompact-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-currencycompact-menu-button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input" placeholder="Search" autocomplete="off"><span class="component-currencycompact-menu-button-arrow">▼</span></div><div class="component-currencycompact-menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencycompact-menu-button menu-button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input menu-input" placeholder="Search" autocomplete="off"><span class="component-currencycompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencycompact-menu-options menu-options"></div>';
 
         var btn = menu.querySelector('.component-currencycompact-menu-button');
         var opts = menu.querySelector('.component-currencycompact-menu-options');
@@ -952,9 +953,18 @@ const CurrencyComponent = (function(){
 
         function applyOpenState(isOpen) {
             menu.classList.toggle('component-currencycompact-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('component-currencycompact-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('component-currencycompact-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('component-currencycompact-menu-options--open', !!isOpen);
+            if (btn) {
+                btn.classList.toggle('component-currencycompact-menu-button--open', !!isOpen);
+                btn.classList.toggle('menu-button--open', !!isOpen);
+            }
+            if (arrow) {
+                arrow.classList.toggle('component-currencycompact-menu-button-arrow--open', !!isOpen);
+                arrow.classList.toggle('menu-arrow--open', !!isOpen);
+            }
+            if (opts) {
+                opts.classList.toggle('component-currencycompact-menu-options--open', !!isOpen);
+                opts.classList.toggle('menu-options--open', !!isOpen);
+            }
         }
 
         // Required by MenuManager (strict)
@@ -1013,9 +1023,9 @@ const CurrencyComponent = (function(){
                 var displayText = item.value + ' - ' + item.label;
 
                 var op = document.createElement('div');
-                op.className = 'component-currencycompact-menu-option';
+                op.className = 'component-currencycompact-menu-option menu-option';
                 var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
-                op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text">' + displayText + '</span>';
+                op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text menu-text">' + displayText + '</span>';
                 op.onclick = function(e) {
                     if (countryCode) {
                         btnImg.src = flagUrl;
@@ -1151,10 +1161,11 @@ const CurrencyComponent = (function(){
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
-        menu.className = 'component-currencyfull-menu';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-currencyfull-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-currencyfull-menu-button"><img class="component-currencyfull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencyfull-menu-button-input" placeholder="Select currency" autocomplete="off"><span class="component-currencyfull-menu-button-arrow">▼</span></div><div class="component-currencyfull-menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencyfull-menu-button menu-button"><img class="component-currencyfull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencyfull-menu-button-input menu-input" placeholder="Select currency" autocomplete="off"><span class="component-currencyfull-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencyfull-menu-options menu-options"></div>';
         
         var btn = menu.querySelector('.component-currencyfull-menu-button');
         var opts = menu.querySelector('.component-currencyfull-menu-options');
@@ -1165,8 +1176,11 @@ const CurrencyComponent = (function(){
         function applyOpenState(isOpen) {
             menu.classList.toggle('component-currencyfull-menu--open', !!isOpen);
             btn.classList.toggle('component-currencyfull-menu-button--open', !!isOpen);
+            btn.classList.toggle('menu-button--open', !!isOpen);
             arrow.classList.toggle('component-currencyfull-menu-button-arrow--open', !!isOpen);
+            arrow.classList.toggle('menu-arrow--open', !!isOpen);
             opts.classList.toggle('component-currencyfull-menu-options--open', !!isOpen);
+            opts.classList.toggle('menu-options--open', !!isOpen);
         }
 
         menu.__menuIsOpen = function() {
@@ -1225,9 +1239,9 @@ const CurrencyComponent = (function(){
                 var displayText = item.value + ' - ' + item.label;
                 
                 var op = document.createElement('div');
-                op.className = 'component-currencyfull-menu-option';
+                op.className = 'component-currencyfull-menu-option menu-option';
                 var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
-                op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text">' + displayText + '</span>';
+                op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text menu-text">' + displayText + '</span>';
                 op.onclick = function(e) {
                     if (flagUrl) {
                         btnImg.src = flagUrl;

@@ -655,9 +655,9 @@
 
 /* ----------------------------------------------------------------------------
    FULL VARIANT (component-currencyfull-menu)
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ---------------------------------------------------------------------------- */
 
-/* Appearance */
 .component-currencyfull-menu {
     width: 100%;
     height: 36px;
@@ -676,9 +676,6 @@
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -728,8 +725,6 @@
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
-    color: #fff;
-    caret-color: #fff;
     background: transparent;
     border: none;
     outline: none;
@@ -759,10 +754,6 @@
     pointer-events: none;
 }
 
-.component-currencyfull-menu-button-input::placeholder {
-    color: #888;
-}
-
 .admin-language-button-input::placeholder {
     color: #888;
 }
@@ -774,7 +765,6 @@
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
     transition: transform 0.2s;
     cursor: pointer;
 }
@@ -797,15 +787,9 @@
     top: 36px;
     left: 0;
     width: 100%;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
 }
 
 .admin-language-options {
@@ -825,19 +809,9 @@
     scrollbar-color: #888 transparent;
 }
 
-.component-currencyfull-menu-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
 .admin-language-options::-webkit-scrollbar {
     width: 8px;
     background: transparent;
-}
-
-.component-currencyfull-menu-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
 }
 
 .admin-language-options::-webkit-scrollbar-thumb {
@@ -852,7 +826,6 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    color: #fff;
     font-size: 14px;
 }
 
@@ -899,29 +872,25 @@
 
 
 /* ----------------------------------------------------------------------------
-   STATES (shared)
+   STATES (shared - admin-language only, currency uses menu-class-1)
    ---------------------------------------------------------------------------- */
 
 .fieldset-currency-button:hover,
-.component-currencyfull-menu-button:hover,
 .admin-language-button:hover {
     border-color: #555;
 }
 
 .fieldset-currency-button--open,
-.component-currencyfull-menu-button--open,
 .admin-language-button--open {
     border-color: var(--blue-500);
 }
 
-.component-currencyfull-menu-button--open,
 .admin-language-button--open {
     border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
 .fieldset-currency-button-arrow--open,
-.component-currencyfull-menu-button-arrow--open,
 .admin-language-button-arrow--open {
     transform: rotate(180deg);
 }
@@ -934,8 +903,6 @@
 
 .fieldset-currency-option:hover,
 .fieldset-currency-option.menu-option--highlighted,
-.component-currencyfull-menu-option:hover,
-.component-currencyfull-menu-option.menu-option--highlighted,
 .admin-language-option:hover,
 .admin-language-option.menu-option--highlighted {
     background: var(--blue-500);
@@ -944,6 +911,7 @@
 
 /* ----------------------------------------------------------------------------
    COMPACT VARIANT (component-currencycompact-menu)
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ---------------------------------------------------------------------------- */
 
 .component-currencycompact-menu {
@@ -959,9 +927,6 @@
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -977,8 +942,6 @@
     text-align: left;
     padding-left: 6px;
     font-size: 12px;
-    color: #fff;
-    caret-color: #fff;
     background: transparent;
     border: none;
     outline: none;
@@ -989,10 +952,6 @@
     pointer-events: none;
 }
 
-.component-currencycompact-menu-button-input::placeholder {
-    color: #666;
-}
-
 .component-currencycompact-menu-button-arrow {
     width: 16px;
     height: 36px;
@@ -1000,7 +959,6 @@
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
     transition: transform 0.2s;
     cursor: pointer;
 }
@@ -1008,27 +966,12 @@
 .component-currencycompact-menu-options {
     display: none;
     position: absolute;
-    top: 36px;
+    top: 35px;
     left: 0;
     width: 250px;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
-}
-
-.component-currencycompact-menu-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-currencycompact-menu-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
 }
 
 .component-currencycompact-menu-option {
@@ -1038,7 +981,6 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    color: #fff;
     font-size: 13px;
     background: transparent;
     border: none;
@@ -1056,29 +998,23 @@
     text-align: left;
     padding-left: 10px;
     font-size: 13px;
-    color: #fff;
 }
 
 /* Compact states */
-.component-currencycompact-menu-button:hover {
-    border-color: #555;
-}
-
-.component-currencycompact-menu-button--open {
-    border-color: var(--blue-500);
-}
-
-.component-currencycompact-menu-button-arrow--open {
-    transform: rotate(180deg);
-}
-
 .component-currencycompact-menu-options--open {
     display: block;
 }
 
-.component-currencycompact-menu-option:hover,
-.component-currencycompact-menu-option.menu-option--highlighted {
-    background: var(--blue-500);
+/* Compact override: narrow button with wide dropdown.
+   Button keeps its bottom border and full corners.
+   Dropdown overlaps by 1px to hide the seam. */
+.component-currencycompact-menu.menu-class-1 .menu-button--open {
+    border-bottom: 1px solid var(--menu-border-focus);
+    border-radius: var(--menu-radius);
+}
+
+.component-currencycompact-menu.menu-class-1 .menu-options {
+    border-radius: var(--menu-radius);
 }
 
 
@@ -3486,3 +3422,4 @@
         transition: none;
     }
 }
+
