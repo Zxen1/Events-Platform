@@ -7700,8 +7700,7 @@ const LocationWallpaperComponent = (function() {
         }
 
         function scheduleStillFreeze() {
-            // Still mode needs a few seconds after first paint for higher-detail tiles to stream in.
-            // We wait until tiles are loaded (if possible) AND a minimum delay has passed.
+            // Still mode: user should see an image quickly (preview), then it can refine if they stay.
             stopOrbit();
             clearRevealTimers();
             if (!st.map) return;
@@ -7710,32 +7709,29 @@ const LocationWallpaperComponent = (function() {
             st.stillNonce++;
             var nonce = st.stillNonce;
 
-            var start = Date.now();
-            // Human timing: user will likely move on within ~7 seconds.
-            // Give tiles time to sharpen, but ensure we freeze within that window.
-            var minMs = 3400;  // allow detail to refine (avoid blurry first pass)
-            var maxMs = 7200;  // never hang forever
-
-            (function tick() {
+            // 1) Preview capture: fast, so the container isn't blank for ~5s.
+            setTimeout(function() {
                 if (!st.map) return;
                 if (nonce !== st.stillNonce) return;
-                var elapsed = Date.now() - start;
+                // Capture + remove map will happen inside freezeToLocationImage.
+                // We'll immediately recreate map (hidden) only if we need a refined pass.
+                freezeToLocationImage();
+            }, 900);
 
-                var loadedOk = true;
-                var tilesOk = true;
-                try { if (st.map && typeof st.map.loaded === 'function') loadedOk = !!st.map.loaded(); } catch (e1) { loadedOk = true; }
-                try { if (st.map && typeof st.map.areTilesLoaded === 'function') tilesOk = !!st.map.areTilesLoaded(); } catch (e2) { tilesOk = true; }
-
-                var ready = loadedOk && tilesOk && elapsed >= minMs;
-                var timedOut = elapsed >= maxMs;
-
-                if (ready || timedOut) {
-                    if (nonce !== st.stillNonce) return;
-                    freezeToLocationImage();
-                    return;
-                }
-                setTimeout(tick, 160);
-            })();
+            // 2) Refined capture: if the user is still in this container a few seconds later,
+            // do a better capture and overwrite the preview.
+            setTimeout(function() {
+                if (nonce !== st.stillNonce) return;
+                if (locationContainerEl.getAttribute('data-active') !== 'true') return;
+                // If map was removed by the preview capture, we need it back (hidden) to refine.
+                // Easiest: refresh will recreate the map and schedule still freeze again,
+                // but we don't want to loop forever; so we do a one-shot recreate + capture by calling refresh.
+                // Mark nonce again so this refined run is the last one.
+                st.stillNonce++;
+                var nonce2 = st.stillNonce;
+                if (nonce2 !== st.stillNonce) return;
+                refreshFromFieldsIfActive();
+            }, 3600);
         }
 
         function freezeToLocationImage() {
