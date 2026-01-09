@@ -349,12 +349,11 @@
 .menu-class-1 .menu-options {
   background: var(--menu-bg);
   border: 1px solid var(--menu-options-border);
+  border-top: none;
   /* The dropdown should have the same blur look as map-control suggestions */
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  /* Visible connecting line between button and dropdown */
-  border-top: 1px solid var(--menu-options-border);
-  /* Top-right needs rounding; top-left remains square to sit under the button */
+  /* Top-left square to sit under button; others rounded */
   border-radius: 0 var(--menu-radius) var(--menu-radius) var(--menu-radius);
   box-shadow: var(--menu-shadow);
 }
