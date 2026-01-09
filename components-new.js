@@ -99,6 +99,8 @@ const MenuManager = (function(){
                 menu.querySelector('input.fieldset-menu-button-input') ||
                 menu.querySelector('input.component-currencycompact-menu-button-input') ||
                 menu.querySelector('input.component-currencyfull-menu-button-input') ||
+                menu.querySelector('input.component-phoneprefixcompact-menu-button-input') ||
+                menu.querySelector('input.component-country-menu-button-input') ||
                 menu.querySelector('input.admin-language-button-input') ||
                 null
             );
@@ -234,11 +236,36 @@ const MenuManager = (function(){
         } catch (e0) {}
     }, true);
     
+    // Find the currently-open menu that contains a given target element.
+    // This is used by shared behaviors (eg. anchor scroll routing) so we avoid selector lists.
+    function findOpenMenuForTarget(target) {
+        if (!target || !(target instanceof Element)) return null;
+        for (var i = 0; i < openMenus.length; i++) {
+            var m = openMenus[i];
+            try {
+                if (!m || !isMenuOpen(m)) continue;
+                if (m.contains(target)) return m;
+            } catch (e0) {}
+        }
+        return null;
+    }
+    
+    // Standard menu hook: return the options container element (dropdown list).
+    function getOptionsEl(menu) {
+        if (!menu) return null;
+        try {
+            if (typeof menu.__menuGetOptionsEl === 'function') return menu.__menuGetOptionsEl() || null;
+        } catch (e0) {}
+        return null;
+    }
+    
     return {
         closeAll: closeAll,
         register: register,
         isOpen: isMenuOpen,
-        setOpen: setMenuOpen
+        setOpen: setMenuOpen,
+        findOpenMenuForTarget: findOpenMenuForTarget,
+        getOptionsEl: getOptionsEl
     };
 })();
 
@@ -908,6 +935,7 @@ const CurrencyComponent = (function(){
             return menu.classList.contains('component-currencycompact-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
+        menu.__menuGetOptionsEl = function() { return opts; };
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1093,6 +1121,7 @@ const CurrencyComponent = (function(){
             return menu.classList.contains('component-currencyfull-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
+        menu.__menuGetOptionsEl = function() { return opts; };
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1319,6 +1348,7 @@ const LanguageMenuComponent = (function(){
             return menu.classList.contains('admin-language-wrapper--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
+        menu.__menuGetOptionsEl = function() { return opts; };
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1536,34 +1566,30 @@ const PhonePrefixComponent = (function(){
         var initialValue = options.initialValue || null;
         var selectedCode = initialValue;
 
-        // Match the Currency compact menu pattern (fieldset-menu combobox)
+        // Match the Currency compact menu pattern (component-* menu system)
         var menu = document.createElement('div');
-        menu.className = 'phoneprefix-button-wrapper fieldset-menu fieldset-currency-compact';
+        menu.className = 'component-phoneprefixcompact-menu';
 
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="component-phoneprefixcompact-menu-button"><img class="component-phoneprefixcompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefixcompact-menu-button-input" placeholder="Search" autocomplete="off"><span class="component-phoneprefixcompact-menu-button-arrow">▼</span></div><div class="component-phoneprefixcompact-menu-options"></div>';
 
-        var btn = menu.querySelector('.fieldset-menu-button');
-        var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnInput = menu.querySelector('.fieldset-menu-button-input');
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
-
-        // Compact variant styling (no descendant selectors)
-        btn.classList.add('fieldset-menu-button--compact');
-        btnInput.classList.add('fieldset-menu-button-input--compact');
-        opts.classList.add('fieldset-menu-options--compact');
+        var btn = menu.querySelector('.component-phoneprefixcompact-menu-button');
+        var opts = menu.querySelector('.component-phoneprefixcompact-menu-options');
+        var btnImg = menu.querySelector('.component-phoneprefixcompact-menu-button-image');
+        var btnInput = menu.querySelector('.component-phoneprefixcompact-menu-button-input');
+        var arrow = menu.querySelector('.component-phoneprefixcompact-menu-button-arrow');
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('fieldset-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+            menu.classList.toggle('component-phoneprefixcompact-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('component-phoneprefixcompact-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('component-phoneprefixcompact-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('component-phoneprefixcompact-menu-options--open', !!isOpen);
         }
 
         // Required by MenuManager (strict)
-        menu.__menuIsOpen = function() { return menu.classList.contains('fieldset-menu--open'); };
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-phoneprefixcompact-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
+        menu.__menuGetOptionsEl = function() { return opts; };
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1606,9 +1632,9 @@ const PhonePrefixComponent = (function(){
 
             var op = document.createElement('button');
             op.type = 'button';
-            op.className = 'fieldset-menu-option';
+            op.className = 'component-phoneprefixcompact-menu-option';
             var flagUrl = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-phoneprefixcompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-phoneprefixcompact-menu-option-text">' + displayText + '</span>';
             op.addEventListener('click', function(e) {
                 if (countryCode) {
                     btnImg.src = flagUrl;
@@ -1652,7 +1678,7 @@ const PhonePrefixComponent = (function(){
 
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-phoneprefixcompact-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -1670,7 +1696,7 @@ const PhonePrefixComponent = (function(){
         btnInput.addEventListener('input', function() {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
+            if (!menu.classList.contains('component-phoneprefixcompact-menu--open')) applyOpenState(true);
         });
 
         btnInput.addEventListener('keydown', function(e) {
@@ -1681,14 +1707,14 @@ const PhonePrefixComponent = (function(){
                 return;
             }
             // Arrow key navigation
-            if (menu.classList.contains('fieldset-menu--open')) {
-                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
+            if (menu.classList.contains('component-phoneprefixcompact-menu--open')) {
+                menuArrowKeyNav(e, opts, '.component-phoneprefixcompact-menu-option', function(opt) { opt.click(); });
             }
         });
 
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-phoneprefixcompact-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -1697,7 +1723,7 @@ const PhonePrefixComponent = (function(){
 
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('fieldset-menu--open')) {
+            if (menu.classList.contains('component-phoneprefixcompact-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
@@ -1766,28 +1792,29 @@ const CountryComponent = (function(){
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
-        menu.className = 'fieldset-menu fieldset-country-menu';
+        menu.className = 'component-country-menu';
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Select country" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="component-country-menu-button"><img class="component-country-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-country-menu-button-input" placeholder="Select country" autocomplete="off"><span class="component-country-menu-button-arrow">▼</span></div><div class="component-country-menu-options"></div>';
         
-        var btn = menu.querySelector('.fieldset-menu-button');
-        var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnInput = menu.querySelector('.fieldset-menu-button-input');
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        var btn = menu.querySelector('.component-country-menu-button');
+        var opts = menu.querySelector('.component-country-menu-options');
+        var btnImg = menu.querySelector('.component-country-menu-button-image');
+        var btnInput = menu.querySelector('.component-country-menu-button-input');
+        var arrow = menu.querySelector('.component-country-menu-button-arrow');
         
         function applyOpenState(isOpen) {
-            menu.classList.toggle('fieldset-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+            menu.classList.toggle('component-country-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('component-country-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('component-country-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('component-country-menu-options--open', !!isOpen);
         }
         
         // Required by MenuManager (strict)
         menu.__menuIsOpen = function() {
-            return menu.classList.contains('fieldset-menu--open');
+            return menu.classList.contains('component-country-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
+        menu.__menuGetOptionsEl = function() { return opts; };
         
         // Store all option elements for filtering
         var allOptions = [];
@@ -1835,9 +1862,9 @@ const CountryComponent = (function(){
             var displayText = code.toUpperCase() + ' - ' + item.label;
             
             var op = document.createElement('div');
-            op.className = 'fieldset-menu-option';
+            op.className = 'component-country-menu-option';
             var flagUrl = window.App.getImageUrl('countries', item.filename);
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-country-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-country-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 btnImg.src = flagUrl;
                 btnImg.style.display = 'block';
@@ -1874,7 +1901,7 @@ const CountryComponent = (function(){
         
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-country-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -1892,7 +1919,7 @@ const CountryComponent = (function(){
         btnInput.addEventListener('input', function() {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
+            if (!menu.classList.contains('component-country-menu--open')) applyOpenState(true);
         });
         
         btnInput.addEventListener('keydown', function(e) {
@@ -1903,14 +1930,14 @@ const CountryComponent = (function(){
                 return;
             }
             // Arrow key navigation
-            if (menu.classList.contains('fieldset-menu--open')) {
-                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
+            if (menu.classList.contains('component-country-menu--open')) {
+                menuArrowKeyNav(e, opts, '.component-country-menu-option', function(opt) { opt.click(); });
             }
         });
         
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-country-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -1919,7 +1946,7 @@ const CountryComponent = (function(){
         
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('fieldset-menu--open')) {
+            if (menu.classList.contains('component-country-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
@@ -2034,7 +2061,7 @@ const MemberAuthFieldsetsComponent = (function(){
         function computeComplete() {
             if (!required) return true;
             if (fieldsetKey === 'country') {
-                var menu = wrap.querySelector('.fieldset-country-menu');
+                var menu = wrap.querySelector('.component-country-menu');
                 var code = menu && menu.dataset ? String(menu.dataset.value || '').trim() : '';
                 return !!code;
             }
@@ -2462,6 +2489,7 @@ const IconPickerComponent = (function(){
         
         // Register with MenuManager
         MenuManager.register(menu);
+        menu.__menuGetOptionsEl = function() { return optionsDiv; };
         
         // NO PRELOADING - menu only loads when opened (admin only, doesn't affect page load speed)
         
@@ -2507,35 +2535,69 @@ const IconPickerComponent = (function(){
         
         // NO PRELOADING - menu only loads when opened (admin only, doesn't affect page load speed)
         
-        // Toggle menu
+        function openMenu() {
+            // Close all other menus first
+            MenuManager.closeAll(menu);
+            // Open menu immediately
+            applyOpenState(true);
+            
+            // Show database icons instantly (menu is now open and interactive)
+            if (!categoryIconsBasket) {
+                loadFolderFromSettings().then(function() {
+                    // Update with database icons now that they're loaded
+                    var updatedDbIcons = getDatabaseIcons(iconFolder);
+                    renderIconOptions(updatedDbIcons, true);
+                });
+            } else {
+                var dbIcons = getDatabaseIcons(iconFolder);
+                renderIconOptions(dbIcons, true);
+            }
+            
+            // Load API in background and append new icons (always runs)
+            loadIconsFromFolder(null, function(updatedIconList) {
+                renderIconOptions(updatedIconList, false);
+            });
+        }
+        
+        function closeMenu() {
+            applyOpenState(false);
+        }
+        
+        // Keyboard: arrows + enter + escape
+        function onKeyDown(e) {
+            if (!e) return;
+            var key = e.key;
+            var isOpen = menu.classList.contains('component-iconpicker--open');
+            
+            if (key === 'Escape') {
+                if (isOpen) {
+                    closeMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                return;
+            }
+            
+            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
+                if (!isOpen) {
+                    openMenu();
+                    // If user is starting keyboard navigation, prevent the implicit click toggle.
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                // Navigate/select highlighted option
+                menuArrowKeyNav(e, optionsDiv, '.component-iconpicker-option', function(opt) { opt.click(); });
+            }
+        }
+        // Capture so options/buttons inside also route through here
+        menu.addEventListener('keydown', onKeyDown, true);
+        
+        // Toggle menu (mouse)
         button.onclick = function(e) {
             e.stopPropagation();
             var isOpen = menu.classList.contains('component-iconpicker--open');
-            if (isOpen) {
-                applyOpenState(false);
-            } else {
-                // Close all other menus first
-                MenuManager.closeAll(menu);
-                // Open menu immediately
-                applyOpenState(true);
-                
-                // Show database icons instantly (menu is now open and interactive)
-                if (!categoryIconsBasket) {
-                    loadFolderFromSettings().then(function() {
-                        // Update with database icons now that they're loaded
-                        var updatedDbIcons = getDatabaseIcons(iconFolder);
-                        renderIconOptions(updatedDbIcons, true);
-                    });
-                } else {
-                    var dbIcons = getDatabaseIcons(iconFolder);
-                    renderIconOptions(dbIcons, true);
-                }
-                
-                // Load API in background and append new icons (always runs)
-                loadIconsFromFolder(null, function(updatedIconList) {
-                    renderIconOptions(updatedIconList, false);
-                });
-            }
+            if (isOpen) closeMenu();
+            else openMenu();
         };
         
         return {
@@ -3864,6 +3926,7 @@ const SystemImagePickerComponent = (function(){
         
         // Register with MenuManager
         MenuManager.register(menu);
+        menu.__menuGetOptionsEl = function() { return optionsDiv; };
         
         // Set button if database value exists (NO API CALL - just construct URL from folder + filename)
         // Ensure folder and system_images are loaded from settings if not already set
@@ -3938,37 +4001,68 @@ const SystemImagePickerComponent = (function(){
                 });
             }
         }
+
+        function openMenu() {
+            // Close all other menus first
+            MenuManager.closeAll(menu);
+            // Open menu immediately
+            applyOpenState(true);
+            
+            // Show database images instantly (menu is now open and interactive)
+            var effectiveFolder2 = folderPathOverride || imageFolder;
+            if (!systemImagesBasket) {
+                loadFolderFromSettings().then(function() {
+                    // Update with database images now that they're loaded
+                    var updatedDbImages = getDatabaseImages(effectiveFolder2);
+                    renderImageOptions(updatedDbImages, true);
+                });
+            } else {
+                var dbImages = getDatabaseImages(effectiveFolder2);
+                renderImageOptions(dbImages, true);
+            }
+            
+            // Load API in background and append new images (always runs)
+            loadImagesFromFolder(effectiveFolder2, function(updatedImageList) {
+                renderImageOptions(updatedImageList, false);
+            });
+        }
         
-        // Toggle menu
+        function closeMenu() {
+            applyOpenState(false);
+        }
+        
+        // Keyboard: arrows + enter + escape
+        function onKeyDown(e) {
+            if (!e) return;
+            var key = e.key;
+            var isOpen = menu.classList.contains('component-systemimagepicker--open');
+            
+            if (key === 'Escape') {
+                if (isOpen) {
+                    closeMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                return;
+            }
+            
+            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
+                if (!isOpen) {
+                    openMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                menuArrowKeyNav(e, optionsDiv, '.component-systemimagepicker-option', function(opt) { opt.click(); });
+            }
+        }
+        menu.addEventListener('keydown', onKeyDown, true);
+        
+        // Toggle menu (mouse)
         button.onclick = function(e) {
             e.stopPropagation();
             var isOpen = menu.classList.contains('component-systemimagepicker--open');
-            if (isOpen) {
-                applyOpenState(false);
-            } else {
-                // Close all other menus first
-                MenuManager.closeAll(menu);
-                // Open menu immediately
-                applyOpenState(true);
-                
-                // Show database images instantly (menu is now open and interactive)
-                var effectiveFolder2 = folderPathOverride || imageFolder;
-                if (!systemImagesBasket) {
-                    loadFolderFromSettings().then(function() {
-                        // Update with database images now that they're loaded
-                        var updatedDbImages = getDatabaseImages(effectiveFolder2);
-                        renderImageOptions(updatedDbImages, true);
-                    });
-                } else {
-                    var dbImages = getDatabaseImages(effectiveFolder2);
-                    renderImageOptions(dbImages, true);
-                }
-                
-                // Load API in background and append new images (always runs)
-                loadImagesFromFolder(effectiveFolder2, function(updatedImageList) {
-                    renderImageOptions(updatedImageList, false);
-                });
-            }
+            if (isOpen) closeMenu();
+            else openMenu();
         };
         
         return {
@@ -4070,6 +4164,7 @@ const AmenitiesMenuComponent = (function(){
         
         // Register with MenuManager
         MenuManager.register(menu);
+        menu.__menuGetOptionsEl = function() { return optionsDiv; };
         
         // Update button text based on selected count
         function updateButtonText() {
@@ -4166,23 +4261,50 @@ const AmenitiesMenuComponent = (function(){
         // Initialize button text
         updateButtonText();
         
-        // Toggle menu - EXACT same structure as SystemImagePickerComponent
+        function openMenu() {
+            MenuManager.closeAll(menu);
+            applyOpenState(true);
+            loadAmenities().then(function(amenities) {
+                renderAmenityOptions(amenities);
+            });
+        }
+        
+        function closeMenu() {
+            applyOpenState(false);
+        }
+        
+        // Keyboard: arrows + enter + escape
+        function onKeyDown(e) {
+            if (!e) return;
+            var key = e.key;
+            var isOpen = menu.classList.contains('component-amenitiespicker--open');
+            
+            if (key === 'Escape') {
+                if (isOpen) {
+                    closeMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                return;
+            }
+            
+            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
+                if (!isOpen) {
+                    openMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                menuArrowKeyNav(e, optionsDiv, '.component-amenitiespicker-option', function(opt) { opt.click(); });
+            }
+        }
+        menu.addEventListener('keydown', onKeyDown, true);
+        
+        // Toggle menu (mouse)
         button.onclick = function(e) {
             e.stopPropagation();
             var isOpen = menu.classList.contains('component-amenitiespicker--open');
-            if (isOpen) {
-                applyOpenState(false);
-            } else {
-                // Close all other menus first
-                MenuManager.closeAll(menu);
-                // Open menu immediately
-                applyOpenState(true);
-                
-                // Load amenities and render
-                loadAmenities().then(function(amenities) {
-                    renderAmenityOptions(amenities);
-                });
-            }
+            if (isOpen) closeMenu();
+            else openMenu();
         };
         
         return {
@@ -5085,26 +5207,21 @@ const BottomSlack = (function() {
             try {
                 var deltaY = Number(e && e.deltaY) || 0;
                 
-                // If the wheel event happens within an open dropdown wrapper, route the scroll to the
-                // dropdown options list when it can actually scroll in that direction.
-                // This prevents the anchor from "eating" the first downward scroll.
+                // If the wheel event happens within an open menu, route the scroll to the menu's
+                // options list when it can actually scroll in that direction.
+                // This prevents the anchor from "eating" the first scroll.
                 try {
                     var t = e && e.target;
-                    if (t && t.closest) {
-                        var wrap = t.closest('.fieldset-menu.fieldset-menu--open, .component-currencycompact-menu.component-currencycompact-menu--open, .component-currencyfull-menu.component-currencyfull-menu--open, .admin-language-wrapper.admin-language-wrapper--open');
-                        if (wrap) {
-                            var opts = wrap.querySelector('.fieldset-menu-options--open, .component-currencycompact-menu-options--open, .component-currencyfull-menu-options--open, .admin-language-options--open') ||
-                                       wrap.querySelector('.fieldset-menu-options, .component-currencycompact-menu-options, .component-currencyfull-menu-options, .admin-language-options');
-                            if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
-                                var max = opts.scrollHeight - opts.clientHeight;
-                                var st = opts.scrollTop || 0;
-                                if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
-                                    opts.scrollTop = st + deltaY;
-                                    if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                                    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
-                                    return;
-                                }
-                            }
+                    var m = (window.MenuManager && typeof MenuManager.findOpenMenuForTarget === 'function') ? MenuManager.findOpenMenuForTarget(t) : null;
+                    var opts = m && window.MenuManager && typeof MenuManager.getOptionsEl === 'function' ? MenuManager.getOptionsEl(m) : null;
+                    if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
+                        var max = opts.scrollHeight - opts.clientHeight;
+                        var st = opts.scrollTop || 0;
+                        if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
+                            opts.scrollTop = st + deltaY;
+                            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                            return;
                         }
                     }
                 } catch (_eMenu) {}
@@ -5137,6 +5254,26 @@ const BottomSlack = (function() {
                 if (lastTouchY === null) lastTouchY = y;
                 var dy = y - lastTouchY;
                 lastTouchY = y;
+
+                // Route touch scrolling to open menu options when possible (same reason as wheel routing).
+                // dy is finger movement; scroll intent is the opposite direction.
+                try {
+                    var deltaY = -dy;
+                    var targ = e && e.target;
+                    var m = (window.MenuManager && typeof MenuManager.findOpenMenuForTarget === 'function') ? MenuManager.findOpenMenuForTarget(targ) : null;
+                    var opts = m && window.MenuManager && typeof MenuManager.getOptionsEl === 'function' ? MenuManager.getOptionsEl(m) : null;
+                    if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
+                        var max = opts.scrollHeight - opts.clientHeight;
+                        var st = opts.scrollTop || 0;
+                        if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
+                            opts.scrollTop = st + deltaY;
+                            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                            return;
+                        }
+                    }
+                } catch (_eMenuTouch) {}
+
                 // Finger moving up (dy < 0) attempts to scroll down.
                 if (dy < 0) collapseIfOffscreenBelow();
                 if (dy < 0 && isSlackOnScreen()) {
@@ -5562,6 +5699,26 @@ const TopSlack = (function() {
         scrollEl.addEventListener('wheel', function(e) {
             try {
                 var deltaY = Number(e && e.deltaY) || 0;
+
+                // If the wheel event happens within an open menu, route the scroll to the menu's
+                // options list when it can actually scroll in that direction.
+                // This prevents the anchor from "eating" the first scroll.
+                try {
+                    var t = e && e.target;
+                    var m = (window.MenuManager && typeof MenuManager.findOpenMenuForTarget === 'function') ? MenuManager.findOpenMenuForTarget(t) : null;
+                    var opts = m && window.MenuManager && typeof MenuManager.getOptionsEl === 'function' ? MenuManager.getOptionsEl(m) : null;
+                    if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
+                        var max = opts.scrollHeight - opts.clientHeight;
+                        var st = opts.scrollTop || 0;
+                        if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
+                            opts.scrollTop = st + deltaY;
+                            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                            return;
+                        }
+                    }
+                } catch (_eMenu) {}
+
                 if (deltaY < 0) collapseIfOffscreenAbove();
                 if (deltaY < 0 && isSlackOnScreen()) {
                     if (e && typeof e.preventDefault === 'function') e.preventDefault();
@@ -5590,6 +5747,26 @@ const TopSlack = (function() {
                 if (lastTouchY === null) lastTouchY = y;
                 var dy = y - lastTouchY;
                 lastTouchY = y;
+
+                // Route touch scrolling to open menu options when possible.
+                // dy is finger movement; scroll intent is the opposite direction.
+                try {
+                    var deltaY = -dy;
+                    var targ = e && e.target;
+                    var m = (window.MenuManager && typeof MenuManager.findOpenMenuForTarget === 'function') ? MenuManager.findOpenMenuForTarget(targ) : null;
+                    var opts = m && window.MenuManager && typeof MenuManager.getOptionsEl === 'function' ? MenuManager.getOptionsEl(m) : null;
+                    if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
+                        var max = opts.scrollHeight - opts.clientHeight;
+                        var st = opts.scrollTop || 0;
+                        if ((deltaY > 0 && st < max) || (deltaY < 0 && st > 0)) {
+                            opts.scrollTop = st + deltaY;
+                            if (e && typeof e.preventDefault === 'function') e.preventDefault();
+                            if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+                            return;
+                        }
+                    }
+                } catch (_eMenuTouch) {}
+
                 // Finger moving down (dy > 0) attempts to scroll up.
                 if (dy > 0) collapseIfOffscreenAbove();
                 if (dy > 0 && isSlackOnScreen()) {
@@ -6877,6 +7054,7 @@ const AgeRatingComponent = (function(){
         
         // Register with MenuManager
         MenuManager.register(menu);
+        menu.__menuGetOptionsEl = function() { return optionsDiv; };
         
         // Set button from initial value
         function setValue(value) {
@@ -6946,26 +7124,57 @@ const AgeRatingComponent = (function(){
             });
         }
         
-        // Toggle menu
+        function openMenu() {
+            MenuManager.closeAll(menu);
+            applyOpenState(true);
+            
+            // Load data if not loaded
+            if (!dataLoaded || ageRatingData.length === 0) {
+                loadFromDatabase().then(function() {
+                    renderOptions();
+                    if (initialValue) setValue(initialValue);
+                });
+            } else {
+                renderOptions();
+            }
+        }
+        
+        function closeMenu() {
+            applyOpenState(false);
+        }
+        
+        // Keyboard: arrows + enter + escape
+        function onKeyDown(e) {
+            if (!e) return;
+            var key = e.key;
+            var isOpen = menu.classList.contains('component-ageratingpicker--open');
+            
+            if (key === 'Escape') {
+                if (isOpen) {
+                    closeMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                return;
+            }
+            
+            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
+                if (!isOpen) {
+                    openMenu();
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                menuArrowKeyNav(e, optionsDiv, '.component-ageratingpicker-option', function(opt) { opt.click(); });
+            }
+        }
+        menu.addEventListener('keydown', onKeyDown, true);
+        
+        // Toggle menu (mouse)
         button.onclick = function(e) {
             e.stopPropagation();
             var isOpen = menu.classList.contains('component-ageratingpicker--open');
-            if (isOpen) {
-                applyOpenState(false);
-            } else {
-                MenuManager.closeAll(menu);
-                applyOpenState(true);
-                
-                // Load data if not loaded
-                if (!dataLoaded || ageRatingData.length === 0) {
-                    loadFromDatabase().then(function() {
-                        renderOptions();
-                        if (initialValue) setValue(initialValue);
-                    });
-                } else {
-                    renderOptions();
-                }
-            }
+            if (isOpen) closeMenu();
+            else openMenu();
         };
         
         // Initialize if data already loaded

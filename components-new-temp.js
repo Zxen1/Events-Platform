@@ -1541,7 +1541,7 @@ const PhonePrefixComponent = (function(){
 
         // Match the Currency compact menu pattern (fieldset-menu combobox)
         var menu = document.createElement('div');
-        menu.className = 'phoneprefix-button-wrapper fieldset-menu fieldset-currency-compact';
+        menu.className = 'component-phoneprefixcompact-menu';
 
         var initialFlagUrl = '';
         menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
@@ -1772,26 +1772,26 @@ const CountryComponent = (function(){
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
-        menu.className = 'fieldset-menu fieldset-country-menu';
+        menu.className = 'component-country-menu';
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="fieldset-menu-button-input" placeholder="Select country" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
+        menu.innerHTML = '<div class="component-country-menu-button"><img class="component-country-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-country-menu-button-input" placeholder="Select country" autocomplete="off"><span class="component-country-menu-button-arrow">▼</span></div><div class="component-country-menu-options"></div>';
         
-        var btn = menu.querySelector('.fieldset-menu-button');
-        var opts = menu.querySelector('.fieldset-menu-options');
-        var btnImg = menu.querySelector('.fieldset-menu-button-image');
-        var btnInput = menu.querySelector('.fieldset-menu-button-input');
-        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+        var btn = menu.querySelector('.component-country-menu-button');
+        var opts = menu.querySelector('.component-country-menu-options');
+        var btnImg = menu.querySelector('.component-country-menu-button-image');
+        var btnInput = menu.querySelector('.component-country-menu-button-input');
+        var arrow = menu.querySelector('.component-country-menu-button-arrow');
         
         function applyOpenState(isOpen) {
-            menu.classList.toggle('fieldset-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
+            menu.classList.toggle('component-country-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('component-country-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('component-country-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('component-country-menu-options--open', !!isOpen);
         }
         
         // Required by MenuManager (strict)
         menu.__menuIsOpen = function() {
-            return menu.classList.contains('fieldset-menu--open');
+            return menu.classList.contains('component-country-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
         
@@ -1841,9 +1841,9 @@ const CountryComponent = (function(){
             var displayText = code.toUpperCase() + ' - ' + item.label;
             
             var op = document.createElement('div');
-            op.className = 'fieldset-menu-option';
+            op.className = 'component-country-menu-option';
             var flagUrl = window.App.getImageUrl('countries', item.filename);
-            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-country-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-country-menu-option-text">' + displayText + '</span>';
             op.onclick = function(e) {
                 e.stopPropagation();
                 btnImg.src = flagUrl;
@@ -1882,7 +1882,7 @@ const CountryComponent = (function(){
         if (btn) {
             btn.addEventListener('click', function(e) {
                 if (e) e.stopPropagation();
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-country-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -1901,7 +1901,7 @@ const CountryComponent = (function(){
         btnInput.addEventListener('input', function() {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
+            if (!menu.classList.contains('component-country-menu--open')) applyOpenState(true);
         });
         
         btnInput.addEventListener('keydown', function(e) {
@@ -1912,14 +1912,14 @@ const CountryComponent = (function(){
                 return;
             }
             // Arrow key navigation
-            if (menu.classList.contains('fieldset-menu--open')) {
-                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
+            if (menu.classList.contains('component-country-menu--open')) {
+                menuArrowKeyNav(e, opts, '.component-country-menu-option', function(opt) { opt.click(); });
             }
         });
         
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
-                if (!menu.classList.contains('fieldset-menu--open')) {
+                if (!menu.classList.contains('component-country-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -1928,7 +1928,7 @@ const CountryComponent = (function(){
         
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('fieldset-menu--open')) {
+            if (menu.classList.contains('component-country-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
@@ -2014,7 +2014,7 @@ const MemberAuthFieldsetsComponent = (function(){
         function computeComplete() {
             if (!required) return true;
             if (fieldsetKey === 'country') {
-                var menu = wrap.querySelector('.fieldset-country-menu');
+                var menu = wrap.querySelector('.component-country-menu');
                 var code = menu && menu.dataset ? String(menu.dataset.value || '').trim() : '';
                 return !!code;
             }

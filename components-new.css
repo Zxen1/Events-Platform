@@ -1082,144 +1082,289 @@
 }
 
 
-/* ============================================================================
-   PHONE PREFIX
-   
-   No variants - same everywhere.
-   ============================================================================ */
+/* ----------------------------------------------------------------------------
+   COMPACT VARIANT (component-phoneprefixcompact-menu)
+   Copied from currency compact menu (same DOM + state classes).
+   ---------------------------------------------------------------------------- */
 
-/* Appearance */
-.phoneprefix-wrapper {
-    display: flex;
-    gap: 8px;
-    align-items: stretch;
-}
-
-.phoneprefix-button-wrapper {
+.component-phoneprefixcompact-menu {
+    width: 120px;
+    height: 36px;
     position: relative;
     flex-shrink: 0;
-    flex: 0 0 100px;
 }
 
-.phoneprefix-button {
+.component-phoneprefixcompact-menu-button {
+    width: 120px;
+    height: 36px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: 100px;
-    height: 36px;
     padding: 0 10px;
-    border: 1px solid rgba(255,255,255,0.2);
+    background: #222;
+    border: 1px solid #333;
     border-radius: 5px;
-    background: rgba(0,0,0,0.35);
-    color: #fff;
-    font: inherit;
-    font-size: 14px;
     cursor: pointer;
+}
+
+.component-phoneprefixcompact-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 
-.phoneprefix-button-flag {
-    width: 20px;
-    height: 15px;
-    object-fit: cover;
-    border-radius: 2px;
-    flex-shrink: 0;
-}
-
-.phoneprefix-button-text {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    line-height: 1;
+.component-phoneprefixcompact-menu-button-input {
     flex: 1;
+    text-align: left;
+    padding-left: 6px;
+    font-size: 12px;
+    color: #fff;
+    caret-color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    min-width: 0;
 }
 
-.phoneprefix-button-arrow {
-    margin-left: auto;
+.component-phoneprefixcompact-menu:not(.component-phoneprefixcompact-menu--open) .component-phoneprefixcompact-menu-button-input {
+    pointer-events: none;
+}
+
+.component-phoneprefixcompact-menu-button-input::placeholder {
+    color: #666;
+}
+
+.component-phoneprefixcompact-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 10px;
-    opacity: 0.6;
-    transition: transform 0.15s;
+    color: #888;
+    transition: transform 0.2s;
+    cursor: pointer;
 }
 
-.phoneprefix-options {
+.component-phoneprefixcompact-menu-options {
+    display: none;
     position: absolute;
-    top: 100%;
+    top: 36px;
     left: 0;
-    width: 280px;
+    width: 250px;
+    background: #222;
+    border: 1px solid var(--blue-500);
+    border-radius: 5px;
     max-height: 300px;
     overflow-y: auto;
-    background: #222;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
-    margin-top: 4px;
     z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
 }
 
-.phoneprefix-options[hidden] {
-    display: none;
+.component-phoneprefixcompact-menu-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
 }
 
-.phoneprefix-option {
+.component-phoneprefixcompact-menu-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.component-phoneprefixcompact-menu-option {
+    width: 100%;
+    height: 36px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    width: 100%;
-    padding: 10px 10px;
-    border: none;
-    background: transparent;
-    color: #fff;
-    font: inherit;
-    text-align: left;
+    padding: 0 10px;
     cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+    background: transparent;
+    border: none;
 }
 
-.phoneprefix-option-flag {
-    width: 20px;
-    height: 15px;
-    object-fit: cover;
-    border-radius: 2px;
+.component-phoneprefixcompact-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
     flex-shrink: 0;
 }
 
-.phoneprefix-option-text {
+.component-phoneprefixcompact-menu-option-text {
     flex: 1;
-    flex-shrink: 1;
-    min-width: 0;
-}
-
-.phoneprefix-input {
-    flex: 1;
-    min-width: 0;
-    height: 36px;
-    padding: 0 12px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
-    background: rgba(0,0,0,0.35);
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
     color: #fff;
-    font: inherit;
 }
 
-/* States */
-.phoneprefix-button:hover {
-    border-color: rgba(255,255,255,0.4);
+/* Compact states */
+.component-phoneprefixcompact-menu-button:hover {
+    border-color: #555;
 }
 
-.phoneprefix-button-arrow--open {
+.component-phoneprefixcompact-menu-button--open {
+    border-color: var(--blue-500);
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.component-phoneprefixcompact-menu-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.phoneprefix-option:hover {
-    background: rgba(255,255,255,0.1);
+.component-phoneprefixcompact-menu-options--open {
+    display: block;
 }
 
-.phoneprefix-option:focus-visible {
-    outline: 2px solid var(--blue-500);
-    outline-offset: -2px;
+.component-phoneprefixcompact-menu-option:hover,
+.component-phoneprefixcompact-menu-option.menu-option--highlighted {
+    background: var(--blue-500);
 }
 
-.phoneprefix-input:focus {
-    outline: none;
+
+/* ----------------------------------------------------------------------------
+   COUNTRY MENU (component-country-menu)
+   Standalone (no fieldset-menu dependency). CSS mirrors the old fieldset-menu
+   look/behavior so this is a naming-only refactor visually.
+   ---------------------------------------------------------------------------- */
+
+.component-country-menu {
+    width: 100%;
+    height: 36px;
+    position: relative;
+}
+
+.component-country-menu-button {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.component-country-menu-button:hover {
+    border-color: #555;
+}
+
+.component-country-menu-button--open {
     border-color: var(--blue-500);
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+}
+
+.component-country-menu-button-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-country-menu-button-input {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    color: #fff;
+    caret-color: #fff;
+    background: transparent;
+    border: none;
+    outline: none;
+    min-width: 0;
+}
+
+.component-country-menu:not(.component-country-menu--open) .component-country-menu-button-input {
+    pointer-events: none;
+}
+
+.component-country-menu-button-input::placeholder {
+    color: #666;
+}
+
+.component-country-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #888;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.component-country-menu-button-arrow--open {
+    transform: rotate(180deg);
+}
+
+.component-country-menu-options {
+    display: none;
+    position: absolute;
+    top: 36px;
+    left: 0;
+    width: 100%;
+    background: #222;
+    border: 1px solid var(--blue-500);
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: var(--layer-menu, 85);
+    scrollbar-width: thin;
+    scrollbar-color: #888 transparent;
+}
+
+.component-country-menu-options::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+.component-country-menu-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.component-country-menu-options--open {
+    display: block;
+}
+
+.component-country-menu-option {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    cursor: pointer;
+    color: #fff;
+    font-size: 13px;
+    background: transparent;
+    border: none;
+}
+
+.component-country-menu-option:hover,
+.component-country-menu-option.menu-option--highlighted {
+    background: var(--blue-500);
+}
+
+.component-country-menu-option-image {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.component-country-menu-option-text {
+    flex: 1;
+    text-align: left;
+    padding-left: 10px;
+    font-size: 13px;
+    color: #fff;
 }
 
 

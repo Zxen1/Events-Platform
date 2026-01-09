@@ -751,6 +751,7 @@ const FieldsetBuilder = (function(){
                 if (child.classList.contains('fieldset-menu')) child.classList.add('fieldset-row-item--menu');
                 if (child.classList.contains('fieldset-currency-wrapper')) child.classList.add('fieldset-row-item--currency-wrapper');
                 if (child.classList.contains('component-currencycompact-menu')) child.classList.add('fieldset-row-item--currency-compact');
+                if (child.classList.contains('component-phoneprefixcompact-menu')) child.classList.add('fieldset-row-item--menu');
                 if (child.classList.contains('fieldset-input-small')) child.classList.add('fieldset-row-item--input-small');
             });
         }

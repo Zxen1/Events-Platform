@@ -264,6 +264,75 @@
 
 
 /* ============================================================================
+   MENU CLASSES
+   
+   Reusable MENU APPEARANCE styles (no layout). Apply the base class to the
+   menu root, and keep layout/structure in the component/fieldset classes.
+   
+   Example integration (fieldset menus):
+   <div class="fieldset-menu menu-class-1">...</div>
+   ============================================================================ */
+
+/* Menu Class 1: Map-control palette (translucent dark + soft white borders) */
+.menu-class-1 {
+  --menu-bg: rgba(0, 0, 0, 0.35);
+  --menu-bg-focus: rgba(0, 0, 0, 0.45);
+  --menu-border: rgba(255, 255, 255, 0.2);
+  --menu-border-focus: var(--blue-500);
+  --menu-text: #ffffff;
+  --menu-placeholder: rgba(255, 255, 255, 0.4);
+  --menu-muted: rgba(255, 255, 255, 0.5);
+  --menu-hover: rgba(255, 255, 255, 0.1);
+  --menu-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Menu part hooks (appearance only)
+   These classes must be applied by menu components (in components-new.js):
+   - .menu-button   (trigger)
+   - .menu-input    (search/display input)
+   - .menu-arrow    (arrow icon/chevron)
+   - .menu-options  (dropdown panel)
+   - .menu-option   (option row)
+   - .menu-text     (option/trigger label text) */
+.menu-class-1 .menu-button {
+  background-color: var(--menu-bg);
+  border-color: var(--menu-border);
+  color: var(--menu-text);
+}
+
+.menu-class-1:focus-within .menu-button {
+  background-color: var(--menu-bg-focus);
+  border-color: var(--menu-border-focus);
+}
+
+.menu-class-1 .menu-text,
+.menu-class-1 .menu-input,
+.menu-class-1 .menu-option {
+  color: var(--menu-text);
+}
+
+.menu-class-1 .menu-input::placeholder {
+  color: var(--menu-placeholder);
+}
+
+.menu-class-1 .menu-arrow {
+  color: var(--menu-muted);
+}
+
+.menu-class-1 .menu-options {
+  background: var(--menu-bg);
+  border-color: var(--menu-border);
+  box-shadow: var(--menu-shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.menu-class-1 .menu-option:hover,
+.menu-class-1 .menu-option.menu-option--highlighted {
+  background-color: var(--menu-hover);
+}
+
+/* ============================================================================
    GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)
    1) SCROLLBARS
    2) GLOBAL FONT (system-ui, sans-serif)
