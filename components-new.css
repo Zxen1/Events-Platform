@@ -3304,11 +3304,12 @@
 .component-locationwallpaper-image {
     position: absolute;
     inset: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.5s ease;
 }
 
 .component-locationwallpaper-mapmount {
     opacity: 0;
+    z-index: 1;
 }
 
 .component-locationwallpaper-image {
@@ -3316,24 +3317,17 @@
     height: 100%;
     object-fit: cover;
     opacity: 0;
+    z-index: 2; /* Image layers on top of map for seamless crossfade */
 }
 
-/* When showing map: map visible, image hidden */
+/* Map visible: show the map layer */
 .component-locationwallpaper--map-visible .component-locationwallpaper-mapmount {
     opacity: 1;
 }
 
-.component-locationwallpaper--map-visible .component-locationwallpaper-image {
-    opacity: 0;
-}
-
-/* When showing image: image visible, map hidden */
+/* Image visible: fade image in on top (map stays visible underneath until covered) */
 .component-locationwallpaper--image-visible .component-locationwallpaper-image {
     opacity: 1;
-}
-
-.component-locationwallpaper--image-visible .component-locationwallpaper-mapmount {
-    opacity: 0;
 }
 
 /* Move Mapbox logo to top-right for location wallpaper */

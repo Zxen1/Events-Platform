@@ -7189,20 +7189,27 @@ const LocationWallpaperComponent = (function() {
         }
 
         function showImage() {
-            // Crossfade: show image layer, hide map layer
-            root.classList.remove('component-locationwallpaper--map-visible');
+            // Crossfade: fade image in on top of map (no black dip)
+            // Keep map visible underneath until image fully covers it
             if (st.imageUrl) {
                 root.classList.add('component-locationwallpaper--image-visible');
+                // After transition completes, we can hide the map layer
+                setTimeout(function() {
+                    if (root.classList.contains('component-locationwallpaper--image-visible')) {
+                        root.classList.remove('component-locationwallpaper--map-visible');
+                    }
+                }, 550); // Slightly longer than transition (500ms)
             } else {
                 root.classList.remove('component-locationwallpaper--image-visible');
+                root.classList.remove('component-locationwallpaper--map-visible');
             }
         }
 
         function showMap() {
-            // Crossfade: show map layer, hide image layer
+            // Crossfade: show map, then fade out image on top
             st.didReveal = true;
-            root.classList.remove('component-locationwallpaper--image-visible');
             root.classList.add('component-locationwallpaper--map-visible');
+            root.classList.remove('component-locationwallpaper--image-visible');
         }
 
         function revealMapCrossfade() {
