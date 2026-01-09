@@ -87,7 +87,7 @@
     right: 10px;
     background: #000;
     border: 1px solid #777;
-    border-radius: 4px;
+    border-radius: 5px;
     padding: 10px;
     font-size: 13px;
     font-style: normal;
@@ -1142,7 +1142,7 @@
     margin-top: 0;
     background: #222;
     border: 1px solid var(--blue-500);
-    border-radius: 4px;
+    border-radius: 5px;
     padding: 0;
     box-sizing: border-box;
     max-height: 600px;
@@ -1196,7 +1196,7 @@
     justify-content: center;
     background: transparent;
     border: 1px solid #333;
-    border-radius: 4px;
+    border-radius: 5px;
     color: #fff;
     cursor: pointer;
     font-size: 18px;
@@ -1214,7 +1214,7 @@
     padding: 0 10px;
     background: transparent;
     border: 1px solid #333;
-    border-radius: 4px;
+    border-radius: 5px;
     color: #fff;
     cursor: pointer;
     font-size: 13px;
@@ -1241,7 +1241,7 @@
     padding: 0 10px;
     background: #222;
     border: 1px solid #333;
-    border-radius: 4px;
+    border-radius: 5px;
     color: #fff;
     font-size: 13px;
     cursor: pointer;
@@ -1292,7 +1292,7 @@
     box-sizing: border-box;
     background: #222;
     border: 1px solid #333;
-    border-radius: 4px;
+    border-radius: 5px;
 }
 
 .fieldset-sessionpricing-ticketgroup-item-header-content:hover {
@@ -1347,7 +1347,7 @@
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
     background: var(--blue-600);
     border-color: var(--blue-500);
-    border-radius: 4px 4px 0 0;
+    border-radius: 5px 5px 0 0;
     border-bottom: none;
 }
 
@@ -1372,7 +1372,7 @@
     padding: 0 10px;
     background: transparent;
     border: 1px solid #333;
-    border-radius: 4px;
+    border-radius: 5px;
     color: #fff;
     cursor: pointer;
     font-size: 13px;
@@ -1389,7 +1389,7 @@
     padding: 0 10px;
     background: transparent;
     border: 1px solid #f87171;
-    border-radius: 4px;
+    border-radius: 5px;
     color: #f87171;
     cursor: pointer;
     font-size: 13px;
@@ -1412,7 +1412,7 @@
     margin-top: 0;
     background: #222;
     border: 1px solid var(--blue-500);
-    border-radius: 4px;
+    border-radius: 5px;
     display: none;
     overflow: hidden;
     z-index: var(--layer-menu, 85);
@@ -1440,7 +1440,7 @@
     padding: 0 10px;
     background: transparent;
     border: 1px solid #333;
-    border-radius: 4px;
+    border-radius: 5px;
     color: #fff;
     cursor: pointer;
     font-size: 13px;

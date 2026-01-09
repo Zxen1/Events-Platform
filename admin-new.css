@@ -1202,7 +1202,7 @@
   margin: 0 0 16px 0;
   padding: 12px;
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  border-radius: 5px;
 }
 
 .admin-settings-countdown-mode-toggles {
@@ -2489,7 +2489,7 @@
   width: 100%;
   margin: 0 0 12px 0;
   background: #080808;
-  border-radius: 4px;
+  border-radius: 5px;
   border: 1px solid var(--blue-500);
   overflow: visible;
 }
@@ -2981,7 +2981,7 @@
 
 .admin-settings-color-swatch {
   aspect-ratio: 1;
-  border-radius: 4px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
