@@ -2182,25 +2182,6 @@ const AdminModule = (function() {
                 });
             });
         }
-
-        // Location Wallpaper mode radios (off | orbit | still)
-        var wallpaperModeRadios = mapTabContainer.querySelectorAll('input[name="adminLocationWallpaperMode"]');
-        if (wallpaperModeRadios.length) {
-            var initialWallpaperMode = mapTabData.location_wallpaper_mode || 'off';
-            wallpaperModeRadios.forEach(function(radio) {
-                radio.checked = (radio.value === initialWallpaperMode);
-            });
-            
-            registerField('map.location_wallpaper_mode', initialWallpaperMode);
-            
-            wallpaperModeRadios.forEach(function(radio) {
-                radio.addEventListener('change', function() {
-                    if (radio.checked) {
-                        updateField('map.location_wallpaper_mode', radio.value);
-                    }
-                });
-            });
-        }
         
         // Initialize Starting Location Geocoder
         initStartingLocationGeocoder();
@@ -2369,8 +2350,7 @@ const AdminModule = (function() {
         // Reset radio groups
         var radioGroups = [
             { name: 'adminSpinType', fieldId: 'map.spin_load_type' },
-            { name: 'adminMapCardDisplay', fieldId: 'map.map_card_display' },
-            { name: 'adminLocationWallpaperMode', fieldId: 'map.location_wallpaper_mode' }
+            { name: 'adminMapCardDisplay', fieldId: 'map.map_card_display' }
         ];
         
         radioGroups.forEach(function(rg) {

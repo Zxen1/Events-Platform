@@ -859,24 +859,6 @@
   box-sizing: border-box;
 }
 
-.admin-map-extras-container {
-  width: 100%;
-  max-width: none;
-  margin: 0 0 12px 0;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-  padding: 16px;
-  box-sizing: border-box;
-}
-
-.admin-map-extras-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.85);
-  margin: 0 0 10px 0;
-}
-
 .admin-lighting-buttons,
 .admin-style-buttons {
   display: grid;
