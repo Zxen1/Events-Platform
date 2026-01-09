@@ -97,7 +97,6 @@ const MenuManager = (function(){
             // Menus designed to accept typing in their "button" row.
             return (
                 menu.querySelector('input.fieldset-menu-button-input') ||
-                menu.querySelector('input.component-phoneprefix-menu-button-input') ||
                 menu.querySelector('input.component-currencycompact-menu-button-input') ||
                 menu.querySelector('input.component-currencyfull-menu-button-input') ||
                 menu.querySelector('input.admin-language-button-input') ||
@@ -1537,30 +1536,33 @@ const PhonePrefixComponent = (function(){
         var initialValue = options.initialValue || null;
         var selectedCode = initialValue;
 
-        // Phone prefix menu - same pattern as CurrencyComponent.buildCompactMenu
+        // Match the Currency compact menu pattern (fieldset-menu combobox)
         var menu = document.createElement('div');
-        menu.className = 'component-phoneprefix-menu menu-class-2';
+        menu.className = 'phoneprefix-button-wrapper fieldset-menu fieldset-currency-compact';
 
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-phoneprefix-menu-button"><img class="component-phoneprefix-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefix-menu-button-input" placeholder="Search" autocomplete="off"><span class="component-phoneprefix-menu-button-arrow">▼</span></div><div class="component-phoneprefix-menu-options"></div>';
+        menu.innerHTML = '<div class="fieldset-menu-button"><img class="fieldset-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="fieldset-menu-button-input" placeholder="Search" autocomplete="off"><span class="fieldset-menu-button-arrow">▼</span></div><div class="fieldset-menu-options"></div>';
 
-        var btn = menu.querySelector('.component-phoneprefix-menu-button');
-        var opts = menu.querySelector('.component-phoneprefix-menu-options');
-        var btnImg = menu.querySelector('.component-phoneprefix-menu-button-image');
-        var btnInput = menu.querySelector('.component-phoneprefix-menu-button-input');
-        var arrow = menu.querySelector('.component-phoneprefix-menu-button-arrow');
+        var btn = menu.querySelector('.fieldset-menu-button');
+        var opts = menu.querySelector('.fieldset-menu-options');
+        var btnImg = menu.querySelector('.fieldset-menu-button-image');
+        var btnInput = menu.querySelector('.fieldset-menu-button-input');
+        var arrow = menu.querySelector('.fieldset-menu-button-arrow');
+
+        // Compact variant styling (no descendant selectors)
+        btn.classList.add('fieldset-menu-button--compact');
+        btnInput.classList.add('fieldset-menu-button-input--compact');
+        opts.classList.add('fieldset-menu-options--compact');
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('component-phoneprefix-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('component-phoneprefix-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('component-phoneprefix-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('component-phoneprefix-menu-options--open', !!isOpen);
+            menu.classList.toggle('fieldset-menu--open', !!isOpen);
+            if (btn) btn.classList.toggle('fieldset-menu-button--open', !!isOpen);
+            if (arrow) arrow.classList.toggle('fieldset-menu-button-arrow--open', !!isOpen);
+            if (opts) opts.classList.toggle('fieldset-menu-options--open', !!isOpen);
         }
 
         // Required by MenuManager (strict)
-        menu.__menuIsOpen = function() {
-            return menu.classList.contains('component-phoneprefix-menu--open');
-        };
+        menu.__menuIsOpen = function() { return menu.classList.contains('fieldset-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
 
         // Store all option elements for filtering
@@ -1604,9 +1606,9 @@ const PhonePrefixComponent = (function(){
 
             var op = document.createElement('button');
             op.type = 'button';
-            op.className = 'component-phoneprefix-menu-option';
+            op.className = 'fieldset-menu-option';
             var flagUrl = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="component-phoneprefix-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-phoneprefix-menu-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="fieldset-menu-option-image" src="' + flagUrl + '" alt=""><span class="fieldset-menu-option-text">' + displayText + '</span>';
             op.addEventListener('click', function(e) {
                 if (countryCode) {
                     btnImg.src = flagUrl;
@@ -1650,7 +1652,7 @@ const PhonePrefixComponent = (function(){
 
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (!menu.classList.contains('component-phoneprefix-menu--open')) {
+                if (!menu.classList.contains('fieldset-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -1668,7 +1670,7 @@ const PhonePrefixComponent = (function(){
         btnInput.addEventListener('input', function() {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('component-phoneprefix-menu--open')) applyOpenState(true);
+            if (!menu.classList.contains('fieldset-menu--open')) applyOpenState(true);
         });
 
         btnInput.addEventListener('keydown', function(e) {
@@ -1679,14 +1681,14 @@ const PhonePrefixComponent = (function(){
                 return;
             }
             // Arrow key navigation
-            if (menu.classList.contains('component-phoneprefix-menu--open')) {
-                menuArrowKeyNav(e, opts, '.component-phoneprefix-menu-option', function(opt) { opt.click(); });
+            if (menu.classList.contains('fieldset-menu--open')) {
+                menuArrowKeyNav(e, opts, '.fieldset-menu-option', function(opt) { opt.click(); });
             }
         });
 
         btnInput.addEventListener('blur', function() {
             setTimeout(function() {
-                if (!menu.classList.contains('component-phoneprefix-menu--open')) {
+                if (!menu.classList.contains('fieldset-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -1695,7 +1697,7 @@ const PhonePrefixComponent = (function(){
 
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('component-phoneprefix-menu--open')) {
+            if (menu.classList.contains('fieldset-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
@@ -5089,10 +5091,10 @@ const BottomSlack = (function() {
                 try {
                     var t = e && e.target;
                     if (t && t.closest) {
-                        var wrap = t.closest('.fieldset-menu.fieldset-menu--open, .component-phoneprefix-menu.component-phoneprefix-menu--open, .component-currencycompact-menu.component-currencycompact-menu--open, .component-currencyfull-menu.component-currencyfull-menu--open, .admin-language-wrapper.admin-language-wrapper--open');
+                        var wrap = t.closest('.fieldset-menu.fieldset-menu--open, .component-currencycompact-menu.component-currencycompact-menu--open, .component-currencyfull-menu.component-currencyfull-menu--open, .admin-language-wrapper.admin-language-wrapper--open');
                         if (wrap) {
-                            var opts = wrap.querySelector('.fieldset-menu-options--open, .component-phoneprefix-menu-options--open, .component-currencycompact-menu-options--open, .component-currencyfull-menu-options--open, .admin-language-options--open') ||
-                                       wrap.querySelector('.fieldset-menu-options, .component-phoneprefix-menu-options, .component-currencycompact-menu-options, .component-currencyfull-menu-options, .admin-language-options');
+                            var opts = wrap.querySelector('.fieldset-menu-options--open, .component-currencycompact-menu-options--open, .component-currencyfull-menu-options--open, .admin-language-options--open') ||
+                                       wrap.querySelector('.fieldset-menu-options, .component-currencycompact-menu-options, .component-currencyfull-menu-options, .admin-language-options');
                             if (opts && opts.scrollHeight > (opts.clientHeight + 1)) {
                                 var max = opts.scrollHeight - opts.clientHeight;
                                 var st = opts.scrollTop || 0;

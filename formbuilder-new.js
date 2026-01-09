@@ -3682,15 +3682,15 @@
         
         if (venueFieldset) {
             // For venue fieldset, prefer venue name, fallback to address
-            var inputs = venueFieldset.querySelectorAll('input.input-class-2');
+            var inputs = venueFieldset.querySelectorAll('input.fieldset-input');
             var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
             var addressName = inputs && inputs[1] ? String(inputs[1].value || '').trim() : '';
             displayName = venueName || addressName;
         } else if (cityFieldset) {
-            var cityInput = cityFieldset.querySelector('input.input-class-2');
+            var cityInput = cityFieldset.querySelector('input.fieldset-input');
             displayName = cityInput ? String(cityInput.value || '').trim() : '';
         } else if (addressFieldset) {
-            var addrInput = addressFieldset.querySelector('input.input-class-2');
+            var addrInput = addressFieldset.querySelector('input.fieldset-input');
             displayName = addrInput ? String(addrInput.value || '').trim() : '';
         }
         
