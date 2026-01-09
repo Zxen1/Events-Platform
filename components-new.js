@@ -7335,11 +7335,10 @@ const LocationWallpaperComponent = (function() {
                 console.error('[LocationWallpaper] LOCATION IMAGE CAPTURED size=' + ((b && typeof b.size === 'number') ? b.size : 'n/a') + ' type=' + type + ' location=' + (st.imageMeta ? st.imageMeta.location_number : 'n/a'));
             } catch (_eP3) {}
 
-            // Optional: auto-open the captured image in a new tab for proof (off by default).
             try {
-                // Proof mode with zero user effort:
-                // In STILL mode, auto-open the first successful capture once per page load.
-                if (st.mode === 'still' && !window.__lw_openedCaptureOnce && window.LocationWallpaperComponent && typeof LocationWallpaperComponent.openLastCapture === 'function') {
+                // Optional: auto-open the captured image in a new tab for proof (off by default).
+                // Enable by setting: localStorage.setItem('lw_open_capture','1')
+                if (localStorage.getItem('lw_open_capture') === '1' && st.mode === 'still' && !window.__lw_openedCaptureOnce && window.LocationWallpaperComponent && typeof LocationWallpaperComponent.openLastCapture === 'function') {
                     window.__lw_openedCaptureOnce = true;
                     LocationWallpaperComponent.openLastCapture();
                 }
