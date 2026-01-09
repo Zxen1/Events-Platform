@@ -353,6 +353,9 @@
 .menu-class-1 .menu-option {
   background: transparent;
   border: none;
+  text-align: left;
+  font: inherit;
+  width: 100%;
 }
 
 .menu-class-1 .menu-options {
