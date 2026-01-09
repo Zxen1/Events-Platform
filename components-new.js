@@ -7326,57 +7326,19 @@ const LocationWallpaperComponent = (function() {
                     type: type
                 };
             } catch (_eP) {}
-            try {
-                console.log('[LocationWallpaper] LOCATION IMAGE CAPTURED', {
-                    size: (b && typeof b.size === 'number') ? b.size : null,
-                    type: type,
-                    location_number: st.imageMeta ? st.imageMeta.location_number : null
-                });
-            } catch (_eP2) {}
-            // High-visibility proof line (some consoles hide normal logs by default).
-            try {
-                console.error('[LocationWallpaper] LOCATION IMAGE CAPTURED size=' + ((b && typeof b.size === 'number') ? b.size : 'n/a') + ' type=' + type + ' location=' + (st.imageMeta ? st.imageMeta.location_number : 'n/a'));
-            } catch (_eP3) {}
-
-            try {
-                // FORCE PROOF OVERLAY: show capture in the center of the screen (z-index 1000).
-                // Click it to close.
-                var overlayId = 'lw-proof-overlay';
-                var el = document.getElementById(overlayId);
-                if (!el) {
-                    el = document.createElement('div');
-                    el.id = overlayId;
-                    el.style.position = 'fixed';
-                    el.style.left = '50%';
-                    el.style.top = '50%';
-                    el.style.transform = 'translate(-50%, -50%)';
-                    el.style.zIndex = '1000';
-                    el.style.background = 'rgba(0,0,0,0.9)';
-                    el.style.border = '1px solid rgba(255,255,255,0.25)';
-                    el.style.borderRadius = '8px';
-                    el.style.padding = '10px';
-                    el.style.width = 'min(90vw, 900px)';
-                    el.style.maxHeight = 'min(80vh, 700px)';
-                    el.style.overflow = 'hidden';
-                    el.style.boxShadow = '0 12px 50px rgba(0,0,0,0.7)';
-                    el.style.cursor = 'pointer';
-                    el.title = 'Click to close';
-
-                    var im = document.createElement('img');
-                    im.style.display = 'block';
-                    im.style.width = '100%';
-                    im.style.height = 'auto';
-                    im.style.borderRadius = '6px';
-                    el.appendChild(im);
-
-                    el.addEventListener('click', function() {
-                        try { el.remove(); } catch (_eR) {}
+            // Debug logs only when explicitly enabled (localStorage debug_locationwallpaper=1).
+            if (st.debug) {
+                try {
+                    console.log('[LocationWallpaper] LOCATION IMAGE CAPTURED', {
+                        size: (b && typeof b.size === 'number') ? b.size : null,
+                        type: type,
+                        location_number: st.imageMeta ? st.imageMeta.location_number : null
                     });
-                    document.body.appendChild(el);
-                }
-                var im2 = el.querySelector('img');
-                if (im2) im2.src = url;
-            } catch (_eP4) {}
+                } catch (_eP2) {}
+                try {
+                    console.error('[LocationWallpaper] LOCATION IMAGE CAPTURED size=' + ((b && typeof b.size === 'number') ? b.size : 'n/a') + ' type=' + type + ' location=' + (st.imageMeta ? st.imageMeta.location_number : 'n/a'));
+                } catch (_eP3) {}
+            }
         }
 
         function dataUrlToBlob(dataUrl) {
