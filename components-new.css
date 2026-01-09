@@ -722,17 +722,11 @@
 
 .component-currencyfull-menu-button-input {
     flex: 1;
-    text-align: left;
     padding-left: 10px;
-    font-size: 14px;
-    background: transparent;
-    border: none;
-    outline: none;
     min-width: 0;
 }
 
 .component-currencyfull-menu:not(.component-currencyfull-menu--open) .component-currencyfull-menu-button-input {
-    /* Clicking the button should toggle open/close; input editing is intentional. */
     pointer-events: none;
 }
 
@@ -750,7 +744,6 @@
 }
 
 .admin-language-wrapper:not(.admin-language-wrapper--open) .admin-language-button-input {
-    /* Clicking the button should toggle open/close; input editing is intentional. */
     pointer-events: none;
 }
 
@@ -764,8 +757,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
-    transition: transform 0.2s;
     cursor: pointer;
 }
 
@@ -826,7 +817,6 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    font-size: 14px;
 }
 
 .admin-language-option {
@@ -858,9 +848,7 @@
 
 .component-currencyfull-menu-option-text {
     flex: 1;
-    text-align: left;
     padding-left: 10px;
-    font-size: 14px;
 }
 
 .admin-language-option-text {
@@ -939,12 +927,7 @@
 
 .component-currencycompact-menu-button-input {
     flex: 1;
-    text-align: left;
     padding-left: 6px;
-    font-size: 12px;
-    background: transparent;
-    border: none;
-    outline: none;
     min-width: 0;
 }
 
@@ -958,8 +941,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
-    transition: transform 0.2s;
     cursor: pointer;
 }
 
@@ -981,9 +962,6 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    font-size: 13px;
-    background: transparent;
-    border: none;
 }
 
 .component-currencycompact-menu-option-image {
@@ -995,9 +973,7 @@
 
 .component-currencycompact-menu-option-text {
     flex: 1;
-    text-align: left;
     padding-left: 10px;
-    font-size: 13px;
 }
 
 /* Compact states */
@@ -1006,11 +982,9 @@
 }
 
 /* Compact override: narrow button (120px) with wide dropdown (250px).
-   - Button loses bottom border + bottom corners when open (standard menu-class-1)
-   - Dropdown has no top border under the button
-   - Pseudo-element draws top border only for the extending portion (right side) */
+   - Top-right corner is rounded (extends beyond button)
+   - Pseudo-element draws top border only for the extending portion */
 .component-currencycompact-menu.menu-class-1 .menu-options {
-    border-top: none;
     border-radius: 0 var(--menu-radius) var(--menu-radius) var(--menu-radius);
 }
 
@@ -1021,7 +995,6 @@
     left: 120px;
     right: 0;
     border-top: 1px solid var(--menu-options-border);
-    border-radius: 0 var(--menu-radius) 0 0;
 }
 
 
