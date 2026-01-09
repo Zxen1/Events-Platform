@@ -2475,7 +2475,7 @@ const FieldsetBuilder = (function(){
                 var spDatePickerRow = document.createElement('div');
                 spDatePickerRow.className = 'fieldset-sessionpricing-session-row fieldset-sessionpricing-session-row--picker';
                 var spDatePickerBox = document.createElement('div');
-                spDatePickerBox.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--picker';
+                spDatePickerBox.className = 'input-class-2 fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--picker';
                 spDatePickerBox.setAttribute('role', 'button');
                 spDatePickerBox.setAttribute('tabindex', '0');
                 spDatePickerBox.setAttribute('aria-haspopup', 'dialog');
@@ -3187,7 +3187,7 @@ const FieldsetBuilder = (function(){
                             row.className = 'fieldset-sessionpricing-session-row';
                             if (idx === 0) {
                                 var dateDisplay = document.createElement('div');
-                                dateDisplay.className = 'fieldset-sessionpricing-session-field-label';
+                                dateDisplay.className = 'input-class-2 fieldset-sessionpricing-session-field-label';
                                 var d = new Date(dateStr + 'T00:00:00');
                                 try {
                                     var wd = d.toLocaleDateString('en-AU', { weekday: 'short' });
