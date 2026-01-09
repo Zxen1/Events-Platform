@@ -7454,9 +7454,9 @@ const LocationWallpaperComponent = (function() {
 
             if (!st.map) return;
 
-            // Reveal and start orbiting once map renders
+            // Reveal and start orbiting once map tiles are loaded (not just first render)
             st.didReveal = false;
-            var onFirstRender = function() {
+            var onMapLoad = function() {
                 if (!st.map || st.didReveal) return;
                 revealMapCrossfade();
                 stopOrbit();
@@ -7464,8 +7464,9 @@ const LocationWallpaperComponent = (function() {
                 startBackgroundCaptures();
             };
 
-            try { st.map.once('render', onFirstRender); } catch (e) {}
-            st.revealTimeout = setTimeout(onFirstRender, 1200);
+            // Use 'load' event like main map - fires when tiles are ready
+            try { st.map.once('load', onMapLoad); } catch (e) {}
+            st.revealTimeout = setTimeout(onMapLoad, 3000);
         }
 
         function deactivateOrbitMode() {
@@ -7524,15 +7525,16 @@ const LocationWallpaperComponent = (function() {
 
             if (!st.map) return;
 
-            // For still mode, show the map visually while it loads
+            // For still mode, wait for tiles to load then show and capture
             st.didReveal = false;
-            var onFirstRender = function() {
+            var onMapLoad = function() {
                 if (!st.map || st.didReveal) return;
                 st.didReveal = true;
-                // Crossfade from existing image (if any) to map
+                
+                // Tiles are ready - fade in the map
                 showMap();
 
-                // Wait for map to "polish" (tiles to load), then capture
+                // Give a moment for any final polish, then capture
                 setTimeout(function() {
                     if (!st.map) return;
                     var url = captureMapToDataUrl();
@@ -7546,11 +7548,12 @@ const LocationWallpaperComponent = (function() {
                     setTimeout(function() {
                         removeMap();
                     }, 600);
-                }, STILL_POLISH_DELAY_MS);
+                }, 500); // Short delay since tiles are already loaded
             };
 
-            try { st.map.once('render', onFirstRender); } catch (e) {}
-            st.revealTimeout = setTimeout(onFirstRender, 1500);
+            // Use 'load' event like main map - fires when tiles are ready
+            try { st.map.once('load', onMapLoad); } catch (e) {}
+            st.revealTimeout = setTimeout(onMapLoad, 3000);
         }
 
         function deactivateStillMode() {
