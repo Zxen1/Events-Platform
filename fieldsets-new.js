@@ -302,10 +302,12 @@ const FieldsetBuilder = (function(){
                                 if (lngInput) lngInput.value = lng;
                                 if (countryInput) countryInput.value = cc;
                                 try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
-                                try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e4) {}
+                                // Dispatch input event for header updates
+                                try { inputElement.dispatchEvent(new Event('input', { bubbles: true })); } catch (e4) {}
+                                try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e5) {}
                                 // Also notify listeners bound to lat/lng fields (e.g. wallpaper)
-                                try { if (latInput) latInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e5) {}
-                                try { if (lngInput) lngInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e6) {}
+                                try { if (latInput) latInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e6) {}
+                                try { if (lngInput) lngInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e7) {}
                                 
                                 if (statusElement) {
                                     statusElement.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);
@@ -3655,8 +3657,9 @@ const FieldsetBuilder = (function(){
 
                                         // Mark address as Places-confirmed (required for completion)
                                         try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
-                                        // Use change so we don't trigger the address input handler.
-                                        try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                        // Dispatch change events to trigger header update and other listeners
+                                        try { smartVenueInput.dispatchEvent(new Event('input', { bubbles: true })); } catch (e1) {}
+                                        try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                                         
                                         // Update status
                                         smartStatus.textContent = '✓ Location set: ' + lat.toFixed(6) + ', ' + lng.toFixed(6);

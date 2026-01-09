@@ -3653,6 +3653,93 @@
      * @param {Function} options.onActivate - Callback when container is activated
      * @returns {Object} - { container, header, headerText, deleteBtn, content }
      */
+    /**
+     * Updates the location container header text based on venue/location input value
+     * Shows venue name (or location name if no venue) with ellipsis if too long
+     * Does NOT alter the fieldset numbering system
+     * @param {HTMLElement} container - The location container element
+     */
+    function updateLocationHeaderFromInput(container) {
+        if (!container) return;
+        
+        var headerText = container.querySelector('.member-postform-location-header-text');
+        if (!headerText) return;
+        
+        // Get the location number and type from container
+        var locationNumber = parseInt(container.dataset.locationNumber, 10) || 1;
+        var locationType = container.dataset.locationType || 'Venue';
+        
+        // Count total location containers to determine if we need numbers
+        var allContainers = document.querySelectorAll('.member-location-container');
+        var totalCount = allContainers.length;
+        
+        // Find the venue/city/address fieldset and get the location name
+        var venueFieldset = container.querySelector('.fieldset[data-fieldset-key="venue"]');
+        var cityFieldset = container.querySelector('.fieldset[data-fieldset-key="city"]');
+        var addressFieldset = container.querySelector('.fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]');
+        
+        var displayName = '';
+        
+        if (venueFieldset) {
+            // For venue fieldset, prefer venue name, fallback to address
+            var inputs = venueFieldset.querySelectorAll('input.fieldset-input');
+            var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
+            var addressName = inputs && inputs[1] ? String(inputs[1].value || '').trim() : '';
+            displayName = venueName || addressName;
+        } else if (cityFieldset) {
+            var cityInput = cityFieldset.querySelector('input.fieldset-input');
+            displayName = cityInput ? String(cityInput.value || '').trim() : '';
+        } else if (addressFieldset) {
+            var addrInput = addressFieldset.querySelector('input.fieldset-input');
+            displayName = addrInput ? String(addrInput.value || '').trim() : '';
+        }
+        
+        // If we have a display name, use it; otherwise fall back to default
+        if (displayName) {
+            // CSS handles text-overflow: ellipsis, so just set the full text
+            headerText.textContent = displayName;
+            headerText.title = displayName; // Full name on hover in case it's truncated
+        } else {
+            // Default: "Type N" when multiple, just "Type" when single
+            headerText.textContent = totalCount > 1 ? (locationType + ' ' + locationNumber) : locationType;
+            headerText.title = '';
+        }
+    }
+    
+    /**
+     * Sets up event listeners to update location header in real-time as user types
+     * @param {HTMLElement} container - The location container element
+     */
+    function setupLocationHeaderAutoUpdate(container) {
+        if (!container) return;
+        
+        var content = container.querySelector('.member-postform-location-content');
+        if (!content) return;
+        
+        // Use event delegation to catch input events on venue/city/address fields
+        content.addEventListener('input', function(e) {
+            var target = e.target;
+            if (!target || target.tagName !== 'INPUT') return;
+            
+            // Check if this input is inside a venue/city/address fieldset
+            var fieldset = target.closest('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]');
+            if (fieldset) {
+                updateLocationHeaderFromInput(container);
+            }
+        });
+        
+        // Also listen for Google Places autocomplete selections (which may not trigger input event)
+        content.addEventListener('change', function(e) {
+            var target = e.target;
+            if (!target || target.tagName !== 'INPUT') return;
+            
+            var fieldset = target.closest('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]');
+            if (fieldset) {
+                updateLocationHeaderFromInput(container);
+            }
+        });
+    }
+    
     function createLocationContainerHeader(options) {
         options = options || {};
         var locationName = options.locationName || 'Location 1';
@@ -3707,12 +3794,23 @@
         content.className = 'member-postform-location-content';
         container.appendChild(content);
         
+        // Store location type for header updates (extract type from locationName like "Venue 1" -> "Venue")
+        var locationType = locationName.replace(/\s*\d+$/, '').trim() || 'Venue';
+        container.dataset.locationType = locationType;
+        
+        // Set up real-time header updates based on venue/location input
+        // Use setTimeout to ensure content is populated before attaching listeners
+        setTimeout(function() {
+            setupLocationHeaderAutoUpdate(container);
+        }, 0);
+        
         return {
             container: container,
             header: header,
             headerText: headerText,
             deleteBtn: deleteBtn,
-            content: content
+            content: content,
+            updateHeaderFromInput: function() { updateLocationHeaderFromInput(container); }
         };
     }
     
@@ -4350,12 +4448,10 @@
             // Update container data attributes
             container.dataset.venue = String(newNumber);
             container.dataset.locationNumber = String(newNumber);
+            container.dataset.locationType = locationType;
             
-            // Update header text - always "Type N" when multiple, just "Type" when single
-            var headerText = container.querySelector('.member-postform-location-header-text');
-            if (headerText) {
-                headerText.textContent = count > 1 ? (locationType + ' ' + newNumber) : locationType;
-            }
+            // Update header text - use custom name from input if available, otherwise "Type N"
+            updateLocationHeaderFromInput(container);
             
             // Update all fieldset labels inside this container to include the location number
             var fieldsets = container.querySelectorAll('.fieldset');
