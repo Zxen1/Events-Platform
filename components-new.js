@@ -7068,40 +7068,28 @@ const LocationWallpaperComponent = (function() {
     }
 
     function getStyleUrlForWallpaper() {
-        // Match MapModule's style selection (member > localStorage > default).
-        var style = 'standard';
-        try {
-            var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
-            if (member && member.map_style) style = member.map_style;
-        } catch (e1) {}
-        try {
-            var storedStyle = localStorage.getItem('map_style');
-            if (storedStyle) style = storedStyle;
-        } catch (e2) {}
-        return (style === 'standard-satellite')
-            ? 'mapbox://styles/mapbox/standard-satellite'
-            : 'mapbox://styles/mapbox/standard';
+        // Location wallpaper always uses standard style (night lighting applied separately).
+        return 'mapbox://styles/mapbox/standard';
     }
 
     function getLightingPresetForWallpaper() {
-        // Prefer mirroring the current main map lighting preset.
-        var main = getMainMap();
-        if (main && typeof main.getConfigProperty === 'function') {
-            try {
-                var preset = main.getConfigProperty('basemap', 'lightPreset');
-                if (preset) return preset;
-            } catch (e) {}
-        }
-        // Next: member setting, then localStorage, then 'day' default (same as MapModule).
+        // Location wallpaper always uses night lighting for consistent dark aesthetic.
+        return 'night';
+    }
+
+    function applyWallpaperNoTextNoRoads(map) {
+        if (!map) return;
+        // Hide all labels and roads for clean wallpaper appearance.
         try {
-            var member = (window.MemberModule && window.MemberModule.getCurrentUser) ? window.MemberModule.getCurrentUser() : null;
-            if (member && member.map_lighting) return member.map_lighting;
-        } catch (e) {}
-        try {
-            var stored = localStorage.getItem('map_lighting');
-            if (stored) return stored;
-        } catch (e) {}
-        return 'day';
+            if (typeof map.setConfigProperty === 'function') {
+                try { map.setConfigProperty('basemap', 'showPlaceLabels', false); } catch (_e1) {}
+                try { map.setConfigProperty('basemap', 'showRoadLabels', false); } catch (_e2) {}
+                try { map.setConfigProperty('basemap', 'showPointOfInterestLabels', false); } catch (_e3) {}
+                try { map.setConfigProperty('basemap', 'showTransitLabels', false); } catch (_e4) {}
+                try { map.setConfigProperty('basemap', 'showRoads', false); } catch (_e5) {}
+                try { map.setConfigProperty('basemap', 'showTraffic', false); } catch (_e6) {}
+            }
+        } catch (_eCfg) {}
     }
 
     function attachToLocationContainer(locationContainerEl) {
@@ -7341,6 +7329,7 @@ const LocationWallpaperComponent = (function() {
                             st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
                         }
                     } catch (eLP) {}
+                    try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNR1) {}
                 });
             }
         }
@@ -7389,13 +7378,14 @@ const LocationWallpaperComponent = (function() {
 
                 ensureResizeObserver();
 
-                // Apply lighting preset early on style.load (mirrors MapModule approach).
+                // Apply lighting preset and hide labels/roads on style.load.
                 st.map.once('style.load', function() {
                     try {
                         if (st.map && typeof st.map.setConfigProperty === 'function') {
                             st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
                         }
                     } catch (eLP) {}
+                    try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNR2) {}
                 });
 
                 // Position at desired camera (no animation) before reveal.
