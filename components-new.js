@@ -7274,6 +7274,9 @@ const LocationWallpaperComponent = (function() {
             st.imageUrl = url || '';
             dbg('setImageUrl', st.imageUrl ? ('len=' + String(st.imageUrl).length) : '(empty)');
             if (st.imageUrl) {
+                // If we previously hid the wallpaper root (no map + no image),
+                // make sure the new image becomes visible immediately.
+                try { root.style.display = ''; } catch (_eShow) {}
                 img.src = st.imageUrl;
                 img.style.display = '';
             } else {
@@ -7336,12 +7339,43 @@ const LocationWallpaperComponent = (function() {
             } catch (_eP3) {}
 
             try {
-                // Optional: auto-open the captured image in a new tab for proof (off by default).
-                // Enable by setting: localStorage.setItem('lw_open_capture','1')
-                if (localStorage.getItem('lw_open_capture') === '1' && st.mode === 'still' && !window.__lw_openedCaptureOnce && window.LocationWallpaperComponent && typeof LocationWallpaperComponent.openLastCapture === 'function') {
-                    window.__lw_openedCaptureOnce = true;
-                    LocationWallpaperComponent.openLastCapture();
+                // FORCE PROOF OVERLAY: show capture in the center of the screen (z-index 1000).
+                // Click it to close.
+                var overlayId = 'lw-proof-overlay';
+                var el = document.getElementById(overlayId);
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = overlayId;
+                    el.style.position = 'fixed';
+                    el.style.left = '50%';
+                    el.style.top = '50%';
+                    el.style.transform = 'translate(-50%, -50%)';
+                    el.style.zIndex = '1000';
+                    el.style.background = 'rgba(0,0,0,0.9)';
+                    el.style.border = '1px solid rgba(255,255,255,0.25)';
+                    el.style.borderRadius = '8px';
+                    el.style.padding = '10px';
+                    el.style.width = 'min(90vw, 900px)';
+                    el.style.maxHeight = 'min(80vh, 700px)';
+                    el.style.overflow = 'hidden';
+                    el.style.boxShadow = '0 12px 50px rgba(0,0,0,0.7)';
+                    el.style.cursor = 'pointer';
+                    el.title = 'Click to close';
+
+                    var im = document.createElement('img');
+                    im.style.display = 'block';
+                    im.style.width = '100%';
+                    im.style.height = 'auto';
+                    im.style.borderRadius = '6px';
+                    el.appendChild(im);
+
+                    el.addEventListener('click', function() {
+                        try { el.remove(); } catch (_eR) {}
+                    });
+                    document.body.appendChild(el);
                 }
+                var im2 = el.querySelector('img');
+                if (im2) im2.src = url;
             } catch (_eP4) {}
         }
 
