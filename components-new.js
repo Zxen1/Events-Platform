@@ -7118,7 +7118,7 @@ const LocationWallpaperComponent = (function() {
         var mapMount = document.createElement('div');
         mapMount.className = 'component-locationwallpaper-mapmount';
         mapMount.style.opacity = '0';
-        mapMount.style.transition = 'opacity 0.5s ease';
+        mapMount.style.transition = 'opacity 0.8s ease';
 
         var img = document.createElement('img');
         img.className = 'component-locationwallpaper-image';
@@ -7126,10 +7126,20 @@ const LocationWallpaperComponent = (function() {
         img.decoding = 'sync';
         img.loading = 'eager';
         img.style.opacity = '0';
-        img.style.transition = 'opacity 0.5s ease';
+        img.style.transition = 'opacity 0.8s ease';
 
         root.appendChild(mapMount);
         root.appendChild(img);
+
+        // Apply dimmer setting from admin
+        var dimmerValue = 30; // Default 30%
+        try {
+            var settings = App.getState('settings') || {};
+            if (settings.location_wallpaper_dimmer !== undefined) {
+                dimmerValue = parseInt(settings.location_wallpaper_dimmer, 10) || 30;
+            }
+        } catch (e) {}
+        root.style.setProperty('--locationwallpaper-dimmer', (dimmerValue / 100).toString());
 
         // Insert as first child so z-index rules can lift everything else above it.
         contentEl.insertBefore(root, contentEl.firstChild || null);

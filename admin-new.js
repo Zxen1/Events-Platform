@@ -2202,6 +2202,23 @@ const AdminModule = (function() {
             });
         }
         
+        // Location Wallpaper Dimmer slider
+        var wallpaperDimmerSlider = document.getElementById('adminLocationWallpaperDimmer');
+        var wallpaperDimmerDisplay = document.getElementById('adminLocationWallpaperDimmerDisplay');
+        if (wallpaperDimmerSlider && wallpaperDimmerDisplay) {
+            var initialDimmer = mapTabData.location_wallpaper_dimmer !== undefined ? parseInt(mapTabData.location_wallpaper_dimmer, 10) : 30;
+            wallpaperDimmerSlider.value = initialDimmer;
+            wallpaperDimmerDisplay.textContent = initialDimmer + '%';
+            
+            registerField('map.location_wallpaper_dimmer', initialDimmer);
+            
+            wallpaperDimmerSlider.addEventListener('input', function() {
+                var val = parseInt(wallpaperDimmerSlider.value, 10);
+                wallpaperDimmerDisplay.textContent = val + '%';
+                updateField('map.location_wallpaper_dimmer', val);
+            });
+        }
+        
         // Initialize Starting Location Geocoder
         initStartingLocationGeocoder();
         
@@ -2329,7 +2346,8 @@ const AdminModule = (function() {
             { id: 'adminStartingZoom', displayId: 'adminStartingZoomDisplay', fieldId: 'map.starting_zoom', format: 'int' },
             { id: 'adminStartingPitch', displayId: 'adminStartingPitchDisplay', fieldId: 'map.starting_pitch', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
-            { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' }
+            { id: 'adminSpinSpeed', displayId: 'adminSpinSpeedDisplay', fieldId: 'map.spin_speed', format: 'decimal1' },
+            { id: 'adminLocationWallpaperDimmer', displayId: 'adminLocationWallpaperDimmerDisplay', fieldId: 'map.location_wallpaper_dimmer', format: 'percent' }
         ];
         
         sliders.forEach(function(s) {
@@ -2346,6 +2364,8 @@ const AdminModule = (function() {
                     display.textContent = parseFloat(entry.original).toFixed(1);
                 } else if (s.format === 'decimal2') {
                     display.textContent = parseFloat(entry.original).toFixed(2);
+                } else if (s.format === 'percent') {
+                    display.textContent = Math.round(entry.original).toString() + '%';
                 }
             }
         });

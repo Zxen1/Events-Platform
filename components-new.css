@@ -3298,14 +3298,29 @@
     pointer-events: none;
     border-radius: 0 0 5px 5px;
     opacity: var(--locationwallpaper-opacity, 1);
+    overflow: hidden; /* Clip the 200px buffer */
+}
+
+/* Dimmer overlay - controlled by admin setting */
+.component-locationwallpaper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, var(--locationwallpaper-dimmer, 0.3));
+    z-index: 10;
+    pointer-events: none;
+    border-radius: inherit;
 }
 
 .component-locationwallpaper-mapmount,
 .component-locationwallpaper-image {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: -200px; /* 200px buffer underneath to prevent flicker on resize */
     opacity: 0;
-    transition: opacity 0.5s ease;
+    transition: opacity 0.8s ease;
     will-change: opacity;
 }
 
@@ -3315,7 +3330,7 @@
 
 .component-locationwallpaper-image {
     width: 100%;
-    height: 100%;
+    height: calc(100% + 200px); /* Match the buffer */
     object-fit: cover;
     z-index: 2; /* Image layers on top of map for seamless crossfade */
 }
