@@ -1094,6 +1094,11 @@
     flex-shrink: 0;
 }
 
+/* Menu-class-1: stop the dropdown top border line under the compact button (120px wide) */
+.component-phoneprefixcompact-menu.menu-class-1 {
+    --menu-options-topline-left: 120px;
+}
+
 .component-phoneprefixcompact-menu-button {
     width: 120px;
     height: 36px;
