@@ -7312,6 +7312,24 @@ const LocationWallpaperComponent = (function() {
             try { url = URL.createObjectURL(b); } catch (eU) { url = ''; }
             if (!url) return;
             setImageUrl(url);
+
+            // Proof/debug: expose last successful capture globally (no UI changes).
+            try {
+                window.__lw_lastCapture = {
+                    file: file,
+                    meta: st.imageMeta,
+                    url: url,
+                    size: (b && typeof b.size === 'number') ? b.size : null,
+                    type: type
+                };
+            } catch (_eP) {}
+            try {
+                console.log('[LocationWallpaper] LOCATION IMAGE CAPTURED', {
+                    size: (b && typeof b.size === 'number') ? b.size : null,
+                    type: type,
+                    location_number: st.imageMeta ? st.imageMeta.location_number : null
+                });
+            } catch (_eP2) {}
         }
 
         function dataUrlToBlob(dataUrl) {
@@ -7738,9 +7756,9 @@ const LocationWallpaperComponent = (function() {
 
             function captureToBlob(cb) {
                 if (!canvas) return cb(null);
-                // Avoid capturing before Mapbox is ready (common early black frames).
-                try { if (st.map && typeof st.map.loaded === 'function' && !st.map.loaded()) return cb(null); } catch (_eLd2) {}
-                try { if (st.map && typeof st.map.areTilesLoaded === 'function' && !st.map.areTilesLoaded()) return cb(null); } catch (_eTl2) {}
+                // NOTE: Do NOT require areTilesLoaded()/loaded() here.
+                // In practice those can remain false for a long time (especially after we hide roads/labels),
+                // causing "no capture ever". We only require a non-blank rendered frame.
                 if (!isCanvasFrameNonBlank()) return cb(null);
 
                 // Prefer toBlob for "proper" asset handling.
@@ -7782,7 +7800,10 @@ const LocationWallpaperComponent = (function() {
             // Unified freeze state machine:
             // - We allow a very small time budget to capture (so we never keep maps alive on deactivate).
             // - If capture fails within budget, we remove the map and show previous image (or hide wallpaper).
-            var budgetMs = 420; // hard cap to avoid multiple maps running
+            // Capture budget:
+            // - orbit mode: must be very fast (user may click into the next container immediately)
+            // - still mode: map is hidden and intended to become an image; allow more time to succeed
+            var budgetMs = (st.mode === 'still') ? 1800 : 420;
             var startMs = Date.now();
             var attempts = 0;
 
