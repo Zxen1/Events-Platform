@@ -6995,11 +6995,13 @@ const AgeRatingComponent = (function(){
 /* ============================================================================
    LOCATION WALLPAPER (Member-only, location containers)
    ============================================================================
-   - One Mapbox instance at a time (only the active location container).
-   - When container deactivates: capture a "location image" (in-browser only),
-     store camera, remove the map.
-   - When container reactivates: recreate map hidden, jumpTo camera, wait idle,
-     then cross-fade from the location image to the live map (no black flash).
+   Modes (admin setting: location_wallpaper_mode):
+   - "off": No wallpaper shown
+   - "orbit": Live orbiting map while container is active; continuous background
+              captures every few seconds; on click-away, stop orbit but keep map
+              running briefly, show pre-captured image, then lazy cleanup
+   - "still": Show map visually while loading, wait for full render, capture
+              and swap to static image
    ============================================================================ */
 
 const LocationWallpaperComponent = (function() {
@@ -7009,6 +7011,13 @@ const LocationWallpaperComponent = (function() {
     var activeContainerEl = null;
     var docListenerInstalled = false;
     var didPrewarm = false;
+
+    // Background capture interval (ms) for orbit mode
+    var CAPTURE_INTERVAL_MS = 3000;
+    // Grace period before removing map after click-away (ms)
+    var CLEANUP_DELAY_MS = 2000;
+    // Still mode: wait this long for map to "polish" before capturing (ms)
+    var STILL_POLISH_DELAY_MS = 1500;
 
     function safeNum(v) {
         var n = parseFloat(String(v || '').trim());
@@ -7021,6 +7030,18 @@ const LocationWallpaperComponent = (function() {
         } catch (e) {
             return false;
         }
+    }
+
+    function getWallpaperMode() {
+        // Source of truth: admin_settings -> App state -> get-admin-settings payload
+        try {
+            if (window.App && typeof App.getState === 'function') {
+                var s = App.getState('settings');
+                var v = s ? String(s.location_wallpaper_mode || '').trim().toLowerCase() : '';
+                if (v === 'orbit' || v === 'still' || v === 'off') return v;
+            }
+        } catch (e) {}
+        return 'off';
     }
 
     function getLocationTypeFromContainer(containerEl) {
@@ -7056,15 +7077,6 @@ const LocationWallpaperComponent = (function() {
         } catch (e) {
             return null;
         }
-    }
-
-    function getMainMap() {
-        try {
-            if (window.MapModule && typeof MapModule.getMap === 'function') {
-                return MapModule.getMap();
-            }
-        } catch (e) {}
-        return null;
     }
 
     function getStyleUrlForWallpaper() {
@@ -7109,8 +7121,8 @@ const LocationWallpaperComponent = (function() {
         var img = document.createElement('img');
         img.className = 'component-locationwallpaper-image';
         img.alt = '';
-        img.decoding = 'async';
-        img.loading = 'lazy';
+        img.decoding = 'sync';
+        img.loading = 'eager';
 
         root.appendChild(mapMount);
         root.appendChild(img);
@@ -7126,17 +7138,21 @@ const LocationWallpaperComponent = (function() {
             lastLng: null,
             savedCamera: null,
             imageUrl: '',
+            latestCaptureUrl: '',  // Most recent background capture (orbit mode)
             reducedMotion: prefersReducedMotion(),
             pendingRevealTimer: null,
             resizeObs: null,
             resizeRaf: 0,
-            prewarmDone: false,
             minHeightLocked: false,
             didReveal: false,
-            revealTimeout: null
+            revealTimeout: null,
+            captureIntervalId: null,
+            cleanupTimeoutId: null,
+            mode: 'off',
+            isActive: false
         };
 
-        function clearRevealTimers() {
+        function clearAllTimers() {
             if (st.pendingRevealTimer) {
                 clearTimeout(st.pendingRevealTimer);
                 st.pendingRevealTimer = null;
@@ -7145,11 +7161,23 @@ const LocationWallpaperComponent = (function() {
                 clearTimeout(st.revealTimeout);
                 st.revealTimeout = null;
             }
+            if (st.captureIntervalId) {
+                clearInterval(st.captureIntervalId);
+                st.captureIntervalId = null;
+            }
+            if (st.cleanupTimeoutId) {
+                clearTimeout(st.cleanupTimeoutId);
+                st.cleanupTimeoutId = null;
+            }
         }
 
         function setImageUrl(url) {
             try {
-                if (st.imageUrl) URL.revokeObjectURL(st.imageUrl);
+                if (st.imageUrl && st.imageUrl.indexOf('data:') === 0) {
+                    // Data URLs don't need revoking
+                } else if (st.imageUrl) {
+                    URL.revokeObjectURL(st.imageUrl);
+                }
             } catch (e) {}
             st.imageUrl = url || '';
             if (st.imageUrl) {
@@ -7162,18 +7190,24 @@ const LocationWallpaperComponent = (function() {
         }
 
         function showImage() {
+            // Show image layer, hide map layer
             root.classList.remove('component-locationwallpaper--map-visible');
             img.style.display = st.imageUrl ? '' : 'none';
         }
 
-        function revealMapCrossfade() {
-            // Cross-fade: keep location image visible while map loads hidden, then fade map in.
+        function showMap() {
+            // Show map layer, hide image layer
             st.didReveal = true;
             root.classList.add('component-locationwallpaper--map-visible');
-            clearRevealTimers();
+            img.style.display = 'none';
+        }
+
+        function revealMapCrossfade() {
+            st.didReveal = true;
+            root.classList.add('component-locationwallpaper--map-visible');
+            // Keep image visible briefly for crossfade, then hide
             st.pendingRevealTimer = setTimeout(function() {
-                // Once map is visible, hide the image (keeps DOM stable).
-                try { if (img) img.style.display = 'none'; } catch (e) {}
+                try { img.style.display = 'none'; } catch (e) {}
             }, 260);
         }
 
@@ -7192,8 +7226,50 @@ const LocationWallpaperComponent = (function() {
             }
         }
 
+        function captureMapToDataUrl() {
+            if (!st.map) return null;
+            var canvas = null;
+            try { canvas = st.map.getCanvas(); } catch (e) { return null; }
+            if (!canvas) return null;
+
+            var dataUrl = '';
+            try { dataUrl = canvas.toDataURL('image/webp', 0.85); } catch (e1) { dataUrl = ''; }
+            if (!dataUrl || dataUrl.indexOf('data:image') !== 0) {
+                try { dataUrl = canvas.toDataURL('image/jpeg', 0.85); } catch (e2) { dataUrl = ''; }
+            }
+            if (dataUrl && dataUrl.indexOf('data:image') === 0) {
+                return dataUrl;
+            }
+            return null;
+        }
+
+        function doBackgroundCapture() {
+            // Called periodically during orbit mode to keep a fresh capture ready
+            if (!st.map || !st.isActive) return;
+            var url = captureMapToDataUrl();
+            if (url) {
+                st.latestCaptureUrl = url;
+            }
+        }
+
+        function startBackgroundCaptures() {
+            if (st.captureIntervalId) return;
+            st.captureIntervalId = setInterval(doBackgroundCapture, CAPTURE_INTERVAL_MS);
+            // Do an immediate capture as well
+            doBackgroundCapture();
+        }
+
+        function stopBackgroundCaptures() {
+            if (st.captureIntervalId) {
+                clearInterval(st.captureIntervalId);
+                st.captureIntervalId = null;
+            }
+        }
+
         function stopOrbit() {
             st.orbiting = false;
+            // Stop the map's current animation
+            try { if (st.map && typeof st.map.stop === 'function') st.map.stop(); } catch (e) {}
         }
 
         function startOrbit(baseZoom) {
@@ -7218,7 +7294,6 @@ const LocationWallpaperComponent = (function() {
                 try {
                     st.map.easeTo(opts);
                 } catch (e2) {
-                    // If easeTo fails (rare), stop orbit rather than thrash.
                     st.orbiting = false;
                     return;
                 }
@@ -7245,14 +7320,11 @@ const LocationWallpaperComponent = (function() {
         }
 
         function ensureMinHeightLocked() {
-            // One-time: lock min-height to the current width (prevents tiny 36px tall containers).
-            // We intentionally do NOT keep updating this on resize to avoid jitter.
             if (st.minHeightLocked) return;
             var w = 0;
             try { w = contentEl.getBoundingClientRect().width || 0; } catch (e) { w = 0; }
             w = Math.max(0, Math.round(w));
             if (!w) {
-                // Try again next frame (layout may not be settled yet on activation).
                 requestAnimationFrame(function() {
                     if (st.minHeightLocked) return;
                     var w2 = 0;
@@ -7269,242 +7341,285 @@ const LocationWallpaperComponent = (function() {
             st.minHeightLocked = true;
         }
 
-        function getPrewarmCamera() {
-            // Use main map camera if available; otherwise a safe default.
+        function createMap(camera) {
+            if (st.map) return;
+            if (!window.mapboxgl || !mapboxgl.accessToken) return;
+
+            mapMount.innerHTML = '';
             try {
-                if (window.MapModule && typeof MapModule.getMapState === 'function') {
-                    var s = MapModule.getMapState();
-                    if (s && Array.isArray(s.center) && s.center.length === 2) {
-                        return {
-                            center: s.center,
-                            zoom: Math.max(1, (typeof s.zoom === 'number' ? s.zoom : 2)),
-                            pitch: 0,
-                            bearing: 0
-                        };
+                st.map = new mapboxgl.Map({
+                    container: mapMount,
+                    style: getStyleUrlForWallpaper(),
+                    projection: 'globe',
+                    center: camera.center,
+                    zoom: camera.zoom,
+                    pitch: camera.pitch || 0,
+                    bearing: camera.bearing || 0,
+                    interactive: false,
+                    attributionControl: false,
+                    renderWorldCopies: false,
+                    antialias: false,
+                    pixelRatio: 1,
+                    preserveDrawingBuffer: true
+                });
+            } catch (eMap) {
+                st.map = null;
+                return;
+            }
+
+            ensureResizeObserver();
+
+            st.map.once('style.load', function() {
+                try {
+                    if (st.map && typeof st.map.setConfigProperty === 'function') {
+                        st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
                     }
-                }
-            } catch (e) {}
-            return { center: [0, 0], zoom: 1.5, pitch: 0, bearing: 0 };
+                } catch (eLP) {}
+                try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNR) {}
+            });
         }
 
-        function ensurePrewarmMap() {
-            // Create a hidden map ASAP on container activation to warm style/tiles/WebGL.
-            if (st.prewarmDone) return;
-            st.prewarmDone = true;
-            if (!window.mapboxgl) return;
-            if (!mapboxgl.accessToken) return;
+        function removeMap() {
+            stopOrbit();
+            stopBackgroundCaptures();
+            try { if (st.map) st.map.remove(); } catch (e) {}
+            st.map = null;
+        }
 
-            // No visual reveal here; we just warm caches.
-            showImage();
+        function lazyCleanup() {
+            // Called after grace period to remove the map
+            if (st.cleanupTimeoutId) {
+                clearTimeout(st.cleanupTimeoutId);
+                st.cleanupTimeoutId = null;
+            }
+            removeMap();
+        }
 
-            if (!st.map) {
-                mapMount.innerHTML = '';
-                var pre = getPrewarmCamera();
-                try {
-                    st.map = new mapboxgl.Map({
-                        container: mapMount,
-                        style: getStyleUrlForWallpaper(),
-                        projection: 'globe',
-                        center: pre.center,
-                        zoom: pre.zoom,
-                        pitch: pre.pitch || 0,
-                        bearing: pre.bearing || 0,
-                        interactive: false,
-                        attributionControl: false,
-                        renderWorldCopies: false,
-                        antialias: false,
-                        pixelRatio: 1,
-                        preserveDrawingBuffer: true
-                    });
-                } catch (eMap) {
-                    st.map = null;
-                    return;
-                }
+        function scheduleLazyCleanup() {
+            if (st.cleanupTimeoutId) return; // Already scheduled
+            st.cleanupTimeoutId = setTimeout(lazyCleanup, CLEANUP_DELAY_MS);
+        }
 
-                ensureResizeObserver();
-
-                st.map.once('style.load', function() {
-                    try {
-                        if (st.map && typeof st.map.setConfigProperty === 'function') {
-                            st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
-                        }
-                    } catch (eLP) {}
-                    try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNR1) {}
-                });
+        function cancelLazyCleanup() {
+            if (st.cleanupTimeoutId) {
+                clearTimeout(st.cleanupTimeoutId);
+                st.cleanupTimeoutId = null;
             }
         }
 
-        function ensureMapAndStart(lat, lng) {
-            if (!window.mapboxgl) return;
-            if (!mapboxgl.accessToken) return;
+        // ============================================================
+        // ORBIT MODE
+        // ============================================================
+        function startOrbitMode(lat, lng) {
+            cancelLazyCleanup();
+            st.isActive = true;
 
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var desired = getDefaultCameraForType(locationType, [lng, lat]);
 
-            // If we have a saved camera for this exact lat/lng, resume ONLY the bearing.
-            // Zoom + pitch stay standardized to defaults (user requested 17 zoom / 70° pitch).
+            // Resume bearing if same location
             if (st.savedCamera && st.lastLat === lat && st.lastLng === lng) {
                 if (typeof st.savedCamera.bearing === 'number') {
                     desired.bearing = st.savedCamera.bearing;
                 }
             }
 
-            // Keep the location image visible while we (re)create the map hidden.
-            showImage();
+            // If we have a pre-captured image, show it while map loads
+            if (st.latestCaptureUrl) {
+                setImageUrl(st.latestCaptureUrl);
+                showImage();
+            }
 
-            // Recreate map if missing
             if (!st.map) {
-                mapMount.innerHTML = '';
-                try {
-                    st.map = new mapboxgl.Map({
-                        container: mapMount,
-                        style: getStyleUrlForWallpaper(),
-                        projection: 'globe',
-                        center: desired.center,
-                        zoom: Math.max(0, (desired.zoom || 0) - 0.25),
-                        pitch: desired.pitch || 0,
-                        bearing: desired.bearing || 0,
-                        interactive: false,
-                        attributionControl: false,
-                        renderWorldCopies: false,
-                        antialias: false,
-                        pixelRatio: 1,
-                        preserveDrawingBuffer: true
-                    });
-                } catch (eMap) {
-                    st.map = null;
-                    return;
-                }
-
-                ensureResizeObserver();
-
-                // Apply lighting preset and hide labels/roads on style.load.
-                st.map.once('style.load', function() {
-                    try {
-                        if (st.map && typeof st.map.setConfigProperty === 'function') {
-                            st.map.setConfigProperty('basemap', 'lightPreset', getLightingPresetForWallpaper());
-                        }
-                    } catch (eLP) {}
-                    try { applyWallpaperNoTextNoRoads(st.map); } catch (_eNR2) {}
-                });
-
-                // Position at desired camera (no animation) before reveal.
-                try { st.map.jumpTo(desired); } catch (eJT) {}
-
-                // Reveal quickly: waiting for `idle` can take 20-30s on slow connections.
-                // We reveal on first render (first painted frame), with a short timeout fallback.
-                st.didReveal = false;
-                try {
-                    st.map.once('render', function() {
-                        if (!st.map || st.didReveal) return;
-                        revealMapCrossfade();
-                        stopOrbit();
-                        startOrbit(desired.zoom);
-                    });
-                } catch (eR0) {}
-                st.revealTimeout = setTimeout(function() {
-                    if (!st.map || st.didReveal) return;
-                    revealMapCrossfade();
-                    stopOrbit();
-                    startOrbit(desired.zoom);
-                }, 1200);
+                createMap(desired);
             } else {
-                // Map already exists: just jump to new location and keep it live.
-                try { st.map.jumpTo(desired); } catch (eJ2) {}
+                try { st.map.jumpTo(desired); } catch (e) {}
+            }
+
+            if (!st.map) return;
+
+            // Reveal and start orbiting once map renders
+            st.didReveal = false;
+            var onFirstRender = function() {
+                if (!st.map || st.didReveal) return;
                 revealMapCrossfade();
-                // If this map came from prewarm, orbit may not have started yet.
                 stopOrbit();
                 startOrbit(desired.zoom);
-            }
+                startBackgroundCaptures();
+            };
+
+            try { st.map.once('render', onFirstRender); } catch (e) {}
+            st.revealTimeout = setTimeout(onFirstRender, 1200);
         }
 
-        function freezeToLocationImage() {
+        function deactivateOrbitMode() {
+            st.isActive = false;
             stopOrbit();
-            clearRevealTimers();
+            stopBackgroundCaptures();
 
-            if (!st.map) {
-                return;
-            }
-
-            // Store camera now (for seamless resume).
+            // Save camera for resume
             st.savedCamera = getMapCamera();
 
-            var canvas = null;
-            try { canvas = st.map.getCanvas(); } catch (e) { canvas = null; }
-            if (!canvas) {
-                try { st.map.remove(); } catch (e2) {}
-                st.map = null;
+            // Immediately show the pre-captured image
+            if (st.latestCaptureUrl) {
+                setImageUrl(st.latestCaptureUrl);
+            } else {
+                // No capture available, do a final capture now
+                var url = captureMapToDataUrl();
+                if (url) {
+                    setImageUrl(url);
+                    st.latestCaptureUrl = url;
+                }
+            }
+            showImage();
+
+            // Schedule lazy cleanup - map stays alive briefly in case user clicks back
+            scheduleLazyCleanup();
+        }
+
+        // ============================================================
+        // STILL MODE
+        // ============================================================
+        function startStillMode(lat, lng) {
+            cancelLazyCleanup();
+            st.isActive = true;
+
+            var locationType = getLocationTypeFromContainer(locationContainerEl);
+            var desired = getDefaultCameraForType(locationType, [lng, lat]);
+
+            // If we already have a captured image for this location, show it
+            if (st.latestCaptureUrl && st.lastLat === lat && st.lastLng === lng) {
+                setImageUrl(st.latestCaptureUrl);
                 showImage();
                 return;
             }
 
-            // Stop any camera transition immediately so we capture a stable frame.
-            try { if (st.map && typeof st.map.stop === 'function') st.map.stop(); } catch (eStop) {}
+            // Show existing image while new one loads
+            if (st.latestCaptureUrl) {
+                setImageUrl(st.latestCaptureUrl);
+            }
 
-            // Capture on the next animation frame to avoid freezing a "not yet rendered" frame (black).
-            // This is still fast enough to guarantee we never run two wallpaper maps concurrently.
-            requestAnimationFrame(function() {
-                if (!canvas) return;
-                var dataUrl = '';
-                try { dataUrl = canvas.toDataURL('image/webp', 0.82); } catch (eDU1) { dataUrl = ''; }
-                if (!dataUrl) {
-                    try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (eDU2) { dataUrl = ''; }
-                }
-                if (dataUrl && dataUrl.indexOf('data:image') === 0) {
-                    setImageUrl(dataUrl);
-                }
-                try { if (st.map) st.map.remove(); } catch (eRM) {}
-                st.map = null;
-                showImage();
-            });
+            if (!st.map) {
+                createMap(desired);
+            } else {
+                try { st.map.jumpTo(desired); } catch (e) {}
+            }
+
+            if (!st.map) return;
+
+            // For still mode, show the map visually while it loads
+            st.didReveal = false;
+            var onFirstRender = function() {
+                if (!st.map || st.didReveal) return;
+                st.didReveal = true;
+                showMap();
+
+                // Wait for map to "polish" (tiles to load), then capture
+                setTimeout(function() {
+                    if (!st.map) return;
+                    var url = captureMapToDataUrl();
+                    if (url) {
+                        st.latestCaptureUrl = url;
+                        setImageUrl(url);
+                    }
+                    showImage();
+                    // In still mode, we can remove the map immediately after capture
+                    removeMap();
+                }, STILL_POLISH_DELAY_MS);
+            };
+
+            try { st.map.once('render', onFirstRender); } catch (e) {}
+            st.revealTimeout = setTimeout(onFirstRender, 1500);
         }
 
-        function refreshFromFieldsIfActive() {
-            // Only start while this container is active.
+        function deactivateStillMode() {
+            st.isActive = false;
+            // In still mode the map should already be removed after capture
+            // Just ensure we're showing the image
+            showImage();
+            removeMap();
+        }
+
+        // ============================================================
+        // PUBLIC API
+        // ============================================================
+        function refresh() {
+            // Called when container becomes active or lat/lng changes
             if (locationContainerEl.getAttribute('data-active') !== 'true') return;
 
-            // Lock min-height on first activation so the wallpaper has enough vertical room.
+            var mode = getWallpaperMode();
+            st.mode = mode;
+
+            if (mode === 'off') {
+                // Hide everything
+                clearAllTimers();
+                removeMap();
+                setImageUrl('');
+                try { root.style.display = 'none'; } catch (e) {}
+                return;
+            }
+
+            try { root.style.display = ''; } catch (e) {}
             ensureMinHeightLocked();
 
             var ll = readLatLng(locationContainerEl);
             if (!ll) {
-                // Still prewarm immediately on activation (faster when lat/lng arrives).
-                ensurePrewarmMap();
+                // No location yet - nothing to show
                 return;
             }
 
             var lat = ll.lat;
             var lng = ll.lng;
 
-            // If location changed, reset saved camera (new anchor).
+            // Track if location changed
             var changed = (st.lastLat !== lat || st.lastLng !== lng);
             st.lastLat = lat;
             st.lastLng = lng;
-            if (changed) st.savedCamera = null;
+            if (changed) {
+                st.savedCamera = null;
+                st.latestCaptureUrl = '';
+            }
 
-            ensureMapAndStart(lat, lng);
+            if (mode === 'orbit') {
+                startOrbitMode(lat, lng);
+            } else if (mode === 'still') {
+                startStillMode(lat, lng);
+            }
+        }
+
+        function freeze() {
+            // Called when user clicks away from container
+            var mode = st.mode;
+            if (mode === 'orbit') {
+                deactivateOrbitMode();
+            } else if (mode === 'still') {
+                deactivateStillMode();
+            } else {
+                // Off mode - just clean up
+                clearAllTimers();
+                removeMap();
+            }
         }
 
         function destroy() {
-            clearRevealTimers();
-            stopOrbit();
-            try { if (st.map) st.map.remove(); } catch (e) {}
-            st.map = null;
+            clearAllTimers();
+            removeMap();
             try {
                 if (st.resizeObs) st.resizeObs.disconnect();
-            } catch (e2) {}
+            } catch (e) {}
             st.resizeObs = null;
             if (st.resizeRaf) cancelAnimationFrame(st.resizeRaf);
             st.resizeRaf = 0;
             setImageUrl('');
-            try { contentEl.classList.remove('member-postform-location-content--locationwallpaper'); } catch (e3) {}
-            try { if (root && root.parentNode) root.parentNode.removeChild(root); } catch (e4) {}
+            st.latestCaptureUrl = '';
+            try { contentEl.classList.remove('member-postform-location-content--locationwallpaper'); } catch (e) {}
+            try { if (root && root.parentNode) root.parentNode.removeChild(root); } catch (e) {}
         }
 
         return {
             element: root,
-            refresh: refreshFromFieldsIfActive,
-            freeze: freezeToLocationImage,
+            refresh: refresh,
+            freeze: freeze,
             destroy: destroy
         };
     }
@@ -7521,8 +7636,9 @@ const LocationWallpaperComponent = (function() {
 
     function handleActiveContainerChange(rootEl, clickedContainerEl) {
         // Called from FormBuilder's centralized container click tracking.
-        // If a location container is active -> ensure wallpaper starts/resumes there.
-        // Otherwise -> freeze the previously active wallpaper (if any).
+        var mode = getWallpaperMode();
+        if (mode === 'off') return;
+
         var nextLocationContainer = null;
         try {
             if (clickedContainerEl && clickedContainerEl.classList && clickedContainerEl.classList.contains('member-location-container')) {
@@ -7530,18 +7646,19 @@ const LocationWallpaperComponent = (function() {
             }
         } catch (e) {}
 
-        // Clicking inside the already-active container should NOT re-refresh the wallpaper,
-        // otherwise the camera gets jumpTo()'d back to defaults (looks like "reset orbit").
+        // Clicking inside the already-active container should NOT re-refresh
         if (nextLocationContainer && activeContainerEl && nextLocationContainer === activeContainerEl && activeCtrl) {
             return;
         }
 
+        // Freeze previous container's wallpaper
         if (activeCtrl && (!nextLocationContainer || activeCtrl !== (nextLocationContainer.__locationWallpaperCtrl || null))) {
             try { activeCtrl.freeze(); } catch (e2) {}
             activeCtrl = null;
             activeContainerEl = null;
         }
 
+        // Activate new container's wallpaper
         if (nextLocationContainer) {
             var ctrl = getOrCreateCtrl(nextLocationContainer);
             activeCtrl = ctrl;
@@ -7557,7 +7674,10 @@ const LocationWallpaperComponent = (function() {
             rootEl.__locationWallpaperInstalled = true;
         } catch (e) {}
 
-        // One-time Mapbox prewarm (if supported) to speed up first map creation.
+        var mode = getWallpaperMode();
+        if (mode === 'off') return;
+
+        // One-time Mapbox prewarm
         if (!didPrewarm) {
             didPrewarm = true;
             try {
@@ -7567,8 +7687,7 @@ const LocationWallpaperComponent = (function() {
             } catch (_ePW) {}
         }
 
-        // Global: clicking anywhere outside the active location container freezes the wallpaper.
-        // We intentionally ignore Google Places dropdown clicks (pac-container lives in <body>).
+        // Global click handler for click-away detection
         if (!docListenerInstalled) {
             docListenerInstalled = true;
             document.addEventListener('click', function(e) {
@@ -7576,6 +7695,7 @@ const LocationWallpaperComponent = (function() {
                 var t = e && e.target ? e.target : null;
                 if (!t || !(t instanceof Element)) return;
                 if (t.closest && t.closest('.pac-container')) return;
+                if (t.closest && t.closest('.fieldset-location-dropdown')) return;
                 if (activeContainerEl.contains(t)) return;
                 try { activeCtrl.freeze(); } catch (_eF) {}
                 activeCtrl = null;
@@ -7583,16 +7703,14 @@ const LocationWallpaperComponent = (function() {
             }, true);
         }
 
-        // When lat/lng are confirmed/updated, refresh the active container wallpaper.
+        // Listen for lat/lng changes
         rootEl.addEventListener('change', function(e) {
             if (!activeCtrl) return;
             var t = e && e.target ? e.target : null;
             if (!t || !(t instanceof Element)) return;
-            // Only react to changes coming from inside the active location container.
             var activeContainer = t.closest('.member-location-container[data-active="true"]');
             if (!activeContainer) return;
             if (activeCtrl !== (activeContainer.__locationWallpaperCtrl || null)) return;
-            // Only refresh when relevant fields change (lat/lng).
             if (t.classList && (t.classList.contains('fieldset-lat') || t.classList.contains('fieldset-lng'))) {
                 try { activeCtrl.refresh(); } catch (e2) {}
             }
