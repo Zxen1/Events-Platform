@@ -7330,6 +7330,20 @@ const LocationWallpaperComponent = (function() {
                     location_number: st.imageMeta ? st.imageMeta.location_number : null
                 });
             } catch (_eP2) {}
+            // High-visibility proof line (some consoles hide normal logs by default).
+            try {
+                console.error('[LocationWallpaper] LOCATION IMAGE CAPTURED size=' + ((b && typeof b.size === 'number') ? b.size : 'n/a') + ' type=' + type + ' location=' + (st.imageMeta ? st.imageMeta.location_number : 'n/a'));
+            } catch (_eP3) {}
+
+            // Optional: auto-open the captured image in a new tab for proof (off by default).
+            try {
+                // Proof mode with zero user effort:
+                // In STILL mode, auto-open the first successful capture once per page load.
+                if (st.mode === 'still' && !window.__lw_openedCaptureOnce && window.LocationWallpaperComponent && typeof LocationWallpaperComponent.openLastCapture === 'function') {
+                    window.__lw_openedCaptureOnce = true;
+                    LocationWallpaperComponent.openLastCapture();
+                }
+            } catch (_eP4) {}
         }
 
         function dataUrlToBlob(dataUrl) {
@@ -8019,6 +8033,18 @@ const LocationWallpaperComponent = (function() {
         // Expose capture for reuse (e.g., post/menu usage later).
         getCapture: function(locationContainerEl) {
             try { return locationContainerEl ? (locationContainerEl.__locationWallpaperCapture || null) : null; } catch (e) { return null; }
+        },
+        // Dev utility: open the last captured image in a new tab (proof/inspection).
+        openLastCapture: function() {
+            try {
+                var c = window.__lw_lastCapture;
+                var url = c && c.url ? String(c.url) : '';
+                if (!url) return false;
+                window.open(url, '_blank', 'noopener,noreferrer');
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
     };
 })();
