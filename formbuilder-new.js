@@ -3682,7 +3682,7 @@
         
         if (venueFieldset) {
             // For venue fieldset, prefer venue name, fallback to address
-            var inputs = venueFieldset.querySelectorAll('input.fieldset-input');
+            var inputs = venueFieldset.querySelectorAll('input.input-class-2');
             var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
             var addressName = inputs && inputs[1] ? String(inputs[1].value || '').trim() : '';
             displayName = venueName || addressName;

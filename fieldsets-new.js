@@ -3473,7 +3473,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(smartVenueSub);
                 var smartVenueInput = document.createElement('input');
                 smartVenueInput.type = 'text';
-                smartVenueInput.className = 'fieldset-input';
+                smartVenueInput.className = 'input-class-2';
                 smartVenueInput.placeholder = 'Search or type venue name...';
                 smartVenueInput.style.marginBottom = '8px';
                 var smartVenueWrap = document.createElement('div');
@@ -3488,7 +3488,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(smartAddrSub);
                 var smartAddrInput = document.createElement('input');
                 smartAddrInput.type = 'text';
-                smartAddrInput.className = 'fieldset-input';
+                smartAddrInput.className = 'input-class-2';
                 smartAddrInput.placeholder = 'Search or type address...';
                 smartAddrInput.style.marginBottom = '4px';
                 var smartAddrWrap = document.createElement('div');
@@ -4042,7 +4042,7 @@ const FieldsetBuilder = (function(){
                     // Venue requires:
                     // - Venue Name: any non-empty text (user-typed allowed)
                     // - Address: Google Places confirmed (lat/lng set)
-                    var inputs = fieldset.querySelectorAll('input.fieldset-input');
+                    var inputs = fieldset.querySelectorAll('input.input-class-2');
                     var venueName = inputs && inputs[0] ? String(inputs[0].value || '').trim() : '';
                     var addr = inputs && inputs[1] ? inputs[1] : null;
                     var lat = fieldset.querySelector('input.fieldset-lat');
