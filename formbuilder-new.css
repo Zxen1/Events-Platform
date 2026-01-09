@@ -1765,19 +1765,19 @@
 }
 
 /* Placeholder mode: override fields show grey placeholder from location 1 */
-.member-postform-location-override--placeholder .fieldset-input,
+.member-postform-location-override--placeholder .input-class-2,
 .member-postform-location-override--placeholder .fieldset-textarea {
   color: rgba(255, 255, 255, 0.5);
 }
 
-.member-postform-location-override--placeholder .fieldset-input:focus,
+.member-postform-location-override--placeholder .input-class-2:focus,
 .member-postform-location-override--placeholder .fieldset-textarea:focus,
-.member-postform-location-override--placeholder .fieldset-input:not(:placeholder-shown),
+.member-postform-location-override--placeholder .input-class-2:not(:placeholder-shown),
 .member-postform-location-override--placeholder .fieldset-textarea:not(:placeholder-shown) {
   color: #fff;
 }
 
-.member-postform-location-override--placeholder .fieldset-input::placeholder,
+.member-postform-location-override--placeholder .input-class-2::placeholder,
 .member-postform-location-override--placeholder .fieldset-textarea::placeholder {
   color: rgba(255, 255, 255, 0.35);
 }
