@@ -308,13 +308,17 @@
   color: var(--menu-text);
 }
 
-/* Hover border should match form inputs, but must NOT override open/focus blue border */
-.menu-class-1:not(:focus-within) .menu-button:not(.menu-button--open):hover {
+/* Hover border should match form inputs, but must NOT override open/focus/active blue border */
+.menu-class-1:not(:focus-within) .menu-button:not(.menu-button--open):not(:active):hover {
   border-color: var(--menu-border-hover);
 }
 
 .menu-class-1:focus-within .menu-button {
   background-color: var(--menu-bg-focus);
+  border-color: var(--menu-border-focus);
+}
+
+.menu-class-1 .menu-button:active {
   border-color: var(--menu-border-focus);
 }
 
@@ -345,8 +349,13 @@
 .menu-class-1 .menu-options {
   background: var(--menu-bg);
   border: 1px solid var(--menu-options-border);
-  border-top: none;
-  border-radius: 0 0 var(--menu-radius) var(--menu-radius);
+  /* The dropdown should have the same blur look as map-control suggestions */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* Visible connecting line between button and dropdown */
+  border-top: 1px solid var(--menu-options-border);
+  /* Top-right needs rounding; top-left remains square to sit under the button */
+  border-radius: 0 var(--menu-radius) var(--menu-radius) var(--menu-radius);
   box-shadow: var(--menu-shadow);
 }
 
