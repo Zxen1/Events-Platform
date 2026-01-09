@@ -858,57 +858,34 @@ body {
 }
 
 
-/* Menu Class 2: Frosted glass background
-   Works with existing menu pattern using [class*="-button"], [class*="-options"], [class*="-option"]
-   and --open modifier classes */
+/* Menu Class 2: Map controls appearance (frosted glass) */
 .menu-class-2 [class*="-button"] {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 5px;
   color: #fff;
   cursor: pointer;
-  box-sizing: border-box;
 }
 .menu-class-2 [class*="-button"]:hover {
   border-color: rgba(255, 255, 255, 0.4);
 }
-.menu-class-2 [class*="-button"]:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
 .menu-class-2 [class*="-button"][class*="--open"] {
   border-color: var(--blue-500);
+  background: rgba(0, 0, 0, 0.45);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
-
 .menu-class-2 [class*="-options"] {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-top: none;
   border-radius: 0 0 5px 5px;
-  box-sizing: border-box;
+  border-top: none;
 }
-.menu-class-2 [class*="-options"][class*="--open"] {
-  border-color: var(--blue-500);
-}
-.menu-class-2 [class*="-options"]::-webkit-scrollbar {
-  width: 8px;
-  background: transparent;
-}
-.menu-class-2 [class*="-options"]::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 5px;
-}
-
 .menu-class-2 [class*="-option"]:not([class*="-options"]) {
-  background: transparent;
-  border: none;
   color: #fff;
   cursor: pointer;
-  box-sizing: border-box;
 }
 .menu-class-2 [class*="-option"]:not([class*="-options"]):hover {
   background: rgba(255, 255, 255, 0.1);

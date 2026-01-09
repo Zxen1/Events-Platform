@@ -1538,7 +1538,6 @@ const PhonePrefixComponent = (function(){
         var selectedCode = initialValue;
 
         // Phone prefix menu - same pattern as CurrencyComponent.buildCompactMenu
-        // menu-class-2 = appearance (frosted glass style)
         var menu = document.createElement('div');
         menu.className = 'component-phoneprefix-menu menu-class-2';
 

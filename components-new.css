@@ -1086,7 +1086,7 @@
    PHONE PREFIX
    
    Same pattern as CurrencyComponent.
-   Appearance from menu-class-2 (applied to wrapper).
+   Appearance copied from map controls (frosted glass).
    ============================================================================ */
 
 .component-phoneprefix-menu {
@@ -1101,9 +1101,7 @@
     height: 36px;
     display: flex;
     align-items: center;
-    gap: 6px;
     padding: 0 10px;
-    font-size: 14px;
 }
 
 .component-phoneprefix-menu-button-image {
@@ -1142,8 +1140,7 @@
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    opacity: 0.6;
-    transition: transform 0.15s;
+    transition: transform 0.2s;
 }
 
 .component-phoneprefix-menu-options {
@@ -1162,9 +1159,7 @@
     height: 36px;
     display: flex;
     align-items: center;
-    gap: 8px;
     padding: 0 10px;
-    text-align: left;
 }
 
 .component-phoneprefix-menu-option-image {
@@ -1178,7 +1173,7 @@
 .component-phoneprefix-menu-option-text {
     flex: 1;
     text-align: left;
-    min-width: 0;
+    padding-left: 10px;
 }
 
 /* States */
@@ -1188,11 +1183,6 @@
 
 .component-phoneprefix-menu-options--open {
     display: block;
-}
-
-.component-phoneprefix-menu-option:focus-visible {
-    outline: 2px solid var(--blue-500);
-    outline-offset: -2px;
 }
 
 
