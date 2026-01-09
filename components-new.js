@@ -7185,6 +7185,9 @@ const LocationWallpaperComponent = (function() {
             lastLng: null,
             savedCamera: null,
             imageUrl: '',
+            imageBlob: null,
+            imageFile: null,
+            imageMeta: null,
             reducedMotion: prefersReducedMotion(),
             pendingRevealTimer: null,
             resizeObs: null,
@@ -7193,8 +7196,31 @@ const LocationWallpaperComponent = (function() {
             minHeightLocked: false,
             didReveal: false,
             revealTimeout: null,
-            stillNonce: 0
+            stillNonce: 0,
+            debug: false,
+            debugId: '',
+            mode: 'off'
         };
+
+        try {
+            st.debug = (localStorage.getItem('debug_locationwallpaper') === '1');
+        } catch (_eDbg) {
+            st.debug = false;
+        }
+        try {
+            st.debugId = 'LW#' + Math.random().toString(16).slice(2, 8);
+        } catch (_eId) {
+            st.debugId = 'LW';
+        }
+
+        function dbg() {
+            if (!st.debug) return;
+            try {
+                var args = Array.prototype.slice.call(arguments);
+                args.unshift('[' + st.debugId + ']');
+                console.log.apply(console, args);
+            } catch (_e) {}
+        }
 
         function clearRevealTimers() {
             if (st.pendingRevealTimer) {
@@ -7207,31 +7233,140 @@ const LocationWallpaperComponent = (function() {
             }
         }
 
+        function getLocationNumber() {
+            try {
+                var n = parseInt(String(locationContainerEl.getAttribute('data-location-number') || '1'), 10);
+                return (isFinite(n) && n > 0) ? n : 1;
+            } catch (e) {
+                return 1;
+            }
+        }
+
+        function buildCaptureMeta() {
+            var ll = readLatLng(locationContainerEl) || {};
+            var locationType = getLocationTypeFromContainer(locationContainerEl);
+            return {
+                location_number: getLocationNumber(),
+                location_type: locationType,
+                lat: (typeof ll.lat === 'number' ? ll.lat : null),
+                lng: (typeof ll.lng === 'number' ? ll.lng : null),
+                style: getStyleUrlForWallpaper(),
+                lighting: getLightingPresetForWallpaper(),
+                camera: st.savedCamera || null,
+                captured_at: Date.now()
+            };
+        }
+
+        function clearCapture() {
+            st.imageBlob = null;
+            st.imageFile = null;
+            st.imageMeta = null;
+            try { delete locationContainerEl.__locationWallpaperCapture; } catch (_e0) {}
+        }
+
         function setImageUrl(url) {
             try {
-                if (st.imageUrl) URL.revokeObjectURL(st.imageUrl);
+                if (st.imageUrl && String(st.imageUrl).indexOf('blob:') === 0) {
+                    URL.revokeObjectURL(st.imageUrl);
+                }
             } catch (e) {}
             st.imageUrl = url || '';
+            dbg('setImageUrl', st.imageUrl ? ('len=' + String(st.imageUrl).length) : '(empty)');
             if (st.imageUrl) {
                 img.src = st.imageUrl;
                 img.style.display = '';
             } else {
                 img.removeAttribute('src');
                 img.style.display = 'none';
+                clearCapture();
+            }
+        }
+
+        function setImageBlob(blob, meta) {
+            if (!blob) {
+                setImageUrl('');
+                return;
+            }
+            var b = blob;
+            var type = String(b.type || 'image/webp');
+            var ext = (type.indexOf('png') !== -1) ? 'png' : ((type.indexOf('jpeg') !== -1 || type.indexOf('jpg') !== -1) ? 'jpg' : 'webp');
+            var locNum = getLocationNumber();
+            var filename = 'location-' + locNum + '-wallpaper.' + ext;
+            var file = null;
+            try { file = new File([b], filename, { type: type }); } catch (eF) { file = b; }
+
+            st.imageBlob = b;
+            st.imageFile = file;
+            st.imageMeta = meta || buildCaptureMeta();
+
+            // Store capture on the container so later we can reuse it for posts/menus.
+            try {
+                locationContainerEl.__locationWallpaperCapture = {
+                    file: file,
+                    meta: st.imageMeta
+                };
+            } catch (_eC) {}
+
+            var url = '';
+            try { url = URL.createObjectURL(b); } catch (eU) { url = ''; }
+            if (!url) return;
+            setImageUrl(url);
+        }
+
+        function dataUrlToBlob(dataUrl) {
+            try {
+                var s = String(dataUrl || '');
+                if (s.indexOf('data:') !== 0) return null;
+                var comma = s.indexOf(',');
+                if (comma === -1) return null;
+                var header = s.slice(5, comma); // after "data:"
+                var body = s.slice(comma + 1);
+                var isBase64 = header.indexOf(';base64') !== -1;
+                var mime = header.split(';')[0] || 'image/webp';
+                var bytes = null;
+                if (isBase64) {
+                    var bin = atob(body);
+                    bytes = new Uint8Array(bin.length);
+                    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                } else {
+                    // percent-encoded
+                    var txt = decodeURIComponent(body);
+                    bytes = new Uint8Array(txt.length);
+                    for (var j = 0; j < txt.length; j++) bytes[j] = txt.charCodeAt(j);
+                }
+                return new Blob([bytes], { type: mime });
+            } catch (_eB) {
+                return null;
             }
         }
 
         function showImage() {
-            // Only hide the map if we have a location image to show.
-            // If we don't have an image yet, hiding the map makes the whole wallpaper go black.
+            // Rules:
+            // - If we have an image: show it (and hide the map layer).
+            // - Else if we have a map:
+            //    - orbit mode: show the map layer
+            //    - still mode: keep map hidden (capture-only)
+            // - Else: hide the wallpaper entirely (prevents a black empty layer).
             if (st.imageUrl) {
+                try { root.style.display = ''; } catch (_e0) {}
                 root.classList.remove('component-locationwallpaper--map-visible');
                 img.style.display = '';
-            } else {
-                // Keep map visible as the fallback (even if it's still loading).
-                root.classList.add('component-locationwallpaper--map-visible');
-                img.style.display = 'none';
+                return;
             }
+            if (st.map) {
+                try { root.style.display = ''; } catch (_e1) {}
+                if (st.mode === 'still') {
+                    // Still mode: never show the live map; it should load off-screen and only produce an image.
+                    root.classList.remove('component-locationwallpaper--map-visible');
+                } else {
+                    root.classList.add('component-locationwallpaper--map-visible');
+                }
+                img.style.display = 'none';
+                return;
+            }
+            // No map and no image → hide layer completely.
+            try { root.style.display = 'none'; } catch (_e2) {}
+            img.style.display = 'none';
         }
 
         function revealMapCrossfade() {
@@ -7411,6 +7546,7 @@ const LocationWallpaperComponent = (function() {
             var locationType = getLocationTypeFromContainer(locationContainerEl);
             var desired = getDefaultCameraForType(locationType, [lng, lat]);
             var mode = getWallpaperMode();
+            st.mode = mode;
 
             // If we have a saved camera for this exact lat/lng, resume ONLY the bearing.
             // Zoom + pitch stay standardized to defaults (user requested 17 zoom / 70° pitch).
@@ -7468,7 +7604,8 @@ const LocationWallpaperComponent = (function() {
                 try {
                     st.map.once('render', function() {
                         if (!st.map || st.didReveal) return;
-                        revealMapCrossfade();
+                        // Still mode must not visibly load a map; orbit mode does.
+                        if (mode !== 'still') revealMapCrossfade();
                         stopOrbit();
                     if (mode === 'orbit') startOrbit(desired.zoom);
                     else if (mode === 'still') scheduleStillFreeze();
@@ -7476,7 +7613,7 @@ const LocationWallpaperComponent = (function() {
                 } catch (eR0) {}
                 st.revealTimeout = setTimeout(function() {
                     if (!st.map || st.didReveal) return;
-                    revealMapCrossfade();
+                    if (mode !== 'still') revealMapCrossfade();
                     stopOrbit();
                 if (mode === 'orbit') startOrbit(desired.zoom);
                 else if (mode === 'still') scheduleStillFreeze();
@@ -7484,7 +7621,7 @@ const LocationWallpaperComponent = (function() {
             } else {
                 // Map already exists: just jump to new location and keep it live.
                 try { st.map.jumpTo(desired); } catch (eJ2) {}
-                revealMapCrossfade();
+                if (mode !== 'still') revealMapCrossfade();
                 // If this map came from prewarm, orbit may not have started yet.
                 stopOrbit();
             if (mode === 'orbit') startOrbit(desired.zoom);
@@ -7536,15 +7673,20 @@ const LocationWallpaperComponent = (function() {
             clearRevealTimers();
 
             if (!st.map) {
+                dbg('freeze: no map');
                 return;
             }
 
             // Store camera now (for seamless resume).
             st.savedCamera = getMapCamera();
+            dbg('freeze: camera', st.savedCamera);
 
             var canvas = null;
             try { canvas = st.map.getCanvas(); } catch (e) { canvas = null; }
             if (!canvas) {
+                // Performance rule: always remove the map on deactivate.
+                // If we cannot capture, we keep the previous image (if any) or hide the wallpaper.
+                dbg('freeze: canvas unavailable (removing map, keeping previous image if any)');
                 try { st.map.remove(); } catch (e2) {}
                 st.map = null;
                 showImage();
@@ -7602,19 +7744,14 @@ const LocationWallpaperComponent = (function() {
             }
 
             function finalizeFreeze(dataUrl) {
-                // If capture fails, keep the previous good image (prevents black).
-                if (dataUrl) setImageUrl(dataUrl);
-
-                // Never remove the map unless we have an image to show.
-                // This prevents "still = blank" when capture fails early (before first real frame).
-                var haveAnyImage = !!(st.imageUrl && String(st.imageUrl).indexOf('data:image') === 0);
-                if (!haveAnyImage) {
-                    // Keep a static live map visible as the fallback (still = no orbit).
-                    revealMapCrossfade();
-                    stopOrbit();
-                    return;
+                // If capture succeeds, store as Blob/File + meta (so it can be reused later in posts).
+                if (dataUrl) {
+                    var blob = dataUrlToBlob(dataUrl);
+                    if (blob) setImageBlob(blob, buildCaptureMeta());
                 }
 
+                // Performance rule: always remove the map after freeze attempt
+                // (prevents multiple maps when user clicks into another venue container).
                 try { if (st.map) st.map.remove(); } catch (eRM) {}
                 st.map = null;
                 showImage();
@@ -7853,7 +7990,11 @@ const LocationWallpaperComponent = (function() {
 
     return {
         install: install,
-        handleActiveContainerChange: handleActiveContainerChange
+        handleActiveContainerChange: handleActiveContainerChange,
+        // Expose capture for reuse (e.g., post/menu usage later).
+        getCapture: function(locationContainerEl) {
+            try { return locationContainerEl ? (locationContainerEl.__locationWallpaperCapture || null) : null; } catch (e) { return null; }
+        }
     };
 })();
 
