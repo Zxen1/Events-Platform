@@ -7182,33 +7182,34 @@ const LocationWallpaperComponent = (function() {
             st.imageUrl = url || '';
             if (st.imageUrl) {
                 img.src = st.imageUrl;
-                img.style.display = 'block';
             } else {
                 img.removeAttribute('src');
-                img.style.display = 'none';
+                root.classList.remove('component-locationwallpaper--image-visible');
             }
         }
 
         function showImage() {
-            // Show image layer, hide map layer
+            // Crossfade: show image layer, hide map layer
             root.classList.remove('component-locationwallpaper--map-visible');
-            img.style.display = st.imageUrl ? 'block' : 'none';
+            if (st.imageUrl) {
+                root.classList.add('component-locationwallpaper--image-visible');
+            } else {
+                root.classList.remove('component-locationwallpaper--image-visible');
+            }
         }
 
         function showMap() {
-            // Show map layer, hide image layer
+            // Crossfade: show map layer, hide image layer
             st.didReveal = true;
+            root.classList.remove('component-locationwallpaper--image-visible');
             root.classList.add('component-locationwallpaper--map-visible');
-            img.style.display = 'none';
         }
 
         function revealMapCrossfade() {
+            // Smooth crossfade from image to map
             st.didReveal = true;
             root.classList.add('component-locationwallpaper--map-visible');
-            // Keep image visible briefly for crossfade, then hide
-            st.pendingRevealTimer = setTimeout(function() {
-                try { img.style.display = 'none'; } catch (e) {}
-            }, 260);
+            root.classList.remove('component-locationwallpaper--image-visible');
         }
 
         function getMapCamera() {
@@ -7494,9 +7495,10 @@ const LocationWallpaperComponent = (function() {
                 return;
             }
 
-            // Show existing image while new one loads
+            // Show existing image while new one loads (smooth transition)
             if (st.latestCaptureUrl) {
                 setImageUrl(st.latestCaptureUrl);
+                showImage();
             }
 
             if (!st.map) {
@@ -7512,6 +7514,7 @@ const LocationWallpaperComponent = (function() {
             var onFirstRender = function() {
                 if (!st.map || st.didReveal) return;
                 st.didReveal = true;
+                // Crossfade from existing image (if any) to map
                 showMap();
 
                 // Wait for map to "polish" (tiles to load), then capture
@@ -7522,6 +7525,7 @@ const LocationWallpaperComponent = (function() {
                         st.latestCaptureUrl = url;
                         setImageUrl(url);
                     }
+                    // Crossfade from map back to captured image
                     showImage();
                     // In still mode, we can remove the map immediately after capture
                     removeMap();
