@@ -7194,6 +7194,7 @@ const LocationWallpaperComponent = (function() {
             resizeRaf: 0,
             prewarmDone: false,
             minHeightLocked: false,
+            didRenderFrame: false,
             didReveal: false,
             revealTimeout: null,
             stillNonce: 0,
@@ -7372,6 +7373,7 @@ const LocationWallpaperComponent = (function() {
         function revealMapCrossfade() {
             // Cross-fade: keep location image visible while map loads hidden, then fade map in.
             st.didReveal = true;
+            st.didRenderFrame = true;
             root.classList.add('component-locationwallpaper--map-visible');
             clearRevealTimers();
             st.pendingRevealTimer = setTimeout(function() {
@@ -7562,6 +7564,7 @@ const LocationWallpaperComponent = (function() {
             // Recreate map if missing
             if (!st.map) {
                 mapMount.innerHTML = '';
+                st.didRenderFrame = false;
                 try {
                     st.map = new mapboxgl.Map({
                         container: mapMount,
@@ -7603,6 +7606,7 @@ const LocationWallpaperComponent = (function() {
                 st.didReveal = false;
                 try {
                     st.map.once('render', function() {
+                        st.didRenderFrame = true;
                         if (!st.map || st.didReveal) return;
                         // Still mode must not visibly load a map; orbit mode does.
                         if (mode !== 'still') revealMapCrossfade();
@@ -7612,6 +7616,7 @@ const LocationWallpaperComponent = (function() {
                     });
                 } catch (eR0) {}
                 st.revealTimeout = setTimeout(function() {
+                    st.didRenderFrame = true;
                     if (!st.map || st.didReveal) return;
                     if (mode !== 'still') revealMapCrossfade();
                     stopOrbit();
@@ -7696,51 +7701,68 @@ const LocationWallpaperComponent = (function() {
             // Stop any camera transition immediately so we capture a stable frame.
             try { if (st.map && typeof st.map.stop === 'function') st.map.stop(); } catch (eStop) {}
 
-            function captureDataUrl() {
-                if (!canvas) return '';
-                // Avoid freezing a valid-but-black frame (common if capture happens before tiles/style are ready).
-                // If not ready, return '' so caller retries or falls back to keeping the live map visible.
-                try {
-                    if (st.map && typeof st.map.loaded === 'function' && !st.map.loaded()) return '';
-                } catch (eLd) {}
-                try {
-                    if (st.map && typeof st.map.areTilesLoaded === 'function' && !st.map.areTilesLoaded()) return '';
-                } catch (eTl) {}
-
-                // Extra guard: Mapbox can report "loaded" but the drawn frame can still be empty/black.
-                // Sample pixels from a downscaled copy; if it's basically black, treat as failed capture.
+            function isCanvasFrameNonBlank() {
+                // Must work in night mode (dark) without rejecting valid captures.
+                // We treat a frame as "blank" only if it's effectively constant black.
                 try {
                     var tmp = document.createElement('canvas');
-                    tmp.width = 24;
-                    tmp.height = 24;
+                    tmp.width = 32;
+                    tmp.height = 32;
                     var ctx = tmp.getContext('2d', { willReadFrequently: true });
-                    if (ctx) {
-                        ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
-                        var imgd = ctx.getImageData(0, 0, tmp.width, tmp.height).data;
-                        var bright = 0;
-                        var count = 0;
-                        // sample every ~6 pixels (performance)
-                        for (var i = 0; i < imgd.length; i += 24) {
-                            var r = imgd[i] || 0;
-                            var g = imgd[i + 1] || 0;
-                            var b = imgd[i + 2] || 0;
-                            // perceived luminance (rough)
-                            var lum = (0.2126 * r + 0.7152 * g + 0.0722 * b);
-                            if (lum > 10) bright++;
-                            count++;
-                        }
-                        // If the frame is "mostly black" (e.g., only a few logo pixels), don't accept it.
-                        var ratio = count ? (bright / count) : 0;
-                        if (ratio < 0.02) return '';
+                    if (!ctx) return true;
+                    ctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+                    var d = ctx.getImageData(0, 0, tmp.width, tmp.height).data;
+                    var minLum = 1e9;
+                    var maxLum = -1e9;
+                    var nonZero = 0;
+                    var count = 0;
+                    for (var i = 0; i < d.length; i += 32) {
+                        var r = d[i] || 0;
+                        var g = d[i + 1] || 0;
+                        var b = d[i + 2] || 0;
+                        var lum = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+                        if (lum < minLum) minLum = lum;
+                        if (lum > maxLum) maxLum = lum;
+                        if (r || g || b) nonZero++;
+                        count++;
                     }
-                } catch (_ePx) {}
-                var dataUrl = '';
-                try { dataUrl = canvas.toDataURL('image/webp', 0.82); } catch (eDU1) { dataUrl = ''; }
-                if (!dataUrl) {
-                    try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (eDU2) { dataUrl = ''; }
+                    // Blank frame patterns we’ve seen are essentially all zeros.
+                    if (nonZero === 0) return false;
+                    // If the entire frame has near-zero dynamic range, treat it as blank.
+                    if (count && (maxLum - minLum) < 0.5 && maxLum < 1) return false;
+                    return true;
+                } catch (_ePx2) {
+                    return true;
                 }
-                if (dataUrl && dataUrl.indexOf('data:image') === 0) return dataUrl;
-                return '';
+            }
+
+            function captureToBlob(cb) {
+                if (!canvas) return cb(null);
+                // Avoid capturing before Mapbox is ready (common early black frames).
+                try { if (st.map && typeof st.map.loaded === 'function' && !st.map.loaded()) return cb(null); } catch (_eLd2) {}
+                try { if (st.map && typeof st.map.areTilesLoaded === 'function' && !st.map.areTilesLoaded()) return cb(null); } catch (_eTl2) {}
+                if (!isCanvasFrameNonBlank()) return cb(null);
+
+                // Prefer toBlob for "proper" asset handling.
+                try {
+                    if (typeof canvas.toBlob === 'function') {
+                        canvas.toBlob(function(blob) {
+                            if (!blob || (blob.size || 0) < 4096) return cb(null);
+                            cb(blob);
+                        }, 'image/webp', 0.82);
+                        return;
+                    }
+                } catch (_eTB) {}
+                // Fallback to dataURL if toBlob not available.
+                var dataUrl = '';
+                try { dataUrl = canvas.toDataURL('image/webp', 0.82); } catch (_eDU) { dataUrl = ''; }
+                if (!dataUrl) {
+                    try { dataUrl = canvas.toDataURL('image/jpeg', 0.82); } catch (_eDU3) { dataUrl = ''; }
+                }
+                if (!dataUrl || dataUrl.indexOf('data:image') !== 0) return cb(null);
+                var b = dataUrlToBlob(dataUrl);
+                if (!b || (b.size || 0) < 4096) return cb(null);
+                cb(b);
             }
 
             function finalizeFreeze(dataUrl) {
@@ -7757,73 +7779,55 @@ const LocationWallpaperComponent = (function() {
                 showImage();
             }
 
-            // If the map hasn't produced a visible frame yet, wait for a render before freezing.
-            if (!st.didReveal) {
-                var didRun = false;
-                try {
-                    st.map.once('render', function() {
-                        if (didRun) return;
-                        didRun = true;
-                        freezeToLocationImage();
-                    });
-                } catch (eW) {}
-                // Fallback: don't hang forever if render never fires for some reason.
-                setTimeout(function() {
-                    if (didRun) return;
-                    didRun = true;
-                    // proceed to capture attempt below (may still fail, but will keep last image)
-                    requestAnimationFrame(function() {
-                        requestAnimationFrame(function() {
-                            finalizeFreeze(captureDataUrl());
-                        });
-                    });
-                }, 500);
-                return;
-            }
-
-            // If tiles aren't ready yet, wait a short moment before capture (still stays fast).
-            // Then retry capture for a few frames if needed (first capture can be blank).
-            var startWait = Date.now();
-            var captureStart = Date.now();
+            // Unified freeze state machine:
+            // - We allow a very small time budget to capture (so we never keep maps alive on deactivate).
+            // - If capture fails within budget, we remove the map and show previous image (or hide wallpaper).
+            var budgetMs = 420; // hard cap to avoid multiple maps running
+            var startMs = Date.now();
             var attempts = 0;
-            (function waitForTilesThenCapture() {
+
+            (function attemptCapture() {
                 if (!st.map) return;
-                var tilesOk = true;
-                try {
-                    if (typeof st.map.areTilesLoaded === 'function') {
-                        tilesOk = !!st.map.areTilesLoaded();
-                    }
-                } catch (eTL) { tilesOk = true; }
-                var timedOut = (Date.now() - startWait) > 650;
-                if (!tilesOk && !timedOut) {
-                    setTimeout(waitForTilesThenCapture, 60);
-                    return;
+                attempts++;
+
+                // Ensure we have at least one frame rendered before capture attempts.
+                if (!st.didRenderFrame) {
+                    try {
+                        st.map.once('render', function() {
+                            st.didRenderFrame = true;
+                            attemptCapture();
+                        });
+                    } catch (_eRF) {}
                 }
-                (function attemptCapture() {
-                    if (!st.map) return;
-                    attempts++;
-                    // Capture on the next two animation frames to avoid freezing a not-yet-painted frame (black).
+
+                // Try capture after two RAFs (more likely to be the latest painted frame).
+                requestAnimationFrame(function() {
                     requestAnimationFrame(function() {
-                        requestAnimationFrame(function() {
-                            var url = captureDataUrl();
-                            // Heuristic: a valid map capture should not be tiny.
-                            var ok = !!(url && url.length > 5000);
-                            if (ok) {
-                                finalizeFreeze(url);
+                        if (!st.map) return;
+                        captureToBlob(function(blob) {
+                            if (!st.map) return;
+                            if (blob) {
+                                setImageBlob(blob, buildCaptureMeta());
+                                // Always remove map after successful capture
+                                try { st.map.remove(); } catch (_eRM2) {}
+                                st.map = null;
+                                showImage();
                                 return;
                             }
-                            var tooMany = attempts >= 10;
-                            var tooLong = (Date.now() - captureStart) > 900;
-                            if (tooMany || tooLong) {
-                                // Give up capturing; fallback will keep live map if no previous image exists.
-                                finalizeFreeze('');
+
+                            var elapsed = Date.now() - startMs;
+                            var timedOut = elapsed >= budgetMs;
+                            if (timedOut || attempts >= 8) {
+                                // Hard stop: remove map, keep previous image if any, otherwise hide wallpaper.
+                                try { st.map.remove(); } catch (_eRM3) {}
+                                st.map = null;
+                                showImage();
                                 return;
                             }
-                            // Try again shortly (next render frames).
                             setTimeout(attemptCapture, 60);
                         });
                     });
-                })();
+                });
             })();
         }
 
