@@ -7117,12 +7117,16 @@ const LocationWallpaperComponent = (function() {
 
         var mapMount = document.createElement('div');
         mapMount.className = 'component-locationwallpaper-mapmount';
+        mapMount.style.opacity = '0';
+        mapMount.style.transition = 'opacity 0.5s ease';
 
         var img = document.createElement('img');
         img.className = 'component-locationwallpaper-image';
         img.alt = '';
         img.decoding = 'sync';
         img.loading = 'eager';
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.5s ease';
 
         root.appendChild(mapMount);
         root.appendChild(img);
@@ -7182,41 +7186,45 @@ const LocationWallpaperComponent = (function() {
             st.imageUrl = url || '';
             if (st.imageUrl) {
                 img.src = st.imageUrl;
+                // Ensure image is decoded and ready for display
+                if (typeof img.decode === 'function') {
+                    img.decode().catch(function() {});
+                }
             } else {
                 img.removeAttribute('src');
-                root.classList.remove('component-locationwallpaper--image-visible');
+                img.style.opacity = '0';
             }
         }
 
         function showImage() {
             // Crossfade: fade image in on top of map (no black dip)
-            // Keep map visible underneath until image fully covers it
-            if (st.imageUrl) {
-                root.classList.add('component-locationwallpaper--image-visible');
-                // After transition completes, we can hide the map layer
-                setTimeout(function() {
-                    if (root.classList.contains('component-locationwallpaper--image-visible')) {
-                        root.classList.remove('component-locationwallpaper--map-visible');
-                    }
-                }, 550); // Slightly longer than transition (500ms)
-            } else {
-                root.classList.remove('component-locationwallpaper--image-visible');
-                root.classList.remove('component-locationwallpaper--map-visible');
+            if (!st.imageUrl) {
+                img.style.opacity = '0';
+                mapMount.style.opacity = '0';
+                return;
             }
+            // Fade in the image on top (transition already set on element)
+            img.style.opacity = '1';
+            // Keep map visible during transition, then fade it out
+            setTimeout(function() {
+                mapMount.style.opacity = '0';
+            }, 100);
         }
 
         function showMap() {
-            // Crossfade: show map, then fade out image on top
+            // Crossfade: show map, fade out image on top
             st.didReveal = true;
-            root.classList.add('component-locationwallpaper--map-visible');
-            root.classList.remove('component-locationwallpaper--image-visible');
+            // Fade in the map (transition already set on element)
+            mapMount.style.opacity = '1';
+            // Keep image visible during transition, then fade it out
+            setTimeout(function() {
+                img.style.opacity = '0';
+            }, 100);
         }
 
         function revealMapCrossfade() {
             // Smooth crossfade from image to map
-            st.didReveal = true;
-            root.classList.add('component-locationwallpaper--map-visible');
-            root.classList.remove('component-locationwallpaper--image-visible');
+            showMap();
         }
 
         function getMapCamera() {
@@ -7534,8 +7542,10 @@ const LocationWallpaperComponent = (function() {
                     }
                     // Crossfade from map back to captured image
                     showImage();
-                    // In still mode, we can remove the map immediately after capture
-                    removeMap();
+                    // Wait for fade transition to complete before removing map
+                    setTimeout(function() {
+                        removeMap();
+                    }, 600);
                 }, STILL_POLISH_DELAY_MS);
             };
 
@@ -7548,7 +7558,10 @@ const LocationWallpaperComponent = (function() {
             // In still mode the map should already be removed after capture
             // Just ensure we're showing the image
             showImage();
-            removeMap();
+            // Delay removal to allow fade transition
+            setTimeout(function() {
+                removeMap();
+            }, 600);
         }
 
         // ============================================================
