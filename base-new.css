@@ -794,167 +794,122 @@ body {
 
 /* ============================================================================
    MENU CLASSES
+   
+   Apply to wrapper element. Uses data attributes to target children:
+   - data-menu="button"  → the trigger button
+   - data-menu="options" → the dropdown container
+   - data-menu="option"  → individual option items
+   
+   Open state via data-menu-open="true" on wrapper.
    ============================================================================ */
 
-/* Menu Button Class 1: Dropdown trigger (matches system image picker) */
-.menu-button-class-1 {
-  width: 100%;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+/* Menu Class 1: Solid background */
+.menu-class-1 [data-menu="button"] {
+  background: #222;
+  border: 1px solid #333;
   border-radius: 5px;
-  cursor: pointer;
   color: #fff;
-  font: inherit;
+  cursor: pointer;
   box-sizing: border-box;
 }
-.menu-button-class-1:hover {
+.menu-class-1 [data-menu="button"]:hover {
   border-color: #555;
 }
-.menu-button-class-1--open {
+.menu-class-1 [data-menu="button"]:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+.menu-class-1[data-menu-open="true"] [data-menu="button"] {
   border-color: var(--blue-500);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
-.menu-button-class-1:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
 
-
-/* Menu Options Class 1: Dropdown container (matches system image picker) */
-.menu-options-class-1 {
+.menu-class-1 [data-menu="options"] {
   display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
   background: #222;
   border: 1px solid var(--blue-500);
   border-top: none;
   border-radius: 0 0 5px 5px;
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: var(--layer-menu, 85);
   box-sizing: border-box;
 }
-.menu-options-class-1--open {
+.menu-class-1[data-menu-open="true"] [data-menu="options"] {
   display: block;
 }
-.menu-options-class-1::-webkit-scrollbar {
+.menu-class-1 [data-menu="options"]::-webkit-scrollbar {
   width: 8px;
   background: transparent;
 }
-.menu-options-class-1::-webkit-scrollbar-thumb {
+.menu-class-1 [data-menu="options"]::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 5px;
 }
 
-
-/* Menu Option Class 1: Dropdown option item (matches system image picker) */
-.menu-option-class-1 {
-  width: 100%;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  cursor: pointer;
-  background: none;
+.menu-class-1 [data-menu="option"] {
+  background: transparent;
   border: none;
   color: #fff;
-  font-size: 14px;
+  cursor: pointer;
   box-sizing: border-box;
 }
-.menu-option-class-1:hover {
+.menu-class-1 [data-menu="option"]:hover {
   background: var(--blue-500);
 }
-.menu-option-class-1--selected {
-  background: var(--blue-600);
-}
 
 
-/* Menu Button Class 2: (copy of Menu Button Class 1) */
-.menu-button-class-2 {
-  width: 100%;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
+/* Menu Class 2: Frosted glass background */
+.menu-class-2 [data-menu="button"] {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 5px;
-  cursor: pointer;
   color: #fff;
-  font: inherit;
+  cursor: pointer;
   box-sizing: border-box;
 }
-.menu-button-class-2:hover {
+.menu-class-2 [data-menu="button"]:hover {
   border-color: #555;
 }
-.menu-button-class-2--open {
+.menu-class-2 [data-menu="button"]:focus {
+  outline: none;
+  border-color: var(--blue-500);
+}
+.menu-class-2[data-menu-open="true"] [data-menu="button"] {
   border-color: var(--blue-500);
   border-radius: 5px 5px 0 0;
   border-bottom: none;
 }
-.menu-button-class-2:focus {
-  outline: none;
-  border-color: var(--blue-500);
-}
 
-
-/* Menu Options Class 2: Frosted glass dropdown (matches map control geocoder) */
-.menu-options-class-2 {
+.menu-class-2 [data-menu="options"] {
   display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  width: 100%;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-top: none;
   border-radius: 0 0 5px 5px;
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: var(--layer-menu, 85);
   box-sizing: border-box;
 }
-.menu-options-class-2--open {
+.menu-class-2[data-menu-open="true"] [data-menu="options"] {
   display: block;
 }
-.menu-options-class-2::-webkit-scrollbar {
+.menu-class-2 [data-menu="options"]::-webkit-scrollbar {
   width: 8px;
   background: transparent;
 }
-.menu-options-class-2::-webkit-scrollbar-thumb {
+.menu-class-2 [data-menu="options"]::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 5px;
 }
 
-
-/* Menu Option Class 2: (copy of Menu Option Class 1) */
-.menu-option-class-2 {
-  width: 100%;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  cursor: pointer;
-  background: none;
+.menu-class-2 [data-menu="option"] {
+  background: transparent;
   border: none;
   color: #fff;
-  font-size: 14px;
+  cursor: pointer;
   box-sizing: border-box;
 }
-.menu-option-class-2:hover {
+.menu-class-2 [data-menu="option"]:hover {
   background: var(--blue-500);
-}
-.menu-option-class-2--selected {
-  background: var(--blue-600);
 }
 
 /* ============================================================================

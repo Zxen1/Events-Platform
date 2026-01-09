@@ -1085,36 +1085,28 @@
 /* ============================================================================
    PHONE PREFIX
    
-   No variants - same everywhere.
+   Appearance from menu-class-2 (applied to wrapper).
+   Layout only in component classes.
    ============================================================================ */
 
-/* Appearance */
-.phoneprefix-wrapper {
-    display: flex;
-    gap: 8px;
-    align-items: stretch;
-}
-
-.phoneprefix-button-wrapper {
+/* Layout */
+.component-phoneprefix {
     position: relative;
     flex-shrink: 0;
-    flex: 0 0 100px;
+    flex: 0 0 120px;
 }
 
-.phoneprefix-button {
-    /* Appearance from menu-button-class-2 */
-    /* Layout only */
+.component-phoneprefix-button {
     display: flex;
     align-items: center;
     gap: 6px;
-    width: 100px;
+    width: 120px;
     height: 36px;
     padding: 0 10px;
     font-size: 14px;
-    flex-shrink: 0;
 }
 
-.phoneprefix-button-flag {
+.component-phoneprefix-button-image {
     width: 20px;
     height: 15px;
     object-fit: cover;
@@ -1122,7 +1114,7 @@
     flex-shrink: 0;
 }
 
-.phoneprefix-button-text {
+.component-phoneprefix-button-text {
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
@@ -1130,7 +1122,7 @@
     flex: 1;
 }
 
-.phoneprefix-button-input {
+.component-phoneprefix-button-input {
     flex: 1;
     text-align: left;
     padding-left: 6px;
@@ -1143,44 +1135,32 @@
     min-width: 0;
 }
 
-.phoneprefix-button-input::placeholder {
+.component-phoneprefix-button-input::placeholder {
     color: #666;
 }
 
-.phoneprefix-button-wrapper:not(.phoneprefix--open) .phoneprefix-button-input {
+.component-phoneprefix:not([data-menu-open="true"]) .component-phoneprefix-button-input {
     pointer-events: none;
 }
 
-.phoneprefix-button-arrow {
+.component-phoneprefix-button-arrow {
     margin-left: auto;
     font-size: 10px;
     opacity: 0.6;
     transition: transform 0.15s;
 }
 
-.phoneprefix-options {
-    /* Appearance from menu-options-class-2 */
-    /* Layout only */
+.component-phoneprefix-options {
     position: absolute;
     top: 100%;
     left: 0;
     width: 280px;
     max-height: 300px;
     overflow-y: auto;
-    margin-top: 4px;
     z-index: var(--layer-menu, 85);
-    /* Override connected style to separated */
-    border-top: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
 }
 
-.phoneprefix-options[hidden] {
-    display: none;
-}
-
-.phoneprefix-option {
-    /* Appearance from menu-option-class-2 */
-    /* Layout only */
+.component-phoneprefix-option {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1189,7 +1169,7 @@
     text-align: left;
 }
 
-.phoneprefix-option-flag {
+.component-phoneprefix-option-image {
     width: 20px;
     height: 15px;
     object-fit: cover;
@@ -1197,41 +1177,20 @@
     flex-shrink: 0;
 }
 
-.phoneprefix-option-text {
+.component-phoneprefix-option-text {
     flex: 1;
     flex-shrink: 1;
     min-width: 0;
 }
 
-.phoneprefix-input {
-    flex: 1;
-    min-width: 0;
-    height: 36px;
-    padding: 0 12px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
-    background: rgba(0,0,0,0.35);
-    color: #fff;
-    font: inherit;
-}
-
 /* States */
-.phoneprefix-button-arrow--open {
+.component-phoneprefix-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.phoneprefix-option:hover {
-    background: rgba(255,255,255,0.1);
-}
-
-.phoneprefix-option:focus-visible {
+.component-phoneprefix-option:focus-visible {
     outline: 2px solid var(--blue-500);
     outline-offset: -2px;
-}
-
-.phoneprefix-input:focus {
-    outline: none;
-    border-color: var(--blue-500);
 }
 
 
