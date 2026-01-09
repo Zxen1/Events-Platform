@@ -966,7 +966,7 @@
 .component-currencycompact-menu-options {
     display: none;
     position: absolute;
-    top: 35px;
+    top: 36px;
     left: 0;
     width: 250px;
     max-height: 300px;
@@ -1005,16 +1005,23 @@
     display: block;
 }
 
-/* Compact override: narrow button with wide dropdown.
-   Button keeps its bottom border and full corners.
-   Dropdown overlaps by 1px to hide the seam. */
-.component-currencycompact-menu.menu-class-1 .menu-button--open {
-    border-bottom: 1px solid var(--menu-border-focus);
-    border-radius: var(--menu-radius);
+/* Compact override: narrow button (120px) with wide dropdown (250px).
+   - Button loses bottom border + bottom corners when open (standard menu-class-1)
+   - Dropdown has no top border under the button
+   - Pseudo-element draws top border only for the extending portion (right side) */
+.component-currencycompact-menu.menu-class-1 .menu-options {
+    border-top: none;
+    border-radius: 0 var(--menu-radius) var(--menu-radius) var(--menu-radius);
 }
 
-.component-currencycompact-menu.menu-class-1 .menu-options {
-    border-radius: var(--menu-radius);
+.component-currencycompact-menu.menu-class-1 .menu-options::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 120px;
+    right: 0;
+    border-top: 1px solid var(--menu-options-border);
+    border-radius: 0 var(--menu-radius) 0 0;
 }
 
 
