@@ -1085,28 +1085,28 @@
 /* ============================================================================
    PHONE PREFIX
    
+   Same pattern as CurrencyComponent.
    Appearance from menu-class-2 (applied to wrapper).
-   Layout only in component classes.
    ============================================================================ */
 
-/* Layout */
-.component-phoneprefix {
+.component-phoneprefix-menu {
+    width: 120px;
+    height: 36px;
     position: relative;
     flex-shrink: 0;
-    flex: 0 0 120px;
 }
 
-.component-phoneprefix-button {
+.component-phoneprefix-menu-button {
+    width: 120px;
+    height: 36px;
     display: flex;
     align-items: center;
     gap: 6px;
-    width: 120px;
-    height: 36px;
     padding: 0 10px;
     font-size: 14px;
 }
 
-.component-phoneprefix-button-image {
+.component-phoneprefix-menu-button-image {
     width: 20px;
     height: 15px;
     object-fit: cover;
@@ -1114,15 +1114,7 @@
     flex-shrink: 0;
 }
 
-.component-phoneprefix-button-text {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    line-height: 1;
-    flex: 1;
-}
-
-.component-phoneprefix-button-input {
+.component-phoneprefix-menu-button-input {
     flex: 1;
     text-align: left;
     padding-left: 6px;
@@ -1135,24 +1127,29 @@
     min-width: 0;
 }
 
-.component-phoneprefix-button-input::placeholder {
-    color: #666;
-}
-
-.component-phoneprefix:not([data-menu-open="true"]) .component-phoneprefix-button-input {
+.component-phoneprefix-menu:not(.component-phoneprefix-menu--open) .component-phoneprefix-menu-button-input {
     pointer-events: none;
 }
 
-.component-phoneprefix-button-arrow {
-    margin-left: auto;
+.component-phoneprefix-menu-button-input::placeholder {
+    color: #666;
+}
+
+.component-phoneprefix-menu-button-arrow {
+    width: 16px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 10px;
     opacity: 0.6;
     transition: transform 0.15s;
 }
 
-.component-phoneprefix-options {
+.component-phoneprefix-menu-options {
+    display: none;
     position: absolute;
-    top: 100%;
+    top: 36px;
     left: 0;
     width: 280px;
     max-height: 300px;
@@ -1160,16 +1157,17 @@
     z-index: var(--layer-menu, 85);
 }
 
-.component-phoneprefix-option {
+.component-phoneprefix-menu-option {
+    width: 100%;
+    height: 36px;
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 100%;
-    padding: 10px;
+    padding: 0 10px;
     text-align: left;
 }
 
-.component-phoneprefix-option-image {
+.component-phoneprefix-menu-option-image {
     width: 20px;
     height: 15px;
     object-fit: cover;
@@ -1177,18 +1175,22 @@
     flex-shrink: 0;
 }
 
-.component-phoneprefix-option-text {
+.component-phoneprefix-menu-option-text {
     flex: 1;
-    flex-shrink: 1;
+    text-align: left;
     min-width: 0;
 }
 
 /* States */
-.component-phoneprefix-button-arrow--open {
+.component-phoneprefix-menu-button-arrow--open {
     transform: rotate(180deg);
 }
 
-.component-phoneprefix-option:focus-visible {
+.component-phoneprefix-menu-options--open {
+    display: block;
+}
+
+.component-phoneprefix-menu-option:focus-visible {
     outline: 2px solid var(--blue-500);
     outline-offset: -2px;
 }
