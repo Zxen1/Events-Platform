@@ -460,10 +460,12 @@
 
 .menu-class-3 {
   --menu-bg: rgba(0, 0, 0, 0.35);
+  --menu-bg-focus: rgba(0, 0, 0, 0.45);
   --menu-bg-hover: var(--blue-500);
   --menu-bg-open: var(--blue-600);
   --menu-bg-options: rgba(0, 0, 0, 0.35);
-  --menu-border: var(--blue-500);
+  --menu-border: #333;
+  --menu-border-hover: #555;
   --menu-border-focus: var(--blue-500);
   --menu-text: #fff;
   --menu-text-secondary: #aaa;
@@ -486,13 +488,12 @@
 }
 
 .menu-class-3 .menu-button:hover {
-  border-color: var(--menu-border-focus);
-  background: var(--menu-bg-hover);
+  border-color: var(--menu-border-hover);
 }
 
 .menu-class-3 .menu-button--open {
   border-color: var(--menu-border-focus);
-  background: var(--menu-bg-open);
+  background: var(--menu-bg-focus);
   border-radius: var(--menu-radius) var(--menu-radius) 0 0;
   border-bottom: none;
 }
@@ -516,7 +517,7 @@
 }
 
 .menu-class-3 .menu-options {
-  background: var(--menu-bg-options);
+  background: var(--menu-bg-focus);
   border: 1px solid var(--menu-border-focus);
   border-top: none;
   border-radius: 0 0 var(--menu-radius) var(--menu-radius);
