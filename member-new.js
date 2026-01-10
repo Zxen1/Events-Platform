@@ -2978,7 +2978,7 @@ const MemberModule = (function() {
                 return checked ? checked.value : '';
 
             case 'age_rating':
-                var ageRatingMenu = el.querySelector('.component-ageratingpicker');
+                var ageRatingMenu = el.querySelector('.component-ageratingpicker-menu');
                 return ageRatingMenu ? String(ageRatingMenu.dataset.value || '').trim() : '';
 
             case 'public_phone':
@@ -3119,7 +3119,7 @@ const MemberModule = (function() {
                             var editorEl = groupEl.querySelector('.fieldset-sessionpricing-pricing-editor') || groupEl;
                             
                             // Extract age rating for this ticket group
-                            var ageRatingMenu = editorEl.querySelector('.component-ageratingpicker');
+                            var ageRatingMenu = editorEl.querySelector('.component-ageratingpicker-menu');
                             if (ageRatingMenu) {
                                 ageRatings[gk] = String(ageRatingMenu.dataset.value || '').trim();
                             }

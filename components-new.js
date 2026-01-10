@@ -101,7 +101,7 @@ const MenuManager = (function(){
                 menu.querySelector('input.component-currencyfull-menu-button-input') ||
                 menu.querySelector('input.component-phoneprefixcompact-menu-button-input') ||
                 menu.querySelector('input.component-country-menu-button-input') ||
-                menu.querySelector('input.admin-language-button-input') ||
+                menu.querySelector('input.component-languagefull-menu-button-input') ||
                 null
             );
         } catch (e) {
@@ -1420,30 +1420,34 @@ const LanguageMenuComponent = (function(){
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
-        menu.className = 'admin-language-wrapper';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-languagefull-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="admin-language-button"><img class="admin-language-button-flag" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="admin-language-button-input" placeholder="Select currency" autocomplete="off"><span class="admin-language-button-arrow">▼</span></div><div class="admin-language-options"></div>';
+        menu.innerHTML = '<div class="component-languagefull-menu-button menu-button" role="button"><img class="component-languagefull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-languagefull-menu-button-input menu-input" placeholder="Select language" autocomplete="off"><span class="component-languagefull-menu-button-arrow menu-arrow">▼</span></div><div class="component-languagefull-menu-options menu-options"></div>';
         
-        var btn = menu.querySelector('.admin-language-button');
-        var opts = menu.querySelector('.admin-language-options');
-        var btnImg = menu.querySelector('.admin-language-button-flag');
-        var btnInput = menu.querySelector('.admin-language-button-input');
-        var arrow = menu.querySelector('.admin-language-button-arrow');
+        var btn = menu.querySelector('.component-languagefull-menu-button');
+        var opts = menu.querySelector('.component-languagefull-menu-options');
+        var btnImg = menu.querySelector('.component-languagefull-menu-button-image');
+        var btnInput = menu.querySelector('.component-languagefull-menu-button-input');
+        var arrow = menu.querySelector('.component-languagefull-menu-button-arrow');
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('admin-language-wrapper--open', !!isOpen);
-            btn.classList.toggle('admin-language-button--open', !!isOpen);
-            arrow.classList.toggle('admin-language-button-arrow--open', !!isOpen);
-            opts.classList.toggle('admin-language-options--open', !!isOpen);
+            menu.classList.toggle('component-languagefull-menu--open', !!isOpen);
+            btn.classList.toggle('component-languagefull-menu-button--open', !!isOpen);
+            btn.classList.toggle('menu-button--open', !!isOpen);
+            arrow.classList.toggle('component-languagefull-menu-button-arrow--open', !!isOpen);
+            arrow.classList.toggle('menu-arrow--open', !!isOpen);
+            opts.classList.toggle('component-languagefull-menu-options--open', !!isOpen);
+            opts.classList.toggle('menu-options--open', !!isOpen);
         }
 
         menu.__menuIsOpen = function() {
-            return menu.classList.contains('admin-language-wrapper--open');
+            return menu.classList.contains('component-languagefull-menu--open');
         };
         menu.__menuApplyOpenState = applyOpenState;
         menu.__menuGetOptionsEl = function() { return opts; };
-        menu.__menuOptionSelector = '.admin-language-option';
+        menu.__menuOptionSelector = '.component-languagefull-menu-option';
 
         // Store all option elements for filtering
         var allOptions = [];
@@ -1482,11 +1486,13 @@ const LanguageMenuComponent = (function(){
             var countryCode = item.filename ? item.filename.replace('.svg', '') : null;
             var displayText = item.value + ' - ' + item.label;
             
-            var op = document.createElement('div');
-            op.className = 'admin-language-option';
+            var op = document.createElement('button');
+            op.type = 'button';
+            op.className = 'component-languagefull-menu-option menu-option';
             var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
-            op.innerHTML = '<img class="admin-language-option-flag" src="' + flagUrl + '" alt=""><span class="admin-language-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-languagefull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-languagefull-menu-option-text menu-text">' + displayText + '</span>';
             op.onclick = function(e) {
+                e.stopPropagation();
                 if (flagUrl) {
                     btnImg.src = flagUrl;
                     btnImg.style.display = 'block';
@@ -1529,7 +1535,7 @@ const LanguageMenuComponent = (function(){
         // (Arrow has its own handler; it stops propagation so it won't double-trigger.)
         if (btn) {
             btn.addEventListener('click', function(e) {
-                if (!menu.classList.contains('admin-language-wrapper--open')) {
+                if (!menu.classList.contains('component-languagefull-menu--open')) {
                     MenuManager.closeAll(menu);
                     applyOpenState(true);
                 } else {
@@ -1549,7 +1555,7 @@ const LanguageMenuComponent = (function(){
         btnInput.addEventListener('input', function(e) {
             filterOptions(this.value);
             if (document.activeElement !== this) return;
-            if (!menu.classList.contains('admin-language-wrapper--open')) applyOpenState(true);
+            if (!menu.classList.contains('component-languagefull-menu--open')) applyOpenState(true);
         });
         
         btnInput.addEventListener('keydown', function(e) {
@@ -1561,8 +1567,8 @@ const LanguageMenuComponent = (function(){
                 return;
             }
             // Arrow key navigation
-            if (menu.classList.contains('admin-language-wrapper--open')) {
-                menuArrowKeyNav(e, opts, '.admin-language-option', function(opt) { opt.click(); });
+            if (menu.classList.contains('component-languagefull-menu--open')) {
+                menuArrowKeyNav(e, opts, '.component-languagefull-menu-option', function(opt) { opt.click(); });
             }
         });
         
@@ -1570,7 +1576,7 @@ const LanguageMenuComponent = (function(){
         btnInput.addEventListener('blur', function() {
             // Small delay to allow option click to fire first
             setTimeout(function() {
-                if (!menu.classList.contains('admin-language-wrapper--open')) {
+                if (!menu.classList.contains('component-languagefull-menu--open')) {
                     setValue(selectedCode);
                     filterOptions('');
                 }
@@ -1580,7 +1586,7 @@ const LanguageMenuComponent = (function(){
         // Arrow click opens/closes
         arrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (menu.classList.contains('admin-language-wrapper--open')) {
+            if (menu.classList.contains('component-languagefull-menu--open')) {
                 applyOpenState(false);
             } else {
                 MenuManager.closeAll(menu);
@@ -1737,6 +1743,7 @@ const PhonePrefixComponent = (function(){
             var flagUrl = countryCode ? window.App.getImageUrl('phonePrefixes', countryCode + '.svg') : '';
             op.innerHTML = '<img class="component-phoneprefixcompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-phoneprefixcompact-menu-option-text menu-text">' + displayText + '</span>';
             op.addEventListener('click', function(e) {
+                e.stopPropagation();
                 if (countryCode) {
                     btnImg.src = flagUrl;
                     btnImg.style.display = 'block';
@@ -1893,9 +1900,10 @@ const CountryComponent = (function(){
         var selectedCode = initialValue;
         
         var menu = document.createElement('div');
-        menu.className = 'component-country-menu';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-country-menu menu-class-1';
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-country-menu-button"><img class="component-country-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-country-menu-button-input" placeholder="Select country" autocomplete="off"><span class="component-country-menu-button-arrow">▼</span></div><div class="component-country-menu-options"></div>';
+        menu.innerHTML = '<div class="component-country-menu-button menu-button" role="button"><img class="component-country-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-country-menu-button-input menu-input" placeholder="Select country" autocomplete="off"><span class="component-country-menu-button-arrow menu-arrow">▼</span></div><div class="component-country-menu-options menu-options"></div>';
         
         var btn = menu.querySelector('.component-country-menu-button');
         var opts = menu.querySelector('.component-country-menu-options');
@@ -1905,9 +1913,18 @@ const CountryComponent = (function(){
         
         function applyOpenState(isOpen) {
             menu.classList.toggle('component-country-menu--open', !!isOpen);
-            if (btn) btn.classList.toggle('component-country-menu-button--open', !!isOpen);
-            if (arrow) arrow.classList.toggle('component-country-menu-button-arrow--open', !!isOpen);
-            if (opts) opts.classList.toggle('component-country-menu-options--open', !!isOpen);
+            if (btn) {
+                btn.classList.toggle('component-country-menu-button--open', !!isOpen);
+                btn.classList.toggle('menu-button--open', !!isOpen);
+            }
+            if (arrow) {
+                arrow.classList.toggle('component-country-menu-button-arrow--open', !!isOpen);
+                arrow.classList.toggle('menu-arrow--open', !!isOpen);
+            }
+            if (opts) {
+                opts.classList.toggle('component-country-menu-options--open', !!isOpen);
+                opts.classList.toggle('menu-options--open', !!isOpen);
+            }
         }
         
         // Required by MenuManager (strict)
@@ -1963,11 +1980,13 @@ const CountryComponent = (function(){
             var code = String(item.value || '').toLowerCase();
             var displayText = code.toUpperCase() + ' - ' + item.label;
             
-            var op = document.createElement('div');
-            op.className = 'component-country-menu-option';
+            var op = document.createElement('button');
+            op.type = 'button';
+            op.className = 'component-country-menu-option menu-option';
             var flagUrl = window.App.getImageUrl('countries', item.filename);
-            op.innerHTML = '<img class="component-country-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-country-menu-option-text">' + displayText + '</span>';
+            op.innerHTML = '<img class="component-country-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-country-menu-option-text menu-text">' + displayText + '</span>';
             op.onclick = function(e) {
+                e.stopPropagation();
                 btnImg.src = flagUrl;
                 btnImg.style.display = 'block';
                 btnInput.value = displayText;
@@ -2547,77 +2566,114 @@ const IconPickerComponent = (function(){
         options = options || {};
         var onSelect = options.onSelect || function() {};
         var currentIcon = options.currentIcon || null;
+        var selectedIcon = currentIcon; // Track confirmed selection for Escape revert
         
         var menu = document.createElement('div');
-        menu.className = 'component-iconpicker';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-iconpicker-menu menu-class-1';
         
-        // Button
-        var button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'component-iconpicker-button';
+        // Button (div with role=button to contain input)
+        var btn = document.createElement('div');
+        btn.className = 'component-iconpicker-menu-button menu-button';
+        btn.setAttribute('role', 'button');
         
         var buttonImage = document.createElement('img');
-        buttonImage.className = 'component-iconpicker-button-image';
+        buttonImage.className = 'component-iconpicker-menu-button-image';
         buttonImage.src = currentIcon || '';
         buttonImage.alt = '';
         if (!currentIcon) buttonImage.style.display = 'none';
         
-        var buttonText = document.createElement('span');
-        buttonText.className = 'component-iconpicker-button-text';
-        buttonText.textContent = currentIcon ? getFilename(currentIcon) : 'Select...';
+        // Input for type-to-filter (replaces span)
+        var btnInput = document.createElement('input');
+        btnInput.type = 'text';
+        btnInput.className = 'component-iconpicker-menu-button-input menu-input';
+        btnInput.placeholder = 'Select icon';
+        btnInput.autocomplete = 'off';
+        if (currentIcon) btnInput.value = getFilename(currentIcon);
         
         var buttonArrow = document.createElement('span');
-        buttonArrow.className = 'component-iconpicker-button-arrow';
+        buttonArrow.className = 'component-iconpicker-menu-button-arrow menu-arrow';
         buttonArrow.textContent = '▼';
         
-        button.appendChild(buttonImage);
-        button.appendChild(buttonText);
-        button.appendChild(buttonArrow);
-        menu.appendChild(button);
+        btn.appendChild(buttonImage);
+        btn.appendChild(btnInput);
+        btn.appendChild(buttonArrow);
+        menu.appendChild(btn);
         
         // Options dropdown
         var optionsDiv = document.createElement('div');
-        optionsDiv.className = 'component-iconpicker-options';
+        optionsDiv.className = 'component-iconpicker-menu-options menu-options';
         menu.appendChild(optionsDiv);
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('component-iconpicker--open', !!isOpen);
-            button.classList.toggle('component-iconpicker-button--open', !!isOpen);
-            buttonArrow.classList.toggle('component-iconpicker-button-arrow--open', !!isOpen);
-            optionsDiv.classList.toggle('component-iconpicker-options--open', !!isOpen);
+            menu.classList.toggle('component-iconpicker-menu--open', !!isOpen);
+            btn.classList.toggle('component-iconpicker-menu-button--open', !!isOpen);
+            btn.classList.toggle('menu-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-iconpicker-menu-button-arrow--open', !!isOpen);
+            buttonArrow.classList.toggle('menu-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-iconpicker-menu-options--open', !!isOpen);
+            optionsDiv.classList.toggle('menu-options--open', !!isOpen);
         }
-        menu.__menuIsOpen = function() { return menu.classList.contains('component-iconpicker--open'); };
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-iconpicker-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
         
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
-        menu.__menuOptionSelector = '.component-iconpicker-option';
+        menu.__menuOptionSelector = '.component-iconpicker-menu-option';
         
-        // NO PRELOADING - menu only loads when opened (admin only, doesn't affect page load speed)
+        // Store all option elements for filtering
+        var allOptions = [];
+        
+        // Filter options based on search text
+        function filterOptions(searchText) {
+            var search = String(searchText || '').toLowerCase();
+            allOptions.forEach(function(optData) {
+                var matches = menuFilterMatch(optData, search);
+                optData.element.style.display = matches ? '' : 'none';
+            });
+        }
+        
+        // Set value (for init and revert)
+        function setValue(iconPath) {
+            currentIcon = iconPath;
+            selectedIcon = iconPath;
+            if (iconPath) {
+                buttonImage.src = iconPath;
+                buttonImage.style.display = '';
+                btnInput.value = getFilename(iconPath);
+            } else {
+                buttonImage.src = '';
+                buttonImage.style.display = 'none';
+                btnInput.value = '';
+            }
+        }
         
         // Render icon options
         function renderIconOptions(iconList, isInitial) {
             optionsDiv.innerHTML = '';
+            allOptions = [];
             if (iconList.length === 0) {
                 var msg = document.createElement('div');
-                msg.className = 'component-iconpicker-error';
+                msg.className = 'component-iconpicker-menu-error';
                 msg.innerHTML = 'No icons found.<br>Please set icon folder in Admin Settings.';
                 optionsDiv.appendChild(msg);
             } else {
                 iconList.forEach(function(iconPath) {
+                    var filename = getFilename(iconPath);
+                    
                     var option = document.createElement('button');
                     option.type = 'button';
-                    option.className = 'component-iconpicker-option';
+                    option.className = 'component-iconpicker-menu-option menu-option';
                     
                     var optImg = document.createElement('img');
-                    optImg.className = 'component-iconpicker-option-image';
+                    optImg.className = 'component-iconpicker-menu-option-image';
                     optImg.src = iconPath;
                     optImg.alt = '';
                     
                     var optText = document.createElement('span');
-                    optText.className = 'component-iconpicker-option-text';
-                    optText.textContent = getFilename(iconPath);
+                    optText.className = 'component-iconpicker-menu-option-text menu-text';
+                    optText.textContent = filename;
                     
                     option.appendChild(optImg);
                     option.appendChild(optText);
@@ -2625,29 +2681,38 @@ const IconPickerComponent = (function(){
                     option.onclick = function(ev) {
                         ev.stopPropagation();
                         currentIcon = iconPath;
+                        selectedIcon = iconPath;
                         buttonImage.src = iconPath;
                         buttonImage.style.display = '';
-                        buttonText.textContent = getFilename(iconPath);
+                        btnInput.value = filename;
+                        filterOptions('');
                         applyOpenState(false);
                         onSelect(iconPath);
                     };
                     optionsDiv.appendChild(option);
+                    
+                    // Store for filtering
+                    allOptions.push({
+                        element: option,
+                        valueLower: filename.toLowerCase(),
+                        labelLower: filename.toLowerCase(),
+                        labelWords: filename.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+                    });
                 });
             }
         }
-        
-        // NO PRELOADING - menu only loads when opened (admin only, doesn't affect page load speed)
         
         function openMenu() {
             // Close all other menus first
             MenuManager.closeAll(menu);
             // Open menu immediately
             applyOpenState(true);
+            btnInput.focus();
+            btnInput.select();
             
             // Show database icons instantly (menu is now open and interactive)
             if (!categoryIconsBasket) {
                 loadFolderFromSettings().then(function() {
-                    // Update with database icons now that they're loaded
                     var updatedDbIcons = getDatabaseIcons(iconFolder);
                     renderIconOptions(updatedDbIcons, true);
                 });
@@ -2662,59 +2727,73 @@ const IconPickerComponent = (function(){
             });
         }
         
-        function closeMenu() {
-            applyOpenState(false);
-        }
+        // Clicking anywhere on the button opens the menu (if closed)
+        btn.addEventListener('click', function(e) {
+            if (!menu.classList.contains('component-iconpicker-menu--open')) {
+                openMenu();
+            } else {
+                applyOpenState(false);
+            }
+        });
+
+        // Input focus opens menu and selects text
+        btnInput.addEventListener('focus', function(e) {
+            openMenu();
+        });
+
+        // Input typing filters options
+        btnInput.addEventListener('input', function(e) {
+            filterOptions(this.value);
+            if (document.activeElement !== this) return;
+            if (!menu.classList.contains('component-iconpicker-menu--open')) openMenu();
+        });
         
-        // Keyboard: arrows + enter + escape
-        function onKeyDown(e) {
-            if (!e) return;
-            var key = e.key;
-            var isOpen = menu.classList.contains('component-iconpicker--open');
-            
-            if (key === 'Escape') {
-                if (isOpen) {
-                    closeMenu();
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
+        btnInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                applyOpenState(false);
+                // Revert to previous selection
+                setValue(selectedIcon);
+                filterOptions('');
                 return;
             }
-            
-            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'Enter') {
-                if (!isOpen) {
-                    openMenu();
-                    // If user is starting keyboard navigation, prevent the implicit click toggle.
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-                // Navigate/select highlighted option
-                menuArrowKeyNav(e, optionsDiv, '.component-iconpicker-option', function(opt) { opt.click(); });
+            // Arrow key navigation
+            if (menu.classList.contains('component-iconpicker-menu--open')) {
+                menuArrowKeyNav(e, optionsDiv, '.component-iconpicker-menu-option', function(opt) { opt.click(); });
             }
-        }
-        // Capture so options/buttons inside also route through here
-        menu.addEventListener('keydown', onKeyDown, true);
+        });
         
-        // Toggle menu (mouse)
-        button.onclick = function(e) {
+        // Blur - restore selected value when clicking away
+        btnInput.addEventListener('blur', function() {
+            // Small delay to allow option click to fire first
+            setTimeout(function() {
+                if (!menu.classList.contains('component-iconpicker-menu--open')) {
+                    setValue(selectedIcon);
+                    filterOptions('');
+                }
+            }, 150);
+        });
+
+        // Arrow click opens/closes
+        buttonArrow.addEventListener('click', function(e) {
             e.stopPropagation();
-            var isOpen = menu.classList.contains('component-iconpicker--open');
+            if (menu.classList.contains('component-iconpicker-menu--open')) {
+                applyOpenState(false);
+            } else {
+                MenuManager.closeAll(menu);
+                applyOpenState(true);
+            }
+        });
             if (isOpen) closeMenu();
             else openMenu();
-        };
+        });
+        
+        // Disable input pointer when closed (like currency menu)
+        menu.classList.add('component-iconpicker-menu--closed');
         
         return {
             element: menu,
             setIcon: function(iconPath) {
-                currentIcon = iconPath;
-                if (iconPath) {
-                    buttonImage.src = iconPath;
-                    buttonImage.style.display = '';
-                    buttonText.textContent = getFilename(iconPath);
-                } else {
-                    buttonImage.style.display = 'none';
-                    buttonText.textContent = 'Select...';
-                }
+                setValue(iconPath);
             },
             getIcon: function() {
                 return currentIcon;
@@ -3987,25 +4066,26 @@ const SystemImagePickerComponent = (function(){
         var currentImage = null; // Only set if databaseValue exists in loaded images
         
         var menu = document.createElement('div');
-        menu.className = 'component-systemimagepicker';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-systemimagepicker-menu menu-class-1';
         
         // Button
         var button = document.createElement('button');
         button.type = 'button';
-        button.className = 'component-systemimagepicker-button';
+        button.className = 'component-systemimagepicker-menu-button menu-button';
         
         var buttonImage = document.createElement('img');
-        buttonImage.className = 'component-systemimagepicker-button-image';
+        buttonImage.className = 'component-systemimagepicker-menu-button-image';
         buttonImage.src = '';
         buttonImage.alt = '';
         buttonImage.style.display = 'none';
         
         var buttonText = document.createElement('span');
-        buttonText.className = 'component-systemimagepicker-button-text';
+        buttonText.className = 'component-systemimagepicker-menu-button-text menu-text';
         buttonText.textContent = 'Select...';
         
         var buttonArrow = document.createElement('span');
-        buttonArrow.className = 'component-systemimagepicker-button-arrow';
+        buttonArrow.className = 'component-systemimagepicker-menu-button-arrow menu-arrow';
         buttonArrow.textContent = '▼';
         
         button.appendChild(buttonImage);
@@ -4015,22 +4095,25 @@ const SystemImagePickerComponent = (function(){
         
         // Options dropdown
         var optionsDiv = document.createElement('div');
-        optionsDiv.className = 'component-systemimagepicker-options';
+        optionsDiv.className = 'component-systemimagepicker-menu-options menu-options';
         menu.appendChild(optionsDiv);
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('component-systemimagepicker--open', !!isOpen);
-            button.classList.toggle('component-systemimagepicker-button--open', !!isOpen);
-            buttonArrow.classList.toggle('component-systemimagepicker-button-arrow--open', !!isOpen);
-            optionsDiv.classList.toggle('component-systemimagepicker-options--open', !!isOpen);
+            menu.classList.toggle('component-systemimagepicker-menu--open', !!isOpen);
+            button.classList.toggle('component-systemimagepicker-menu-button--open', !!isOpen);
+            button.classList.toggle('menu-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-systemimagepicker-menu-button-arrow--open', !!isOpen);
+            buttonArrow.classList.toggle('menu-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-systemimagepicker-menu-options--open', !!isOpen);
+            optionsDiv.classList.toggle('menu-options--open', !!isOpen);
         }
-        menu.__menuIsOpen = function() { return menu.classList.contains('component-systemimagepicker--open'); };
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-systemimagepicker-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
         
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
-        menu.__menuOptionSelector = '.component-systemimagepicker-option';
+        menu.__menuOptionSelector = '.component-systemimagepicker-menu-option';
         
         // Set button if database value exists (NO API CALL - just construct URL from folder + filename)
         // Ensure folder and system_images are loaded from settings if not already set
@@ -4065,7 +4148,7 @@ const SystemImagePickerComponent = (function(){
             if (imageList.length === 0) {
                 if (clearFirst) {
                     var msg = document.createElement('div');
-                    msg.className = 'component-systemimagepicker-error';
+                    msg.className = 'component-systemimagepicker-menu-error';
                     msg.innerHTML = 'No images found.<br>Please set system images folder in Admin Settings.';
                     optionsDiv.appendChild(msg);
                 }
@@ -4077,16 +4160,16 @@ const SystemImagePickerComponent = (function(){
                     
                     var option = document.createElement('button');
                     option.type = 'button';
-                    option.className = 'component-systemimagepicker-option';
+                    option.className = 'component-systemimagepicker-menu-option menu-option';
                     option.setAttribute('data-image-path', imagePath);
                     
                     var optImg = document.createElement('img');
-                    optImg.className = 'component-systemimagepicker-option-image';
+                    optImg.className = 'component-systemimagepicker-menu-option-image';
                     optImg.src = imagePath;
                     optImg.alt = '';
                     
                     var optText = document.createElement('span');
-                    optText.className = 'component-systemimagepicker-option-text';
+                    optText.className = 'component-systemimagepicker-menu-option-text menu-text';
                     optText.textContent = getFilename(imagePath);
                     
                     option.appendChild(optImg);
@@ -4139,7 +4222,7 @@ const SystemImagePickerComponent = (function(){
         function onKeyDown(e) {
             if (!e) return;
             var key = e.key;
-            var isOpen = menu.classList.contains('component-systemimagepicker--open');
+            var isOpen = menu.classList.contains('component-systemimagepicker-menu--open');
             
             if (key === 'Escape') {
                 if (isOpen) {
@@ -4156,7 +4239,7 @@ const SystemImagePickerComponent = (function(){
                     e.preventDefault();
                     e.stopPropagation();
                 }
-                menuArrowKeyNav(e, optionsDiv, '.component-systemimagepicker-option', function(opt) { opt.click(); });
+                menuArrowKeyNav(e, optionsDiv, '.component-systemimagepicker-menu-option', function(opt) { opt.click(); });
             }
         }
         menu.addEventListener('keydown', onKeyDown, true);
@@ -4164,7 +4247,7 @@ const SystemImagePickerComponent = (function(){
         // Toggle menu (mouse)
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = menu.classList.contains('component-systemimagepicker--open');
+            var isOpen = menu.classList.contains('component-systemimagepicker-menu--open');
             if (isOpen) closeMenu();
             else openMenu();
         };
@@ -4233,19 +4316,20 @@ const AmenitiesMenuComponent = (function(){
         var selectedAmenities = options.selectedAmenities || [];
         
         var menu = document.createElement('div');
-        menu.className = 'component-amenitiespicker';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-amenitiespicker-menu menu-class-1';
         
         // Button - EXACT same structure as SystemImagePickerComponent
         var button = document.createElement('button');
         button.type = 'button';
-        button.className = 'component-amenitiespicker-button';
+        button.className = 'component-amenitiespicker-menu-button menu-button';
         
         var buttonText = document.createElement('span');
-        buttonText.className = 'component-amenitiespicker-button-text';
+        buttonText.className = 'component-amenitiespicker-menu-button-text menu-text';
         buttonText.textContent = 'Select amenities...';
         
         var buttonArrow = document.createElement('span');
-        buttonArrow.className = 'component-amenitiespicker-button-arrow';
+        buttonArrow.className = 'component-amenitiespicker-menu-button-arrow menu-arrow';
         buttonArrow.textContent = '▼';
         
         button.appendChild(buttonText);
@@ -4254,22 +4338,25 @@ const AmenitiesMenuComponent = (function(){
         
         // Options dropdown - EXACT same structure
         var optionsDiv = document.createElement('div');
-        optionsDiv.className = 'component-amenitiespicker-options';
+        optionsDiv.className = 'component-amenitiespicker-menu-options menu-options';
         menu.appendChild(optionsDiv);
 
         function applyOpenState(isOpen) {
-            menu.classList.toggle('component-amenitiespicker--open', !!isOpen);
-            button.classList.toggle('component-amenitiespicker-button--open', !!isOpen);
-            buttonArrow.classList.toggle('component-amenitiespicker-button-arrow--open', !!isOpen);
-            optionsDiv.classList.toggle('component-amenitiespicker-options--open', !!isOpen);
+            menu.classList.toggle('component-amenitiespicker-menu--open', !!isOpen);
+            button.classList.toggle('component-amenitiespicker-menu-button--open', !!isOpen);
+            button.classList.toggle('menu-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-amenitiespicker-menu-button-arrow--open', !!isOpen);
+            buttonArrow.classList.toggle('menu-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-amenitiespicker-menu-options--open', !!isOpen);
+            optionsDiv.classList.toggle('menu-options--open', !!isOpen);
         }
-        menu.__menuIsOpen = function() { return menu.classList.contains('component-amenitiespicker--open'); };
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-amenitiespicker-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
         
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
-        menu.__menuOptionSelector = '.component-amenitiespicker-option';
+        menu.__menuOptionSelector = '.component-amenitiespicker-menu-option';
         
         // Update button text based on selected count
         function updateButtonText() {
@@ -4289,7 +4376,7 @@ const AmenitiesMenuComponent = (function(){
             
             if (!amenities || amenities.length === 0) {
                 var msg = document.createElement('div');
-                msg.className = 'component-amenitiespicker-error';
+                msg.className = 'component-amenitiespicker-menu-error';
                 msg.innerHTML = 'No amenities found.<br>Please set amenities folder in Admin Settings.';
                 optionsDiv.appendChild(msg);
                 return;
@@ -4298,18 +4385,18 @@ const AmenitiesMenuComponent = (function(){
             amenities.forEach(function(amenity) {
                 var option = document.createElement('button');
                 option.type = 'button';
-                option.className = 'component-amenitiespicker-option';
+                option.className = 'component-amenitiespicker-menu-option menu-option';
                 option.setAttribute('data-amenity-value', amenity.value || '');
                 
                 // Checkbox - added to match amenities requirement
                 var checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
-                checkbox.className = 'component-amenitiespicker-option-checkbox';
+                checkbox.className = 'component-amenitiespicker-menu-option-checkbox';
                 checkbox.checked = selectedAmenities.indexOf(amenity.value) !== -1;
                 
                 // Icon - EXACT same structure as SystemImagePickerComponent
                 var optImg = document.createElement('img');
-                optImg.className = 'component-amenitiespicker-option-image';
+                optImg.className = 'component-amenitiespicker-menu-option-image';
                 if (amenity.filename && window.App) {
                     var iconUrl = window.App.getImageUrl('amenities', amenity.filename);
                     optImg.src = iconUrl;
@@ -4318,7 +4405,7 @@ const AmenitiesMenuComponent = (function(){
                 
                 // Text - EXACT same structure as SystemImagePickerComponent
                 var optText = document.createElement('span');
-                optText.className = 'component-amenitiespicker-option-text';
+                optText.className = 'component-amenitiespicker-menu-option-text menu-text';
                 optText.textContent = amenity.value || amenity.label || '';
                 
                 option.appendChild(checkbox);
@@ -4330,7 +4417,7 @@ const AmenitiesMenuComponent = (function(){
                 
                 // Update visual state based on checkbox
                 function updateOptionState() {
-                    optImg.classList.toggle('component-amenitiespicker-option-image--selected', !!checkbox.checked);
+                    optImg.classList.toggle('component-amenitiespicker-menu-option-image--selected', !!checkbox.checked);
                 }
                 updateOptionState();
                 
@@ -4382,7 +4469,7 @@ const AmenitiesMenuComponent = (function(){
         function onKeyDown(e) {
             if (!e) return;
             var key = e.key;
-            var isOpen = menu.classList.contains('component-amenitiespicker--open');
+            var isOpen = menu.classList.contains('component-amenitiespicker-menu--open');
             
             if (key === 'Escape') {
                 if (isOpen) {
@@ -4399,7 +4486,7 @@ const AmenitiesMenuComponent = (function(){
                     e.preventDefault();
                     e.stopPropagation();
                 }
-                menuArrowKeyNav(e, optionsDiv, '.component-amenitiespicker-option', function(opt) { opt.click(); });
+                menuArrowKeyNav(e, optionsDiv, '.component-amenitiespicker-menu-option', function(opt) { opt.click(); });
             }
         }
         menu.addEventListener('keydown', onKeyDown, true);
@@ -4407,7 +4494,7 @@ const AmenitiesMenuComponent = (function(){
         // Toggle menu (mouse)
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = menu.classList.contains('component-amenitiespicker--open');
+            var isOpen = menu.classList.contains('component-amenitiespicker-menu--open');
             if (isOpen) closeMenu();
             else openMenu();
         };
@@ -4421,7 +4508,7 @@ const AmenitiesMenuComponent = (function(){
                 selectedAmenities = amenities || [];
                 updateButtonText();
                 // Re-render if menu is open
-                if (menu.classList.contains('component-amenitiespicker--open')) {
+                if (menu.classList.contains('component-amenitiespicker-menu--open')) {
                     loadAmenities().then(function(amenitiesList) {
                         renderAmenityOptions(amenitiesList);
                     });
@@ -7113,28 +7200,29 @@ const AgeRatingComponent = (function(){
         var selectedValue = initialValue;
         
         var menu = document.createElement('div');
-        menu.className = 'component-ageratingpicker';
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        menu.className = 'component-ageratingpicker-menu menu-class-1';
         // Default state is "no image" until a real selection with an icon is applied.
         // This ensures placeholder text aligns with options (only 10px left padding from the button itself).
-        menu.classList.add('component-ageratingpicker--noimage');
+        menu.classList.add('component-ageratingpicker-menu--noimage');
         
         // Button
         var button = document.createElement('button');
         button.type = 'button';
-        button.className = 'component-ageratingpicker-button';
+        button.className = 'component-ageratingpicker-menu-button menu-button';
         
         var buttonImage = document.createElement('img');
-        buttonImage.className = 'component-ageratingpicker-button-image';
+        buttonImage.className = 'component-ageratingpicker-menu-button-image';
         buttonImage.src = '';
         buttonImage.alt = '';
         buttonImage.style.display = 'none';
         
         var buttonText = document.createElement('span');
-        buttonText.className = 'component-ageratingpicker-button-text';
+        buttonText.className = 'component-ageratingpicker-menu-button-text menu-text';
         buttonText.textContent = 'Select rating';
         
         var buttonArrow = document.createElement('span');
-        buttonArrow.className = 'component-ageratingpicker-button-arrow';
+        buttonArrow.className = 'component-ageratingpicker-menu-button-arrow menu-arrow';
         buttonArrow.textContent = '▼';
         
         button.appendChild(buttonImage);
@@ -7144,23 +7232,26 @@ const AgeRatingComponent = (function(){
         
         // Options dropdown
         var optionsDiv = document.createElement('div');
-        optionsDiv.className = 'component-ageratingpicker-options';
+        optionsDiv.className = 'component-ageratingpicker-menu-options menu-options';
         menu.appendChild(optionsDiv);
         
         function applyOpenState(isOpen) {
-            menu.classList.toggle('component-ageratingpicker--open', !!isOpen);
-            button.classList.toggle('component-ageratingpicker-button--open', !!isOpen);
-            buttonArrow.classList.toggle('component-ageratingpicker-button-arrow--open', !!isOpen);
-            optionsDiv.classList.toggle('component-ageratingpicker-options--open', !!isOpen);
+            menu.classList.toggle('component-ageratingpicker-menu--open', !!isOpen);
+            button.classList.toggle('component-ageratingpicker-menu-button--open', !!isOpen);
+            button.classList.toggle('menu-button--open', !!isOpen);
+            buttonArrow.classList.toggle('component-ageratingpicker-menu-button-arrow--open', !!isOpen);
+            buttonArrow.classList.toggle('menu-arrow--open', !!isOpen);
+            optionsDiv.classList.toggle('component-ageratingpicker-menu-options--open', !!isOpen);
+            optionsDiv.classList.toggle('menu-options--open', !!isOpen);
         }
         
-        menu.__menuIsOpen = function() { return menu.classList.contains('component-ageratingpicker--open'); };
+        menu.__menuIsOpen = function() { return menu.classList.contains('component-ageratingpicker-menu--open'); };
         menu.__menuApplyOpenState = applyOpenState;
         
         // Register with MenuManager
         MenuManager.register(menu);
         menu.__menuGetOptionsEl = function() { return optionsDiv; };
-        menu.__menuOptionSelector = '.component-ageratingpicker-option';
+        menu.__menuOptionSelector = '.component-ageratingpicker-menu-option';
         
         // Set button from initial value
         function setValue(value) {
@@ -7171,7 +7262,7 @@ const AgeRatingComponent = (function(){
                 selectedValue = null;
                 menu.dataset.value = '';
                 // Placeholder state: no icon, so remove extra left padding before text
-                menu.classList.add('component-ageratingpicker--noimage');
+                menu.classList.add('component-ageratingpicker-menu--noimage');
                 return;
             }
             var found = ageRatingData.find(function(item) {
@@ -7185,10 +7276,10 @@ const AgeRatingComponent = (function(){
                 if (imgUrl) {
                     buttonImage.src = imgUrl;
                     buttonImage.style.display = '';
-                    menu.classList.remove('component-ageratingpicker--noimage');
+                    menu.classList.remove('component-ageratingpicker-menu--noimage');
                 } else {
                     buttonImage.style.display = 'none';
-                    menu.classList.add('component-ageratingpicker--noimage');
+                    menu.classList.add('component-ageratingpicker-menu--noimage');
                 }
             }
         }
@@ -7200,11 +7291,11 @@ const AgeRatingComponent = (function(){
             ageRatingData.forEach(function(item) {
                 var option = document.createElement('button');
                 option.type = 'button';
-                option.className = 'component-ageratingpicker-option';
+                option.className = 'component-ageratingpicker-menu-option menu-option';
                 option.setAttribute('data-value', item.value);
                 
                 var optImg = document.createElement('img');
-                optImg.className = 'component-ageratingpicker-option-image';
+                optImg.className = 'component-ageratingpicker-menu-option-image';
                 var itemImgUrl = getImageUrl(item.filename);
                 if (itemImgUrl) {
                     optImg.src = itemImgUrl;
@@ -7212,7 +7303,7 @@ const AgeRatingComponent = (function(){
                 optImg.alt = '';
                 
                 var optText = document.createElement('span');
-                optText.className = 'component-ageratingpicker-option-text';
+                optText.className = 'component-ageratingpicker-menu-option-text menu-text';
                 optText.textContent = item.label;
                 
                 option.appendChild(optImg);
@@ -7253,7 +7344,7 @@ const AgeRatingComponent = (function(){
         function onKeyDown(e) {
             if (!e) return;
             var key = e.key;
-            var isOpen = menu.classList.contains('component-ageratingpicker--open');
+            var isOpen = menu.classList.contains('component-ageratingpicker-menu--open');
             
             if (key === 'Escape') {
                 if (isOpen) {
@@ -7270,7 +7361,7 @@ const AgeRatingComponent = (function(){
                     e.preventDefault();
                     e.stopPropagation();
                 }
-                menuArrowKeyNav(e, optionsDiv, '.component-ageratingpicker-option', function(opt) { opt.click(); });
+                menuArrowKeyNav(e, optionsDiv, '.component-ageratingpicker-menu-option', function(opt) { opt.click(); });
             }
         }
         menu.addEventListener('keydown', onKeyDown, true);
@@ -7278,7 +7369,7 @@ const AgeRatingComponent = (function(){
         // Toggle menu (mouse)
         button.onclick = function(e) {
             e.stopPropagation();
-            var isOpen = menu.classList.contains('component-ageratingpicker--open');
+            var isOpen = menu.classList.contains('component-ageratingpicker-menu--open');
             if (isOpen) closeMenu();
             else openMenu();
         };
@@ -8102,5 +8193,6 @@ window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;
 window.LocationWallpaperComponent = LocationWallpaperComponent;
+
 
 

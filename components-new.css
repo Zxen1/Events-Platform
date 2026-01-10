@@ -664,7 +664,7 @@
     position: relative;
 }
 
-.admin-language-wrapper {
+.component-languagefull-menu {
     width: 100%;
     height: 36px;
     position: relative;
@@ -679,15 +679,12 @@
     cursor: pointer;
 }
 
-.admin-language-button {
+.component-languagefull-menu-button {
     width: 100%;
     height: 36px;
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
     cursor: pointer;
 }
 
@@ -699,25 +696,12 @@
     flex-shrink: 0;
 }
 
-.admin-language-button-flag {
+.component-languagefull-menu-button-image {
     width: 20px;
     height: 15px;
     object-fit: cover;
     border-radius: 2px;
     flex-shrink: 0;
-}
-
-/* Note: button-text not used in new version - uses button-input instead */
-
-.admin-language-button-text {
-    flex: 1;
-    text-align: left;
-    padding-left: 10px;
-    font-size: 14px;
-    color: #fff;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .component-currencyfull-menu-button-input {
@@ -732,25 +716,16 @@
     pointer-events: none;
 }
 
-.admin-language-button-input {
+.component-languagefull-menu-button-input {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
-    color: #fff;
-    caret-color: #fff;
-    background: transparent;
-    border: none;
-    outline: none;
     min-width: 0;
 }
 
-.admin-language-wrapper:not(.admin-language-wrapper--open) .admin-language-button-input {
+.component-languagefull-menu:not(.component-languagefull-menu--open) .component-languagefull-menu-button-input {
     pointer-events: none;
-}
-
-.admin-language-button-input::placeholder {
-    color: #888;
 }
 
 .component-currencyfull-menu-button-arrow {
@@ -763,15 +738,13 @@
     cursor: pointer;
 }
 
-.admin-language-button-arrow {
+.component-languagefull-menu-button-arrow {
     width: 16px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
-    transition: transform 0.2s;
     cursor: pointer;
 }
 
@@ -786,31 +759,15 @@
     z-index: var(--layer-menu, 85);
 }
 
-.admin-language-options {
+.component-languagefull-menu-options {
     display: none;
     position: absolute;
     top: 36px;
     left: 0;
     width: 100%;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
-}
-
-.admin-language-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.admin-language-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
 }
 
 .component-currencyfull-menu-option {
@@ -822,15 +779,13 @@
     cursor: pointer;
 }
 
-.admin-language-option {
+.component-languagefull-menu-option {
     width: 100%;
     height: 40px;
     display: flex;
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    color: #fff;
-    font-size: 14px;
 }
 
 .component-currencyfull-menu-option-image {
@@ -841,7 +796,7 @@
     flex-shrink: 0;
 }
 
-.admin-language-option-flag {
+.component-languagefull-menu-option-image {
     width: 20px;
     height: 15px;
     object-fit: cover;
@@ -856,49 +811,15 @@
     font-size: 14px;
 }
 
-.admin-language-option-text {
+.component-languagefull-menu-option-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
 }
 
-
-/* ----------------------------------------------------------------------------
-   STATES (shared - admin-language only, currency uses menu-class-1)
-   ---------------------------------------------------------------------------- */
-
-.fieldset-currency-button:hover,
-.admin-language-button:hover {
-    border-color: #555;
-}
-
-.fieldset-currency-button--open,
-.admin-language-button--open {
-    border-color: var(--blue-500);
-}
-
-.admin-language-button--open {
-    border-radius: 5px 5px 0 0;
-    border-bottom: none;
-}
-
-.fieldset-currency-button-arrow--open,
-.admin-language-button-arrow--open {
-    transform: rotate(180deg);
-}
-
-.fieldset-currency-options--open,
-.component-currencyfull-menu-options--open,
-.admin-language-options--open {
+.component-languagefull-menu-options--open {
     display: block;
-}
-
-.fieldset-currency-option:hover,
-.fieldset-currency-option.menu-option--highlighted,
-.admin-language-option:hover,
-.admin-language-option.menu-option--highlighted {
-    background: var(--blue-500);
 }
 
 
@@ -996,7 +917,7 @@
 
 /* ----------------------------------------------------------------------------
    COMPACT VARIANT (component-phoneprefixcompact-menu)
-   Copied from currency compact menu (same DOM + state classes).
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ---------------------------------------------------------------------------- */
 
 .component-phoneprefixcompact-menu {
@@ -1027,18 +948,11 @@
     text-align: left;
     padding-left: 6px;
     font-size: 12px;
-    background: transparent;
-    border: none;
-    outline: none;
     min-width: 0;
 }
 
 .component-phoneprefixcompact-menu:not(.component-phoneprefixcompact-menu--open) .component-phoneprefixcompact-menu-button-input {
     pointer-events: none;
-}
-
-.component-phoneprefixcompact-menu-button-input::placeholder {
-    /* color is owned by base menu classes when used */
 }
 
 .component-phoneprefixcompact-menu-button-arrow {
@@ -1048,7 +962,6 @@
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    transition: transform 0.2s;
     cursor: pointer;
 }
 
@@ -1061,18 +974,6 @@
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
-}
-
-.component-phoneprefixcompact-menu-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-phoneprefixcompact-menu-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
 }
 
 .component-phoneprefixcompact-menu-option {
@@ -1082,9 +983,6 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    font-size: 13px;
-    background: transparent;
-    border: none;
 }
 
 .component-phoneprefixcompact-menu-option-image {
@@ -1099,36 +997,16 @@
     text-align: left;
     padding-left: 10px;
     font-size: 13px;
-    /* color is owned by base menu classes when used */
-}
-
-/* Compact states */
-.component-phoneprefixcompact-menu-button:hover {
-    /* border hover is owned by base menu classes when used */
-}
-
-.component-phoneprefixcompact-menu-button--open {
-    /* open state border/radius is owned by base menu classes when used */
-}
-
-.component-phoneprefixcompact-menu-button-arrow--open {
-    transform: rotate(180deg);
 }
 
 .component-phoneprefixcompact-menu-options--open {
     display: block;
 }
 
-.component-phoneprefixcompact-menu-option:hover,
-.component-phoneprefixcompact-menu-option.menu-option--highlighted {
-    /* hover/highlight background is owned by base menu classes when used */
-}
-
 
 /* ----------------------------------------------------------------------------
    COUNTRY MENU (component-country-menu)
-   Standalone (no fieldset-menu dependency). CSS mirrors the old fieldset-menu
-   look/behavior so this is a naming-only refactor visually.
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ---------------------------------------------------------------------------- */
 
 .component-country-menu {
@@ -1143,20 +1021,7 @@
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
     cursor: pointer;
-}
-
-.component-country-menu-button:hover {
-    border-color: #555;
-}
-
-.component-country-menu-button--open {
-    border-color: var(--blue-500);
-    border-radius: 5px 5px 0 0;
-    border-bottom: none;
 }
 
 .component-country-menu-button-image {
@@ -1171,20 +1036,11 @@
     text-align: left;
     padding-left: 10px;
     font-size: 13px;
-    color: #fff;
-    caret-color: #fff;
-    background: transparent;
-    border: none;
-    outline: none;
     min-width: 0;
 }
 
 .component-country-menu:not(.component-country-menu--open) .component-country-menu-button-input {
     pointer-events: none;
-}
-
-.component-country-menu-button-input::placeholder {
-    color: #666;
 }
 
 .component-country-menu-button-arrow {
@@ -1194,13 +1050,7 @@
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
-    transition: transform 0.2s;
     cursor: pointer;
-}
-
-.component-country-menu-button-arrow--open {
-    transform: rotate(180deg);
 }
 
 .component-country-menu-options {
@@ -1209,25 +1059,9 @@
     top: 36px;
     left: 0;
     width: 100%;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
-    scrollbar-width: thin;
-    scrollbar-color: #888 transparent;
-}
-
-.component-country-menu-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-country-menu-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
 }
 
 .component-country-menu-options--open {
@@ -1241,15 +1075,6 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    color: #fff;
-    font-size: 13px;
-    background: transparent;
-    border: none;
-}
-
-.component-country-menu-option:hover,
-.component-country-menu-option.menu-option--highlighted {
-    background: var(--blue-500);
 }
 
 .component-country-menu-option-image {
@@ -1264,398 +1089,280 @@
     text-align: left;
     padding-left: 10px;
     font-size: 13px;
-    color: #fff;
 }
 
 
 /* ============================================================================
    ICON PICKER
    
-   Dropdown menu for selecting category icons.
-   Matches admin currency menu style.
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ============================================================================ */
 
-/* Appearance */
-.component-iconpicker {
+.component-iconpicker-menu {
     width: 100%;
     height: 36px;
     position: relative;
 }
 
-.component-iconpicker-button {
+.component-iconpicker-menu-button {
     width: 100%;
     height: 36px;
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
     cursor: pointer;
-    color: #fff;
     font: inherit;
 }
 
-.component-iconpicker-button-image {
+.component-iconpicker-menu-button-image {
     width: 24px;
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.component-iconpicker-button-text {
+.component-iconpicker-menu-button-input {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
-    color: #fff;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
 }
 
-.component-iconpicker-button-arrow {
+.component-iconpicker-menu:not(.component-iconpicker-menu--open) .component-iconpicker-menu-button-input {
+    pointer-events: none;
+}
+
+.component-iconpicker-menu-button-arrow {
     width: 16px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
-    transition: transform 0.2s;
 }
 
-.component-iconpicker-options {
+.component-iconpicker-menu-options {
     display: none;
     position: absolute;
     top: 36px;
     left: 0;
     width: 100%;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
     max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
 }
 
-.component-iconpicker-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-iconpicker-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.component-iconpicker-option {
+.component-iconpicker-menu-option {
     width: 100%;
     height: 40px;
     display: flex;
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 14px;
 }
 
-.component-iconpicker-option-image {
+.component-iconpicker-menu-option-image {
     width: 24px;
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.component-iconpicker-option-text {
+.component-iconpicker-menu-option-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
 }
 
-.component-iconpicker-error {
+.component-iconpicker-menu-error {
     padding: 20px 12px;
     text-align: center;
     font-size: 12px;
-    color: #888;
     line-height: 1.6;
 }
 
-/* States */
-.component-iconpicker-button:hover {
-    border-color: #555;
-}
-
-.component-iconpicker-button--open {
-    border-color: var(--blue-500);
-    border-radius: 5px 5px 0 0;
-    border-bottom: none;
-}
-
-.component-iconpicker-button-arrow--open {
-    transform: rotate(180deg);
-}
-
-.component-iconpicker-options--open {
+.component-iconpicker-menu-options--open {
     display: block;
 }
 
-.component-iconpicker-loading {
+.component-iconpicker-menu-loading {
     padding: 20px;
     text-align: center;
-    color: #aaa;
-}
-
-.component-iconpicker-option:hover {
-    background: var(--blue-500);
 }
 
 
 /* ============================================================================
    SYSTEM IMAGE PICKER
    
-   Dropdown menu for selecting system images (logos, map pills, etc).
-   Matches admin currency menu style.
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ============================================================================ */
 
-/* Appearance */
-.component-systemimagepicker {
+.component-systemimagepicker-menu {
     width: 100%;
     height: 36px;
     position: relative;
 }
 
-.component-systemimagepicker-button {
+.component-systemimagepicker-menu-button {
     width: 100%;
     height: 36px;
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
     cursor: pointer;
-    color: #fff;
     font: inherit;
 }
 
-.component-systemimagepicker-button-image {
+.component-systemimagepicker-menu-button-image {
     width: 24px;
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.component-systemimagepicker-button-text {
+.component-systemimagepicker-menu-button-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
-    color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.component-systemimagepicker-button-arrow {
+.component-systemimagepicker-menu-button-arrow {
     width: 16px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
-    transition: transform 0.2s;
 }
 
-.component-systemimagepicker-options {
+.component-systemimagepicker-menu-options {
     display: none;
     position: absolute;
     top: 36px;
     left: 0;
     width: 100%;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
     max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
 }
 
-.component-systemimagepicker-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-systemimagepicker-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.component-systemimagepicker-option {
+.component-systemimagepicker-menu-option {
     width: 100%;
     height: 40px;
     display: flex;
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 14px;
 }
 
-.component-systemimagepicker-option-image {
+.component-systemimagepicker-menu-option-image {
     width: 24px;
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.component-systemimagepicker-option-text {
+.component-systemimagepicker-menu-option-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
 }
 
-.component-systemimagepicker-error {
+.component-systemimagepicker-menu-error {
     padding: 20px 12px;
     text-align: center;
     font-size: 12px;
-    color: #888;
     line-height: 1.6;
 }
 
-/* States */
-.component-systemimagepicker-button:hover {
-    border-color: #555;
-}
-
-.component-systemimagepicker-button--open {
-    border-color: var(--blue-500);
-    border-radius: 5px 5px 0 0;
-    border-bottom: none;
-}
-
-.component-systemimagepicker-button-arrow--open {
-    transform: rotate(180deg);
-}
-
-.component-systemimagepicker-options--open {
+.component-systemimagepicker-menu-options--open {
     display: block;
 }
 
-.component-systemimagepicker-loading {
+.component-systemimagepicker-menu-loading {
     padding: 20px;
     text-align: center;
-    color: #aaa;
-}
-
-.component-systemimagepicker-option:hover {
-    background: var(--blue-500);
 }
 
 
 /* ============================================================================
    AMENITIES PICKER COMPONENT
+   
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ============================================================================ */
 
-.component-amenitiespicker {
+.component-amenitiespicker-menu {
     width: 100%;
     height: 36px;
     position: relative;
 }
 
-.component-amenitiespicker-button {
+.component-amenitiespicker-menu-button {
     width: 100%;
     height: 36px;
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
     cursor: pointer;
-    color: #fff;
     font: inherit;
 }
 
-.component-amenitiespicker-button-text {
+.component-amenitiespicker-menu-button-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
-    color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.component-amenitiespicker-button-arrow {
+.component-amenitiespicker-menu-button-arrow {
     width: 16px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
-    transition: transform 0.2s;
 }
 
-.component-amenitiespicker-options {
+.component-amenitiespicker-menu-options {
     display: none;
     position: absolute;
     top: 36px;
     left: 0;
     width: 100%;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
     max-height: 600px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
 }
 
-.component-amenitiespicker-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-amenitiespicker-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.component-amenitiespicker-option {
+.component-amenitiespicker-menu-option {
     width: 100%;
     height: 40px;
     display: flex;
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 14px;
 }
 
-.component-amenitiespicker-option-checkbox {
+.component-amenitiespicker-menu-option-checkbox {
     margin-right: 10px;
     cursor: pointer;
     flex-shrink: 0;
 }
 
-.component-amenitiespicker-option-image {
+.component-amenitiespicker-menu-option-image {
     width: 24px;
     height: 24px;
     object-fit: contain;
@@ -1664,182 +1371,119 @@
     transition: filter 0.2s;
 }
 
-.component-amenitiespicker-option-image--selected {
+.component-amenitiespicker-menu-option-image--selected {
     filter: brightness(0) saturate(100%) invert(47%) sepia(95%) saturate(1352%) hue-rotate(201deg) brightness(98%) contrast(96%);
 }
 
-.component-amenitiespicker-option-text {
+.component-amenitiespicker-menu-option-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
 }
 
-.component-amenitiespicker-error {
+.component-amenitiespicker-menu-error {
     padding: 20px 12px;
     text-align: center;
     font-size: 12px;
-    color: #888;
     line-height: 1.6;
 }
 
-/* States */
-.component-amenitiespicker-button:hover {
-    border-color: #555;
-}
-
-.component-amenitiespicker-button--open {
-    border-color: var(--blue-500);
-    border-radius: 5px 5px 0 0;
-    border-bottom: none;
-}
-
-.component-amenitiespicker-button-arrow--open {
-    transform: rotate(180deg);
-}
-
-.component-amenitiespicker-options--open {
+.component-amenitiespicker-menu-options--open {
     display: block;
-}
-
-.component-amenitiespicker-option:hover {
-    background: var(--blue-500);
 }
 
 
 /* ============================================================================
    AGE RATING PICKER COMPONENT
+   
+   Uses menu-class-1 for appearance; this section is LAYOUT ONLY.
    ============================================================================ */
 
-/* Appearance */
-.component-ageratingpicker {
+.component-ageratingpicker-menu {
     width: 100%;
     height: 36px;
     position: relative;
 }
 
-.component-ageratingpicker-button {
+.component-ageratingpicker-menu-button {
     width: 100%;
     height: 36px;
     display: flex;
     align-items: center;
     padding: 0 10px;
-    background: rgba(0,0,0,0.35);
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 5px;
     cursor: pointer;
-    color: #fff;
     font: inherit;
 }
 
-.component-ageratingpicker-button-image {
+.component-ageratingpicker-menu-button-image {
     width: 24px;
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.component-ageratingpicker-button-text {
+.component-ageratingpicker-menu-button-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
-    color: #fff;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 /* Placeholder: no image => remove extra padding so total left padding stays 10px (button padding only) */
-.component-ageratingpicker--noimage .component-ageratingpicker-button-text {
+.component-ageratingpicker-menu--noimage .component-ageratingpicker-menu-button-text {
     padding-left: 0;
 }
 
-.component-ageratingpicker-button-arrow {
+.component-ageratingpicker-menu-button-arrow {
     width: 16px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 10px;
-    color: #888;
-    transition: transform 0.2s;
 }
 
-.component-ageratingpicker-options {
+.component-ageratingpicker-menu-options {
     display: none;
     position: absolute;
     top: 36px;
     left: 0;
     width: 100%;
-    background: #222;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 5px 5px;
     max-height: 300px;
     overflow-y: auto;
     overflow-x: hidden;
     z-index: var(--layer-menu, 85);
 }
 
-.component-ageratingpicker-options::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-}
-
-.component-ageratingpicker-options::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 5px;
-}
-
-.component-ageratingpicker-option {
+.component-ageratingpicker-menu-option {
     width: 100%;
     height: 40px;
     display: flex;
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 14px;
 }
 
-.component-ageratingpicker-option-image {
+.component-ageratingpicker-menu-option-image {
     width: 24px;
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.component-ageratingpicker-option-text {
+.component-ageratingpicker-menu-option-text {
     flex: 1;
     text-align: left;
     padding-left: 10px;
     font-size: 14px;
 }
 
-/* States */
-.component-ageratingpicker-button:hover {
-    border-color: #555;
-}
-
-.component-ageratingpicker-button--open {
-    border-color: var(--blue-500);
-    border-radius: 5px 5px 0 0;
-    border-bottom: none;
-}
-
-.component-ageratingpicker-button-arrow--open {
-    transform: rotate(180deg);
-}
-
-.component-ageratingpicker-options--open {
+.component-ageratingpicker-menu-options--open {
     display: block;
-}
-
-.component-ageratingpicker-option:hover {
-    background: var(--blue-500);
 }
 
 

@@ -189,8 +189,9 @@ const FieldsetBuilder = (function(){
         }
         
         // Create dropdown for suggestions
+        // menu-class-1 supplies appearance; component CSS supplies layout only.
         var dropdown = document.createElement('div');
-        dropdown.className = 'fieldset-location-dropdown';
+        dropdown.className = 'fieldset-location-dropdown menu-class-1 menu-options';
         dropdown.style.display = 'none';
         
         // Insert dropdown after input element
@@ -276,7 +277,7 @@ const FieldsetBuilder = (function(){
                     if (!prediction) return;
                     
                     var item = document.createElement('div');
-                    item.className = 'fieldset-location-dropdown-item';
+                    item.className = 'fieldset-location-dropdown-item menu-option';
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
@@ -912,22 +913,23 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 
                 // Custom dropdown menu (no native <select> arrow). Uses MenuManager + animated ▼ arrow like Formbuilder menus.
+                // menu-class-1 supplies appearance; component CSS supplies layout only.
                 var cdPlaceholderText = (typeof placeholder === 'string') ? placeholder.trim() : '';
                 var cdMenu = document.createElement('div');
-                cdMenu.className = 'fieldset-customdropdown';
+                cdMenu.className = 'fieldset-customdropdown menu-class-1';
                 cdMenu.dataset.value = '';
                 
                 var cdButton = document.createElement('button');
                 cdButton.type = 'button';
-                cdButton.className = 'fieldset-customdropdown-button form-preview-select';
+                cdButton.className = 'fieldset-customdropdown-button menu-button form-preview-select';
                 cdButton.dataset.value = '';
                 
                 var cdButtonText = document.createElement('span');
-                cdButtonText.className = 'fieldset-customdropdown-button-text';
+                cdButtonText.className = 'fieldset-customdropdown-button-text menu-text';
                 cdButtonText.textContent = cdPlaceholderText;
                 
                 var cdArrow = document.createElement('span');
-                cdArrow.className = 'fieldset-customdropdown-button-arrow';
+                cdArrow.className = 'fieldset-customdropdown-button-arrow menu-arrow';
                 cdArrow.textContent = '▼';
                 
                 cdButton.appendChild(cdButtonText);
@@ -935,14 +937,17 @@ const FieldsetBuilder = (function(){
                 cdMenu.appendChild(cdButton);
                 
                 var cdOptions = document.createElement('div');
-                cdOptions.className = 'fieldset-customdropdown-options';
+                cdOptions.className = 'fieldset-customdropdown-options menu-options';
                 cdMenu.appendChild(cdOptions);
                 
                 function cdApplyOpenState(isOpen) {
                     cdMenu.classList.toggle('fieldset-customdropdown--open', !!isOpen);
                     cdButton.classList.toggle('fieldset-customdropdown-button--open', !!isOpen);
+                    cdButton.classList.toggle('menu-button--open', !!isOpen);
                     cdArrow.classList.toggle('fieldset-customdropdown-button-arrow--open', !!isOpen);
+                    cdArrow.classList.toggle('menu-arrow--open', !!isOpen);
                     cdOptions.classList.toggle('fieldset-customdropdown-options--open', !!isOpen);
+                    cdOptions.classList.toggle('menu-options--open', !!isOpen);
                 }
                 
                 cdMenu.__menuIsOpen = function() { return cdMenu.classList.contains('fieldset-customdropdown--open'); };
@@ -972,7 +977,7 @@ const FieldsetBuilder = (function(){
                         var label = String(opt == null ? '' : opt);
                         var btn = document.createElement('button');
                         btn.type = 'button';
-                        btn.className = 'fieldset-customdropdown-option';
+                        btn.className = 'fieldset-customdropdown-option menu-option';
                         btn.textContent = label;
                         btn.addEventListener('click', function(e) {
                             e.preventDefault();
@@ -3546,8 +3551,9 @@ const FieldsetBuilder = (function(){
                     }
                     
                     // Create dropdown for suggestions
+                    // menu-class-1 supplies appearance; component CSS supplies layout only.
                     var dropdown = document.createElement('div');
-                    dropdown.className = 'fieldset-location-dropdown';
+                    dropdown.className = 'fieldset-location-dropdown menu-class-1 menu-options';
                     dropdown.style.display = 'none';
                     
                     var parent = inputEl.parentNode;
@@ -3582,7 +3588,7 @@ const FieldsetBuilder = (function(){
                                 if (!prediction) return;
                                 
                                 var item = document.createElement('div');
-                                item.className = 'fieldset-location-dropdown-item';
+                                item.className = 'fieldset-location-dropdown-item menu-option';
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                                 var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
@@ -3820,7 +3826,7 @@ const FieldsetBuilder = (function(){
                         case 'amenities':
                             return !!fieldset.querySelector('.fieldset-amenities-row input[type="radio"]:checked');
                         case 'age_rating': {
-                            var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker');
+                            var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker-menu');
                             return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                         }
                         case 'session_pricing': {
@@ -4131,7 +4137,7 @@ const FieldsetBuilder = (function(){
                 }
                 case 'age_rating': {
                     // Required age rating: must have a value selected (not "Select rating")
-                    var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker');
+                    var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker-menu');
                     return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                 }
                 case 'item-pricing': {
