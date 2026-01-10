@@ -346,9 +346,12 @@ const FieldsetBuilder = (function(){
         
         // If the user types, the location is no longer confirmed (must pick from Google again).
         inputElement.addEventListener('input', function() {
-            // If this input event came from a programmatic selection (not user typing), skip
+            // If this input event came from a programmatic selection (not user typing), skip once
             try {
-                if (inputElement.dataset.placesConfirmed === 'true') return;
+                if (inputElement.dataset.placesConfirmed === 'true') {
+                    inputElement.dataset.placesConfirmed = 'false';
+                    return;
+                }
             } catch (e) {}
             
             // Manual typing invalidates confirmation, but must not re-dispatch input (would recurse).
@@ -3699,9 +3702,12 @@ const FieldsetBuilder = (function(){
                     
                     // Input event handler with debounce
                     inputEl.addEventListener('input', function() {
-                        // If this input event came from a programmatic selection (not user typing), skip
+                        // If this input event came from a programmatic selection (not user typing), skip once
                         try {
-                            if (smartAddrInput.dataset.placesConfirmed === 'true') return;
+                            if (smartAddrInput.dataset.placesConfirmed === 'true') {
+                                smartAddrInput.dataset.placesConfirmed = 'false';
+                                return;
+                            }
                         } catch (e) {}
                         
                         // Manual typing invalidates Places confirmation for the address field.
