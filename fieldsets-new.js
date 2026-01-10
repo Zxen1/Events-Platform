@@ -189,9 +189,9 @@ const FieldsetBuilder = (function(){
         }
         
         // Create dropdown for suggestions
-        // menu-class-1 supplies appearance; component CSS supplies layout only.
+        // menu-class-2 supplies appearance; component CSS supplies layout only.
         var dropdown = document.createElement('div');
-        dropdown.className = 'fieldset-location-dropdown menu-class-1 menu-options';
+        dropdown.className = 'fieldset-location-dropdown menu-class-2 menu-dropdown';
         dropdown.style.display = 'none';
         
         // Insert dropdown after input element
@@ -277,14 +277,14 @@ const FieldsetBuilder = (function(){
                     if (!prediction) return;
                     
                     var item = document.createElement('div');
-                    item.className = 'fieldset-location-dropdown-item menu-option';
+                    item.className = 'fieldset-location-dropdown-item menu-item';
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                     var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
                     
                     item.innerHTML = 
-                        '<div class="fieldset-location-dropdown-item-main">' + mainText + '</div>' +
-                        (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary">' + secondaryText + '</div>' : '');
+                        '<div class="fieldset-location-dropdown-item-main menu-item-main">' + mainText + '</div>' +
+                        (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary menu-item-secondary">' + secondaryText + '</div>' : '');
                     
                     item.addEventListener('click', async function() {
                         try {
@@ -3551,9 +3551,9 @@ const FieldsetBuilder = (function(){
                     }
                     
                     // Create dropdown for suggestions
-                    // menu-class-1 supplies appearance; component CSS supplies layout only.
+                    // menu-class-2 supplies appearance; component CSS supplies layout only.
                     var dropdown = document.createElement('div');
-                    dropdown.className = 'fieldset-location-dropdown menu-class-1 menu-options';
+                    dropdown.className = 'fieldset-location-dropdown menu-class-2 menu-dropdown';
                     dropdown.style.display = 'none';
                     
                     var parent = inputEl.parentNode;
@@ -3588,14 +3588,14 @@ const FieldsetBuilder = (function(){
                                 if (!prediction) return;
                                 
                                 var item = document.createElement('div');
-                                item.className = 'fieldset-location-dropdown-item menu-option';
+                                item.className = 'fieldset-location-dropdown-item menu-item';
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
                                 var secondaryText = prediction.secondaryText ? prediction.secondaryText.text : '';
                                 
                                 item.innerHTML = 
-                                    '<div class="fieldset-location-dropdown-item-main">' + mainText + '</div>' +
-                                    (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary">' + secondaryText + '</div>' : '');
+                                    '<div class="fieldset-location-dropdown-item-main menu-item-main">' + mainText + '</div>' +
+                                    (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary menu-item-secondary">' + secondaryText + '</div>' : '');
                                 
                                 item.addEventListener('click', async function() {
                                     try {

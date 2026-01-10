@@ -377,6 +377,62 @@
 }
 
 /* ============================================================================
+   MENU CLASS 2 (Standalone dropdown - no button trigger)
+   Used by: Location dropdowns (venue, address, city) - Google Places autocomplete
+   
+   Unlike menu-class-1, these dropdowns:
+   - Have no button trigger (appear under text inputs)
+   - Support two-line items (main text + secondary text)
+   - Are always "open" style (no closed state)
+   
+   Bridge classes:
+   - .menu-dropdown    (the dropdown container)
+   - .menu-item        (each suggestion row)
+   - .menu-item-main   (primary text)
+   - .menu-item-secondary (secondary text)
+   ============================================================================ */
+
+.menu-class-2 {
+  --menu-bg: rgba(0, 0, 0, 0.7);
+  --menu-border: var(--blue-500);
+  --menu-radius: 5px;
+  --menu-text: #fff;
+  --menu-text-secondary: #aaa;
+  --menu-hover: var(--blue-500);
+  --menu-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.menu-class-2.menu-dropdown {
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  border-radius: var(--menu-radius);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--menu-shadow);
+}
+
+.menu-class-2 .menu-item {
+  cursor: pointer;
+  color: var(--menu-text);
+}
+
+.menu-class-2 .menu-item:hover,
+.menu-class-2 .menu-item.menu-item--active {
+  background-color: var(--menu-hover);
+}
+
+.menu-class-2 .menu-item-main {
+  font-weight: 600;
+  color: var(--menu-text);
+}
+
+.menu-class-2 .menu-item-secondary {
+  font-size: 12px;
+  color: var(--menu-text-secondary);
+  margin-top: 2px;
+}
+
+/* ============================================================================
    GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)
    1) SCROLLBARS
    2) GLOBAL FONT (system-ui, sans-serif)

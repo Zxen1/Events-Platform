@@ -1499,7 +1499,7 @@
 }
 
 /* Location dropdown (New Google Places AutocompleteSuggestion UI)
-   Appearance governed by menu-class-1 from base-new.css.
+   Appearance governed by menu-class-2 from base-new.css.
    This section contains LAYOUT ONLY. */
 .fieldset-location-dropdown {
     display: none;
@@ -1514,15 +1514,6 @@
 
 .fieldset-location-dropdown-item {
     padding: 8px 10px;
-}
-
-.fieldset-location-dropdown-item-main {
-    font-weight: 600;
-}
-
-.fieldset-location-dropdown-item-secondary {
-    margin-top: 2px;
-    font-size: 12px;
 }
 
 /* Venue fieldset: address "secret input" (click to edit) */
