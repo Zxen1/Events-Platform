@@ -72,23 +72,19 @@ const ImageAddTileComponent = (function(){
       - Text elements: add .menu-text, .menu-option-text
    
    2. Implement required methods on the menu container element:
-      menuEl.__menuIsOpen = function() { return true/false; }
-      menuEl.__menuApplyOpenState = function(isOpen) { /* toggle classes */ }
-      menuEl.__menuOnClose = function() { /* optional: revert on close */ }
+      menuEl.__menuIsOpen = function that returns true or false
+      menuEl.__menuApplyOpenState = function(isOpen) that toggles open classes
+      menuEl.__menuOnClose = optional function called when menu closes
    
    3. Register with MenuManager:
       MenuManager.register(menuEl);
    
    4. On button click, close others and toggle:
-      MenuManager.closeAll(menuEl);  // close all except this one
+      MenuManager.closeAll(menuEl);
       menuEl.__menuApplyOpenState(!menuEl.__menuIsOpen());
    
-   5. For keyboard navigation, use menuArrowKeyNav():
-      btnEl.addEventListener('keydown', function(e) {
-          if (menuEl.__menuIsOpen()) {
-              menuArrowKeyNav(e, optsEl, '.menu-option', null);
-          }
-      });
+   5. For keyboard navigation, call menuArrowKeyNav(e, optsEl, '.menu-option', null)
+      in your keydown handler when the menu is open.
    
    MENU CLASSES (in base-new.css):
    - menu-class-1: Standard menus (translucent, type-to-filter support)
