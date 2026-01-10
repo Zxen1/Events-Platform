@@ -1938,7 +1938,6 @@ const MemberModule = (function() {
             } catch (e) {}
             
             // Keyboard navigation using shared menuArrowKeyNav
-            var optsEl = menuEl.querySelector('.member-formpicker-menu-options');
             btnEl.addEventListener('keydown', function(e) {
                 var key = e.key;
                 var isOpen = menuEl.__menuIsOpen();
@@ -1952,10 +1951,15 @@ const MemberModule = (function() {
                         }
                     } catch (e0) {}
                     menuEl.__menuApplyOpenState(true);
+                    btnEl.focus(); // Ensure button keeps focus
                     return;
                 }
                 
                 if (!isOpen) return;
+                
+                // Query optsEl fresh each time (options may be rebuilt dynamically)
+                var optsEl = menuEl.querySelector('.member-formpicker-menu-options');
+                if (!optsEl) return;
                 
                 // Use shared menuArrowKeyNav for arrow/enter
                 if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter') {
