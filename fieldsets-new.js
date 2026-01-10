@@ -2931,17 +2931,21 @@ const FieldsetBuilder = (function(){
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open', !!isOpen);
 
-                    // Toggle sticky class on header (CSS handles the sticky behavior)
+                    // Toggle sticky class on header and button--selected on header-content
                     try {
                         Object.keys(spTicketGroups).forEach(function(k) {
                             var gg = spTicketGroups[k];
                             if (!gg) return;
                             var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (hh) hh.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            var hc = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc) hc.classList.remove('button--selected');
                         });
                         if (isOpen) {
                             var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            var hc0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc0) hc0.classList.add('button--selected');
                         }
                     } catch (eSticky) {}
                 }
@@ -3119,11 +3123,11 @@ const FieldsetBuilder = (function(){
 
                     // Content row inside header (36px button area with all interactions)
                     var headerContent = document.createElement('div');
-                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content';
+                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content button-class-2';
 
                     var selectBtn = document.createElement('button');
                     selectBtn.type = 'button';
-                    selectBtn.className = 'fieldset-sessionpricing-ticketgroup-button-select button-class-2';
+                    selectBtn.className = 'fieldset-sessionpricing-ticketgroup-button-select';
                     selectBtn.textContent = 'Ticket Group ' + key;
                     selectBtn.addEventListener('click', function() {
                         // Selecting a group closes any open edit panels (only one editing context at a time)

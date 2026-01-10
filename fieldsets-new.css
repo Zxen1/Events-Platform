@@ -1193,7 +1193,7 @@
     z-index: 10;
 }
 
-/* Content row inside header: the 36px button area */
+/* Content row inside header: appearance from button-class-2 */
 .fieldset-sessionpricing-ticketgroup-item-header-content {
     width: 100%;
     height: 36px;
@@ -1202,27 +1202,17 @@
     gap: 0;
     padding: 0 10px;
     box-sizing: border-box;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 4px;
 }
 
-.fieldset-sessionpricing-ticketgroup-item-header-content:hover {
-    background: var(--blue-500);
-    border-color: var(--blue-500);
-}
 
-.fieldset-sessionpricing-ticketgroup-item-header--selected .fieldset-sessionpricing-ticketgroup-item-header-content,
-.fieldset-sessionpricing-ticketgroup-item-header--sticky .fieldset-sessionpricing-ticketgroup-item-header-content {
-    background: var(--blue-600);
-    border-color: var(--blue-500);
-}
-
-/* Select button - appearance from button-class-2 */
 .fieldset-sessionpricing-ticketgroup-button-select {
     flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
     font-size: 13px;
     text-align: left;
+    cursor: pointer;
     height: 36px;
     padding: 0 10px 0 0;
 }
@@ -1251,8 +1241,6 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
-    background: var(--blue-600);
-    border-color: var(--blue-500);
     border-radius: 4px 4px 0 0;
     border-bottom: none;
 }
