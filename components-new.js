@@ -1028,6 +1028,7 @@ const CurrencyComponent = (function(){
                 var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
                 op.innerHTML = '<img class="component-currencycompact-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencycompact-menu-option-text menu-text">' + displayText + '</span>';
                 op.onclick = function(e) {
+                    e.stopPropagation();
                     if (countryCode) {
                         btnImg.src = flagUrl;
                         btnImg.style.display = 'block';
@@ -1245,6 +1246,7 @@ const CurrencyComponent = (function(){
                 var flagUrl = countryCode ? window.App.getImageUrl('currencies', countryCode + '.svg') : '';
                 op.innerHTML = '<img class="component-currencyfull-menu-option-image" src="' + flagUrl + '" alt=""><span class="component-currencyfull-menu-option-text menu-text">' + displayText + '</span>';
                 op.onclick = function(e) {
+                    e.stopPropagation();
                     if (flagUrl) {
                         btnImg.src = flagUrl;
                         btnImg.style.display = 'block';
