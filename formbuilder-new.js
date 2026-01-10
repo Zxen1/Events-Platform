@@ -4369,11 +4369,22 @@
             
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
-
-            // Location wallpaper: manage lifecycle based on active container
+            
+            // Note: Location wallpaper is NOT triggered on click.
+            // It only triggers after user types in location fieldset (see input listener below).
+        });
+        
+        // Location wallpaper: only trigger after user types in location fieldset
+        container.addEventListener('input', function(e) {
             try {
+                var locationFieldset = e.target.closest('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]');
+                if (!locationFieldset) return;
+                
+                var locationContainer = e.target.closest('.member-location-container');
+                if (!locationContainer) return;
+                
                 if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-                    LocationWallpaperComponent.handleActiveContainerChange(container, clickedContainer);
+                    LocationWallpaperComponent.handleActiveContainerChange(container, locationContainer);
                 }
             } catch (_eLW) {}
         });
