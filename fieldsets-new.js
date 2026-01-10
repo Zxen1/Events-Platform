@@ -3519,6 +3519,7 @@ const FieldsetBuilder = (function(){
                 smartAddrInput.placeholder = 'Search or type address...';
                 var smartAddrWrap = document.createElement('div');
                 smartAddrWrap.className = 'fieldset-location-inputwrap';
+                smartAddrWrap.setAttribute('role', 'button');
                 smartAddrWrap.appendChild(smartAddrInput);
                 
                 // Address "secret input" display (click-to-edit, like Messages tab)
