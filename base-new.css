@@ -189,12 +189,6 @@
 .button-class-1[aria-expanded="true"],
 .button-class-1.button--active {
   color: var(--blue-600);
-  border: 1px solid transparent;
-}
-.button-class-1[aria-pressed="true"]:hover,
-.button-class-1[aria-expanded="true"]:hover,
-.button-class-1.button--active:hover {
-  border-color: var(--blue-600);
 }
 .button-class-1-icon {
   width: 30px;
@@ -230,8 +224,12 @@
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
   background: var(--blue-950);
-  border-color: var(--blue-600);
+  border-color: transparent;
   color: var(--website-white);
+}
+.button-class-2[aria-selected="true"]:hover,
+.button-class-2.button--selected:hover {
+  border-color: var(--blue-600);
 }
 .button-class-2:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.85);
