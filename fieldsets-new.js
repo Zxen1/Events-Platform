@@ -70,7 +70,7 @@ const FieldsetBuilder = (function(){
 
         function syncActiveClass(items) {
             items.forEach(function(el, idx) {
-                try { el.classList.toggle('fieldset-location-dropdown-item--active', idx === activeIndex); } catch (e) {}
+                try { el.classList.toggle('menu-item--active', idx === activeIndex); } catch (e) {}
             });
         }
 

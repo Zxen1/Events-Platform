@@ -1500,12 +1500,13 @@
 
 /* When dropdown is open, connect input to dropdown visually */
 .fieldset-location-inputwrap--open .fieldset-input {
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.35);
     border: 1px solid var(--blue-500);
     border-bottom: none;
     border-radius: 5px 5px 0 0;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    margin-bottom: 0;
 }
 
 /* Location dropdown (New Google Places AutocompleteSuggestion UI)
@@ -1516,7 +1517,7 @@
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(100% - 1px);
+    top: 100%;
     z-index: var(--layer-menu, 85);
     max-height: 200px;
     overflow-y: auto;

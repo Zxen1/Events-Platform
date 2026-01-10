@@ -393,7 +393,7 @@
    ============================================================================ */
 
 .menu-class-2 {
-  --menu-bg: rgba(0, 0, 0, 0.7);
+  --menu-bg: rgba(0, 0, 0, 0.35);
   --menu-border: var(--blue-500);
   --menu-radius: 5px;
   --menu-text: #fff;
