@@ -1499,13 +1499,10 @@
 }
 
 /* When dropdown is open, connect input to dropdown visually */
-.fieldset-location-inputwrap--open .fieldset-input {
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid var(--blue-500);
+.fieldset-location-inputwrap--open .input-class-1 {
+    border-color: var(--blue-500);
     border-bottom: none;
     border-radius: 5px 5px 0 0;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
 }
 
 /* Location dropdown (New Google Places AutocompleteSuggestion UI)

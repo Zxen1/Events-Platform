@@ -260,6 +260,38 @@
   border-color: var(--blue-600);
   color: var(--website-white);
 }
+
+/* ============================================================================
+   INPUT CLASSES
+   
+   Reusable INPUT APPEARANCE styles. Apply to input elements for consistent
+   styling across the site.
+   ============================================================================ */
+
+/* Input Class 1: Translucent input (matches menu-class appearance) */
+.input-class-1 {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #fff;
+  outline: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.input-class-1:hover {
+  border-color: #555;
+}
+
+.input-class-1:focus {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: var(--blue-500);
+}
+
+.input-class-1::placeholder {
+  color: #888;
+}
+
 /* ============================================================================
    MENU CLASSES
    
@@ -300,6 +332,8 @@
   border-radius: var(--menu-radius);
   color: var(--menu-text);
   outline: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 /* Hover border should match form inputs, but must NOT override open/focus/active blue border */

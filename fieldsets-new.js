@@ -1197,7 +1197,7 @@ const FieldsetBuilder = (function(){
                 addrWrap.className = 'fieldset-location-inputwrap';
                 var addrInputEl = document.createElement('input');
                 addrInputEl.type = 'text';
-                addrInputEl.className = 'fieldset-input';
+                addrInputEl.className = 'fieldset-input input-class-1';
                 applyPlaceholder(addrInputEl, placeholder);
                 addrWrap.appendChild(addrInputEl);
                 fieldset.appendChild(addrWrap);
@@ -1228,7 +1228,7 @@ const FieldsetBuilder = (function(){
                 cityWrap.className = 'fieldset-location-inputwrap';
                 var cityInputEl = document.createElement('input');
                 cityInputEl.type = 'text';
-                cityInputEl.className = 'fieldset-input';
+                cityInputEl.className = 'fieldset-input input-class-1';
                 applyPlaceholder(cityInputEl, placeholder);
                 cityWrap.appendChild(cityInputEl);
                 fieldset.appendChild(cityWrap);
@@ -3499,7 +3499,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(smartVenueSub);
                 var smartVenueInput = document.createElement('input');
                 smartVenueInput.type = 'text';
-                smartVenueInput.className = 'fieldset-input';
+                smartVenueInput.className = 'fieldset-input input-class-1';
                 smartVenueInput.placeholder = 'Search or type venue name...';
                 smartVenueInput.style.marginBottom = '8px';
                 var smartVenueWrap = document.createElement('div');
@@ -3514,7 +3514,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(smartAddrSub);
                 var smartAddrInput = document.createElement('input');
                 smartAddrInput.type = 'text';
-                smartAddrInput.className = 'fieldset-input';
+                smartAddrInput.className = 'fieldset-input input-class-1';
                 smartAddrInput.placeholder = 'Search or type address...';
                 smartAddrInput.style.marginBottom = '4px';
                 var smartAddrWrap = document.createElement('div');
