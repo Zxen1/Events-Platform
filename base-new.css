@@ -328,7 +328,7 @@
    - .container-content (body/content area below header) */
 .container-class-2 {
   --container-header-bg: var(--blue-950);
-  --container-header-bg-hover: var(--blue-500);
+  --container-header-bg-hover: var(--blue-950);
   --container-header-border: transparent;
   --container-header-text: #fff;
   --container-content-bg: rgba(0, 0, 0, 0.2);
