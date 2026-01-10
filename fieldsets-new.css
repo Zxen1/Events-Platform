@@ -946,10 +946,6 @@
     font-size: 13px;
     display: flex;
     align-items: center;
-}
-
-.fieldset-sessionpricing-session-field-label--picker:hover {
-    border-color: var(--blue-500);
     cursor: pointer;
 }
 
