@@ -329,7 +329,7 @@
 .container-class-2 {
   --container-header-bg: var(--blue-950);
   --container-header-bg-hover: var(--blue-950);
-  --container-header-border: transparent;
+  --container-header-border: rgba(255, 255, 255, 0.1);
   --container-header-text: #fff;
   --container-content-bg: rgba(0, 0, 0, 0.2);
   --container-content-border: rgba(255, 255, 255, 0.1);
