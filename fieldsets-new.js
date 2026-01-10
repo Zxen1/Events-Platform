@@ -2927,7 +2927,7 @@ const FieldsetBuilder = (function(){
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open', !!isOpen);
 
-                    // Toggle sticky class on header and button--selected on header-content
+                    // Toggle sticky class on header and hide/show header-content
                     try {
                         Object.keys(spTicketGroups).forEach(function(k) {
                             var gg = spTicketGroups[k];
@@ -2935,13 +2935,16 @@ const FieldsetBuilder = (function(){
                             var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (hh) hh.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
                             var hc = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
-                            if (hc) hc.classList.remove('button--selected');
+                            if (hc) {
+                                hc.classList.remove('button--selected');
+                                hc.style.display = '';
+                            }
                         });
                         if (isOpen) {
                             var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
                             var hc0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
-                            if (hc0) hc0.classList.add('button--selected');
+                            if (hc0) hc0.style.display = 'none';
                         }
                     } catch (eSticky) {}
                 }
