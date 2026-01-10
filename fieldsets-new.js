@@ -3157,6 +3157,7 @@ const FieldsetBuilder = (function(){
                             var editorEl0 = group.querySelector('.fieldset-sessionpricing-pricing-editor');
                             spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
                             spOpenGroupKey = key;
+                            spAssignGroupToActive(key);
                         } else {
                             spOpenGroupSnapshot = null;
                             spOpenGroupKey = null;
