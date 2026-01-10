@@ -327,7 +327,7 @@
    - .container-header  (clickable header row)
    - .container-content (body/content area below header) */
 .container-class-2 {
-  --container-header-bg: var(--blue-600);
+  --container-header-bg: var(--blue-950);
   --container-header-bg-hover: var(--blue-500);
   --container-header-border: transparent;
   --container-header-text: #fff;
