@@ -276,7 +276,8 @@ const FieldsetBuilder = (function(){
                     var prediction = suggestion.placePrediction;
                     if (!prediction) return;
                     
-                    var item = document.createElement('div');
+                    var item = document.createElement('button');
+                    item.type = 'button';
                     item.className = 'fieldset-location-dropdown-item menu-item';
                     
                     var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
@@ -286,7 +287,9 @@ const FieldsetBuilder = (function(){
                         '<div class="fieldset-location-dropdown-item-main menu-item-main">' + mainText + '</div>' +
                         (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary menu-item-secondary">' + secondaryText + '</div>' : '');
                     
-                    item.addEventListener('click', async function() {
+                    item.addEventListener('click', async function(e) {
+                        e.stopPropagation();
+                        clearTimeout(debounceTimer);
                         try {
                             var place = prediction.toPlace();
                             await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'addressComponents'] });
@@ -343,6 +346,11 @@ const FieldsetBuilder = (function(){
         
         // If the user types, the location is no longer confirmed (must pick from Google again).
         inputElement.addEventListener('input', function() {
+            // If this input event came from a programmatic selection (not user typing), skip
+            try {
+                if (inputElement.dataset.placesConfirmed === 'true') return;
+            } catch (e) {}
+            
             // Manual typing invalidates confirmation, but must not re-dispatch input (would recurse).
             clearConfirmedLocation(false);
             clearTimeout(debounceTimer);
@@ -3587,7 +3595,8 @@ const FieldsetBuilder = (function(){
                                 var prediction = suggestion.placePrediction;
                                 if (!prediction) return;
                                 
-                                var item = document.createElement('div');
+                                var item = document.createElement('button');
+                                item.type = 'button';
                                 item.className = 'fieldset-location-dropdown-item menu-item';
                                 
                                 var mainText = prediction.mainText ? prediction.mainText.text : (prediction.text ? prediction.text.text : '');
@@ -3597,7 +3606,9 @@ const FieldsetBuilder = (function(){
                                     '<div class="fieldset-location-dropdown-item-main menu-item-main">' + mainText + '</div>' +
                                     (secondaryText ? '<div class="fieldset-location-dropdown-item-secondary menu-item-secondary">' + secondaryText + '</div>' : '');
                                 
-                                item.addEventListener('click', async function() {
+                                item.addEventListener('click', async function(e) {
+                                    e.stopPropagation();
+                                    clearTimeout(debounceTimer);
                                     try {
                                         var place = prediction.toPlace();
                                         await place.fetchFields({ fields: ['location', 'displayName', 'formattedAddress', 'types', 'addressComponents'] });
@@ -3688,6 +3699,11 @@ const FieldsetBuilder = (function(){
                     
                     // Input event handler with debounce
                     inputEl.addEventListener('input', function() {
+                        // If this input event came from a programmatic selection (not user typing), skip
+                        try {
+                            if (smartAddrInput.dataset.placesConfirmed === 'true') return;
+                        } catch (e) {}
+                        
                         // Manual typing invalidates Places confirmation for the address field.
                         // Venue name can be typed freely, but the address must be confirmed via Google.
                         if (!isVenueBox) {

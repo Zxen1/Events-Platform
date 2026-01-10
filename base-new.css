@@ -413,6 +413,13 @@
 }
 
 .menu-class-2 .menu-item {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: left;
+  font: inherit;
   cursor: pointer;
   color: var(--menu-text);
 }

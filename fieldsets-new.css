@@ -1501,7 +1501,7 @@
 /* When dropdown is open, connect input to dropdown visually */
 .fieldset-location-inputwrap--open .fieldset-input {
     background: rgba(0, 0, 0, 0.7);
-    border-color: var(--blue-500);
+    border: 1px solid var(--blue-500);
     border-bottom: none;
     border-radius: 5px 5px 0 0;
     backdrop-filter: blur(10px);
@@ -1514,9 +1514,10 @@
 .fieldset-location-dropdown {
     display: none;
     position: absolute;
-    left: -1px;
-    right: -1px;
-    top: calc(100% - 1px);
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: -1px;
     z-index: var(--layer-menu, 85);
     max-height: 200px;
     overflow-y: auto;
