@@ -189,6 +189,12 @@
 .button-class-1[aria-expanded="true"],
 .button-class-1.button--active {
   color: var(--blue-600);
+  border: 1px solid transparent;
+}
+.button-class-1[aria-pressed="true"]:hover,
+.button-class-1[aria-expanded="true"]:hover,
+.button-class-1.button--active:hover {
+  border-color: var(--blue-600);
 }
 .button-class-1-icon {
   width: 30px;
