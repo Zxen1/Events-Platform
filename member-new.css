@@ -98,11 +98,6 @@
   transform: scale(0.97);
 }
 
-.member-supporterpayment-button:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
-}
-
 .member-supporterpayment-button[aria-pressed="true"] {
   border-color: rgba(34, 197, 94, 1);
   background: rgba(34, 197, 94, 0.30);
@@ -698,11 +693,6 @@
   border-color: var(--blue-500);
   color: #ffffff;
   transform: scale(0.97);
-}
-
-.member-button-auth:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
 }
 
 .member-button-auth--disabled {

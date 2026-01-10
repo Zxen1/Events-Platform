@@ -1623,7 +1623,6 @@
 .filter-mapcontrol-geolocate:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    outline: none;
 }
 
 .filter-mapcontrol-geolocate-icon {
@@ -1658,7 +1657,6 @@
 .filter-mapcontrol-compass:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    outline: none;
 }
 
 .filter-mapcontrol-compass-icon {
@@ -1813,7 +1811,6 @@
 .map-mapcontrol-geolocate:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    outline: none;
 }
 
 .map-mapcontrol-geolocate-icon {
@@ -1848,7 +1845,6 @@
 .map-mapcontrol-compass:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    outline: none;
 }
 
 .map-mapcontrol-compass-icon {
@@ -2012,7 +2008,6 @@
 .welcome-mapcontrol-geolocate:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    outline: none;
 }
 
 .welcome-mapcontrol-geolocate-icon {
@@ -2047,7 +2042,6 @@
 .welcome-mapcontrol-compass:focus-visible {
     background-color: rgba(255, 255, 255, 0.1);
     color: #ffffff;
-    outline: none;
 }
 
 .welcome-mapcontrol-compass-icon {
@@ -2501,13 +2495,11 @@
 .component-confirm-dialog-button--cancel:focus-visible,
 .component-confirm-dialog-button--cancel:hover {
     background: rgba(0, 0, 0, 0.3);
-    outline: none;
 }
 
 .component-confirm-dialog-button--confirm:focus-visible,
 .component-confirm-dialog-button--confirm:hover {
     background: rgba(0, 0, 0, 0.3);
-    outline: none;
 }
 
 /* Danger variant for destructive actions */
@@ -2619,19 +2611,16 @@
 .component-three-button-dialog-button--cancel:focus-visible,
 .component-three-button-dialog-button--cancel:hover {
     background: rgba(0, 0, 0, 0.3);
-    outline: none;
 }
 
 .component-three-button-dialog-button--save:focus-visible,
 .component-three-button-dialog-button--save:hover {
     background: rgba(0, 0, 0, 0.3);
-    outline: none;
 }
 
 .component-three-button-dialog-button--discard:focus-visible,
 .component-three-button-dialog-button--discard:hover {
     background: rgba(0, 0, 0, 0.3);
-    outline: none;
 }
 
 /* ============================================================================

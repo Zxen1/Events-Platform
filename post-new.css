@@ -785,11 +785,6 @@
   opacity: 0.85;
 }
 
-.post-venue-nav-button:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
-  outline-offset: 2px;
-}
-
 .post-venue-nav-button-image {
   position: absolute;
   top: 10px;
@@ -859,11 +854,6 @@
 
 .post-session-nav-button:hover {
   opacity: 0.85;
-}
-
-.post-session-nav-button:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.5);
-  outline-offset: 2px;
 }
 
 .post-session-nav-button-image {

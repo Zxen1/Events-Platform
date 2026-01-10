@@ -156,6 +156,15 @@
   --scrollbar-h: 8px;
 }
 
+/* ============================================================================
+   GLOBAL FOCUS RESET
+   
+   Remove browser's default :focus-visible outline site-wide.
+   Custom focus/hover styles are defined per component.
+   ============================================================================ */
+*:focus-visible {
+  outline: none;
+}
 
 /* ============================================================================
    BUTTON CLASSES
@@ -227,12 +236,6 @@
   border-color: var(--blue-600);
   color: var(--website-white);
 }
-.button-class-2:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.85);
-  outline-offset: 2px;
-}
-
-
 /* Button Class 3: (copy of Button Class 2) */
 .button-class-3 {
   height: 36px;
@@ -257,12 +260,6 @@
   border-color: var(--blue-600);
   color: var(--website-white);
 }
-.button-class-3:focus-visible {
-  outline: 2px solid rgba(255, 255, 255, 0.85);
-  outline-offset: 2px;
-}
-
-
 /* ============================================================================
    MENU CLASSES
    
