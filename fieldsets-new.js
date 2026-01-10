@@ -3123,7 +3123,7 @@ const FieldsetBuilder = (function(){
 
                     var selectBtn = document.createElement('button');
                     selectBtn.type = 'button';
-                    selectBtn.className = 'fieldset-sessionpricing-ticketgroup-button-select';
+                    selectBtn.className = 'fieldset-sessionpricing-ticketgroup-button-select button-class-2';
                     selectBtn.textContent = 'Ticket Group ' + key;
                     selectBtn.addEventListener('click', function() {
                         // Selecting a group closes any open edit panels (only one editing context at a time)
@@ -3160,7 +3160,7 @@ const FieldsetBuilder = (function(){
                     group.appendChild(header);
 
                     var editorWrap = document.createElement('div');
-                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap';
+                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-class-1';
                     editorWrap.style.display = 'none';
 
                     var editor = document.createElement('div');

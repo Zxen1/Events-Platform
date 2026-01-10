@@ -1218,14 +1218,11 @@
     border-color: var(--blue-500);
 }
 
+/* Select button - appearance from button-class-2 */
 .fieldset-sessionpricing-ticketgroup-button-select {
     flex: 1;
-    background: transparent;
-    border: none;
-    color: #fff;
     font-size: 13px;
     text-align: left;
-    cursor: pointer;
     height: 36px;
     padding: 0 10px 0 0;
 }
@@ -1247,13 +1244,10 @@
     padding: 0;
 }
 
-/* Ticket Group Editor */
+/* Ticket Group Editor - appearance from container-class-1 */
 .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     margin-top: 8px;
     padding: 0;
-    background: transparent;
-    border: none;
-    border-radius: 0;
 }
 
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
@@ -1266,9 +1260,6 @@
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     margin-top: 0;
     padding: 10px;
-    border: 1px solid var(--blue-500);
-    border-top: none;
-    border-radius: 0 0 4px 4px;
 }
 
 .fieldset-sessionpricing-ticketgroup-actions {
