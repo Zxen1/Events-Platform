@@ -2502,7 +2502,7 @@ const FieldsetBuilder = (function(){
                 var spDatePickerRow = document.createElement('div');
                 spDatePickerRow.className = 'fieldset-sessionpricing-session-row fieldset-sessionpricing-session-row--picker';
                 var spDatePickerBox = document.createElement('div');
-                spDatePickerBox.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--picker';
+                spDatePickerBox.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--picker input-class-1';
                 spDatePickerBox.setAttribute('role', 'button');
                 spDatePickerBox.setAttribute('tabindex', '0');
                 spDatePickerBox.setAttribute('aria-haspopup', 'dialog');
@@ -2515,7 +2515,7 @@ const FieldsetBuilder = (function(){
                 spPickerTimeWrap.className = 'fieldset-sessionpricing-session-field-time';
                 var spPickerTimeInput = document.createElement('input');
                 spPickerTimeInput.type = 'text';
-                spPickerTimeInput.className = 'fieldset-sessionpricing-session-field-time-input';
+                spPickerTimeInput.className = 'fieldset-sessionpricing-session-field-time-input input-class-1';
                 spPickerTimeInput.placeholder = 'HH:MM';
                 spPickerTimeInput.maxLength = 5;
                 spPickerTimeInput.disabled = true;
@@ -3243,7 +3243,7 @@ const FieldsetBuilder = (function(){
                             timeWrapper.className = 'fieldset-sessionpricing-session-field-time';
                             var timeInput = document.createElement('input');
                             timeInput.type = 'text';
-                            timeInput.className = 'fieldset-sessionpricing-session-field-time-input';
+                            timeInput.className = 'fieldset-sessionpricing-session-field-time-input input-class-1';
                             timeInput.placeholder = 'HH:MM';
                             timeInput.maxLength = 5;
                             timeInput.value = timeVal;
