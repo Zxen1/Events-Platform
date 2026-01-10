@@ -283,7 +283,7 @@
   --menu-text: #ffffff;
   --menu-placeholder: #888;
   --menu-muted: #888;
-  --menu-hover: var(--blue-500);
+  --menu-hover: rgba(255, 255, 255, 0.1);
   --menu-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
   --menu-radius: 5px;
   --menu-options-border: var(--blue-500);
@@ -398,7 +398,7 @@
   --menu-radius: 5px;
   --menu-text: #fff;
   --menu-text-secondary: #aaa;
-  --menu-hover: var(--blue-500);
+  --menu-hover: rgba(255, 255, 255, 0.1);
   --menu-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
 }
 
@@ -470,7 +470,7 @@
   --menu-text: #fff;
   --menu-text-secondary: #aaa;
   --menu-muted: #888;
-  --menu-hover: var(--blue-500);
+  --menu-hover: rgba(255, 255, 255, 0.1);
   --menu-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   --menu-radius: 5px;
 }

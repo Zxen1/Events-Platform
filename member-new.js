@@ -2103,6 +2103,8 @@ const MemberModule = (function() {
                     // Keep it open until a subcategory is selected.
                     categoryMenu.__menuApplyOpenState(false);
                     subcategoryMenu.__menuApplyOpenState(true);
+                    // Focus the subcategory button for keyboard nav
+                    try { subcategoryBtn.focus(); } catch (e) {}
                 } else {
                     subcategoryWrapper.hidden = true;
                 }
@@ -2153,6 +2155,9 @@ const MemberModule = (function() {
         // Subcategory auto-open is handled when a category is picked.
         if (!selectedCategory) {
             categoryMenu.__menuApplyOpenState(true);
+            // Focus the menu button so keyboard nav works immediately
+            // and focus-visible doesn't appear on the tab button
+            try { categoryBtn.focus(); } catch (e) {}
         }
     }
     
