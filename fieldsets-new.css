@@ -1514,9 +1514,9 @@
 .fieldset-location-dropdown {
     display: none;
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 100%;
+    left: -1px;
+    right: -1px;
+    top: calc(100% - 1px);
     z-index: var(--layer-menu, 85);
     max-height: 200px;
     overflow-y: auto;
