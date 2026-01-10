@@ -2614,6 +2614,7 @@ const FieldsetBuilder = (function(){
                 spFooterAddBtn.setAttribute('aria-label', 'Add Ticket Group');
                 spFooterAddBtn.addEventListener('click', function(e) {
                     try { e.preventDefault(); } catch (e0) {}
+                    spCloseAllGroupEditors();
                     var newKey = spFirstUnusedLetter();
                     spEnsureTicketGroup(newKey);
                     spUpdateFooterButtons();
