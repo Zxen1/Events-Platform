@@ -405,7 +405,8 @@
 .menu-class-2.menu-dropdown {
   background: var(--menu-bg);
   border: 1px solid var(--menu-border);
-  border-radius: var(--menu-radius);
+  border-top: none;
+  border-radius: 0 0 var(--menu-radius) var(--menu-radius);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--menu-shadow);
