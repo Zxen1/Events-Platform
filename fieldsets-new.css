@@ -116,6 +116,7 @@
     padding: 0 10px;
     font-size: 13px;
     box-sizing: border-box;
+    margin-bottom: 10px;
 }
 
 .fieldset-input[type="number"] {

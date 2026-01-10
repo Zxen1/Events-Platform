@@ -397,6 +397,7 @@
   -webkit-backdrop-filter: blur(10px);
   /* Both top corners square to match button's square bottom corners */
   border-radius: 0 0 var(--menu-radius) var(--menu-radius);
+  margin-bottom: 10px;
   box-shadow: var(--menu-shadow);
 }
 
@@ -439,6 +440,7 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--menu-shadow);
+  margin-bottom: 10px;
 }
 
 .menu-class-2 .menu-item {
@@ -554,6 +556,7 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--menu-shadow);
+  margin-bottom: 10px;
 }
 
 .menu-class-3 .menu-option {
