@@ -32,6 +32,11 @@
     margin-bottom: 10px;
 }
 
+/* 10-12-6 rule: last child margin removal (see base-new.css for full docs) */
+.fieldset > *:last-child {
+    margin-bottom: 0;
+}
+
 .fieldset-divider {
     width: 100%;
     height: 1px;

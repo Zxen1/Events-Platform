@@ -167,6 +167,20 @@
 }
 
 /* ============================================================================
+   10-12-6 VERTICAL SPACING RULE
+   
+   12px = Between containers (margin-bottom on containers, padding-top on panels)
+   10px = Between elements inside containers (margin-bottom on inputs, fieldsets)
+   6px  = Between label and its element (margin-bottom on labels)
+   
+   To prevent double-up (e.g., 10px fieldset + 10px input = 20px), the last child
+   in any container gets margin-bottom: 0. The container's margin handles spacing.
+   
+   Apply this pattern to any container that holds elements with margin-bottom:
+   .my-container > *:last-child { margin-bottom: 0; }
+   ============================================================================ */
+
+/* ============================================================================
    BUTTON CLASSES
    
    Reusable button styles. Apply class + name class to element:
