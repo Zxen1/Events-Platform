@@ -897,17 +897,12 @@
    SESSION PRICING FIELDSET
    ============================================================================ */
 
-/* Time Input */
+/* Time Input - appearance from input-class-1 */
 .fieldset-sessionpricing-session-field-time-input {
     width: 100%;
     height: 36px;
     padding: 0 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
-    color: #fff;
     font-size: 13px;
-    caret-color: #fff;
 }
 
 .fieldset-sessionpricing-session-field-time-input::-webkit-calendar-picker-indicator {
@@ -943,21 +938,14 @@
     gap: 8px;
 }
 
+/* Date input box - appearance from input-class-1 */
 .fieldset-sessionpricing-session-field-label {
     flex: 1;
     height: 36px;
     padding: 0 10px;
-    background: #333;
-    border: 1px solid #333;
-    border-radius: 5px;
-    color: #fff;
     font-size: 13px;
     display: flex;
     align-items: center;
-}
-
-.fieldset-sessionpricing-session-field-label:hover {
-    border-color: var(--blue-500);
 }
 
 .fieldset-sessionpricing-session-field-label--picker:hover {
