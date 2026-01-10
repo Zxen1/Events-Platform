@@ -863,7 +863,7 @@ const FieldsetBuilder = (function(){
                 
                 var pwInput = document.createElement('input');
                 pwInput.type = 'password';
-                pwInput.className = 'fieldset-input';
+                pwInput.className = 'fieldset-input input-class-1';
                 
                 // Dynamic placeholder showing min length
                 var pwPlaceholder = placeholder || ('Min ' + pwMinLength + ' characters');
@@ -879,7 +879,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var titleInput = document.createElement('input');
                 titleInput.type = 'text';
-                titleInput.className = 'fieldset-input';
+                titleInput.className = 'fieldset-input input-class-1';
                 titleInput.autocomplete = 'off';
                 applyPlaceholder(titleInput, placeholder);
                 var titleValidation = addInputValidation(titleInput, minLength, maxLength, null);
@@ -891,7 +891,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var couponInput = document.createElement('input');
                 couponInput.type = 'text';
-                couponInput.className = 'fieldset-input';
+                couponInput.className = 'fieldset-input input-class-1';
                 applyPlaceholder(couponInput, placeholder);
                 var couponValidation = addInputValidation(couponInput, minLength, maxLength, null);
                 fieldset.appendChild(couponInput);
@@ -912,7 +912,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var textBoxInput = document.createElement('input');
                 textBoxInput.type = 'text';
-                textBoxInput.className = 'fieldset-input';
+                textBoxInput.className = 'fieldset-input input-class-1';
                 applyPlaceholder(textBoxInput, placeholder);
                 var textBoxValidation = addInputValidation(textBoxInput, minLength, maxLength, null);
                 fieldset.appendChild(textBoxInput);
@@ -1165,7 +1165,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var emailInput = document.createElement('input');
                 emailInput.type = 'email';
-                emailInput.className = 'fieldset-input';
+                emailInput.className = 'fieldset-input input-class-1';
                 if (key === 'public_email') emailInput.autocomplete = 'off';
                 applyPlaceholder(emailInput, placeholder);
                 var emailValidation = addInputValidation(emailInput, minLength, maxLength, isValidEmail);
@@ -1180,7 +1180,7 @@ const FieldsetBuilder = (function(){
                 phoneRow.appendChild(buildPhonePrefixMenu(container));
                 var phoneInput = document.createElement('input');
                 phoneInput.type = 'tel';
-                phoneInput.className = 'fieldset-input';
+                phoneInput.className = 'fieldset-input input-class-1';
                 applyPlaceholder(phoneInput, placeholder);
                 makePhoneDigitsOnly(phoneInput);
                 var phoneValidation = addInputValidation(phoneInput, minLength, maxLength, null);
@@ -1258,7 +1258,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var urlInput = document.createElement('input');
                 urlInput.type = 'text'; // text not url, we handle protocol
-                urlInput.className = 'fieldset-input';
+                urlInput.className = 'fieldset-input input-class-1';
                 applyPlaceholder(urlInput, placeholder);
                 autoUrlProtocol(urlInput);
                 var urlValidation = addInputValidation(urlInput, minLength, maxLength, isValidUrl);
@@ -2256,7 +2256,7 @@ const FieldsetBuilder = (function(){
                     tierSub.className = 'fieldset-sublabel';
                     tierSub.textContent = 'Pricing Tier';
                     var tierInput = document.createElement('input');
-                    tierInput.className = 'fieldset-input';
+                    tierInput.className = 'fieldset-input input-class-1';
                     tierInput.placeholder = 'eg. Adult';
                     tierCol.appendChild(tierSub);
                     tierCol.appendChild(tierInput);
@@ -2320,7 +2320,7 @@ const FieldsetBuilder = (function(){
                     priceSub.className = 'fieldset-sublabel';
                     priceSub.textContent = 'Price';
                     var priceInput = document.createElement('input');
-                    priceInput.className = 'fieldset-input';
+                    priceInput.className = 'fieldset-input input-class-1';
                     priceInput.placeholder = '0.00';
                     spAttachMoneyInputBehavior(priceInput);
                     priceCol.appendChild(priceSub);
@@ -2361,7 +2361,7 @@ const FieldsetBuilder = (function(){
                     seatSub.textContent = 'Seating Area';
                     var seatInput = document.createElement('input');
                     seatInput.type = 'text';
-                    seatInput.className = 'fieldset-input';
+                    seatInput.className = 'fieldset-input input-class-1';
                     seatInput.placeholder = 'eg. Orchestra';
                     seatCol.appendChild(seatSub);
                     seatCol.appendChild(seatInput);
@@ -3758,7 +3758,7 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var input = document.createElement('input');
                 input.type = 'text';
-                input.className = 'fieldset-input';
+                input.className = 'fieldset-input input-class-1';
                 applyPlaceholder(input, placeholder);
                 var validation = addInputValidation(input, minLength, maxLength, null);
                 fieldset.appendChild(input);
