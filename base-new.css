@@ -306,6 +306,56 @@
 }
 
 /* ============================================================================
+   CONTAINER CLASSES
+   
+   Reusable CONTAINER APPEARANCE styles. Apply to container elements for
+   consistent styling across the site.
+   ============================================================================ */
+
+/* Container Class 1: Translucent form container (holds form fields) */
+.container-class-1 {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  padding: 10px 10px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Container Class 2: Container with header + content (location container)
+   Bridge classes:
+   - .container-header  (clickable header row)
+   - .container-content (body/content area below header) */
+.container-class-2 {
+  --container-header-bg: var(--blue-600);
+  --container-header-bg-hover: var(--blue-500);
+  --container-header-border: transparent;
+  --container-header-text: #fff;
+  --container-content-bg: rgba(0, 0, 0, 0.2);
+  --container-content-border: rgba(255, 255, 255, 0.1);
+  --container-radius: 5px;
+}
+
+.container-class-2 .container-header {
+  background: var(--container-header-bg);
+  border: 1px solid var(--container-header-border);
+  border-radius: var(--container-radius) var(--container-radius) 0 0;
+  border-bottom: none;
+  color: var(--container-header-text);
+}
+
+.container-class-2 .container-header:hover {
+  background: var(--container-header-bg-hover);
+}
+
+.container-class-2 .container-content {
+  background: var(--container-content-bg);
+  border: 1px solid var(--container-content-border);
+  border-top: none;
+  border-radius: 0 0 var(--container-radius) var(--container-radius);
+}
+
+/* ============================================================================
    MENU CLASSES
    
    Reusable MENU APPEARANCE styles (no layout). Apply the base class to the

@@ -3750,13 +3750,13 @@
         
         // Create container
         var container = document.createElement('div');
-        container.className = 'member-location-container';
+        container.className = 'member-location-container container-class-2';
         container.dataset.venue = String(locationNumber);
         container.dataset.locationNumber = String(locationNumber);
         
         // Create header
         var header = document.createElement('div');
-        header.className = 'member-postform-location-header';
+        header.className = 'member-postform-location-header container-header';
         
         // Header text
         var headerText = document.createElement('span');
@@ -3791,7 +3791,7 @@
         
         // Create content wrapper
         var content = document.createElement('div');
-        content.className = 'member-postform-location-content';
+        content.className = 'member-postform-location-content container-content';
         container.appendChild(content);
         
         // Store location type for header updates (extract type from locationName like "Venue 1" -> "Venue")

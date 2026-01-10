@@ -87,6 +87,7 @@ Website loading speed is critical. Any changes that slow down initial page load 
 1. **Do not invent a second approach** to achieve the same outcome (two methods = future bugs).
 2. Before changing/adding a container/button/menu/etc., **compare it to its closest equivalent** nearby (same panel, same component type).
 3. If a similar thing already works, **copy that exact strategy** (CSS structure, JS flow, selectors, naming), then apply the minimal edits needed.
+4. **Always look at existing patterns first** — before completing any task, find and study similar implementations in the codebase. Do not reinvent things and cause a multi-coding mess everywhere.
 
 ## Critical Information for All Future AI Agents
 
