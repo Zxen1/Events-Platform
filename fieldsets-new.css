@@ -129,19 +129,6 @@
     margin: 0;
 }
 
-.fieldset-input::placeholder {
-    color: #777;
-}
-
-.fieldset-input:hover {
-    border-color: #666;
-}
-
-.fieldset-input:focus {
-    outline: none;
-    border-color: var(--blue-500);
-}
-
 /* Browser autofill styling uses global rule from base-new.css */
 /* Animation name: global-autofill-detected */
 
@@ -1553,13 +1540,15 @@
    ============================================================================ */
 
 .pac-container {
-    /* Match .fieldset-input styling */
-    background: #222;
-    border: 1px solid #444;
+    /* Google Places external dropdown - matches menu-class-2 appearance */
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--blue-500);
     border-radius: 5px;
     font-size: 13px;
     z-index: var(--layer-menu, 85);
     box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     transform: translateY(10px);
 }
 
@@ -1574,13 +1563,9 @@
     border-top: none;
 }
 
-.pac-item:hover {
-    background: var(--blue-500);
-    color: #fff;
-}
-
+.pac-item:hover,
 .pac-item-selected {
-    background: var(--blue-600);
+    background: rgba(255, 255, 255, 0.1);
     color: #fff;
 }
 
