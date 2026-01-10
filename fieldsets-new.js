@@ -2931,21 +2931,17 @@ const FieldsetBuilder = (function(){
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open', !!isOpen);
 
-                    // Toggle sticky class on header and button--selected on header-content
+                    // Toggle sticky class on header
                     try {
                         Object.keys(spTicketGroups).forEach(function(k) {
                             var gg = spTicketGroups[k];
                             if (!gg) return;
                             var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (hh) hh.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
-                            var hc = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
-                            if (hc) hc.classList.remove('button--selected');
                         });
                         if (isOpen) {
                             var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
-                            var hc0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
-                            if (hc0) hc0.classList.add('button--selected');
                         }
                     } catch (eSticky) {}
                 }
@@ -2979,10 +2975,6 @@ const FieldsetBuilder = (function(){
                             if (!g) return;
                             var header = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (header) header.classList.toggle('fieldset-sessionpricing-ticketgroup-item-header--selected', normalizedKey && String(k) === String(normalizedKey));
-                            var hc = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
-                            if (hc && !g.classList.contains('fieldset-sessionpricing-ticketgroup-item--open')) {
-                                hc.classList.toggle('button--selected', normalizedKey && String(k) === String(normalizedKey));
-                            }
                         });
                     } catch (eSel) {}
                 }
@@ -3117,7 +3109,7 @@ const FieldsetBuilder = (function(){
                     if (spTicketGroups[key]) return spTicketGroups[key];
 
                     var group = document.createElement('div');
-                    group.className = 'fieldset-sessionpricing-ticketgroup-item';
+                    group.className = 'fieldset-sessionpricing-ticketgroup-item container-class-2';
                     group.dataset.ticketGroupKey = key;
 
                     // Header wrapper (46px when sticky - top 10px is shield, bottom 36px is content)
@@ -3126,7 +3118,7 @@ const FieldsetBuilder = (function(){
 
                     // Content row inside header (36px button area with all interactions)
                     var headerContent = document.createElement('div');
-                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content button-class-2';
+                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content container-header';
 
                     var selectBtn = document.createElement('button');
                     selectBtn.type = 'button';
@@ -3167,7 +3159,7 @@ const FieldsetBuilder = (function(){
                     group.appendChild(header);
 
                     var editorWrap = document.createElement('div');
-                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-class-1';
+                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-content';
                     editorWrap.style.display = 'none';
 
                     var editor = document.createElement('div');
