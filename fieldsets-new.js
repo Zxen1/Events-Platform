@@ -2618,10 +2618,6 @@ const FieldsetBuilder = (function(){
                     spEnsureTicketGroup(newKey);
                     spUpdateFooterButtons();
                     spAssignGroupToActive(newKey);
-                    spCloseAllGroupEditors();
-                    spOpenGroupKey = newKey;
-                    spOpenGroupSnapshot = [];
-                    spSetGroupEditorOpen(newKey, true);
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                 });
                 spTicketGroupFooter.appendChild(spFooterAddBtn);
@@ -3109,7 +3105,7 @@ const FieldsetBuilder = (function(){
                     if (spTicketGroups[key]) return spTicketGroups[key];
 
                     var group = document.createElement('div');
-                    group.className = 'fieldset-sessionpricing-ticketgroup-item container-class-2';
+                    group.className = 'fieldset-sessionpricing-ticketgroup-item';
                     group.dataset.ticketGroupKey = key;
 
                     // Header wrapper (46px when sticky - top 10px is shield, bottom 36px is content)
@@ -3118,7 +3114,7 @@ const FieldsetBuilder = (function(){
 
                     // Content row inside header (36px button area with all interactions)
                     var headerContent = document.createElement('div');
-                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content container-header';
+                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content button-class-2';
 
                     var selectBtn = document.createElement('button');
                     selectBtn.type = 'button';
@@ -3159,7 +3155,7 @@ const FieldsetBuilder = (function(){
                     group.appendChild(header);
 
                     var editorWrap = document.createElement('div');
-                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-content';
+                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-class-1';
                     editorWrap.style.display = 'none';
 
                     var editor = document.createElement('div');
