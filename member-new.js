@@ -1912,18 +1912,11 @@ const MemberModule = (function() {
                 optsEl.classList.toggle('member-formpicker-menu-options--open', !!isOpen);
                 optsEl.classList.toggle('menu-options--open', !!isOpen);
             }
-            // When opening: reset highlight and focus button for keyboard nav
-            if (isOpen) {
-                if (optsEl) {
-                    var opts = optsEl.querySelectorAll('.menu-option');
-                    opts.forEach(function(o) { o.classList.remove('menu-option--highlighted'); });
-                    if (opts.length > 0) opts[0].classList.add('menu-option--highlighted');
-                }
-                // Focus the button so keyboard navigation works immediately
-                // Use setTimeout to ensure DOM is fully updated before focusing
-                if (btnEl) {
-                    setTimeout(function() { btnEl.focus(); }, 0);
-                }
+            // When opening: reset highlight (keyboard nav handled by MenuManager at document level)
+            if (isOpen && optsEl) {
+                var opts = optsEl.querySelectorAll('.menu-option');
+                opts.forEach(function(o) { o.classList.remove('menu-option--highlighted'); });
+                if (opts.length > 0) opts[0].classList.add('menu-option--highlighted');
             }
         }
         
@@ -1935,6 +1928,10 @@ const MemberModule = (function() {
             };
             menuEl.__menuApplyOpenState = function(isOpen) {
                 applyFormpickerMenuOpenState(menuEl, isOpen);
+            };
+            // Required for MenuManager document-level keyboard nav (works without button focus)
+            menuEl.__menuGetOptionsEl = function() {
+                return menuEl.querySelector('.member-formpicker-menu-options');
             };
             
             // Register with MenuManager
@@ -2132,10 +2129,7 @@ const MemberModule = (function() {
                     window.MenuManager.closeAll(categoryMenu);
                 }
             } catch (e0) {}
-            var willOpen = !categoryMenu.__menuIsOpen();
-            categoryMenu.__menuApplyOpenState(willOpen);
-            // Ensure focus for keyboard nav after mouse click
-            if (willOpen) setTimeout(function() { categoryBtn.focus(); }, 0);
+            categoryMenu.__menuApplyOpenState(!categoryMenu.__menuIsOpen());
         });
         
         // Toggle subcategory menu
@@ -2146,10 +2140,7 @@ const MemberModule = (function() {
                     window.MenuManager.closeAll(subcategoryMenu);
                 }
             } catch (e0) {}
-            var willOpen = !subcategoryMenu.__menuIsOpen();
-            subcategoryMenu.__menuApplyOpenState(willOpen);
-            // Ensure focus for keyboard nav after mouse click
-            if (willOpen) setTimeout(function() { subcategoryBtn.focus(); }, 0);
+            subcategoryMenu.__menuApplyOpenState(!subcategoryMenu.__menuIsOpen());
         });
         categoryWrapper.appendChild(categoryLabel);
         categoryWrapper.appendChild(categoryMenu);
