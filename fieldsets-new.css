@@ -158,30 +158,14 @@
 }
 
 /* Textarea */
+/* Textarea - layout only, appearance from input-class-1 in base-new.css */
 .fieldset-textarea {
     width: 100%;
     min-height: 120px;
     padding: 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
-    color: #fff;
     font-size: 13px;
     resize: vertical;
-    caret-color: #fff;
-}
-
-.fieldset-textarea::placeholder {
-    color: #666;
-}
-
-.fieldset-textarea:hover {
-    border-color: #555;
-}
-
-.fieldset-textarea:focus {
-    outline: none;
-    border-color: var(--blue-500);
+    margin-bottom: 10px;
 }
 
 .fieldset-textarea.fieldset-input--invalid {

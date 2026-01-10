@@ -901,7 +901,7 @@ const FieldsetBuilder = (function(){
             case 'description':
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var descTextarea = document.createElement('textarea');
-                descTextarea.className = 'fieldset-textarea';
+                descTextarea.className = 'fieldset-textarea input-class-1';
                 applyPlaceholder(descTextarea, placeholder);
                 var descValidation = addInputValidation(descTextarea, minLength, maxLength, null);
                 fieldset.appendChild(descTextarea);
@@ -922,7 +922,7 @@ const FieldsetBuilder = (function(){
             case 'custom_textarea': // post_map_cards.custom_textarea
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var editableTextarea = document.createElement('textarea');
-                editableTextarea.className = 'fieldset-textarea';
+                editableTextarea.className = 'fieldset-textarea input-class-1';
                 applyPlaceholder(editableTextarea, placeholder);
                 var textareaValidation = addInputValidation(editableTextarea, minLength, maxLength, null);
                 fieldset.appendChild(editableTextarea);
@@ -3501,7 +3501,6 @@ const FieldsetBuilder = (function(){
                 smartVenueInput.type = 'text';
                 smartVenueInput.className = 'fieldset-input input-class-1';
                 smartVenueInput.placeholder = 'Search or type venue name...';
-                smartVenueInput.style.marginBottom = '8px';
                 var smartVenueWrap = document.createElement('div');
                 smartVenueWrap.className = 'fieldset-location-inputwrap';
                 smartVenueWrap.appendChild(smartVenueInput);
@@ -3516,7 +3515,6 @@ const FieldsetBuilder = (function(){
                 smartAddrInput.type = 'text';
                 smartAddrInput.className = 'fieldset-input input-class-1';
                 smartAddrInput.placeholder = 'Search or type address...';
-                smartAddrInput.style.marginBottom = '4px';
                 var smartAddrWrap = document.createElement('div');
                 smartAddrWrap.className = 'fieldset-location-inputwrap';
                 smartAddrWrap.appendChild(smartAddrInput);
