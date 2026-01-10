@@ -32,11 +32,6 @@
     margin-bottom: 10px;
 }
 
-/* Vertical containers: last child doesn't need bottom margin */
-.fieldset > *:last-child {
-    margin-bottom: 0;
-}
-
 .fieldset-divider {
     width: 100%;
     height: 1px;
@@ -121,7 +116,6 @@
     padding: 0 10px;
     font-size: 13px;
     box-sizing: border-box;
-    margin-bottom: 10px;
 }
 
 .fieldset-input[type="number"] {
@@ -170,7 +164,6 @@
     padding: 10px;
     font-size: 13px;
     resize: vertical;
-    margin-bottom: 10px;
 }
 
 .fieldset-textarea.fieldset-input--invalid {
