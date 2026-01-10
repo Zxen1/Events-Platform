@@ -2927,17 +2927,21 @@ const FieldsetBuilder = (function(){
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open', !!isOpen);
 
-                    // Toggle sticky class on header
+                    // Toggle sticky class on header and button--selected on header-content
                     try {
                         Object.keys(spTicketGroups).forEach(function(k) {
                             var gg = spTicketGroups[k];
                             if (!gg) return;
                             var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (hh) hh.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            var hc = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc) hc.classList.remove('button--selected');
                         });
                         if (isOpen) {
                             var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            var hc0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc0) hc0.classList.add('button--selected');
                         }
                     } catch (eSticky) {}
                 }
@@ -2971,6 +2975,10 @@ const FieldsetBuilder = (function(){
                             if (!g) return;
                             var header = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (header) header.classList.toggle('fieldset-sessionpricing-ticketgroup-item-header--selected', normalizedKey && String(k) === String(normalizedKey));
+                            var hc = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc && !g.classList.contains('fieldset-sessionpricing-ticketgroup-item--open')) {
+                                hc.classList.toggle('button--selected', normalizedKey && String(k) === String(normalizedKey));
+                            }
                         });
                     } catch (eSel) {}
                 }
