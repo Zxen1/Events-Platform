@@ -1139,23 +1139,7 @@
 
 .member-profileform-toggle {
   width: 100%;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 10px;
-  background: rgba(59, 130, 245, 0.15);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: bold;
-  color: #fff;
   margin-bottom: 12px;
-}
-
-.member-profileform-toggle:hover {
-  border-color: var(--blue-500);
 }
 
 .member-profileform-container {
