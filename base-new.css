@@ -275,6 +275,23 @@
   color: var(--website-white);
 }
 
+/* Button Class 4: Input-styled button (looks like input, acts like button) */
+.button-class-4 {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid #333;
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.button-class-4:hover {
+  border-color: #555;
+}
+.button-class-4:focus {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: var(--blue-500);
+}
+
 /* ============================================================================
    INPUT CLASSES
    

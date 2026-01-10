@@ -2502,7 +2502,7 @@ const FieldsetBuilder = (function(){
                 var spDatePickerRow = document.createElement('div');
                 spDatePickerRow.className = 'fieldset-sessionpricing-session-row fieldset-sessionpricing-session-row--picker';
                 var spDatePickerBox = document.createElement('div');
-                spDatePickerBox.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--picker input-class-1';
+                spDatePickerBox.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--picker button-class-4';
                 spDatePickerBox.setAttribute('role', 'button');
                 spDatePickerBox.setAttribute('tabindex', '0');
                 spDatePickerBox.setAttribute('aria-haspopup', 'dialog');
