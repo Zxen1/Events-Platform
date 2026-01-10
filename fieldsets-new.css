@@ -1240,9 +1240,14 @@
     padding: 0;
 }
 
+.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
+    border-color: var(--blue-500);
+}
+
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     margin-top: 0;
     padding: 10px;
+    border-color: var(--blue-500);
 }
 
 .fieldset-sessionpricing-ticketgroup-actions {
