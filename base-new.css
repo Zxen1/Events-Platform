@@ -441,6 +441,100 @@
 }
 
 /* ============================================================================
+   MENU CLASS 3 (Category picker menus)
+   Used by: Formpicker category/subcategory dropdowns
+   
+   Similar to menu-class-1 but with:
+   - Solid blue background on hover (not translucent)
+   - Icon + text layout for options
+   
+   Bridge classes:
+   - .menu-button      (trigger button)
+   - .menu-text        (button text)
+   - .menu-arrow       (arrow icon)
+   - .menu-image       (icon image in button/option)
+   - .menu-options     (dropdown panel)
+   - .menu-option      (each option row)
+   - .menu-option-text (option text)
+   ============================================================================ */
+
+.menu-class-3 {
+  --menu-bg: rgba(0, 0, 0, 0.2);
+  --menu-bg-hover: var(--blue-500);
+  --menu-bg-open: var(--blue-600);
+  --menu-bg-options: #222;
+  --menu-border: rgba(255, 255, 255, 0.1);
+  --menu-border-focus: var(--blue-500);
+  --menu-text: #fff;
+  --menu-muted: #888;
+  --menu-hover: var(--blue-500);
+  --menu-radius: 5px;
+}
+
+.menu-class-3 .menu-button {
+  background: var(--menu-bg);
+  border: 1px solid var(--menu-border);
+  border-radius: var(--menu-radius);
+  color: var(--menu-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.menu-class-3 .menu-button:hover {
+  border-color: var(--menu-border-focus);
+  background: var(--menu-bg-hover);
+}
+
+.menu-class-3 .menu-button--open {
+  border-color: var(--menu-border-focus);
+  background: var(--menu-bg-open);
+  border-radius: var(--menu-radius) var(--menu-radius) 0 0;
+  border-bottom: none;
+}
+
+.menu-class-3 .menu-text {
+  color: var(--menu-text);
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-class-3 .menu-arrow {
+  font-size: 10px;
+  color: var(--menu-muted);
+  transition: transform 0.2s;
+}
+
+.menu-class-3 .menu-arrow--open {
+  transform: rotate(180deg);
+}
+
+.menu-class-3 .menu-options {
+  background: var(--menu-bg-options);
+  border: 1px solid var(--menu-border-focus);
+  border-top: none;
+  border-radius: 0 0 var(--menu-radius) var(--menu-radius);
+}
+
+.menu-class-3 .menu-option {
+  cursor: pointer;
+  color: var(--menu-text);
+  font-size: 14px;
+  background: transparent;
+  border: none;
+}
+
+.menu-class-3 .menu-option:hover {
+  background: var(--menu-hover);
+}
+
+.menu-class-3 .menu-option-text {
+  color: var(--menu-text);
+  font-size: 14px;
+}
+
+/* ============================================================================
    GLOBAL RULES (THREE IN THE ENTIRE WEBSITE)
    1) SCROLLBARS
    2) GLOBAL FONT (system-ui, sans-serif)
