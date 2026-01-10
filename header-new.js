@@ -205,12 +205,9 @@ const HeaderModule = (function() {
         modeSwitchButtons.forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var mode = btn.dataset.mode;
-                if (!mode || mode === currentMode) return;
+                if (!mode) return;
                 
-                // Change mode immediately - no waiting
-                setMode(mode);
-                
-                // Close any open panels in parallel (non-blocking)
+                // Close any open panels (always - cleans screen on small devices)
                 try {
                     var filterPanel = document.querySelector('.filter-panel');
                     if (filterPanel && filterPanel.classList.contains('show')) {
@@ -232,6 +229,12 @@ const HeaderModule = (function() {
                 } catch (e) {
                     // ignore
                 }
+                
+                // Skip mode change if already in this mode
+                if (mode === currentMode) return;
+                
+                // Change mode
+                setMode(mode);
             });
         });
         
