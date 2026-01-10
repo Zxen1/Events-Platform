@@ -1200,6 +1200,7 @@ const FieldsetBuilder = (function(){
                 addrInputEl.className = 'fieldset-input input-class-1';
                 applyPlaceholder(addrInputEl, placeholder);
                 addrWrap.appendChild(addrInputEl);
+                addrWrap.style.marginBottom = '10px';
                 fieldset.appendChild(addrWrap);
                 // Hidden lat/lng fields
                 var addrLatInput = document.createElement('input');
@@ -3504,6 +3505,7 @@ const FieldsetBuilder = (function(){
                 var smartVenueWrap = document.createElement('div');
                 smartVenueWrap.className = 'fieldset-location-inputwrap';
                 smartVenueWrap.appendChild(smartVenueInput);
+                smartVenueWrap.style.marginBottom = '10px';
                 fieldset.appendChild(smartVenueWrap);
                 
                 // Address row
