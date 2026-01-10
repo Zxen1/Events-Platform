@@ -1506,7 +1506,6 @@
     border-radius: 5px 5px 0 0;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    margin-bottom: 0;
 }
 
 /* Location dropdown (New Google Places AutocompleteSuggestion UI)

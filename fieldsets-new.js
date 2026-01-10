@@ -91,9 +91,16 @@ const FieldsetBuilder = (function(){
             } catch (e2) {}
         }
 
+        var savedMargin = '';
+        
         function open() {
             dropdownEl.style.display = 'block';
             try { if (parentWrapEl) parentWrapEl.classList.add('fieldset-location-inputwrap--open'); } catch (e0) {}
+            // Save and clear inline margin to eliminate gap
+            try {
+                savedMargin = inputEl.style.marginBottom || '';
+                inputEl.style.marginBottom = '0';
+            } catch (e1) {}
             activeIndex = -1;
             setActiveIndex(0);
         }
@@ -102,6 +109,8 @@ const FieldsetBuilder = (function(){
             dropdownEl.style.display = 'none';
             activeIndex = -1;
             try { if (parentWrapEl) parentWrapEl.classList.remove('fieldset-location-inputwrap--open'); } catch (e0) {}
+            // Restore inline margin
+            try { inputEl.style.marginBottom = savedMargin; } catch (e1) {}
         }
 
         function selectActive() {
