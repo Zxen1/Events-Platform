@@ -32,7 +32,7 @@
     margin-bottom: 10px;
 }
 
-/* 10-12-6 rule: last child margin removal (see base-new.css for full docs) */
+/* Vertical containers: last child doesn't need bottom margin */
 .fieldset > *:last-child {
     margin-bottom: 0;
 }
