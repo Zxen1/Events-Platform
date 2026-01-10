@@ -459,15 +459,17 @@
    ============================================================================ */
 
 .menu-class-3 {
-  --menu-bg: rgba(0, 0, 0, 0.2);
+  --menu-bg: rgba(0, 0, 0, 0.35);
   --menu-bg-hover: var(--blue-500);
   --menu-bg-open: var(--blue-600);
-  --menu-bg-options: #222;
-  --menu-border: rgba(255, 255, 255, 0.1);
+  --menu-bg-options: rgba(0, 0, 0, 0.35);
+  --menu-border: var(--blue-500);
   --menu-border-focus: var(--blue-500);
   --menu-text: #fff;
+  --menu-text-secondary: #aaa;
   --menu-muted: #888;
   --menu-hover: var(--blue-500);
+  --menu-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   --menu-radius: 5px;
 }
 
@@ -479,6 +481,8 @@
   font-size: 14px;
   cursor: pointer;
   outline: none;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .menu-class-3 .menu-button:hover {
@@ -516,6 +520,9 @@
   border: 1px solid var(--menu-border-focus);
   border-top: none;
   border-radius: 0 0 var(--menu-radius) var(--menu-radius);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--menu-shadow);
 }
 
 .menu-class-3 .menu-option {
