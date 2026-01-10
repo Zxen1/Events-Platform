@@ -501,6 +501,10 @@
     align-items: flex-end;
 }
 
+.fieldset-row .fieldset-input {
+    margin-bottom: 0;
+}
+
 .fieldset-row-item {
     flex: 1;
 }
