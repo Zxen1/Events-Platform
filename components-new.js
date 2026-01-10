@@ -406,13 +406,23 @@ function menuArrowKeyNav(e, optsContainer, optionSelector, onSelect) {
         return false;
     }
     
-    // ArrowUp / ArrowDown
+    // ArrowUp / ArrowDown - stop at boundaries, don't loop
     e.preventDefault();
     var nextIdx;
     if (key === 'ArrowDown') {
-        nextIdx = currentIdx < 0 ? 0 : (currentIdx + 1) % visibleOpts.length;
+        if (currentIdx < 0) {
+            nextIdx = 0; // Nothing selected, go to first
+        } else if (currentIdx >= visibleOpts.length - 1) {
+            nextIdx = currentIdx; // Already at bottom, stay there
+        } else {
+            nextIdx = currentIdx + 1;
+        }
     } else {
-        nextIdx = currentIdx <= 0 ? visibleOpts.length - 1 : currentIdx - 1;
+        if (currentIdx <= 0) {
+            nextIdx = 0; // Already at top (or nothing selected), stay at first
+        } else {
+            nextIdx = currentIdx - 1;
+        }
     }
     
     // Remove highlight from all, add to new
@@ -3092,8 +3102,8 @@ const MapControlRowComponent = (function(){
                 return;
             }
             var i = nextIdx;
-            if (i < 0) i = dropdownItems.length - 1;
-            if (i >= dropdownItems.length) i = 0;
+            if (i < 0) i = 0; // Stop at top, don't loop
+            if (i >= dropdownItems.length) i = dropdownItems.length - 1; // Stop at bottom, don't loop
             activeIndex = i;
             dropdownItems.forEach(function(el, idx) {
                 try {

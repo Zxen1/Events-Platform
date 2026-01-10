@@ -81,8 +81,8 @@ const FieldsetBuilder = (function(){
                 return;
             }
             var i = nextIdx;
-            if (i < 0) i = items.length - 1;
-            if (i >= items.length) i = 0;
+            if (i < 0) i = 0; // Stop at top, don't loop
+            if (i >= items.length) i = items.length - 1; // Stop at bottom, don't loop
             activeIndex = i;
             syncActiveClass(items);
             try {
