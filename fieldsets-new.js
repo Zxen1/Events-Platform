@@ -2927,17 +2927,27 @@ const FieldsetBuilder = (function(){
                     wrap.style.display = isOpen ? '' : 'none';
                     g.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open', !!isOpen);
 
-                    // Toggle sticky class on header
+                    // Toggle sticky class on header and swap button-class-2 / container-header
                     try {
                         Object.keys(spTicketGroups).forEach(function(k) {
                             var gg = spTicketGroups[k];
                             if (!gg) return;
                             var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (hh) hh.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            var hc = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc) {
+                                hc.classList.remove('container-header');
+                                hc.classList.add('button-class-2');
+                            }
                         });
                         if (isOpen) {
                             var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
                             if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
+                            var hc0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc0) {
+                                hc0.classList.remove('button-class-2');
+                                hc0.classList.add('container-header');
+                            }
                         }
                     } catch (eSticky) {}
                 }
@@ -3118,7 +3128,7 @@ const FieldsetBuilder = (function(){
 
                     // Content row inside header (36px button area with all interactions)
                     var headerContent = document.createElement('div');
-                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content container-header';
+                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content button-class-2';
 
                     var selectBtn = document.createElement('button');
                     selectBtn.type = 'button';
