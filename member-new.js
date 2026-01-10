@@ -2106,7 +2106,11 @@ const MemberModule = (function() {
             categoryOpts.appendChild(optionBtn);
         });
         
-        // Setup MenuManager integration
+        // Assemble category menu structure first
+        categoryMenu.appendChild(categoryBtn);
+        categoryMenu.appendChild(categoryOpts);
+        
+        // Setup MenuManager integration (must be after structure is complete)
         setupFormpickerMenu(categoryMenu, categoryBtn);
         setupFormpickerMenu(subcategoryMenu, subcategoryBtn);
         
@@ -2131,9 +2135,6 @@ const MemberModule = (function() {
             } catch (e0) {}
             subcategoryMenu.__menuApplyOpenState(!subcategoryMenu.__menuIsOpen());
         });
-        
-        categoryMenu.appendChild(categoryBtn);
-        categoryMenu.appendChild(categoryOpts);
         categoryWrapper.appendChild(categoryLabel);
         categoryWrapper.appendChild(categoryMenu);
         
