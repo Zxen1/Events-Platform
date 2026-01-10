@@ -2783,9 +2783,6 @@ const IconPickerComponent = (function(){
                 applyOpenState(true);
             }
         });
-            if (isOpen) closeMenu();
-            else openMenu();
-        });
         
         // Disable input pointer when closed (like currency menu)
         menu.classList.add('component-iconpicker-menu--closed');
