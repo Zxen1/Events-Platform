@@ -1912,11 +1912,15 @@ const MemberModule = (function() {
                 optsEl.classList.toggle('member-formpicker-menu-options--open', !!isOpen);
                 optsEl.classList.toggle('menu-options--open', !!isOpen);
             }
-            // Reset highlight when opening
-            if (isOpen && optsEl) {
-                var opts = optsEl.querySelectorAll('.menu-option');
-                opts.forEach(function(o) { o.classList.remove('menu-option--highlighted'); });
-                if (opts.length > 0) opts[0].classList.add('menu-option--highlighted');
+            // When opening: reset highlight and focus button for keyboard nav
+            if (isOpen) {
+                if (optsEl) {
+                    var opts = optsEl.querySelectorAll('.menu-option');
+                    opts.forEach(function(o) { o.classList.remove('menu-option--highlighted'); });
+                    if (opts.length > 0) opts[0].classList.add('menu-option--highlighted');
+                }
+                // Focus the button so keyboard navigation works immediately
+                if (btnEl) btnEl.focus();
             }
         }
         
@@ -1951,7 +1955,6 @@ const MemberModule = (function() {
                         }
                     } catch (e0) {}
                     menuEl.__menuApplyOpenState(true);
-                    btnEl.focus(); // Ensure button keeps focus
                     return;
                 }
                 
@@ -2148,7 +2151,9 @@ const MemberModule = (function() {
 
         // Auto-open category menu when nothing is selected yet.
         // Subcategory auto-open is handled when a category is picked.
-        if (!selectedCategory) categoryMenu.__menuApplyOpenState(true);
+        if (!selectedCategory) {
+            categoryMenu.__menuApplyOpenState(true);
+        }
     }
     
     function renderConfiguredFields() {
