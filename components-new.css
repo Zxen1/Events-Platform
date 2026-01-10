@@ -818,6 +818,10 @@
     font-size: 14px;
 }
 
+.component-currencyfull-menu-options--open {
+    display: block;
+}
+
 .component-languagefull-menu-options--open {
     display: block;
 }

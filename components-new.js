@@ -102,6 +102,7 @@ const MenuManager = (function(){
                 menu.querySelector('input.component-phoneprefixcompact-menu-button-input') ||
                 menu.querySelector('input.component-country-menu-button-input') ||
                 menu.querySelector('input.component-languagefull-menu-button-input') ||
+                menu.querySelector('input.component-iconpicker-menu-button-input') ||
                 null
             );
         } catch (e) {
@@ -244,6 +245,8 @@ const MenuManager = (function(){
                     if (opts) {
                         // Uses shared helper (also used by input-driven menus)
                         menuArrowKeyNav(e, opts, sel, function(opt) { opt.click(); });
+                        // Stop propagation so component-level keydown handlers don't double-fire
+                        if (typeof e.stopPropagation === 'function') e.stopPropagation();
                     }
                 } catch (eNav0) {}
                 return;

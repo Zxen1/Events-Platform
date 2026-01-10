@@ -302,6 +302,7 @@
   border: 1px solid var(--menu-border);
   border-radius: var(--menu-radius);
   color: var(--menu-text);
+  outline: none;
 }
 
 /* Hover border should match form inputs, but must NOT override open/focus/active blue border */
