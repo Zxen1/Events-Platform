@@ -357,8 +357,8 @@
 }
 
 .menu-class-1 .menu-options {
-  /* Match button's focus background so colors align when open */
-  background: var(--menu-bg-focus);
+  /* Match map control geocoder dropdown background */
+  background: var(--menu-bg);
   border: 1px solid var(--menu-border-focus);
   border-top: none;
   backdrop-filter: blur(10px);
@@ -515,7 +515,7 @@
 }
 
 .menu-class-3 .menu-options {
-  background: var(--menu-bg-focus);
+  background: var(--menu-bg);
   border: 1px solid var(--menu-border-focus);
   border-top: none;
   border-radius: 0 0 var(--menu-radius) var(--menu-radius);
