@@ -1240,11 +1240,6 @@
     padding: 0;
 }
 
-.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
-    border-radius: 4px 4px 0 0;
-    border-bottom: none;
-}
-
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     margin-top: 0;
     padding: 10px;

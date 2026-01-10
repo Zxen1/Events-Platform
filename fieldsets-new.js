@@ -2978,8 +2978,11 @@ const FieldsetBuilder = (function(){
                             var g = spTicketGroups[k];
                             if (!g) return;
                             var header = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
-                            if (!header) return;
-                            header.classList.toggle('fieldset-sessionpricing-ticketgroup-item-header--selected', normalizedKey && String(k) === String(normalizedKey));
+                            if (header) header.classList.toggle('fieldset-sessionpricing-ticketgroup-item-header--selected', normalizedKey && String(k) === String(normalizedKey));
+                            var hc = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
+                            if (hc && !g.classList.contains('fieldset-sessionpricing-ticketgroup-item--open')) {
+                                hc.classList.toggle('button--selected', normalizedKey && String(k) === String(normalizedKey));
+                            }
                         });
                     } catch (eSel) {}
                 }
