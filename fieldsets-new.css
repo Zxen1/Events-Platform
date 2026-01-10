@@ -1003,7 +1003,7 @@
     color: #fff;
 }
 
-/* Ticket Group Button */
+/* Ticket Group Button - appearance from button-class-5 */
 .fieldset-sessionpricing-ticketgroup-button-toggle {
     flex: 0 0 70px;
     width: 70px;
@@ -1011,23 +1011,10 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    background: transparent;
-    border: 1px solid #333;
-    border-radius: 5px;
-    cursor: pointer;
     position: relative;
     box-sizing: border-box;
     padding: 0 10px;
     gap: 10px;
-}
-
-.fieldset-sessionpricing-ticketgroup-button-toggle:hover {
-    border-color: var(--blue-500);
-}
-
-.fieldset-sessionpricing-ticketgroup-button-toggle--open {
-    border-color: var(--blue-500);
-    background: var(--blue-600);
 }
 
 .fieldset-sessionpricing-ticketgroup-button-icon {

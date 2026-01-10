@@ -292,6 +292,21 @@
   border-color: var(--blue-500);
 }
 
+/* Button Class 5: Ticket group button (transparent, bordered) */
+.button-class-5 {
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.button-class-5:hover {
+  border-color: var(--blue-500);
+}
+.button-class-5.button--open {
+  border-color: var(--blue-500);
+  background: var(--blue-600);
+}
+
 /* ============================================================================
    INPUT CLASSES
    
