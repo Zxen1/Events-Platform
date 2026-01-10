@@ -224,12 +224,8 @@
 .button-class-2[aria-selected="true"],
 .button-class-2.button--selected {
   background: var(--blue-950);
-  border-color: transparent;
-  color: var(--website-white);
-}
-.button-class-2[aria-selected="true"]:hover,
-.button-class-2.button--selected:hover {
   border-color: var(--blue-600);
+  color: var(--website-white);
 }
 .button-class-2:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.85);
