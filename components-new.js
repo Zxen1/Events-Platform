@@ -59,7 +59,45 @@ const ImageAddTileComponent = (function(){
 
 /* ============================================================================
    MENU MANAGER
-   Global manager to close all open menus when clicking outside or opening another
+   Global manager to close all open menus when clicking outside or opening another.
+   
+   HOW TO CREATE A NEW MENU:
+   -------------------------
+   1. Create your menu HTML structure with these bridge classes:
+      - Container: add your component class + menu-class-1/2/3
+      - Button: add .menu-button
+      - Arrow: add .menu-arrow  
+      - Options panel: add .menu-options
+      - Each option: add .menu-option
+      - Text elements: add .menu-text, .menu-option-text
+   
+   2. Implement required methods on the menu container element:
+      menuEl.__menuIsOpen = function() { return true/false; }
+      menuEl.__menuApplyOpenState = function(isOpen) { /* toggle classes */ }
+      menuEl.__menuOnClose = function() { /* optional: revert on close */ }
+   
+   3. Register with MenuManager:
+      MenuManager.register(menuEl);
+   
+   4. On button click, close others and toggle:
+      MenuManager.closeAll(menuEl);  // close all except this one
+      menuEl.__menuApplyOpenState(!menuEl.__menuIsOpen());
+   
+   5. For keyboard navigation, use menuArrowKeyNav():
+      btnEl.addEventListener('keydown', function(e) {
+          if (menuEl.__menuIsOpen()) {
+              menuArrowKeyNav(e, optsEl, '.menu-option', null);
+          }
+      });
+   
+   MENU CLASSES (in base-new.css):
+   - menu-class-1: Standard menus (translucent, type-to-filter support)
+   - menu-class-2: Location dropdowns (no button trigger, two-line items)
+   - menu-class-3: Category pickers (solid blue hover, icon+text options)
+   
+   STATE CLASSES (toggled by __menuApplyOpenState):
+   - .menu-button--open, .menu-arrow--open, .menu-options--open
+   - .menu-option--highlighted (for keyboard navigation)
    ============================================================================ */
 
 const MenuManager = (function(){
@@ -394,6 +432,9 @@ function menuArrowKeyNav(e, optsContainer, optionSelector, onSelect) {
     
     return true;
 }
+
+// Expose for use by other modules (member-new.js formpicker)
+window.menuArrowKeyNav = menuArrowKeyNav;
 
 
 /* ============================================================================

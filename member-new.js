@@ -1894,7 +1894,7 @@ const MemberModule = (function() {
         var categoryOpts = document.createElement('div');
         categoryOpts.className = 'member-formpicker-menu-options menu-options';
 
-        function setFormpickerMenuOpen(menuEl, isOpen) {
+        function applyFormpickerMenuOpenState(menuEl, isOpen) {
             if (!menuEl) return;
             menuEl.classList.toggle('member-formpicker-menu--open', !!isOpen);
             var btnEl = menuEl.querySelector('.member-formpicker-menu-button');
@@ -1912,6 +1912,75 @@ const MemberModule = (function() {
                 optsEl.classList.toggle('member-formpicker-menu-options--open', !!isOpen);
                 optsEl.classList.toggle('menu-options--open', !!isOpen);
             }
+            // Reset highlight when opening
+            if (isOpen && optsEl) {
+                var opts = optsEl.querySelectorAll('.menu-option');
+                opts.forEach(function(o) { o.classList.remove('menu-option--highlighted'); });
+                if (opts.length > 0) opts[0].classList.add('menu-option--highlighted');
+            }
+        }
+        
+        // Setup MenuManager integration for a formpicker menu
+        function setupFormpickerMenu(menuEl, btnEl) {
+            // MenuManager requires these methods
+            menuEl.__menuIsOpen = function() {
+                return menuEl.classList.contains('member-formpicker-menu--open');
+            };
+            menuEl.__menuApplyOpenState = function(isOpen) {
+                applyFormpickerMenuOpenState(menuEl, isOpen);
+            };
+            
+            // Register with MenuManager
+            try {
+                if (window.MenuManager && typeof window.MenuManager.register === 'function') {
+                    window.MenuManager.register(menuEl);
+                }
+            } catch (e) {}
+            
+            // Keyboard navigation using shared menuArrowKeyNav
+            var optsEl = menuEl.querySelector('.member-formpicker-menu-options');
+            btnEl.addEventListener('keydown', function(e) {
+                var key = e.key;
+                var isOpen = menuEl.__menuIsOpen();
+                
+                // Open menu on ArrowDown/Enter/Space when closed
+                if (!isOpen && (key === 'ArrowDown' || key === 'Enter' || key === ' ')) {
+                    e.preventDefault();
+                    try {
+                        if (window.MenuManager && typeof window.MenuManager.closeAll === 'function') {
+                            window.MenuManager.closeAll(menuEl);
+                        }
+                    } catch (e0) {}
+                    menuEl.__menuApplyOpenState(true);
+                    return;
+                }
+                
+                if (!isOpen) return;
+                
+                // Use shared menuArrowKeyNav for arrow/enter
+                if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Enter') {
+                    if (typeof window.menuArrowKeyNav === 'function') {
+                        var handled = window.menuArrowKeyNav(e, optsEl, '.menu-option', null);
+                        if (handled) {
+                            e.stopPropagation();
+                            return;
+                        }
+                    }
+                }
+                
+                // Escape closes menu
+                if (key === 'Escape') {
+                    e.preventDefault();
+                    menuEl.__menuApplyOpenState(false);
+                    return;
+                }
+                
+                // Tab closes menu
+                if (key === 'Tab') {
+                    menuEl.__menuApplyOpenState(false);
+                    return;
+                }
+            });
         }
         
         // Populate category options
@@ -1961,7 +2030,7 @@ const MemberModule = (function() {
                 btnArrow.textContent = '▼';
                 categoryBtn.appendChild(btnArrow);
                 
-                setFormpickerMenuOpen(categoryMenu, false);
+                categoryMenu.__menuApplyOpenState(false);
                 selectedCategory = cat.name;
                 selectedSubcategory = '';
                 
@@ -2012,7 +2081,7 @@ const MemberModule = (function() {
                             subBtnArrow.textContent = '▼';
                             subcategoryBtn.appendChild(subBtnArrow);
                             
-                            setFormpickerMenuOpen(subcategoryMenu, false);
+                            subcategoryMenu.__menuApplyOpenState(false);
                             selectedSubcategory = subName;
                             renderConfiguredFields();
                         });
@@ -2025,8 +2094,8 @@ const MemberModule = (function() {
 
                     // Auto-open subcategory menu as soon as a category is chosen.
                     // Keep it open until a subcategory is selected.
-                    setFormpickerMenuOpen(categoryMenu, false);
-                    setFormpickerMenuOpen(subcategoryMenu, true);
+                    categoryMenu.__menuApplyOpenState(false);
+                    subcategoryMenu.__menuApplyOpenState(true);
                 } else {
                     subcategoryWrapper.hidden = true;
                 }
@@ -2037,29 +2106,30 @@ const MemberModule = (function() {
             categoryOpts.appendChild(optionBtn);
         });
         
+        // Setup MenuManager integration
+        setupFormpickerMenu(categoryMenu, categoryBtn);
+        setupFormpickerMenu(subcategoryMenu, subcategoryBtn);
+        
         // Toggle category menu
         categoryBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            setFormpickerMenuOpen(subcategoryMenu, false);
-            setFormpickerMenuOpen(categoryMenu, !categoryMenu.classList.contains('member-formpicker-menu--open'));
+            try {
+                if (window.MenuManager && typeof window.MenuManager.closeAll === 'function') {
+                    window.MenuManager.closeAll(categoryMenu);
+                }
+            } catch (e0) {}
+            categoryMenu.__menuApplyOpenState(!categoryMenu.__menuIsOpen());
         });
         
         // Toggle subcategory menu
         subcategoryBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            setFormpickerMenuOpen(categoryMenu, false);
-            setFormpickerMenuOpen(subcategoryMenu, !subcategoryMenu.classList.contains('member-formpicker-menu--open'));
-        });
-        
-        // Close menus on outside click
-        document.addEventListener('click', function(e) {
-            if (!categoryMenu.contains(e.target)) setFormpickerMenuOpen(categoryMenu, false);
-            if (!subcategoryMenu.contains(e.target)) {
-                // Keep subcategory menu open until user has picked a subcategory.
-                if (!(selectedCategory && !selectedSubcategory)) {
-                    setFormpickerMenuOpen(subcategoryMenu, false);
+            try {
+                if (window.MenuManager && typeof window.MenuManager.closeAll === 'function') {
+                    window.MenuManager.closeAll(subcategoryMenu);
                 }
-            }
+            } catch (e0) {}
+            subcategoryMenu.__menuApplyOpenState(!subcategoryMenu.__menuIsOpen());
         });
         
         categoryMenu.appendChild(categoryBtn);
@@ -2073,7 +2143,7 @@ const MemberModule = (function() {
 
         // Auto-open category menu when nothing is selected yet.
         // Subcategory auto-open is handled when a category is picked.
-        if (!selectedCategory) setFormpickerMenuOpen(categoryMenu, true);
+        if (!selectedCategory) categoryMenu.__menuApplyOpenState(true);
     }
     
     function renderConfiguredFields() {

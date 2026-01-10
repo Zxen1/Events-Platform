@@ -478,6 +478,7 @@
   color: var(--menu-text);
   font-size: 14px;
   cursor: pointer;
+  outline: none;
 }
 
 .menu-class-3 .menu-button:hover {
@@ -523,9 +524,11 @@
   font-size: 14px;
   background: transparent;
   border: none;
+  outline: none;
 }
 
-.menu-class-3 .menu-option:hover {
+.menu-class-3 .menu-option:hover,
+.menu-class-3 .menu-option.menu-option--highlighted {
   background: var(--menu-hover);
 }
 
