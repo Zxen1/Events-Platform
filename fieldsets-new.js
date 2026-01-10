@@ -2556,7 +2556,7 @@ const FieldsetBuilder = (function(){
 
                 var spPickerTicketBtn = document.createElement('button');
                 spPickerTicketBtn.type = 'button';
-                spPickerTicketBtn.className = 'fieldset-sessionpricing-ticketgroup-button-toggle button-class-5';
+                spPickerTicketBtn.className = 'fieldset-sessionpricing-ticketgroup-button-toggle button-class-2';
                 spPickerTicketBtn.title = 'Ticket Group';
                 spPickerTicketBtn.disabled = true;
                 spPickerTicketBtn.style.opacity = '0.3';
@@ -3006,7 +3006,7 @@ const FieldsetBuilder = (function(){
                     spPricingGroupsWrap.classList.remove('fieldset-sessionpricing-ticketgroups-popover--open');
                     try {
                         if (spActivePicker && spActivePicker.ticketBtn) {
-                            spActivePicker.ticketBtn.classList.remove('button--open');
+                            spActivePicker.ticketBtn.classList.remove('button--selected');
                         }
                     } catch (eCls) {}
                     spActivePicker = null;
@@ -3048,7 +3048,7 @@ const FieldsetBuilder = (function(){
                     if (!anchorRowEl || !pickerObj) return;
                     spCloseTicketMenu();
                     spActivePicker = pickerObj;
-                    try { if (pickerObj.ticketBtn) pickerObj.ticketBtn.classList.add('button--open'); } catch (eCls2) {}
+                    try { if (pickerObj.ticketBtn) pickerObj.ticketBtn.classList.add('button--selected'); } catch (eCls2) {}
 
                     // Ensure active row has a group assigned
                     var currentKey = '';
@@ -3431,7 +3431,7 @@ const FieldsetBuilder = (function(){
                             // Ticket group button (icon + label)
                             var ticketBtn = document.createElement('button');
                             ticketBtn.type = 'button';
-                            ticketBtn.className = 'fieldset-sessionpricing-ticketgroup-button-toggle button-class-5';
+                            ticketBtn.className = 'fieldset-sessionpricing-ticketgroup-button-toggle button-class-2';
                             ticketBtn.title = 'Ticket Group';
 
                             var iconUrl = spGetSystemTicketIconUrl();
