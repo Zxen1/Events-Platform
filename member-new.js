@@ -1920,7 +1920,10 @@ const MemberModule = (function() {
                     if (opts.length > 0) opts[0].classList.add('menu-option--highlighted');
                 }
                 // Focus the button so keyboard navigation works immediately
-                if (btnEl) btnEl.focus();
+                // Use setTimeout to ensure DOM is fully updated before focusing
+                if (btnEl) {
+                    setTimeout(function() { btnEl.focus(); }, 0);
+                }
             }
         }
         
@@ -2129,7 +2132,10 @@ const MemberModule = (function() {
                     window.MenuManager.closeAll(categoryMenu);
                 }
             } catch (e0) {}
-            categoryMenu.__menuApplyOpenState(!categoryMenu.__menuIsOpen());
+            var willOpen = !categoryMenu.__menuIsOpen();
+            categoryMenu.__menuApplyOpenState(willOpen);
+            // Ensure focus for keyboard nav after mouse click
+            if (willOpen) setTimeout(function() { categoryBtn.focus(); }, 0);
         });
         
         // Toggle subcategory menu
@@ -2140,7 +2146,10 @@ const MemberModule = (function() {
                     window.MenuManager.closeAll(subcategoryMenu);
                 }
             } catch (e0) {}
-            subcategoryMenu.__menuApplyOpenState(!subcategoryMenu.__menuIsOpen());
+            var willOpen = !subcategoryMenu.__menuIsOpen();
+            subcategoryMenu.__menuApplyOpenState(willOpen);
+            // Ensure focus for keyboard nav after mouse click
+            if (willOpen) setTimeout(function() { subcategoryBtn.focus(); }, 0);
         });
         categoryWrapper.appendChild(categoryLabel);
         categoryWrapper.appendChild(categoryMenu);
