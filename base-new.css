@@ -250,6 +250,28 @@
   border-color: var(--blue-600);
   color: var(--website-white);
 }
+
+/* Button Class 2B: Always-active variant of Button Class 2 */
+.button-class-2b {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: var(--blue-950);
+  border: 1px solid var(--blue-600);
+  color: var(--website-white);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.button-class-2b:hover {
+  background: var(--blue-600);
+}
+.button-class-2b:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Button Class 3: (copy of Button Class 2) */
 .button-class-3 {
   height: 36px;
