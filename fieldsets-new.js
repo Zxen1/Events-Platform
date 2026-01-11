@@ -2080,7 +2080,7 @@ const FieldsetBuilder = (function(){
                 // Item Name input
                 var itemNameInput = document.createElement('input');
                 itemNameInput.type = 'text';
-                itemNameInput.className = 'fieldset-itempricing-input-itemname';
+                itemNameInput.className = 'fieldset-itempricing-input-itemname input-class-1';
                 itemNameInput.placeholder = 'eg. T-Shirt';
                 fieldset.appendChild(itemNameInput);
                 
@@ -2129,7 +2129,7 @@ const FieldsetBuilder = (function(){
                 // Item Price input
                 var itemPriceInput = document.createElement('input');
                 itemPriceInput.type = 'text';
-                itemPriceInput.className = 'fieldset-itempricing-input-itemprice';
+                itemPriceInput.className = 'fieldset-itempricing-input-itemprice input-class-1';
                 itemPriceInput.placeholder = '0.00';
                 attachMoneyInputBehavior(itemPriceInput);
                 itemPriceCol.appendChild(itemPriceInput);
@@ -2157,7 +2157,7 @@ const FieldsetBuilder = (function(){
                     // Variant name input
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
-                    variantInput.className = 'fieldset-itempricing-input-itemvariantname';
+                    variantInput.className = 'fieldset-itempricing-input-itemvariantname input-class-1';
                     variantInput.placeholder = 'eg. Large Red';
                     variantRow.appendChild(variantInput);
                     

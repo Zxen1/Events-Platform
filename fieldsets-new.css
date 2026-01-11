@@ -860,31 +860,6 @@
     width: 100%;
     height: 36px;
     padding: 0 10px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 5px;
-    color: #fff;
-    font-size: 13px;
-    caret-color: #fff;
-}
-
-.fieldset-itempricing-input-itemname::placeholder,
-.fieldset-itempricing-input-itemprice::placeholder,
-.fieldset-itempricing-input-itemvariantname::placeholder {
-    color: #666;
-}
-
-.fieldset-itempricing-input-itemname:hover,
-.fieldset-itempricing-input-itemprice:hover,
-.fieldset-itempricing-input-itemvariantname:hover {
-    border-color: #555;
-}
-
-.fieldset-itempricing-input-itemname:focus,
-.fieldset-itempricing-input-itemprice:focus,
-.fieldset-itempricing-input-itemvariantname:focus {
-    outline: none;
-    border-color: var(--blue-500);
 }
 
 .fieldset-itempricing-input-itemname {
