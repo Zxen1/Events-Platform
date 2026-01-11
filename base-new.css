@@ -598,7 +598,7 @@
   --menu-text: #fff;
   --menu-text-secondary: #aaa;
   --menu-muted: #888;
-  --menu-hover: rgba(255, 255, 255, 0.1);
+  --menu-hover: var(--blue-400);
   --menu-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
   --menu-radius: 5px;
 }
