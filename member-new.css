@@ -1198,6 +1198,9 @@
   margin-bottom: 6px;
 }
 
+.member-login {
+  width: 100%;
+}
 
 .member-loginform-container[hidden] {
   display: none;

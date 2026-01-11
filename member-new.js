@@ -4125,7 +4125,7 @@ const MemberModule = (function() {
         // Submit button
         var submitBtn = document.createElement('button');
         submitBtn.type = 'submit';
-        submitBtn.className = 'member-button-submit';
+        submitBtn.className = 'member-login button-class-2';
         submitBtn.dataset.action = 'login';
         submitBtn.textContent = 'Log In';
 
