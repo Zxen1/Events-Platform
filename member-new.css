@@ -384,8 +384,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 10px 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding: 12px 10px calc(10px + env(safe-area-inset-bottom, 0px));
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--panel-scrollbar-thumb) transparent;
