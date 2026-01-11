@@ -452,25 +452,7 @@
     border-top: 1px solid #333;
 }
 
-.calendar-ok,
-.calendar-cancel {
-    height: 32px;
-    padding: 0 16px;
-    border: none;
-    border-radius: 5px;
-    font-size: 13px;
-    cursor: pointer;
-}
-
-.calendar-ok {
-    background: var(--blue-500);
-    color: #fff;
-}
-
-.calendar-cancel {
-    background: #333;
-    color: #fff;
-}
+/* .calendar-ok and .calendar-cancel use button-class-2 for appearance */
 
 /* States */
 .calendar-day.empty {
@@ -529,13 +511,6 @@
     border-radius: 0;
 }
 
-.calendar-ok:hover {
-    background: #2563eb;
-}
-
-.calendar-cancel:hover {
-    background: #444;
-}
 
 
 /* ============================================================================

@@ -757,10 +757,11 @@ const CalendarComponent = (function(){
             actionsEl.className = 'calendar-actions';
             
             var cancelBtn = document.createElement('button');
-            cancelBtn.className = 'calendar-cancel';
+            cancelBtn.className = 'calendar-cancel button-class-2';
             cancelBtn.type = 'button';
             cancelBtn.textContent = 'Cancel';
-            cancelBtn.addEventListener('click', function() {
+            cancelBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
                 selectedStart = null;
                 selectedEnd = null;
                 updateSelection(calendar);
@@ -769,10 +770,11 @@ const CalendarComponent = (function(){
             });
             
             var okBtn = document.createElement('button');
-            okBtn.className = 'calendar-ok';
+            okBtn.className = 'calendar-ok button-class-2';
             okBtn.type = 'button';
             okBtn.textContent = 'OK';
-            okBtn.addEventListener('click', function() {
+            okBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
                 if (onSelect) onSelect(selectedStart, selectedEnd);
             });
             
