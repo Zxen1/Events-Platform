@@ -3790,9 +3790,9 @@ const FieldsetBuilder = (function(){
                                             // Address: strip to just address (in case Google added extra)
                                             smartAddrInput.value = address;
                                             syncSmartAddrDisplay();
-                                            // Venue name: fill only if empty AND result is an establishment
-                                            if (!smartVenueInput.value.trim() && isEstablishment && venueName) {
-                                                smartVenueInput.value = venueName;
+                                            // Venue name: fill if empty (use venue name if available, otherwise address)
+                                            if (!smartVenueInput.value.trim()) {
+                                                smartVenueInput.value = (isEstablishment && venueName) ? venueName : address;
                                             }
                                         }
                                         
