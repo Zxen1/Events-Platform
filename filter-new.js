@@ -586,8 +586,10 @@ const FilterModule = (function() {
 
         function setSortMenuOpen(isOpen) {
             sortMenuEl.classList.toggle('filter-sort-menu--open', !!isOpen);
-            if (sortButtonEl) sortButtonEl.classList.toggle('filter-sort-menu-button--open', !!isOpen);
-            if (sortArrowEl) sortArrowEl.classList.toggle('filter-sort-menu-button-arrow--open', !!isOpen);
+            if (sortButtonEl) sortButtonEl.classList.toggle('menu-button--open', !!isOpen);
+            if (sortArrowEl) sortArrowEl.classList.toggle('menu-arrow--open', !!isOpen);
+            if (sortOptionsEl) sortOptionsEl.classList.toggle('menu-options--open', !!isOpen);
+            // Keep component-specific classes for display toggle
             if (sortOptionsEl) sortOptionsEl.classList.toggle('filter-sort-menu-options--open', !!isOpen);
         }
         

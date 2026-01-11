@@ -315,7 +315,7 @@
   );
 }
 
-/* Sort menu */
+/* Sort menu - uses menu-class-1 for appearance */
 .filter-sort-menu {
   width: 100%;
   max-width: 420px;
@@ -329,27 +329,13 @@
   display: flex;
   align-items: center;
   padding: 0 12px;
-  background: rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 5px;
   cursor: pointer;
-}
-
-.filter-sort-menu-button:hover {
-  border-color: rgba(255,255,255,0.3);
-}
-
-.filter-sort-menu-button--open {
-  border-color: var(--blue-500);
-  border-radius: 5px 5px 0 0;
-  border-bottom: none;
 }
 
 .filter-sort-menu-button-text {
   flex: 1;
   text-align: left;
   font-size: 14px;
-  color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -362,12 +348,6 @@
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: #888;
-  transition: transform 0.2s;
-}
-
-.filter-sort-menu-button-arrow--open {
-  transform: rotate(180deg);
 }
 
 .filter-sort-menu-options {
@@ -376,10 +356,6 @@
   top: 36px;
   left: 0;
   width: 100%;
-  background: #222;
-  border: 1px solid var(--blue-500);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
   max-height: 300px;
   overflow-y: auto;
   z-index: 1000;
@@ -390,19 +366,12 @@
 }
 
 .filter-sort-menu-option {
-  width: 100%;
   height: 36px;
   display: flex;
   align-items: center;
   padding: 0 12px;
   cursor: pointer;
-  color: #fff;
   font-size: 14px;
-  box-sizing: border-box;
-}
-
-.filter-sort-menu-option:hover {
-  background: var(--blue-500);
 }
 
 .filter-sort-menu-option--selected {
