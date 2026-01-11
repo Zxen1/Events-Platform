@@ -420,29 +420,17 @@
   gap: 4px;
 }
 
-/* Input base */
+/* Input base - uses input-class-1 for appearance */
 .filter-keyword-input,
 .filter-price-input,
 .filter-daterange-input {
   flex: 1;
   height: 36px;
   padding: 0 12px;
-  border-radius: 5px;
-  background: rgba(0,0,0,0.2);
-  color: #fff;
-  caret-color: #fff;
-  border: 1px solid rgba(255,255,255,0.1);
   font: inherit;
   font-size: 14px;
   text-align: left;
   cursor: text;
-}
-
-.filter-keyword-input::placeholder,
-.filter-price-input::placeholder,
-.filter-daterange-input::placeholder {
-  color: #666;
-  font-size: inherit;
 }
 
 .filter-daterange-input {
