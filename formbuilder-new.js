@@ -4280,12 +4280,8 @@
                 locationSection.dataset.locationNumber = locationNum;
                 
                 // Build location fieldset for this location
-                var locationFieldData = {};
-                for (var prop in locationFieldsetData) {
-                    if (locationFieldsetData.hasOwnProperty(prop)) {
-                        locationFieldData[prop] = locationFieldsetData[prop];
-                    }
-                }
+                // CRITICAL: Deep clone to prevent shared state between location containers
+                var locationFieldData = JSON.parse(JSON.stringify(locationFieldsetData));
                 locationFieldData.name = defaultName;
                 
                 var locationFieldsetClone = buildFieldset(locationFieldData, {
@@ -4307,7 +4303,10 @@
                         return;
                     }
                     
-                    var fieldset = buildFieldset(fieldData, {
+                    // CRITICAL: Deep clone to prevent shared state between location containers
+                    var clonedFieldData = JSON.parse(JSON.stringify(fieldData));
+                    
+                    var fieldset = buildFieldset(clonedFieldData, {
                         idPrefix: idPrefix,
                         fieldIndex: fieldIndex,
                         locationNumber: locationNum,
@@ -4370,11 +4369,17 @@
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
             
-            // Note: Location wallpaper is NOT triggered on click.
-            // It only triggers after user types in location fieldset (see input listener below).
+            // Location wallpaper: resume orbit when clicking back into a location container
+            if (clickedContainer.classList.contains('member-location-container')) {
+                try {
+                    if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
+                        LocationWallpaperComponent.handleActiveContainerChange(container, clickedContainer);
+                    }
+                } catch (_eLW) {}
+            }
         });
         
-        // Location wallpaper: only trigger after user types in location fieldset
+        // Location wallpaper: also trigger when user types in location fieldset
         container.addEventListener('input', function(e) {
             try {
                 var locationFieldset = e.target.closest('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]');
