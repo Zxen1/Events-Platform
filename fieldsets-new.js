@@ -1053,9 +1053,7 @@ const FieldsetBuilder = (function(){
                         var v = String(row.dataset.value || '').toLowerCase();
                         var isOn = (v === selected && selected !== '');
                         row.classList.toggle('fieldset-radio--selected', isOn);
-                        var radioImg = row.querySelector('.fieldset-radio-icon');
                         var selectedImg = row.querySelector('.fieldset-radio-icon-selected');
-                        if (radioImg) radioImg.style.display = isOn ? 'none' : '';
                         if (selectedImg) selectedImg.style.display = isOn ? '' : 'none';
                     });
                 }
