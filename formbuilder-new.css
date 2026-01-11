@@ -139,11 +139,14 @@
   background: var(--blue-950);
   border: 1px solid var(--blue-500);
   border-top: none;
-  border-radius: 0 0 5px 5px;
 }
 
 .formbuilder-accordion-editpanel--editing {
   display: block;
+}
+
+.formbuilder-accordion--editing:not(.formbuilder-accordion--open) .formbuilder-accordion-editpanel {
+  border-radius: 0 0 5px 5px;
 }
 
 .formbuilder-accordion-editpanel-row {
