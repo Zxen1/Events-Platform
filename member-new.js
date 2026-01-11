@@ -3068,8 +3068,8 @@ const MemberModule = (function() {
             }
                 
             case 'custom_radio':
-                var checked = el.querySelector('input[type="radio"]:checked');
-                return checked ? checked.value : '';
+                var radioGroup = el.querySelector('.fieldset-radio-group');
+                return radioGroup ? String(radioGroup.dataset.value || '').trim() : '';
 
             case 'age_rating':
                 var ageRatingMenu = el.querySelector('.component-ageratingpicker-menu');

@@ -1025,14 +1025,83 @@ const FieldsetBuilder = (function(){
                 
             case 'custom_radio': // post_map_cards.custom_radio
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
+                
+                // Radio icons from Admin Settings (system_images)
+                function crGetSystemIconUrl(settingKey) {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys[settingKey] ? String(sys[settingKey] || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e0) {
+                        return '';
+                    }
+                }
+                
+                var radioUrl = crGetSystemIconUrl('icon_radio');
+                var radioSelectedUrl = crGetSystemIconUrl('icon_radio_selected');
+                
                 var radioGroup = document.createElement('div');
                 radioGroup.className = 'fieldset-radio-group';
+                radioGroup.dataset.value = '';
+                
+                function crSyncUi() {
+                    var selected = String(radioGroup.dataset.value || '').toLowerCase();
+                    var rows = radioGroup.querySelectorAll('.fieldset-radio');
+                    rows.forEach(function(row) {
+                        var v = String(row.dataset.value || '').toLowerCase();
+                        var isOn = (v === selected && selected !== '');
+                        row.classList.toggle('fieldset-radio--selected', isOn);
+                        var radioImg = row.querySelector('.fieldset-radio-icon');
+                        var selectedImg = row.querySelector('.fieldset-radio-icon-selected');
+                        if (radioImg) radioImg.style.display = isOn ? 'none' : '';
+                        if (selectedImg) selectedImg.style.display = isOn ? '' : 'none';
+                    });
+                }
+                
                 if (Array.isArray(fieldOptions)) {
-                    fieldOptions.forEach(function(opt, i) {
-                        var radio = document.createElement('label');
-                        radio.className = 'fieldset-radio';
-                        radio.innerHTML = '<input type="radio" name="radio-' + index + '" class="fieldset-radio-input" value="' + opt + '"><span class="fieldset-radio-text">' + opt + '</span>';
-                        radioGroup.appendChild(radio);
+                    fieldOptions.forEach(function(opt) {
+                        var label = String(opt == null ? '' : opt).trim();
+                        if (!label) return;
+                        
+                        var row = document.createElement('button');
+                        row.type = 'button';
+                        row.className = 'fieldset-radio';
+                        row.dataset.value = label;
+                        
+                        var iconWrap = document.createElement('span');
+                        iconWrap.className = 'fieldset-radio-box';
+                        
+                        var radioImg = document.createElement('img');
+                        radioImg.className = 'fieldset-radio-icon';
+                        radioImg.alt = '';
+                        radioImg.src = radioUrl;
+                        iconWrap.appendChild(radioImg);
+                        
+                        var selectedImg = document.createElement('img');
+                        selectedImg.className = 'fieldset-radio-icon-selected';
+                        selectedImg.alt = '';
+                        selectedImg.src = radioSelectedUrl;
+                        selectedImg.style.display = 'none';
+                        iconWrap.appendChild(selectedImg);
+                        
+                        var text = document.createElement('span');
+                        text.className = 'fieldset-radio-text';
+                        text.textContent = label;
+                        
+                        row.appendChild(iconWrap);
+                        row.appendChild(text);
+                        
+                        row.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            radioGroup.dataset.value = label;
+                            crSyncUi();
+                            try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                        });
+                        
+                        radioGroup.appendChild(row);
                     });
                 }
                 fieldset.appendChild(radioGroup);
@@ -3839,8 +3908,10 @@ const FieldsetBuilder = (function(){
             function fieldHasAnyUserValue() {
                 try {
                     switch (key) {
-                        case 'custom_radio':
-                            return !!fieldset.querySelector('input[type="radio"]:checked');
+                        case 'custom_radio': {
+                            var radioGrp = fieldset.querySelector('.fieldset-radio-group');
+                            return !!(radioGrp && String(radioGrp.dataset.value || '').trim());
+                        }
                         case 'custom_dropdown': {
                             var menu = fieldset.querySelector('.fieldset-customdropdown');
                             return !!(menu && String(menu.dataset.value || '').trim());
@@ -4065,8 +4136,8 @@ const FieldsetBuilder = (function(){
                     }
                 }
                 case 'custom_radio': {
-                    var checked = fieldset.querySelector('input[type="radio"]:checked');
-                    return !!checked;
+                    var radioGrp2 = fieldset.querySelector('.fieldset-radio-group');
+                    return !!(radioGrp2 && String(radioGrp2.dataset.value || '').trim());
                 }
                 case 'public_phone': {
                     var prefixInput = fieldset.querySelector('.fieldset-menu-button-input');

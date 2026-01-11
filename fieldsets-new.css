@@ -458,7 +458,6 @@
 .fieldset-radio-group {
     display: flex;
     flex-direction: column;
-    /* No vertical spacing between rows (checklist-style stack) */
     gap: 0;
     border: none;
     border-radius: 0;
@@ -469,7 +468,7 @@
 .fieldset-radio {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
     height: 36px;
     padding: 0 10px;
@@ -477,22 +476,56 @@
     background: transparent;
     border: none;
     margin: 0;
+    color: #fff;
+    font: inherit;
 }
 
 .fieldset-radio:first-child { border-radius: 0; }
 .fieldset-radio:last-child { border-radius: 0; }
 
-.fieldset-radio-input {
+.fieldset-radio-box {
     width: 20px;
     height: 20px;
-    margin: 0;
-    accent-color: var(--blue-500);
-    cursor: pointer;
+    position: relative;
+    flex: 0 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fieldset-radio-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+    filter: brightness(0) invert(0.45);
+    opacity: 0.9;
+}
+
+.fieldset-radio--selected .fieldset-radio-icon {
+    filter: brightness(0) invert(1);
+    opacity: 1;
+}
+
+.fieldset-radio-icon-selected {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    transform: translate(-50%, -50%);
+    display: block;
+    object-fit: contain;
 }
 
 .fieldset-radio-text {
+    flex: 1;
+    text-align: left;
     font-size: 13px;
     color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Row */
