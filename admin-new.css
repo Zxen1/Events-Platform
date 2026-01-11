@@ -2980,10 +2980,6 @@
   margin-bottom: 10px;
 }
 
-.admin-settings-color-swatches > *:last-child {
-  margin-bottom: 0;
-}
-
 .admin-settings-color-swatch {
   aspect-ratio: 1;
   border-radius: 4px;

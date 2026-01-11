@@ -182,15 +182,22 @@
 /* ============================================================================
    10-12-6 VERTICAL SPACING RULE
    
-   12px = Between containers (margin-bottom on containers, padding-top on panels)
-   10px = Between elements inside containers (margin-bottom on inputs, fieldsets)
+   12px = Between containers (margin-bottom on sibling containers)
+   10px = Between elements inside containers (margin-bottom on elements)
    6px  = Between label and its element (margin-bottom on labels)
    
-   To prevent double-up (e.g., 10px fieldset + 10px input = 20px), the last child
-   in any container gets margin-bottom: 0. The container's margin handles spacing.
+   CONTAINER PADDING:
+   - Visible containers: padding 10px 10px 0 (top 10px, sides 10px, bottom 0)
+   - Elements inside keep margin-bottom: 10px, which provides bottom spacing
    
-   Apply this pattern to any container that holds elements with margin-bottom:
-   .my-container > *:last-child { margin-bottom: 0; }
+   LAST-CHILD RULE (invisible containers only):
+   - Invisible containers (no background/border) use: > *:last-child { margin-bottom: 0; }
+   - This prevents double-up when the container itself has no visible boundaries
+   - Visible containers do NOT use this rule - elements keep their margin-bottom
+   
+   NESTED CONTAINERS (rare):
+   - When containers are inside other containers, inner containers get
+     margin-bottom: 10px (same as other elements inside containers)
    ============================================================================ */
 
 /* ============================================================================
