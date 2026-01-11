@@ -2481,12 +2481,12 @@
   padding: 0 10px;
   cursor: pointer;
   background: var(--blue-950);
-  border-radius: 4px 4px 0 0;
+  border-radius: 5px 5px 0 0;
 }
 
 .admin-messages-accordion-header--open,
 .admin-messages-accordion-header--editing {
-  border-radius: 4px 4px 0 0;
+  border-radius: 5px 5px 0 0;
 }
 
 .admin-messages-accordion-header-image {
@@ -2597,7 +2597,8 @@
 /* Content area (for messages list) */
 .admin-messages-accordion-content {
   padding: 10px 10px 0 10px;
-  background: rgba(0, 0, 0, 0.2);
+  background: #111111;
+  border-radius: 0 0 5px 5px;
 }
 
 .admin-messages-accordion-content--hidden {
