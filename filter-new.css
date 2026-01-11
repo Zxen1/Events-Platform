@@ -496,11 +496,9 @@
   border-color: #cc6600;
 }
 
-/* Expired row - standalone element in panel body */
+/* Expired row - uses row-class-1 for 36px height */
 .filter-expired-row {
   width: 100%;
-  display: flex;
-  align-items: center;
   justify-content: space-between;
   gap: 8px;
   max-width: 420px;
