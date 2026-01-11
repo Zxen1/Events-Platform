@@ -4000,7 +4000,7 @@ const FieldsetBuilder = (function(){
                             for (var i2 = 0; i2 < t2.length; i2++) {
                                 if (t2[i2] && String(t2[i2].value || '').trim()) return true;
                             }
-                            var pricingInputs = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-groups .fieldset-sessionpricing-pricing-group:not([style*="display: none"]) input:not([type="hidden"]), .fieldset-sessionpricing-pricing-groups .fieldset-sessionpricing-pricing-group:not([style*="display: none"]) select, .fieldset-sessionpricing-pricing-groups .fieldset-sessionpricing-pricing-group:not([style*="display: none"]) textarea');
+                            var pricingInputs = fieldset.querySelectorAll('.fieldset-sessionpricing-ticketgroups-container .fieldset-sessionpricing-ticketgroup-item:not([style*="display: none"]) input:not([type="hidden"]), .fieldset-sessionpricing-ticketgroups-container .fieldset-sessionpricing-ticketgroup-item:not([style*="display: none"]) select, .fieldset-sessionpricing-ticketgroups-container .fieldset-sessionpricing-ticketgroup-item:not([style*="display: none"]) textarea');
                             for (var p0 = 0; p0 < pricingInputs.length; p0++) {
                                 var el0 = pricingInputs[p0];
                                 if (!el0) continue;
@@ -4240,9 +4240,9 @@ const FieldsetBuilder = (function(){
                     // Ticket pricing groups must be complete:
                     // - Every visible time must have a non-empty group selected
                     // - Every existing group editor must have no blank fields (no partial/half-built groups)
-                    var groupsWrap = fieldset.querySelector('.fieldset-sessionpricing-pricing-groups');
+                    var groupsWrap = fieldset.querySelector('.fieldset-sessionpricing-ticketgroups-container');
                     if (!groupsWrap) return false;
-                    var groups = groupsWrap.querySelectorAll('.fieldset-sessionpricing-pricing-group');
+                    var groups = groupsWrap.querySelectorAll('.fieldset-sessionpricing-ticketgroup-item');
                     if (!groups || groups.length === 0) return false;
 
                     function allControlsFilledNoVisibility(containerEl) {
@@ -4267,7 +4267,7 @@ const FieldsetBuilder = (function(){
                         if (!ti3 || !isVisibleControl(ti3)) continue;
                         var gk = ti3.dataset ? String(ti3.dataset.ticketGroupKey || '').trim() : '';
                         if (!gk) return false; // every visible time must have a group
-                        var grpEl0 = groupsWrap.querySelector('.fieldset-sessionpricing-pricing-group[data-ticket-group-key="' + gk + '"]');
+                        var grpEl0 = groupsWrap.querySelector('.fieldset-sessionpricing-ticketgroup-item[data-ticket-group-key="' + gk + '"]');
                         if (!grpEl0) return false;
                     }
 
