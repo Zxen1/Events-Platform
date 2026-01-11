@@ -483,8 +483,9 @@
 .fieldset-radio:last-child { border-radius: 0; }
 
 .fieldset-radio-input {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
+    margin: 0;
     accent-color: var(--blue-500);
     cursor: pointer;
 }
