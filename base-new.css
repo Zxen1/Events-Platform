@@ -485,7 +485,6 @@
 
 .accordion-class-1 .accordion-header:hover {
   background: var(--accordion-header-bg-hover);
-  border-color: var(--blue-600);
 }
 
 /* When open: square bottom corners on header, no bottom border */
