@@ -2401,20 +2401,8 @@ const MemberModule = (function() {
 
             function getMaxSelectedIso(fieldsetEl) {
                 if (!fieldsetEl) return null;
-                var isSessionPricing = false;
-                try {
-                    var datasetKey = '';
-                    if (fieldsetEl.dataset && fieldsetEl.dataset.fieldsetKey && typeof fieldsetEl.dataset.fieldsetKey === 'string') {
-                        datasetKey = fieldsetEl.dataset.fieldsetKey;
-                    }
-                    isSessionPricing = datasetKey === 'session_pricing';
-                } catch (e0) {
-                    isSessionPricing = false;
-                }
-                var selector = isSessionPricing
-                    ? '.fieldset-sessionpricing-calendar-day--selected[data-iso]'
-                    : '.fieldset-calendar-day.selected[data-iso]';
-                var days = fieldsetEl.querySelectorAll(selector);
+                // CalendarComponent uses .calendar-day.selected for all calendar types
+                var days = fieldsetEl.querySelectorAll('.calendar-day.selected[data-iso]');
                 var latest = null;
                 days.forEach(function(el) {
                     var iso = el.dataset.iso;
