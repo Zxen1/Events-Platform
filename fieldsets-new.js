@@ -3996,7 +3996,7 @@ const FieldsetBuilder = (function(){
                         case 'session_pricing': {
                             var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                             if (selected2 && selected2.length > 0) return true;
-                            var t2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input');
+                            var t2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-session-field-time-input');
                             for (var i2 = 0; i2 < t2.length; i2++) {
                                 if (t2[i2] && String(t2[i2].value || '').trim()) return true;
                             }
@@ -4228,7 +4228,7 @@ const FieldsetBuilder = (function(){
                     var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
                     if (!selectedDays2 || selectedDays2.length === 0) return false;
 
-                    var timeInputs2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-sessions-time-input');
+                    var timeInputs2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-session-field-time-input');
                     if (!timeInputs2 || timeInputs2.length === 0) return false;
                     for (var i2 = 0; i2 < timeInputs2.length; i2++) {
                         var ti2 = timeInputs2[i2];
