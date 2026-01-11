@@ -214,6 +214,11 @@
   background-color: transparent;
 }
 
+/* Map controls container - 10-12-6 rule */
+.filter-map-controls {
+  margin-bottom: 12px;
+}
+
 /* Reset buttons */
 .filter-reset-box {
   width: 100%;
