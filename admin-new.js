@@ -2554,10 +2554,9 @@ const AdminModule = (function() {
     function syncModerationAccordionUi(acc) {
         if (!acc) return;
         var isOpen = acc.classList.contains('admin-moderation-accordion--open');
-        var header = acc.querySelector('.admin-moderation-accordion-header');
         var arrow = acc.querySelector('.admin-moderation-accordion-arrow');
         var body = acc.querySelector('.admin-moderation-accordion-body');
-        if (header) header.classList.toggle('admin-moderation-accordion-header--open', isOpen);
+        acc.classList.toggle('accordion-class-1--open', isOpen);
         if (arrow) arrow.classList.toggle('admin-moderation-accordion-arrow--open', isOpen);
         if (body) body.classList.toggle('admin-moderation-accordion-body--open', isOpen);
     }
@@ -3176,8 +3175,6 @@ const AdminModule = (function() {
         container.querySelectorAll('.admin-checkout-accordion--editing').forEach(function(el) {
             if (el !== exceptAccordion) {
                 el.classList.remove('admin-checkout-accordion--editing');
-                var editPanel = el.querySelector('.admin-checkout-accordion-editpanel');
-                if (editPanel) editPanel.style.display = 'none';
                 syncCheckoutAccordionUi(el);
             }
         });
@@ -3190,12 +3187,12 @@ const AdminModule = (function() {
         var header = accordion.querySelector('.admin-checkout-accordion-header');
         var arrow = accordion.querySelector('.admin-checkout-accordion-header-arrow');
         var editPanel = accordion.querySelector('.admin-checkout-accordion-editpanel');
+        accordion.classList.toggle('accordion-class-1--open', !!isEditing);
         if (header) {
-            header.classList.toggle('admin-checkout-accordion-header--editing', !!isEditing);
             header.classList.toggle('admin-checkout-accordion-header--hidden', !!isHidden);
         }
         if (arrow) arrow.classList.toggle('admin-checkout-accordion-header-arrow--editing', !!isEditing);
-        if (editPanel) editPanel.style.display = isEditing ? 'flex' : 'none';
+        if (editPanel) editPanel.classList.toggle('admin-checkout-accordion-editpanel--open', !!isEditing);
     }
 
     function renderCheckoutOptions(checkoutOptions, siteCurrency) {
@@ -3262,7 +3259,6 @@ const AdminModule = (function() {
             // Edit panel (sibling to header)
             var editPanel = document.createElement('div');
             editPanel.className = 'admin-checkout-accordion-editpanel accordion-body';
-            editPanel.style.display = 'none';
 
             // Title row with input and more button (same as formbuilder)
             var titleRow = document.createElement('div');

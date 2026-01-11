@@ -1780,10 +1780,14 @@
 
 /* Edit Panel (uses accordion-body for appearance) */
 .admin-checkout-accordion-editpanel {
+  display: none;
   padding: 10px;
-  display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.admin-checkout-accordion-editpanel--open {
+  display: flex;
 }
 
 .admin-checkout-accordion-editpanel-row {
