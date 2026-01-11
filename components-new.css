@@ -139,38 +139,38 @@
     transform: translateX(20px);
 }
 
-/* Size: Large */
-.component-large-switch {
+/* Size: Massive (44x24, 18px knob) */
+.component-massive-switch {
     position: relative;
     display: inline-block;
-    width: 50px;
-    height: 26px;
+    width: 44px;
+    height: 24px;
     flex-shrink: 0;
     cursor: pointer;
 }
 
-.component-large-switch-input {
+.component-massive-switch-input {
     opacity: 0;
     width: 0;
     height: 0;
 }
 
-.component-large-switch-slider {
+.component-massive-switch-slider {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 13px;
+    border-radius: 12px;
     transition: background 0.2s;
 }
 
-.component-large-switch-slider::before {
+.component-massive-switch-slider::before {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     left: 3px;
     bottom: 3px;
     background: #fff;
@@ -178,12 +178,12 @@
     transition: transform 0.2s;
 }
 
-.component-large-switch-slider--on {
-    background: var(--blue-600);
+.component-massive-switch-slider--on {
+    background: var(--blue-500);
 }
 
-.component-large-switch-slider--on::before {
-    transform: translateX(24px);
+.component-massive-switch-slider--on::before {
+    transform: translateX(20px);
 }
 
 /* Size: Big (gray background, 36x20) */
