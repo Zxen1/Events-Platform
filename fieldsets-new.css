@@ -405,20 +405,22 @@
 .fieldset-customchecklist-row:last-child { border-radius: 0; }
 
 .fieldset-customchecklist-row-box {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     position: relative;
-    flex: 0 0 24px;
+    flex: 0 0 20px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .fieldset-customchecklist-row-boximg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: block;
     object-fit: contain;
+    position: relative;
+    z-index: 2;
     /* Default: checkbox looks "disabled"/unselected (gray on dark UI) */
     filter: brightness(0) invert(0.45);
     opacity: 0.9;
@@ -434,12 +436,12 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
     transform: translate(-50%, -50%);
-    margin-top: -1px;
     display: block;
     object-fit: contain;
+    z-index: 1;
 }
 
 .fieldset-customchecklist-row-text {
