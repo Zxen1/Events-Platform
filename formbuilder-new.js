@@ -1229,7 +1229,7 @@
         
         var nameInput = document.createElement('input');
         nameInput.type = 'text';
-        nameInput.className = 'formbuilder-accordion-editpanel-input';
+        nameInput.className = 'formbuilder-accordion-editpanel-input input-class-1';
         nameInput.value = cat.name;
         nameInput.oninput = function() {
             headerText.textContent = nameInput.value;
@@ -1441,7 +1441,7 @@
         
         var subNameInput = document.createElement('input');
         subNameInput.type = 'text';
-        subNameInput.className = 'formbuilder-accordion-editpanel-input';
+        subNameInput.className = 'formbuilder-accordion-editpanel-input input-class-1';
         subNameInput.classList.add('formbuilder-accordion-editpanel-input--subcategory');
         subNameInput.value = subName;
         subNameInput.oninput = function() {
