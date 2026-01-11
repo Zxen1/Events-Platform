@@ -601,7 +601,7 @@
 /* Body uses container-content for appearance */
 .filter-categoryfilter-accordion-body {
   display: none;
-  padding: 10px 0 0 0;
+  padding: 10px 10px 0 10px;
 }
 
 .filter-categoryfilter-accordion-body--open {
