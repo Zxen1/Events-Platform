@@ -1249,7 +1249,7 @@ const AdminModule = (function() {
             
             var nameInput = document.createElement('input');
             nameInput.type = 'text';
-            nameInput.className = 'admin-messages-accordion-editpanel-input';
+            nameInput.className = 'admin-messages-accordion-editpanel-input input-class-1';
             nameInput.value = cat.name;
             nameInput.dataset.categoryKey = cat.key;
             nameInput.oninput = function() {

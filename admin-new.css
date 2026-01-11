@@ -2561,19 +2561,7 @@
   height: 36px;
   padding: 0 10px;
   margin: 0;
-  background: #062038;
-  border: 1px solid #222222;
-  border-radius: 5px;
-  color: #fff;
   font-size: 13px;
-  cursor: text;
-  caret-color: #fff;
-}
-
-.admin-messages-accordion-editpanel-input:hover,
-.admin-messages-accordion-editpanel-input:focus {
-  outline: none;
-  border-color: var(--blue-500);
 }
 
 /* Content area (uses accordion-body for appearance) */
