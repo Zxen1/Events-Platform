@@ -2799,11 +2799,11 @@ const FieldsetBuilder = (function(){
 
                 var spTicketGroupFooterOk = document.createElement('button');
                 spTicketGroupFooterOk.type = 'button';
-                spTicketGroupFooterOk.className = 'fieldset-sessionpricing-ticketgroups-button-ok';
+                spTicketGroupFooterOk.className = 'fieldset-sessionpricing-ticketgroups-button-ok button-class-2';
                 spTicketGroupFooterOk.textContent = 'OK';
                 var spTicketGroupFooterCancel = document.createElement('button');
                 spTicketGroupFooterCancel.type = 'button';
-                spTicketGroupFooterCancel.className = 'fieldset-sessionpricing-ticketgroups-button-cancel';
+                spTicketGroupFooterCancel.className = 'fieldset-sessionpricing-ticketgroups-button-cancel button-class-2';
                 spTicketGroupFooterCancel.textContent = 'Cancel';
                 spTicketGroupFooter.appendChild(spTicketGroupFooterOk);
                 spTicketGroupFooter.appendChild(spTicketGroupFooterCancel);
@@ -3151,13 +3151,13 @@ const FieldsetBuilder = (function(){
 
                 // Footer buttons (OK/Cancel) for the ticket-group pop-up (locked like session picker)
                 spTicketGroupFooterOk.addEventListener('click', function(e) {
-                    try { e.preventDefault(); } catch (e0) {}
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
                     spCloseAllGroupEditors();
                     spCloseTicketMenu();
                 });
 
                 spTicketGroupFooterCancel.addEventListener('click', function(e) {
-                    try { e.preventDefault(); } catch (e0) {}
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
                     // Revert current open editor only, then close the menu.
                     try {
                         if (spOpenGroupKey && spOpenGroupSnapshot) {

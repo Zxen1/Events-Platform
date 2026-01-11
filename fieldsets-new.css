@@ -1155,29 +1155,7 @@
     color: var(--blue-500);
 }
 
-.fieldset-sessionpricing-ticketgroups-button-ok,
-.fieldset-sessionpricing-ticketgroups-button-cancel {
-    height: 36px;
-    padding: 0 10px;
-    background: transparent;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #fff;
-    cursor: pointer;
-    font-size: 13px;
-}
-
-.fieldset-sessionpricing-ticketgroups-button-ok:hover,
-.fieldset-sessionpricing-ticketgroups-button-cancel:hover {
-    background: var(--blue-500);
-    border-color: var(--blue-500);
-}
-
-.fieldset-sessionpricing-ticketgroup-footer-ok:active,
-.fieldset-sessionpricing-ticketgroup-footer-cancel:active {
-    background: var(--blue-600);
-    border-color: var(--blue-500);
-}
+/* OK/Cancel buttons use button-class-2 for appearance */
 
 .fieldset-sessionpricing-ticketgroups-button-create {
     width: 100%;
