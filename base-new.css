@@ -415,14 +415,14 @@
    These provide consistent 36px height with centered content.
    ============================================================================ */
 
-/* Row Class 1: Standard interactive row (36px, centered, padded)
+/* Row Class 1: Standard interactive row (36px, vertically centered)
    - Default: 10px margin-bottom (for spacing from next element)
-   - When followed by another row: no margin (rows stack tightly) */
+   - When followed by another row: no margin (rows stack tightly)
+   - No horizontal padding - context determines padding based on placement */
 .row-class-1 {
   height: 36px;
   display: flex;
   align-items: center;
-  padding: 0 10px;
   box-sizing: border-box;
   margin-bottom: 10px;
 }
