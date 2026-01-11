@@ -250,7 +250,7 @@ const MemberModule = (function() {
         panelContent = panel.querySelector('.member-panel-contents');
         memberPanelBody = panel.querySelector('.member-panel-body');
         closeBtn = panel.querySelector('.member-panel-actions-icon-btn--close');
-        tabButtons = panel.querySelectorAll('.member-tab-bar > .button-class-1');
+        tabButtons = panel.querySelectorAll('.member-tab-bar > .button-class-2');
         tabPanels = panel.querySelectorAll('.member-tab-contents');
         myPostsPanel = document.getElementById('member-tab-myposts');
         
