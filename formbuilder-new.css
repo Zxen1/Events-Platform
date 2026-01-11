@@ -31,6 +31,7 @@
   margin-bottom: 3px;
   background: #080808;
   border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   overflow: visible;
 }
 
@@ -41,14 +42,12 @@
   padding: 0 10px;
   cursor: pointer;
   background: var(--blue-950);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px 4px 0 0;
 }
 
 .formbuilder-accordion-header--open,
 .formbuilder-accordion-header--editing {
-  border-radius: 5px 5px 0 0;
-  border-bottom-color: transparent;
+  border-radius: 4px 4px 0 0;
 }
 
 .formbuilder-accordion-header-image {
@@ -128,9 +127,6 @@
   display: none;
   padding: 10px;
   background: var(--blue-950);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
 }
 
 .formbuilder-accordion-editpanel--editing {
@@ -260,9 +256,6 @@
   display: none;
   padding: 10px 10px 0;
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
 }
 
 .formbuilder-accordion-body--open {
