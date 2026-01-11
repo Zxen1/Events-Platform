@@ -5003,9 +5003,25 @@ const MemberModule = (function() {
         storeCurrent(null);
         render();
         
-        // Revert to admin/localStorage settings
-        var lighting = localStorage.getItem('map_lighting') || 'day';
-        var style = localStorage.getItem('map_style') || 'standard';
+        // Revert to localStorage (guest) or admin settings (site default)
+        var lighting = localStorage.getItem('map_lighting');
+        if (!lighting) {
+            if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                lighting = settings.map_lighting || 'day';
+            } else {
+                lighting = 'day';
+            }
+        }
+        var style = localStorage.getItem('map_style');
+        if (!style) {
+            if (window.App && typeof App.getState === 'function') {
+                var settings = App.getState('settings') || {};
+                style = settings.map_style || 'standard';
+            } else {
+                style = 'standard';
+            }
+        }
         if (window.MapModule) {
             if (window.MapModule.setMapLighting) {
                 window.MapModule.setMapLighting(lighting);
