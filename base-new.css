@@ -487,10 +487,10 @@
   background: var(--accordion-header-bg-hover);
 }
 
-/* When open: square bottom corners on header, no bottom border */
+/* When open: square bottom corners on header, transparent bottom border to prevent 1px shift */
 .accordion-class-1.accordion-class-1--open .accordion-header {
   border-radius: var(--accordion-radius) var(--accordion-radius) 0 0;
-  border-bottom: none;
+  border-bottom-color: transparent;
 }
 
 .accordion-class-1 .accordion-body {
