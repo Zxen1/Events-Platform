@@ -1241,7 +1241,7 @@ const AdminModule = (function() {
             
             // Edit panel (sibling to header, like formbuilder)
             var editPanel = document.createElement('div');
-            editPanel.className = 'admin-messages-accordion-editpanel accordion-body';
+            editPanel.className = 'admin-messages-accordion-editpanel';
             
             // Name input row
             var nameRow = document.createElement('div');
