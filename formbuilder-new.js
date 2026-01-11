@@ -4179,15 +4179,25 @@
         var insertBeforeElement = options.insertBeforeElement;
         var onQuantityUpdate = options.onQuantityUpdate || function() {};
         
-        // Remove existing additional location containers (keep venue 1)
-        document.querySelectorAll('.member-location-container[data-location-number]').forEach(function(el) {
-            var locNum = parseInt(el.dataset.locationNumber || '0', 10);
-            if (locNum > 1) {
-                el.remove();
-            }
-        });
+        // Get all existing location containers and find the highest number
+        var existingContainers = document.querySelectorAll('.member-location-container[data-location-number]');
+        var currentCount = existingContainers.length; // includes venue 1
         
-        if (quantity <= 1) return;
+        // If decreasing: remove containers from the end (those with number > quantity)
+        if (quantity < currentCount) {
+            existingContainers.forEach(function(el) {
+                var locNum = parseInt(el.dataset.locationNumber || '0', 10);
+                if (locNum > quantity) {
+                    el.remove();
+                }
+            });
+            // Update delete button visibility after removal
+            updateVenueDeleteButtons();
+            return;
+        }
+        
+        // If same count or only venue 1 needed, nothing to add
+        if (quantity <= currentCount) return;
         
         // Always re-query location1Container to ensure it's in the DOM
         // (passed reference may be stale after form re-render)
@@ -4218,7 +4228,13 @@
             console.warn('[FormBuilder] Venue 1 container has no parent');
             return;
         }
+        
+        // Find the last existing container to insert after
         var insertAfter = venue1Container;
+        var lastContainer = document.querySelector('.member-location-container[data-location-number="' + currentCount + '"]');
+        if (lastContainer) {
+            insertAfter = lastContainer;
+        }
         
         // Build lookup for repeat fieldsets
         var locationSpecificKeys = {};
@@ -4227,7 +4243,8 @@
             if (k) locationSpecificKeys[k] = f;
         });
         
-        for (var i = 2; i <= quantity; i++) {
+        // Only add NEW containers (start from currentCount + 1)
+        for (var i = currentCount + 1; i <= quantity; i++) {
             (function(locationNum) {
                 var venueTypeName = locationType.charAt(0).toUpperCase() + locationType.slice(1);
                 var defaultName = venueTypeName + ' ' + locationNum;
@@ -4343,6 +4360,9 @@
                 // Click tracking handled by centralized event delegation in organizeFieldsIntoLocationContainers
             })(i);
         }
+        
+        // Update delete button visibility after adding new containers
+        updateVenueDeleteButtons();
     }
     
     /**
