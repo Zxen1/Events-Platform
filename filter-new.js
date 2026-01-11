@@ -1070,7 +1070,7 @@ const FilterModule = (function() {
                         optText.textContent = subName;
                         
                         var optSwitch = SwitchComponent.create({
-                            size: 'small',
+                            size: 'big',
                             checked: true,
                             onChange: function() {
                                 applyFilters();
