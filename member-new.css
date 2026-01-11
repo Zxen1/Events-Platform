@@ -883,26 +883,6 @@
 
 .member-button-submit {
   width: 100%;
-  background: var(--website-color, #3b82f5);
-  border: none;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
-  height: 36px;
-  min-height: 36px;
-  padding: 0 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-}
-
-.member-button-submit:hover:not(:disabled) {
-  background: var(--website-color-hover, #2563eb);
-}
-
-.member-button-submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* Incomplete-list popover (shown on hover over disabled submit area) */
