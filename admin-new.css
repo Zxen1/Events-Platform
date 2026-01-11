@@ -2278,14 +2278,11 @@
   padding: 0;
 }
 
-/* Image Manager Accordion */
+/* Image Manager Accordion - uses accordion-class-1 for appearance */
 .admin-settings-imagemanager-accordion {
   width: 100%;
   max-width: 420px;
   margin: 0 auto 12px auto;
-  background: #080808;
-  border-radius: 5px;
-  overflow: visible;
 }
 
 .admin-settings-imagemanager-accordion-header {
@@ -2294,26 +2291,11 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 10px;
-  cursor: pointer;
-  background: var(--blue-500);
-  border-radius: 5px;
-  border: 1px solid transparent;
-}
-
-/* Header state is applied directly on the header element (no structural selectors) */
-.admin-settings-imagemanager-accordion-header--open {
-  border-radius: 5px 5px 0 0;
-  border-bottom: none;
-}
-
-.admin-settings-imagemanager-accordion-header:hover {
-  border-color: var(--blue-500);
 }
 
 .admin-settings-imagemanager-accordion-header-text {
   flex: 1;
   font-weight: bold;
-  color: #fff;
 }
 
 .admin-settings-imagemanager-accordion-header-arrow {
@@ -2323,17 +2305,11 @@
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  transition: transform 0.2s;
-  color: #fff;
-}
-
-.admin-settings-imagemanager-accordion-header-arrow--open {
-  transform: rotate(180deg);
 }
 
 .admin-settings-imagemanager-accordion-body {
   display: none;
-  padding: 3px 0 0 0;
+  padding: 10px 10px 0;
 }
 
 .admin-settings-imagemanager-accordion-body--open {

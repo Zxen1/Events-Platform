@@ -3005,6 +3005,9 @@ const AdminModule = (function() {
         var header = acc.querySelector('.admin-settings-imagemanager-accordion-header');
         var arrow = acc.querySelector('.admin-settings-imagemanager-accordion-header-arrow');
         var body = acc.querySelector('.admin-settings-imagemanager-accordion-body');
+        // Toggle bridge state class on accordion root
+        acc.classList.toggle('accordion-class-1--open', !!isOpen);
+        // Keep component-specific classes for backwards compatibility
         if (header) header.classList.toggle('admin-settings-imagemanager-accordion-header--open', !!isOpen);
         if (arrow) arrow.classList.toggle('admin-settings-imagemanager-accordion-header-arrow--open', !!isOpen);
         if (body) body.classList.toggle('admin-settings-imagemanager-accordion-body--open', !!isOpen);
