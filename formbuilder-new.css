@@ -43,6 +43,7 @@
   background: var(--blue-950);
   border-radius: 5px;
   border: 1px solid transparent;
+  font-weight: normal;
 }
 
 .formbuilder-accordion-header:hover {
