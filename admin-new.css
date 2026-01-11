@@ -2305,6 +2305,11 @@
   align-items: center;
   justify-content: center;
   font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.admin-settings-imagemanager-accordion-header-arrow--open {
+  transform: rotate(180deg);
 }
 
 .admin-settings-imagemanager-accordion-body {
