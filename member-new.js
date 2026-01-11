@@ -2556,7 +2556,7 @@ const MemberModule = (function() {
         // Main submit button
         submitBtn = document.createElement('button');
         submitBtn.type = 'submit';
-        submitBtn.className = 'member-button-submit button-class-2';
+        submitBtn.className = 'member-button-submit button-class-2b';
         submitBtn.textContent = 'Submit';
         submitBtn.disabled = true;
         actionsWrapper.appendChild(submitBtn);
@@ -4125,7 +4125,7 @@ const MemberModule = (function() {
         // Submit button
         var submitBtn = document.createElement('button');
         submitBtn.type = 'submit';
-        submitBtn.className = 'member-login button-class-2';
+        submitBtn.className = 'member-login button-class-2b';
         submitBtn.dataset.action = 'login';
         submitBtn.textContent = 'Log In';
 
@@ -4238,7 +4238,7 @@ const MemberModule = (function() {
 
         var loginSubmit = document.createElement('button');
         loginSubmit.type = 'submit';
-        loginSubmit.className = 'member-button-submit button-class-2';
+        loginSubmit.className = 'member-button-submit button-class-2b';
         loginSubmit.dataset.action = 'create-auth-login';
         loginSubmit.textContent = 'Log In & Submit';
 
@@ -4270,7 +4270,7 @@ const MemberModule = (function() {
 
         var registerSubmit = document.createElement('button');
         registerSubmit.type = 'submit';
-        registerSubmit.className = 'member-button-submit button-class-2';
+        registerSubmit.className = 'member-button-submit button-class-2b';
         registerSubmit.dataset.action = 'create-auth-register';
         registerSubmit.textContent = 'Register & Submit';
 
