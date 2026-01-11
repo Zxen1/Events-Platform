@@ -1194,12 +1194,12 @@ const AdminModule = (function() {
         
         MESSAGE_CATEGORIES.forEach(function(cat) {
             var accordion = document.createElement('div');
-            accordion.className = 'admin-messages-accordion';
+            accordion.className = 'admin-messages-accordion accordion-class-1';
             accordion.dataset.messageCategory = cat.key;
             
             // Header (same structure as formbuilder)
             var header = document.createElement('div');
-            header.className = 'admin-messages-accordion-header';
+            header.className = 'admin-messages-accordion-header accordion-header';
             
             // Header image
             var headerImg = document.createElement('img');
@@ -1241,7 +1241,7 @@ const AdminModule = (function() {
             
             // Edit panel (sibling to header, like formbuilder)
             var editPanel = document.createElement('div');
-            editPanel.className = 'admin-messages-accordion-editpanel';
+            editPanel.className = 'admin-messages-accordion-editpanel accordion-body';
             
             // Name input row
             var nameRow = document.createElement('div');
@@ -1306,7 +1306,7 @@ const AdminModule = (function() {
             
             // Content area (for messages list)
             var content = document.createElement('div');
-            content.className = 'admin-messages-accordion-content admin-messages-accordion-content--hidden';
+            content.className = 'admin-messages-accordion-content admin-messages-accordion-content--hidden accordion-body';
             
             accordion.appendChild(header);
             accordion.appendChild(editPanel);
@@ -1400,14 +1400,10 @@ const AdminModule = (function() {
         if (!accordion) return;
         var isOpen = accordion.classList.contains('admin-messages-accordion--open');
         var isEditing = accordion.classList.contains('admin-messages-accordion--editing');
-        var header = accordion.querySelector('.admin-messages-accordion-header');
         var arrow = accordion.querySelector('.admin-messages-accordion-header-arrow');
         var editArea = accordion.querySelector('.admin-messages-accordion-header-editarea');
         var editPanel = accordion.querySelector('.admin-messages-accordion-editpanel');
-        if (header) {
-            header.classList.toggle('admin-messages-accordion-header--open', !!isOpen);
-            header.classList.toggle('admin-messages-accordion-header--editing', !!isEditing);
-        }
+        accordion.classList.toggle('accordion-class-1--open', isOpen || isEditing);
         if (arrow) arrow.classList.toggle('admin-messages-accordion-header-arrow--open', !!isOpen);
         if (editArea) editArea.classList.toggle('admin-messages-accordion-header-editarea--editing', !!isEditing);
         if (editPanel) editPanel.classList.toggle('admin-messages-accordion-editpanel--editing', !!isEditing);
