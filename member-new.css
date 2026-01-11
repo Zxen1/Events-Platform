@@ -929,31 +929,7 @@
 }
 
 .member-button-admin-submit {
-  background: #22c55e;
-  border: 1px solid #22c55e;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1;
-  padding: 0 16px;
-  height: 36px;
-  min-height: 36px;
-  border-radius: 5px;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-.member-button-admin-submit:hover {
-  background: #16a34a;
-  border-color: #16a34a;
-}
-
-.member-button-admin-submit:disabled {
-  background: #166534;
-  border-color: #166534;
-  opacity: 0.6;
-  cursor: not-allowed;
+  width: 100%;
 }
 
 

@@ -272,6 +272,28 @@
   cursor: not-allowed;
 }
 
+/* Button Class 2C: Always-active green variant of Button Class 2 */
+.button-class-2c {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 5px;
+  background: #22c55e;
+  border: 1px solid #22c55e;
+  color: var(--website-white);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+.button-class-2c:hover {
+  background: #16a34a;
+  border-color: #16a34a;
+}
+.button-class-2c:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Button Class 3: (copy of Button Class 2) */
 .button-class-3 {
   height: 36px;

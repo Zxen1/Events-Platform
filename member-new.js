@@ -2565,7 +2565,7 @@ const MemberModule = (function() {
         if (currentUser && currentUser.isAdmin) {
             adminSubmitBtn = document.createElement('button');
             adminSubmitBtn.type = 'button';
-            adminSubmitBtn.className = 'member-button-admin-submit';
+            adminSubmitBtn.className = 'member-button-admin-submit button-class-2c';
             adminSubmitBtn.textContent = 'Admin: Submit Free';
             adminSubmitBtn.disabled = true;
             actionsWrapper.appendChild(adminSubmitBtn);
@@ -4270,7 +4270,7 @@ const MemberModule = (function() {
 
         var registerSubmit = document.createElement('button');
         registerSubmit.type = 'submit';
-        registerSubmit.className = 'member-button-submit button-class-2b';
+        registerSubmit.className = 'member-button-submit button-class-2';
         registerSubmit.dataset.action = 'create-auth-register';
         registerSubmit.textContent = 'Register & Submit';
 
