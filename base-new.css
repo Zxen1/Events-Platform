@@ -451,6 +451,57 @@
 }
 
 /* ============================================================================
+   ACCORDION CLASSES
+   
+   Reusable ACCORDION styles for expand/collapse patterns.
+   Header maintains consistent appearance (no color change on open/close).
+   
+   Bridge classes:
+   - .accordion-header  (clickable header, always same color)
+   - .accordion-body    (collapsible content area)
+   
+   State classes (apply to wrapper):
+   - .accordion-class-1--open  (body visible, header corners adjusted)
+   ============================================================================ */
+
+/* Accordion Class 1: Standard expand/collapse (translucent dark) */
+.accordion-class-1 {
+  --accordion-header-bg: rgba(0, 0, 0, 0.35);
+  --accordion-header-bg-hover: rgba(0, 0, 0, 0.45);
+  --accordion-header-border: rgba(255, 255, 255, 0.18);
+  --accordion-header-text: #fff;
+  --accordion-body-bg: rgba(0, 0, 0, 0.2);
+  --accordion-body-border: rgba(255, 255, 255, 0.1);
+  --accordion-radius: 5px;
+}
+
+.accordion-class-1 .accordion-header {
+  background: var(--accordion-header-bg);
+  border: 1px solid var(--accordion-header-border);
+  border-radius: var(--accordion-radius);
+  color: var(--accordion-header-text);
+  cursor: pointer;
+}
+
+.accordion-class-1 .accordion-header:hover {
+  background: var(--accordion-header-bg-hover);
+  border-color: var(--blue-600);
+}
+
+/* When open: square bottom corners on header, body visible with matching border */
+.accordion-class-1.accordion-class-1--open .accordion-header {
+  border-radius: var(--accordion-radius) var(--accordion-radius) 0 0;
+  border-bottom: none;
+}
+
+.accordion-class-1 .accordion-body {
+  background: var(--accordion-body-bg);
+  border: 1px solid var(--accordion-body-border);
+  border-top: none;
+  border-radius: 0 0 var(--accordion-radius) var(--accordion-radius);
+}
+
+/* ============================================================================
    MENU CLASSES
    
    Reusable MENU APPEARANCE styles (no layout). Apply the base class to the

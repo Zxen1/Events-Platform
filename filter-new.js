@@ -1016,11 +1016,11 @@ const FilterModule = (function() {
                 
                 categories.forEach(function(cat) {
                     var accordion = document.createElement('div');
-                    accordion.className = 'filter-categoryfilter-accordion container-class-2';
+                    accordion.className = 'filter-categoryfilter-accordion accordion-class-1';
                     
                     // Header
                     var header = document.createElement('div');
-                    header.className = 'filter-categoryfilter-accordion-header button-class-2';
+                    header.className = 'filter-categoryfilter-accordion-header accordion-header';
                     
                     var headerImg = document.createElement('img');
                     headerImg.className = 'filter-categoryfilter-accordion-header-image';
@@ -1051,7 +1051,7 @@ const FilterModule = (function() {
                     
                     // Body
                     var body = document.createElement('div');
-                    body.className = 'filter-categoryfilter-accordion-body container-content';
+                    body.className = 'filter-categoryfilter-accordion-body accordion-body';
                     
                     var subs = cat.subs || [];
                     subs.forEach(function(subName) {
@@ -1095,16 +1095,9 @@ const FilterModule = (function() {
 
                     function setAccordionOpen(isOpen) {
                         accordion.classList.toggle('filter-categoryfilter-accordion--open', !!isOpen);
+                        accordion.classList.toggle('accordion-class-1--open', !!isOpen);
                         headerArrow.classList.toggle('filter-categoryfilter-accordion-header-arrow--open', !!isOpen);
                         body.classList.toggle('filter-categoryfilter-accordion-body--open', !!isOpen);
-                        // Toggle header between button (closed) and container-header (open)
-                        if (isOpen) {
-                            header.classList.remove('button-class-2');
-                            header.classList.add('container-header');
-                        } else {
-                            header.classList.remove('container-header');
-                            header.classList.add('button-class-2');
-                        }
                     }
 
                     function setAccordionDisabled(isDisabled) {
