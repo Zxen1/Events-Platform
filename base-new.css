@@ -464,11 +464,11 @@
    - .accordion-class-1--open  (body visible, header corners adjusted)
    ============================================================================ */
 
-/* Accordion Class 1: Standard expand/collapse (translucent dark) */
+/* Accordion Class 1: Standard expand/collapse (blue header like container-class-2) */
 .accordion-class-1 {
-  --accordion-header-bg: rgba(0, 0, 0, 0.35);
-  --accordion-header-bg-hover: rgba(0, 0, 0, 0.45);
-  --accordion-header-border: rgba(255, 255, 255, 0.18);
+  --accordion-header-bg: var(--blue-950);
+  --accordion-header-bg-hover: var(--blue-950);
+  --accordion-header-border: rgba(255, 255, 255, 0.1);
   --accordion-header-text: #fff;
   --accordion-body-bg: rgba(0, 0, 0, 0.2);
   --accordion-body-border: rgba(255, 255, 255, 0.1);
@@ -488,7 +488,7 @@
   border-color: var(--blue-600);
 }
 
-/* When open: square bottom corners on header, body visible with matching border */
+/* When open: square bottom corners on header, no bottom border */
 .accordion-class-1.accordion-class-1--open .accordion-header {
   border-radius: var(--accordion-radius) var(--accordion-radius) 0 0;
   border-bottom: none;
