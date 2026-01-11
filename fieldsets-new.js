@@ -315,8 +315,7 @@ const FieldsetBuilder = (function(){
                                 if (lngInput) lngInput.value = lng;
                                 if (countryInput) countryInput.value = cc;
                                 try { inputElement.dataset.placesConfirmed = 'true'; } catch (e3) {}
-                                // Dispatch input event for header updates
-                                try { inputElement.dispatchEvent(new Event('input', { bubbles: true })); } catch (e4) {}
+                                // Dispatch change event (not input) to avoid triggering the input handler
                                 try { inputElement.dispatchEvent(new Event('change', { bubbles: true })); } catch (e5) {}
                                 // Also notify listeners bound to lat/lng fields (e.g. wallpaper)
                                 try { if (latInput) latInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e6) {}
@@ -355,17 +354,7 @@ const FieldsetBuilder = (function(){
         
         // If the user types, the location is no longer confirmed (must pick from Google again).
         inputElement.addEventListener('input', function() {
-            // If this input event came from a programmatic selection (not user typing), skip processing.
-            // The placesConfirmed flag is set to 'true' BEFORE the input event is dispatched,
-            // so if we see 'true' here, it means this event was triggered by a Google Places selection.
-            // We must preserve the 'true' state and skip the clearing logic.
-            try {
-                if (inputElement.dataset.placesConfirmed === 'true') {
-                    return; // Skip - preserve confirmed state
-                }
-            } catch (e) {}
-            
-            // Manual typing invalidates confirmation, but must not re-dispatch input (would recurse).
+            // Any typing invalidates the confirmed location
             clearConfirmedLocation(false);
             clearTimeout(debounceTimer);
             var query = inputElement.value.trim();
@@ -3819,8 +3808,8 @@ const FieldsetBuilder = (function(){
 
                                         // Mark address as Places-confirmed (required for completion)
                                         try { smartAddrInput.dataset.placesConfirmed = 'true'; } catch (e0) {}
-                                        // Dispatch change events to trigger header update and other listeners
-                                        try { smartVenueInput.dispatchEvent(new Event('input', { bubbles: true })); } catch (e1) {}
+                                        // Dispatch change events (not input) to avoid triggering the input handler
+                                        try { smartVenueInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                                         try { smartAddrInput.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                                         
                                         // Update status
@@ -3846,19 +3835,10 @@ const FieldsetBuilder = (function(){
                         // Manual typing invalidates Places confirmation for the address field ONLY.
                         // Venue name can be typed freely without affecting address confirmation.
                         if (!isVenueBox) {
-                            // If this input event came from a programmatic selection (not user typing), skip processing.
-                            // The placesConfirmed flag is set to 'true' BEFORE the input event is dispatched,
-                            // so if we see 'true' here, it means this event was triggered by a Google Places selection.
-                            // We must preserve the 'true' state and skip the clearing logic.
-                            try {
-                                if (smartAddrInput.dataset.placesConfirmed === 'true') {
-                                    return; // Skip - preserve confirmed state
-                                }
-                            } catch (e) {}
+                            // Any typing in address field invalidates the confirmed location
                             try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e2) {}
                             smartLatInput.value = '';
                             smartLngInput.value = '';
-                            // No re-dispatch here; this handler is already running due to input.
                         }
                         clearTimeout(debounceTimer);
                         var query = inputEl.value.trim();
