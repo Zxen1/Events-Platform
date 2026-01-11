@@ -2500,7 +2500,13 @@ const MemberModule = (function() {
         if (!formFields) return;
         
         // Find centralized checkout container to append terms and actions inside it
+        // Create it if it doesn't exist (e.g., when checkoutOptions is empty for events)
         var checkoutContainer = formFields.querySelector('.member-checkout-container');
+        if (!checkoutContainer) {
+            checkoutContainer = document.createElement('div');
+            checkoutContainer.className = 'member-checkout-container fieldset member-checkout-wrapper';
+            formFields.appendChild(checkoutContainer);
+        }
         
         // Terms container
         var termsWrapper = document.createElement('div');
