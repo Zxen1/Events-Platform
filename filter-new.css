@@ -580,27 +580,20 @@
   margin: 0 auto;
 }
 
+/* Accordion uses container-class-2 for appearance */
 .filter-categoryfilter-accordion {
   width: 100%;
-  margin-bottom: 3px;
-  background: #222222;
-  border-radius: 5px;
+  margin-bottom: 12px;
   overflow: hidden;
 }
 
+/* Header uses button-class-2 (closed) / container-header (open) for appearance */
 .filter-categoryfilter-accordion-header {
-  height: 40px;
+  height: 36px;
   display: flex;
   align-items: center;
   padding: 0 10px;
   cursor: pointer;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
-}
-
-.filter-categoryfilter-accordion-header:hover {
-  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .filter-categoryfilter-accordion-header-image {
@@ -639,10 +632,10 @@
   cursor: pointer;
 }
 
+/* Body uses container-content for appearance */
 .filter-categoryfilter-accordion-body {
   display: none;
-  padding: 5px;
-  background: #111111;
+  padding: 10px 10px 0 10px;
 }
 
 .filter-categoryfilter-accordion-body--open {
@@ -656,17 +649,11 @@
   padding: 0 10px;
   border-radius: 5px;
   cursor: pointer;
-  background: #111111;
-  margin-bottom: 3px;
-}
-
-
-.filter-categoryfilter-accordion-option:last-child {
-  margin-bottom: 0;
+  margin-bottom: 10px;
 }
 
 .filter-categoryfilter-accordion-option:hover {
-  background: #222222;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .filter-categoryfilter-accordion-option-image {
