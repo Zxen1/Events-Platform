@@ -3188,7 +3188,7 @@ const AdminModule = (function() {
             header.classList.toggle('admin-checkout-accordion-header--hidden', !!isHidden);
         }
         if (arrow) arrow.classList.toggle('admin-checkout-accordion-header-arrow--editing', !!isEditing);
-        if (editPanel) editPanel.classList.toggle('admin-checkout-accordion-editpanel--open', !!isEditing);
+        if (editPanel) editPanel.classList.toggle('admin-checkout-accordion-editpanel--editing', !!isEditing);
     }
 
     function renderCheckoutOptions(checkoutOptions, siteCurrency) {
@@ -3254,7 +3254,7 @@ const AdminModule = (function() {
 
             // Edit panel (sibling to header)
             var editPanel = document.createElement('div');
-            editPanel.className = 'admin-checkout-accordion-editpanel accordion-body';
+            editPanel.className = 'admin-checkout-accordion-editpanel';
 
             // Title row with input and more button (same as formbuilder)
             var titleRow = document.createElement('div');
