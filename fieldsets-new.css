@@ -742,6 +742,7 @@
     grid-template-columns: 24px 1fr auto;
     align-items: center;
     column-gap: 12px;
+    height: 36px;
 }
 
 .fieldset-amenities-row:last-child {
@@ -781,12 +782,11 @@
 .fieldset-amenities-option {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
     color: #ccc;
-    padding: 4px 8px;
-    border-radius: 5px;
+    padding: 0;
     border: none;
     background: transparent;
     transition: color 0.15s;
@@ -797,25 +797,36 @@
 }
 
 .fieldset-amenities-option-icon {
+    width: 20px;
+    height: 20px;
+    position: relative;
+    flex: 0 0 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
-    position: relative;
 }
 
-.fieldset-amenities-option-radio,
+.fieldset-amenities-option-radio {
+    width: 20px;
+    height: 20px;
+    display: block;
+    object-fit: contain;
+}
+
 .fieldset-amenities-option-radio-selected {
-    width: 16px;
-    height: 16px;
     position: absolute;
-    top: 0;
-    left: 0;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+    display: block;
+    object-fit: contain;
 }
 
 .fieldset-amenities-option-text {
-    line-height: 1;
+    font-size: 13px;
+    color: inherit;
 }
 
 
