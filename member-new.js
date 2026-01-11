@@ -2555,7 +2555,7 @@ const MemberModule = (function() {
         submitBtn.disabled = true;
         actionsWrapper.appendChild(submitBtn);
         
-        // Admin submit button - only create if user is admin
+        // Admin submit button - only create if user is admin (security: don't load for non-admins)
         if (currentUser && currentUser.isAdmin) {
             adminSubmitBtn = document.createElement('button');
             adminSubmitBtn.type = 'button';
@@ -2809,10 +2809,32 @@ const MemberModule = (function() {
             submitBtn.hidden = !loggedIn;
             submitBtn.disabled = (!ready || !loggedIn);
         }
-        if (adminSubmitBtn) {
-            // Admin button only relevant when logged in as admin (never when logged out).
-            adminSubmitBtn.hidden = !(loggedIn && currentUser && currentUser.isAdmin);
-            adminSubmitBtn.disabled = (!ready || !(loggedIn && currentUser && currentUser.isAdmin));
+        // Admin button: dynamically create when admin logs in, remove when non-admin
+        if (loggedIn && currentUser && currentUser.isAdmin) {
+            // Create admin button if it doesn't exist
+            if (!adminSubmitBtn && submitBtn && submitBtn.parentNode) {
+                adminSubmitBtn = document.createElement('button');
+                adminSubmitBtn.type = 'button';
+                adminSubmitBtn.className = 'member-button-admin-submit button-class-2c';
+                adminSubmitBtn.textContent = 'Admin: Submit Free';
+                adminSubmitBtn.disabled = true;
+                submitBtn.parentNode.appendChild(adminSubmitBtn);
+                attachMissingPopoverToButton(adminSubmitBtn, function() { return getCreatePostMissingList({ mode: null }); });
+                adminSubmitBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    handleCreatePostSubmit(true);
+                });
+            }
+            if (adminSubmitBtn) {
+                adminSubmitBtn.hidden = false;
+                adminSubmitBtn.disabled = !ready;
+            }
+        } else {
+            // Remove admin button when not admin (security)
+            if (adminSubmitBtn) {
+                try { adminSubmitBtn.remove(); } catch (e) {}
+                adminSubmitBtn = null;
+            }
         }
 
         // Logged-out users: mount/unmount inline auth submit UI on demand (no hidden subtree).
@@ -4263,7 +4285,7 @@ const MemberModule = (function() {
 
         var registerSubmit = document.createElement('button');
         registerSubmit.type = 'submit';
-        registerSubmit.className = 'member-button-submit button-class-2';
+        registerSubmit.className = 'member-button-submit button-class-2b';
         registerSubmit.dataset.action = 'create-auth-register';
         registerSubmit.textContent = 'Register & Submit';
 
