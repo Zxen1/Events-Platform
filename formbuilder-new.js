@@ -4353,7 +4353,8 @@
     function setupFormContainerClickTracking(container) {
         if (!container) return;
         
-        // Use event delegation - single handler on parent for all containers
+        // Use capture phase - fires BEFORE bubbling, so stopPropagation in fieldsets won't block it
+        // This ensures container activation works regardless of what element is clicked
         container.addEventListener('click', function(e) {
             // Find the clicked form container (or closest ancestor that is a form container)
             var clickedContainer = e.target.closest('.form-primary-container, .member-locationpicker-container, .member-checkout-container, .member-location-container');
@@ -4373,7 +4374,7 @@
                     LocationWallpaperComponent.handleActiveContainerChange(container, clickedContainer);
                 }
             } catch (_eLW) {}
-        });
+        }, true);  // true = capture phase
     }
     
     /**
