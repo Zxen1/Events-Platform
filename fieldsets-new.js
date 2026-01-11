@@ -1960,10 +1960,8 @@ const FieldsetBuilder = (function(){
                         nameEl.classList.toggle('fieldset-amenities-row-text--no', isNo);
                         iconImg.classList.toggle('fieldset-amenities-row-image--yes', isYes);
                         iconImg.classList.toggle('fieldset-amenities-row-image--no', isNo);
-                        // Toggle radio icon visibility
-                        yesRadioImg.style.display = isYes ? 'none' : '';
+                        // Toggle selected icon visibility only - base icon always visible
                         yesRadioSelectedImg.style.display = isYes ? '' : 'none';
-                        noRadioImg.style.display = isNo ? 'none' : '';
                         noRadioSelectedImg.style.display = isNo ? '' : 'none';
                     }
                     
