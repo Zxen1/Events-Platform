@@ -2465,8 +2465,8 @@
   width: 100%;
   margin: 0 0 12px 0;
   background: #080808;
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  border: 1px solid var(--blue-500);
   overflow: visible;
 }
 
@@ -2480,13 +2480,17 @@
   align-items: center;
   padding: 0 10px;
   cursor: pointer;
-  background: var(--blue-950);
-  border-radius: 5px 5px 0 0;
+  background: var(--blue-500);
+  border-radius: 3px 3px 0 0;
+}
+
+.admin-messages-accordion-header:hover {
+  background: var(--blue-500);
 }
 
 .admin-messages-accordion-header--open,
 .admin-messages-accordion-header--editing {
-  border-radius: 5px 5px 0 0;
+  border-radius: 3px 3px 0 0;
 }
 
 .admin-messages-accordion-header-image {
@@ -2561,7 +2565,7 @@
 .admin-messages-accordion-editpanel {
   display: none;
   padding: 10px;
-  background: var(--blue-950);
+  background: var(--blue-500);
 }
 
 .admin-messages-accordion-editpanel--editing {
@@ -2598,7 +2602,7 @@
 .admin-messages-accordion-content {
   padding: 10px 10px 0 10px;
   background: #111111;
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 3px 3px;
 }
 
 .admin-messages-accordion-content--hidden {
