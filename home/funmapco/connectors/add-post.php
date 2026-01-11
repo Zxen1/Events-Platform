@@ -364,6 +364,68 @@ foreach ($fields as $entry) {
 }
 if (!$byLoc) $byLoc = [1 => []];
 
+// Copy shared/primary fields to all locations
+// Shared fields are those where location_specific = 0 in the subcategory configuration
+if (count($byLoc) > 1 && isset($byLoc[1])) {
+  $sharedFields = [];
+  
+  // Look up subcategory's fieldset configuration
+  $subcatStmt = $mysqli->prepare("SELECT fieldset_ids, location_specific FROM subcategories WHERE subcategory_key = ? LIMIT 1");
+  if ($subcatStmt) {
+    $subcatStmt->bind_param('s', $subcategoryKey);
+    $subcatStmt->execute();
+    $subcatResult = $subcatStmt->get_result();
+    if ($subcatResult && $subcatRow = $subcatResult->fetch_assoc()) {
+      $fieldsetIdsCsv = $subcatRow['fieldset_ids'] ?? '';
+      $locationFlagsCsv = $subcatRow['location_specific'] ?? '';
+      
+      $fieldsetIds = $fieldsetIdsCsv !== '' ? explode(',', $fieldsetIdsCsv) : [];
+      $locationFlags = $locationFlagsCsv !== '' ? explode(',', $locationFlagsCsv) : [];
+      
+      // Get fieldset keys for each ID
+      $fieldsetKeyMap = [];
+      if (!empty($fieldsetIds)) {
+        $idList = implode(',', array_map('intval', $fieldsetIds));
+        $fsResult = $mysqli->query("SELECT id, fieldset_key FROM fieldsets WHERE id IN ($idList)");
+        if ($fsResult) {
+          while ($fsRow = $fsResult->fetch_assoc()) {
+            $fieldsetKeyMap[(int)$fsRow['id']] = strtolower(trim($fsRow['fieldset_key']));
+          }
+          $fsResult->free();
+        }
+      }
+      
+      // Build list of shared fieldset keys (location_specific = 0 or not set)
+      $sharedKeys = [];
+      foreach ($fieldsetIds as $i => $id) {
+        $id = (int)trim($id);
+        $isLocationSpecific = isset($locationFlags[$i]) && trim($locationFlags[$i]) === '1';
+        if (!$isLocationSpecific && isset($fieldsetKeyMap[$id])) {
+          $sharedKeys[] = $fieldsetKeyMap[$id];
+        }
+      }
+      
+      // Extract shared fields from location 1
+      foreach ($byLoc[1] as $entry) {
+        $key = isset($entry['key']) ? strtolower(trim((string)$entry['key'])) : '';
+        if ($key !== '' && in_array($key, $sharedKeys, true)) {
+          $sharedFields[] = $entry;
+        }
+      }
+      
+      // Copy shared fields to all other locations
+      foreach ($byLoc as $locNum => $entries) {
+        if ($locNum === 1) continue;
+        foreach ($sharedFields as $shared) {
+          $byLoc[$locNum][] = $shared;
+        }
+      }
+    }
+    $subcatResult->free();
+    $subcatStmt->close();
+  }
+}
+
 // Insert map cards
 $mapCardIds = [];
 $primaryTitle = '';

@@ -4079,12 +4079,8 @@
                 });
                 
                 // Build location fieldset for this additional location
-                var additionalLocationFieldData = {};
-                for (var prop in locationFieldset) {
-                    if (locationFieldset.hasOwnProperty(prop)) {
-                        additionalLocationFieldData[prop] = locationFieldset[prop];
-                    }
-                }
+                // CRITICAL: Deep clone to prevent shared state between location containers
+                var additionalLocationFieldData = JSON.parse(JSON.stringify(locationFieldset));
                 
                 var additionalLocationFieldset = buildFieldset(additionalLocationFieldData, {
                     idPrefix: idPrefix,
@@ -4111,7 +4107,9 @@
                     }
                     
                     if (fieldsetKey && allRepeatKeys[fieldsetKey]) {
-                        var repeatFieldset = buildFieldset(fieldData, {
+                        // CRITICAL: Deep clone to prevent shared state between location containers
+                        var clonedFieldData = JSON.parse(JSON.stringify(fieldData));
+                        var repeatFieldset = buildFieldset(clonedFieldData, {
                             idPrefix: idPrefix,
                             fieldIndex: fieldIndex,
                             container: null,
@@ -4368,28 +4366,11 @@
             
             // Add active state to clicked container
             clickedContainer.setAttribute('data-active', 'true');
-            
-            // Location wallpaper: resume orbit when clicking back into a location container
-            if (clickedContainer.classList.contains('member-location-container')) {
-                try {
-                    if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-                        LocationWallpaperComponent.handleActiveContainerChange(container, clickedContainer);
-                    }
-                } catch (_eLW) {}
-            }
-        });
-        
-        // Location wallpaper: also trigger when user types in location fieldset
-        container.addEventListener('input', function(e) {
+
+            // Location wallpaper: manage lifecycle based on active container
             try {
-                var locationFieldset = e.target.closest('.fieldset[data-fieldset-key="venue"], .fieldset[data-fieldset-key="city"], .fieldset[data-fieldset-key="address"], .fieldset[data-fieldset-key="location"]');
-                if (!locationFieldset) return;
-                
-                var locationContainer = e.target.closest('.member-location-container');
-                if (!locationContainer) return;
-                
                 if (window.LocationWallpaperComponent && typeof LocationWallpaperComponent.handleActiveContainerChange === 'function') {
-                    LocationWallpaperComponent.handleActiveContainerChange(container, locationContainer);
+                    LocationWallpaperComponent.handleActiveContainerChange(container, clickedContainer);
                 }
             } catch (_eLW) {}
         });
