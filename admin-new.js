@@ -3226,7 +3226,7 @@ const AdminModule = (function() {
             }
 
             var accordion = document.createElement('div');
-            accordion.className = 'admin-checkout-accordion';
+            accordion.className = 'admin-checkout-accordion accordion-class-1';
             accordion.dataset.id = option.id;
 
             var flagfallPrice = option.checkout_flagfall_price !== undefined ? option.checkout_flagfall_price : 0;
@@ -3238,7 +3238,7 @@ const AdminModule = (function() {
 
             // Header
             var header = document.createElement('div');
-            header.className = 'admin-checkout-accordion-header';
+            header.className = 'admin-checkout-accordion-header accordion-header';
 
             // Header text (title)
             var headerText = document.createElement('span');
@@ -3261,7 +3261,7 @@ const AdminModule = (function() {
 
             // Edit panel (sibling to header)
             var editPanel = document.createElement('div');
-            editPanel.className = 'admin-checkout-accordion-editpanel';
+            editPanel.className = 'admin-checkout-accordion-editpanel accordion-body';
             editPanel.style.display = 'none';
 
             // Title row with input and more button (same as formbuilder)
