@@ -3276,7 +3276,7 @@ const MemberModule = (function() {
                 return currBtn ? currBtn.dataset.currencyValue || '' : '';
                 
             case 'amenities':
-                // New-site amenities are rendered as rows with Yes/No radios (no dataset payload).
+                // Button-based amenities use data-value on each row ('1' = Yes, '0' = No, '' = unset).
                 // Return a stable array of answers so required validation works and backend can consume it.
                 try {
                     var rows = el.querySelectorAll('.fieldset-amenities-row');
@@ -3285,13 +3285,12 @@ const MemberModule = (function() {
                     for (var i = 0; i < rows.length; i++) {
                         var row = rows[i];
                         if (!row) return [];
-                        var nameEl = row.querySelector('.fieldset-amenities-row-text');
-                        var amenityName = nameEl ? String(nameEl.textContent || '').trim() : '';
-                        var checked = row.querySelector('input[type="radio"]:checked');
-                        if (!checked) return []; // incomplete
+                        var amenityName = row.dataset.amenity || '';
+                        var val = row.dataset.value;
+                        if (val !== '1' && val !== '0') return []; // incomplete
                         out.push({
                             amenity: amenityName,
-                            value: String(checked.value || '')
+                            value: val
                         });
                     }
                     return out;

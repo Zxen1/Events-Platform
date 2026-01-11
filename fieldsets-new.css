@@ -779,23 +779,43 @@
 }
 
 .fieldset-amenities-option {
-    display: grid;
-    grid-auto-flow: column;
+    display: flex;
     align-items: center;
-    justify-items: center;
-    column-gap: 4px;
+    gap: 6px;
     cursor: pointer;
     font-size: 12px;
     color: #ccc;
-    min-width: 36px;
-    min-height: 36px;
-    padding: 0 8px;
+    padding: 4px 8px;
     border-radius: 5px;
+    border: none;
+    background: transparent;
+    transition: color 0.15s;
 }
 
-.fieldset-amenities-option-radio {
-    cursor: pointer;
-    accent-color: var(--blue-500);
+.fieldset-amenities-option:hover {
+    color: #fff;
+}
+
+.fieldset-amenities-option-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    position: relative;
+}
+
+.fieldset-amenities-option-radio,
+.fieldset-amenities-option-radio-selected {
+    width: 16px;
+    height: 16px;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.fieldset-amenities-option-text {
+    line-height: 1;
 }
 
 

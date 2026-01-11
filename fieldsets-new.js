@@ -1871,6 +1871,22 @@ const FieldsetBuilder = (function(){
                 var amenitiesGrid = document.createElement('div');
                 amenitiesGrid.className = 'fieldset-amenities-container';
                 
+                // Get radio icons from Admin Settings (system_images) - same pattern as custom_radio
+                function amGetSystemIconUrl(settingKey) {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys[settingKey] ? String(sys[settingKey] || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e0) {
+                        return '';
+                    }
+                }
+                
+                var amRadioUrl = amGetSystemIconUrl('icon_radio');
+                var amRadioSelectedUrl = amGetSystemIconUrl('icon_radio_selected');
+                
                 // Get amenities from amenities table (via picklist response structure)
                 var allAmenities = dropdownOptions['amenity'];
                 if (!allAmenities) {
@@ -1910,6 +1926,8 @@ const FieldsetBuilder = (function(){
                     var row = document.createElement('div');
                     row.className = 'fieldset-amenities-row';
                     row.title = description; // Tooltip on hover
+                    row.dataset.amenity = amenityName; // Store amenity name for value extraction
+                    row.dataset.value = ''; // Empty = unset, '1' = Yes, '0' = No
                     
                     // Icon (no wrapper, direct img element)
                     var amenityUrl = '';
@@ -1930,55 +1948,90 @@ const FieldsetBuilder = (function(){
                     nameEl.textContent = amenityName;
                     row.appendChild(nameEl);
                     
-                    // Yes/No options
+                    // Yes/No options (using buttons with system images - same pattern as custom_radio)
                     var optionsEl = document.createElement('div');
                     optionsEl.className = 'fieldset-amenities-row-options';
                     
-                    // Use value as unique identifier for radio button names
-                    var radioName = 'amenity-' + (item.value || i).replace(/[^a-z0-9]/gi, '-').toLowerCase();
+                    // Helper to update row styling and button states
+                    function setAmenityState(newValue) {
+                        row.dataset.value = newValue;
+                        var isYes = newValue === '1';
+                        var isNo = newValue === '0';
+                        nameEl.classList.toggle('fieldset-amenities-row-text--no', isNo);
+                        iconImg.classList.toggle('fieldset-amenities-row-image--yes', isYes);
+                        iconImg.classList.toggle('fieldset-amenities-row-image--no', isNo);
+                        // Toggle radio icon visibility
+                        yesRadioImg.style.display = isYes ? 'none' : '';
+                        yesRadioSelectedImg.style.display = isYes ? '' : 'none';
+                        noRadioImg.style.display = isNo ? 'none' : '';
+                        noRadioSelectedImg.style.display = isNo ? '' : 'none';
+                    }
                     
-                    var yesLabel = document.createElement('label');
-                    yesLabel.className = 'fieldset-amenities-option';
-                    var yesRadio = document.createElement('input');
-                    yesRadio.type = 'radio';
-                    yesRadio.name = radioName;
-                    yesRadio.value = '1';
-                    yesRadio.className = 'fieldset-amenities-option-radio';
+                    // Yes button
+                    var yesBtn = document.createElement('button');
+                    yesBtn.type = 'button';
+                    yesBtn.className = 'fieldset-amenities-option';
+                    
+                    var yesIconWrap = document.createElement('span');
+                    yesIconWrap.className = 'fieldset-amenities-option-icon';
+                    var yesRadioImg = document.createElement('img');
+                    yesRadioImg.className = 'fieldset-amenities-option-radio';
+                    yesRadioImg.src = amRadioUrl;
+                    yesRadioImg.alt = '';
+                    yesIconWrap.appendChild(yesRadioImg);
+                    var yesRadioSelectedImg = document.createElement('img');
+                    yesRadioSelectedImg.className = 'fieldset-amenities-option-radio-selected';
+                    yesRadioSelectedImg.src = amRadioSelectedUrl;
+                    yesRadioSelectedImg.alt = '';
+                    yesRadioSelectedImg.style.display = 'none';
+                    yesIconWrap.appendChild(yesRadioSelectedImg);
+                    yesBtn.appendChild(yesIconWrap);
+                    
                     var yesText = document.createElement('span');
                     yesText.className = 'fieldset-amenities-option-text';
                     yesText.textContent = 'Yes';
-                    yesLabel.appendChild(yesRadio);
-                    yesLabel.appendChild(yesText);
-                    optionsEl.appendChild(yesLabel);
+                    yesBtn.appendChild(yesText);
                     
-                    var noLabel = document.createElement('label');
-                    noLabel.className = 'fieldset-amenities-option';
-                    var noRadio = document.createElement('input');
-                    noRadio.type = 'radio';
-                    noRadio.name = radioName;
-                    noRadio.value = '0';
-                    noRadio.className = 'fieldset-amenities-option-radio';
+                    yesBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setAmenityState('1');
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                    });
+                    optionsEl.appendChild(yesBtn);
+                    
+                    // No button
+                    var noBtn = document.createElement('button');
+                    noBtn.type = 'button';
+                    noBtn.className = 'fieldset-amenities-option';
+                    
+                    var noIconWrap = document.createElement('span');
+                    noIconWrap.className = 'fieldset-amenities-option-icon';
+                    var noRadioImg = document.createElement('img');
+                    noRadioImg.className = 'fieldset-amenities-option-radio';
+                    noRadioImg.src = amRadioUrl;
+                    noRadioImg.alt = '';
+                    noIconWrap.appendChild(noRadioImg);
+                    var noRadioSelectedImg = document.createElement('img');
+                    noRadioSelectedImg.className = 'fieldset-amenities-option-radio-selected';
+                    noRadioSelectedImg.src = amRadioSelectedUrl;
+                    noRadioSelectedImg.alt = '';
+                    noRadioSelectedImg.style.display = 'none';
+                    noIconWrap.appendChild(noRadioSelectedImg);
+                    noBtn.appendChild(noIconWrap);
+                    
                     var noText = document.createElement('span');
                     noText.className = 'fieldset-amenities-option-text';
                     noText.textContent = 'No';
-                    noLabel.appendChild(noRadio);
-                    noLabel.appendChild(noText);
-                    optionsEl.appendChild(noLabel);
+                    noBtn.appendChild(noText);
                     
-                    // Add change listeners to update row styling
-                    function setAmenityState(isYes) {
-                        nameEl.classList.toggle('fieldset-amenities-row-text--no', !isYes);
-                        iconImg.classList.toggle('fieldset-amenities-row-image--yes', !!isYes);
-                        iconImg.classList.toggle('fieldset-amenities-row-image--no', !isYes);
-                    }
-                    
-                    yesRadio.addEventListener('change', function() {
-                        setAmenityState(true);
+                    noBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setAmenityState('0');
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
                     });
-                    
-                    noRadio.addEventListener('change', function() {
-                        setAmenityState(false);
-                    });
+                    optionsEl.appendChild(noBtn);
                     
                     row.appendChild(optionsEl);
                     amenitiesGrid.appendChild(row);
@@ -3936,7 +3989,8 @@ const FieldsetBuilder = (function(){
                             }
                         }
                         case 'amenities':
-                            return !!fieldset.querySelector('.fieldset-amenities-row input[type="radio"]:checked');
+                            // Check if any amenity row has a value set (button-based, uses data-value)
+                            return !!fieldset.querySelector('.fieldset-amenities-row[data-value="1"], .fieldset-amenities-row[data-value="0"]');
                         case 'age_rating': {
                             var ageRatingMenu = fieldset.querySelector('.component-ageratingpicker-menu');
                             return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
@@ -4239,11 +4293,12 @@ const FieldsetBuilder = (function(){
                     }
                 }
                 case 'amenities': {
-                    // Required amenities: every row needs Yes/No selected.
+                    // Required amenities: every row needs Yes/No selected (button-based, uses data-value).
                     var rows = fieldset.querySelectorAll('.fieldset-amenities-row');
                     if (!rows || rows.length === 0) return false;
                     for (var i = 0; i < rows.length; i++) {
-                        if (!rows[i].querySelector('input[type="radio"]:checked')) return false;
+                        var val = rows[i].dataset.value;
+                        if (val !== '1' && val !== '0') return false;
                     }
                     return true;
                 }
