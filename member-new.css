@@ -1199,7 +1199,7 @@
 }
 
 .member-login {
-  width: 100%;
+  align-self: flex-end;
 }
 
 .member-loginform-container[hidden] {
