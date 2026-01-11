@@ -2960,7 +2960,7 @@
   width: 100%;
   max-width: 420px;
   margin: 0 auto 12px auto;
-  padding: 16px;
+  padding: 12px 12px 0;
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
@@ -2969,7 +2969,7 @@
 .admin-settings-color-swatches-title {
   font-size: 14px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   color: rgba(255, 255, 255, 0.9);
 }
 
@@ -2977,6 +2977,11 @@
   display: grid;
   grid-template-columns: repeat(11, 1fr);
   gap: 4px;
+  margin-bottom: 10px;
+}
+
+.admin-settings-color-swatches > *:last-child {
+  margin-bottom: 0;
 }
 
 .admin-settings-color-swatch {
