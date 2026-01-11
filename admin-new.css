@@ -1778,39 +1778,35 @@
   background: #333;
 }
 
-/* Edit Panel */
-.admin-checkout-accordion-editpanel {
+/* Body (uses accordion-body for appearance) */
+.admin-checkout-accordion-body {
   display: none;
   padding: 10px;
   flex-direction: column;
   gap: 12px;
-  background: var(--blue-950);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: none;
-  border-radius: 0 0 5px 5px;
 }
 
-.admin-checkout-accordion-editpanel--editing {
+.admin-checkout-accordion-body--open {
   display: flex;
 }
 
-.admin-checkout-accordion-editpanel-row {
+.admin-checkout-accordion-body-row {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 /* Title row - input and more button side by side */
-.admin-checkout-accordion-editpanel-row--title {
+.admin-checkout-accordion-body-row--title {
   flex-direction: row;
   gap: 10px;
 }
 
-.admin-checkout-accordion-editpanel-input--title {
+.admin-checkout-accordion-body-input--title {
   flex: 1;
 }
 
-.admin-checkout-accordion-editpanel-row--checkboxes {
+.admin-checkout-accordion-body-row--checkboxes {
   flex-direction: row;
   flex-wrap: wrap;
   gap: 16px;
@@ -1818,7 +1814,7 @@
 }
 
 /* More button (3-dot menu) - inside edit panel */
-.admin-checkout-accordion-editpanel-more {
+.admin-checkout-accordion-body-more {
   position: relative;
   width: 36px;
   height: 36px;
@@ -1833,13 +1829,13 @@
   color: #888;
 }
 
-.admin-checkout-accordion-editpanel-more:hover {
+.admin-checkout-accordion-body-more:hover {
   border-color: var(--blue-500);
   color: var(--blue-500);
 }
 
 
-.admin-checkout-accordion-editpanel-more-menu {
+.admin-checkout-accordion-body-more-menu {
   position: absolute;
   top: 100%;
   right: 0;
@@ -1852,11 +1848,11 @@
   z-index: var(--layer-menu, 85);
 }
 
-.admin-checkout-accordion-editpanel-more-menu--open {
+.admin-checkout-accordion-body-more-menu--open {
   display: block;
 }
 
-.admin-checkout-accordion-editpanel-more-item {
+.admin-checkout-accordion-body-more-item {
   height: 36px;
   display: flex;
   align-items: center;
@@ -1866,15 +1862,15 @@
   font-size: 13px;
 }
 
-.admin-checkout-accordion-editpanel-more-item:hover {
+.admin-checkout-accordion-body-more-item:hover {
   background: #222;
 }
 
-.admin-checkout-accordion-editpanel-more-item-text {
+.admin-checkout-accordion-body-more-item-text {
   flex: 1;
 }
 
-.admin-checkout-accordion-editpanel-more-switch {
+.admin-checkout-accordion-body-more-switch {
   width: 36px;
   height: 20px;
   background: #444;
@@ -1883,7 +1879,7 @@
   cursor: pointer;
 }
 
-.admin-checkout-accordion-editpanel-more-switch::after {
+.admin-checkout-accordion-body-more-switch::after {
   content: '';
   position: absolute;
   width: 16px;
@@ -1895,28 +1891,28 @@
   transition: left 0.2s;
 }
 
-.admin-checkout-accordion-editpanel-more-switch.on {
+.admin-checkout-accordion-body-more-switch.on {
   background: var(--blue-500);
 }
 
-.admin-checkout-accordion-editpanel-more-switch.on::after {
+.admin-checkout-accordion-body-more-switch.on::after {
   left: 18px;
 }
 
-.admin-checkout-accordion-editpanel-more-delete {
+.admin-checkout-accordion-body-more-delete {
   color: #f87171;
 }
 
-.admin-checkout-accordion-editpanel-more-delete:hover {
+.admin-checkout-accordion-body-more-delete:hover {
   background: #7f1d1d;
 }
 
-.admin-checkout-accordion-editpanel-label {
+.admin-checkout-accordion-body-label {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.7);
 }
 
-.admin-checkout-accordion-editpanel-input {
+.admin-checkout-accordion-body-input {
   height: 36px;
   padding: 0 10px;
   background: #1a1a1a;
@@ -1927,12 +1923,12 @@
   caret-color: #fff;
 }
 
-.admin-checkout-accordion-editpanel-input:focus {
+.admin-checkout-accordion-body-input:focus {
   outline: none;
   border-color: var(--blue-500);
 }
 
-.admin-checkout-accordion-editpanel-textarea {
+.admin-checkout-accordion-body-textarea {
   min-height: 80px;
   padding: 10px;
   background: #1a1a1a;
@@ -1944,12 +1940,12 @@
   caret-color: #fff;
 }
 
-.admin-checkout-accordion-editpanel-textarea:focus {
+.admin-checkout-accordion-body-textarea:focus {
   outline: none;
   border-color: var(--blue-500);
 }
 
-.admin-checkout-accordion-editpanel-checkbox {
+.admin-checkout-accordion-body-checkbox {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1966,18 +1962,18 @@
   cursor: pointer;
 }
 
-.admin-checkout-accordion-editpanel-calc {
+.admin-checkout-accordion-body-calc {
   display: flex;
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.admin-checkout-accordion-editpanel-input--calc {
+.admin-checkout-accordion-body-input--calc {
   width: 100px;
 }
 
-.admin-checkout-accordion-editpanel-calc-equals {
+.admin-checkout-accordion-body-calc-equals {
   font-weight: 600;
 }
 

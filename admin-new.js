@@ -3182,13 +3182,13 @@ const AdminModule = (function() {
         var isHidden = accordion.classList.contains('admin-checkout-accordion--hidden');
         var header = accordion.querySelector('.admin-checkout-accordion-header');
         var arrow = accordion.querySelector('.admin-checkout-accordion-header-arrow');
-        var editPanel = accordion.querySelector('.admin-checkout-accordion-editpanel');
+        var body = accordion.querySelector('.admin-checkout-accordion-body');
         accordion.classList.toggle('accordion-class-1--open', !!isEditing);
         if (header) {
             header.classList.toggle('admin-checkout-accordion-header--hidden', !!isHidden);
         }
         if (arrow) arrow.classList.toggle('admin-checkout-accordion-header-arrow--editing', !!isEditing);
-        if (editPanel) editPanel.classList.toggle('admin-checkout-accordion-editpanel--editing', !!isEditing);
+        if (body) body.classList.toggle('admin-checkout-accordion-body--open', !!isEditing);
     }
 
     function renderCheckoutOptions(checkoutOptions, siteCurrency) {
@@ -3252,74 +3252,74 @@ const AdminModule = (function() {
             header.appendChild(headerBadge);
             header.appendChild(headerArrow);
 
-            // Edit panel (sibling to header)
-            var editPanel = document.createElement('div');
-            editPanel.className = 'admin-checkout-accordion-editpanel';
+            // Body
+            var body = document.createElement('div');
+            body.className = 'admin-checkout-accordion-body accordion-body';
 
             // Title row with input and more button (same as formbuilder)
             var titleRow = document.createElement('div');
-            titleRow.className = 'admin-checkout-accordion-editpanel-row admin-checkout-accordion-editpanel-row--title';
+            titleRow.className = 'admin-checkout-accordion-body-row admin-checkout-accordion-body-row--title';
 
             var titleInput = document.createElement('input');
             titleInput.type = 'text';
-            titleInput.className = 'admin-checkout-accordion-editpanel-input admin-checkout-option-title';
-            titleInput.classList.add('admin-checkout-accordion-editpanel-input--title');
+            titleInput.className = 'admin-checkout-accordion-body-input admin-checkout-option-title';
+            titleInput.classList.add('admin-checkout-accordion-body-input--title');
             titleInput.value = String(option.checkout_title).trim();
             titleInput.placeholder = 'Title';
 
             // More button (3-dot menu) - inside edit panel like formbuilder
             var moreBtn = document.createElement('div');
-            moreBtn.className = 'admin-checkout-accordion-editpanel-more';
+            moreBtn.className = 'admin-checkout-accordion-body-more';
             moreBtn.innerHTML = icons.moreDots + 
-                '<div class="admin-checkout-accordion-editpanel-more-menu">' +
-                    '<div class="admin-checkout-accordion-editpanel-more-item">' +
-                        '<span class="admin-checkout-accordion-editpanel-more-item-text">Hide Tier</span>' +
-                        '<div class="admin-checkout-accordion-editpanel-more-switch' + (isHidden ? ' on' : '') + '"></div>' +
+                '<div class="admin-checkout-accordion-body-more-menu">' +
+                    '<div class="admin-checkout-accordion-body-more-item">' +
+                        '<span class="admin-checkout-accordion-body-more-item-text">Hide Tier</span>' +
+                        '<div class="admin-checkout-accordion-body-more-switch' + (isHidden ? ' on' : '') + '"></div>' +
                     '</div>' +
-                    '<div class="admin-checkout-accordion-editpanel-more-item admin-checkout-accordion-editpanel-more-delete">Delete Tier</div>' +
+                    '<div class="admin-checkout-accordion-body-more-item admin-checkout-accordion-body-more-delete">Delete Tier</div>' +
                 '</div>';
 
             titleRow.appendChild(titleInput);
             titleRow.appendChild(moreBtn);
-            editPanel.appendChild(titleRow);
+            body.appendChild(titleRow);
 
-            // Rest of the edit panel
+            // Rest of the body
             var restOfPanel = document.createElement('div');
             restOfPanel.innerHTML =
-                '<div class="admin-checkout-accordion-editpanel-row">' +
-                    '<label class="admin-checkout-accordion-editpanel-label">Description</label>' +
-                    '<textarea class="admin-checkout-accordion-editpanel-textarea admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
+                '<div class="admin-checkout-accordion-body-row">' +
+                    '<label class="admin-checkout-accordion-body-label">Description</label>' +
+                    '<textarea class="admin-checkout-accordion-body-textarea admin-checkout-option-description" placeholder="Description">' + escapeHtml(option.checkout_description || '') + '</textarea>' +
                 '</div>' +
-                '<div class="admin-checkout-accordion-editpanel-row admin-checkout-accordion-editpanel-row--checkboxes">' +
-                    '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-featured"' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
-                    '<label class="admin-checkout-accordion-editpanel-checkbox"><input type="checkbox" class="admin-checkout-option-sidebar"' + (option.checkout_sidebar_ad ? ' checked' : '') + ' /><span>Sidebar Ad</span></label>' +
+                '<div class="admin-checkout-accordion-body-row admin-checkout-accordion-body-row--checkboxes">' +
+                    '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-featured"' + (isFeatured ? ' checked' : '') + ' /><span>Featured</span></label>' +
+                    '<label class="admin-checkout-accordion-body-checkbox"><input type="checkbox" class="admin-checkout-option-sidebar"' + (option.checkout_sidebar_ad ? ' checked' : '') + ' /><span>Sidebar Ad</span></label>' +
                 '</div>' +
-                '<div class="admin-checkout-accordion-editpanel-row">' +
-                    '<label class="admin-checkout-accordion-editpanel-label">Flagfall Price</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
+                '<div class="admin-checkout-accordion-body-row">' +
+                    '<label class="admin-checkout-accordion-body-label">Flagfall Price</label>' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-option-price" value="' + flagfallPrice.toFixed(2) + '" placeholder="0.00" />' +
                 '</div>' +
-                '<div class="admin-checkout-accordion-editpanel-row">' +
-                    '<label class="admin-checkout-accordion-editpanel-label">Basic Day Rate</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" placeholder="N/A" />' +
+                '<div class="admin-checkout-accordion-body-row">' +
+                    '<label class="admin-checkout-accordion-body-label">Basic Day Rate</label>' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-option-basic-day-rate" value="' + basicDayRate + '" placeholder="N/A" />' +
                 '</div>' +
-                '<div class="admin-checkout-accordion-editpanel-row">' +
-                    '<label class="admin-checkout-accordion-editpanel-label">Discount Day Rate</label>' +
-                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" placeholder="N/A" />' +
+                '<div class="admin-checkout-accordion-body-row">' +
+                    '<label class="admin-checkout-accordion-body-label">Discount Day Rate</label>' +
+                    '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-option-discount-day-rate" value="' + discountDayRate + '" placeholder="N/A" />' +
                 '</div>' +
-                '<div class="admin-checkout-accordion-editpanel-row">' +
-                    '<label class="admin-checkout-accordion-editpanel-label">Price Calculator (Sandbox)</label>' +
-                    '<div class="admin-checkout-accordion-editpanel-calc">' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-accordion-editpanel-input--calc admin-checkout-option-calc-days" value="" placeholder="Days" />' +
-                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-editpanel-input admin-checkout-accordion-editpanel-input--calc admin-checkout-option-calc-locations" value="1" placeholder="Locations" />' +
-                        '<input type="text" inputmode="decimal" class="admin-checkout-accordion-editpanel-input admin-checkout-accordion-editpanel-input--calc admin-checkout-option-calc-surcharge" value="0" placeholder="Surcharge %" />' +
-                        '<span class="admin-checkout-accordion-editpanel-calc-equals">=</span>' +
+                '<div class="admin-checkout-accordion-body-row">' +
+                    '<label class="admin-checkout-accordion-body-label">Price Calculator (Sandbox)</label>' +
+                    '<div class="admin-checkout-accordion-body-calc">' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-body-input admin-checkout-accordion-body-input--calc admin-checkout-option-calc-days" value="" placeholder="Days" />' +
+                        '<input type="text" inputmode="numeric" class="admin-checkout-accordion-body-input admin-checkout-accordion-body-input--calc admin-checkout-option-calc-locations" value="1" placeholder="Locations" />' +
+                        '<input type="text" inputmode="decimal" class="admin-checkout-accordion-body-input admin-checkout-accordion-body-input--calc admin-checkout-option-calc-surcharge" value="0" placeholder="Surcharge %" />' +
+                        '<span class="admin-checkout-accordion-body-calc-equals">=</span>' +
                         '<span class="admin-checkout-option-calc-total">' + siteCurrency + ' 0.00</span>' +
                     '</div>' +
                 '</div>';
             
             // Append all children from restOfPanel
             while (restOfPanel.firstChild) {
-                editPanel.appendChild(restOfPanel.firstChild);
+                body.appendChild(restOfPanel.firstChild);
             }
             
             // Calculator inputs have their --calc class baked into the markup above.
@@ -3330,26 +3330,26 @@ const AdminModule = (function() {
             }
 
             accordion.appendChild(header);
-            accordion.appendChild(editPanel);
+            accordion.appendChild(body);
             container.appendChild(accordion);
             syncCheckoutAccordionUi(accordion);
 
             // More button click - toggle menu
-            var moreMenuEl = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-menu');
+            var moreMenuEl = moreBtn.querySelector('.admin-checkout-accordion-body-more-menu');
             moreBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                var wasOpen = moreMenuEl && moreMenuEl.classList.contains('admin-checkout-accordion-editpanel-more-menu--open');
+                var wasOpen = moreMenuEl && moreMenuEl.classList.contains('admin-checkout-accordion-body-more-menu--open');
                 // Close all other menus
-                container.querySelectorAll('.admin-checkout-accordion-editpanel-more-menu--open').forEach(function(el) {
-                    if (el !== moreMenuEl) el.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
+                container.querySelectorAll('.admin-checkout-accordion-body-more-menu--open').forEach(function(el) {
+                    if (el !== moreMenuEl) el.classList.remove('admin-checkout-accordion-body-more-menu--open');
                 });
                 if (!moreMenuEl) return;
-                if (!wasOpen) moreMenuEl.classList.add('admin-checkout-accordion-editpanel-more-menu--open');
-                else moreMenuEl.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
+                if (!wasOpen) moreMenuEl.classList.add('admin-checkout-accordion-body-more-menu--open');
+                else moreMenuEl.classList.remove('admin-checkout-accordion-body-more-menu--open');
             });
 
             // Hide switch click
-            var hideSwitch = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-switch');
+            var hideSwitch = moreBtn.querySelector('.admin-checkout-accordion-body-more-switch');
             hideSwitch.addEventListener('click', function(e) {
                 e.stopPropagation();
                 hideSwitch.classList.toggle('on');
@@ -3359,10 +3359,10 @@ const AdminModule = (function() {
             });
 
             // Delete option click
-            var deleteOption = moreBtn.querySelector('.admin-checkout-accordion-editpanel-more-delete');
+            var deleteOption = moreBtn.querySelector('.admin-checkout-accordion-body-more-delete');
             deleteOption.addEventListener('click', function(e) {
                 e.stopPropagation();
-                if (moreMenuEl) moreMenuEl.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
+                if (moreMenuEl) moreMenuEl.classList.remove('admin-checkout-accordion-body-more-menu--open');
                 var titleText = titleInput.value.trim();
                 if (!titleText) titleText = 'this checkout option';
                 
@@ -3587,9 +3587,9 @@ const AdminModule = (function() {
 
         // Close more menus when clicking outside
         document.addEventListener('click', function(e) {
-            if (!e.target.closest('.admin-checkout-accordion-editpanel-more')) {
-                document.querySelectorAll('.admin-checkout-accordion-editpanel-more-menu--open').forEach(function(el) {
-                    el.classList.remove('admin-checkout-accordion-editpanel-more-menu--open');
+            if (!e.target.closest('.admin-checkout-accordion-body-more')) {
+                document.querySelectorAll('.admin-checkout-accordion-body-more-menu--open').forEach(function(el) {
+                    el.classList.remove('admin-checkout-accordion-body-more-menu--open');
                 });
             }
         });
@@ -3638,7 +3638,7 @@ const AdminModule = (function() {
             var descriptionInput = accordion.querySelector('.admin-checkout-option-description');
             var featuredCheckbox = accordion.querySelector('.admin-checkout-option-featured');
             var sidebarCheckbox = accordion.querySelector('.admin-checkout-option-sidebar');
-            var hiddenSwitch = accordion.querySelector('.admin-checkout-accordion-editpanel-more-switch');
+            var hiddenSwitch = accordion.querySelector('.admin-checkout-accordion-body-more-switch');
 
             if (!titleInput) {
                 console.warn('Checkout option title input not found for accordion:', accordion);
