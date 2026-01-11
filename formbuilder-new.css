@@ -45,18 +45,10 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.formbuilder-accordion-header:hover {
-  border-color: var(--blue-500);
-}
-
 .formbuilder-accordion-header--open,
 .formbuilder-accordion-header--editing {
   border-radius: 5px 5px 0 0;
-}
-
-.formbuilder-accordion-header--editing {
-  border-color: var(--blue-500);
-  border-bottom: none;
+  border-bottom-color: transparent;
 }
 
 .formbuilder-accordion-header-image {
@@ -136,7 +128,7 @@
   display: none;
   padding: 10px;
   background: var(--blue-950);
-  border: 1px solid var(--blue-950);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-top: none;
   border-radius: 0 0 5px 5px;
 }
@@ -266,7 +258,11 @@
 /* Accordion Body */
 .formbuilder-accordion-body {
   display: none;
-  padding: 3px 0 0 0;
+  padding: 10px 10px 0;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: none;
+  border-radius: 0 0 5px 5px;
 }
 
 .formbuilder-accordion-body--open {
