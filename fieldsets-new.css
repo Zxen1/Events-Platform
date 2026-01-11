@@ -506,8 +506,8 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     transform: translate(-50%, -50%);
     display: block;
     object-fit: contain;
