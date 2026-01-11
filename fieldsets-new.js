@@ -355,11 +355,13 @@ const FieldsetBuilder = (function(){
         
         // If the user types, the location is no longer confirmed (must pick from Google again).
         inputElement.addEventListener('input', function() {
-            // If this input event came from a programmatic selection (not user typing), skip once
+            // If this input event came from a programmatic selection (not user typing), skip processing.
+            // The placesConfirmed flag is set to 'true' BEFORE the input event is dispatched,
+            // so if we see 'true' here, it means this event was triggered by a Google Places selection.
+            // We must preserve the 'true' state and skip the clearing logic.
             try {
                 if (inputElement.dataset.placesConfirmed === 'true') {
-                    inputElement.dataset.placesConfirmed = 'false';
-                    return;
+                    return; // Skip - preserve confirmed state
                 }
             } catch (e) {}
             
@@ -3841,17 +3843,18 @@ const FieldsetBuilder = (function(){
                     
                     // Input event handler with debounce
                     inputEl.addEventListener('input', function() {
-                        // If this input event came from a programmatic selection (not user typing), skip once
-                        try {
-                            if (smartAddrInput.dataset.placesConfirmed === 'true') {
-                                smartAddrInput.dataset.placesConfirmed = 'false';
-                                return;
-                            }
-                        } catch (e) {}
-                        
-                        // Manual typing invalidates Places confirmation for the address field.
-                        // Venue name can be typed freely, but the address must be confirmed via Google.
+                        // Manual typing invalidates Places confirmation for the address field ONLY.
+                        // Venue name can be typed freely without affecting address confirmation.
                         if (!isVenueBox) {
+                            // If this input event came from a programmatic selection (not user typing), skip processing.
+                            // The placesConfirmed flag is set to 'true' BEFORE the input event is dispatched,
+                            // so if we see 'true' here, it means this event was triggered by a Google Places selection.
+                            // We must preserve the 'true' state and skip the clearing logic.
+                            try {
+                                if (smartAddrInput.dataset.placesConfirmed === 'true') {
+                                    return; // Skip - preserve confirmed state
+                                }
+                            } catch (e) {}
                             try { smartAddrInput.dataset.placesConfirmed = 'false'; } catch (e2) {}
                             smartLatInput.value = '';
                             smartLngInput.value = '';
