@@ -3146,13 +3146,20 @@ const FieldsetBuilder = (function(){
                 
                 var spTicketMenuKeyHandler = null;
                 
+                function spCaptureGroupSnapshot(editorEl) {
+                    var pricing = spExtractPricingFromEditor(editorEl);
+                    var ageMenu = editorEl ? editorEl.querySelector('.component-ageratingpicker-menu') : null;
+                    var ageRating = ageMenu ? String(ageMenu.dataset.value || '').trim() : '';
+                    return { pricing: pricing, ageRating: ageRating };
+                }
+                
                 function spHasUnsavedChanges() {
                     if (!spOpenGroupKey || !spOpenGroupSnapshot) return false;
                     var grpEl = spTicketGroups[spOpenGroupKey];
                     if (!grpEl) return false;
                     var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
-                    var currentPricing = spExtractPricingFromEditor(editorEl);
-                    return JSON.stringify(currentPricing) !== JSON.stringify(spOpenGroupSnapshot);
+                    var currentSnapshot = spCaptureGroupSnapshot(editorEl);
+                    return JSON.stringify(currentSnapshot) !== JSON.stringify(spOpenGroupSnapshot);
                 }
                 
                 function spSyncAllAndClose() {
@@ -3186,7 +3193,18 @@ const FieldsetBuilder = (function(){
                         var g = spTicketGroups[String(spOpenGroupKey || '')];
                         if (g) {
                             var editorEl = g.querySelector('.fieldset-sessionpricing-pricing-editor');
-                            if (editorEl) spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot || []);
+                            if (editorEl) {
+                                spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot.pricing || []);
+                                // Restore age rating
+                                if (spOpenGroupSnapshot.ageRating) {
+                                    var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
+                                    if (ageMenu) {
+                                        ageMenu.dataset.value = spOpenGroupSnapshot.ageRating;
+                                        var ageBtn = ageMenu.querySelector('.component-ageratingpicker-menu-button-text');
+                                        if (ageBtn) ageBtn.textContent = spOpenGroupSnapshot.ageRating;
+                                    }
+                                }
+                            }
                         }
                     }
                     spCloseAllGroupEditors();
@@ -3250,7 +3268,7 @@ const FieldsetBuilder = (function(){
                         spOpenGroupKey = currentKey;
                         var grpEl0 = spTicketGroups[currentKey];
                         var editorEl0 = grpEl0 ? grpEl0.querySelector('.fieldset-sessionpricing-pricing-editor') : null;
-                        spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
+                        spOpenGroupSnapshot = spCaptureGroupSnapshot(editorEl0);
                         spSetGroupEditorOpen(currentKey, true);
                     } catch (eAutoOpen) {}
 
@@ -3383,7 +3401,7 @@ const FieldsetBuilder = (function(){
                         var isOpen = group.classList.contains('fieldset-sessionpricing-ticketgroup-item--open');
                         if (!isOpen) {
                             var editorEl0 = group.querySelector('.fieldset-sessionpricing-pricing-editor');
-                            spOpenGroupSnapshot = spExtractPricingFromEditor(editorEl0);
+                            spOpenGroupSnapshot = spCaptureGroupSnapshot(editorEl0);
                             spOpenGroupKey = key;
                             spAssignGroupToActive(key);
                         } else {
