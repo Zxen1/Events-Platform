@@ -205,195 +205,20 @@
 }
 
 /* ============================================================================
-   MAP CARD CONTAINERS
+   MAP CARD STYLES
+   ============================================================================
+   
+   Map card CSS is DYNAMICALLY INJECTED by map-new.js injectMapCardStyles()
+   This allows pill background images to be set from admin settings.
+   
+   Classes injected dynamically:
+   - .map-card-container (anchor point at lat/lng)
+   - .map-card-icon (subcategory icon or thumbnail)
+   - .map-card-pill (pill background from admin settings)
+   - .map-card-small, .map-card-hover, .map-card-big (state variants)
+   - .map-card-labels, .map-card-title, .map-card-venue
+   
    ============================================================================ */
-
-.map-card-container-small {
-  position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
-  isolation: isolate;
-  contain: layout style paint;
-  z-index: 1;
-}
-
-.map-card-container-small--interactive {
-  pointer-events: auto;
-}
-
-.map-card-container-big {
-  position: absolute;
-  left: 0;
-  top: 0;
-  pointer-events: none;
-  isolation: isolate;
-  contain: layout style paint;
-  z-index: 2;
-  width: 225px;
-  height: 60px;
-  transform: translate3d(-90px, -50%, 0);
-}
-
-.map-card-container-big--interactive {
-  pointer-events: auto;
-}
-
-/* ============================================================================
-   SMALL MAP CARD
-   ============================================================================ */
-
-.map-card-small {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 150px;
-  height: 40px;
-  transform: translate3d(-75px, -50%, 0);
-  pointer-events: auto;
-  cursor: pointer;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px 5px 5px;
-  box-sizing: border-box;
-  z-index: 1;
-  transition: width 0.3s ease, height 0.3s ease, transform 0.3s ease;
-  border-color: var(--border);
-}
-
-.map-card-small:hover {
-  border-color: var(--border-hover);
-}
-
-.map-card-small:active {
-  border-color: var(--border-active);
-}
-
-.map-card-small--clicked {
-  width: 225px;
-  height: 60px;
-  transform: translate3d(-90px, -50%, 0);
-}
-
-.map-card-small--post-open {
-  width: 225px;
-  height: 60px;
-  transform: translate3d(-90px, -50%, 0);
-}
-
-.map-card-small-image {
-  display: block;
-}
-
-.map-card-small-link {
-  color: var(--primary);
-  cursor: pointer;
-}
-
-.map-card-small-link:hover {
-  color: var(--accent);
-}
-
-.map-card-small-link:active {
-  color: var(--active);
-}
-
-.map-card-small-title {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-/* ============================================================================
-   BIG MAP CARD
-   ============================================================================ */
-
-.map-card-big {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: auto;
-  cursor: pointer;
-  border-radius: 999px;
-  background: rgba(46, 58, 114, 0.9);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px 5px 5px;
-  box-sizing: border-box;
-  z-index: 1;
-  border-color: var(--border);
-}
-
-.map-card-big:hover {
-  border-color: var(--border-hover);
-}
-
-.map-card-big:active {
-  border-color: var(--border-active);
-}
-
-.map-card-big-image {
-  display: block;
-}
-
-.map-card-big-link {
-  color: var(--primary);
-  cursor: pointer;
-}
-
-.map-card-big-link:hover {
-  color: var(--accent);
-}
-
-.map-card-big-link:active {
-  color: var(--active);
-}
-
-.map-card-big-title {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-/* ============================================================================
-   MULTI-POST MAP CARD
-   ============================================================================ */
-
-.map-card-multipost {
-  gap: 5px;
-  padding-right: 10px;
-}
-
-.map-card-multipost-marker {
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-}
-
-.map-card-multipost-label {
-  position: static;
-  left: auto;
-  top: auto;
-  width: auto;
-  height: auto;
-  padding: 0;
-  gap: 2px;
-  align-items: flex-start;
-}
-
-.map-card-multipost-label-line {
-  width: auto;
-  text-align: left;
-}
-
-.map-card-multipost-label-line--primary {
-  font-weight: 600;
-}
 
 /* ============================================================================
    MAP MARKER

@@ -107,6 +107,371 @@ const MapModule = (function() {
     if (DEBUG_MAP) console.log(...args);
   }
 
+  // Text measurement context
+  let measureContext = null;
+  const ELLIPSIS_CHAR = '\u2026';
+
+
+  /* ==========================================================================
+     SECTION 1B: TEXT UTILITIES
+     ========================================================================== */
+  
+  /**
+   * Get or create canvas context for text measurement
+   */
+  function ensureMeasureContext() {
+    if (measureContext) return measureContext;
+    const canvas = document.createElement('canvas');
+    measureContext = canvas.getContext('2d');
+    return measureContext;
+  }
+  
+  /**
+   * Get font string for text measurement (matches global font from base-new.css)
+   */
+  function measureFont() {
+    return `${MARKER_LABEL_TEXT_SIZE}px system-ui, sans-serif`;
+  }
+  
+  /**
+   * Shorten text to fit within maxWidth pixels, adding ellipsis
+   */
+  function shortenText(text, maxWidth) {
+    const raw = (text ?? '').toString().trim();
+    if (!raw) return '';
+    
+    const ctx = ensureMeasureContext();
+    if (!ctx) return raw;
+    
+    ctx.font = measureFont();
+    if (ctx.measureText(raw).width <= maxWidth) return raw;
+    
+    let low = 0;
+    let high = raw.length;
+    let best = ELLIPSIS_CHAR;
+    
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      if (mid <= 0) {
+        high = mid - 1;
+        continue;
+      }
+      const candidate = raw.slice(0, mid).trimEnd() + ELLIPSIS_CHAR;
+      if (ctx.measureText(candidate).width <= maxWidth) {
+        best = candidate;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return best;
+  }
+  
+  /**
+   * Split text into multiple lines that fit within maxWidth
+   */
+  function splitTextLines(text, maxWidth, maxLines = 2) {
+    const normalized = (text ?? '').toString().replace(/\s+/g, ' ').trim();
+    if (!normalized) return [];
+    if (!Number.isFinite(maxWidth) || maxWidth <= 0 || maxLines <= 0) return [normalized];
+    
+    const ctx = ensureMeasureContext();
+    if (!ctx) return [normalized];
+    
+    ctx.font = measureFont();
+    if (ctx.measureText(normalized).width <= maxWidth) return [normalized];
+    
+    const lines = [];
+    let remaining = normalized;
+    
+    // First line: don't break words
+    const words = remaining.split(/\s+/);
+    let firstLine = '';
+    let firstLineWords = [];
+    
+    for (let i = 0; i < words.length; i++) {
+      const testLine = firstLineWords.length > 0 
+        ? firstLineWords.join(' ') + ' ' + words[i]
+        : words[i];
+      if (ctx.measureText(testLine).width <= maxWidth) {
+        firstLineWords.push(words[i]);
+        firstLine = testLine;
+      } else {
+        break;
+      }
+    }
+    
+    if (firstLineWords.length > 0) {
+      lines.push(firstLine);
+      remaining = words.slice(firstLineWords.length).join(' ');
+    }
+    
+    // Second line: truncate with ellipsis if needed
+    if (lines.length < maxLines && remaining) {
+      if (ctx.measureText(remaining).width <= maxWidth) {
+        lines.push(remaining);
+      } else {
+        lines.push(shortenText(remaining, maxWidth));
+      }
+    }
+    
+    return lines;
+  }
+  
+  /**
+   * Get marker label lines for a post
+   */
+  function getMarkerLabelLines(post, isActive = false) {
+    const title = post && post.title ? post.title : '';
+    const maxWidth = isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL;
+    const titleLines = splitTextLines(title, maxWidth, 2);
+    
+    while (titleLines.length < 2) titleLines.push('');
+    
+    const venueName = post.venue || '';
+    const venueLine = venueName ? shortenText(venueName, maxWidth) : '';
+    
+    return {
+      line1: titleLines[0] || '',
+      line2: titleLines[1] || '',
+      venueLine
+    };
+  }
+
+
+  /* ==========================================================================
+     SECTION 1C: MAP CARD URLS
+     ========================================================================== */
+  
+  /**
+   * Get pill image URL based on state
+   * Uses folder_system_images + filename from admin_settings (same pattern as cluster icon)
+   */
+  function getPillUrl(state) {
+    var baseUrl = adminSettings.folder_system_images;
+    if (!baseUrl) {
+      console.error('[Map] folder_system_images not configured in admin_settings');
+      return '';
+    }
+    
+    var filename;
+    switch (state) {
+      case 'big':
+        filename = adminSettings.big_map_card_pill;
+        break;
+      case 'hover':
+        filename = adminSettings.hover_map_card_pill || adminSettings.small_map_card_pill;
+        break;
+      default:
+        filename = adminSettings.small_map_card_pill;
+    }
+    
+    if (!filename) {
+      console.error('[Map] Pill image not configured in Admin > Map tab for state:', state);
+      return '';
+    }
+    
+    return baseUrl + '/' + filename;
+  }
+  
+  /**
+   * Get icon URL for small state (subcategory icon)
+   * Uses post's iconUrl or multi_post_icon from admin_settings (same pattern as cluster icon)
+   */
+  function getSmallIconUrl(post) {
+    // Use post's iconUrl (subcategory icon) - primary source
+    if (post.iconUrl) return post.iconUrl;
+    
+    // Fallback to multi_post_icon from admin settings
+    var baseUrl = adminSettings.folder_system_images;
+    var filename = adminSettings.multi_post_icon;
+    
+    if (baseUrl && filename) {
+      return baseUrl + '/' + filename;
+    }
+    
+    // No icon available - log error, return empty
+    console.error('[Map] No icon URL available for post:', post.id);
+    return '';
+  }
+  
+  /**
+   * Get icon URL for big state (thumbnail or subcategory icon)
+   */
+  function getBigIconUrl(post) {
+    // Show thumbnail for single posts
+    if (post.thumbnailUrl) return post.thumbnailUrl;
+    // Fall back to subcategory icon
+    return getSmallIconUrl(post);
+  }
+  
+  /**
+   * Get icon URL based on state
+   */
+  function getIconUrl(post, state = 'small') {
+    return state === 'big' ? getBigIconUrl(post) : getSmallIconUrl(post);
+  }
+
+
+  /* ==========================================================================
+     SECTION 1D: MAP CARD CSS INJECTION
+     ========================================================================== */
+  
+  /**
+   * Inject map card CSS styles dynamically
+   * Called on init and when admin settings change
+   */
+  function injectMapCardStyles() {
+    if (document.getElementById('map-card-styles-dynamic')) return;
+    
+    const smallPillUrl = getPillUrl('small');
+    const hoverPillUrl = getPillUrl('hover');
+    const bigPillUrl = getPillUrl('big');
+    
+    const css = `
+      /* Container = lat/lng point (0,0) - zero size anchor */
+      .map-card-container {
+        position: relative;
+        width: 0;
+        height: 0;
+        cursor: pointer;
+        z-index: 1;
+      }
+      .map-card-container:hover { z-index: 5; }
+      .map-card-container.is-active { z-index: 6; }
+      
+      /* Icon - center at lat/lng (0,0) */
+      .map-card-icon {
+        position: absolute;
+        left: -${SMALL_ICON_SIZE / 2}px;
+        top: -${SMALL_ICON_SIZE / 2}px;
+        border-radius: 50%;
+        z-index: 2;
+        transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
+      }
+      .map-card-container.is-active .map-card-icon {
+        left: -${BIG_ICON_SIZE / 2}px;
+        top: -${BIG_ICON_SIZE / 2}px;
+      }
+      
+      /* Pill - all positions from lat/lng (0,0) */
+      .map-card-pill {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        background-repeat: no-repeat;
+        transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease, background-image 0.2s ease;
+      }
+      
+      /* Small pill: left at -20, labels at +20 */
+      .map-card-small {
+        left: -20px;
+        top: -${SMALL_PILL_HEIGHT / 2}px;
+        width: ${SMALL_PILL_WIDTH}px;
+        height: ${SMALL_PILL_HEIGHT}px;
+        padding-left: 40px;
+        background-image: url('${smallPillUrl}');
+        background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
+      }
+      
+      /* Hover pill: same size, different background */
+      .map-card-hover {
+        left: -20px;
+        top: -${SMALL_PILL_HEIGHT / 2}px;
+        width: ${SMALL_PILL_WIDTH}px;
+        height: ${SMALL_PILL_HEIGHT}px;
+        padding-left: 40px;
+        background-image: url('${hoverPillUrl}');
+        background-size: ${SMALL_PILL_WIDTH}px ${SMALL_PILL_HEIGHT}px;
+      }
+      
+      /* Big pill: left at -30, labels at +30 */
+      .map-card-big {
+        left: -30px;
+        top: -${BIG_PILL_HEIGHT / 2}px;
+        width: ${BIG_PILL_WIDTH}px;
+        height: ${BIG_PILL_HEIGHT}px;
+        padding-left: 60px;
+        background-image: url('${bigPillUrl}');
+        background-size: ${BIG_PILL_WIDTH}px ${BIG_PILL_HEIGHT}px;
+      }
+      
+      /* Labels */
+      .map-card-labels {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      
+      /* Hover Only Mode - hide pill, keep icon */
+      body[data-map-card-display="hover_only"] .map-card-pill {
+        display: none;
+      }
+      body[data-map-card-display="hover_only"] .map-card-container:hover .map-card-pill,
+      body[data-map-card-display="hover_only"] .map-card-container.is-active .map-card-pill,
+      body[data-map-card-display="hover_only"] .map-card-container.is-hovered .map-card-pill {
+        display: flex;
+      }
+      
+      /* Text styling - inherits global font from base-new.css */
+      .map-card-title {
+        color: #fff;
+        font-family: inherit;
+        font-size: ${MARKER_LABEL_TEXT_SIZE}px;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      /* Venue Text (big cards only) */
+      .map-card-venue {
+        color: rgba(255,255,255,0.7);
+        font-family: inherit;
+        font-size: ${MARKER_LABEL_TEXT_SIZE - 1}px;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    `;
+    
+    const style = document.createElement('style');
+    style.id = 'map-card-styles-dynamic';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+  
+  /**
+   * Refresh CSS with updated pill URLs (after admin settings change)
+   */
+  function refreshMapCardStyles() {
+    const existing = document.getElementById('map-card-styles-dynamic');
+    if (existing) existing.remove();
+    injectMapCardStyles();
+    
+    // Update inline styles on existing markers
+    const smallPillUrl = getPillUrl('small');
+    const hoverPillUrl = getPillUrl('hover');
+    const bigPillUrl = getPillUrl('big');
+    
+    mapCardMarkers.forEach((entry) => {
+      const pillEl = entry.element.querySelector('.map-card-pill');
+      if (pillEl) {
+        switch (entry.state) {
+          case 'big':
+            pillEl.style.backgroundImage = `url('${bigPillUrl}')`;
+            break;
+          case 'hover':
+            pillEl.style.backgroundImage = `url('${hoverPillUrl}')`;
+            break;
+          default:
+            pillEl.style.backgroundImage = `url('${smallPillUrl}')`;
+        }
+      }
+    });
+  }
+
 
   /* ==========================================================================
      SECTION 2: MAPBOX - Map Initialization
@@ -267,6 +632,9 @@ const MapModule = (function() {
     
     // Emit ready event immediately (other modules may depend on this)
     App.emit('map:ready', { map });
+    
+    // Inject map card CSS (uses admin settings for pill images)
+    injectMapCardStyles();
     
     // Defer non-critical operations to next frame to avoid blocking render loop
     requestAnimationFrame(function() {
@@ -1226,23 +1594,35 @@ const MapModule = (function() {
     const iconSize = isActive ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
     const pillClass = `map-card-${state}`;
     
-    // Get icon URL from post or database setting (no hardcoded fallback)
-    // Get multi_post_icon from system_images and convert to full URL
-    let iconUrl = post.iconUrl;
-    if (!iconUrl && adminSettings.system_images && adminSettings.system_images.multi_post_icon) {
-      const filename = adminSettings.system_images.multi_post_icon;
-      iconUrl = window.App.getImageUrl('systemImages', filename);
+    // Get icon URL based on state (thumbnail for big, subcategory icon for small/hover)
+    const iconUrl = getIconUrl(post, state);
+    
+    // Get properly truncated label lines
+    const labels = getMarkerLabelLines(post, isActive);
+    
+    // Build label HTML
+    let labelHTML = '';
+    if (isActive) {
+      // Big card: show title (2 lines) + venue
+      labelHTML = `
+        <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+        ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+        ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
+      `;
+    } else {
+      // Small/hover card: show title only (2 lines)
+      labelHTML = `
+        <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+        ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+      `;
     }
     
-    // Truncate title for label
-    const title = post.title || '';
-    const maxWidth = isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL;
-    
+    // Icon is at center (0,0 = lat/lng), pill extends to the right
     return `
       <img class="map-card-icon" src="${iconUrl}" width="${iconSize}" height="${iconSize}" alt="">
       <div class="map-card-pill ${pillClass}" data-id="${post.id}" data-state="${state}">
         <div class="map-card-labels">
-          <div class="map-card-title">${escapeHtml(title)}</div>
+          ${labelHTML}
         </div>
       </div>
     `;
@@ -1308,7 +1688,47 @@ const MapModule = (function() {
     if (!entry || entry.state === newState) return;
 
     entry.state = newState;
-    entry.element.innerHTML = buildMapCardHTML(entry.post, newState);
+    
+    // Update pill element classes and background
+    const pillEl = entry.element.querySelector('.map-card-pill');
+    if (pillEl) {
+      pillEl.classList.remove('map-card-small', 'map-card-hover', 'map-card-big');
+      pillEl.classList.add(`map-card-${newState}`);
+      pillEl.setAttribute('data-state', newState);
+      
+      // Update background-image inline to match new state
+      const pillUrl = getPillUrl(newState);
+      pillEl.style.backgroundImage = `url('${pillUrl}')`;
+    }
+    
+    // Update icon (size and image - thumbnail for big, category icon for small/hover)
+    const iconEl = entry.element.querySelector('.map-card-icon');
+    if (iconEl) {
+      const isActive = newState === 'big';
+      const iconSize = isActive ? BIG_ICON_SIZE : SMALL_ICON_SIZE;
+      iconEl.width = iconSize;
+      iconEl.height = iconSize;
+      iconEl.src = getIconUrl(entry.post, newState);
+    }
+    
+    // Update labels for big state (adds venue line)
+    const labelsEl = entry.element.querySelector('.map-card-labels');
+    if (labelsEl) {
+      const isActive = newState === 'big';
+      const labels = getMarkerLabelLines(entry.post, isActive);
+      if (isActive) {
+        labelsEl.innerHTML = `
+          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+          ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
+        `;
+      } else {
+        labelsEl.innerHTML = `
+          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+        `;
+      }
+    }
   }
 
   /**
@@ -1664,6 +2084,12 @@ const MapModule = (function() {
     removeMapCardMarker,
     clearAllMapCardMarkers,
     setActiveMapCard,
+    refreshMapCardStyles,
+    
+    // Map card utilities (for PostModule)
+    getMarkerLabelLines,
+    getPillUrl,
+    getIconUrl,
     
     // Clusters
     createClusterLayers,
