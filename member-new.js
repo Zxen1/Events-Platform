@@ -2916,6 +2916,11 @@ const MemberModule = (function() {
         if (submitBtn) submitBtn.disabled = true;
         if (adminSubmitBtn) adminSubmitBtn.disabled = true;
         
+        // Immediately switch to My Posts and show loading placeholder
+        resetCreatePostForm();
+        try { requestTabSwitch('myposts'); } catch (e0) {}
+        showMyPostsLoadingPlaceholder(validation.payload);
+        
         // Submit the post
         submitPostData(validation.payload, isAdminFree)
             .then(function(result) {
@@ -2930,10 +2935,8 @@ const MemberModule = (function() {
                             if (msg) ToastComponent.showSuccess(msg);
                         });
                     }
-                    // Reset form
-                    resetCreatePostForm();
-                    // Land on My Posts after successful post.
-                    try { requestTabSwitch('myposts'); } catch (e0) {}
+                    // Update placeholder to show success
+                    updateMyPostsLoadingPlaceholder('success', result);
                 } else {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         // Prefer message system keys from backend (no hardcoded server strings).
@@ -2953,12 +2956,17 @@ const MemberModule = (function() {
                             });
                         }
                     }
+                    // Update placeholder to show error
+                    updateMyPostsLoadingPlaceholder('error', result);
                 }
             })
             .catch(function(err) {
                 console.error('[Member] Post submission failed:', err);
                 isSubmittingPost = false;
                 updateSubmitButtonState();
+                
+                // Update placeholder to show error
+                updateMyPostsLoadingPlaceholder('error', err);
                 
                 if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                     if (err && err.message_key) {
@@ -2977,6 +2985,89 @@ const MemberModule = (function() {
                     }
                 }
             });
+    }
+    
+    /* --------------------------------------------------------------------------
+       MY POSTS LOADING PLACEHOLDER
+       Shows a postcard-style placeholder with loading indicator while uploading
+       -------------------------------------------------------------------------- */
+    function showMyPostsLoadingPlaceholder(payload) {
+        if (!myPostsPanel) return;
+        
+        // Get title from payload fields
+        var title = '';
+        if (payload && payload.fields && Array.isArray(payload.fields)) {
+            for (var i = 0; i < payload.fields.length; i++) {
+                var f = payload.fields[i];
+                if (f && f.key === 'title' && f.value) {
+                    title = String(f.value);
+                    break;
+                }
+            }
+        }
+        if (!title) title = 'New Post';
+        
+        // Create placeholder card
+        var placeholder = document.createElement('div');
+        placeholder.className = 'member-myposts-placeholder';
+        placeholder.id = 'member-myposts-uploading';
+        placeholder.innerHTML = 
+            '<div class="member-myposts-placeholder-card">' +
+                '<div class="member-myposts-placeholder-overlay">' +
+                    '<div class="member-myposts-placeholder-spinner"></div>' +
+                    '<div class="member-myposts-placeholder-text">Uploading...</div>' +
+                '</div>' +
+                '<div class="member-myposts-placeholder-title">' + escapeHtml(title) + '</div>' +
+            '</div>';
+        
+        // Insert at top of My Posts panel
+        myPostsPanel.insertBefore(placeholder, myPostsPanel.firstChild);
+    }
+    
+    function updateMyPostsLoadingPlaceholder(status, result) {
+        var placeholder = document.getElementById('member-myposts-uploading');
+        if (!placeholder) return;
+        
+        var overlay = placeholder.querySelector('.member-myposts-placeholder-overlay');
+        if (!overlay) return;
+        
+        if (status === 'success') {
+            // Show success state briefly then remove
+            overlay.innerHTML = 
+                '<div class="member-myposts-placeholder-check">✓</div>' +
+                '<div class="member-myposts-placeholder-text">Posted!</div>';
+            placeholder.classList.add('member-myposts-placeholder--success');
+            
+            // Remove after a short delay (the real post list will be loaded)
+            setTimeout(function() {
+                if (placeholder.parentNode) {
+                    placeholder.parentNode.removeChild(placeholder);
+                }
+            }, 2000);
+        } else {
+            // Show error state
+            overlay.innerHTML = 
+                '<div class="member-myposts-placeholder-error">✕</div>' +
+                '<div class="member-myposts-placeholder-text">Failed</div>';
+            placeholder.classList.add('member-myposts-placeholder--error');
+            
+            // Remove after a longer delay so user can see the error
+            setTimeout(function() {
+                if (placeholder.parentNode) {
+                    placeholder.parentNode.removeChild(placeholder);
+                }
+            }, 4000);
+        }
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
     
     function validateAndCollectFormData() {
