@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 13, 2026 at 04:37 AM
+-- Generation Time: Jan 13, 2026 at 05:03 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -31,13 +31,13 @@ CREATE TABLE `addons` (
   `id` int(11) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
   `addon_key` varchar(255) DEFAULT NULL,
-  `description` text DEFAULT NULL,
+  `description` mediumtext DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
   `duration_days` int(11) DEFAULT NULL,
   `active` tinyint(1) DEFAULT 1,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -54,15 +54,15 @@ CREATE TABLE `admins` (
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
-  `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `favorites` text DEFAULT NULL,
+  `recent` text DEFAULT NULL,
   `country` varchar(100) DEFAULT NULL,
   `hidden` tinyint(1) NOT NULL DEFAULT 0,
   `deleted_at` datetime DEFAULT NULL,
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `backup_json` longtext DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `admins`
@@ -338,7 +338,7 @@ CREATE TABLE `banned_words` (
   `language` varchar(10) DEFAULT NULL,
   `reason` varchar(255) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `banned_words`
@@ -364,7 +364,7 @@ CREATE TABLE `categories` (
   `color_hex` char(7) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `categories`
@@ -433,7 +433,7 @@ CREATE TABLE `commissions` (
   `payout_status` enum('pending','paid') DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -454,7 +454,7 @@ CREATE TABLE `coupons` (
   `created_by_admin_id` int(11) DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -465,13 +465,13 @@ CREATE TABLE `coupons` (
 CREATE TABLE `fields` (
   `id` int(11) NOT NULL,
   `field_key` varchar(255) DEFAULT NULL,
-  `input_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `input_type` varchar(255) DEFAULT NULL,
   `min_length` int(11) DEFAULT NULL,
   `max_length` int(11) DEFAULT NULL,
   `show_limit` tinyint(1) DEFAULT 1,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `fields`
@@ -521,13 +521,13 @@ CREATE TABLE `fieldsets` (
   `fieldset_key` varchar(255) DEFAULT NULL,
   `fieldset_type` enum('subcategory','auth') NOT NULL DEFAULT 'subcategory',
   `sort_order` int(10) UNSIGNED DEFAULT 0,
-  `fieldset_fields` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
-  `fieldset_options` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_options`)),
-  `fieldset_placeholder` text DEFAULT NULL,
-  `fieldset_tooltip` text DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
+  `fieldset_fields` longtext DEFAULT NULL CHECK (json_valid(`fieldset_fields`)),
+  `fieldset_options` longtext DEFAULT NULL CHECK (json_valid(`fieldset_options`)),
+  `fieldset_placeholder` mediumtext DEFAULT NULL,
+  `fieldset_tooltip` mediumtext DEFAULT NULL COMMENT 'Custom tooltip/help text shown on hover for this fieldset',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `fieldsets`
@@ -1843,10 +1843,10 @@ CREATE TABLE `logs` (
   `actor_type` enum('admin','member','codex','system') DEFAULT 'codex',
   `actor_id` int(11) DEFAULT NULL,
   `action` varchar(255) NOT NULL,
-  `description` text DEFAULT NULL,
+  `description` mediumtext DEFAULT NULL,
   `ip_address` varchar(45) DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1863,15 +1863,15 @@ CREATE TABLE `members` (
   `password_hash` varchar(255) NOT NULL,
   `map_lighting` varchar(20) DEFAULT 'day',
   `map_style` varchar(20) DEFAULT 'standard',
-  `favorites` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `recent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `favorites` text DEFAULT NULL,
+  `recent` text DEFAULT NULL,
   `country` varchar(100) DEFAULT NULL,
   `hidden` tinyint(1) NOT NULL DEFAULT 0,
   `deleted_at` datetime DEFAULT NULL,
-  `backup_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `backup_json` longtext DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `members`
@@ -1936,10 +1936,10 @@ CREATE TABLE `moderation_log` (
   `moderator_id` int(11) DEFAULT NULL,
   `moderator_name` varchar(255) DEFAULT NULL,
   `action` varchar(50) DEFAULT NULL,
-  `reason` text DEFAULT NULL,
+  `reason` mediumtext DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1964,16 +1964,6 @@ CREATE TABLE `posts` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `posts`
---
-
-INSERT INTO `posts` (`id`, `post_key`, `member_id`, `member_name`, `subcategory_key`, `loc_qty`, `visibility`, `moderation_status`, `flag_reason`, `checkout_title`, `payment_status`, `expires_at`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, NULL, 1, 'Administrator', 'Live Gigs', 1, 'paused', 'pending', NULL, NULL, 'pending', NULL, NULL, '2025-12-31 16:29:46', '2025-12-31 16:29:46'),
-(2, NULL, 1, 'Administrator', 'Live Gigs', 1, 'paused', 'pending', NULL, NULL, 'pending', NULL, NULL, '2025-12-31 16:32:00', '2025-12-31 16:32:00'),
-(3, NULL, 4, 'Test 3', 'Test 2 Subcategory', 1, 'paused', 'pending', NULL, NULL, 'pending', NULL, NULL, '2026-01-01 06:12:51', '2026-01-01 06:12:51'),
-(4, NULL, 4, 'Test 3', 'Live Gigs', 1, 'paused', 'pending', NULL, NULL, 'pending', NULL, NULL, '2026-01-01 06:52:46', '2026-01-01 06:52:46');
 
 -- --------------------------------------------------------
 
@@ -2121,19 +2111,19 @@ CREATE TABLE `subcategories` (
   `fieldset_ids` varchar(255) DEFAULT NULL,
   `fieldset_name` varchar(255) DEFAULT NULL,
   `required` varchar(255) DEFAULT NULL,
-  `fieldset_mods` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`fieldset_mods`)),
+  `fieldset_mods` longtext DEFAULT NULL CHECK (json_valid(`fieldset_mods`)),
   `location_specific` varchar(255) DEFAULT NULL,
   `checkout_surcharge` decimal(10,2) DEFAULT NULL,
-  `sort_order` text DEFAULT NULL,
+  `sort_order` mediumtext DEFAULT NULL,
   `hidden` tinyint(1) NOT NULL DEFAULT 0,
   `icon_path` varchar(255) DEFAULT NULL,
   `color_hex` varchar(7) DEFAULT NULL,
   `subcategory_type` varchar(20) DEFAULT NULL,
-  `subcategory_type_logic` text DEFAULT NULL,
+  `subcategory_type_logic` mediumtext DEFAULT NULL,
   `location_type` enum('Venue','City','Address') DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `subcategories`
@@ -2208,7 +2198,7 @@ CREATE TABLE `transactions` (
   `status` enum('paid','pending','refunded') DEFAULT 'pending',
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Indexes for dumped tables
@@ -2225,8 +2215,8 @@ ALTER TABLE `addons`
 --
 ALTER TABLE `admins`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `idx_account_email` (`account_email`),
-  ADD UNIQUE KEY `idx_username_key` (`username_key`),
+  ADD UNIQUE KEY `idx_account_email` (`account_email`) USING HASH,
+  ADD UNIQUE KEY `idx_username_key` (`username_key`) USING HASH,
   ADD KEY `idx_deleted_at` (`deleted_at`);
 
 --
@@ -2631,43 +2621,43 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `post_item_pricing`
 --
 ALTER TABLE `post_item_pricing`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `post_map_cards`
 --
 ALTER TABLE `post_map_cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `post_media`
 --
 ALTER TABLE `post_media`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `post_revisions`
 --
 ALTER TABLE `post_revisions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `post_sessions`
 --
 ALTER TABLE `post_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `post_ticket_pricing`
 --
 ALTER TABLE `post_ticket_pricing`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `subcategories`

@@ -302,6 +302,45 @@ $insertId = $stmt->insert_id;
 $stmt->close();
 
 // ---------------------------------------------------------------------------
+// Generate post_key: {id}-{slug}
+// ---------------------------------------------------------------------------
+$postTitle = '';
+foreach ($fieldsArr as $fld) {
+  if (!is_array($fld)) continue;
+  $fldKey = isset($fld['key']) ? strtolower(trim((string)$fld['key'])) : '';
+  if ($fldKey === 'title') {
+    $postTitle = isset($fld['value']) ? trim((string)$fld['value']) : '';
+    break;
+  }
+}
+
+// Generate URL-friendly slug from title (preserves Unicode for international support)
+function generate_slug(string $text): string {
+  // Convert to lowercase (Unicode-aware)
+  $slug = mb_strtolower($text, 'UTF-8');
+  // Remove punctuation and special URL characters, but keep letters/numbers from all languages
+  // \p{L} = any letter (including Chinese, Arabic, etc.)
+  // \p{N} = any number
+  $slug = preg_replace('/[^\p{L}\p{N}]+/u', '-', $slug);
+  // Remove consecutive hyphens
+  $slug = preg_replace('/-+/', '-', $slug);
+  // Trim hyphens from start and end
+  $slug = trim($slug, '-');
+  return $slug;
+}
+
+$slug = generate_slug($postTitle);
+$postKey = $insertId . ($slug !== '' ? '-' . $slug : '');
+
+// Update post with post_key
+$stmtKey = $mysqli->prepare("UPDATE posts SET post_key = ? WHERE id = ?");
+if ($stmtKey) {
+  $stmtKey->bind_param('si', $postKey, $insertId);
+  $stmtKey->execute();
+  $stmtKey->close();
+}
+
+// ---------------------------------------------------------------------------
 // Build post_map_cards + post_children + post_revisions + post_media (uploads)
 // ---------------------------------------------------------------------------
 
