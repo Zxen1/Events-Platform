@@ -148,12 +148,8 @@ const PostModule = (function() {
           lastZoom = map.getZoom();
           updatePostsButtonState();
         }
-        // Load posts on map ready (required for clusters and map cards)
-        // This loads posts regardless of whether panel is visible
-        if (!cachedPosts && !postsLoading) {
-          loadPosts();
-        } else if (cachedPosts && cachedPosts.length) {
-          // Re-render markers if we already have cached posts
+        // Re-render markers if we have cached posts
+        if (cachedPosts && cachedPosts.length) {
           renderMapMarkers(cachedPosts);
         }
       } catch (e) {

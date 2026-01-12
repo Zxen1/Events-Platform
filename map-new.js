@@ -1161,7 +1161,7 @@ const MapModule = (function() {
 
   /**
    * Update cluster source data for current zoom level
-   * Uses visible (filtered) posts, not all cached posts
+   * Fetches aggregated data from server (lightweight, no individual posts)
    */
   function updateClusterData(zoom) {
     if (!map) return;
@@ -1175,15 +1175,55 @@ const MapModule = (function() {
     // Skip if same bucket key (no grid size change)
     if (lastClusterBucketKey === bucketKey) return;
     
-    // Get visible posts from PostModule (respects current filters)
-    var posts = [];
-    if (window.PostModule && PostModule.getVisiblePosts) {
-      posts = PostModule.getVisiblePosts() || [];
+    // Fetch cluster data from lightweight endpoint
+    fetchClusterData(zoomValue).then(function(clusters) {
+      var data = buildClusterFeatureCollectionFromServer(clusters);
+      source.setData(data);
+      lastClusterBucketKey = bucketKey;
+    });
+  }
+
+  /**
+   * Fetch cluster data from server
+   * Returns aggregated counts, not individual posts
+   */
+  function fetchClusterData(zoom) {
+    var url = '/gateway.php?action=get-clusters&zoom=' + encodeURIComponent(zoom);
+    
+    return fetch(url)
+      .then(function(response) { return response.json(); })
+      .then(function(data) {
+        if (data.success && Array.isArray(data.clusters)) {
+          return data.clusters;
+        }
+        return [];
+      })
+      .catch(function(err) {
+        console.warn('[Map] Failed to fetch clusters:', err);
+        return [];
+      });
+  }
+
+  /**
+   * Build GeoJSON FeatureCollection from server cluster data
+   */
+  function buildClusterFeatureCollectionFromServer(clusters) {
+    if (!Array.isArray(clusters) || clusters.length === 0) {
+      return { type: 'FeatureCollection', features: [] };
     }
     
-    var data = buildClusterFeatureCollection(posts, zoomValue);
-    source.setData(data);
-    lastClusterBucketKey = bucketKey;
+    var features = clusters.map(function(c) {
+      return {
+        type: 'Feature',
+        properties: {
+          count: c.count,
+          label: c.label
+        },
+        geometry: { type: 'Point', coordinates: [c.lng, c.lat] }
+      };
+    });
+    
+    return { type: 'FeatureCollection', features: features };
   }
 
   /**

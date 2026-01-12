@@ -36,6 +36,7 @@ $map = [
   'get-form' => $connectorDir . '/get-form.php',
   'add-post' => $connectorDir . '/add-post.php',
   'get-posts' => $connectorDir . '/get-posts.php',
+  'get-clusters' => $connectorDir . '/get-clusters.php',
   'upload-media' => $connectorDir . '/upload-media.php',
   'issue-token' => $connectorDir . '/issue-token.php',
   // Backwards-compat routes for rename
