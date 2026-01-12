@@ -3145,6 +3145,29 @@ const FieldsetBuilder = (function(){
                     try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
                     spCloseAllGroupEditors();
                     spCloseTicketMenu();
+                    
+                    // Sync all ticket groups to other session_pricing fieldsets in this form
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                        var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
+                        var keys = Object.keys(spTicketGroups);
+                        for (var ki = 0; ki < keys.length; ki++) {
+                            var gk = keys[ki];
+                            var grpEl = spTicketGroups[gk];
+                            if (!grpEl) continue;
+                            var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
+                            var pricing = spExtractPricingFromEditor(editorEl);
+                            var ageMenu = editorEl ? editorEl.querySelector('.component-ageratingpicker-menu') : null;
+                            var ageRating = ageMenu ? String(ageMenu.dataset.value || '').trim() : '';
+                            for (var si = 0; si < allSP.length; si++) {
+                                var otherFS = allSP[si];
+                                if (otherFS === fieldset) continue;
+                                if (typeof otherFS._syncTicketGroup === 'function') {
+                                    otherFS._syncTicketGroup(gk, pricing, ageRating);
+                                }
+                            }
+                        }
+                    } catch (eSyncAll) {}
                 });
 
                 spTicketGroupFooterCancel.addEventListener('click', function(e) {
@@ -3228,6 +3251,50 @@ const FieldsetBuilder = (function(){
                     if (!key) return null;
                     if (spTicketGroups[key]) return spTicketGroups[key];
 
+                    // Check other fieldsets for existing group with same letter (auto-fill)
+                    var existingPricing = null;
+                    var existingAgeRating = '';
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                        var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
+                        for (var si = 0; si < allSP.length; si++) {
+                            var otherFS = allSP[si];
+                            if (otherFS === fieldset) continue;
+                            var otherGrp = otherFS.querySelector('.fieldset-sessionpricing-ticketgroup-item[data-ticket-group-key="' + key + '"]');
+                            if (otherGrp) {
+                                var otherEditor = otherGrp.querySelector('.fieldset-sessionpricing-pricing-editor');
+                                if (otherEditor) {
+                                    // Extract pricing from the other fieldset's group
+                                    var seatingBlocks = otherEditor.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
+                                    var seatOut = [];
+                                    seatingBlocks.forEach(function(block) {
+                                        var seatName = '';
+                                        var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                                        if (seatInput) seatName = String(seatInput.value || '').trim();
+                                        var tiers = [];
+                                        block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
+                                            var tierName = '';
+                                            var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
+                                            if (tierInput) tierName = String(tierInput.value || '').trim();
+                                            var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
+                                            var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                            var priceInput = null;
+                                            var inputs = tier.querySelectorAll('input.fieldset-input');
+                                            if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
+                                            var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                            tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                                        });
+                                        seatOut.push({ seating_area: seatName, tiers: tiers });
+                                    });
+                                    if (seatOut.length > 0) existingPricing = seatOut;
+                                    var ageMenu = otherEditor.querySelector('.component-ageratingpicker-menu');
+                                    if (ageMenu) existingAgeRating = String(ageMenu.dataset.value || '').trim();
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (eLookup) {}
+
                     var group = document.createElement('div');
                     group.className = 'fieldset-sessionpricing-ticketgroup-item container-class-2';
                     group.dataset.ticketGroupKey = key;
@@ -3286,7 +3353,16 @@ const FieldsetBuilder = (function(){
                     var editor = document.createElement('div');
                     editor.className = 'fieldset-sessionpricing-pricing-editor';
                     editorWrap.appendChild(editor);
-                    spReplaceEditorFromPricing(editor, []);
+                    spReplaceEditorFromPricing(editor, existingPricing || []);
+                    // Set age rating if copied from another location
+                    if (existingAgeRating) {
+                        var ageMenu = editor.querySelector('.component-ageratingpicker-menu');
+                        if (ageMenu) {
+                            ageMenu.dataset.value = existingAgeRating;
+                            var ageBtn = ageMenu.querySelector('.component-ageratingpicker-menu-button-text');
+                            if (ageBtn) ageBtn.textContent = existingAgeRating;
+                        }
+                    }
                     group.appendChild(editorWrap);
 
                     spTicketGroups[key] = group;
@@ -3593,6 +3669,26 @@ const FieldsetBuilder = (function(){
 
                 // Initial UI state
                 spRenderSessions();
+
+                // Expose sync function for cross-location ticket group auto-fill
+                fieldset._syncTicketGroup = function(groupKey, pricingArr, ageRating) {
+                    var key = String(groupKey || '').trim();
+                    if (!key) return;
+                    spEnsureTicketGroup(key);
+                    var grpEl = spTicketGroups[key];
+                    if (!grpEl) return;
+                    var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
+                    if (editorEl) {
+                        spReplaceEditorFromPricing(editorEl, pricingArr || []);
+                        // Set age rating
+                        var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
+                        if (ageMenu && ageRating) {
+                            ageMenu.dataset.value = ageRating;
+                            var ageBtn = ageMenu.querySelector('.component-ageratingpicker-menu-button-text');
+                            if (ageBtn) ageBtn.textContent = ageRating;
+                        }
+                    }
+                };
 
                 break;
                 
