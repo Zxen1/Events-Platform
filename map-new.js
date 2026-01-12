@@ -915,103 +915,10 @@ const MapModule = (function() {
   }
 
   /**
-   * Get bucket key for caching (based on grid size)
+   * Get bucket key for caching (prevents refetch when grid size unchanged)
    */
   function getClusterBucketKey(zoom) {
-    const size = getClusterGridSize(zoom);
-    return Number.isFinite(size) ? size.toFixed(2) : 'default';
-  }
-
-  /**
-   * Format cluster count for display (1000 → 1k, 1000000 → 1m)
-   */
-  function formatClusterCount(count) {
-    if (!Number.isFinite(count) || count <= 0) return '0';
-    if (count >= 1000000) {
-      const value = count / 1000000;
-      return (value >= 10 ? Math.round(value) : Math.round(value * 10) / 10) + 'm';
-    }
-    if (count >= 1000) {
-      const value = count / 1000;
-      return (value >= 10 ? Math.round(value) : Math.round(value * 10) / 10) + 'k';
-    }
-    return String(count);
-  }
-
-  /**
-   * Clamp latitude to valid range for clustering
-   */
-  function clampClusterLat(lat) {
-    return Math.max(-85, Math.min(85, lat));
-  }
-
-  /**
-   * Group map cards into cluster buckets based on zoom level
-   * Uses a grid-based approach where grid cell size varies by zoom
-   * Counts MAP CARDS, not posts (one post with 5 locations = 5 map cards)
-   */
-  function groupMapCardsForClusterZoom(posts, zoom) {
-    var gridSize = getClusterGridSize(zoom) || 5;
-    var groups = new Map();
-    
-    posts.forEach(function(post) {
-      // Iterate over ALL map cards in the post, not just the first
-      var mapCards = post.map_cards;
-      if (!Array.isArray(mapCards) || !mapCards.length) return;
-      
-      mapCards.forEach(function(mapCard) {
-        var lng = mapCard.longitude;
-        var lat = mapCard.latitude;
-        if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
-        
-        lat = clampClusterLat(lat);
-        var col = Math.floor((lng + 180) / gridSize);
-        var row = Math.floor((lat + 90) / gridSize);
-        var key = col + '|' + row;
-        
-        var bucket = groups.get(key);
-        if (!bucket) {
-          bucket = { count: 0, sumLng: 0, sumLat: 0, mapCards: [] };
-          groups.set(key, bucket);
-        }
-        bucket.count += 1;
-        bucket.sumLng += lng;
-        bucket.sumLat += lat;
-        bucket.mapCards.push({ post: post, mapCard: mapCard });
-      });
-    });
-    
-    return groups;
-  }
-
-  /**
-   * Build GeoJSON FeatureCollection for clusters
-   * Counts map cards, not posts
-   */
-  function buildClusterFeatureCollection(posts, zoom) {
-    if (!Array.isArray(posts) || posts.length === 0) {
-      return { type: 'FeatureCollection', features: [] };
-    }
-    
-    var groups = groupMapCardsForClusterZoom(posts, zoom);
-    var features = [];
-    
-    groups.forEach(function(bucket, key) {
-      if (!bucket || bucket.count <= 0) return;
-      var avgLng = bucket.sumLng / bucket.count;
-      var avgLat = bucket.sumLat / bucket.count;
-      features.push({
-        type: 'Feature',
-        properties: {
-          count: bucket.count,
-          label: formatClusterCount(bucket.count),
-          bucket: key
-        },
-        geometry: { type: 'Point', coordinates: [avgLng, avgLat] }
-      });
-    });
-    
-    return { type: 'FeatureCollection', features: features };
+    return getClusterGridSize(zoom).toFixed(2);
   }
 
   /**
@@ -1024,45 +931,25 @@ const MapModule = (function() {
         return;
       }
       
-      // Get icon filename from local adminSettings (loaded via App.getState)
-      var iconFilename = '';
-      if (adminSettings && adminSettings.marker_cluster_icon) {
-        iconFilename = adminSettings.marker_cluster_icon;
-      }
-      // Fallback to window global (set by live site pattern)
-      if (!iconFilename && window._markerClusterIcon) {
-        iconFilename = window._markerClusterIcon;
-      }
-      
+      var iconFilename = adminSettings.marker_cluster_icon;
       if (!iconFilename) {
-        console.warn('[Map] No marker_cluster_icon configured');
+        console.error('[Map] marker_cluster_icon not configured in Admin > Map tab');
         resolve();
         return;
       }
       
-      // Build full URL using folder_system_images from adminSettings
-      var baseUrl = '';
-      if (adminSettings && adminSettings.folder_system_images) {
-        baseUrl = adminSettings.folder_system_images;
-      }
-      var iconUrl = baseUrl ? (baseUrl + '/' + iconFilename) : iconFilename;
+      var iconUrl = adminSettings.folder_system_images + '/' + iconFilename;
       
-      logDebug('[Map] Loading cluster icon:', iconUrl);
-      
-      // Load image
       var img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = function() {
-        if (img.width > 0 && img.height > 0 && !map.hasImage(CLUSTER_ICON_ID)) {
-          var pixelRatio = img.width >= 256 ? 2 : 1;
-          map.addImage(CLUSTER_ICON_ID, img, { pixelRatio: pixelRatio });
-          clusterIconLoaded = true;
-          logDebug('[Map] Cluster icon loaded successfully');
-        }
+        var pixelRatio = img.width >= 256 ? 2 : 1;
+        map.addImage(CLUSTER_ICON_ID, img, { pixelRatio: pixelRatio });
+        clusterIconLoaded = true;
         resolve();
       };
       img.onerror = function() {
-        console.warn('[Map] Failed to load cluster icon:', iconUrl);
+        console.error('[Map] Failed to load cluster icon:', iconUrl);
         resolve();
       };
       img.src = iconUrl;
@@ -1071,23 +958,12 @@ const MapModule = (function() {
 
   /**
    * Initialize cluster system
-   * Waits for settings to be ready before loading cluster icon
    */
   function initClusters() {
     if (!map) return;
     
-    // Ensure settings are loaded before trying to get cluster icon
-    var settingsReady = Promise.resolve();
-    if (window.App && typeof App.whenStartupSettingsReady === 'function') {
-      settingsReady = App.whenStartupSettingsReady();
-    }
-    
-    settingsReady.then(function() {
-      // Refresh adminSettings from App state now that they're ready
-      if (window.App && typeof App.getState === 'function') {
-        adminSettings = App.getState('settings') || {};
-        adminSettings.system_images = App.getState('system_images') || {};
-      }
+    App.whenStartupSettingsReady().then(function() {
+      adminSettings = App.getState('settings');
       return loadClusterIcon();
     }).then(function() {
       setupClusterLayers();
@@ -1192,27 +1068,12 @@ const MapModule = (function() {
 
   /**
    * Fetch cluster data from server
-   * Returns aggregated counts, not individual posts
    */
   function fetchClusterData(zoom) {
-    var url = '/gateway.php?action=get-clusters&zoom=' + encodeURIComponent(zoom);
-    
-    console.log('[Map] Fetching clusters for zoom:', zoom);
-    
-    return fetch(url)
+    return fetch('/gateway.php?action=get-clusters&zoom=' + zoom)
       .then(function(response) { return response.json(); })
       .then(function(data) {
-        console.log('[Map] Cluster response:', data);
-        if (data.success && Array.isArray(data.clusters)) {
-          console.log('[Map] Clusters received:', data.clusters.length);
-          return data.clusters;
-        }
-        console.warn('[Map] Cluster response not successful or no clusters array');
-        return [];
-      })
-      .catch(function(err) {
-        console.error('[Map] Failed to fetch clusters:', err);
-        return [];
+        return (data.success && Array.isArray(data.clusters)) ? data.clusters : [];
       });
   }
 
@@ -1239,21 +1100,20 @@ const MapModule = (function() {
   }
 
   /**
-   * Handle cluster click - go directly to zoom 12 (map card visibility threshold)
-   * No intermediate stops or forking - straight to where posts are visible
+   * Handle cluster click - fly directly to zoom 12
    */
   function handleClusterClick(e) {
-    if (!e || !e.features || !e.features.length) return;
+    if (!e || !e.features || !e.features[0]) return;
     
-    var feature = e.features[0];
-    var coords = feature.geometry && feature.geometry.coordinates;
-    if (!Array.isArray(coords) || coords.length < 2) return;
+    var coords = e.features[0].geometry.coordinates;
     
-    // Go directly to zoom 12 - no intermediate clustering
-    map.easeTo({
+    map.flyTo({
       center: coords,
-      zoom: CLUSTER_ZOOM_MAX,
-      duration: 500
+      zoom: 12,
+      pitch: map.getPitch(),
+      speed: 1.35,
+      curve: 1.5,
+      easing: function(t) { return 1 - Math.pow(1 - t, 3); }
     });
   }
 
