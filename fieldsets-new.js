@@ -3137,16 +3137,26 @@ const FieldsetBuilder = (function(){
                         try { window.removeEventListener('resize', spTicketMenuWinHandler, true); } catch (e1) {}
                         spTicketMenuWinHandler = null;
                     }
+                    if (spTicketMenuKeyHandler) {
+                        try { document.removeEventListener('keydown', spTicketMenuKeyHandler, true); } catch (e2) {}
+                        spTicketMenuKeyHandler = null;
+                    }
                     spTicketMenuScrollEl = null;
                 }
-
-                // Footer buttons (OK/Cancel) for the ticket-group pop-up (locked like session picker)
-                spTicketGroupFooterOk.addEventListener('click', function(e) {
-                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                
+                var spTicketMenuKeyHandler = null;
+                
+                function spHasUnsavedChanges() {
+                    if (!spOpenGroupKey || !spOpenGroupSnapshot) return false;
+                    var grpEl = spTicketGroups[spOpenGroupKey];
+                    if (!grpEl) return false;
+                    var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
+                    var currentPricing = spExtractPricingFromEditor(editorEl);
+                    return JSON.stringify(currentPricing) !== JSON.stringify(spOpenGroupSnapshot);
+                }
+                
+                function spSyncAllAndClose() {
                     spCloseAllGroupEditors();
-                    spCloseTicketMenu();
-                    
-                    // Sync all ticket groups to other session_pricing fieldsets in this form
                     try {
                         var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
                         var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
@@ -3168,22 +3178,54 @@ const FieldsetBuilder = (function(){
                             }
                         }
                     } catch (eSyncAll) {}
+                    spCloseTicketMenu();
+                }
+                
+                function spDiscardAndClose() {
+                    if (spOpenGroupKey && spOpenGroupSnapshot) {
+                        var g = spTicketGroups[String(spOpenGroupKey || '')];
+                        if (g) {
+                            var editorEl = g.querySelector('.fieldset-sessionpricing-pricing-editor');
+                            if (editorEl) spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot || []);
+                        }
+                    }
+                    spCloseAllGroupEditors();
+                    spCloseTicketMenu();
+                }
+                
+                function spHandleEscapeOrClickOutside() {
+                    if (!spTicketMenuOpen) return;
+                    if (spHasUnsavedChanges()) {
+                        if (typeof ThreeButtonDialogComponent !== 'undefined' && ThreeButtonDialogComponent.show) {
+                            ThreeButtonDialogComponent.show({
+                                titleText: 'Unsaved Changes',
+                                messageText: 'You have unsaved changes to your ticket pricing.'
+                            }).then(function(result) {
+                                if (result === 'save') {
+                                    spSyncAllAndClose();
+                                } else if (result === 'discard') {
+                                    spDiscardAndClose();
+                                }
+                            });
+                        } else {
+                            spCloseAllGroupEditors();
+                            spCloseTicketMenu();
+                        }
+                    } else {
+                        spCloseAllGroupEditors();
+                        spCloseTicketMenu();
+                    }
+                }
+
+                // Footer buttons (OK/Cancel) for the ticket-group pop-up
+                spTicketGroupFooterOk.addEventListener('click', function(e) {
+                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                    spSyncAllAndClose();
                 });
 
                 spTicketGroupFooterCancel.addEventListener('click', function(e) {
                     try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                    // Revert current open editor only, then close the menu.
-                    try {
-                        if (spOpenGroupKey && spOpenGroupSnapshot) {
-                            var g = spTicketGroups[String(spOpenGroupKey || '')];
-                            if (g) {
-                                var editorEl = g.querySelector('.fieldset-sessionpricing-pricing-editor');
-                                if (editorEl) spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot || []);
-                            }
-                        }
-                    } catch (e1) {}
-                    spCloseAllGroupEditors();
-                    spCloseTicketMenu();
+                    spDiscardAndClose();
                 });
 
                 function spOpenTicketMenu(anchorRowEl, pickerObj) {
@@ -3232,18 +3274,27 @@ const FieldsetBuilder = (function(){
                     spPricingGroupsWrap.classList.add('fieldset-sessionpricing-ticketgroups-popover--open');
                     spTicketMenuOpen = true;
 
-                    // Close when clicking outside (Formbuilder-style)
+                    // Close when clicking outside - show dialog if unsaved changes
                     spTicketMenuDocHandler = function(ev) {
                         try {
-                            // If a confirm dialog is open, don't treat clicks inside it as "outside" the ticket-group menu.
-                            var confirmOverlay = document.querySelector('.component-confirm-dialog-overlay--visible');
+                            // If a dialog is open, don't treat clicks inside it as "outside"
+                            var confirmOverlay = document.querySelector('.component-confirm-dialog-overlay--visible, .component-three-button-dialog-overlay--visible');
                             if (confirmOverlay && confirmOverlay.contains(ev.target)) return;
                             if (!spPricingGroupsWrap.contains(ev.target) && !(pickerObj.ticketBtn && pickerObj.ticketBtn.contains(ev.target))) {
-                                spCloseTicketMenu();
+                                spHandleEscapeOrClickOutside();
                             }
                         } catch (e) {}
                     };
                     try { document.addEventListener('click', spTicketMenuDocHandler, true); } catch (e1) {}
+                    
+                    // Escape key - show dialog if unsaved changes
+                    spTicketMenuKeyHandler = function(ev) {
+                        if (ev.key === 'Escape' || ev.keyCode === 27) {
+                            try { ev.preventDefault(); ev.stopPropagation(); } catch (e0) {}
+                            spHandleEscapeOrClickOutside();
+                        }
+                    };
+                    try { document.addEventListener('keydown', spTicketMenuKeyHandler, true); } catch (e2) {}
                 }
 
                 function spEnsureTicketGroup(groupKey) {
