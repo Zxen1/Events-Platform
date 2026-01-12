@@ -249,13 +249,31 @@ $paymentStatus = $skipPayment ? 'paid' : 'pending';
 $postColumns = fetch_table_columns($mysqli, 'posts');
 $hasPaymentStatus = in_array('payment_status', $postColumns, true);
 
+// Extract checkout_title from fields (post-level, not location-specific)
+$checkoutTitle = null;
+$fieldsArr = $data['fields'] ?? [];
+if (is_array($fieldsArr)) {
+  foreach ($fieldsArr as $fld) {
+    if (!is_array($fld)) continue;
+    $fldKey = isset($fld['key']) ? strtolower(trim((string)$fld['key'])) : '';
+    if ($fldKey === 'checkout') {
+      if (!empty($fld['value'])) {
+        $checkoutTitle = (string)$fld['value'];
+      } elseif (!empty($fld['option_id'])) {
+        $checkoutTitle = (string)$fld['option_id'];
+      }
+      break;
+    }
+  }
+}
+
 if ($hasPaymentStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status) VALUES (?, ?, ?, ?, 'paused', ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_title) VALUES (?, ?, ?, ?, 'paused', ?, ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility) VALUES (?, ?, ?, ?, 'paused')"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_title) VALUES (?, ?, ?, ?, 'paused', ?)"
   );
 }
 
@@ -264,12 +282,12 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus) {
-  if (!bind_statement_params($stmt, 'issis', $memberId, $memberName, $subcategoryKey, $locQty, $paymentStatus)) {
+  if (!bind_statement_params($stmt, 'ississ', $memberId, $memberName, $subcategoryKey, $locQty, $paymentStatus, $checkoutTitle)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  if (!bind_statement_params($stmt, 'issi', $memberId, $memberName, $subcategoryKey, $locQty)) {
+  if (!bind_statement_params($stmt, 'issis', $memberId, $memberName, $subcategoryKey, $locQty, $checkoutTitle)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
 }
@@ -452,7 +470,6 @@ foreach ($byLoc as $locNum => $entries) {
     'coupon_code' => null,
     'amenities' => null,
     'age_rating' => null,
-    'checkout_title' => null,
     'session_summary' => null,
     'price_summary' => null,
   ];
@@ -574,15 +591,6 @@ foreach ($byLoc as $locNum => $entries) {
     abort_with_error($mysqli, 400, 'Missing coordinates', $transactionActive);
   }
 
-  // checkout_title
-  if (is_array($checkout)) {
-    if (!empty($checkout['value'])) {
-      $card['checkout_title'] = (string)$checkout['value'];
-    } elseif (!empty($checkout['option_id'])) {
-      $card['checkout_title'] = (string)$checkout['option_id'];
-    }
-  }
-
   // session_summary (JSON: {start, end} date range)
   $sessionsForSummary = $sessions;
   if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
@@ -665,8 +673,8 @@ foreach ($byLoc as $locNum => $entries) {
     $card['price_summary'] = json_encode($priceSummary, JSON_UNESCAPED_UNICODE);
   }
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, age_rating, website_url, tickets_url, coupon_code, checkout_title, session_summary, price_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -692,7 +700,6 @@ foreach ($byLoc as $locNum => $entries) {
   $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
   $couponCodeParam = $card['coupon_code'];
-  $checkoutTitleParam = $card['checkout_title'];
   $sessSumParam = $card['session_summary'];
   $priceSumParam = $card['price_summary'];
 
@@ -710,9 +717,9 @@ foreach ($byLoc as $locNum => $entries) {
   // s (age_rating)
   // ss (website_url, tickets_url)
   // s (coupon_code)
-  // sss (checkout_title, session_summary, price_summary)
+  // ss (session_summary, price_summary)
   $stmtCard->bind_param(
-    'issssssssssssssddsssssssss',
+    'issssssssssssssddssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -736,7 +743,6 @@ foreach ($byLoc as $locNum => $entries) {
     $websiteParam,
     $ticketsParam,
     $couponCodeParam,
-    $checkoutTitleParam,
     $sessSumParam,
     $priceSumParam
   );
