@@ -3186,7 +3186,7 @@ const MemberModule = (function() {
                 // Store atomically (DB has phone_prefix + public_phone).
                 // No fallbacks: if either part is missing, return empty so required validation blocks submit.
                 try {
-                    var pfxInput = el.querySelector('.fieldset-menu-button-input');
+                    var pfxInput = el.querySelector('.component-phoneprefixcompact-menu-button-input');
                     var telInput = el.querySelector('input[type="tel"].fieldset-input');
                     var pfx = pfxInput ? String(pfxInput.value || '').trim() : '';
                     var num = telInput ? String(telInput.value || '').trim() : '';
@@ -3467,21 +3467,19 @@ const MemberModule = (function() {
             fd.set('payload', JSON.stringify(postData));
 
             // Attach image files (if any) from the Images fieldset (stored as fileInput._imageFiles).
-            try {
-                var imagesFs = formFields ? formFields.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]') : null;
-                var fileInput = imagesFs ? imagesFs.querySelector('input[type="file"]') : null;
-                var metaInput = imagesFs ? imagesFs.querySelector('input.fieldset-images-meta') : null;
-                var files = [];
-                if (fileInput && Array.isArray(fileInput._imageFiles)) {
-                    files = fileInput._imageFiles.slice();
-                }
-                files.forEach(function(file) {
-                    if (file) fd.append('images[]', file, file.name || 'image');
-                });
-                if (metaInput) {
-                    fd.set('images_meta', String(metaInput.value || '[]'));
-                }
-            } catch (e0) {}
+            var imagesFs = formFields ? formFields.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]') : null;
+            var fileInput = imagesFs ? imagesFs.querySelector('input[type="file"]') : null;
+            var metaInput = imagesFs ? imagesFs.querySelector('input.fieldset-images-meta') : null;
+            var files = [];
+            if (fileInput && Array.isArray(fileInput._imageFiles)) {
+                files = fileInput._imageFiles.slice();
+            }
+            files.forEach(function(file) {
+                if (file) fd.append('images[]', file, file.name || 'image');
+            });
+            if (metaInput) {
+                fd.set('images_meta', String(metaInput.value || '[]'));
+            }
 
             fetch('/gateway.php?action=add-post', {
                 method: 'POST',
