@@ -4160,7 +4160,7 @@ const FieldsetBuilder = (function(){
                             return false;
                         }
                         case 'public_phone': {
-                            var pfx = fieldset.querySelector('.fieldset-menu-button-input');
+                            var pfx = fieldset.querySelector('.component-phoneprefixcompact-menu-button-input');
                             var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
                             if (pfx && String(pfx.value || '').trim()) return true;
                             if (tel && String(tel.value || '').trim()) return true;
@@ -4337,7 +4337,7 @@ const FieldsetBuilder = (function(){
                     return !!(radioGrp2 && String(radioGrp2.dataset.value || '').trim());
                 }
                 case 'public_phone': {
-                    var prefixInput = fieldset.querySelector('.fieldset-menu-button-input');
+                    var prefixInput = fieldset.querySelector('.component-phoneprefixcompact-menu-button-input');
                     var phoneInput = fieldset.querySelector('input[type="tel"].fieldset-input');
                     if (!prefixInput || !phoneInput) return false;
                     var pfx = String(prefixInput.value || '').trim();

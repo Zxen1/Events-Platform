@@ -687,13 +687,15 @@
 }
 
 .formbuilder-fieldset-menu-option--disabled,
-.formbuilder-fieldset-menu-option--disabled-location-type {
+.formbuilder-fieldset-menu-option--disabled-location-type,
+.formbuilder-fieldset-menu-option--disabled-general {
   color: #555;
   cursor: not-allowed;
 }
 
 .formbuilder-fieldset-menu-option--disabled:hover,
-.formbuilder-fieldset-menu-option--disabled-location-type:hover {
+.formbuilder-fieldset-menu-option--disabled-location-type:hover,
+.formbuilder-fieldset-menu-option--disabled-general:hover {
   background: transparent;
 }
 

@@ -1668,6 +1668,24 @@
             });
         }
         
+        // Function to enable/disable session_pricing based on subcategory type (Events vs General)
+        function updateSessionPricingFieldset(subcategoryType) {
+            if (!fieldsetOpts) return;
+            var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
+            allOptions.forEach(function(opt) {
+                var fsId = opt.getAttribute('data-fieldset-id');
+                if (!fsId) return;
+                var fsIdLower = String(fsId).toLowerCase();
+                if (fsIdLower === 'session_pricing') {
+                    if (subcategoryType === 'Events') {
+                        opt.classList.remove('formbuilder-fieldset-menu-option--disabled-general');
+                    } else {
+                        opt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
+                    }
+                }
+            });
+        }
+        
         // Function to update divider line and location repeat switches based on location type selection
         function updateLocationDividerAndRepeatSwitches() {
             if (!fieldsContainer) return;
@@ -2084,6 +2102,8 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'Events';
+                // Enable session_pricing for Events type
+                updateSessionPricingFieldset('Events');
                 notifyChange();
             }
         });
@@ -2127,6 +2147,8 @@
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'General';
                 // Keep existing location_type - don't set to null
+                // Disable session_pricing for General type
+                updateSessionPricingFieldset('General');
                 notifyChange();
             }
         });
@@ -2868,8 +2890,16 @@
                 return;
             }
             
+            // Check if this is session_pricing (only available for Events, not General)
+            var isSessionPricing = fieldsetKeyLower === 'session_pricing';
+            
             var opt = document.createElement('div');
             opt.className = 'formbuilder-fieldset-menu-option';
+            
+            // Grey out session_pricing for General subcategory type
+            if (isSessionPricing && currentSubcategoryType !== 'Events') {
+                opt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
+            }
             var displayName = '';
             if (fs.name && typeof fs.name === 'string' && fs.name.trim()) {
                 displayName = fs.name.trim();
@@ -2883,8 +2913,9 @@
             
             opt.onclick = function(e) {
                 e.stopPropagation();
-                // Check for "already added" disabled
+                // Check for "already added" disabled or "general type" disabled (for session_pricing)
                 if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled')) return;
+                if (opt.classList.contains('formbuilder-fieldset-menu-option--disabled-general')) return;
                 
                 var result = createFieldElement(fs, true, fs);
                 fieldsContainer.appendChild(result.wrapper);
