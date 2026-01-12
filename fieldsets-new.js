@@ -3751,6 +3751,10 @@ const FieldsetBuilder = (function(){
                             ageMenu._ageRatingSetValue(ageRating || null);
                         }
                     }
+                    // Trigger completeness re-check after sync
+                    try {
+                        fieldset.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (eDispatch) {}
                 };
 
                 break;
