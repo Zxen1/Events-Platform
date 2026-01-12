@@ -3467,6 +3467,8 @@ const MemberModule = (function() {
             fd.set('payload', JSON.stringify(postData));
 
             // Attach image files (if any) from the Images fieldset (stored as fileInput._imageFiles).
+            console.log('[Post] formFields element:', formFields);
+            console.log('[Post] All fieldsets with data-fieldset-key:', formFields ? Array.from(formFields.querySelectorAll('[data-fieldset-key]')).map(function(fs) { return fs.dataset.fieldsetKey; }) : 'formFields is null');
             var imagesFs = formFields ? formFields.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]') : null;
             console.log('[Post] imagesFs found:', !!imagesFs);
             var fileInput = imagesFs ? imagesFs.querySelector('input[type="file"]') : null;
