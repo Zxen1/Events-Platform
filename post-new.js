@@ -1208,12 +1208,22 @@ const PostModule = (function() {
     // Find or create the target element
     var target = originEl || container.querySelector('[data-id="' + post.id + '"]');
 
-    // Build the detail view
+    // Store parent reference and remove target from DOM before building detail
+    // (buildPostDetail will move the card inside the detail wrapper)
+    var targetParent = target ? target.parentElement : null;
+    var targetNextSibling = target ? target.nextSibling : null;
+    if (target && targetParent) {
+      targetParent.removeChild(target);
+    }
+
+    // Build the detail view (may reuse the removed target element)
     var detail = buildPostDetail(post, target, fromRecent);
 
-    // Replace target with detail, or append if no target
-    if (target && target.parentElement) {
-      target.parentElement.replaceChild(detail, target);
+    // Insert detail at original position, or at top of container
+    if (targetParent && targetNextSibling) {
+      targetParent.insertBefore(detail, targetNextSibling);
+    } else if (targetParent) {
+      targetParent.appendChild(detail);
     } else {
       container.insertBefore(detail, container.firstChild);
     }
@@ -1352,13 +1362,13 @@ const PostModule = (function() {
     postBody.innerHTML = [
       '<div class="open-post-container-nav">',
         '<button class="open-post-button-venue" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">',
-          '<img class="open-post-image-navpreview" src="assets/Map Screenshot.png" alt="Map view">',
+          '<div class="open-post-image-navpreview open-post-image-navpreview--map"></div>',
           '<span class="open-post-text-venuename">' + escapeHtml(venueName) + '</span>',
           '<span class="open-post-text-address">' + escapeHtml(addressLine) + '</span>',
           locationList.length > 1 ? '<span class="open-post-icon-arrow" aria-hidden="true"></span>' : '',
         '</button>',
         '<button class="open-post-button-session" type="button" aria-label="View Calendar" aria-haspopup="true" aria-expanded="false" data-nav="calendar">',
-          '<img class="open-post-image-navpreview" src="assets/Calendar Screenshot.png" alt="Calendar view">',
+          '<div class="open-post-image-navpreview open-post-image-navpreview--calendar"></div>',
         '</button>',
       '</div>',
       '<div id="venue-' + post.id + '" class="open-post-dropdown-venue">',
