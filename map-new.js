@@ -888,94 +888,302 @@ const MapModule = (function() {
 
 
   /* ==========================================================================
-     SECTION 5: CLUSTERS - Marker Clustering (Mapbox)
+     SECTION 5: CLUSTERS - Marker Clustering
      ========================================================================== */
   
+  // Cluster constants
+  const CLUSTER_SOURCE_ID = 'post-cluster-source';
   const CLUSTER_LAYER_ID = 'post-clusters';
-  const CLUSTER_COUNT_LAYER_ID = 'post-cluster-count';
+  const CLUSTER_ICON_ID = 'cluster-icon';
+  const CLUSTER_MIN_ZOOM = 0;
+  
+  // Cluster state
+  let clusterIconLoaded = false;
+  let lastClusterBucketKey = null;
 
   /**
-   * Initialize cluster layers
+   * Get cluster grid size based on zoom level
+   * Smaller grids at higher zoom = more granular clustering
+   */
+  function getClusterGridSize(zoom) {
+    const z = Number.isFinite(zoom) ? zoom : 0;
+    if (z >= 7.5) return 0.5;
+    if (z >= 6) return 1;
+    if (z >= 4) return 2.5;
+    if (z >= 2) return 5;
+    return 10;
+  }
+
+  /**
+   * Get bucket key for caching (based on grid size)
+   */
+  function getClusterBucketKey(zoom) {
+    const size = getClusterGridSize(zoom);
+    return Number.isFinite(size) ? size.toFixed(2) : 'default';
+  }
+
+  /**
+   * Format cluster count for display (1000 → 1k, 1000000 → 1m)
+   */
+  function formatClusterCount(count) {
+    if (!Number.isFinite(count) || count <= 0) return '0';
+    if (count >= 1000000) {
+      const value = count / 1000000;
+      return (value >= 10 ? Math.round(value) : Math.round(value * 10) / 10) + 'm';
+    }
+    if (count >= 1000) {
+      const value = count / 1000;
+      return (value >= 10 ? Math.round(value) : Math.round(value * 10) / 10) + 'k';
+    }
+    return String(count);
+  }
+
+  /**
+   * Clamp latitude to valid range for clustering
+   */
+  function clampClusterLat(lat) {
+    return Math.max(-85, Math.min(85, lat));
+  }
+
+  /**
+   * Group map cards into cluster buckets based on zoom level
+   * Uses a grid-based approach where grid cell size varies by zoom
+   * Counts MAP CARDS, not posts (one post with 5 locations = 5 map cards)
+   */
+  function groupMapCardsForClusterZoom(posts, zoom) {
+    var gridSize = getClusterGridSize(zoom) || 5;
+    var groups = new Map();
+    
+    posts.forEach(function(post) {
+      // Iterate over ALL map cards in the post, not just the first
+      var mapCards = post.map_cards;
+      if (!Array.isArray(mapCards) || !mapCards.length) return;
+      
+      mapCards.forEach(function(mapCard) {
+        var lng = mapCard.longitude;
+        var lat = mapCard.latitude;
+        if (!Number.isFinite(lng) || !Number.isFinite(lat)) return;
+        
+        lat = clampClusterLat(lat);
+        var col = Math.floor((lng + 180) / gridSize);
+        var row = Math.floor((lat + 90) / gridSize);
+        var key = col + '|' + row;
+        
+        var bucket = groups.get(key);
+        if (!bucket) {
+          bucket = { count: 0, sumLng: 0, sumLat: 0, mapCards: [] };
+          groups.set(key, bucket);
+        }
+        bucket.count += 1;
+        bucket.sumLng += lng;
+        bucket.sumLat += lat;
+        bucket.mapCards.push({ post: post, mapCard: mapCard });
+      });
+    });
+    
+    return groups;
+  }
+
+  /**
+   * Build GeoJSON FeatureCollection for clusters
+   * Counts map cards, not posts
+   */
+  function buildClusterFeatureCollection(posts, zoom) {
+    if (!Array.isArray(posts) || posts.length === 0) {
+      return { type: 'FeatureCollection', features: [] };
+    }
+    
+    var groups = groupMapCardsForClusterZoom(posts, zoom);
+    var features = [];
+    
+    groups.forEach(function(bucket, key) {
+      if (!bucket || bucket.count <= 0) return;
+      var avgLng = bucket.sumLng / bucket.count;
+      var avgLat = bucket.sumLat / bucket.count;
+      features.push({
+        type: 'Feature',
+        properties: {
+          count: bucket.count,
+          label: formatClusterCount(bucket.count),
+          bucket: key
+        },
+        geometry: { type: 'Point', coordinates: [avgLng, avgLat] }
+      });
+    });
+    
+    return { type: 'FeatureCollection', features: features };
+  }
+
+  /**
+   * Load cluster icon from admin settings
+   */
+  function loadClusterIcon() {
+    return new Promise(function(resolve) {
+      if (!map || clusterIconLoaded) {
+        resolve();
+        return;
+      }
+      
+      // Get icon URL from admin settings
+      var iconFilename = '';
+      if (window.adminSettings && window.adminSettings.marker_cluster_icon) {
+        iconFilename = window.adminSettings.marker_cluster_icon;
+      }
+      if (!iconFilename && window._markerClusterIcon) {
+        iconFilename = window._markerClusterIcon;
+      }
+      
+      if (!iconFilename) {
+        console.warn('[Map] No marker_cluster_icon configured');
+        resolve();
+        return;
+      }
+      
+      // Build full URL
+      var baseUrl = '';
+      if (window.adminSettings && window.adminSettings.folder_system_images) {
+        baseUrl = window.adminSettings.folder_system_images;
+      }
+      var iconUrl = baseUrl ? (baseUrl + '/' + iconFilename) : iconFilename;
+      
+      // Load image
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        if (img.width > 0 && img.height > 0 && !map.hasImage(CLUSTER_ICON_ID)) {
+          var pixelRatio = img.width >= 256 ? 2 : 1;
+          map.addImage(CLUSTER_ICON_ID, img, { pixelRatio: pixelRatio });
+          clusterIconLoaded = true;
+        }
+        resolve();
+      };
+      img.onerror = function() {
+        console.warn('[Map] Failed to load cluster icon:', iconUrl);
+        resolve();
+      };
+      img.src = iconUrl;
+    });
+  }
+
+  /**
+   * Initialize cluster system
    */
   function initClusters() {
     if (!map) return;
-
-    // Clusters are created when post source is added
-    // This sets up the layer configuration
-    // Cluster system ready
+    
+    loadClusterIcon().then(function() {
+      setupClusterLayers();
+    });
   }
 
   /**
-   * Create cluster layers for posts source
+   * Set up cluster source and layer
    */
-  function createClusterLayers() {
-    if (!map || !map.getSource('posts')) return;
-
-    // Remove existing layers if present
-    if (map.getLayer(CLUSTER_COUNT_LAYER_ID)) map.removeLayer(CLUSTER_COUNT_LAYER_ID);
-    if (map.getLayer(CLUSTER_LAYER_ID)) map.removeLayer(CLUSTER_LAYER_ID);
-
-    // Cluster circles
+  function setupClusterLayers() {
+    if (!map) return;
+    
+    // Remove existing layer if present
+    if (map.getLayer(CLUSTER_LAYER_ID)) {
+      map.removeLayer(CLUSTER_LAYER_ID);
+    }
+    
+    // Remove existing source if present
+    if (map.getSource(CLUSTER_SOURCE_ID)) {
+      map.removeSource(CLUSTER_SOURCE_ID);
+    }
+    
+    // Create empty source
+    var emptyData = { type: 'FeatureCollection', features: [] };
+    map.addSource(CLUSTER_SOURCE_ID, { type: 'geojson', data: emptyData });
+    
+    // Create cluster layer
     map.addLayer({
       id: CLUSTER_LAYER_ID,
-      type: 'circle',
-      source: 'posts',
-      filter: ['has', 'point_count'],
-      paint: {
-        'circle-color': '#2f3b73',
-        'circle-radius': [
-          'step',
-          ['get', 'point_count'],
-          20,    // radius for count < 100
-          100, 30,  // radius for count >= 100
-          750, 40   // radius for count >= 750
-        ],
-        'circle-stroke-width': 2,
-        'circle-stroke-color': '#ffffff'
-      }
-    });
-
-    // Cluster count labels
-    map.addLayer({
-      id: CLUSTER_COUNT_LAYER_ID,
       type: 'symbol',
-      source: 'posts',
-      filter: ['has', 'point_count'],
+      source: CLUSTER_SOURCE_ID,
+      minzoom: CLUSTER_MIN_ZOOM,
+      maxzoom: CLUSTER_ZOOM_MAX,
       layout: {
-        'text-field': '{point_count_abbreviated}',
-        'text-size': 12
+        'icon-image': CLUSTER_ICON_ID,
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-anchor': 'bottom',
+        'text-field': ['to-string', ['coalesce', ['get', 'label'], ['get', 'count']]],
+        'text-size': 12,
+        'text-offset': [0, -1.35],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        'text-allow-overlap': true,
+        'text-ignore-placement': true,
+        'symbol-z-order': 'viewport-y',
+        'symbol-sort-key': 900
       },
       paint: {
-        'text-color': '#ffffff'
+        'text-color': '#ffffff',
+        'text-halo-color': 'rgba(0,0,0,0.45)',
+        'text-halo-width': 1.2,
+        'icon-opacity': 0.95
       }
     });
-
-    // Cluster click handler
+    
+    // Bind click handler
     map.on('click', CLUSTER_LAYER_ID, handleClusterClick);
-    map.on('mouseenter', CLUSTER_LAYER_ID, () => {
+    map.on('mouseenter', CLUSTER_LAYER_ID, function() {
       map.getCanvas().style.cursor = 'pointer';
     });
-    map.on('mouseleave', CLUSTER_LAYER_ID, () => {
+    map.on('mouseleave', CLUSTER_LAYER_ID, function() {
       map.getCanvas().style.cursor = 'grab';
     });
+    
+    // Initial update
+    var currentZoom = map.getZoom();
+    updateClusterData(currentZoom);
+    updateClusterVisibility(currentZoom);
   }
 
   /**
-   * Handle cluster click - zoom in
+   * Update cluster source data for current zoom level
+   * Uses visible (filtered) posts, not all cached posts
+   */
+  function updateClusterData(zoom) {
+    if (!map) return;
+    
+    var source = map.getSource(CLUSTER_SOURCE_ID);
+    if (!source || typeof source.setData !== 'function') return;
+    
+    var zoomValue = Number.isFinite(zoom) ? zoom : (map.getZoom() || 0);
+    var bucketKey = getClusterBucketKey(zoomValue);
+    
+    // Skip if same bucket key (no grid size change)
+    if (lastClusterBucketKey === bucketKey) return;
+    
+    // Get visible posts from PostModule (respects current filters)
+    var posts = [];
+    if (window.PostModule && PostModule.getVisiblePosts) {
+      posts = PostModule.getVisiblePosts() || [];
+    }
+    
+    var data = buildClusterFeatureCollection(posts, zoomValue);
+    source.setData(data);
+    lastClusterBucketKey = bucketKey;
+  }
+
+  /**
+   * Handle cluster click - go directly to zoom 12 (map card visibility threshold)
+   * No intermediate stops or forking - straight to where posts are visible
    */
   function handleClusterClick(e) {
-    const features = map.queryRenderedFeatures(e.point, { layers: [CLUSTER_LAYER_ID] });
-    if (!features.length) return;
-
-    const clusterId = features[0].properties.cluster_id;
-    const source = map.getSource('posts');
-
-    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-      if (err) return;
-      map.easeTo({
-        center: features[0].geometry.coordinates,
-        zoom: zoom
-      });
+    if (!e || !e.features || !e.features.length) return;
+    
+    var feature = e.features[0];
+    var coords = feature.geometry && feature.geometry.coordinates;
+    if (!Array.isArray(coords) || coords.length < 2) return;
+    
+    // Go directly to zoom 12 - no intermediate clustering
+    map.easeTo({
+      center: coords,
+      zoom: CLUSTER_ZOOM_MAX,
+      duration: 500
     });
   }
 
@@ -985,17 +1193,37 @@ const MapModule = (function() {
   function updateClusterVisibility(zoom) {
     if (!map) return;
     
-    const shouldShow = zoom < CLUSTER_ZOOM_MAX;
+    var shouldShow = zoom < CLUSTER_ZOOM_MAX;
     if (shouldShow !== clusterLayerVisible) {
       clusterLayerVisible = shouldShow;
       
       if (map.getLayer(CLUSTER_LAYER_ID)) {
         map.setLayoutProperty(CLUSTER_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
       }
-      if (map.getLayer(CLUSTER_COUNT_LAYER_ID)) {
-        map.setLayoutProperty(CLUSTER_COUNT_LAYER_ID, 'visibility', shouldShow ? 'visible' : 'none');
-      }
     }
+    
+    // Update cluster data when visible
+    if (shouldShow) {
+      updateClusterData(zoom);
+    }
+  }
+
+  /**
+   * Refresh clusters with new post data
+   * Called by PostModule when posts are loaded/updated
+   */
+  function refreshClusters() {
+    if (!map) return;
+    lastClusterBucketKey = null; // Force refresh
+    var zoom = map.getZoom() || 0;
+    updateClusterData(zoom);
+  }
+
+  /**
+   * Create cluster layers (public API for PostModule)
+   */
+  function createClusterLayers() {
+    setupClusterLayers();
   }
 
 
@@ -1509,6 +1737,7 @@ const MapModule = (function() {
     
     // Clusters
     createClusterLayers,
+    refreshClusters,
     
     // Post maps
     createPostMap,

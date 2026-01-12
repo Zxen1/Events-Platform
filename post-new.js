@@ -503,6 +503,10 @@ const PostModule = (function() {
         if (data.success && Array.isArray(data.posts)) {
           cachedPosts = data.posts;
           renderPostList(data.posts);
+          // Refresh map clusters with new post data
+          if (window.MapModule && MapModule.refreshClusters) {
+            MapModule.refreshClusters();
+          }
           return data.posts;
         } else {
           postsError = data.message || 'Unknown error';
@@ -888,8 +892,13 @@ const PostModule = (function() {
     // Apply client-side filtering
     filteredPosts = filterPosts(cachedPosts, filterState);
 
-    // Re-render
+    // Re-render post list
     renderPostList(filteredPosts);
+    
+    // Refresh map clusters to reflect filtered results
+    if (window.MapModule && MapModule.refreshClusters) {
+      MapModule.refreshClusters();
+    }
   }
 
   /**
@@ -2024,6 +2033,17 @@ const PostModule = (function() {
     init: init,
     loadPosts: loadPosts,
     refreshPosts: refreshPosts,
+    getCachedPosts: function() { return cachedPosts; },
+    getVisiblePosts: function() { return filteredPosts || cachedPosts; },
+    getVisibleMapCardCount: function() {
+      var posts = filteredPosts || cachedPosts || [];
+      var count = 0;
+      for (var i = 0; i < posts.length; i++) {
+        var mc = posts[i].map_cards;
+        count += (Array.isArray(mc) ? mc.length : 0);
+      }
+      return count;
+    },
     openPost: openPost,
     openPostById: openPostById,
     closePost: closePost,
