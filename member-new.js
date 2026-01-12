@@ -2916,13 +2916,17 @@ const MemberModule = (function() {
         if (submitBtn) submitBtn.disabled = true;
         if (adminSubmitBtn) adminSubmitBtn.disabled = true;
         
+        // Extract images from validation (collected before form clears)
+        var imageFiles = validation.imageFiles || [];
+        var imagesMeta = validation.imagesMeta || '[]';
+        
         // Immediately switch to My Posts and show loading placeholder
         resetCreatePostForm();
         try { requestTabSwitch('myposts'); } catch (e0) {}
         showMyPostsLoadingPlaceholder(validation.payload);
         
         // Submit the post
-        submitPostData(validation.payload, isAdminFree)
+        submitPostData(validation.payload, isAdminFree, imageFiles, imagesMeta)
             .then(function(result) {
                 isSubmittingPost = false;
                 updateSubmitButtonState();
@@ -3129,7 +3133,22 @@ const MemberModule = (function() {
             }
         } catch (e1) {}
         
-        return { payload: payload };
+        // Collect image files BEFORE form is cleared (form clears before submitPostData runs)
+        var imageFiles = [];
+        var imagesMeta = '[]';
+        var imagesFs = formFields ? formFields.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]') : null;
+        if (imagesFs) {
+            var fileInput = imagesFs.querySelector('input[type="file"]');
+            var metaInput = imagesFs.querySelector('input.fieldset-images-meta');
+            if (fileInput && Array.isArray(fileInput._imageFiles)) {
+                imageFiles = fileInput._imageFiles.slice();
+            }
+            if (metaInput) {
+                imagesMeta = String(metaInput.value || '[]');
+            }
+        }
+        
+        return { payload: payload, imageFiles: imageFiles, imagesMeta: imagesMeta };
     }
     
     function extractFieldValue(el, fieldType) {
@@ -3434,10 +3453,11 @@ const MemberModule = (function() {
         return null;
     }
     
-    function submitPostData(payload, isAdminFree) {
+    function submitPostData(payload, isAdminFree, imageFiles, imagesMeta) {
         return new Promise(function(resolve, reject) {
             // Submit as multipart so we can include image files and keep the whole publish flow server-side.
             // This avoids "draft" uploads and prevents unused Bunny files.
+            // Note: imageFiles and imagesMeta are collected BEFORE form clears, passed in as params.
             
             // Look up the actual subcategory_key from memberCategories
             var actualSubcategoryKey = payload.subcategory; // fallback to display name
@@ -3466,26 +3486,15 @@ const MemberModule = (function() {
             var fd = new FormData();
             fd.set('payload', JSON.stringify(postData));
 
-            // Attach image files (if any) from the Images fieldset (stored as fileInput._imageFiles).
-            console.log('[Post] formFields element:', formFields);
-            console.log('[Post] All fieldsets with data-fieldset-key:', formFields ? Array.from(formFields.querySelectorAll('[data-fieldset-key]')).map(function(fs) { return fs.dataset.fieldsetKey; }) : 'formFields is null');
-            var imagesFs = formFields ? formFields.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]') : null;
-            console.log('[Post] imagesFs found:', !!imagesFs);
-            var fileInput = imagesFs ? imagesFs.querySelector('input[type="file"]') : null;
-            console.log('[Post] fileInput found:', !!fileInput, 'has _imageFiles:', !!(fileInput && fileInput._imageFiles));
-            var metaInput = imagesFs ? imagesFs.querySelector('input.fieldset-images-meta') : null;
-            var files = [];
-            if (fileInput && Array.isArray(fileInput._imageFiles)) {
-                files = fileInput._imageFiles.slice();
+            // Attach image files (passed from validateAndCollectFormData, collected before form cleared)
+            console.log('[Post] files to upload:', imageFiles ? imageFiles.length : 0);
+            if (imageFiles && imageFiles.length > 0) {
+                imageFiles.forEach(function(file) {
+                    if (file) fd.append('images[]', file, file.name || 'image');
+                });
             }
-            console.log('[Post] files to upload:', files.length, files.map(function(f) { return f ? f.name : 'null'; }));
-            files.forEach(function(file) {
-                if (file) fd.append('images[]', file, file.name || 'image');
-            });
-            if (metaInput) {
-                fd.set('images_meta', String(metaInput.value || '[]'));
-                console.log('[Post] images_meta:', metaInput.value);
-            }
+            fd.set('images_meta', imagesMeta || '[]');
+            console.log('[Post] images_meta:', imagesMeta);
 
             fetch('/gateway.php?action=add-post', {
                 method: 'POST',
