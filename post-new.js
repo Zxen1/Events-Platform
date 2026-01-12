@@ -807,8 +807,9 @@ const PostModule = (function() {
     var venueName = mapCard.venue_name || '';
     var subcategoryKey = post.subcategory_key || mapCard.subcategory_key || '';
 
-    // Get icon URL from subcategoryMarkers or subcategoryIconPaths
-    var iconUrl = getSubcategoryIconUrl(subcategoryKey);
+    // Get icon URL from API response (subcategory_icon_url) - primary source
+    // Falls back to global subcategoryIconPaths lookup if not in response
+    var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
     // Get thumbnail URL
     var thumbnailUrl = (mapCard.media_urls && mapCard.media_urls.length) ? mapCard.media_urls[0] : '';

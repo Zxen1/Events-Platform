@@ -165,7 +165,19 @@ try {
     $total = $countResult ? (int)$countResult->fetch_assoc()['total'] : 0;
     $countStmt->close();
 
-    // Fetch posts with map card data
+    // Fetch folder_category_icons from admin_settings for subcategory icon URLs
+    $folderCategoryIcons = '';
+    $folderStmt = $mysqli->prepare("SELECT setting_value FROM admin_settings WHERE setting_key = 'folder_category_icons' LIMIT 1");
+    if ($folderStmt) {
+        $folderStmt->execute();
+        $folderResult = $folderStmt->get_result();
+        if ($folderRow = $folderResult->fetch_assoc()) {
+            $folderCategoryIcons = $folderRow['setting_value'] ?? '';
+        }
+        $folderStmt->close();
+    }
+
+    // Fetch posts with map card data and subcategory icon
     $sql = "
         SELECT 
             p.id,
@@ -178,6 +190,7 @@ try {
             p.checkout_title,
             p.expires_at,
             p.created_at,
+            sc.icon_path AS subcategory_icon_path,
             mc.id AS map_card_id,
             mc.title,
             mc.description,
@@ -203,6 +216,7 @@ try {
             mc.session_summary,
             mc.price_summary
         FROM `posts` p
+        LEFT JOIN `subcategories` sc ON sc.subcategory_key = p.subcategory_key
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
         WHERE {$whereClause}
         ORDER BY p.created_at DESC
@@ -231,12 +245,19 @@ try {
         $postId = (int)$row['id'];
         
         if (!isset($postsById[$postId])) {
+            // Build subcategory icon URL from folder + icon_path
+            $subcategoryIconUrl = '';
+            if (!empty($folderCategoryIcons) && !empty($row['subcategory_icon_path'])) {
+                $subcategoryIconUrl = $folderCategoryIcons . '/' . $row['subcategory_icon_path'];
+            }
+            
             $postsById[$postId] = [
                 'id' => $postId,
                 'post_key' => $row['post_key'],
                 'member_id' => (int)$row['member_id'],
                 'member_name' => $row['member_name'],
                 'subcategory_key' => $row['subcategory_key'],
+                'subcategory_icon_url' => $subcategoryIconUrl,
                 'loc_qty' => (int)$row['loc_qty'],
                 'visibility' => $row['visibility'],
                 'checkout_title' => $row['checkout_title'],
