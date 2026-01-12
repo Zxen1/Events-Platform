@@ -3334,7 +3334,8 @@ const FieldsetBuilder = (function(){
                             row.className = 'fieldset-sessionpricing-session-row';
                             if (idx === 0) {
                                 var dateDisplay = document.createElement('div');
-                                dateDisplay.className = 'fieldset-sessionpricing-session-field-label button-class-4';
+                                dateDisplay.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--selected button-class-4';
+                                dateDisplay.dataset.iso = dateStr;
                                 var d = new Date(dateStr + 'T00:00:00');
                                 try {
                                     var wd = d.toLocaleDateString('en-AU', { weekday: 'short' });
