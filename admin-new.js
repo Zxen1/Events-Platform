@@ -2299,8 +2299,16 @@ const AdminModule = (function() {
                 });
             }
         }
+        
+        // Set initial value in geocoder input from saved settings
+        if (startingAddress) {
+            var geocoderInput = startingGeocoderContainer.querySelector('input');
+            if (geocoderInput) {
+                geocoderInput.value = startingAddress;
+            }
+        }
 
-                    showAddressDisplay();
+        showAddressDisplay();
     }
     
     function initMapImagePicker(containerId, settingKey) {

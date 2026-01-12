@@ -159,9 +159,31 @@ const PostModule = (function() {
 
     App.on('map:boundsChanged', function(data) {
       if (!data) return;
+      var prevZoom = lastZoom;
       if (typeof data.zoom === 'number') {
         lastZoom = data.zoom;
         updatePostsButtonState();
+        
+        var threshold = getPostsMinZoom();
+        var crossedUp = prevZoom < threshold && lastZoom >= threshold;
+        
+        // Load posts when crossing zoom threshold
+        if (crossedUp && !cachedPosts && !postsLoading) {
+          loadPosts();
+        }
+        // Render markers when above threshold
+        if (lastZoom >= threshold && cachedPosts && cachedPosts.length) {
+          renderMapMarkers(cachedPosts);
+        }
+        // Clear markers when below threshold
+        if (lastZoom < threshold && window.MapModule && MapModule.clearAllMapCardMarkers) {
+          MapModule.clearAllMapCardMarkers();
+        }
+        
+        // Reapply filters when viewport changes (for map area filter)
+        if (currentFilters && currentFilters.mapArea) {
+          applyFilters(currentFilters);
+        }
       }
     });
 
@@ -907,11 +929,45 @@ const PostModule = (function() {
    * @param {Object} filters - Filter state
    * @returns {Array} Filtered posts
    */
+  /**
+   * Check if a point is within bounds
+   */
+  function pointWithinBounds(lng, lat, bounds) {
+    if (!bounds) return true;
+    var withinLat = lat >= bounds.south && lat <= bounds.north;
+    if (!withinLat) return false;
+    if (bounds.west <= bounds.east) {
+      return lng >= bounds.west && lng <= bounds.east;
+    }
+    // Handle antimeridian crossing
+    return lng >= bounds.west || lng <= bounds.east;
+  }
+
+  /**
+   * Get current map bounds
+   */
+  function getMapBounds() {
+    if (!window.MapModule || !MapModule.getBounds) return null;
+    return MapModule.getBounds();
+  }
+
   function filterPosts(posts, filters) {
     if (!filters) return posts;
 
+    // Get current map bounds for viewport filtering
+    var bounds = filters.mapArea ? getMapBounds() : null;
+
     return posts.filter(function(post) {
       var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+
+      // Map area filter (viewport bounds)
+      if (bounds && mapCard) {
+        var lng = mapCard.longitude;
+        var lat = mapCard.latitude;
+        if (!pointWithinBounds(lng, lat, bounds)) {
+          return false;
+        }
+      }
 
       // Keyword filter
       if (filters.keyword) {
@@ -947,9 +1003,6 @@ const PostModule = (function() {
           return false;
         }
       }
-
-      // Date filter would require session dates in post_children
-      // For now, skip date filtering on client side
 
       return true;
     });
