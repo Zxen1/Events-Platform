@@ -3347,8 +3347,23 @@ const MemberModule = (function() {
         return new Promise(function(resolve, reject) {
             // Submit as multipart so we can include image files and keep the whole publish flow server-side.
             // This avoids "draft" uploads and prevents unused Bunny files.
+            
+            // Look up the actual subcategory_key from memberCategories
+            var actualSubcategoryKey = payload.subcategory; // fallback to display name
+            if (memberCategories && memberCategories.length > 0) {
+                var category = memberCategories.find(function(c) {
+                    return c.name === payload.category;
+                });
+                if (category && category.subFees && category.subFees[payload.subcategory]) {
+                    var subData = category.subFees[payload.subcategory];
+                    if (subData.subcategory_key) {
+                        actualSubcategoryKey = subData.subcategory_key;
+                    }
+                }
+            }
+            
             var postData = {
-                subcategory_key: payload.subcategory,
+                subcategory_key: actualSubcategoryKey,
                 member_id: currentUser ? currentUser.id : null,
                 member_name: currentUser ? (currentUser.username || currentUser.name || '') : '',
                 member_type: currentUser && currentUser.isAdmin ? 'admin' : 'member',

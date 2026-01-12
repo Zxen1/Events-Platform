@@ -1020,6 +1020,7 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
             'checkout_surcharge' => isset($sub['checkout_surcharge']) ? (float)$sub['checkout_surcharge'] : null,
             'subcategory_type' => $sub['subcategory_type'] ?? 'Standard',
             'location_type' => isset($sub['location_type']) ? $sub['location_type'] : null,
+            'subcategory_key' => isset($sub['subcategory_key']) ? $sub['subcategory_key'] : null,
         ];
 
         // Get fieldset_ids and required flags from CSV columns
