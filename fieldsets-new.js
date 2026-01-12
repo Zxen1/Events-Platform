@@ -427,6 +427,8 @@ const FieldsetBuilder = (function(){
             initialValue: null,
             container: container
         });
+        // Store setValue on the element for external access
+        result.element._ageRatingSetValue = result.setValue;
         return result.element;
     }
     
@@ -3195,14 +3197,10 @@ const FieldsetBuilder = (function(){
                             var editorEl = g.querySelector('.fieldset-sessionpricing-pricing-editor');
                             if (editorEl) {
                                 spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot.pricing || []);
-                                // Restore age rating
-                                if (spOpenGroupSnapshot.ageRating) {
-                                    var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
-                                    if (ageMenu) {
-                                        ageMenu.dataset.value = spOpenGroupSnapshot.ageRating;
-                                        var ageBtn = ageMenu.querySelector('.component-ageratingpicker-menu-button-text');
-                                        if (ageBtn) ageBtn.textContent = spOpenGroupSnapshot.ageRating;
-                                    }
+                                // Restore age rating using component API
+                                var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
+                                if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
+                                    ageMenu._ageRatingSetValue(spOpenGroupSnapshot.ageRating || null);
                                 }
                             }
                         }
@@ -3426,10 +3424,8 @@ const FieldsetBuilder = (function(){
                     // Set age rating if copied from another location
                     if (existingAgeRating) {
                         var ageMenu = editor.querySelector('.component-ageratingpicker-menu');
-                        if (ageMenu) {
-                            ageMenu.dataset.value = existingAgeRating;
-                            var ageBtn = ageMenu.querySelector('.component-ageratingpicker-menu-button-text');
-                            if (ageBtn) ageBtn.textContent = existingAgeRating;
+                        if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
+                            ageMenu._ageRatingSetValue(existingAgeRating);
                         }
                     }
                     group.appendChild(editorWrap);
@@ -3749,12 +3745,10 @@ const FieldsetBuilder = (function(){
                     var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
                     if (editorEl) {
                         spReplaceEditorFromPricing(editorEl, pricingArr || []);
-                        // Set age rating
+                        // Set age rating using component API
                         var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
-                        if (ageMenu && ageRating) {
-                            ageMenu.dataset.value = ageRating;
-                            var ageBtn = ageMenu.querySelector('.component-ageratingpicker-menu-button-text');
-                            if (ageBtn) ageBtn.textContent = ageRating;
+                        if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
+                            ageMenu._ageRatingSetValue(ageRating || null);
                         }
                     }
                 };
