@@ -3468,17 +3468,21 @@ const MemberModule = (function() {
 
             // Attach image files (if any) from the Images fieldset (stored as fileInput._imageFiles).
             var imagesFs = formFields ? formFields.querySelector('.fieldset[data-fieldset-type="images"], .fieldset[data-fieldset-key="images"]') : null;
+            console.log('[Post] imagesFs found:', !!imagesFs);
             var fileInput = imagesFs ? imagesFs.querySelector('input[type="file"]') : null;
+            console.log('[Post] fileInput found:', !!fileInput, 'has _imageFiles:', !!(fileInput && fileInput._imageFiles));
             var metaInput = imagesFs ? imagesFs.querySelector('input.fieldset-images-meta') : null;
             var files = [];
             if (fileInput && Array.isArray(fileInput._imageFiles)) {
                 files = fileInput._imageFiles.slice();
             }
+            console.log('[Post] files to upload:', files.length, files.map(function(f) { return f ? f.name : 'null'; }));
             files.forEach(function(file) {
                 if (file) fd.append('images[]', file, file.name || 'image');
             });
             if (metaInput) {
                 fd.set('images_meta', String(metaInput.value || '[]'));
+                console.log('[Post] images_meta:', metaInput.value);
             }
 
             fetch('/gateway.php?action=add-post', {
