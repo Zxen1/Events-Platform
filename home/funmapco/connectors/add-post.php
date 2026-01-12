@@ -245,9 +245,18 @@ $transactionActive = true;
 // Determine payment status - admins can skip payment if requested, others get 'pending'
 $paymentStatus = $skipPayment ? 'paid' : 'pending';
 
+// Admin free submit: post goes live immediately
+// Regular member: post stays paused until payment received
+$visibility = $skipPayment ? 'active' : 'paused';
+
+// Moderation status: 'clean' for all new posts
+// Moderation system only deals with flagged/reported content later, not initial submission
+$moderationStatus = 'clean';
+
 // Check if posts table has payment_status column
 $postColumns = fetch_table_columns($mysqli, 'posts');
 $hasPaymentStatus = in_array('payment_status', $postColumns, true);
+$hasModerationStatus = in_array('moderation_status', $postColumns, true);
 
 // Extract checkout_title from fields (post-level, not location-specific)
 $checkoutTitle = null;
@@ -267,13 +276,17 @@ if (is_array($fieldsArr)) {
   }
 }
 
-if ($hasPaymentStatus) {
+if ($hasPaymentStatus && $hasModerationStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_title) VALUES (?, ?, ?, ?, 'paused', ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, moderation_status, payment_status, checkout_title) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  );
+} elseif ($hasPaymentStatus) {
+  $stmt = $mysqli->prepare(
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_title) VALUES (?, ?, ?, ?, ?, ?, ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_title) VALUES (?, ?, ?, ?, 'paused', ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_title) VALUES (?, ?, ?, ?, ?, ?)"
   );
 }
 
@@ -281,16 +294,24 @@ if (!$stmt) {
   abort_with_error($mysqli, 500, 'Unable to prepare post statement.', $transactionActive);
 }
 
-if ($hasPaymentStatus) {
-  if (!bind_statement_params($stmt, 'ississ', $memberId, $memberName, $subcategoryKey, $locQty, $paymentStatus, $checkoutTitle)) {
+if ($hasPaymentStatus && $hasModerationStatus) {
+  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutTitle(s)
+  if (!bind_statement_params($stmt, 'ississss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutTitle)) {
+    $stmt->close();
+    abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
+  }
+} elseif ($hasPaymentStatus) {
+  // 7 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), paymentStatus(s), checkoutTitle(s)
+  if (!bind_statement_params($stmt, 'ississs', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $paymentStatus, $checkoutTitle)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  if (!bind_statement_params($stmt, 'issis', $memberId, $memberName, $subcategoryKey, $locQty, $checkoutTitle)) {
+  // 6 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), checkoutTitle(s)
+  if (!bind_statement_params($stmt, 'ississ', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $checkoutTitle)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
-}
+  }
 }
 
 if (!$stmt->execute()) {

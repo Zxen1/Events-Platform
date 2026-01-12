@@ -2223,6 +2223,7 @@ const AdminModule = (function() {
         initMapImagePicker('adminBigMapCardPillPicker', 'big_map_card_pill');
         initMapImagePicker('adminHoverMapCardPillPicker', 'hover_map_card_pill');
         initMapImagePicker('adminMultiPostIconPicker', 'multi_post_icon');
+        initMapImagePicker('adminMarkerClusterIconPicker', 'marker_cluster_icon');
     }
     
     // Helper to update switch slider visual state
@@ -2440,7 +2441,8 @@ const AdminModule = (function() {
             { containerId: 'adminSmallMapCardPillPicker', fieldId: 'map.small_map_card_pill' },
             { containerId: 'adminBigMapCardPillPicker', fieldId: 'map.big_map_card_pill' },
             { containerId: 'adminHoverMapCardPillPicker', fieldId: 'map.hover_map_card_pill' },
-            { containerId: 'adminMultiPostIconPicker', fieldId: 'map.multi_post_icon' }
+            { containerId: 'adminMultiPostIconPicker', fieldId: 'map.multi_post_icon' },
+            { containerId: 'adminMarkerClusterIconPicker', fieldId: 'map.marker_cluster_icon' }
         ];
         
         imagePickers.forEach(function(ip) {
