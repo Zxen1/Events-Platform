@@ -4221,6 +4221,19 @@ const FieldsetBuilder = (function(){
                         if (!isTimeHHMM(ti2.value)) return false;
                     }
 
+                    // No duplicate times on the same date
+                    var timesByDate = {};
+                    for (var di = 0; di < timeInputs2.length; di++) {
+                        var tdi = timeInputs2[di];
+                        if (!tdi || !isVisibleControl(tdi)) continue;
+                        var dateKey = tdi.dataset ? String(tdi.dataset.date || '').trim() : '';
+                        var timeVal = String(tdi.value || '').trim();
+                        if (!dateKey || !timeVal) continue;
+                        if (!timesByDate[dateKey]) timesByDate[dateKey] = [];
+                        if (timesByDate[dateKey].indexOf(timeVal) !== -1) return false;
+                        timesByDate[dateKey].push(timeVal);
+                    }
+
                     // Ticket pricing groups must be complete:
                     // - Every visible time must have a non-empty group selected
                     // - Every existing group editor must have no blank fields (no partial/half-built groups)
