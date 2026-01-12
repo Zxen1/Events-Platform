@@ -1024,11 +1024,12 @@ const MapModule = (function() {
         return;
       }
       
-      // Get icon URL from admin settings
+      // Get icon filename from local adminSettings (loaded via App.getState)
       var iconFilename = '';
-      if (window.adminSettings && window.adminSettings.marker_cluster_icon) {
-        iconFilename = window.adminSettings.marker_cluster_icon;
+      if (adminSettings && adminSettings.marker_cluster_icon) {
+        iconFilename = adminSettings.marker_cluster_icon;
       }
+      // Fallback to window global (set by live site pattern)
       if (!iconFilename && window._markerClusterIcon) {
         iconFilename = window._markerClusterIcon;
       }
@@ -1039,12 +1040,14 @@ const MapModule = (function() {
         return;
       }
       
-      // Build full URL
+      // Build full URL using folder_system_images from adminSettings
       var baseUrl = '';
-      if (window.adminSettings && window.adminSettings.folder_system_images) {
-        baseUrl = window.adminSettings.folder_system_images;
+      if (adminSettings && adminSettings.folder_system_images) {
+        baseUrl = adminSettings.folder_system_images;
       }
       var iconUrl = baseUrl ? (baseUrl + '/' + iconFilename) : iconFilename;
+      
+      logDebug('[Map] Loading cluster icon:', iconUrl);
       
       // Load image
       var img = new Image();
@@ -1054,6 +1057,7 @@ const MapModule = (function() {
           var pixelRatio = img.width >= 256 ? 2 : 1;
           map.addImage(CLUSTER_ICON_ID, img, { pixelRatio: pixelRatio });
           clusterIconLoaded = true;
+          logDebug('[Map] Cluster icon loaded successfully');
         }
         resolve();
       };
@@ -1067,11 +1071,25 @@ const MapModule = (function() {
 
   /**
    * Initialize cluster system
+   * Waits for settings to be ready before loading cluster icon
    */
   function initClusters() {
     if (!map) return;
     
-    loadClusterIcon().then(function() {
+    // Ensure settings are loaded before trying to get cluster icon
+    var settingsReady = Promise.resolve();
+    if (window.App && typeof App.whenStartupSettingsReady === 'function') {
+      settingsReady = App.whenStartupSettingsReady();
+    }
+    
+    settingsReady.then(function() {
+      // Refresh adminSettings from App state now that they're ready
+      if (window.App && typeof App.getState === 'function') {
+        adminSettings = App.getState('settings') || {};
+        adminSettings.system_images = App.getState('system_images') || {};
+      }
+      return loadClusterIcon();
+    }).then(function() {
       setupClusterLayers();
     });
   }
