@@ -4,26 +4,16 @@
    
    Controls the Post panel and Recent panel.
    
-   CONTAINS:
-   - Post cards (thumbnail, title, category, location, dates, favourite)
-   - Recent cards (with "last opened" timestamps)
-   - Open post view:
-     - Sticky header
-     - Venue menu
-     - Session menu
-     - Post details (location, price, dates)
-     - Description (see more/less)
-     - Posted by section
-     - Images gallery
-   - Share button
-   - Favourite star
-   - Mascot illustration (recent panel)
-   
-   CONTAINERS:
-   - (TBD - need to name all post containers)
+   FUTURE COMPONENTS (to be extracted):
+   - VenueMenuComponent - Map + venue selection dropdown
+   - SessionMenuComponent - Calendar + session selection
+   - ImageGalleryComponent - Hero image + thumbnails + swipe
+   - ImageModalComponent - Full-screen image lightbox
    
    DEPENDENCIES:
    - index.js (backbone)
+   - CalendarComponent (for session menu)
+   - mapboxgl (for venue map)
    
    COMMUNICATES WITH:
    - map.js (clicking cards highlights markers)
@@ -546,8 +536,25 @@ const PostModule = (function() {
   }
 
   /* --------------------------------------------------------------------------
-     POST RENDERING
+     POST CARDS
+     --------------------------------------------------------------------------
+     Post card rendering for the post panel list.
+     Structure: .post-card > .post-card-image + .post-card-meta + .post-card-container-actions
      -------------------------------------------------------------------------- */
+
+  /**
+   * Append Bunny Optimizer class to image URL for size optimization.
+   * This is a progressive enhancement - if the CDN doesn't support ?class=,
+   * the parameter is simply ignored and CSS handles display sizing.
+   * @param {string} url - Image URL (may already have ?crop= parameter)
+   * @param {string} className - Bunny class name (thumbnail, minithumb, imagebox)
+   * @returns {string} URL with class parameter appended
+   */
+  function addImageClass(url, className) {
+    if (!url || !className) return url || '';
+    var separator = url.indexOf('?') === -1 ? '?' : '&';
+    return url + separator + 'class=' + className;
+  }
 
   /**
    * Get thumbnail URL for a post
@@ -566,8 +573,61 @@ const PostModule = (function() {
       return mediaUrls[0];
     }
 
-    // Fallback: return empty (CSS will show placeholder background)
     return '';
+  }
+
+  /**
+   * Format dates display for a post (matches live site formatDates)
+   * @param {Object} post - Post data from API
+   * @returns {string} Formatted date string or empty
+   */
+  function formatPostDates(post) {
+    // Get sessions from first map card
+    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    if (!mapCard) return '';
+
+    // Try sessions array
+    var sessions = mapCard.sessions;
+    if (!Array.isArray(sessions) || !sessions.length) return '';
+
+    // Sort by date
+    var sortedSessions = sessions.slice().sort(function(a, b) {
+      var dateA = a.date || a.full || '';
+      var dateB = b.date || b.full || '';
+      return dateA.localeCompare(dateB);
+    });
+
+    // Get first and last dates
+    var first = sortedSessions[0];
+    var last = sortedSessions[sortedSessions.length - 1];
+
+    var firstDate = first.date || first.full || '';
+    var lastDate = last.date || last.full || '';
+
+    if (!firstDate) return '';
+
+    // Format: "Jan 1 - Jan 15" or just "Jan 1" if same/single
+    if (firstDate === lastDate || sortedSessions.length === 1) {
+      return formatDateShort(firstDate);
+    }
+    return formatDateShort(firstDate) + ' - ' + formatDateShort(lastDate);
+  }
+
+  /**
+   * Format a single date string for display
+   * @param {string} dateStr - Date string (YYYY-MM-DD or similar)
+   * @returns {string} Formatted date like "Jan 1"
+   */
+  function formatDateShort(dateStr) {
+    if (!dateStr) return '';
+    try {
+      var d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return months[d.getMonth()] + ' ' + d.getDate();
+    } catch (e) {
+      return dateStr;
+    }
   }
 
   /**
@@ -636,6 +696,7 @@ const PostModule = (function() {
 
   /**
    * Render a single post card
+   * Structure: .post-card-image, .post-card-meta, .post-card-text-title, .post-card-container-info
    * @param {Object} post - Post data from API
    * @returns {HTMLElement} Post card element
    */
@@ -651,46 +712,46 @@ const PostModule = (function() {
     // Get display data
     var title = (mapCard && mapCard.title) || post.checkout_title || '';
     var venueName = (mapCard && mapCard.venue_name) || '';
-    var addressLine = (mapCard && mapCard.address_line) || '';
-    var location = venueName || addressLine || '';
-    var sessionSummary = (mapCard && mapCard.session_summary) || '';
-    var priceSummary = (mapCard && mapCard.price_summary) || '';
+    var city = (mapCard && mapCard.city) || '';
+    var locationDisplay = venueName || city || '';
 
     // Get subcategory info
     var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
     var subInfo = getSubcategoryInfo(subcategoryKey);
-    var iconUrl = getSubcategoryIconUrl(subcategoryKey);
+    var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Get thumbnail
-    var thumbUrl = getPostThumbnailUrl(post);
+    // Format dates (if sessions exist)
+    var datesText = formatPostDates(post);
 
-    // Build HTML
-    var thumbHtml = thumbUrl
-      ? '<img class="post-card-thumb" loading="lazy" src="' + thumbUrl + '" alt="" />'
-      : '<div class="post-card-thumb post-card-thumb--empty"></div>';
+    // Get thumbnail - use 'thumbnail' class (100x100) for post cards
+    var thumbUrl = addImageClass(getPostThumbnailUrl(post), 'thumbnail');
+
+    // Build HTML - proper class naming: .{section}-{name}-{type}-{part}
+    var thumbHtml = '<img class="post-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />';
 
     var iconHtml = iconUrl
-      ? '<span class="post-card-subicon"><img class="post-card-subicon-image" src="' + iconUrl + '" alt="" /></span>'
+      ? '<span class="post-card-icon-sub"><img src="' + iconUrl + '" alt="" /></span>'
       : '';
 
     var catLineText = subInfo.category && subInfo.subcategory
       ? subInfo.category + ' &gt; ' + subInfo.subcategory
       : subInfo.subcategory || subcategoryKey;
 
+    var isFav = isFavorite(post.id);
+
     el.innerHTML = [
       thumbHtml,
       '<div class="post-card-meta">',
-        '<div class="post-card-catline">' + iconHtml + '<span>' + catLineText + '</span></div>',
-        '<h3 class="post-card-title">' + escapeHtml(title) + '</h3>',
-        '<div class="post-card-info">',
-          location ? '<div class="post-card-info-row"><span class="post-card-badge">📍</span><span>' + escapeHtml(location) + '</span></div>' : '',
-          sessionSummary ? '<div class="post-card-info-row"><span class="post-card-badge">📅</span><span>' + escapeHtml(sessionSummary) + '</span></div>' : '',
-          priceSummary ? '<div class="post-card-info-row"><span class="post-card-badge">💰</span><span>' + escapeHtml(priceSummary) + '</span></div>' : '',
+        '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
+        '<div class="post-card-container-info">',
+          '<div class="post-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>',
+          locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
+          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
         '</div>',
       '</div>',
-      '<div class="post-card-actions">',
-        '<button class="post-card-fav" aria-pressed="false" aria-label="Toggle favourite">',
-          '<svg class="post-card-fav-icon" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+      '<div class="post-card-container-actions">',
+        '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+          '<svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
         '</button>',
       '</div>'
     ].join('');
@@ -698,12 +759,12 @@ const PostModule = (function() {
     // Click handler for opening post
     el.addEventListener('click', function(e) {
       // Don't open if clicking favorite button
-      if (e.target.closest('.post-card-fav')) return;
+      if (e.target.closest('.post-card-button-fav')) return;
       openPost(post, { originEl: el });
     });
 
     // Favorite toggle handler
-    var favBtn = el.querySelector('.post-card-fav');
+    var favBtn = el.querySelector('.post-card-button-fav');
     if (favBtn) {
       favBtn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -739,11 +800,6 @@ const PostModule = (function() {
         MapCards.removeMapCardHover(postId);
       }
       return;
-    }
-
-    // Fallback to MapModule
-    if (window.MapModule) {
-      // MapModule doesn't have hover API yet - could add later
     }
   }
 
@@ -811,8 +867,9 @@ const PostModule = (function() {
     // Falls back to global subcategoryIconPaths lookup if not in response
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Get thumbnail URL
-    var thumbnailUrl = (mapCard.media_urls && mapCard.media_urls.length) ? mapCard.media_urls[0] : '';
+    // Get thumbnail URL - use 'minithumb' class (50x50) for map card markers
+    var rawUrl = (mapCard.media_urls && mapCard.media_urls.length) ? mapCard.media_urls[0] : '';
+    var thumbnailUrl = addImageClass(rawUrl, 'minithumb');
 
     return {
       id: post.id,
@@ -1116,6 +1173,18 @@ const PostModule = (function() {
     renderMapMarkers(posts);
   }
 
+  /* --------------------------------------------------------------------------
+     OPEN POST - Post Detail View
+     --------------------------------------------------------------------------
+     When a post card is clicked, it expands to show the full post details.
+     Structure: .open-post > .post-card + .open-post-body
+     
+     Contains sub-sections that are COMPONENT PLACEHOLDERS:
+     - Venue Menu (map + venue selection)
+     - Session Menu (calendar + session selection)
+     - Image Gallery (hero + thumbnails)
+     -------------------------------------------------------------------------- */
+
   /**
    * Open a post (show detail view)
    * @param {Object} post - Post data
@@ -1168,7 +1237,7 @@ const PostModule = (function() {
    * @param {HTMLElement} container - Container element
    */
   function closeOpenPost(container) {
-    var openPost = container.querySelector('.post-open');
+    var openPost = container.querySelector('.open-post');
     if (!openPost) return;
 
     var postId = openPost.dataset.id;
@@ -1200,176 +1269,151 @@ const PostModule = (function() {
 
   /**
    * Build the post detail view
+   * Structure: .open-post > .post-card + .open-post-body
    * @param {Object} post - Post data
    * @param {HTMLElement} existingCard - Existing card element (optional)
    * @param {boolean} fromRecent - Whether opened from recent panel
    * @returns {HTMLElement} Detail view element
    */
   function buildPostDetail(post, existingCard, fromRecent) {
-    var wrap = document.createElement('article');
-    wrap.className = 'post-open';
-    wrap.dataset.id = String(post.id);
-    wrap.dataset.postKey = post.post_key || '';
+    // Get all map cards (locations)
+    var locationList = post.map_cards || [];
+    var loc0 = locationList[0] || {};
 
-    // Get first map card data
-    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-
-    // Get display data
-    var title = (mapCard && mapCard.title) || post.checkout_title || '';
-    var description = (mapCard && mapCard.description) || '';
-    var venueName = (mapCard && mapCard.venue_name) || '';
-    var addressLine = (mapCard && mapCard.address_line) || '';
-    var sessionSummary = (mapCard && mapCard.session_summary) || '';
-    var priceSummary = (mapCard && mapCard.price_summary) || '';
-    var email = (mapCard && mapCard.public_email) || '';
-    var phone = (mapCard && mapCard.public_phone) || '';
-    var websiteUrl = (mapCard && mapCard.website_url) || '';
-    var ticketsUrl = (mapCard && mapCard.tickets_url) || '';
-    var mediaUrls = (mapCard && mapCard.media_urls) || [];
+    // Get display data from first location
+    var title = loc0.title || post.checkout_title || '';
+    var description = loc0.description || '';
+    var venueName = loc0.venue_name || '';
+    var addressLine = loc0.address_line || '';
+    var mediaUrls = loc0.media_urls || [];
+    // Hero image uses 'imagebox' class (530x530)
+    var heroUrl = addImageClass(mediaUrls[0] || '', 'imagebox');
 
     // Get subcategory info
-    var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
+    var subcategoryKey = post.subcategory_key || loc0.subcategory_key || '';
     var subInfo = getSubcategoryInfo(subcategoryKey);
-    var iconUrl = getSubcategoryIconUrl(subcategoryKey);
+    var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Get thumbnail
-    var thumbUrl = mediaUrls.length ? mediaUrls[0] : '';
+    // Format dates
+    var datesText = formatPostDates(post);
+
+    // Posted by info
+    var posterName = post.member_name || 'Anonymous';
+    var postedTime = formatPostTimestamp(post.created_at);
+    var postedMeta = postedTime ? 'Posted by ' + posterName + ' · ' + postedTime : 'Posted by ' + posterName;
+
+    // Default session info display
+    var basePrice = loc0.price_summary || '';
+    var defaultInfo = datesText
+      ? '💲 ' + basePrice + ' | 📅 ' + datesText
+      : '💲 ' + basePrice;
 
     // Check favorite status
     var isFav = isFavorite(post.id);
 
-    // Build header (sticky card)
-    var header = document.createElement('header');
-    header.className = 'post-open-header';
+    // Create wrapper - proper class naming: .open-post
+    var wrap = document.createElement('div');
+    wrap.className = 'open-post';
+    wrap.dataset.id = String(post.id);
+    wrap.dataset.postKey = post.post_key || '';
 
-    var thumbHtml = thumbUrl
-      ? '<img class="post-card-thumb" src="' + thumbUrl + '" alt="" />'
-      : '<div class="post-card-thumb post-card-thumb--empty"></div>';
+    // Use existing card or create new one
+    var cardEl = existingCard;
+    var isValidCard = cardEl && (cardEl.classList.contains('post-card') || cardEl.classList.contains('recent-card'));
+    if (!isValidCard) {
+      cardEl = renderPostCard(post);
+    }
 
-    var iconHtml = iconUrl
-      ? '<span class="post-card-subicon"><img class="post-card-subicon-image" src="' + iconUrl + '" alt="" /></span>'
-      : '';
+    // Remove hover highlight - CSS handles the open post background
+    if (cardEl) {
+      cardEl.classList.remove('post-card--map-highlight');
+    }
 
-    var catLineText = subInfo.category && subInfo.subcategory
-      ? subInfo.category + ' &gt; ' + subInfo.subcategory
-      : subInfo.subcategory || subcategoryKey;
+    // Add share button if not present
+    if (cardEl && !cardEl.querySelector('.open-post-button-share')) {
+      var cardActions = cardEl.querySelector('.post-card-container-actions, .recent-card-container-actions');
+      if (cardActions) {
+        var shareBtn = document.createElement('button');
+        shareBtn.className = 'open-post-button-share';
+        shareBtn.setAttribute('aria-label', 'Share post');
+        shareBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
+        cardActions.appendChild(shareBtn);
+      }
+    }
 
-    header.innerHTML = [
-      thumbHtml,
-      '<div class="post-card-meta">',
-        '<div class="post-card-catline">' + iconHtml + '<span>' + catLineText + '</span></div>',
-        '<h3 class="post-card-title">' + escapeHtml(title) + '</h3>',
+    // Build venue dropdown options
+    var venueOptionsHtml = locationList.map(function(loc, i) {
+      return '<button data-index="' + i + '"><span class="open-post-text-venuename">' + escapeHtml(loc.venue_name || '') + '</span><span class="open-post-text-address">' + escapeHtml(loc.address_line || '') + '</span></button>';
+    }).join('');
+
+    // Create post body - proper class naming
+    var postBody = document.createElement('div');
+    postBody.className = 'open-post-body';
+    postBody.innerHTML = [
+      '<div class="open-post-container-nav">',
+        '<button class="open-post-button-venue" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">',
+          '<img class="open-post-image-navpreview" src="assets/Map Screenshot.png" alt="Map view">',
+          '<span class="open-post-text-venuename">' + escapeHtml(venueName) + '</span>',
+          '<span class="open-post-text-address">' + escapeHtml(addressLine) + '</span>',
+          locationList.length > 1 ? '<span class="open-post-icon-arrow" aria-hidden="true"></span>' : '',
+        '</button>',
+        '<button class="open-post-button-session" type="button" aria-label="View Calendar" aria-haspopup="true" aria-expanded="false" data-nav="calendar">',
+          '<img class="open-post-image-navpreview" src="assets/Calendar Screenshot.png" alt="Calendar view">',
+        '</button>',
       '</div>',
-      '<div class="post-open-actions">',
-        '<button class="post-card-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-          '<svg class="post-card-fav-icon' + (isFav ? ' post-card-fav-icon--active' : '') + '" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
-        '</button>',
-        '<button class="post-card-share" aria-label="Share post">',
-          '<svg class="post-card-share-icon" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>',
-        '</button>',
+      '<div id="venue-' + post.id + '" class="open-post-dropdown-venue">',
+        '<div class="open-post-menu-venue" hidden>',
+          '<div class="open-post-container-map"><div id="map-' + post.id + '" class="open-post-map"></div></div>',
+          '<div class="open-post-container-venueopts">' + venueOptionsHtml + '</div>',
+        '</div>',
+      '</div>',
+      '<div id="sess-' + post.id + '" class="open-post-dropdown-session">',
+        '<div class="open-post-menu-session" hidden>',
+          '<div class="open-post-container-calendar"><div class="open-post-scroll-calendar"><div id="cal-' + post.id + '" class="open-post-calendar"></div></div></div>',
+          '<div class="open-post-container-sessionopts"></div>',
+        '</div>',
+      '</div>',
+      '<div class="open-post-container-details">',
+        '<div class="open-post-container-venueselect"></div>',
+        '<div class="open-post-container-sessionselect"></div>',
+        '<div class="open-post-container-info">',
+          '<div id="venue-info-' + post.id + '" class="open-post-text-venueinfo"></div>',
+          '<div id="session-info-' + post.id + '" class="open-post-text-sessioninfo"><div>' + defaultInfo + '</div></div>',
+        '</div>',
+        '<div class="open-post-container-desc">',
+          '<div class="open-post-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '</div>',
+          '<div class="open-post-row-member"><span>' + escapeHtml(postedMeta) + '</span></div>',
+        '</div>',
+      '</div>',
+      '<div class="open-post-container-images">',
+        '<div class="open-post-container-hero">',
+          '<div class="open-post-track-hero">',
+            '<img class="open-post-image-hero open-post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
+          '</div>',
+        '</div>',
+        '<div class="open-post-container-thumbs"></div>',
       '</div>'
     ].join('');
 
-    // Build body
-    var body = document.createElement('div');
-    body.className = 'post-open-body';
-
-    // Images section
-    var imagesHtml = '';
-    if (mediaUrls.length > 0) {
-      var heroImg = '<div class="post-open-image-box"><div class="post-open-image-track">';
-      heroImg += '<img class="post-open-image" src="' + mediaUrls[0] + '" alt="" loading="eager" />';
-      heroImg += '</div></div>';
-
-      var thumbs = '';
-      if (mediaUrls.length > 1) {
-        thumbs = '<div class="post-open-thumbnails">';
-        for (var i = 0; i < mediaUrls.length; i++) {
-          thumbs += '<img class="post-open-thumbnail' + (i === 0 ? ' post-open-thumbnail--active' : '') + '" src="' + mediaUrls[i] + '" data-index="' + i + '" alt="" />';
-        }
-        thumbs += '</div>';
+    // Build thumbnails - use 'minithumb' class (50x50) for small previews
+    if (mediaUrls.length > 1) {
+      var thumbRow = postBody.querySelector('.open-post-container-thumbs');
+      if (thumbRow) {
+        mediaUrls.forEach(function(url, i) {
+          var img = document.createElement('img');
+          img.className = 'open-post-image-thumb' + (i === 0 ? ' open-post-image-thumb--active' : '');
+          img.src = addImageClass(url, 'minithumb');
+          img.alt = '';
+          img.dataset.index = String(i);
+          img.dataset.fullUrl = url; // Store original URL for hero switching
+          thumbRow.appendChild(img);
+        });
       }
-
-      imagesHtml = '<div class="post-open-images">' + heroImg + thumbs + '</div>';
     }
 
-    // Details section
-    var detailsHtml = '<div class="post-open-details">';
-
-    // Venue/location
-    if (venueName || addressLine) {
-      detailsHtml += '<div class="post-open-detail-row">';
-      detailsHtml += '<span class="post-card-badge">📍</span>';
-      detailsHtml += '<div class="post-open-detail-content">';
-      if (venueName) detailsHtml += '<strong>' + escapeHtml(venueName) + '</strong>';
-      if (addressLine) detailsHtml += '<div>' + escapeHtml(addressLine) + '</div>';
-      detailsHtml += '</div></div>';
-    }
-
-    // Dates/sessions
-    if (sessionSummary) {
-      detailsHtml += '<div class="post-open-detail-row">';
-      detailsHtml += '<span class="post-card-badge">📅</span>';
-      detailsHtml += '<div class="post-open-detail-content">' + escapeHtml(sessionSummary) + '</div>';
-      detailsHtml += '</div>';
-    }
-
-    // Price
-    if (priceSummary) {
-      detailsHtml += '<div class="post-open-detail-row">';
-      detailsHtml += '<span class="post-card-badge">💰</span>';
-      detailsHtml += '<div class="post-open-detail-content">' + escapeHtml(priceSummary) + '</div>';
-      detailsHtml += '</div>';
-    }
-
-    // Contact info
-    if (phone) {
-      detailsHtml += '<div class="post-open-detail-row">';
-      detailsHtml += '<span class="post-card-badge">📞</span>';
-      detailsHtml += '<div class="post-open-detail-content"><a href="tel:' + escapeHtml(phone) + '">' + escapeHtml(phone) + '</a></div>';
-      detailsHtml += '</div>';
-    }
-    if (email) {
-      detailsHtml += '<div class="post-open-detail-row">';
-      detailsHtml += '<span class="post-card-badge">✉️</span>';
-      detailsHtml += '<div class="post-open-detail-content"><a href="mailto:' + escapeHtml(email) + '">' + escapeHtml(email) + '</a></div>';
-      detailsHtml += '</div>';
-    }
-
-    // Links
-    if (websiteUrl) {
-      detailsHtml += '<div class="post-open-detail-row">';
-      detailsHtml += '<span class="post-card-badge">🌐</span>';
-      detailsHtml += '<div class="post-open-detail-content"><a href="' + escapeHtml(websiteUrl) + '" target="_blank" rel="noopener">Website</a></div>';
-      detailsHtml += '</div>';
-    }
-    if (ticketsUrl) {
-      detailsHtml += '<div class="post-open-detail-row">';
-      detailsHtml += '<span class="post-card-badge">🎟️</span>';
-      detailsHtml += '<div class="post-open-detail-content"><a href="' + escapeHtml(ticketsUrl) + '" target="_blank" rel="noopener">Get Tickets</a></div>';
-      detailsHtml += '</div>';
-    }
-
-    detailsHtml += '</div>';
-
-    // Description
-    var descHtml = '';
-    if (description) {
-      descHtml = '<div class="post-open-description">';
-      descHtml += '<div class="post-description-wrap"><div class="post-description">' + escapeHtml(description) + '</div></div>';
-      descHtml += '</div>';
-    }
-
-    // Posted by
-    var memberHtml = '<div class="post-member-avatar post-member-avatar--visible">';
-    memberHtml += '<span class="post-member-avatar-name">Posted by ' + escapeHtml(post.member_name || 'Anonymous') + '</span>';
-    memberHtml += '</div>';
-
-    body.innerHTML = imagesHtml + '<div class="post-open-body-main">' + detailsHtml + descHtml + memberHtml + '</div>';
-
-    // Assemble
-    wrap.appendChild(header);
-    wrap.appendChild(body);
+    // Assemble structure
+    wrap.appendChild(cardEl);
+    wrap.appendChild(postBody);
 
     // Event handlers
     setupPostDetailEvents(wrap, post);
@@ -1378,32 +1422,52 @@ const PostModule = (function() {
   }
 
   /**
+   * Format post creation timestamp
+   * @param {string} timestamp - ISO timestamp
+   * @returns {string} Formatted time like "2 hours ago"
+   */
+  function formatPostTimestamp(timestamp) {
+    if (!timestamp) return '';
+    try {
+      var date = new Date(timestamp);
+      if (isNaN(date.getTime())) return '';
+      var diff = Date.now() - date.getTime();
+      var mins = Math.floor(diff / 60000);
+      if (mins < 60) return mins + ' minute' + (mins === 1 ? '' : 's') + ' ago';
+      var hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs + ' hour' + (hrs === 1 ? '' : 's') + ' ago';
+      var days = Math.floor(hrs / 24);
+      if (days < 30) return days + ' day' + (days === 1 ? '' : 's') + ' ago';
+      var months = Math.floor(days / 30);
+      return months + ' month' + (months === 1 ? '' : 's') + ' ago';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  /**
    * Set up event handlers for post detail view
    * @param {HTMLElement} wrap - Detail view element
    * @param {Object} post - Post data
    */
   function setupPostDetailEvents(wrap, post) {
-    // Header click to close
-    var header = wrap.querySelector('.post-open-header');
-    if (header) {
-      header.addEventListener('click', function(e) {
-        // Don't close if clicking buttons
-        if (e.target.closest('.post-card-fav') || e.target.closest('.post-card-share')) return;
-        closePost(post.id);
-      });
-    }
+    // Get card element (first child)
+    var cardEl = wrap.querySelector('.post-card, .recent-card');
 
-    // Favorite button
-    var favBtn = wrap.querySelector('.post-card-fav');
+    // Card click does not close post (removed per user request)
+
+    // Favorite button (check both card types)
+    var favBtn = wrap.querySelector('.post-card-button-fav, .recent-card-button-fav');
     if (favBtn) {
       favBtn.addEventListener('click', function(e) {
         e.stopPropagation();
+        e.preventDefault();
         toggleFavorite(post, favBtn);
       });
     }
 
     // Share button
-    var shareBtn = wrap.querySelector('.post-card-share');
+    var shareBtn = wrap.querySelector('.open-post-button-share');
     if (shareBtn) {
       shareBtn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1411,22 +1475,212 @@ const PostModule = (function() {
       });
     }
 
-    // Thumbnail clicks
-    var thumbnails = wrap.querySelectorAll('.post-open-thumbnail');
-    var heroImg = wrap.querySelector('.post-open-image');
+    /* ........................................................................
+       IMAGE GALLERY [COMPONENT PLACEHOLDER: ImageGalleryComponent]
+       Hero image + thumbnail row with click-to-swap
+       Future: Will become ImageGalleryComponent with swipe, zoom, lightbox
+       ........................................................................ */
+
+    var thumbnails = wrap.querySelectorAll('.open-post-container-thumbs img');
+    var heroImg = wrap.querySelector('.open-post-image-hero');
     thumbnails.forEach(function(thumb) {
       thumb.addEventListener('click', function() {
-        var index = parseInt(thumb.dataset.index, 10);
-        var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-        var mediaUrls = (mapCard && mapCard.media_urls) || [];
-        if (mediaUrls[index] && heroImg) {
-          heroImg.src = mediaUrls[index];
+        // Use stored full URL from data attribute, apply imagebox class for hero display
+        var fullUrl = thumb.dataset.fullUrl || '';
+        if (fullUrl && heroImg) {
+          heroImg.src = addImageClass(fullUrl, 'imagebox');
           // Update active state
-          thumbnails.forEach(function(t) { t.classList.remove('post-open-thumbnail--active'); });
-          thumb.classList.add('post-open-thumbnail--active');
+          thumbnails.forEach(function(t) { t.classList.remove('open-post-image-thumb--active'); });
+          thumb.classList.add('open-post-image-thumb--active');
         }
       });
     });
+
+    /* ........................................................................
+       VENUE MENU [COMPONENT PLACEHOLDER: VenueMenuComponent]
+       Map display + venue selection dropdown
+       Future: Will become VenueMenuComponent with full map interaction
+       ........................................................................ */
+    var venueBtn = wrap.querySelector('.open-post-button-venue');
+    var venueDropdown = wrap.querySelector('.open-post-dropdown-venue .open-post-menu-venue');
+    var venueMapContainer = wrap.querySelector('.open-post-map');
+    var venueMapInitialized = false;
+    
+    if (venueBtn && venueDropdown) {
+      venueBtn.addEventListener('click', function() {
+        var isExpanded = venueBtn.getAttribute('aria-expanded') === 'true';
+        venueBtn.setAttribute('aria-expanded', !isExpanded);
+        venueDropdown.hidden = isExpanded;
+        
+        // Initialize venue map on first open
+        if (!isExpanded && !venueMapInitialized && venueMapContainer && window.mapboxgl) {
+          var loc = post.map_cards && post.map_cards[0];
+          if (loc && loc.longitude && loc.latitude) {
+            var venueMap = new mapboxgl.Map({
+              container: venueMapContainer,
+              style: 'mapbox://styles/mapbox/streets-v12',
+              center: [loc.longitude, loc.latitude],
+              zoom: 15,
+              interactive: true
+            });
+            
+            // Add marker for venue
+            new mapboxgl.Marker()
+              .setLngLat([loc.longitude, loc.latitude])
+              .addTo(venueMap);
+            
+            venueMapInitialized = true;
+          }
+        }
+      });
+    }
+
+    /* ........................................................................
+       SESSION MENU [COMPONENT PLACEHOLDER: SessionMenuComponent]
+       CalendarComponent + session selection list
+       Future: Will become SessionMenuComponent with date highlighting
+       ........................................................................ */
+
+    var sessionBtn = wrap.querySelector('.open-post-button-session');
+    var sessionDropdown = wrap.querySelector('.open-post-dropdown-session .open-post-menu-session');
+    var calendarContainer = wrap.querySelector('.open-post-calendar');
+    var calendarInitialized = false;
+    
+    if (sessionBtn && sessionDropdown) {
+      sessionBtn.addEventListener('click', function() {
+        var isExpanded = sessionBtn.getAttribute('aria-expanded') === 'true';
+        sessionBtn.setAttribute('aria-expanded', !isExpanded);
+        sessionDropdown.hidden = isExpanded;
+        
+        // Initialize CalendarComponent and session options on first open
+        if (!isExpanded && !calendarInitialized && calendarContainer && window.CalendarComponent) {
+          // Gather session dates from all map cards
+          var sessionDates = [];
+          if (post.map_cards) {
+            post.map_cards.forEach(function(mc) {
+              if (mc.sessions && Array.isArray(mc.sessions)) {
+                mc.sessions.forEach(function(s) {
+                  if (s.date) sessionDates.push(s.date);
+                });
+              }
+            });
+          }
+          
+          CalendarComponent.create(calendarContainer, {
+            monthsPast: 0,
+            monthsFuture: 12,
+            allowPast: false,
+            selectionMode: 'single',
+            onSelect: function(date) {
+              // Update session info display when date selected
+              var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
+              if (sessionInfo && date) {
+                sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(date) + '</div>';
+              }
+              // Close the session dropdown after selection
+              sessionBtn.setAttribute('aria-expanded', 'false');
+              sessionDropdown.hidden = true;
+            }
+          });
+          
+          // Build session options list
+          var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
+          if (sessionOptsContainer && sessionDates.length > 0) {
+            var uniqueDates = sessionDates.filter(function(d, i, arr) { return arr.indexOf(d) === i; }).sort();
+            uniqueDates.forEach(function(dateStr) {
+              var btn = document.createElement('button');
+              btn.className = 'open-post-button-sessionopt';
+              btn.textContent = formatDateShort(dateStr);
+              btn.addEventListener('click', function() {
+                var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
+                if (sessionInfo) {
+                  sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(dateStr) + '</div>';
+                }
+                sessionBtn.setAttribute('aria-expanded', 'false');
+                sessionDropdown.hidden = true;
+              });
+              sessionOptsContainer.appendChild(btn);
+            });
+          }
+          
+          calendarInitialized = true;
+        }
+      });
+    }
+
+    // Venue option clicks
+    var venueOptions = wrap.querySelectorAll('.open-post-container-venueopts button');
+    venueOptions.forEach(function(optBtn) {
+      optBtn.addEventListener('click', function() {
+        var index = parseInt(optBtn.dataset.index, 10);
+        var loc = post.map_cards && post.map_cards[index];
+        if (loc) {
+          // Update venue display
+          var venueNameEl = venueBtn.querySelector('.open-post-text-venuename');
+          var addressEl = venueBtn.querySelector('.open-post-text-address');
+          if (venueNameEl) venueNameEl.textContent = loc.venue_name || '';
+          if (addressEl) addressEl.textContent = loc.address_line || '';
+          // Close dropdown
+          venueBtn.setAttribute('aria-expanded', 'false');
+          venueDropdown.hidden = true;
+        }
+      });
+    });
+
+    /* ........................................................................
+       DESCRIPTION EXPAND
+       Click/keyboard to toggle post detail expansion
+       ........................................................................ */
+
+    var descEl = wrap.querySelector('.open-post-text-desc');
+    if (descEl) {
+      descEl.addEventListener('click', function(e) {
+        e.preventDefault();
+        var isExpanded = wrap.classList.contains('open-post--desc-expanded');
+        wrap.classList.toggle('open-post--desc-expanded', !isExpanded);
+        descEl.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
+      });
+      
+      // Also handle keyboard for accessibility
+      descEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          var isExpanded = wrap.classList.contains('open-post--desc-expanded');
+          wrap.classList.toggle('open-post--desc-expanded', !isExpanded);
+          descEl.setAttribute('aria-expanded', !isExpanded ? 'true' : 'false');
+        }
+      });
+    }
+
+    /* ........................................................................
+       PROGRESSIVE IMAGE LOADING
+       Swap low-quality placeholder with full image after load
+       ........................................................................ */
+
+    (function() {
+      var img = wrap.querySelector('.open-post-image-hero');
+      if (img) {
+        var full = img.getAttribute('data-full');
+        if (full) {
+          var hi = new Image();
+          hi.referrerPolicy = 'no-referrer';
+          hi.fetchPriority = 'high';
+          hi.onload = function() {
+            var swap = function() {
+              img.src = full;
+              img.classList.remove('open-post-image-hero--loading');
+              img.classList.add('open-post-image-hero--ready');
+            };
+            if (hi.decode) {
+              hi.decode().then(swap).catch(swap);
+            } else {
+              swap();
+            }
+          };
+          hi.src = full;
+        }
+      }
+    })();
   }
 
   /**
@@ -1434,7 +1688,7 @@ const PostModule = (function() {
    * @param {string|number} postId - Post ID
    */
   function closePost(postId) {
-    var openPost = document.querySelector('.post-open[data-id="' + postId + '"]');
+    var openPost = document.querySelector('.open-post[data-id="' + postId + '"]');
     if (!openPost) return;
 
     var container = openPost.parentElement;
@@ -1464,6 +1718,10 @@ const PostModule = (function() {
     }
   }
 
+  /* --------------------------------------------------------------------------
+     SHARE
+     -------------------------------------------------------------------------- */
+
   /**
    * Share a post
    * @param {Object} post - Post data
@@ -1473,13 +1731,13 @@ const PostModule = (function() {
     var title = (mapCard && mapCard.title) || post.checkout_title || '';
     var url = window.location.origin + '/post/' + (post.post_key || post.id);
 
-    // Use Web Share API if available
+    // Use Web Share API if available, otherwise copy to clipboard
     if (navigator.share) {
       navigator.share({
         title: title,
         url: url
       }).catch(function() {
-        // Fallback to clipboard
+        // Share cancelled or failed - copy instead
         copyToClipboard(url);
       });
     } else {
@@ -1495,23 +1753,17 @@ const PostModule = (function() {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function() {
         showToast('Link copied to clipboard');
-      }).catch(function() {
-        // Silent fail
       });
     } else {
-      // Fallback for older browsers
+      // Legacy browser method (pre-Clipboard API)
       var textarea = document.createElement('textarea');
       textarea.value = text;
       textarea.style.position = 'fixed';
       textarea.style.opacity = '0';
       document.body.appendChild(textarea);
       textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast('Link copied to clipboard');
-      } catch (e) {
-        // Silent fail
-      }
+      document.execCommand('copy');
+      showToast('Link copied to clipboard');
       document.body.removeChild(textarea);
     }
   }
@@ -1524,13 +1776,18 @@ const PostModule = (function() {
     if (window.ToastComponent && typeof ToastComponent.show === 'function') {
       ToastComponent.show(message);
     } else {
-      // Fallback: use console
+      // ToastComponent not loaded - log for visibility
       console.log('[Post] ' + message);
     }
   }
 
+  /* --------------------------------------------------------------------------
+     FAVORITES
+     -------------------------------------------------------------------------- */
+
   /**
    * Toggle favorite status
+   * Uses aria-pressed and CSS attribute selectors for styling
    * @param {Object} post - Post data
    * @param {HTMLElement} btn - Favorite button element
    */
@@ -1540,27 +1797,10 @@ const PostModule = (function() {
 
     btn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
 
-    var icon = btn.querySelector('.post-card-fav-icon');
-    if (icon) {
-      if (newFav) {
-        icon.classList.add('post-card-fav-icon--active');
-      } else {
-        icon.classList.remove('post-card-fav-icon--active');
-      }
-    }
-
-    // Update all instances of this post's fav button
-    document.querySelectorAll('[data-id="' + post.id + '"] .post-card-fav').forEach(function(otherBtn) {
+    // Update all instances of this post's fav button (both post-card and recent-card)
+    document.querySelectorAll('[data-id="' + post.id + '"] .post-card-button-fav, [data-id="' + post.id + '"] .recent-card-button-fav').forEach(function(otherBtn) {
       if (otherBtn === btn) return;
       otherBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
-      var otherIcon = otherBtn.querySelector('.post-card-fav-icon');
-      if (otherIcon) {
-        if (newFav) {
-          otherIcon.classList.add('post-card-fav-icon--active');
-        } else {
-          otherIcon.classList.remove('post-card-fav-icon--active');
-        }
-      }
     });
 
     // Save to localStorage
@@ -1794,6 +2034,7 @@ const PostModule = (function() {
 
   /**
    * Render a recent card
+   * Structure: .recent-card-image, .recent-card-meta, .recent-card-text-title, .recent-card-container-info
    * @param {Object} entry - Recent history entry { id, post_key, title, timestamp }
    * @returns {HTMLElement|null} Recent card element
    */
@@ -1818,39 +2059,52 @@ const PostModule = (function() {
     // Get data from post or entry
     var title = entry.title || (post && post.checkout_title) || '';
     var mapCard = post && post.map_cards && post.map_cards.length ? post.map_cards[0] : null;
-    var thumbUrl = mapCard && mapCard.media_urls && mapCard.media_urls.length ? mapCard.media_urls[0] : '';
-    var venueName = mapCard ? mapCard.venue_name || '' : '';
+    // Use 'thumbnail' class (100x100) for recent cards
+    var thumbUrl = addImageClass(mapCard && mapCard.media_urls && mapCard.media_urls.length ? mapCard.media_urls[0] : '', 'thumbnail');
+    var city = mapCard ? (mapCard.city || mapCard.venue_name || '') : '';
+
+    // Get subcategory info
+    var subcategoryKey = post ? (post.subcategory_key || '') : '';
+    var subInfo = getSubcategoryInfo(subcategoryKey);
+    var iconUrl = post ? (post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey)) : '';
 
     // Format last opened time
     var lastOpenedText = formatLastOpened(entry.timestamp);
 
-    // Build card HTML
-    var thumbHtml = thumbUrl
-      ? '<img class="post-card-thumb" loading="lazy" src="' + thumbUrl + '" alt="" />'
-      : '<div class="post-card-thumb post-card-thumb--empty"></div>';
+    // Build card HTML - proper class naming: .{section}-{name}-{type}-{part}
+    var thumbHtml = '<img class="recent-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />';
+
+    var iconHtml = iconUrl
+      ? '<span class="recent-card-icon-sub"><img src="' + iconUrl + '" alt="" /></span>'
+      : '';
+
+    var catLineText = subInfo.category && subInfo.subcategory
+      ? subInfo.category + ' &gt; ' + subInfo.subcategory
+      : subInfo.subcategory || subcategoryKey;
 
     // Check favorite status
     var isFav = isFavorite(entry.id);
 
     el.innerHTML = [
       thumbHtml,
-      '<div class="post-card-meta">',
-        '<h3 class="post-card-title">' + escapeHtml(title) + '</h3>',
-        '<div class="post-card-info">',
-          venueName ? '<div class="post-card-info-row"><span class="post-card-badge">📍</span><span>' + escapeHtml(venueName) + '</span></div>' : '',
-          lastOpenedText ? '<p class="post-last-opened-label">' + escapeHtml(lastOpenedText) + '</p>' : '',
+      '<div class="recent-card-meta">',
+        '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
+        '<div class="recent-card-container-info">',
+          catLineText ? '<div class="recent-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>' : '',
+          city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
+          lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
         '</div>',
       '</div>',
-      '<div class="post-card-actions">',
-        '<button class="post-card-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-          '<svg class="post-card-fav-icon' + (isFav ? ' post-card-fav-icon--active' : '') + '" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+      '<div class="recent-card-container-actions">',
+        '<button class="recent-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+          '<svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
         '</button>',
       '</div>'
     ].join('');
 
     // Click handler
     el.addEventListener('click', function(e) {
-      if (e.target.closest('.post-card-fav')) return;
+      if (e.target.closest('.recent-card-button-fav')) return;
 
       // If we have full post data, open it
       if (post) {
@@ -1866,7 +2120,7 @@ const PostModule = (function() {
     });
 
     // Favorite toggle
-    var favBtn = el.querySelector('.post-card-fav');
+    var favBtn = el.querySelector('.recent-card-button-fav');
     if (favBtn) {
       favBtn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1904,6 +2158,7 @@ const PostModule = (function() {
 
   /**
    * Toggle favorite by ID (when full post data not available)
+   * Uses aria-pressed and CSS attribute selectors for styling
    * @param {number|string} postId - Post ID
    * @param {HTMLElement} btn - Favorite button element
    */
@@ -1913,30 +2168,13 @@ const PostModule = (function() {
 
     btn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
 
-    var icon = btn.querySelector('.post-card-fav-icon');
-    if (icon) {
-      if (newFav) {
-        icon.classList.add('post-card-fav-icon--active');
-      } else {
-        icon.classList.remove('post-card-fav-icon--active');
-      }
-    }
-
     // Save to localStorage
     saveFavorite(postId, newFav);
 
-    // Update other instances
-    document.querySelectorAll('[data-id="' + postId + '"] .post-card-fav').forEach(function(otherBtn) {
+    // Update other instances (both post-card and recent-card)
+    document.querySelectorAll('[data-id="' + postId + '"] .post-card-button-fav, [data-id="' + postId + '"] .recent-card-button-fav').forEach(function(otherBtn) {
       if (otherBtn === btn) return;
       otherBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
-      var otherIcon = otherBtn.querySelector('.post-card-fav-icon');
-      if (otherIcon) {
-        if (newFav) {
-          otherIcon.classList.add('post-card-fav-icon--active');
-        } else {
-          otherIcon.classList.remove('post-card-fav-icon--active');
-        }
-      }
     });
   }
 

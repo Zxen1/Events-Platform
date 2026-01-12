@@ -1,7 +1,15 @@
 /* ============================================================================
-   POST / RECENT PANELS
-   Post cards, recent cards, open post view
-   Calendar component has its own CSS (calendar-test.html)
+   POST / RECENT PANELS - CSS
+   ============================================================================
+   
+   Post cards, recent cards, open post view.
+   
+   FUTURE COMPONENTS (will have separate CSS):
+   - ImageGalleryComponent - Hero + thumbnails + swipe + zoom
+   - VenueMenuComponent - Map + venue list dropdown
+   - SessionMenuComponent - Calendar + session list dropdown
+   - ImageModalComponent - Full-screen lightbox
+   
    ============================================================================ */
 
 /* ============================================================================
@@ -201,122 +209,134 @@
 }
 
 /* ============================================================================
-   POST CARD
+   CARDS - Base styling for .post-card, .recent-card
+   Class naming: .{section}-{name}-{type}-{part}--{state}
    ============================================================================ */
 
+.recent-card,
 .post-card {
   display: grid;
   grid-template-columns: 100px 1fr 36px;
   gap: 12px;
-  align-items: stretch;
+  align-items: flex-start;
   background-color: transparent;
   border: none;
-  border-radius: 0;
-  padding: 0;
-  margin: 0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  width: 100%;
-  max-width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-sizing: border-box;
 }
 
-.post-card:last-child {
-  border-bottom: none;
+.post-card *,
+.recent-card * {
+  transition: none;
 }
 
-.post-card:hover {
-  background: var(--blue-500);
-}
-
-.post-card--map-highlight {
-  background-color: var(--blue-500);
-}
-
-/* ============================================================================
-   RECENT CARD
-   ============================================================================ */
-
-.recent-card {
-  display: grid;
-  grid-template-columns: 100px 1fr 36px;
-  gap: 12px;
-  align-items: stretch;
-  background-color: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  width: 100%;
-  max-width: 100%;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-sizing: border-box;
-}
-
-.recent-card:last-child {
-  border-bottom: none;
-}
-
+.post-card:hover,
 .recent-card:hover {
-  background: var(--blue-500);
+  background: #2e3a72;
 }
 
-.recent-card--selected {
+.post-card {
+  border: none;
+  border-radius: 8px;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.post-card,
+.post-card *,
+.recent-card,
+.recent-card * {
+  cursor: pointer;
+}
+
+/* Card in post-panel */
+.post-panel-content .post-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+.post-panel-content .post-card,
+.post-panel-content .open-post {
+  background-color: transparent;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.post-panel-content .post-card.post-card--map-highlight {
+  background-color: #2e3a72;
+}
+
+.post-panel-content .post-card:last-child,
+.post-panel-content .open-post:last-child {
+  border-bottom: none;
+}
+
+.post-panel-content .post-card-image {
+  border-radius: 8px;
+}
+
+.post-panel-content button {
+  background: var(--btn);
+  border-color: var(--btn);
+  color: var(--ink);
+}
+
+/* Card in recent-panel */
+.recent-panel-content .recent-card {
+  width: 100%;
+  max-width: 100%;
+}
+
+.recent-panel-content .recent-card {
+  margin: 0;
+  border-radius: 0;
+  background-color: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.recent-panel-content .recent-card:last-child {
+  border-bottom: none;
+}
+
+.recent-card[aria-selected="true"] {
   position: relative;
   z-index: 0;
   background: none;
 }
 
-.recent-card--selected::before {
+.recent-card[aria-selected="true"]::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-color: var(--blue-500);
-  border-radius: 5px;
+  background-color: #2e3a72;
+  border-radius: 8px;
   z-index: -1;
 }
 
 /* ============================================================================
-   CARD COMPONENTS
+   CARD COMPONENTS - image, meta, text-title, container-info, badge, button-fav
    ============================================================================ */
 
-/* Thumbnail */
-.post-card-thumb {
-  flex: 0 0 100px;
+/* Thumbnail image */
+.post-card-image,
+.recent-card-image {
   width: 100px;
-  height: 100%;
-  min-height: 100px;
-  border-radius: 0;
+  height: 100px;
+  border-radius: 8px;
   object-fit: cover;
   display: block;
   background: var(--panel-bg);
-  transition: filter 0.22s ease;
-}
-
-.post-card-thumb--lqip {
-  filter: none;
-}
-
-.post-card-thumb--empty {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-/* Actions column */
-.post-card-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: 12px;
-  padding-right: 12px;
+  flex: 0 0 100px;
 }
 
 /* Meta container */
-.post-card-meta {
+.post-card-meta,
+.recent-card-meta {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -324,13 +344,29 @@
   gap: 6px;
 }
 
-/* Category line */
-.post-card-catline {
+/* Subcategory icon */
+.post-card-icon-sub svg,
+.recent-card-icon-sub svg {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+}
+
+.post-card-icon-sub img,
+.recent-card-icon-sub img {
+  width: 18px;
+  height: 18px;
+}
+
+/* Category row */
+.post-card-row-cat,
+.recent-card-row-cat {
   display: flex;
   align-items: center;
 }
 
-.post-card-subicon {
+.post-card-row-cat .post-card-icon-sub,
+.recent-card-row-cat .recent-card-icon-sub {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -338,18 +374,15 @@
   padding-right: 5px;
 }
 
-.post-card-subicon:empty {
+.post-card-row-cat .post-card-icon-sub:empty,
+.recent-card-row-cat .recent-card-icon-sub:empty {
   display: none;
   padding-right: 0;
 }
 
-.post-card-subicon-image {
-  width: 18px;
-  height: 18px;
-}
-
 /* Title */
-.post-card-title {
+.post-card-text-title,
+.recent-card-text-title {
   margin: 0;
   font-weight: bold;
   font-size: 16px;
@@ -362,8 +395,9 @@
   -webkit-box-orient: vertical;
 }
 
-/* Info row */
-.post-card-info {
+/* Info container */
+.post-card-container-info,
+.recent-card-container-info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -373,14 +407,19 @@
   overflow: hidden;
 }
 
-.post-card-info-row {
+/* Info rows */
+.post-card-row-loc,
+.post-card-row-date,
+.recent-card-row-loc,
+.recent-card-row-date {
   display: flex;
   align-items: center;
   gap: 0;
 }
 
 /* Badge */
-.post-card-badge {
+.post-card-badge,
+.recent-card-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -393,20 +432,29 @@
   line-height: 1;
 }
 
+/* Actions container */
+.post-card-container-actions,
+.recent-card-container-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
 /* Favorite button */
-.post-card-fav {
-  flex: 0 0 auto;
+.post-card-button-fav,
+.recent-card-button-fav {
   width: 36px;
   height: 36px;
-  border-radius: 5px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
   background: var(--btn);
   border: 1px solid var(--btn);
-  cursor: pointer;
 }
 
-.post-card-fav-icon {
+.post-card-button-fav svg,
+.recent-card-button-fav svg {
   width: 18px;
   height: 18px;
   fill: none;
@@ -415,29 +463,10 @@
   pointer-events: none;
 }
 
-.post-card-fav-icon--active {
+.post-card-button-fav[aria-pressed="true"] svg,
+.recent-card-button-fav[aria-pressed="true"] svg {
   fill: var(--gold);
   stroke: var(--gold);
-}
-
-/* Share button */
-.post-card-share {
-  width: 36px;
-  height: 36px;
-  border-radius: 5px;
-  display: grid;
-  place-items: center;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  margin-left: auto;
-  cursor: pointer;
-}
-
-.post-card-share-icon {
-  width: 18px;
-  height: 18px;
-  fill: var(--button-text);
-  pointer-events: none;
 }
 
 /* ============================================================================
@@ -527,9 +556,10 @@
 
 /* ============================================================================
    OPEN POST
+   Class naming: .open-post-{type}-{part}--{state}
    ============================================================================ */
 
-.post-open {
+.open-post {
   border: none;
   border-radius: 0;
   margin: 0;
@@ -541,53 +571,64 @@
   flex-direction: column;
   gap: 0;
   position: relative;
+}
+
+.post-panel-content .open-post {
   width: 100%;
   max-width: 100%;
-  background-color: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.post-open:last-child {
-  border-bottom: none;
-}
-
-/* Open post header card */
-.post-open-header {
+/* Card inside open post - sticky header */
+.open-post .post-card,
+.open-post .recent-card {
   position: sticky;
   top: 0;
   z-index: 10;
   background: #1f2750;
   border-bottom: none;
   margin-bottom: 0;
-  display: grid;
-  grid-template-columns: 100px 1fr 36px;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 12px;
-  cursor: pointer;
 }
 
-.post-open-header:hover {
+.open-post .post-card:hover,
+.open-post .recent-card:hover {
   background: #1f2750;
 }
 
-/* Open post actions column */
-.post-open-actions {
+.open-post .post-card-container-actions,
+.open-post .recent-card-container-actions {
   display: flex;
   flex-direction: column;
   gap: 6px;
   align-items: center;
 }
 
-.post-card-share--hidden {
+.open-post.open-post--collapsed .open-post-button-share {
   display: none;
+}
+
+/* Share button in open post */
+.open-post-button-share {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+}
+
+.open-post-button-share svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--button-text);
+  pointer-events: none;
 }
 
 /* ============================================================================
    OPEN POST BODY
    ============================================================================ */
 
-.post-open-body {
+.open-post-body {
   padding: 0 0 10px;
   display: flex;
   flex-direction: column;
@@ -607,7 +648,7 @@
   border-top: none;
 }
 
-.post-open-body--collapsed {
+.open-post.open-post--collapsed .open-post-body {
   max-height: 0;
   opacity: 0;
   padding-top: 0;
@@ -615,17 +656,11 @@
   pointer-events: none;
 }
 
-.post-open-body-main {
-  flex: 1 1 100%;
-  max-width: 100%;
-  width: 100%;
-}
-
 /* ============================================================================
    OPEN POST DETAILS
    ============================================================================ */
 
-.post-open-details {
+.open-post-container-details {
   margin-top: 0;
   width: calc(100% - 20px);
   max-width: calc(100% - 20px);
@@ -640,39 +675,47 @@
   margin-right: auto;
 }
 
-.post-venue-selection--hidden {
+.open-post:not(.open-post--desc-expanded) .open-post-container-venueselect,
+.open-post:not(.open-post--desc-expanded) .open-post-container-sessionselect,
+.open-post:not(.open-post--desc-expanded) .open-post-container-info,
+.open-post:not(.open-post--desc-expanded) .open-post-row-member {
   display: none;
 }
 
-.post-session-selection--hidden {
-  display: none;
-}
-
-.post-location-section--hidden {
-  display: none;
-}
-
-.post-details-info--hidden {
-  display: none;
-}
-
-.post-member-avatar--hidden {
-  display: none;
-}
-
-.post-description--collapsed {
+.open-post:not(.open-post--desc-expanded) .open-post-text-desc {
   margin-top: 0;
 }
 
-.post-nav-buttons--hidden {
-  display: none;
+/* Description */
+.open-post-text-desc {
+  margin-top: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Member row */
+.open-post-row-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 10px;
+}
+
+.open-post-row-member img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
 /* ============================================================================
-   OPEN POST IMAGES
+   OPEN POST IMAGES [FUTURE: ImageGalleryComponent]
+   Hero image + thumbnail row. Will become a separate component.
    ============================================================================ */
 
-.post-open-images {
+.open-post-container-images {
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -684,12 +727,12 @@
   align-self: stretch;
 }
 
-.post-open-images--expanded {
+.open-post.open-post--desc-expanded .open-post-container-images {
   position: static;
   margin-top: var(--gap);
 }
 
-.post-open-image-box {
+.open-post-container-hero {
   width: 100%;
   max-width: 100%;
   aspect-ratio: 1/1;
@@ -704,7 +747,7 @@
   position: relative;
 }
 
-.post-open-image-track {
+.open-post-track-hero {
   display: flex;
   width: 100%;
   height: 100%;
@@ -715,7 +758,7 @@
   touch-action: pan-y;
 }
 
-.post-open-image {
+.open-post-image-hero {
   width: 100%;
   height: 100%;
   aspect-ratio: 1/1;
@@ -725,33 +768,41 @@
   flex: 0 0 100%;
 }
 
-.post-open-image--ready {
+.open-post-image-hero--ready {
   object-fit: cover;
 }
 
-/* Thumbnail row */
-.post-open-thumbnails {
+/* Thumbnail container */
+.open-post-container-thumbs {
   position: relative;
+  display: flex;
+  gap: 5px;
+  padding: 0 10px;
 }
 
-.post-open-thumbnail {
+.open-post-image-thumb {
   width: 50px;
   height: 50px;
   object-fit: cover;
   object-position: center;
   aspect-ratio: 1/1;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   position: relative;
   z-index: 1;
 }
 
+.open-post-image-thumb--active {
+  border-color: var(--gold);
+}
+
 /* ============================================================================
-   VENUE/SESSION NAV BUTTONS
+   VENUE/SESSION NAV BUTTONS [FUTURE: Part of VenueMenuComponent, SessionMenuComponent]
+   Navigation buttons that open venue/session dropdowns.
    ============================================================================ */
 
-.post-nav-buttons {
+.open-post-container-nav {
   display: flex;
   gap: 10px;
   width: calc(100% - 20px);
@@ -765,7 +816,8 @@
   box-sizing: border-box;
 }
 
-.post-venue-nav-button {
+.open-post-button-venue,
+.open-post-button-session {
   flex: 1 1 50%;
   height: 120px;
   position: relative;
@@ -781,11 +833,22 @@
   outline: none;
 }
 
-.post-venue-nav-button:hover {
+.open-post-button-venue:hover,
+.open-post-button-venue:focus,
+.open-post-button-session:hover,
+.open-post-button-session:focus {
   opacity: 0.85;
+  outline: none;
+  background: transparent;
 }
 
-.post-venue-nav-button-image {
+.open-post-button-venue:focus-visible,
+.open-post-button-session:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+.open-post-image-navpreview {
   position: absolute;
   top: 10px;
   left: 0;
@@ -794,27 +857,12 @@
   object-fit: cover;
   object-position: center top;
   display: block;
-  border-radius: 5px;
+  border-radius: 8px;
   pointer-events: none;
 }
 
-.post-venue-nav-button-name {
-  position: absolute;
-  bottom: 30px;
-  left: 10px;
-  right: 10px;
-  z-index: 1;
-  text-align: left;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 5px 8px;
-  border-radius: 5px;
-  line-height: 1.2;
-  font-size: 13px;
-  font-weight: bold;
-  pointer-events: none;
-}
-
-.post-venue-nav-button-address {
+.open-post-text-venuename,
+.open-post-text-address {
   position: absolute;
   bottom: 10px;
   left: 10px;
@@ -823,26 +871,31 @@
   text-align: left;
   background: rgba(0, 0, 0, 0.7);
   padding: 5px 8px;
-  border-radius: 5px;
+  border-radius: 4px;
   line-height: 1.2;
   font-size: 12px;
   pointer-events: none;
 }
 
-.post-session-nav-button {
-  flex: 1 1 50%;
-  height: 120px;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  border: none;
-  padding: 10px 0;
-  margin: 0;
-  background: transparent;
-  transition: opacity 0.2s ease;
-  border-radius: 0;
-  box-sizing: border-box;
-  outline: none;
+.open-post-text-venuename {
+  font-weight: bold;
+  bottom: 30px;
+  font-size: 13px;
+}
+
+.open-post-icon-arrow {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #fff;
+  pointer-events: none;
+}
+
+.open-post-button-session {
   color: #fff;
   text-shadow: 0 0 4px #000;
   font-weight: bold;
@@ -852,366 +905,123 @@
   justify-content: center;
 }
 
-.post-session-nav-button:hover {
-  opacity: 0.85;
-}
-
-.post-session-nav-button-image {
-  position: absolute;
-  top: 10px;
-  left: 0;
-  width: 100%;
-  height: 100px;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-  border-radius: 5px;
-  pointer-events: none;
-}
-
-.post-session-nav-button-date {
-  position: absolute;
-  bottom: 30px;
-  left: 10px;
-  right: 10px;
-  z-index: 1;
-  text-align: left;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 5px 8px;
-  border-radius: 5px;
-  line-height: 1.2;
-  font-size: 13px;
-  font-weight: bold;
-  pointer-events: none;
-}
-
-.post-session-nav-button-time {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 1;
-  text-align: left;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 5px 8px;
-  border-radius: 5px;
-  line-height: 1.2;
-  font-size: 12px;
-  pointer-events: none;
-}
-
 /* ============================================================================
-   VENUE DROPDOWN
+   OPEN POST DROPDOWNS [FUTURE: VenueMenuComponent, SessionMenuComponent]
+   Dropdown panels for venue map/selection and session calendar/selection.
    ============================================================================ */
 
-.post-venue-dropdown {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-}
-
-.post-venue-dropdown-button {
-  height: 50px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: var(--dropdown-radius);
-  text-align: left;
-  padding: 2px 8px;
-  color: var(--button-text);
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  cursor: pointer;
-}
-
-.post-venue-dropdown-name {
-  font-weight: bold;
-  display: block;
-  line-height: 1.2;
-}
-
-.post-venue-dropdown-address {
-  display: block;
-  line-height: 1.2;
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  font-size: inherit;
-}
-
-/* ============================================================================
-   VENUE MENU
-   ============================================================================ */
-
-.post-venue-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  bottom: auto;
-  left: 0;
-  right: auto;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  max-width: 100%;
-  max-height: min(80vh, calc(100vh - (var(--header-h) + var(--safe-top) + 20px)));
-  overflow: auto;
-  background: #222222;
-  border: 1px solid var(--border);
-  border-radius: var(--dropdown-radius);
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: var(--layer-menu);
-  --button-selected-bg: var(--blue-500);
-  --button-selected-border: var(--blue-500);
-  --button-selected-text: var(--button-active-text);
-}
-
-.post-venue-menu[hidden] {
-  display: none;
-}
-
-.post-venue-menu-options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  width: 100%;
-  flex: 1 1 auto;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.post-venue-menu-option {
-  height: 50px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: var(--dropdown-radius);
-  text-align: left;
-  padding: 4px 8px;
-  color: var(--button-text);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  cursor: pointer;
-}
-
-.post-venue-menu-option--selected {
-  background: var(--blue-500);
-  color: var(--button-active-text);
-  border-color: var(--blue-500);
-}
-
-.post-venue-menu-option-name {
-  font-weight: bold;
-  display: block;
-  line-height: 1.2;
-}
-
-.post-venue-menu-option-address {
-  display: block;
-  line-height: 1.2;
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  font-size: inherit;
-}
-
-/* ============================================================================
-   SESSION DROPDOWN
-   ============================================================================ */
-
-.post-session-dropdown {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-}
-
-.post-session-dropdown-button {
-  height: 50px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: var(--dropdown-radius);
-  text-align: left;
-  padding: 2px 8px;
-  color: var(--button-text);
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  cursor: pointer;
-}
-
-.post-session-dropdown-date {
-  font-weight: bold;
-}
-
-.post-session-dropdown-time {
+.open-post-dropdown-venue,
+.open-post-dropdown-session {
+  margin-top: 0;
+  width: calc(100% - 20px);
+  max-width: calc(100% - 20px);
   margin-left: auto;
-  padding-right: 20px;
-}
-
-/* ============================================================================
-   SESSION MENU
-   ============================================================================ */
-
-.post-session-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  bottom: auto;
-  left: 0;
-  right: auto;
-  width: 100%;
-  min-width: 0;
+  margin-right: auto;
   box-sizing: border-box;
-  max-width: 100%;
-  max-height: min(80vh, calc(100vh - (var(--header-h) + var(--safe-top) + 20px)));
-  overflow: auto;
-  background: #222222;
-  border: 1px solid var(--border);
-  border-radius: var(--dropdown-radius);
+}
+
+.open-post-menu-venue,
+.open-post-menu-session {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: var(--layer-menu);
-  --button-selected-bg: var(--blue-500);
-  --button-selected-border: var(--blue-500);
-  --button-selected-text: var(--button-active-text);
-}
-
-.post-session-menu[hidden] {
-  display: none;
-}
-
-.post-session-menu-options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--gap);
-  width: 100%;
-  flex: 1 1 auto;
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.post-session-menu-option {
-  height: 50px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: var(--dropdown-radius);
-  text-align: left;
-  padding: 4px 8px;
-  color: var(--button-text);
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  cursor: pointer;
-}
-
-.post-session-menu-option--selected {
-  background: var(--blue-500);
-  color: var(--button-active-text);
-  border-color: var(--blue-500);
-}
-
-.post-session-menu-option-date {
-  font-weight: bold;
-}
-
-.post-session-menu-option-time {
-  margin-left: auto;
-  padding-right: 20px;
-}
-
-/* ============================================================================
-   MEMBER AVATAR ROW
-   ============================================================================ */
-
-.post-member-avatar {
-  display: none;
-  align-items: center;
-  height: 50px;
-  gap: 10px;
-  margin: var(--gap) 0 0;
-}
-
-.post-member-avatar--visible {
-  display: flex;
-}
-
-/* ============================================================================
-   POST OPEN DETAIL ROWS
-   ============================================================================ */
-
-.post-open-detail-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.post-open-detail-row:last-child {
-  border-bottom: none;
-}
-
-.post-open-detail-row .post-card-badge {
-  flex: 0 0 auto;
-  font-size: 16px;
-}
-
-.post-open-detail-content {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.post-open-detail-content a {
-  color: #60a5fa;
-  text-decoration: none;
-}
-
-.post-open-detail-content a:hover {
-  text-decoration: underline;
-}
-
-/* Post open description */
-.post-open-description {
+  background: var(--popup-bg, #222222);
+  border-radius: 8px;
   margin-top: 10px;
-  padding: 10px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Thumbnail active state */
-.post-open-thumbnail--active {
-  border-color: var(--blue-500);
-  box-shadow: 0 0 0 2px var(--blue-500);
+.open-post-menu-venue[hidden],
+.open-post-menu-session[hidden] {
+  display: none;
 }
 
-.post-member-avatar-image {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 50%;
+.open-post-container-map {
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.post-member-avatar-name {
-  padding-left: 10px;
+.open-post-map {
+  width: 100%;
+  height: 100%;
+}
+
+.open-post-container-venueopts {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.open-post-container-venueopts button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.open-post-container-venueopts button:hover {
+  background: var(--btn-hover);
+}
+
+.open-post-container-venueopts .open-post-text-venuename {
+  position: static;
+  background: none;
+  padding: 0;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.open-post-container-venueopts .open-post-text-address {
+  position: static;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.open-post-container-calendar {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.open-post-scroll-calendar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.open-post-calendar {
+  min-width: 280px;
+}
+
+.open-post-container-sessionopts {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.open-post-button-sessionopt {
+  padding: 10px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font-size: 14px;
+}
+
+.open-post-button-sessionopt:hover {
+  background: var(--btn-hover);
 }
 
 /* ============================================================================
@@ -1356,11 +1166,12 @@
     padding: 12px;
   }
   
-  .post-card-thumb {
-    border-radius: 5px;
+  .post-card-image,
+  .recent-card-image {
+    border-radius: 8px;
   }
   
-  .post-open-image-box {
+  .open-post-container-hero {
     width: 100%;
     max-width: 100%;
     aspect-ratio: 1/1;
@@ -1368,11 +1179,11 @@
     border-radius: 0;
   }
   
-  .post-open-image {
+  .open-post-image-hero {
     border-radius: 0;
   }
   
-  .post-open-thumbnail {
+  .open-post-image-thumb {
     width: 60px;
     height: 60px;
   }
@@ -1403,36 +1214,39 @@
     margin: 0;
   }
   
-  .post-open {
+  .recent-card {
+    grid-template-columns: 100px 1fr 36px;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 0;
+    width: 100%;
+    margin: 0;
+  }
+  
+  .open-post {
     width: 100%;
     border-radius: 0;
     margin: 0;
   }
   
-  .post-open-body {
+  .open-post-body {
     flex-direction: column;
     gap: var(--gap);
     padding: 0;
   }
   
-  .post-open-body-main {
-    flex: 1 1 100%;
-    width: 100%;
-    max-width: 100%;
-  }
-  
-  .post-open-images {
+  .open-post-container-images {
     flex: 0 0 100%;
     width: 100%;
   }
   
-  .post-open-details {
+  .open-post-container-details {
     width: calc(100% - 20px);
     max-width: calc(100% - 20px);
     padding: 10px 0;
   }
   
-  .post-open-image-box {
+  .open-post-container-hero {
     width: 100%;
     max-width: 100%;
     aspect-ratio: 1/1;
@@ -1441,3 +1255,4 @@
     border-radius: 0;
   }
 }
+
