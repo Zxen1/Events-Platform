@@ -264,12 +264,12 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus) {
-  if (!bind_statement_params($stmt, 'isiss', $memberId, $memberName, $subcategoryKey, $locQty, $paymentStatus)) {
+  if (!bind_statement_params($stmt, 'issis', $memberId, $memberName, $subcategoryKey, $locQty, $paymentStatus)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  if (!bind_statement_params($stmt, 'isis', $memberId, $memberName, $subcategoryKey, $locQty)) {
+  if (!bind_statement_params($stmt, 'issi', $memberId, $memberName, $subcategoryKey, $locQty)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
 }
