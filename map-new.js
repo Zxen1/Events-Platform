@@ -1096,9 +1096,16 @@ const MapModule = (function() {
 
   /**
    * Set up cluster source and layer
+   * Requires marker_cluster_icon to be configured in admin settings
    */
   function setupClusterLayers() {
     if (!map) return;
+    
+    // Cluster icon is required - if not loaded, clusters won't appear
+    if (!clusterIconLoaded || !map.hasImage(CLUSTER_ICON_ID)) {
+      console.error('[Map] Cluster icon not loaded. Configure marker_cluster_icon in Admin > Map tab.');
+      return;
+    }
     
     // Remove existing layer if present
     if (map.getLayer(CLUSTER_LAYER_ID)) {
@@ -1114,7 +1121,7 @@ const MapModule = (function() {
     var emptyData = { type: 'FeatureCollection', features: [] };
     map.addSource(CLUSTER_SOURCE_ID, { type: 'geojson', data: emptyData });
     
-    // Create cluster layer
+    // Create cluster layer with icon
     map.addLayer({
       id: CLUSTER_LAYER_ID,
       type: 'symbol',
@@ -1190,16 +1197,21 @@ const MapModule = (function() {
   function fetchClusterData(zoom) {
     var url = '/gateway.php?action=get-clusters&zoom=' + encodeURIComponent(zoom);
     
+    console.log('[Map] Fetching clusters for zoom:', zoom);
+    
     return fetch(url)
       .then(function(response) { return response.json(); })
       .then(function(data) {
+        console.log('[Map] Cluster response:', data);
         if (data.success && Array.isArray(data.clusters)) {
+          console.log('[Map] Clusters received:', data.clusters.length);
           return data.clusters;
         }
+        console.warn('[Map] Cluster response not successful or no clusters array');
         return [];
       })
       .catch(function(err) {
-        console.warn('[Map] Failed to fetch clusters:', err);
+        console.error('[Map] Failed to fetch clusters:', err);
         return [];
       });
   }

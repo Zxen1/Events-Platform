@@ -16,11 +16,22 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
 
 header('Content-Type: application/json');
 
+// Helper function for error responses
+function fail(int $code, string $message): void {
+    http_response_code($code);
+    echo json_encode(['success' => false, 'message' => $message]);
+    exit;
+}
+
 try {
-    // Database connection
+    // Database connection (same pattern as get-posts.php)
     $configCandidates = [
         __DIR__ . '/../config/config-db.php',
         dirname(__DIR__) . '/config/config-db.php',
+        dirname(__DIR__, 2) . '/config/config-db.php',
+        dirname(__DIR__, 3) . '/../config/config-db.php',
+        dirname(__DIR__) . '/../config/config-db.php',
+        __DIR__ . '/config-db.php',
     ];
 
     $configPath = null;
@@ -32,26 +43,12 @@ try {
     }
 
     if ($configPath === null) {
-        echo json_encode(['success' => false, 'message' => 'Config missing']);
-        return;
+        fail(500, 'Database configuration file is missing.');
     }
     require_once $configPath;
 
-    $mysqli = null;
-    if (isset($GLOBALS['mysqli']) && $GLOBALS['mysqli'] instanceof mysqli) {
-        $mysqli = $GLOBALS['mysqli'];
-    } elseif (defined('DB_HOST') && defined('DB_NAME') && defined('DB_USER')) {
-        $mysqli = new mysqli(DB_HOST, DB_USER, defined('DB_PASS') ? DB_PASS : '', DB_NAME);
-        if ($mysqli->connect_error) {
-            echo json_encode(['success' => false, 'message' => 'Database connection failed']);
-            return;
-        }
-        $mysqli->set_charset('utf8mb4');
-    }
-
-    if (!$mysqli) {
-        echo json_encode(['success' => false, 'message' => 'No database connection']);
-        return;
+    if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
+        fail(500, 'Database connection unavailable.');
     }
 
     // Get zoom level from request (determines grid size)
@@ -90,8 +87,7 @@ try {
 
     $stmt = $mysqli->prepare($sql);
     if (!$stmt) {
-        echo json_encode(['success' => false, 'message' => 'Query preparation failed']);
-        return;
+        fail(500, 'Query preparation failed: ' . $mysqli->error);
     }
 
     $stmt->bind_param('dd', $gridSize, $gridSize);
