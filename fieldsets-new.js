@@ -4260,6 +4260,9 @@ const FieldsetBuilder = (function(){
                         if (!grpEl) return false;
                         var editor = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor') || grpEl;
                         if (!allControlsFilledNoVisibility(editor)) return false;
+                        // Age rating must be selected for each ticket group
+                        var ageRatingMenu = editor.querySelector('.component-ageratingpicker-menu');
+                        if (!ageRatingMenu || !String(ageRatingMenu.dataset.value || '').trim()) return false;
                     }
                     return true;
                 }
