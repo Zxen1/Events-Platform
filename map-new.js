@@ -275,14 +275,9 @@ const MapModule = (function() {
   }
   
   /**
-   * Get icon URL for small state (subcategory icon)
-   * Uses post's iconUrl or multi_post_icon from admin_settings (same pattern as cluster icon)
+   * Get multi-post icon URL from admin settings
    */
-  function getSmallIconUrl(post) {
-    // Use post's iconUrl (subcategory icon) - primary source
-    if (post.iconUrl) return post.iconUrl;
-    
-    // Fallback to multi_post_icon from admin settings
+  function getMultiPostIconUrl() {
     var baseUrl = adminSettings.folder_system_images;
     var filename = adminSettings.multi_post_icon;
     
@@ -290,16 +285,36 @@ const MapModule = (function() {
       return baseUrl + '/' + filename;
     }
     
-    // No icon available - log error, return empty
-    console.error('[Map] No icon URL available for post:', post.id);
+    console.error('[Map] multi_post_icon not configured in Admin > Map tab');
     return '';
   }
   
   /**
-   * Get icon URL for big state (thumbnail or subcategory icon)
+   * Get icon URL for small state (subcategory icon or multi-post icon)
+   * Multi-post markers use multi_post_icon, single posts use subcategory icon
+   */
+  function getSmallIconUrl(post) {
+    // Multi-post markers use the multi-post icon
+    if (post.isMultiPost) {
+      return getMultiPostIconUrl();
+    }
+    
+    // Single post: use subcategory icon from post data
+    if (post.iconUrl) return post.iconUrl;
+    
+    // No subcategory icon - fall back to multi-post icon
+    return getMultiPostIconUrl();
+  }
+  
+  /**
+   * Get icon URL for big state (thumbnail for single posts, multi-post icon for multi)
    */
   function getBigIconUrl(post) {
-    // Show thumbnail for single posts
+    // Multi-post markers keep the multi-post icon
+    if (post.isMultiPost) {
+      return getSmallIconUrl(post);
+    }
+    // Single posts show thumbnail
     if (post.thumbnailUrl) return post.thumbnailUrl;
     // Fall back to subcategory icon
     return getSmallIconUrl(post);
