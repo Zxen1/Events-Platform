@@ -2167,8 +2167,12 @@ const FieldsetBuilder = (function(){
                         addBtn.appendChild(ipPlusImg);
                     }
                     addBtn.addEventListener('click', function() {
-                        itemVariantsContainer.appendChild(createItemVariantRow());
+                        var newRow = createItemVariantRow();
+                        itemVariantsContainer.appendChild(newRow);
                         updateItemVariantButtons();
+                        
+                        var input = newRow.querySelector('.fieldset-itempricing-input-itemvariantname');
+                        if (input) input.focus();
                     });
                     variantRow.appendChild(addBtn);
                     
