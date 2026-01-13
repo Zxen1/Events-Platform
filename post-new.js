@@ -211,11 +211,6 @@ const PostModule = (function() {
       if (!data) return;
       filterFavourites(data.enabled);
     });
-
-    // Listen for new post created - refresh to show the new post
-    App.on('post:created', function() {
-      refreshPosts();
-    });
   }
 
   /**
@@ -1158,15 +1153,28 @@ const PostModule = (function() {
         if (!keywordMatch) return false;
       }
 
+      // Price filter (if price_summary contains a number)
+      if (filters.minPrice || filters.maxPrice) {
+        var priceSummary = (mapCard && mapCard.price_summary) || '';
+        var priceMatch = priceSummary.match(/[\d,.]+/);
+        var price = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : null;
+
+        if (price !== null) {
+          if (filters.minPrice && price < parseFloat(filters.minPrice)) {
+            return false;
+          }
+          if (filters.maxPrice && price > parseFloat(filters.maxPrice)) {
+            return false;
+          }
+        }
+      }
+
       // Favorites filter
       if (filters.favourites) {
         if (!isFavorite(post.id)) {
           return false;
         }
       }
-
-      // TODO: Price, date, expired, category filters need server-side implementation
-      // using post_sessions, post_ticket_pricing, post_item_pricing tables
 
       return true;
     });

@@ -2941,9 +2941,6 @@ const MemberModule = (function() {
                     }
                     // Update placeholder to show success
                     updateMyPostsLoadingPlaceholder('success', result);
-                    
-                    // Refresh posts and map markers to show the new post
-                    App.emit('post:created', { postId: result.insert_id });
                 } else {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         // Prefer message system keys from backend (no hardcoded server strings).

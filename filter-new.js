@@ -363,50 +363,10 @@ const FilterModule = (function() {
     var lastFilteredCount = 0;
     var lastTotalCount = 0;
     var headerFilterBadge = null;
-    var summaryLoadingEl = null;
-    var isCountsLoading = false;
     
     function updateSummary(text) {
         if (summaryEl) {
             summaryEl.textContent = text || '';
-        }
-    }
-    
-    /**
-     * Show loading state for counts
-     */
-    function showCountsLoading() {
-        isCountsLoading = true;
-        
-        if (summaryEl) {
-            // Create or show loading spinner in summary
-            if (!summaryLoadingEl) {
-                summaryLoadingEl = document.createElement('span');
-                summaryLoadingEl.className = 'filter-panel-summary-loading';
-                summaryLoadingEl.innerHTML = '<span class="filter-loading-spinner"></span> Counting...';
-            }
-            summaryEl.textContent = '';
-            summaryEl.appendChild(summaryLoadingEl);
-        }
-        
-        // Show loading state on header badge
-        if (headerFilterBadge) {
-            headerFilterBadge.classList.add('filter-badge--loading');
-        }
-    }
-    
-    /**
-     * Hide loading state for counts
-     */
-    function hideCountsLoading() {
-        isCountsLoading = false;
-        
-        if (summaryLoadingEl && summaryLoadingEl.parentNode) {
-            summaryLoadingEl.parentNode.removeChild(summaryLoadingEl);
-        }
-        
-        if (headerFilterBadge) {
-            headerFilterBadge.classList.remove('filter-badge--loading');
         }
     }
     
@@ -416,8 +376,6 @@ const FilterModule = (function() {
      * @param {number} total - Total results in visible area
      */
     function updateFilterCounts(filtered, total) {
-        hideCountsLoading();
-        
         lastFilteredCount = filtered;
         lastTotalCount = total;
         
@@ -1298,11 +1256,6 @@ const FilterModule = (function() {
             saveFilters();
         });
         
-        // Listen for counting started (show loading state)
-        App.on('filter:countingStarted', function() {
-            showCountsLoading();
-        });
-        
         // Listen for filter count updates from PostModule (detailed, after posts loaded)
         App.on('filter:countsUpdated', function(data) {
             if (data && typeof data.filtered === 'number' && typeof data.total === 'number') {
@@ -1346,9 +1299,7 @@ const FilterModule = (function() {
         setDateRange: setDateRange,
         openCalendar: openCalendar,
         closeCalendar: closeCalendar,
-        resetAllFilters: resetAllFilters,
-        showCountsLoading: showCountsLoading,
-        hideCountsLoading: hideCountsLoading
+        resetAllFilters: resetAllFilters
     };
 
 })();
