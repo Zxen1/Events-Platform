@@ -182,10 +182,28 @@ const PostModule = (function() {
       }
     });
 
-    // Listen for map marker clicks
+    // Listen for map marker clicks (single post)
     App.on('map:cardClicked', function(data) {
       if (!data || !data.postId) return;
       openPostById(data.postId, { fromMap: true });
+    });
+
+    // Listen for multi-post map card clicks (highlight all, don't open)
+    App.on('map:multiPostClicked', function(data) {
+      if (!data || !data.postIds || !data.postIds.length) return;
+      
+      // Clear any existing highlights first
+      document.querySelectorAll('.post-card--map-highlight').forEach(function(card) {
+        card.classList.remove('post-card--map-highlight');
+      });
+      
+      // Highlight all post cards at this venue
+      data.postIds.forEach(function(postId) {
+        var postCards = document.querySelectorAll('.post-card[data-id="' + postId + '"]');
+        postCards.forEach(function(card) {
+          card.classList.add('post-card--map-highlight');
+        });
+      });
     });
 
     // Listen for map card hover to sync post card highlights

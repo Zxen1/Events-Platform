@@ -1744,8 +1744,19 @@ const MapModule = (function() {
     // Stop spin
     stopSpin();
     
-    // Emit event for post module to open the post
-    App.emit('map:cardClicked', { postId });
+    // Find the marker entry to check if multi-post
+    const entry = findMarkerByPostId(postId);
+    
+    if (entry && entry.post && entry.post.isMultiPost && entry.postIds && entry.postIds.length > 1) {
+      // Multi-post venue: highlight all posts, don't auto-open
+      App.emit('map:multiPostClicked', { 
+        postIds: entry.postIds,
+        venueKey: entry.venueKey
+      });
+    } else {
+      // Single post: open the post
+      App.emit('map:cardClicked', { postId });
+    }
   }
 
   /**
