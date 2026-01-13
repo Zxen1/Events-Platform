@@ -785,6 +785,18 @@ const MemberModule = (function() {
             if (!user) return;
             if (user.country_code) localStorage.setItem('member_country_code', String(user.country_code));
             if (user.timezone) localStorage.setItem('member_timezone', String(user.timezone));
+            // Filters: DB-first snapshot mirrored to localStorage so map can load correctly before filter panel opens.
+            if (user.filters_json && typeof user.filters_json === 'string') {
+                localStorage.setItem('funmap_filters', String(user.filters_json));
+                // Ensure clusters immediately reflect DB filters without waiting for filter panel open.
+                try {
+                    if (window.App && typeof App.emit === 'function') {
+                        var parsed = null;
+                        try { parsed = JSON.parse(String(user.filters_json)); } catch (_eParse) { parsed = null; }
+                        App.emit('filter:changed', parsed && typeof parsed === 'object' ? parsed : {});
+                    }
+                } catch (_eEmit) {}
+            }
         } catch (e) {
             // ignore
         }
@@ -5244,6 +5256,12 @@ const MemberModule = (function() {
             map_lighting: (payload.map_lighting !== undefined) ? payload.map_lighting : null,
             map_style: (payload.map_style !== undefined) ? payload.map_style : null,
             timezone: (payload.timezone !== undefined) ? payload.timezone : null
+            ,
+            // Filters (DB-first; localStorage is secondary)
+            filters_json: (payload.filters_json !== undefined) ? payload.filters_json : null,
+            filters_hash: (payload.filters_hash !== undefined) ? payload.filters_hash : null,
+            filters_version: (payload.filters_version !== undefined) ? payload.filters_version : null,
+            filters_updated_at: (payload.filters_updated_at !== undefined) ? payload.filters_updated_at : null
         };
     }
 

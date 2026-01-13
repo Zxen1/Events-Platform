@@ -56,17 +56,17 @@ try {
     // IMPORTANT:
     // - Database schemas evolve; do not select columns that may not exist (mysqli->prepare will fail).
     // - Keep this SELECT limited to columns that exist in current funmapco_db views/tables (see latest dump).
-    $sqlWithAvatarFile = "SELECT id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
+    $sqlWithAvatarFile = "SELECT id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
       $avatarCol = 'avatar_file';
     } else {
-      $sqlWithAvatarUrl = "SELECT id, account_email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
+      $sqlWithAvatarUrl = "SELECT id, account_email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
       $stmt = $db->prepare($sqlWithAvatarUrl);
       if ($stmt) {
         $avatarCol = 'avatar_url';
       } else {
-        $sqlNoAvatar = "SELECT id, account_email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
+        $sqlNoAvatar = "SELECT id, account_email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
         $stmt = $db->prepare($sqlNoAvatar);
         if (!$stmt) return null;
       }
@@ -111,7 +111,11 @@ try {
         'map_style' => isset($row['map_style']) ? (string)$row['map_style'] : null,
         'timezone' => null,
         'favorites' => isset($row['favorites']) ? (string)$row['favorites'] : null,
-        'recent' => isset($row['recent']) ? (string)$row['recent'] : null
+        'recent' => isset($row['recent']) ? (string)$row['recent'] : null,
+        'filters_json' => isset($row['filters_json']) ? (string)$row['filters_json'] : null,
+        'filters_hash' => isset($row['filters_hash']) ? (string)$row['filters_hash'] : null,
+        'filters_version' => isset($row['filters_version']) ? (int)$row['filters_version'] : null,
+        'filters_updated_at' => isset($row['filters_updated_at']) ? (string)$row['filters_updated_at'] : null
       ]
     ];
   };

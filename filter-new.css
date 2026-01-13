@@ -634,6 +634,40 @@
   padding-left: 10px;
 }
 
+/* Count badge (category/subcategory result counts) */
+.filter-categoryfilter-count {
+  min-width: 34px;
+  text-align: right;
+  font-size: 13px;
+  opacity: 0.9;
+  padding-right: 8px;
+  box-sizing: border-box;
+}
+
+.filter-categoryfilter-count--loading {
+  color: transparent; /* reserve space, but hide stale number */
+  position: relative;
+}
+
+.filter-categoryfilter-count--loading::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  margin-top: -6.5px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: rgba(255,255,255,0.9);
+  animation: filterCountSpin 0.8s linear infinite;
+}
+
+@keyframes filterCountSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Disabled state */
 .filter-categoryfilter-accordion-header--disabled {
   opacity: 0.5;

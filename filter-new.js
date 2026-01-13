@@ -66,9 +66,20 @@ const FilterModule = (function() {
                     favourites: favouritesOn,
                     sort: currentSort,
                     categories: getCategoryState(),
-                    map: getMapState()
+                    map: getMapState(),
+                    subcategoryKeys: getSelectedSubcategoryKeys()
                 };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                
+                // DB-first persistence (member/admin row), localStorage is secondary.
+                try {
+                    if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function' && typeof MemberModule.saveSetting === 'function') {
+                        var u = MemberModule.getCurrentUser();
+                        if (u && u.id && u.account_email) {
+                            MemberModule.saveSetting('filters_json', JSON.stringify(state));
+                        }
+                    }
+                } catch (_eSaveDb) {}
             } catch (e) {
                 console.warn('[Filter] Failed to save filters:', e);
             }
@@ -229,6 +240,18 @@ const FilterModule = (function() {
     
     function restoreFilters() {
         var saved = loadFilters();
+        // DB-first: if logged in and a DB snapshot exists, mirror it into localStorage and use it.
+        try {
+            if (window.MemberModule && typeof MemberModule.getCurrentUser === 'function') {
+                var u = MemberModule.getCurrentUser();
+                if (u && u.filters_json && typeof u.filters_json === 'string') {
+                    // Keep localStorage in sync so map clusters can load correctly before opening filter panel.
+                    localStorage.setItem(STORAGE_KEY, u.filters_json);
+                    saved = JSON.parse(u.filters_json);
+                }
+            }
+        } catch (_eDbRestore) {}
+
         if (!saved) return;
         
         // Restore basic filters
@@ -424,18 +447,19 @@ const FilterModule = (function() {
      * @param {number} filtered - Number of filtered results
      * @param {number} total - Total results in visible area
      */
-    function updateFilterCounts(filtered, total) {
+    function updateFilterCounts(filtered, total, areaActive) {
         lastFilteredCount = filtered;
         lastTotalCount = total;
         
         // Update summary message in filter panel
         if (summaryEl) {
+            var scopeText = areaActive ? 'in this area' : 'worldwide';
             if (total === 0) {
-                summaryEl.textContent = 'No results in this area.';
+                summaryEl.textContent = 'No results ' + scopeText + '.';
             } else if (filtered === total) {
-                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' in this area.';
+                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' ' + scopeText + '.';
             } else {
-                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' showing out of ' + total + ' in this area.';
+                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' showing out of ' + total + ' ' + scopeText + '.';
             }
         }
         
@@ -908,7 +932,13 @@ const FilterModule = (function() {
     }
     
     function applyFilters() {
-        App.emit('filter:changed', getFilterState());
+        var state = getFilterState();
+        App.emit('filter:changed', state);
+        // Write localStorage immediately so map clusters/counts are always based on the latest filters.
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (_e) {}
+        // Debounced DB save
         saveFilters();
     }
     
@@ -1088,6 +1118,55 @@ const FilterModule = (function() {
     /* --------------------------------------------------------------------------
        CATEGORY FILTER
        -------------------------------------------------------------------------- */
+
+    function setCategoryCountsLoading(on) {
+        try {
+            var els = panelEl ? panelEl.querySelectorAll('.filter-categoryfilter-count') : [];
+            els.forEach(function(el) {
+                if (!el) return;
+                el.classList.toggle('filter-categoryfilter-count--loading', !!on);
+                if (on) {
+                    // Blank (no wrong numbers, no flicker if request is fast)
+                    if (el.textContent !== '') el.textContent = '';
+                }
+            });
+        } catch (_e) {}
+    }
+
+    function applyFacetCounts(facetMap) {
+        if (!facetMap || typeof facetMap !== 'object') return;
+        var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
+        if (!container) return;
+
+        // Subcategory counts
+        container.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+            var key = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+            var countEl = opt ? opt.querySelector('.filter-categoryfilter-count') : null;
+            if (!countEl) return;
+            var val = key && facetMap.hasOwnProperty(key) ? Number(facetMap[key] || 0) : 0;
+            var nextText = String(val);
+            if (countEl.textContent !== nextText) {
+                countEl.textContent = nextText;
+            }
+        });
+
+        // Category header counts = sum of subs
+        container.querySelectorAll('.filter-categoryfilter-accordion').forEach(function(acc) {
+            var total = 0;
+            acc.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                var key = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+                if (!key) return;
+                if (facetMap.hasOwnProperty(key)) {
+                    total += Number(facetMap[key] || 0);
+                }
+            });
+            var headerCount = acc.querySelector('.filter-categoryfilter-accordion-header .filter-categoryfilter-count');
+            if (headerCount) {
+                var t = String(total);
+                if (headerCount.textContent !== t) headerCount.textContent = t;
+            }
+        });
+    }
     
     function initCategoryFilter() {
         var container = panelEl.querySelector('.filter-categoryfilter-container');
@@ -1137,6 +1216,10 @@ const FilterModule = (function() {
                     var headerText = document.createElement('span');
                     headerText.className = 'filter-categoryfilter-accordion-header-text';
                     headerText.textContent = cat.name;
+
+                    var headerCount = document.createElement('span');
+                    headerCount.className = 'filter-categoryfilter-count filter-categoryfilter-count--loading';
+                    headerCount.textContent = '';
                     
                     var headerArrow = document.createElement('span');
                     headerArrow.className = 'filter-categoryfilter-accordion-header-arrow';
@@ -1153,6 +1236,7 @@ const FilterModule = (function() {
                     
                     header.appendChild(headerImg);
                     header.appendChild(headerText);
+                    header.appendChild(headerCount);
                     header.appendChild(headerArrow);
                     header.appendChild(headerToggleArea);
                     
@@ -1184,6 +1268,10 @@ const FilterModule = (function() {
                         var optText = document.createElement('span');
                         optText.className = 'filter-categoryfilter-accordion-option-text';
                         optText.textContent = subName;
+
+                        var optCount = document.createElement('span');
+                        optCount.className = 'filter-categoryfilter-count filter-categoryfilter-count--loading';
+                        optCount.textContent = '';
                         
                         var optSwitch = SwitchComponent.create({
                             size: 'big',
@@ -1197,6 +1285,7 @@ const FilterModule = (function() {
                         
                         option.appendChild(optImg);
                         option.appendChild(optText);
+                        option.appendChild(optCount);
                         option.appendChild(optSwitch.element);
                         
                         // Click anywhere on option toggles the switch
@@ -1319,10 +1408,10 @@ const FilterModule = (function() {
             saveFilters();
         });
         
-        // Listen for filter count updates from PostModule (detailed, after posts loaded)
+        // Listen for filter count updates from PostModule (legacy). Keep, but server-side counts override it.
         App.on('filter:countsUpdated', function(data) {
             if (data && typeof data.filtered === 'number' && typeof data.total === 'number') {
-                updateFilterCounts(data.filtered, data.total);
+                updateFilterCounts(data.filtered, data.total, !!data.areaActive);
             }
         });
         
@@ -1340,6 +1429,74 @@ const FilterModule = (function() {
                 }
             }
         });
+
+        // Authoritative counts (worldwide + in-area) from server.
+        var countsToken = 0;
+        function requestCounts() {
+            countsToken++;
+            var myToken = countsToken;
+
+            var st = {};
+            try {
+                var raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    var parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === 'object') st = parsed;
+                }
+            } catch (_e) {}
+
+            var zoom = 0;
+            var boundsParam = '';
+            try {
+                if (window.MapModule && typeof MapModule.getMap === 'function') {
+                    var map = MapModule.getMap();
+                    if (map && typeof map.getZoom === 'function') zoom = map.getZoom();
+                    if (map && typeof map.getBounds === 'function') {
+                        var b = map.getBounds();
+                        if (b && typeof b.getWest === 'function') {
+                            boundsParam = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
+                        }
+                    }
+                }
+            } catch (_e2) {}
+
+            var qs = new URLSearchParams();
+            qs.set('action', 'get-filter-counts');
+            qs.set('zoom', String(zoom));
+            if (boundsParam) qs.set('bounds', boundsParam);
+            if (st.keyword) qs.set('keyword', String(st.keyword));
+            if (st.minPrice) qs.set('min_price', String(st.minPrice));
+            if (st.maxPrice) qs.set('max_price', String(st.maxPrice));
+            if (st.dateStart) qs.set('date_start', String(st.dateStart));
+            if (st.dateEnd) qs.set('date_end', String(st.dateEnd));
+            if (st.expired) qs.set('expired', '1');
+            if (Array.isArray(st.subcategoryKeys) && st.subcategoryKeys.length) {
+                qs.set('subcategory_keys', st.subcategoryKeys.map(String).join(','));
+            }
+
+            // Only show "loading" state if request is not instant (prevents flicker).
+            var loadingTimer = setTimeout(function() {
+                setCategoryCountsLoading(true);
+            }, 120);
+
+            fetch('/gateway.php?' + qs.toString())
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (myToken !== countsToken) return;
+                    if (!res || res.success !== true) return;
+                    clearTimeout(loadingTimer);
+                    setCategoryCountsLoading(false);
+                    updateFilterCounts(Number(res.total_showing || 0), Number(res.total_available || 0), !!res.area_active);
+                    if (res.facet_subcategories && typeof res.facet_subcategories === 'object') {
+                        applyFacetCounts(res.facet_subcategories);
+                    }
+                })
+                .catch(function() { /* ignore */ });
+        }
+
+        // Recompute counts when filters change or map moves
+        App.on('filter:changed', function() { requestCounts(); });
+        App.on('map:boundsChanged', function() { requestCounts(); });
     }
 
 

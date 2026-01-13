@@ -9,7 +9,14 @@
  *   - limit (int): Max posts to return (default 50, max 200)
  *   - offset (int): Pagination offset (default 0)
  *   - bounds (string): "sw_lng,sw_lat,ne_lng,ne_lat" for map viewport filtering
- *   - subcategory_key (string): Filter by subcategory
+ *   - subcategory_key (string): Filter by single subcategory (legacy)
+ *   - subcategory_keys (string): Comma-separated subcategory_key list
+ *   - keyword (string): Keyword filter (matches title/description/venue/city/checkout_title)
+ *   - min_price (number): Min price filter (ticket/item pricing)
+ *   - max_price (number): Max price filter (ticket/item pricing)
+ *   - date_start (YYYY-MM-DD): Session date range start
+ *   - date_end (YYYY-MM-DD): Session date range end
+ *   - expired (0/1): Include expired posts
  *   - visibility (string): Filter by visibility status (default: active)
  * 
  * Response:
@@ -38,6 +45,16 @@ function fail(int $code, string $message): void {
     http_response_code($code);
     echo json_encode(['success' => false, 'message' => $message]);
     exit;
+}
+
+function bind_params_array(mysqli_stmt $stmt, string $types, array &$params): bool
+{
+    if ($types === '') return true;
+    $arguments = [$types];
+    foreach ($params as $k => $v) {
+        $arguments[] = &$params[$k];
+    }
+    return call_user_func_array([$stmt, 'bind_param'], $arguments);
 }
 
 try {
@@ -76,6 +93,20 @@ try {
     $limit = isset($_GET['limit']) ? min(200, max(1, intval($_GET['limit']))) : 50;
     $offset = isset($_GET['offset']) ? max(0, intval($_GET['offset'])) : 0;
     $subcategoryKey = isset($_GET['subcategory_key']) ? trim($_GET['subcategory_key']) : '';
+    $subcategoryKeys = [];
+    if (!empty($_GET['subcategory_keys'])) {
+        $raw = explode(',', (string)$_GET['subcategory_keys']);
+        foreach ($raw as $k) {
+            $k = trim($k);
+            if ($k !== '') $subcategoryKeys[] = $k;
+        }
+    }
+    $keyword = isset($_GET['keyword']) ? trim((string)$_GET['keyword']) : '';
+    $minPrice = isset($_GET['min_price']) && $_GET['min_price'] !== '' ? floatval($_GET['min_price']) : null;
+    $maxPrice = isset($_GET['max_price']) && $_GET['max_price'] !== '' ? floatval($_GET['max_price']) : null;
+    $dateStart = isset($_GET['date_start']) ? trim((string)$_GET['date_start']) : '';
+    $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
+    $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
     $visibility = isset($_GET['visibility']) ? trim($_GET['visibility']) : 'active';
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     
@@ -98,8 +129,13 @@ try {
     $params = [];
     $types = '';
 
-    // Visibility filter
-    if ($visibility !== '' && $visibility !== 'all') {
+    // Visibility filter (expired toggle can widen this)
+    if ($includeExpired) {
+        $where[] = 'p.visibility IN (?, ?)';
+        $params[] = 'active';
+        $params[] = 'expired';
+        $types .= 'ss';
+    } elseif ($visibility !== '' && $visibility !== 'all') {
         $where[] = 'p.visibility = ?';
         $params[] = $visibility;
         $types .= 's';
@@ -116,11 +152,54 @@ try {
     $params[] = 'pending';
     $types .= 'ss';
 
-    // Subcategory filter
+    // Subcategory filters
     if ($subcategoryKey !== '') {
         $where[] = 'p.subcategory_key = ?';
         $params[] = $subcategoryKey;
         $types .= 's';
+    } elseif (!empty($subcategoryKeys)) {
+        $placeholders = implode(',', array_fill(0, count($subcategoryKeys), '?'));
+        $where[] = "p.subcategory_key IN ($placeholders)";
+        foreach ($subcategoryKeys as $k) {
+            $params[] = $k;
+            $types .= 's';
+        }
+    }
+
+    // Keyword filter (map card + checkout title)
+    if ($keyword !== '') {
+        $kw = '%' . $keyword . '%';
+        $where[] = '(mc.title LIKE ? OR mc.description LIKE ? OR mc.venue_name LIKE ? OR mc.city LIKE ? OR p.checkout_title LIKE ?)';
+        $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw;
+        $types .= 'sssss';
+    }
+
+    // Date range filter (correct: uses post_sessions)
+    if ($dateStart !== '' || $dateEnd !== '') {
+        $start = $dateStart !== '' ? $dateStart : $dateEnd;
+        $end = $dateEnd !== '' ? $dateEnd : $dateStart;
+        if ($start === '' || $end === '') { $start = $start ?: $end; $end = $start; }
+        $where[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = mc.id AND ps.session_date BETWEEN ? AND ?)';
+        $params[] = $start;
+        $params[] = $end;
+        $types .= 'ss';
+    }
+
+    // Price range filter (correct: uses pricing tables)
+    if ($minPrice !== null || $maxPrice !== null) {
+        if ($minPrice !== null && $maxPrice !== null) {
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price BETWEEN ? AND ?))';
+            $params[] = $minPrice; $params[] = $maxPrice; $params[] = $minPrice; $params[] = $maxPrice;
+            $types .= 'dddd';
+        } elseif ($minPrice !== null) {
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price >= ?))';
+            $params[] = $minPrice; $params[] = $minPrice;
+            $types .= 'dd';
+        } elseif ($maxPrice !== null) {
+            $where[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = mc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = mc.id AND ip.item_price <= ?))';
+            $params[] = $maxPrice; $params[] = $maxPrice;
+            $types .= 'dd';
+        }
     }
 
     // Single post by ID filter
@@ -157,7 +236,8 @@ try {
     }
 
     if (!empty($params)) {
-        $countStmt->bind_param($types, ...$params);
+        $paramsBind = $params;
+        bind_params_array($countStmt, $types, $paramsBind);
     }
 
     $countStmt->execute();
@@ -233,7 +313,8 @@ try {
     $params[] = $offset;
     $types .= 'ii';
 
-    $stmt->bind_param($types, ...$params);
+    $paramsBind2 = $params;
+    bind_params_array($stmt, $types, $paramsBind2);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -317,7 +398,8 @@ try {
         $mediaStmt = $mysqli->prepare("SELECT id, file_url, settings_json FROM `post_media` WHERE id IN ($placeholders) AND deleted_at IS NULL");
         if ($mediaStmt) {
             $types = str_repeat('i', count($allMediaIds));
-            $mediaStmt->bind_param($types, ...$allMediaIds);
+            $mediaBind = $allMediaIds;
+            bind_params_array($mediaStmt, $types, $mediaBind);
             $mediaStmt->execute();
             $mediaResult = $mediaStmt->get_result();
             while ($mediaRow = $mediaResult->fetch_assoc()) {

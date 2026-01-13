@@ -1403,6 +1403,11 @@ const MapModule = (function() {
     }).then(function() {
       setupClusterLayers();
     });
+
+    // Filters can change while the user stays at low zoom; clusters must refresh even if grid bucket is unchanged.
+    App.on('filter:changed', function() {
+      refreshClusters();
+    });
   }
 
   /**
@@ -1493,7 +1498,11 @@ const MapModule = (function() {
     // Skip if same bucket key (no grid size change)
     if (lastClusterBucketKey === bucketKey) return;
     
-    // Fetch cluster data from lightweight endpoint
+    // Clear clusters immediately so we never show wrong numbers during calculation.
+    // (No loading GIF on clusters; labels simply disappear until correct data arrives.)
+    source.setData({ type: 'FeatureCollection', features: [] });
+
+    // Fetch cluster data from server
     fetchClusterData(zoomValue).then(function(result) {
       var data = buildClusterFeatureCollectionFromServer(result.clusters);
       source.setData(data);
@@ -1511,7 +1520,31 @@ const MapModule = (function() {
    * Returns { clusters: Array, totalCount: number }
    */
   function fetchClusterData(zoom) {
-    return fetch('/gateway.php?action=get-clusters&zoom=' + zoom)
+    // Include current filters so clusters are never wrong.
+    // Filters are loaded from localStorage so they apply before the filter panel is opened.
+    var qs = new URLSearchParams();
+    qs.set('action', 'get-clusters');
+    qs.set('zoom', String(zoom));
+    try {
+      var raw = localStorage.getItem('funmap_filters');
+      if (raw) {
+        var saved = JSON.parse(raw);
+        if (saved && typeof saved === 'object') {
+          if (saved.keyword) qs.set('keyword', String(saved.keyword));
+          if (saved.minPrice) qs.set('min_price', String(saved.minPrice));
+          if (saved.maxPrice) qs.set('max_price', String(saved.maxPrice));
+          if (saved.dateStart) qs.set('date_start', String(saved.dateStart));
+          if (saved.dateEnd) qs.set('date_end', String(saved.dateEnd));
+          if (saved.expired) qs.set('expired', '1');
+          // Subcategory selection: send list of enabled subcategory keys if present
+          if (Array.isArray(saved.subcategoryKeys) && saved.subcategoryKeys.length) {
+            qs.set('subcategory_keys', saved.subcategoryKeys.map(String).join(','));
+          }
+        }
+      }
+    } catch (_e) {}
+
+    return fetch('/gateway.php?' + qs.toString())
       .then(function(response) { return response.json(); })
       .then(function(data) {
         return {

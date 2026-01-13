@@ -70,6 +70,10 @@ const PostModule = (function() {
     bindAppEvents();
     bindModeButtons();
 
+    // DB-first/localStorage filter state is stored in localStorage by MemberModule on login.
+    // PostModule needs it even if the filter panel hasn't been opened yet.
+    currentFilters = loadSavedFiltersFromLocalStorage();
+
     // Capture initial mode (HeaderModule already ran, but PostModule may have missed the event).
     currentMode = inferCurrentModeFromHeader() || 'map';
     applyMode(currentMode);
@@ -77,6 +81,17 @@ const PostModule = (function() {
     // Initialize zoom gating if we can.
     primeZoomFromMapIfAvailable();
     updatePostsButtonState();
+  }
+
+  function loadSavedFiltersFromLocalStorage() {
+    try {
+      var raw = localStorage.getItem('funmap_filters');
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (_e) {
+      return null;
+    }
   }
 
   function ensurePanelsDom() {
@@ -160,73 +175,28 @@ const PostModule = (function() {
         var threshold = getPostsMinZoom();
         var crossedUp = prevZoom < threshold && lastZoom >= threshold;
         
-        // Load posts when crossing zoom threshold (use viewport bounds at zoom 8+)
-        if (crossedUp && !cachedPosts && !postsLoading) {
+        // At zoom >= threshold, posts are server-filtered within the current bounds.
+        // Reload when crossing threshold, or when viewport changes enough to matter.
+        if (crossedUp) {
           var b0 = getMapBounds();
-          var boundsParam0 = b0 ? boundsToApiParam(b0) : '';
           var boundsKey0 = b0 ? boundsToKey(b0, 2) : '';
           if (boundsKey0) {
             lastLoadedBoundsKey = boundsKey0;
           }
-          
-          // IMPORTANT: render markers as soon as posts arrive (do not wait for moveend/zoomend)
-          loadPosts({ bounds: boundsParam0, limit: 200, offset: 0 }).then(function() {
-            // If filters exist, let applyFilters handle marker + list rendering to preserve state logic
-            if (currentFilters) {
-              applyFilters(currentFilters);
-              return;
-            }
-            // Otherwise, render markers immediately if we are still above threshold
-            var threshold0 = getPostsMinZoom();
-            if (lastZoom >= threshold0 && cachedPosts && cachedPosts.length) {
-              // Defer one frame so Mapbox marker DOM injection doesn't fight the zoom animation
-              requestAnimationFrame(function() {
-                renderMapMarkers(cachedPosts);
-                emitFilterCounts();
-              });
-            }
-          });
+          applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
         }
-        // Render markers when above threshold
-        if (lastZoom >= threshold && cachedPosts && cachedPosts.length) {
-          renderMapMarkers(filteredPosts || cachedPosts);
-        }
-        // Clear markers when below threshold
-        if (lastZoom < threshold && window.MapModule && MapModule.clearAllMapCardMarkers) {
-          MapModule.clearAllMapCardMarkers();
-        }
-        
-        // Reapply/reload when viewport changes (at zoom 8+, viewport bounds affect results)
-        var threshold2 = getPostsMinZoom();
-        if (lastZoom >= threshold2) {
+        if (lastZoom >= threshold) {
           var b = getMapBounds();
           var boundsKey = b ? boundsToKey(b, 2) : '';
-          var boundsParam = b ? boundsToApiParam(b) : '';
-          
-          // If we already loaded posts for a different viewport, reload for the new viewport.
-          // This keeps "map area" filtering correct without relying on global pagination order.
           if (boundsKey && boundsKey !== lastLoadedBoundsKey && !postsLoading) {
             lastLoadedBoundsKey = boundsKey;
-            loadPosts({ bounds: boundsParam, limit: 200, offset: 0 }).then(function() {
-              if (currentFilters) {
-                applyFilters(currentFilters);
-              } else {
-                // No filters: still refresh counts + markers based on viewport-loaded posts
-                emitFilterCounts();
-                renderMapMarkers(cachedPosts);
-              }
-            });
-          } else {
-            // Same bounds: just reapply client-side filters/counts
-            if (currentFilters) {
-              applyFilters(currentFilters);
-            } else if (cachedPosts) {
-              emitFilterCounts();
-            }
+            applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
           }
-        } else if (cachedPosts) {
-          // Still emit counts when map moves below threshold (no viewport filter)
-          emitFilterCounts();
+        } else {
+          // Below threshold: clusters handle the map; clear high-zoom markers.
+          if (window.MapModule && MapModule.clearAllMapCardMarkers) {
+            MapModule.clearAllMapCardMarkers();
+          }
         }
       }
     });
@@ -611,7 +581,20 @@ const PostModule = (function() {
     if (options && options.bounds) {
       params.append('bounds', options.bounds);
     }
-    if (options && options.subcategory_key) {
+    // Server-side filters (correct source-of-truth tables, not summaries)
+    if (options && options.filters && typeof options.filters === 'object') {
+      var f = options.filters;
+      if (f.keyword) params.append('keyword', String(f.keyword));
+      if (f.minPrice) params.append('min_price', String(f.minPrice));
+      if (f.maxPrice) params.append('max_price', String(f.maxPrice));
+      if (f.dateStart) params.append('date_start', String(f.dateStart));
+      if (f.dateEnd) params.append('date_end', String(f.dateEnd));
+      if (f.expired) params.append('expired', '1');
+      if (Array.isArray(f.subcategoryKeys) && f.subcategoryKeys.length) {
+        params.append('subcategory_keys', f.subcategoryKeys.map(String).join(','));
+      }
+    } else if (options && options.subcategory_key) {
+      // Legacy
       params.append('subcategory_key', options.subcategory_key);
     }
 
@@ -1214,31 +1197,44 @@ const PostModule = (function() {
    */
   function applyFilters(filterState) {
     currentFilters = filterState;
+    // Persist to localStorage so map clusters (which read localStorage) update even if filter panel closes.
+    try {
+      localStorage.setItem('funmap_filters', JSON.stringify(filterState || {}));
+    } catch (_eStore) {}
 
-    if (!cachedPosts || !cachedPosts.length) {
-      // No posts to filter - emit zero counts
-      App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
+    // At zoom >= threshold, results must be filtered server-side (correct tables: sessions/pricing/etc).
+    var threshold = getPostsMinZoom();
+    if (typeof lastZoom === 'number' && lastZoom >= threshold) {
+      var b = getMapBounds();
+      var boundsParam = b ? boundsToApiParam(b) : '';
+      // Clear current markers/list so we never show wrong results during calculation.
+      if (window.MapModule && MapModule.clearAllMapCardMarkers) {
+        MapModule.clearAllMapCardMarkers();
+      }
+      if (postListEl) {
+        // Keep open-post DOM intact (map movement must not close an open post),
+        // but blank everything else so we never show wrong results while server filtering runs.
+        var preservedOpenPost = postListEl.querySelector('.open-post');
+        if (preservedOpenPost && preservedOpenPost.parentElement === postListEl) {
+          try { postListEl.removeChild(preservedOpenPost); } catch (_eDetach) {}
+        }
+        postListEl.innerHTML = '';
+        if (preservedOpenPost) {
+          preservedOpenPost.style.display = '';
+          postListEl.appendChild(preservedOpenPost);
+        }
+      }
+      loadPosts({ bounds: boundsParam, limit: 200, offset: 0, filters: filterState || {} }).then(function() {
+        // Server returned filtered posts; renderMapMarkers is called by loadPosts->renderPostList path.
+        // Keep active state synced if open post still exists.
+        restoreActiveMapCardFromOpenPost();
+      });
       return;
     }
 
-    // Apply client-side filtering
-    filteredPosts = filterPosts(cachedPosts, filterState);
-
-    // Re-render post list
-    renderPostList(filteredPosts);
-    
-    // Emit count updates for filter panel
+    // Below threshold: no posts list should be shown; keep counts/clusters updated elsewhere.
+    filteredPosts = cachedPosts;
     emitFilterCounts();
-    
-    // Refresh map markers based on filtered results
-    renderMapMarkers(filteredPosts);
-    // Ensure active map card state stays in sync if a post is currently open
-    restoreActiveMapCardFromOpenPost();
-    
-    // Refresh map clusters to reflect filtered results
-    if (window.MapModule && MapModule.refreshClusters) {
-      MapModule.refreshClusters();
-    }
   }
 
   /**

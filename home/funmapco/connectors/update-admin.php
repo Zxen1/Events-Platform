@@ -108,6 +108,28 @@ if (isset($input['timezone'])) {
   $vals[] = trim((string)$input['timezone']);
 }
 
+// Filters persistence (DB-first; localStorage is secondary)
+if (array_key_exists('filters_json', $input)) {
+  $filtersJson = $input['filters_json'];
+  if ($filtersJson === null || $filtersJson === '') {
+    $updates[] = 'filters_json=NULL';
+    $updates[] = 'filters_hash=NULL';
+    $updates[] = 'filters_updated_at=NOW()';
+  } else {
+    $filtersJsonStr = is_string($filtersJson) ? $filtersJson : json_encode($filtersJson, JSON_UNESCAPED_SLASHES);
+    if (!is_string($filtersJsonStr)) fail(400, 'Invalid filters_json');
+    $decoded = json_decode($filtersJsonStr, true);
+    if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) fail(400, 'filters_json must be valid JSON');
+    $updates[] = 'filters_json=?';
+    $types .= 's';
+    $vals[] = $filtersJsonStr;
+    $updates[] = 'filters_hash=?';
+    $types .= 's';
+    $vals[] = sha1($filtersJsonStr);
+    $updates[] = 'filters_updated_at=NOW()';
+  }
+}
+
 // Password change
 $newPass = isset($input['password']) ? (string)$input['password'] : '';
 $confirm = isset($input['confirm']) ? (string)$input['confirm'] : '';

@@ -54,6 +54,22 @@ try {
     // Get zoom level from request (determines grid size)
     $zoom = isset($_GET['zoom']) ? floatval($_GET['zoom']) : 3;
     
+    // Filters (worldwide)
+    $keyword = isset($_GET['keyword']) ? trim((string)$_GET['keyword']) : '';
+    $minPrice = isset($_GET['min_price']) && $_GET['min_price'] !== '' ? floatval($_GET['min_price']) : null;
+    $maxPrice = isset($_GET['max_price']) && $_GET['max_price'] !== '' ? floatval($_GET['max_price']) : null;
+    $dateStart = isset($_GET['date_start']) ? trim((string)$_GET['date_start']) : '';
+    $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
+    $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
+    $subcategoryKeys = [];
+    if (!empty($_GET['subcategory_keys'])) {
+        $raw = explode(',', (string)$_GET['subcategory_keys']);
+        foreach ($raw as $k) {
+            $k = trim($k);
+            if ($k !== '') $subcategoryKeys[] = $k;
+        }
+    }
+    
     // Calculate grid size based on zoom (same logic as client-side)
     if ($zoom >= 7.5) {
         $gridSize = 0.5;
@@ -68,7 +84,63 @@ try {
     }
 
     // Query: Group map cards by grid cell, count each bucket
-    // Only include visible posts (active visibility, clean moderation, paid payment)
+    // Only include visible posts (active visibility, clean/pending moderation, paid payment)
+    $where = [];
+    $params = [];
+    $types = '';
+    
+    $where[] = "p.deleted_at IS NULL";
+    $where[] = "p.payment_status = 'paid'";
+    if ($includeExpired) {
+        $where[] = "p.visibility IN ('active','expired')";
+    } else {
+        $where[] = "p.visibility = 'active'";
+    }
+    $where[] = "p.moderation_status IN ('clean','pending')";
+    
+    if ($keyword !== '') {
+        $where[] = "(pmc.title LIKE ? OR pmc.description LIKE ? OR pmc.venue_name LIKE ? OR pmc.city LIKE ? OR p.checkout_title LIKE ?)";
+        $kw = '%' . $keyword . '%';
+        $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw;
+        $types .= 'sssss';
+    }
+    
+    if ($dateStart !== '' || $dateEnd !== '') {
+        $start = $dateStart !== '' ? $dateStart : $dateEnd;
+        $end = $dateEnd !== '' ? $dateEnd : $dateStart;
+        if ($start === '' || $end === '') { $start = $start ?: $end; $end = $start; }
+        $where[] = "EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = pmc.id AND ps.session_date BETWEEN ? AND ?)";
+        $params[] = $start; $params[] = $end;
+        $types .= 'ss';
+    }
+    
+    if ($minPrice !== null || $maxPrice !== null) {
+        if ($minPrice !== null && $maxPrice !== null) {
+            $where[] = "(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price BETWEEN ? AND ?))";
+            $params[] = $minPrice; $params[] = $maxPrice; $params[] = $minPrice; $params[] = $maxPrice;
+            $types .= 'dddd';
+        } elseif ($minPrice !== null) {
+            $where[] = "(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price >= ?))";
+            $params[] = $minPrice; $params[] = $minPrice;
+            $types .= 'dd';
+        } elseif ($maxPrice !== null) {
+            $where[] = "(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price <= ?))";
+            $params[] = $maxPrice; $params[] = $maxPrice;
+            $types .= 'dd';
+        }
+    }
+    
+    if (count($subcategoryKeys) > 0) {
+        $placeholders = implode(',', array_fill(0, count($subcategoryKeys), '?'));
+        $where[] = "pmc.subcategory_key IN ($placeholders)";
+        foreach ($subcategoryKeys as $k) {
+            $params[] = $k;
+            $types .= 's';
+        }
+    }
+    
+    $whereSql = implode(' AND ', $where);
+    
     $sql = "
         SELECT 
             FLOOR((pmc.longitude + 180) / ?) AS grid_col,
@@ -78,9 +150,7 @@ try {
             AVG(LEAST(GREATEST(pmc.latitude, -85), 85)) AS avg_lat
         FROM post_map_cards pmc
         INNER JOIN posts p ON pmc.post_id = p.id
-        WHERE p.visibility = 'active'
-          AND p.moderation_status = 'clean'
-          AND p.payment_status = 'paid'
+        WHERE {$whereSql}
         GROUP BY grid_col, grid_row
         HAVING count > 0
     ";
@@ -90,7 +160,19 @@ try {
         fail(500, 'Query preparation failed: ' . $mysqli->error);
     }
 
-    $stmt->bind_param('dd', $gridSize, $gridSize);
+    function bind_params_array(mysqli_stmt $stmt, string $types, array &$params): bool
+    {
+        $arguments = [$types];
+        foreach ($params as $k => $v) {
+            $arguments[] = &$params[$k];
+        }
+        return call_user_func_array([$stmt, 'bind_param'], $arguments);
+    }
+
+    // Bind: grid params first, then filter params
+    $bindTypes = 'dd' . $types;
+    $bindParams = array_merge([$gridSize, $gridSize], $params);
+    bind_params_array($stmt, $bindTypes, $bindParams);
     $stmt->execute();
     $result = $stmt->get_result();
 
