@@ -872,8 +872,7 @@ const FilterModule = (function() {
             dateEnd: dateEnd,
             expired: expiredInput ? expiredInput.checked : false,
             favourites: favouritesOn,
-            sort: currentSort,
-            categories: getCategoryState()
+            sort: currentSort
         };
     }
     

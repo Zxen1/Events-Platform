@@ -97,6 +97,7 @@ const MapModule = (function() {
   // Markers
   let mapCardMarkers = new Map();    // postId -> { marker, element, state }
   let clusterLayerVisible = true;
+  let lastMapZoom = 0;               // Track zoom for threshold crossing detection
   
   // Settings cache
   let adminSettings = {};
@@ -1149,21 +1150,33 @@ const MapModule = (function() {
   function bindMapEvents() {
     if (!map) return;
 
-    // Zoom event - only clear markers when going below threshold (like live site)
-    // Following live site pattern: index.js lines 21132-21161
+    // Initialize lastMapZoom to current zoom
+    lastMapZoom = map.getZoom();
+
+    // Zoom event - fires continuously during animation
+    // Triggers immediate marker rendering when crossing threshold 8
     map.on('zoom', () => {
       const zoom = map.getZoom();
+      const threshold = MARKER_ZOOM_THRESHOLD;
+      const crossedUp = lastMapZoom < threshold && zoom >= threshold;
       
-      // Clear markers when zoom drops below threshold
-      if (zoom < MARKER_ZOOM_THRESHOLD) {
-        clearAllMapCardMarkers();
+      if (crossedUp) {
+        // Immediately emit boundsChanged when crossing threshold upward
+        App.emit('map:boundsChanged', {
+          bounds: map.getBounds(),
+          zoom: zoom,
+          center: map.getCenter()
+        });
+        
+        // Update visibility immediately
+        updateClusterVisibility(zoom);
+        updateMarkersVisibility(zoom);
       }
       
-      // Update cluster visibility
-      updateClusterVisibility(zoom);
+      lastMapZoom = zoom;
     });
 
-    // Bounds change events (when animation completes)
+    // Bounds change events (moveend/zoomend - fires when animation completes)
     ['moveend', 'zoomend'].forEach(event => {
       map.on(event, () => {
         const bounds = map.getBounds();
@@ -1180,6 +1193,9 @@ const MapModule = (function() {
         
         // Update markers visibility
         updateMarkersVisibility(zoom);
+        
+        // Keep lastMapZoom in sync
+        lastMapZoom = zoom;
       });
     });
 
@@ -1194,26 +1210,11 @@ const MapModule = (function() {
       });
     });
 
-    // Click handler - stop spin, close modals, and handle click-away
-    map.on('click', (e) => {
+    // Click to stop spin and close welcome modal
+    map.on('click', () => {
       if (spinning) stopSpin();
       if (window.WelcomeModalComponent && WelcomeModalComponent.isVisible()) {
         WelcomeModalComponent.close();
-      }
-      
-      // Check if clicking on a map card container
-      const originalTarget = e.originalEvent && e.originalEvent.target;
-      const mapCardContainer = originalTarget && typeof originalTarget.closest === 'function'
-        ? originalTarget.closest('.map-card-container')
-        : null;
-      
-      if (!mapCardContainer) {
-        // Clicked elsewhere on the map - clear active and hover states
-        clearActiveMapCard();
-        clearAllMapCardHoverStates();
-        
-        // Emit event so post module can clear highlights
-        App.emit('map:clickedAway');
       }
     });
   }
@@ -1704,13 +1705,9 @@ const MapModule = (function() {
    * Find marker entry by post ID (searches through venue-keyed entries)
    */
   function findMarkerByPostId(postId) {
-    const searchId = String(postId);
     for (const [key, entry] of mapCardMarkers) {
-      if (entry.postIds) {
-        const found = entry.postIds.some(function(pid) {
-          return String(pid) === searchId;
-        });
-        if (found) return entry;
+      if (entry.postIds && entry.postIds.includes(postId)) {
+        return entry;
       }
     }
     return null;
@@ -1736,7 +1733,6 @@ const MapModule = (function() {
 
   /**
    * Handle map card click
-   * Following live site pattern: map.js lines 380-399
    */
   function onMapCardClick(postId) {
     // Set this card to active
@@ -1745,10 +1741,8 @@ const MapModule = (function() {
     // Stop spin
     stopSpin();
     
-    // Open the post directly (like live site)
-    if (window.PostModule && PostModule.openPostById) {
-      PostModule.openPostById(postId, { fromMap: true });
-    }
+    // Emit event for post module to open the post
+    App.emit('map:cardClicked', { postId });
   }
 
   /**
@@ -1771,61 +1765,6 @@ const MapModule = (function() {
       updateMapCardStateByKey(targetKey, 'big');
       targetEntry.element.classList.add('is-active');
     }
-  }
-
-  /**
-   * Clear all active map cards (deactivate all)
-   */
-  function clearActiveMapCard() {
-    mapCardMarkers.forEach((entry, venueKey) => {
-      if (entry.state === 'big') {
-        updateMapCardStateByKey(venueKey, 'small');
-        entry.element.classList.remove('is-active');
-      }
-      // Also clear any hover states
-      entry.element.classList.remove('is-hovered');
-    });
-  }
-
-  /**
-   * Set hover state on a map card by post ID
-   */
-  function setMapCardHover(postId) {
-    const entry = findMarkerByPostId(postId);
-    if (!entry || entry.state === 'big') return; // Don't change if already active
-    entry.element.classList.add('is-hovered');
-    updateMapCardStateByKey(entry.venueKey, 'hover');
-  }
-
-  /**
-   * Remove hover state from a map card by post ID
-   */
-  function removeMapCardHover(postId) {
-    const entry = findMarkerByPostId(postId);
-    if (!entry || entry.state === 'big') return; // Don't change if active
-    entry.element.classList.remove('is-hovered');
-    updateMapCardStateByKey(entry.venueKey, 'small');
-  }
-
-  /**
-   * Clear all hover states from all map cards
-   */
-  function clearAllMapCardHoverStates() {
-    mapCardMarkers.forEach((entry, venueKey) => {
-      if (entry.element.classList.contains('is-hovered') || entry.state === 'hover') {
-        entry.element.classList.remove('is-hovered');
-        if (entry.state === 'hover') {
-          updateMapCardStateByKey(venueKey, 'small');
-        }
-      }
-    });
-  }
-
-  /**
-   * Get all map card markers
-   */
-  function getAllMapCardMarkers() {
-    return mapCardMarkers;
   }
 
   /**
@@ -2258,12 +2197,6 @@ const MapModule = (function() {
     removeMapCardMarker,
     clearAllMapCardMarkers,
     setActiveMapCard,
-    clearActiveMapCard,
-    setMapCardHover,
-    removeMapCardHover,
-    clearAllMapCardHoverStates,
-    getAllMapCardMarkers,
-    findMarkerByPostId,
     refreshMapCardStyles,
     
     // Map card utilities (for PostModule)

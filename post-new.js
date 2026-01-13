@@ -158,9 +158,11 @@ const PostModule = (function() {
         var threshold = getPostsMinZoom();
         var crossedUp = prevZoom < threshold && lastZoom >= threshold;
         
-        // Load posts when crossing zoom threshold
+        // Load posts when crossing zoom threshold (use viewport bounds at zoom 8+)
         if (crossedUp && !cachedPosts && !postsLoading) {
-          loadPosts();
+          var b0 = getMapBounds();
+          var boundsParam0 = b0 ? boundsToApiParam(b0) : '';
+          loadPosts({ bounds: boundsParam0, limit: 200, offset: 0 });
         }
         // Render markers when above threshold
         if (lastZoom >= threshold && cachedPosts && cachedPosts.length) {
@@ -171,60 +173,45 @@ const PostModule = (function() {
           MapModule.clearAllMapCardMarkers();
         }
         
-        // Reapply filters when viewport changes (at zoom 8+, viewport bounds affect results)
-        var threshold = getPostsMinZoom();
-        if (lastZoom >= threshold && currentFilters) {
-          applyFilters(currentFilters);
+        // Reapply/reload when viewport changes (at zoom 8+, viewport bounds affect results)
+        var threshold2 = getPostsMinZoom();
+        if (lastZoom >= threshold2) {
+          var b = getMapBounds();
+          var boundsKey = b ? boundsToKey(b, 2) : '';
+          var boundsParam = b ? boundsToApiParam(b) : '';
+          
+          // If we already loaded posts for a different viewport, reload for the new viewport.
+          // This keeps "map area" filtering correct without relying on global pagination order.
+          if (boundsKey && boundsKey !== lastLoadedBoundsKey && !postsLoading) {
+            lastLoadedBoundsKey = boundsKey;
+            loadPosts({ bounds: boundsParam, limit: 200, offset: 0 }).then(function() {
+              if (currentFilters) {
+                applyFilters(currentFilters);
+              } else {
+                // No filters: still refresh counts + markers based on viewport-loaded posts
+                emitFilterCounts();
+                renderMapMarkers(cachedPosts);
+              }
+            });
+          } else {
+            // Same bounds: just reapply client-side filters/counts
+            if (currentFilters) {
+              applyFilters(currentFilters);
+            } else if (cachedPosts) {
+              emitFilterCounts();
+            }
+          }
         } else if (cachedPosts) {
-          // Still emit counts when map moves
+          // Still emit counts when map moves below threshold (no viewport filter)
           emitFilterCounts();
         }
       }
     });
 
-    // Listen for map marker clicks (single post)
+    // Listen for map marker clicks
     App.on('map:cardClicked', function(data) {
       if (!data || !data.postId) return;
       openPostById(data.postId, { fromMap: true });
-    });
-
-    // Listen for multi-post map card clicks (highlight all, don't open)
-    App.on('map:multiPostClicked', function(data) {
-      if (!data || !data.postIds || !data.postIds.length) return;
-      
-      // Clear any existing highlights first
-      document.querySelectorAll('.post-card--map-highlight').forEach(function(card) {
-        card.classList.remove('post-card--map-highlight');
-      });
-      
-      // Highlight all post cards at this venue
-      data.postIds.forEach(function(postId) {
-        var postCards = document.querySelectorAll('.post-card[data-id="' + postId + '"]');
-        postCards.forEach(function(card) {
-          card.classList.add('post-card--map-highlight');
-        });
-      });
-    });
-
-    // Listen for map card hover to sync post card highlights
-    App.on('map:cardHover', function(data) {
-      if (!data) return;
-      var postId = String(data.postId);
-      var postCards = document.querySelectorAll('.post-card[data-id="' + postId + '"]');
-      postCards.forEach(function(card) {
-        if (data.isHovering) {
-          card.classList.add('post-card--map-highlight');
-        } else {
-          card.classList.remove('post-card--map-highlight');
-        }
-      });
-    });
-
-    // Listen for click-away on map to clear post card highlights
-    App.on('map:clickedAway', function() {
-      document.querySelectorAll('.post-card--map-highlight').forEach(function(card) {
-        card.classList.remove('post-card--map-highlight');
-      });
     });
 
     // Listen for filter changes
@@ -840,13 +827,14 @@ const PostModule = (function() {
    * @param {boolean} isHovering - Whether hovering
    */
   function syncMapMarkerHover(postId, isHovering) {
-    // Use MapModule API
-    if (!window.MapModule) return;
-    
-    if (isHovering && MapModule.setMapCardHover) {
-      MapModule.setMapCardHover(postId);
-    } else if (!isHovering && MapModule.removeMapCardHover) {
-      MapModule.removeMapCardHover(postId);
+    // Use MapCards API if available (from map.js)
+    if (window.MapCards) {
+      if (isHovering && MapCards.setMapCardHover) {
+        MapCards.setMapCardHover(postId);
+      } else if (!isHovering && MapCards.removeMapCardHover) {
+        MapCards.removeMapCardHover(postId);
+      }
+      return;
     }
   }
 
@@ -1051,6 +1039,9 @@ const PostModule = (function() {
   // Current filter state
   var currentFilters = null;
   var filteredPosts = null;
+  
+  // Track last viewport used for server-side post loads (prevents refetch on same bounds)
+  var lastLoadedBoundsKey = '';
 
   /**
    * Count map cards in visible map area (for filter counts)
@@ -1074,7 +1065,7 @@ const PostModule = (function() {
         // If no bounds or map area filter is off, count all
         if (!bounds) {
           count++;
-        } else if (inBounds(mc.longitude, mc.latitude, bounds)) {
+        } else if (pointWithinBounds(mc.longitude, mc.latitude, bounds)) {
           count++;
         }
       }
@@ -1135,12 +1126,16 @@ const PostModule = (function() {
    */
   /**
    * Check if a point is within bounds
-   * Following live site pattern: index.js lines 24113-24117
    */
-  function inBounds(lng, lat, bounds) {
+  function pointWithinBounds(lng, lat, bounds) {
     if (!bounds) return true;
-    return lng >= bounds.getWest() && lng <= bounds.getEast() &&
-           lat >= bounds.getSouth() && lat <= bounds.getNorth();
+    var withinLat = lat >= bounds.south && lat <= bounds.north;
+    if (!withinLat) return false;
+    if (bounds.west <= bounds.east) {
+      return lng >= bounds.west && lng <= bounds.east;
+    }
+    // Handle antimeridian crossing
+    return lng >= bounds.west || lng <= bounds.east;
   }
 
   /**
@@ -1148,7 +1143,47 @@ const PostModule = (function() {
    */
   function getMapBounds() {
     if (!window.MapModule || !MapModule.getBounds) return null;
-    return MapModule.getBounds();
+    return normalizeBounds(MapModule.getBounds());
+  }
+
+  /**
+   * Normalize Mapbox LngLatBounds into a simple POJO:
+   * { west, east, south, north }
+   * (Matches live site logic to keep bounds math consistent.)
+   */
+  function normalizeBounds(bounds) {
+    if (!bounds) return null;
+    if (typeof bounds.getWest === 'function') {
+      return {
+        west: bounds.getWest(),
+        east: bounds.getEast(),
+        south: bounds.getSouth(),
+        north: bounds.getNorth()
+      };
+    }
+    var west = bounds.west;
+    var east = bounds.east;
+    var south = bounds.south;
+    var north = bounds.north;
+    if (!Number.isFinite(west) || !Number.isFinite(east) || !Number.isFinite(south) || !Number.isFinite(north)) {
+      return null;
+    }
+    return { west: west, east: east, south: south, north: north };
+  }
+
+  function boundsToKey(bounds, precision) {
+    var b = normalizeBounds(bounds);
+    if (!b) return '';
+    var p = Number.isFinite(precision) ? precision : 2;
+    var fmt = function(v) { return Number.isFinite(v) ? v.toFixed(p) : 'nan'; };
+    return [b.west, b.south, b.east, b.north].map(fmt).join('|');
+  }
+
+  // API expects: sw_lng,sw_lat,ne_lng,ne_lat
+  function boundsToApiParam(bounds) {
+    var b = normalizeBounds(bounds);
+    if (!b) return '';
+    return [b.west, b.south, b.east, b.north].join(',');
   }
 
   function filterPosts(posts, filters) {
@@ -1164,10 +1199,10 @@ const PostModule = (function() {
 
       // Map area filter (viewport bounds) - include post if ANY map card is in bounds
       if (bounds) {
-        var anyCardInBounds = mapCards.some(function(mc) {
-          return mc && inBounds(mc.longitude, mc.latitude, bounds);
+        var anyInBounds = mapCards.some(function(mc) {
+          return mc && pointWithinBounds(mc.longitude, mc.latitude, bounds);
         });
-        if (!anyCardInBounds) return false;
+        if (!anyInBounds) return false;
       }
 
       // Keyword filter - match against ANY map card's content
@@ -1187,83 +1222,19 @@ const PostModule = (function() {
         if (!keywordMatch) return false;
       }
 
-      // Price filter - check if ANY map card's price is within range
+      // Price filter (if price_summary contains a number)
       if (filters.minPrice || filters.maxPrice) {
-        var minP = filters.minPrice ? parseFloat(filters.minPrice) : null;
-        var maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : null;
-        
-        var priceInRange = mapCards.some(function(mc) {
-          if (!mc || !mc.price_summary) return false;
-          var priceMatch = mc.price_summary.match(/[\d,.]+/);
-          if (!priceMatch) return false;
-          var price = parseFloat(priceMatch[0].replace(/,/g, ''));
-          if (!Number.isFinite(price)) return false;
-          if (minP !== null && price < minP) return false;
-          if (maxP !== null && price > maxP) return false;
-          return true;
-        });
-        
-        if (!priceInRange) return false;
-      }
+        var priceSummary = (mapCard && mapCard.price_summary) || '';
+        var priceMatch = priceSummary.match(/[\d,.]+/);
+        var price = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : null;
 
-      // Date filter - check if ANY map card has sessions within range
-      // Following live site pattern: index.js lines 24186-24202
-      var hasDateFilter = filters.dateStart || filters.dateEnd;
-      var showExpired = filters.expired;
-      
-      if (hasDateFilter || !showExpired) {
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        var startDate = filters.dateStart ? new Date(filters.dateStart) : null;
-        var endDate = filters.dateEnd ? new Date(filters.dateEnd) : null;
-        
-        var dateMatch = mapCards.some(function(mc) {
-          if (!mc || !mc.sessions || !mc.sessions.length) return false;
-          return mc.sessions.some(function(sess) {
-            var sessDate = sess.date || sess.full;
-            if (!sessDate) return false;
-            var dt = new Date(sessDate);
-            dt.setHours(0, 0, 0, 0);
-            
-            // If no range set, just check not expired (unless showExpired)
-            if (!startDate && !endDate) {
-              return showExpired || dt >= today;
-            }
-            
-            // Check within range
-            if (startDate && dt < startDate) return false;
-            if (endDate && dt > endDate) return false;
-            return true;
-          });
-        });
-        
-        if (!dateMatch) return false;
-      }
-
-      // Category filter - check if post's category/subcategory is enabled
-      // Following live site pattern: index.js lines 24203-24217
-      if (filters.categories) {
-        var catState = filters.categories;
-        var hasCatFilters = Object.keys(catState).length > 0;
-        
-        if (hasCatFilters) {
-          var catMatch = mapCards.some(function(mc) {
-            if (!mc) return false;
-            var category = mc.category || '';
-            var subcategory = mc.subcategory || '';
-            
-            var catConfig = catState[category];
-            if (!catConfig || !catConfig.enabled) return false;
-            
-            // Check subcategory if subs exist
-            if (catConfig.subs && Object.keys(catConfig.subs).length > 0) {
-              return catConfig.subs[subcategory] === true;
-            }
-            return true;
-          });
-          
-          if (!catMatch) return false;
+        if (price !== null) {
+          if (filters.minPrice && price < parseFloat(filters.minPrice)) {
+            return false;
+          }
+          if (filters.maxPrice && price > parseFloat(filters.maxPrice)) {
+            return false;
+          }
         }
       }
 
