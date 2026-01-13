@@ -1149,7 +1149,25 @@ const MapModule = (function() {
   function bindMapEvents() {
     if (!map) return;
 
-    // Bounds change events
+    // Zoom event - fires DURING zoom animation (not just at end)
+    // This allows map cards to appear instantly as zoom crosses threshold
+    map.on('zoom', () => {
+      const zoom = map.getZoom();
+      
+      App.emit('map:boundsChanged', {
+        bounds: map.getBounds(),
+        zoom: zoom,
+        center: map.getCenter()
+      });
+      
+      // Update cluster visibility
+      updateClusterVisibility(zoom);
+      
+      // Update markers visibility
+      updateMarkersVisibility(zoom);
+    });
+
+    // Bounds change events (when animation completes)
     ['moveend', 'zoomend'].forEach(event => {
       map.on(event, () => {
         const bounds = map.getBounds();
