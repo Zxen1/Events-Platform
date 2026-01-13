@@ -1255,6 +1255,7 @@ const CurrencyComponent = (function(){
                 btnImg.src = '';
                 btnImg.style.display = 'none';
                 btnInput.value = '';
+                btnInput.placeholder = 'Select';
                 selectedCode = null;
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
@@ -1272,6 +1273,7 @@ const CurrencyComponent = (function(){
                     btnImg.style.display = 'none';
                 }
                 btnInput.value = found.value + ' - ' + found.label;
+                btnInput.placeholder = 'Search';
                 selectedCode = code;
                 try { menu.dataset.value = String(code || '').trim(); } catch (e1) {}
             }
@@ -1508,6 +1510,16 @@ const LanguageMenuComponent = (function(){
 
         // Find and set initial value
         function setValue(code) {
+            // Handle null/empty - revert to placeholder state
+            if (!code) {
+                btnImg.src = '';
+                btnImg.style.display = 'none';
+                btnInput.value = '';
+                btnInput.placeholder = 'Select';
+                selectedCode = null;
+                try { menu.dataset.value = ''; } catch (e0) {}
+                return;
+            }
             var found = languageData.find(function(item) {
                 return item.value === code;
             });
@@ -1521,7 +1533,9 @@ const LanguageMenuComponent = (function(){
                     btnImg.style.display = 'none';
                 }
                 btnInput.value = found.value + ' - ' + found.label;
+                btnInput.placeholder = 'Search';
                 selectedCode = code;
+                try { menu.dataset.value = String(code || '').trim(); } catch (e1) {}
             }
         }
 
@@ -2005,18 +2019,19 @@ const CountryComponent = (function(){
         var allOptions = [];
         
         function setValue(code) {
-            var found = countryData.find(function(item) {
-                return item.value === code;
-            });
-            if (!found && !code) {
-                // Clear the input if no code
+            // Handle null/empty - revert to placeholder state
+            if (!code) {
                 btnImg.src = '';
                 btnImg.style.display = 'none';
                 btnInput.value = '';
+                btnInput.placeholder = 'Select';
                 selectedCode = null;
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
             }
+            var found = countryData.find(function(item) {
+                return item.value === code;
+            });
             if (found) {
                 var filename = found.filename ? String(found.filename) : '';
                 if (filename) {
@@ -2027,6 +2042,7 @@ const CountryComponent = (function(){
                     btnImg.style.display = 'none';
                 }
                 btnInput.value = (found.value || '').toUpperCase() + ' - ' + (found.label || '');
+                btnInput.placeholder = 'Search';
                 selectedCode = code;
                 try { menu.dataset.value = String(code || '').toLowerCase(); } catch (e1) {}
             }
