@@ -97,7 +97,6 @@ const MapModule = (function() {
   // Markers
   let mapCardMarkers = new Map();    // postId -> { marker, element, state }
   let clusterLayerVisible = true;
-  let lastMapZoom = 0;               // Track zoom for threshold crossing detection
   
   // Settings cache
   let adminSettings = {};
@@ -1150,33 +1149,7 @@ const MapModule = (function() {
   function bindMapEvents() {
     if (!map) return;
 
-    // Initialize lastMapZoom to current zoom
-    lastMapZoom = map.getZoom();
-
-    // Zoom event - fires continuously during animation
-    // Triggers immediate marker rendering when crossing threshold 8
-    map.on('zoom', () => {
-      const zoom = map.getZoom();
-      const threshold = MARKER_ZOOM_THRESHOLD;
-      const crossedUp = lastMapZoom < threshold && zoom >= threshold;
-      
-      if (crossedUp) {
-        // Immediately emit boundsChanged when crossing threshold upward
-        App.emit('map:boundsChanged', {
-          bounds: map.getBounds(),
-          zoom: zoom,
-          center: map.getCenter()
-        });
-        
-        // Update visibility immediately
-        updateClusterVisibility(zoom);
-        updateMarkersVisibility(zoom);
-      }
-      
-      lastMapZoom = zoom;
-    });
-
-    // Bounds change events (moveend/zoomend - fires when animation completes)
+    // Bounds change events
     ['moveend', 'zoomend'].forEach(event => {
       map.on(event, () => {
         const bounds = map.getBounds();
@@ -1193,9 +1166,6 @@ const MapModule = (function() {
         
         // Update markers visibility
         updateMarkersVisibility(zoom);
-        
-        // Keep lastMapZoom in sync
-        lastMapZoom = zoom;
       });
     });
 
