@@ -39,6 +39,7 @@ const PostModule = (function() {
   var currentMode = 'map';
   var lastZoom = null;
   var postsEnabled = false;
+  var favToTop = false; // matches live site: "Favourites on top" is a sort behavior, not a filter
 
   var modeButtonsBound = false;
 
@@ -270,7 +271,10 @@ const PostModule = (function() {
 
     App.on('filter:favouritesToggle', function(data) {
       if (!data) return;
-      filterFavourites(data.enabled);
+      favToTop = !!data.enabled;
+      // Re-apply sorting/rendering without filtering out non-favourites.
+      // Keep existing sort key if available; default to 'az'.
+      sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'az') : 'az');
     });
   }
 
@@ -1375,6 +1379,13 @@ const PostModule = (function() {
     var sorted = posts.slice().sort(function(a, b) {
       var mcA = (a.map_cards && a.map_cards.length) ? a.map_cards[0] : null;
       var mcB = (b.map_cards && b.map_cards.length) ? b.map_cards[0] : null;
+      
+      // Live-site behavior: "Favourites on top" is applied as a primary ordering when enabled.
+      if (favToTop) {
+        var favA = isFavorite(a.id) ? 1 : 0;
+        var favB = isFavorite(b.id) ? 1 : 0;
+        if (favA !== favB) return favB - favA;
+      }
 
       switch (sortKey) {
         case 'az':
@@ -1382,10 +1393,11 @@ const PostModule = (function() {
           var titleB = ((mcB && mcB.title) || b.checkout_title || '').toLowerCase();
           return titleA.localeCompare(titleB);
 
-        case 'za':
-          var titleA2 = ((mcA && mcA.title) || a.checkout_title || '').toLowerCase();
-          var titleB2 = ((mcB && mcB.title) || b.checkout_title || '').toLowerCase();
-          return titleB2.localeCompare(titleA2);
+        case 'nearest':
+          return compareNearestToMapCenter(a, b);
+
+        case 'soon':
+          return compareSoonest(a, b);
 
         case 'newest':
           var dateA = new Date(a.created_at || 0).getTime();
@@ -1426,17 +1438,103 @@ const PostModule = (function() {
     var match = mapCard.price_summary.match(/[\d,.]+/);
     return match ? parseFloat(match[0].replace(/,/g, '')) : 0;
   }
+  
+  function getMapCenter() {
+    try {
+      if (window.MapModule && typeof MapModule.getMap === 'function') {
+        var map = MapModule.getMap();
+        if (map && typeof map.getCenter === 'function') {
+          return map.getCenter();
+        }
+      }
+    } catch (_e) {}
+    return null;
+  }
+  
+  function distKm(a, b) {
+    // Haversine
+    var R = 6371;
+    var dLat = (b.lat - a.lat) * Math.PI / 180;
+    var dLng = (b.lng - a.lng) * Math.PI / 180;
+    var lat1 = a.lat * Math.PI / 180;
+    var lat2 = b.lat * Math.PI / 180;
+    var s1 = Math.sin(dLat / 2);
+    var s2 = Math.sin(dLng / 2);
+    var h = s1 * s1 + Math.cos(lat1) * Math.cos(lat2) * s2 * s2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  
+  function getPostMinDistanceKmToCenter(post, center) {
+    if (!post || !center) return Number.POSITIVE_INFINITY;
+    var centerPt = { lng: Number(center.lng), lat: Number(center.lat) };
+    if (!Number.isFinite(centerPt.lng) || !Number.isFinite(centerPt.lat)) return Number.POSITIVE_INFINITY;
+    
+    var cards = Array.isArray(post.map_cards) ? post.map_cards : [];
+    var best = Number.POSITIVE_INFINITY;
+    for (var i = 0; i < cards.length; i++) {
+      var mc = cards[i];
+      if (!mc) continue;
+      var lng = Number(mc.longitude);
+      var lat = Number(mc.latitude);
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
+      var d = distKm({ lng: lng, lat: lat }, centerPt);
+      if (d < best) best = d;
+    }
+    return best;
+  }
+  
+  function compareNearestToMapCenter(a, b) {
+    var center = getMapCenter();
+    if (!center) return 0;
+    var dA = getPostMinDistanceKmToCenter(a, center);
+    var dB = getPostMinDistanceKmToCenter(b, center);
+    if (dA === dB) return 0;
+    return dA - dB;
+  }
+  
+  function getPostSoonestTimestamp(post) {
+    var cards = Array.isArray(post && post.map_cards) ? post.map_cards : [];
+    var best = Number.POSITIVE_INFINITY;
+    for (var i = 0; i < cards.length; i++) {
+      var mc = cards[i];
+      var sessions = mc && Array.isArray(mc.sessions) ? mc.sessions : [];
+      for (var j = 0; j < sessions.length; j++) {
+        var s = sessions[j];
+        if (!s) continue;
+        var dt = null;
+        // Support both {date,time} and {session_date,session_time}
+        var dateStr = s.date || s.session_date || '';
+        var timeStr = s.time || s.session_time || '';
+        if (dateStr) {
+          dt = new Date(String(dateStr) + (timeStr ? ('T' + String(timeStr)) : 'T00:00:00'));
+        }
+        var t = dt ? dt.getTime() : NaN;
+        if (Number.isFinite(t) && t < best) best = t;
+      }
+    }
+    return best;
+  }
+  
+  function compareSoonest(a, b) {
+    var tA = getPostSoonestTimestamp(a);
+    var tB = getPostSoonestTimestamp(b);
+    var aHas = Number.isFinite(tA) && tA !== Number.POSITIVE_INFINITY;
+    var bHas = Number.isFinite(tB) && tB !== Number.POSITIVE_INFINITY;
+    if (aHas && bHas) return tA - tB;
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    return 0;
+  }
 
   /**
    * Filter to show only favourites
    * @param {boolean} showFavouritesOnly - Whether to show only favourites
    */
-  function filterFavourites(showFavouritesOnly) {
-    if (!currentFilters) {
-      currentFilters = {};
-    }
-    currentFilters.favourites = showFavouritesOnly;
-    applyFilters(currentFilters);
+  // Backwards-compat: this used to mean "favourites only" filtering, but the UI is "Favourites on top".
+  // Keep it as a no-op wrapper that toggles favToTop (do not hide non-favourites).
+  function filterFavourites(favouritesOnTop) {
+    favToTop = !!favouritesOnTop;
+    sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'az') : 'az');
   }
 
   /**

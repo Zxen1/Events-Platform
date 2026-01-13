@@ -221,13 +221,23 @@ const FilterModule = (function() {
             if (favouritesBtn) {
                 favouritesBtn.setAttribute('aria-pressed', favouritesOn ? 'true' : 'false');
             }
+            syncFavouritesButtonUi();
         }
         if (saved.sort) {
             currentSort = saved.sort;
-            if (sortButtonText) {
-                var sortLabels = { az: 'A–Z', za: 'Z–A', soonest: 'Soonest', latest: 'Latest' };
-                sortButtonText.textContent = sortLabels[saved.sort] || saved.sort;
-            }
+            // Keep UI label in sync with the actual option text (matches live-site behavior).
+            // Do NOT emit sort change during restore; sorting will occur when posts are loaded / user interacts.
+            try {
+                var opt = sortMenuEl ? sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="' + currentSort + '"]') : null;
+                if (opt && sortButtonText) {
+                    sortButtonText.textContent = opt.textContent;
+                }
+                if (sortMenuEl) {
+                    sortMenuEl.querySelectorAll('.filter-sort-menu-option').forEach(function(o) {
+                        o.classList.toggle('filter-sort-menu-option--selected', o.getAttribute('data-sort') === currentSort);
+                    });
+                }
+            } catch (_eSortRestore) {}
         }
         
         // Map state is restored separately after map is ready
