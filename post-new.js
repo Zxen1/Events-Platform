@@ -229,6 +229,20 @@ const PostModule = (function() {
       }
     });
 
+    // Hover sync from map → post cards (and open post header).
+    // MapModule emits this when a map card is hovered.
+    App.on('map:cardHover', function(data) {
+      if (!data) return;
+      var isHovering = !!data.isHovering;
+      var ids = [];
+      if (Array.isArray(data.postIds)) {
+        ids = data.postIds.map(function(v) { return String(v); }).filter(Boolean);
+      } else if (data.postId !== undefined && data.postId !== null) {
+        ids = [String(data.postId)];
+      }
+      syncPostCardHoverFromMap(ids, isHovering);
+    });
+
     // Listen for map marker clicks
     App.on('map:cardClicked', function(data) {
       if (!data || !data.postId) return;
@@ -258,6 +272,44 @@ const PostModule = (function() {
       if (!data) return;
       filterFavourites(data.enabled);
     });
+  }
+
+  var lastMapHoverPostIds = [];
+
+  function syncPostCardHoverFromMap(postIds, isHovering) {
+    if (!postListEl) return;
+    var ids = Array.isArray(postIds) ? postIds : [];
+    
+    // Clear previous hover highlights if we are starting a new hover group
+    if (isHovering) {
+      lastMapHoverPostIds.forEach(function(pid) {
+        togglePostCardHoverClass(pid, false);
+      });
+      lastMapHoverPostIds = ids.slice();
+      ids.forEach(function(pid) {
+        togglePostCardHoverClass(pid, true);
+      });
+      return;
+    }
+    
+    // Hover end: clear the current group
+    lastMapHoverPostIds.forEach(function(pid) {
+      togglePostCardHoverClass(pid, false);
+    });
+    lastMapHoverPostIds = [];
+  }
+
+  function togglePostCardHoverClass(postId, on) {
+    if (!postId) return;
+    // Includes open-post header card too (it remains .post-card with data-id)
+    var cards = document.querySelectorAll('.post-card[data-id="' + postId + '"], .recent-card[data-id="' + postId + '"]');
+    cards.forEach(function(el) {
+      el.classList.toggle('post-card--map-highlight', !!on);
+    });
+    var openWrap = document.querySelector('.open-post[data-id="' + postId + '"]');
+    if (openWrap) {
+      openWrap.classList.toggle('open-post--map-highlight', !!on);
+    }
   }
 
   /**
@@ -865,8 +917,16 @@ const PostModule = (function() {
    */
   function renderPostList(posts) {
     if (!postListEl) return;
-
-    // Clear existing
+    
+    // Preserve an open post across re-renders (map moves trigger filter refreshes).
+    // If the open post is still in the filtered results, keep it open (do NOT close just because the map moved).
+    var preservedOpenPost = postListEl.querySelector('.open-post');
+    var preservedOpenPostId = preservedOpenPost && preservedOpenPost.dataset ? String(preservedOpenPost.dataset.id || '') : '';
+    if (preservedOpenPost && preservedOpenPost.parentElement === postListEl) {
+      try { postListEl.removeChild(preservedOpenPost); } catch (_eDetach) {}
+    }
+    
+    // Clear existing list content (cards + summary)
     postListEl.innerHTML = '';
 
     // Show empty state if no posts
@@ -886,9 +946,19 @@ const PostModule = (function() {
 
     // Render each post card
     posts.forEach(function(post) {
+      // If this post is currently open, reinsert the existing open-post wrapper instead of recreating.
+      if (preservedOpenPost && preservedOpenPostId && String(post.id) === preservedOpenPostId) {
+        // Ensure it stays visible (if it was previously hidden)
+        preservedOpenPost.style.display = '';
+        postListEl.appendChild(preservedOpenPost);
+        return;
+      }
       var card = renderPostCard(post);
       postListEl.appendChild(card);
     });
+    
+    // If there was an open post but it is no longer in the filtered list, do not reinsert it.
+    // That means it disappears because it's filtered out (expected).
 
     // Render markers on the map (only if above zoom threshold)
     var threshold = getPostsMinZoom();
@@ -1375,30 +1445,8 @@ const PostModule = (function() {
   function renderFilteredPosts() {
     var posts = filteredPosts || cachedPosts;
     if (!posts) return;
-
-    if (!postListEl) return;
-    postListEl.innerHTML = '';
-
-    if (!posts.length) {
-      renderPostsEmptyState();
-      return;
-    }
-
-    var summaryText = getFilterSummaryText();
-    if (summaryText) {
-      var summaryEl = document.createElement('div');
-      summaryEl.className = 'msg--summary post-panel-summary';
-      summaryEl.textContent = summaryText;
-      postListEl.appendChild(summaryEl);
-    }
-
-    posts.forEach(function(post) {
-      var card = renderPostCard(post);
-      postListEl.appendChild(card);
-    });
-
-    // Re-render markers for filtered posts
-    renderMapMarkers(posts);
+    // Use the standard renderer so open posts are preserved correctly
+    renderPostList(posts);
   }
 
   /* --------------------------------------------------------------------------

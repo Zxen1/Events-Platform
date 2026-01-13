@@ -1728,7 +1728,10 @@ const MapModule = (function() {
       updateMapCardStateByKey(entry.venueKey, 'small');
     }
 
-    App.emit('map:cardHover', { postId, isHovering });
+    // Emit both the primary postId and all post IDs associated with this marker
+    // (multi-post venues should highlight all related post cards).
+    const postIds = Array.isArray(entry.postIds) ? entry.postIds.slice() : [postId];
+    App.emit('map:cardHover', { postId, postIds, isHovering });
   }
 
   /**
@@ -2197,6 +2200,9 @@ const MapModule = (function() {
     removeMapCardMarker,
     clearAllMapCardMarkers,
     setActiveMapCard,
+    // MapCards-style hover API (compat layer for PostModule)
+    setMapCardHover: (postId) => onMapCardHover(postId, true),
+    removeMapCardHover: (postId) => onMapCardHover(postId, false),
     refreshMapCardStyles,
     
     // Map card utilities (for PostModule)
@@ -2226,3 +2232,11 @@ App.registerModule('map', MapModule);
 
 // Expose globally for consistency with other modules
 window.MapModule = MapModule;
+
+// Live-site compatibility shim: PostModule expects window.MapCards for hover syncing.
+// Keep it thin: delegate to MapModule.
+window.MapCards = window.MapCards || {
+  setMapCardHover: (postId) => MapModule.setMapCardHover(postId),
+  removeMapCardHover: (postId) => MapModule.removeMapCardHover(postId),
+  setMapCardActive: (postId) => MapModule.setActiveMapCard(postId)
+};
