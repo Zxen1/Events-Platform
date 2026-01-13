@@ -954,7 +954,7 @@ const PostModule = (function() {
       });
     });
 
-    // Second pass: create markers, marking multi-post venues
+    // Second pass: create ONE marker per venue
     var markerCount = 0;
     Object.keys(venueGroups).forEach(function(venueKey) {
       var group = venueGroups[venueKey];
@@ -965,21 +965,22 @@ const PostModule = (function() {
       group.forEach(function(item) { uniquePostIds[item.post.id] = true; });
       var isMultiPostVenue = Object.keys(uniquePostIds).length > 1;
       
-      // Create a marker for each map card at this venue
-      group.forEach(function(item) {
-        var markerData = convertMapCardToMarker(item.post, item.mapCard, item.index);
-        if (!markerData) return;
-        
-        // Override isMultiPost if this is a multi-post venue
-        if (isMultiPostVenue) {
-          markerData.isMultiPost = true;
-        }
+      // Use the first item for the marker, but store all post IDs for the venue
+      var firstItem = group[0];
+      var markerData = convertMapCardToMarker(firstItem.post, firstItem.mapCard, firstItem.index);
+      if (!markerData) return;
+      
+      if (isMultiPostVenue) {
+        // Multi-post venue: use multi-post icon and store all post IDs
+        markerData.isMultiPost = true;
+        markerData.venuePostIds = Object.keys(uniquePostIds);
+        markerData.venuePostCount = markerData.venuePostIds.length;
+      }
 
-        if (mapModule.createMapCardMarker) {
-          mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat);
-          markerCount++;
-        }
-      });
+      if (mapModule.createMapCardMarker) {
+        mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat);
+        markerCount++;
+      }
     });
 
     console.log('[Post] Rendered ' + markerCount + ' map markers');
