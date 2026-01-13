@@ -4164,22 +4164,23 @@ const FieldsetBuilder = (function(){
                             return false;
                         }
                         case 'public_phone': {
-                            var pfx = fieldset.querySelector('.component-phoneprefixcompact-menu-button-input');
+                            // Only check the phone number input, NOT the prefix selector
+                            // Selecting a prefix alone should not trigger incomplete state
                             var tel = fieldset.querySelector('input[type="tel"].fieldset-input');
-                            if (pfx && String(pfx.value || '').trim()) return true;
                             if (tel && String(tel.value || '').trim()) return true;
                             return false;
                         }
                         case 'item-pricing': {
-                            var els = fieldset.querySelectorAll('input:not([type="hidden"]), select, textarea');
-                            for (var i = 0; i < els.length; i++) {
-                                var el = els[i];
-                                if (!el) continue;
-                                if (el.type === 'checkbox' || el.type === 'radio') {
-                                    if (el.checked) return true;
-                                } else if (String(el.value || '').trim()) {
-                                    return true;
-                                }
+                            // Only check item name, price, and variant inputs
+                            // Selecting a currency alone should not trigger incomplete state
+                            var itemName = fieldset.querySelector('.fieldset-itempricing-input-itemname');
+                            var itemPrice = fieldset.querySelector('.fieldset-itempricing-input-itemprice');
+                            if (itemName && String(itemName.value || '').trim()) return true;
+                            if (itemPrice && String(itemPrice.value || '').trim()) return true;
+                            // Check variant inputs
+                            var variantInputs = fieldset.querySelectorAll('.fieldset-itempricing-input-itemvariantname');
+                            for (var i = 0; i < variantInputs.length; i++) {
+                                if (variantInputs[i] && String(variantInputs[i].value || '').trim()) return true;
                             }
                             return false;
                         }
