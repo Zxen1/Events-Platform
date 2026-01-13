@@ -781,7 +781,7 @@ foreach ($byLoc as $locNum => $entries) {
   // s (coupon_code)
   // sss (session_summary, price_summary, amenity_summary)
   $stmtCard->bind_param(
-    'issssssssssssssddsssssssss',
+    'isssssssssssssddssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
