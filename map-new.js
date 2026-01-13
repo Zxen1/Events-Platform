@@ -1597,7 +1597,16 @@ const MapModule = (function() {
       lng: lng,
       lat: lat
     };
-    mapCardMarkers.set(post.id, entry);
+    
+    // For multi-post venues, store reference under ALL post IDs at this venue
+    // This allows highlighting/activating from any post at the venue
+    if (post.isMultiPost && Array.isArray(post.venuePostIds) && post.venuePostIds.length > 1) {
+      post.venuePostIds.forEach(function(pid) {
+        mapCardMarkers.set(Number(pid) || pid, entry);
+      });
+    } else {
+      mapCardMarkers.set(post.id, entry);
+    }
 
     // Bind events
     el.addEventListener('mouseenter', () => onMapCardHover(post.id, true));
@@ -1621,24 +1630,37 @@ const MapModule = (function() {
     // Get icon URL based on state (thumbnail for big, subcategory icon for small/hover)
     const iconUrl = getIconUrl(post, state);
     
-    // Get properly truncated label lines
-    const labels = getMarkerLabelLines(post, isActive);
-    
-    // Build label HTML
+    // Build label HTML based on whether this is a multi-post venue
     let labelHTML = '';
-    if (isActive) {
-      // Big card: show title (2 lines) + venue
+    
+    if (post.isMultiPost && post.venuePostCount > 1) {
+      // Multi-post venue: show "X posts here" and venue name
+      const countLabel = post.venuePostCount + ' posts here';
+      const venueName = post.venue || '';
+      const truncatedVenue = venueName ? shortenText(venueName, isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL) : '';
+      
       labelHTML = `
-        <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-        ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-        ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
+        <div class="map-card-title">${escapeHtml(countLabel)}</div>
+        ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
       `;
     } else {
-      // Small/hover card: show title only (2 lines)
-      labelHTML = `
-        <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-        ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-      `;
+      // Single post: show title and venue
+      const labels = getMarkerLabelLines(post, isActive);
+      
+      if (isActive) {
+        // Big card: show title (2 lines) + venue
+        labelHTML = `
+          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+          ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
+        `;
+      } else {
+        // Small/hover card: show title only (2 lines)
+        labelHTML = `
+          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+        `;
+      }
     }
     
     // Icon is at center (0,0 = lat/lng), pill extends to the right
@@ -1735,22 +1757,37 @@ const MapModule = (function() {
       iconEl.src = getIconUrl(entry.post, newState);
     }
     
-    // Update labels for big state (adds venue line)
+    // Update labels
     const labelsEl = entry.element.querySelector('.map-card-labels');
     if (labelsEl) {
       const isActive = newState === 'big';
-      const labels = getMarkerLabelLines(entry.post, isActive);
-      if (isActive) {
+      const post = entry.post;
+      
+      if (post.isMultiPost && post.venuePostCount > 1) {
+        // Multi-post venue: show "X posts here" and venue name
+        const countLabel = post.venuePostCount + ' posts here';
+        const venueName = post.venue || '';
+        const truncatedVenue = venueName ? shortenText(venueName, isActive ? MARKER_LABEL_MAX_WIDTH_BIG : MARKER_LABEL_MAX_WIDTH_SMALL) : '';
+        
         labelsEl.innerHTML = `
-          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-          ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
+          <div class="map-card-title">${escapeHtml(countLabel)}</div>
+          ${truncatedVenue ? `<div class="map-card-venue">${escapeHtml(truncatedVenue)}</div>` : ''}
         `;
       } else {
-        labelsEl.innerHTML = `
-          <div class="map-card-title">${escapeHtml(labels.line1)}</div>
-          ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
-        `;
+        // Single post: show title and venue
+        const labels = getMarkerLabelLines(post, isActive);
+        if (isActive) {
+          labelsEl.innerHTML = `
+            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+            ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+            ${labels.venueLine ? `<div class="map-card-venue">${escapeHtml(labels.venueLine)}</div>` : ''}
+          `;
+        } else {
+          labelsEl.innerHTML = `
+            <div class="map-card-title">${escapeHtml(labels.line1)}</div>
+            ${labels.line2 ? `<div class="map-card-title">${escapeHtml(labels.line2)}</div>` : ''}
+          `;
+        }
       }
     }
   }
