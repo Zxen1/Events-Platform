@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 14, 2026 at 07:03 AM
+-- Generation Time: Jan 14, 2026 at 09:36 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1973,7 +1973,8 @@ CREATE TABLE `posts` (
 INSERT INTO `posts` (`id`, `post_key`, `member_id`, `member_name`, `subcategory_key`, `loc_qty`, `visibility`, `moderation_status`, `flag_reason`, `checkout_title`, `payment_status`, `expires_at`, `deleted_at`, `created_at`, `updated_at`) VALUES
 (1, '1-test', 1, 'Administrator', 'live-gigs', 2, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
 (4, '4-dshhfdfh', 1, 'Administrator', 'screenings', 2, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
-(12, '12-dhtd', 1, 'Administrator', 'goods-and-services', 1, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 06:51:31', '2026-01-14 06:51:31');
+(12, '12-dhtd', 1, 'Administrator', 'goods-and-services', 1, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 06:51:31', '2026-01-14 06:51:31'),
+(14, '14-ykfdhhkkhf', 1, 'Administrator', 'goods-and-services', 1, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 07:06:16', '2026-01-14 07:06:16');
 
 -- --------------------------------------------------------
 
@@ -2077,78 +2078,88 @@ CREATE TABLE `post_item_pricing` (
 --
 DELIMITER $$
 CREATE TRIGGER `trg_post_item_pricing_after_delete` AFTER DELETE ON `post_item_pricing` FOR EACH ROW BEGIN
-  DECLARE ticket_json JSON;
-  DECLARE item_json JSON;
-  
+  DECLARE ticket_json LONGTEXT;
+  DECLARE item_json LONGTEXT;
+
   SELECT IF(COUNT(*) > 0,
     JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
     NULL
   )
   INTO ticket_json
-  FROM post_ticket_pricing 
-  WHERE map_card_id = OLD.map_card_id;
-  
+  FROM `post_ticket_pricing`
+  WHERE `map_card_id` = OLD.`map_card_id`;
+
   SELECT IF(COUNT(*) > 0,
     JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
     NULL
   )
   INTO item_json
-  FROM post_item_pricing 
-  WHERE map_card_id = OLD.map_card_id;
-  
-  UPDATE post_map_cards 
-  SET price_summary = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
-    JSON_OBJECT('ticket', ticket_json, 'item', item_json)
+  FROM `post_item_pricing`
+  WHERE `map_card_id` = OLD.`map_card_id`;
+
+  UPDATE `post_map_cards`
+  SET `price_summary` = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    CONCAT('{"ticket":', IFNULL(ticket_json, 'null'), ',"item":', IFNULL(item_json, 'null'), '}')
   )
-  WHERE id = OLD.map_card_id;
+  WHERE `id` = OLD.`map_card_id`;
 END
 $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `trg_post_item_pricing_after_insert` AFTER INSERT ON `post_item_pricing` FOR EACH ROW BEGIN
-  DECLARE ticket_json JSON;
-  DECLARE item_json JSON;
-  
-  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
-  INTO ticket_json
-  FROM post_ticket_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
-  INTO item_json
-  FROM post_item_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  UPDATE post_map_cards 
-  SET price_summary = JSON_OBJECT(
-    'ticket', ticket_json,
-    'item', item_json
+  DECLARE ticket_json LONGTEXT;
+  DECLARE item_json LONGTEXT;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
+    NULL
   )
-  WHERE id = NEW.map_card_id;
+  INTO ticket_json
+  FROM `post_ticket_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO item_json
+  FROM `post_item_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  UPDATE `post_map_cards`
+  SET `price_summary` = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    CONCAT('{"ticket":', IFNULL(ticket_json, 'null'), ',"item":', IFNULL(item_json, 'null'), '}')
+  )
+  WHERE `id` = NEW.`map_card_id`;
 END
 $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `trg_post_item_pricing_after_update` AFTER UPDATE ON `post_item_pricing` FOR EACH ROW BEGIN
-  DECLARE ticket_json JSON;
-  DECLARE item_json JSON;
-  
-  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
-  INTO ticket_json
-  FROM post_ticket_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
-  INTO item_json
-  FROM post_item_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  UPDATE post_map_cards 
-  SET price_summary = JSON_OBJECT(
-    'ticket', ticket_json,
-    'item', item_json
+  DECLARE ticket_json LONGTEXT;
+  DECLARE item_json LONGTEXT;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
+    NULL
   )
-  WHERE id = NEW.map_card_id;
+  INTO ticket_json
+  FROM `post_ticket_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO item_json
+  FROM `post_item_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  UPDATE `post_map_cards`
+  SET `price_summary` = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    CONCAT('{"ticket":', IFNULL(ticket_json, 'null'), ',"item":', IFNULL(item_json, 'null'), '}')
+  )
+  WHERE `id` = NEW.`map_card_id`;
 END
 $$
 DELIMITER ;
@@ -2186,7 +2197,7 @@ CREATE TABLE `post_map_cards` (
   `tickets_url` varchar(500) DEFAULT NULL,
   `coupon_code` varchar(100) DEFAULT NULL,
   `session_summary` varchar(255) DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_sessions.',
-  `price_summary` varchar(255) DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_ticket_pricing/post_item_pricing.',
+  `price_summary` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_ticket_pricing/post_item_pricing.' CHECK (json_valid(`price_summary`)),
   `amenity_summary` text DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_amenities.',
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -2197,11 +2208,12 @@ CREATE TABLE `post_map_cards` (
 --
 
 INSERT INTO `post_map_cards` (`id`, `post_id`, `subcategory_key`, `title`, `description`, `media_ids`, `custom_text`, `custom_textarea`, `custom_dropdown`, `custom_checklist`, `custom_radio`, `public_email`, `phone_prefix`, `public_phone`, `venue_name`, `address_line`, `city`, `latitude`, `longitude`, `country_code`, `timezone`, `age_rating`, `website_url`, `tickets_url`, `coupon_code`, `session_summary`, `price_summary`, `amenity_summary`, `created_at`, `updated_at`) VALUES
-(1, 1, 'live-gigs', 'Test.', 'Test test test test test test.', '[1,2,3,4,5,6,7]', NULL, NULL, NULL, NULL, NULL, 'dfgdgf@hdhd.rddtrh', 'us', '255255', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, NULL, 'https://dhdtht.dhdt', 'https://dthtdth.hh', 'hdtrhthht', '{\"start\": \"2026-01-22\", \"end\": \"2026-05-12\"}', '{\"ticket\": \"{\\\"min\\\": 12.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 02:08:41', '2026-01-14 02:08:59'),
-(2, 1, 'live-gigs', 'Test.', 'Test test test test test test.', '[1,2,3,4,5,6,7]', NULL, NULL, NULL, NULL, NULL, 'dfgdgf@hdhd.rddtrh', 'us', '255255', 'Marvel Stadium', '740 Bourke St, Docklands VIC 3008, Australia', NULL, -37.8164974, 144.9475972, 'AU', NULL, NULL, 'https://dhdtht.dhdt', 'https://dthtdth.hh', 'hdtrhthht', '{\"start\": \"2026-01-23\", \"end\": \"2026-06-26\"}', '{\"ticket\": \"{\\\"min\\\": 12.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 02:08:41', '2026-01-14 02:08:59'),
-(5, 4, 'screenings', 'dshhfdfh', 'fdhdfhdfhdfhdfdfhddhf', '[8,9]', NULL, NULL, NULL, NULL, NULL, '', '+376', '42544552', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, NULL, '', '', '', '{\"start\": \"2026-01-21\", \"end\": \"2026-02-24\"}', '{\"ticket\": \"{\\\"min\\\": 34.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"1\"},{\"amenity\": \"kid_friendly\", \"value\": \"0\"}]', '2026-01-14 04:08:08', '2026-01-14 04:08:15'),
-(6, 4, 'screenings', 'dshhfdfh', 'fdhdfhdfhdfhdfdfhddhf', '[8,9]', NULL, NULL, NULL, NULL, NULL, '', '+376', '42544552', 'Federation Square, Melbourne VIC 3000, Australia', 'Federation Square, Melbourne VIC 3000, Australia', NULL, -37.8179789, 144.9690576, 'AU', NULL, NULL, '', '', '', '{\"start\": \"2026-01-28\", \"end\": \"2026-02-15\"}', '{\"ticket\": \"{\\\"min\\\": 34.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 04:08:08', '2026-01-14 04:08:15'),
-(14, 12, 'goods-and-services', 'dhtd', 'thdthhthtdhtdhtd', '[10,11,12]', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'SHG Hotel Antonella', 'Via Pontina, km 28, 00071 Pomezia RM, Italy', NULL, 41.6836536, 12.4944635, 'IT', NULL, NULL, '', NULL, NULL, '{\"start\": \"2026-01-21\", \"end\": \"2026-02-23\"}', '{\"ticket\": \"{\\\"min\\\": 54.00, \\\"max\\\": 54.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', NULL, '2026-01-14 06:51:31', '2026-01-14 06:51:39');
+(1, 1, 'live-gigs', 'Test.', 'Test test test test test test.', '[1,2,3,4,5,6,7]', NULL, NULL, NULL, NULL, NULL, 'dfgdgf@hdhd.rddtrh', 'us', '255255', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, NULL, 'https://dhdtht.dhdt', 'https://dthtdth.hh', 'hdtrhthht', '{\"start\": \"2026-01-22\", \"end\": \"2026-05-12\"}', '{\"ticket\":{\"min\": 12.00, \"max\": 34.00, \"currency\": \"USD\"},\"item\":null}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 02:08:41', '2026-01-14 09:36:29'),
+(2, 1, 'live-gigs', 'Test.', 'Test test test test test test.', '[1,2,3,4,5,6,7]', NULL, NULL, NULL, NULL, NULL, 'dfgdgf@hdhd.rddtrh', 'us', '255255', 'Marvel Stadium', '740 Bourke St, Docklands VIC 3008, Australia', NULL, -37.8164974, 144.9475972, 'AU', NULL, NULL, 'https://dhdtht.dhdt', 'https://dthtdth.hh', 'hdtrhthht', '{\"start\": \"2026-01-23\", \"end\": \"2026-06-26\"}', '{\"ticket\":{\"min\": 12.00, \"max\": 34.00, \"currency\": \"USD\"},\"item\":null}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 02:08:41', '2026-01-14 09:36:29'),
+(5, 4, 'screenings', 'dshhfdfh', 'fdhdfhdfhdfhdfdfhddhf', '[8,9]', NULL, NULL, NULL, NULL, NULL, '', '+376', '42544552', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, NULL, '', '', '', '{\"start\": \"2026-01-21\", \"end\": \"2026-02-24\"}', '{\"ticket\":{\"min\": 34.00, \"max\": 34.00, \"currency\": \"USD\"},\"item\":null}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"1\"},{\"amenity\": \"kid_friendly\", \"value\": \"0\"}]', '2026-01-14 04:08:08', '2026-01-14 09:36:29'),
+(6, 4, 'screenings', 'dshhfdfh', 'fdhdfhdfhdfhdfdfhddhf', '[8,9]', NULL, NULL, NULL, NULL, NULL, '', '+376', '42544552', 'Federation Square, Melbourne VIC 3000, Australia', 'Federation Square, Melbourne VIC 3000, Australia', NULL, -37.8179789, 144.9690576, 'AU', NULL, NULL, '', '', '', '{\"start\": \"2026-01-28\", \"end\": \"2026-02-15\"}', '{\"ticket\":{\"min\": 34.00, \"max\": 34.00, \"currency\": \"USD\"},\"item\":null}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 04:08:08', '2026-01-14 09:36:29'),
+(14, 12, 'goods-and-services', 'dhtd', 'thdthhthtdhtdhtd', '[10,11,12]', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'SHG Hotel Antonella', 'Via Pontina, km 28, 00071 Pomezia RM, Italy', NULL, 41.6836536, 12.4944635, 'IT', NULL, NULL, '', NULL, NULL, '{\"start\": \"2026-01-21\", \"end\": \"2026-02-23\"}', '{\"ticket\":{\"min\": 54.00, \"max\": 54.00, \"currency\": \"USD\"},\"item\":null}', NULL, '2026-01-14 06:51:31', '2026-01-14 09:36:29'),
+(16, 14, 'goods-and-services', 'ykfdhhkkhf', 'kykfhkdhkdkhdhkdhkhk', '[13,14,15,16]', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, NULL, 'FjÃ¦ldevÃ¦nget', NULL, 56.1773284, 10.1643280, 'DK', NULL, NULL, '', NULL, NULL, '{\"start\": \"2026-01-20\", \"end\": \"2026-02-23\"}', '{\"ticket\":{\"min\": 4.00, \"max\": 4.00, \"currency\": \"USD\"},\"item\":null}', NULL, '2026-01-14 07:06:16', '2026-01-14 09:36:29');
 
 -- --------------------------------------------------------
 
@@ -2239,7 +2251,11 @@ INSERT INTO `post_media` (`id`, `member_id`, `post_id`, `file_name`, `file_url`,
 (9, 1, 4, '4-23e83e.png', 'https://cdn.funmap.com/post-images/2026-01/4-23e83e.png', 3002902, '{\"file_name\":\"balloon-png-28080.png\",\"file_type\":\"image\\/png\",\"file_size\":3002902,\"crop\":null}', NULL, NULL, '2026-01-14 04:08:15', '2026-01-14 04:08:15'),
 (10, 1, 12, '12-df3c85.jpg', 'https://cdn.funmap.com/post-images/2026-01/12-df3c85.jpg', 966239, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":966239,\"crop\":null}', NULL, NULL, '2026-01-14 06:51:33', '2026-01-14 06:51:33'),
 (11, 1, 12, '12-7ca2ab.jpg', 'https://cdn.funmap.com/post-images/2026-01/12-7ca2ab.jpg', 1151956, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}', NULL, NULL, '2026-01-14 06:51:36', '2026-01-14 06:51:36'),
-(12, 1, 12, '12-d21deb.jpg', 'https://cdn.funmap.com/post-images/2026-01/12-d21deb.jpg', 1151956, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}', NULL, NULL, '2026-01-14 06:51:39', '2026-01-14 06:51:39');
+(12, 1, 12, '12-d21deb.jpg', 'https://cdn.funmap.com/post-images/2026-01/12-d21deb.jpg', 1151956, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}', NULL, NULL, '2026-01-14 06:51:39', '2026-01-14 06:51:39'),
+(13, 1, 14, '14-97aac0.jpg', 'https://cdn.funmap.com/post-images/2026-01/14-97aac0.jpg', 1543241, '{\"file_name\":\"Firefly_earth with balloons everywhere 135867 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1543241,\"crop\":null}', NULL, NULL, '2026-01-14 07:06:18', '2026-01-14 07:06:18'),
+(14, 1, 14, '14-8b9195.jpg', 'https://cdn.funmap.com/post-images/2026-01/14-8b9195.jpg', 864224, '{\"file_name\":\"Firefly_earth with balloons everywhere 135867.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":864224,\"crop\":null}', NULL, NULL, '2026-01-14 07:06:21', '2026-01-14 07:06:21'),
+(15, 1, 14, '14-eb56f8.jpg', 'https://cdn.funmap.com/post-images/2026-01/14-eb56f8.jpg', 1131851, '{\"file_name\":\"Firefly_earth with balloons everywhere 172077.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1131851,\"crop\":null}', NULL, NULL, '2026-01-14 07:06:24', '2026-01-14 07:06:24'),
+(16, 1, 14, '14-129572.jpg', 'https://cdn.funmap.com/post-images/2026-01/14-129572.jpg', 1306980, '{\"file_name\":\"Firefly_earth with balloons everywhere 556657.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1306980,\"crop\":null}', NULL, NULL, '2026-01-14 07:06:27', '2026-01-14 07:06:27');
 
 -- --------------------------------------------------------
 
@@ -2268,7 +2284,8 @@ CREATE TABLE `post_revisions` (
 INSERT INTO `post_revisions` (`id`, `post_id`, `post_title`, `editor_id`, `editor_name`, `edited_at`, `change_type`, `change_summary`, `data_json`, `created_at`, `updated_at`) VALUES
 (10, 1, 'Test.', 1, 'Administrator', '2026-01-14 02:08:59', 'create', 'Created', '{\"subcategory_key\":\"live-gigs\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":2,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"Test.\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"Test test test test test test.\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"Firefly_cute little monkey in red cape shrugging 346494.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":862566,\"crop\":{\"x1\":0,\"y1\":211,\"x2\":1440,\"y2\":1651}},{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 609041 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":823246,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":823246,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 946979.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":781823,\"crop\":null},{\"file_name\":\"Firefly_cute monkey shrugging 578443.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":462404,\"crop\":null},{\"file_name\":\"Firefly_cute monkey shrugging sadly and wearing a red cape. 287360.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1132247,\"crop\":null},{\"file_name\":\"Firefly_cute monkey shrugging sadly and wearing a red cape. 842295.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":942004,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":{\"phone_prefix\":\"us\",\"public_phone\":\"255255\"},\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"dfgdgf@hdhd.rddtrh\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"https:\\/\\/dhdtht.dhdt\",\"location_number\":1},{\"key\":\"tickets-url\",\"type\":\"tickets-url\",\"name\":\"Tickets (URL)\",\"value\":\"https:\\/\\/dthtdth.hh\",\"location_number\":1},{\"key\":\"coupon\",\"type\":\"coupon\",\"name\":\"Coupon\",\"value\":\"hdtrhthht\",\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue\",\"value\":{\"venue_name\":\"Sydney Opera House\",\"address_line\":\"Bennelong Point, Sydney NSW 2000, Australia\",\"latitude\":\"-33.856784399999995\",\"longitude\":\"151.21529669999998\",\"country_code\":\"AU\"},\"location_number\":1},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}],\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-22\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-03-19\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"},{\"time\":\"15:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-04-20\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-05-12\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"},{\"time\":\"15:00\",\"ticket_group_key\":\"A\"},{\"time\":\"19:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dfdshdht\",\"tiers\":[{\"pricing_tier\":\"dthdtthth\",\"currency\":\"USD\",\"price\":\"12.00\"},{\"pricing_tier\":\"drgrddr\",\"currency\":\"USD\",\"price\":\"23.00\"},{\"pricing_tier\":\"rdgdgrd\",\"currency\":\"USD\",\"price\":\"34.00\"}]},{\"seating_area\":\"dgrrgdgr\",\"tiers\":[{\"pricing_tier\":\"grddrgrgdgdr\",\"currency\":\"USD\",\"price\":\"12.00\"}]}]},\"age_ratings\":{\"A\":\"15\"}},\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue 2\",\"value\":{\"venue_name\":\"Marvel Stadium\",\"address_line\":\"740 Bourke St, Docklands VIC 3008, Australia\",\"latitude\":\"-37.816497399999996\",\"longitude\":\"144.9475972\",\"country_code\":\"AU\"},\"location_number\":2},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}],\"location_number\":2},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-23\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-17\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-06-16\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-06-26\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dfdshdht\",\"tiers\":[{\"pricing_tier\":\"dthdtthth\",\"currency\":\"USD\",\"price\":\"12.00\"},{\"pricing_tier\":\"drgrddr\",\"currency\":\"USD\",\"price\":\"23.00\"},{\"pricing_tier\":\"rdgdgrd\",\"currency\":\"USD\",\"price\":\"34.00\"}]},{\"seating_area\":\"dgrrgdgr\",\"tiers\":[{\"pricing_tier\":\"grddrgrgdgdr\",\"currency\":\"USD\",\"price\":\"12.00\"}]}]},\"age_ratings\":{\"A\":\"15\"}},\"location_number\":2},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"4\",\"option_id\":\"4\",\"days\":164,\"price\":null},\"location_number\":1}]}', '2026-01-14 02:08:59', '2026-01-14 02:08:59'),
 (11, 4, 'dshhfdfh', 1, 'Administrator', '2026-01-14 04:08:15', 'create', 'Created', '{\"subcategory_key\":\"screenings\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":2,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"dshhfdfh\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"fdhdfhdfhdfhdfdfhddhf\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"balloon-png-28080 - Copy.png\",\"file_type\":\"image\\/png\",\"file_size\":3002902,\"crop\":null},{\"file_name\":\"balloon-png-28080.png\",\"file_type\":\"image\\/png\",\"file_size\":3002902,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":{\"phone_prefix\":\"+376\",\"public_phone\":\"42544552\"},\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"tickets-url\",\"type\":\"tickets-url\",\"name\":\"Tickets (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"coupon\",\"type\":\"coupon\",\"name\":\"Coupon\",\"value\":\"\",\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue\",\"value\":{\"venue_name\":\"Sydney Opera House\",\"address_line\":\"Bennelong Point, Sydney NSW 2000, Australia\",\"latitude\":\"-33.856784399999995\",\"longitude\":\"151.21529669999998\",\"country_code\":\"AU\"},\"location_number\":1},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"0\"}],\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-21\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-09\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-24\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dsfdsf\",\"tiers\":[{\"pricing_tier\":\"fdsa\",\"currency\":\"USD\",\"price\":\"34.00\"}]}]},\"age_ratings\":{\"A\":\"12\"}},\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue 2\",\"value\":{\"venue_name\":\"Federation Square, Melbourne VIC 3000, Australia\",\"address_line\":\"Federation Square, Melbourne VIC 3000, Australia\",\"latitude\":\"-37.8179789\",\"longitude\":\"144.96905759999999\",\"country_code\":\"AU\"},\"location_number\":2},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}],\"location_number\":2},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-28\",\"times\":[{\"time\":\"13:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-09\",\"times\":[{\"time\":\"13:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-15\",\"times\":[{\"time\":\"13:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dsfdsf\",\"tiers\":[{\"pricing_tier\":\"fdsa\",\"currency\":\"USD\",\"price\":\"34.00\"}]}]},\"age_ratings\":{\"A\":\"12\"}},\"location_number\":2},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"4\",\"option_id\":\"4\",\"days\":41,\"price\":null},\"location_number\":1}]}', '2026-01-14 04:08:15', '2026-01-14 04:08:15'),
-(12, 12, 'dhtd', 1, 'Administrator', '2026-01-14 06:51:39', 'create', 'Created', '{\"subcategory_key\":\"goods-and-services\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":1,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"dhtd\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"thdthhthtdhtdhtd\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":966239,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":\"\",\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue\",\"value\":{\"venue_name\":\"SHG Hotel Antonella\",\"address_line\":\"Via Pontina, km 28, 00071 Pomezia RM, Italy\",\"latitude\":\"41.6836536\",\"longitude\":\"12.4944635\",\"country_code\":\"IT\"},\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-21\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-23\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"sg\",\"tiers\":[{\"pricing_tier\":\"gsf\",\"currency\":\"USD\",\"price\":\"54.00\"}]}]},\"age_ratings\":{\"A\":\"all\"}},\"location_number\":1},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"4\",\"option_id\":\"4\",\"days\":40,\"price\":null},\"location_number\":1}]}', '2026-01-14 06:51:39', '2026-01-14 06:51:39');
+(12, 12, 'dhtd', 1, 'Administrator', '2026-01-14 06:51:39', 'create', 'Created', '{\"subcategory_key\":\"goods-and-services\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":1,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"dhtd\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"thdthhthtdhtdhtd\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":966239,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":\"\",\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue\",\"value\":{\"venue_name\":\"SHG Hotel Antonella\",\"address_line\":\"Via Pontina, km 28, 00071 Pomezia RM, Italy\",\"latitude\":\"41.6836536\",\"longitude\":\"12.4944635\",\"country_code\":\"IT\"},\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-21\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-23\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"sg\",\"tiers\":[{\"pricing_tier\":\"gsf\",\"currency\":\"USD\",\"price\":\"54.00\"}]}]},\"age_ratings\":{\"A\":\"all\"}},\"location_number\":1},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"4\",\"option_id\":\"4\",\"days\":40,\"price\":null},\"location_number\":1}]}', '2026-01-14 06:51:39', '2026-01-14 06:51:39'),
+(13, 14, 'ykfdhhkkhf', 1, 'Administrator', '2026-01-14 07:06:27', 'create', 'Created', '{\"subcategory_key\":\"goods-and-services\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":1,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"ykfdhhkkhf\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"kykfhkdhkdkhdhkdhkhk\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"Firefly_earth with balloons everywhere 135867 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1543241,\"crop\":null},{\"file_name\":\"Firefly_earth with balloons everywhere 135867.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":864224,\"crop\":null},{\"file_name\":\"Firefly_earth with balloons everywhere 172077.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1131851,\"crop\":null},{\"file_name\":\"Firefly_earth with balloons everywhere 556657.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1306980,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":\"\",\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"address\",\"type\":\"address\",\"name\":\"Address\",\"value\":{\"address_line\":\"FjÃ¦ldevÃ¦nget\",\"latitude\":\"56.1773284\",\"longitude\":\"10.164328\",\"country_code\":\"DK\"},\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-20\",\"times\":[{\"time\":\"03:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-23\",\"times\":[{\"time\":\"03:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"rgs\",\"tiers\":[{\"pricing_tier\":\"srgrgr\",\"currency\":\"USD\",\"price\":\"4.00\"}]}]},\"age_ratings\":{\"A\":\"12\"}},\"location_number\":1},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"2-365\",\"option_id\":\"2\",\"days\":365,\"price\":39.2},\"location_number\":1}]}', '2026-01-14 07:06:27', '2026-01-14 07:06:27');
 
 -- --------------------------------------------------------
 
@@ -2309,7 +2326,9 @@ INSERT INTO `post_sessions` (`id`, `map_card_id`, `session_date`, `session_time`
 (16, 6, '2026-02-09', '13:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
 (17, 6, '2026-02-15', '13:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
 (18, 14, '2026-01-21', '12:00:00', 'A', '2026-01-14 06:51:31', '2026-01-14 06:51:31'),
-(19, 14, '2026-02-23', '12:00:00', 'A', '2026-01-14 06:51:31', '2026-01-14 06:51:31');
+(19, 14, '2026-02-23', '12:00:00', 'A', '2026-01-14 06:51:31', '2026-01-14 06:51:31'),
+(20, 16, '2026-01-20', '03:00:00', 'A', '2026-01-14 07:06:16', '2026-01-14 07:06:16'),
+(21, 16, '2026-02-23', '03:00:00', 'A', '2026-01-14 07:06:16', '2026-01-14 07:06:16');
 
 --
 -- Triggers `post_sessions`
@@ -2394,87 +2413,96 @@ INSERT INTO `post_ticket_pricing` (`id`, `map_card_id`, `ticket_group_key`, `age
 (8, 2, 'A', '15', 'dgrrgdgr', 'grddrgrgdgdr', 12.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
 (9, 5, 'A', '12', 'dsfdsf', 'fdsa', 34.00, 'USD', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
 (10, 6, 'A', '12', 'dsfdsf', 'fdsa', 34.00, 'USD', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
-(11, 14, 'A', 'all', 'sg', 'gsf', 54.00, 'USD', '2026-01-14 06:51:31', '2026-01-14 06:51:31');
+(11, 14, 'A', 'all', 'sg', 'gsf', 54.00, 'USD', '2026-01-14 06:51:31', '2026-01-14 06:51:31'),
+(12, 16, 'A', '12', 'rgs', 'srgrgr', 4.00, 'USD', '2026-01-14 07:06:16', '2026-01-14 07:06:16');
 
 --
 -- Triggers `post_ticket_pricing`
 --
 DELIMITER $$
 CREATE TRIGGER `trg_post_ticket_pricing_after_delete` AFTER DELETE ON `post_ticket_pricing` FOR EACH ROW BEGIN
-  DECLARE ticket_json JSON;
-  DECLARE item_json JSON;
-  
+  DECLARE ticket_json LONGTEXT;
+  DECLARE item_json LONGTEXT;
+
   SELECT IF(COUNT(*) > 0,
     JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
     NULL
   )
   INTO ticket_json
-  FROM post_ticket_pricing 
-  WHERE map_card_id = OLD.map_card_id;
-  
+  FROM `post_ticket_pricing`
+  WHERE `map_card_id` = OLD.`map_card_id`;
+
   SELECT IF(COUNT(*) > 0,
     JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
     NULL
   )
   INTO item_json
-  FROM post_item_pricing 
-  WHERE map_card_id = OLD.map_card_id;
-  
-  UPDATE post_map_cards 
-  SET price_summary = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
-    JSON_OBJECT('ticket', ticket_json, 'item', item_json)
+  FROM `post_item_pricing`
+  WHERE `map_card_id` = OLD.`map_card_id`;
+
+  UPDATE `post_map_cards`
+  SET `price_summary` = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    CONCAT('{"ticket":', IFNULL(ticket_json, 'null'), ',"item":', IFNULL(item_json, 'null'), '}')
   )
-  WHERE id = OLD.map_card_id;
+  WHERE `id` = OLD.`map_card_id`;
 END
 $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `trg_post_ticket_pricing_after_insert` AFTER INSERT ON `post_ticket_pricing` FOR EACH ROW BEGIN
-  DECLARE ticket_json JSON;
-  DECLARE item_json JSON;
-  
-  -- Get ticket min/max
-  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
-  INTO ticket_json
-  FROM post_ticket_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  -- Get existing item pricing
-  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
-  INTO item_json
-  FROM post_item_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  UPDATE post_map_cards 
-  SET price_summary = JSON_OBJECT(
-    'ticket', ticket_json,
-    'item', item_json
+  DECLARE ticket_json LONGTEXT;
+  DECLARE item_json LONGTEXT;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
+    NULL
   )
-  WHERE id = NEW.map_card_id;
+  INTO ticket_json
+  FROM `post_ticket_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO item_json
+  FROM `post_item_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  UPDATE `post_map_cards`
+  SET `price_summary` = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    CONCAT('{"ticket":', IFNULL(ticket_json, 'null'), ',"item":', IFNULL(item_json, 'null'), '}')
+  )
+  WHERE `id` = NEW.`map_card_id`;
 END
 $$
 DELIMITER ;
 DELIMITER $$
 CREATE TRIGGER `trg_post_ticket_pricing_after_update` AFTER UPDATE ON `post_ticket_pricing` FOR EACH ROW BEGIN
-  DECLARE ticket_json JSON;
-  DECLARE item_json JSON;
-  
-  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
-  INTO ticket_json
-  FROM post_ticket_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
-  INTO item_json
-  FROM post_item_pricing 
-  WHERE map_card_id = NEW.map_card_id;
-  
-  UPDATE post_map_cards 
-  SET price_summary = JSON_OBJECT(
-    'ticket', ticket_json,
-    'item', item_json
+  DECLARE ticket_json LONGTEXT;
+  DECLARE item_json LONGTEXT;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
+    NULL
   )
-  WHERE id = NEW.map_card_id;
+  INTO ticket_json
+  FROM `post_ticket_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO item_json
+  FROM `post_item_pricing`
+  WHERE `map_card_id` = NEW.`map_card_id`;
+
+  UPDATE `post_map_cards`
+  SET `price_summary` = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    CONCAT('{"ticket":', IFNULL(ticket_json, 'null'), ',"item":', IFNULL(item_json, 'null'), '}')
+  )
+  WHERE `id` = NEW.`map_card_id`;
 END
 $$
 DELIMITER ;
@@ -2797,7 +2825,8 @@ ALTER TABLE `post_amenities`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `uniq_map_card_amenity` (`map_card_id`,`amenity_key`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
-  ADD KEY `idx_amenity_key` (`amenity_key`);
+  ADD KEY `idx_amenity_key` (`amenity_key`),
+  ADD KEY `idx_amenity_value_map_card` (`amenity_key`,`value`,`map_card_id`);
 
 --
 -- Indexes for table `post_item_pricing`
@@ -2806,7 +2835,8 @@ ALTER TABLE `post_item_pricing`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
   ADD KEY `price` (`item_price`),
-  ADD KEY `idx_price_currency` (`item_price`,`currency`);
+  ADD KEY `idx_price_currency` (`item_price`,`currency`),
+  ADD KEY `idx_map_card_item_price` (`map_card_id`,`item_price`);
 
 --
 -- Indexes for table `post_map_cards`
@@ -2841,7 +2871,9 @@ ALTER TABLE `post_sessions`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
   ADD KEY `idx_session_date` (`session_date`),
-  ADD KEY `idx_ticket_group_key` (`ticket_group_key`);
+  ADD KEY `idx_ticket_group_key` (`ticket_group_key`),
+  ADD KEY `idx_session_date_map_card` (`session_date`,`map_card_id`),
+  ADD KEY `idx_map_card_date` (`map_card_id`,`session_date`);
 
 --
 -- Indexes for table `post_ticket_pricing`
@@ -2851,7 +2883,8 @@ ALTER TABLE `post_ticket_pricing`
   ADD UNIQUE KEY `uniq_group_line` (`map_card_id`,`ticket_group_key`,`seating_area`,`pricing_tier`,`price`,`currency`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
   ADD KEY `idx_price_currency` (`price`,`currency`),
-  ADD KEY `idx_ticket_group_key` (`ticket_group_key`);
+  ADD KEY `idx_ticket_group_key` (`ticket_group_key`),
+  ADD KEY `idx_map_card_price` (`map_card_id`,`price`);
 
 --
 -- Indexes for table `subcategories`
@@ -3014,7 +3047,7 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `post_amenities`
@@ -3032,31 +3065,31 @@ ALTER TABLE `post_item_pricing`
 -- AUTO_INCREMENT for table `post_map_cards`
 --
 ALTER TABLE `post_map_cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `post_media`
 --
 ALTER TABLE `post_media`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `post_revisions`
 --
 ALTER TABLE `post_revisions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `post_sessions`
 --
 ALTER TABLE `post_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `post_ticket_pricing`
 --
 ALTER TABLE `post_ticket_pricing`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `subcategories`
