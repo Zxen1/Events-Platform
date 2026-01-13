@@ -1708,9 +1708,13 @@ const MapModule = (function() {
    * Find marker entry by post ID (searches through venue-keyed entries)
    */
   function findMarkerByPostId(postId) {
+    const searchId = String(postId);
     for (const [key, entry] of mapCardMarkers) {
-      if (entry.postIds && entry.postIds.includes(postId)) {
-        return entry;
+      if (entry.postIds) {
+        const found = entry.postIds.some(function(pid) {
+          return String(pid) === searchId;
+        });
+        if (found) return entry;
       }
     }
     return null;
@@ -1747,7 +1751,8 @@ const MapModule = (function() {
     // Find the marker entry to check if multi-post
     const entry = findMarkerByPostId(postId);
     
-    if (entry && entry.post && entry.post.isMultiPost && entry.postIds && entry.postIds.length > 1) {
+    // Check if this is a multi-post venue (more than 1 post at this location)
+    if (entry && entry.postIds && entry.postIds.length > 1) {
       // Multi-post venue: highlight all posts, don't auto-open
       App.emit('map:multiPostClicked', { 
         postIds: entry.postIds,
