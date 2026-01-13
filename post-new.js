@@ -163,16 +163,20 @@ const PostModule = (function() {
         }
         // Render markers when above threshold
         if (lastZoom >= threshold && cachedPosts && cachedPosts.length) {
-          renderMapMarkers(cachedPosts);
+          renderMapMarkers(filteredPosts || cachedPosts);
         }
         // Clear markers when below threshold
         if (lastZoom < threshold && window.MapModule && MapModule.clearAllMapCardMarkers) {
           MapModule.clearAllMapCardMarkers();
         }
         
-        // Reapply filters when viewport changes (for map area filter)
-        if (currentFilters && currentFilters.mapArea) {
+        // Reapply filters when viewport changes (at zoom 8+, viewport bounds affect results)
+        var threshold = getPostsMinZoom();
+        if (lastZoom >= threshold && currentFilters) {
           applyFilters(currentFilters);
+        } else if (cachedPosts) {
+          // Still emit counts when map moves
+          emitFilterCounts();
         }
       }
     });
@@ -514,7 +518,10 @@ const PostModule = (function() {
         postsLoading = false;
         if (data.success && Array.isArray(data.posts)) {
           cachedPosts = data.posts;
+          filteredPosts = null; // Reset filtered posts on fresh load
           renderPostList(data.posts);
+          // Emit initial filter counts
+          emitFilterCounts();
           // Refresh map clusters with new post data
           if (window.MapModule && MapModule.refreshClusters) {
             MapModule.refreshClusters();
@@ -523,6 +530,7 @@ const PostModule = (function() {
         } else {
           postsError = data.message || 'Unknown error';
           renderPostsEmptyState();
+          App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
           return [];
         }
       })
@@ -958,6 +966,50 @@ const PostModule = (function() {
   var filteredPosts = null;
 
   /**
+   * Count map cards in visible map area (for filter counts)
+   * @param {Array} posts - Array of posts to count
+   * @returns {number} Total map cards in visible area
+   */
+  function countMapCardsInView(posts) {
+    if (!posts || !posts.length) return 0;
+    
+    var bounds = getMapBounds();
+    var count = 0;
+    
+    for (var i = 0; i < posts.length; i++) {
+      var mapCards = posts[i].map_cards;
+      if (!Array.isArray(mapCards)) continue;
+      
+      for (var j = 0; j < mapCards.length; j++) {
+        var mc = mapCards[j];
+        if (!mc) continue;
+        
+        // If no bounds or map area filter is off, count all
+        if (!bounds) {
+          count++;
+        } else if (pointWithinBounds(mc.longitude, mc.latitude, bounds)) {
+          count++;
+        }
+      }
+    }
+    
+    return count;
+  }
+
+  /**
+   * Emit filter count updates to the filter panel
+   */
+  function emitFilterCounts() {
+    var totalInArea = countMapCardsInView(cachedPosts);
+    var filteredCount = countMapCardsInView(filteredPosts || cachedPosts);
+    
+    App.emit('filter:countsUpdated', {
+      total: totalInArea,
+      filtered: filteredCount
+    });
+  }
+
+  /**
    * Apply filters to the cached posts
    * @param {Object} filterState - Filter state from FilterModule
    */
@@ -965,7 +1017,8 @@ const PostModule = (function() {
     currentFilters = filterState;
 
     if (!cachedPosts || !cachedPosts.length) {
-      // No posts to filter
+      // No posts to filter - emit zero counts
+      App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
       return;
     }
 
@@ -974,6 +1027,12 @@ const PostModule = (function() {
 
     // Re-render post list
     renderPostList(filteredPosts);
+    
+    // Emit count updates for filter panel
+    emitFilterCounts();
+    
+    // Refresh map markers based on filtered results
+    renderMapMarkers(filteredPosts);
     
     // Refresh map clusters to reflect filtered results
     if (window.MapModule && MapModule.refreshClusters) {
@@ -1012,8 +1071,9 @@ const PostModule = (function() {
   function filterPosts(posts, filters) {
     if (!filters) return posts;
 
-    // Get current map bounds for viewport filtering
-    var bounds = filters.mapArea ? getMapBounds() : null;
+    // Get current map bounds for viewport filtering (only at zoom 8+)
+    var threshold = getPostsMinZoom();
+    var bounds = (lastZoom >= threshold) ? getMapBounds() : null;
 
     return posts.filter(function(post) {
       var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;

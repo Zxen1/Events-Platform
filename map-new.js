@@ -1442,21 +1442,30 @@ const MapModule = (function() {
     if (lastClusterBucketKey === bucketKey) return;
     
     // Fetch cluster data from lightweight endpoint
-    fetchClusterData(zoomValue).then(function(clusters) {
-      var data = buildClusterFeatureCollectionFromServer(clusters);
+    fetchClusterData(zoomValue).then(function(result) {
+      var data = buildClusterFeatureCollectionFromServer(result.clusters);
       source.setData(data);
       lastClusterBucketKey = bucketKey;
+      
+      // Emit cluster count for header badge (fast initial load)
+      if (typeof result.totalCount === 'number') {
+        App.emit('clusters:countUpdated', { total: result.totalCount });
+      }
     });
   }
 
   /**
    * Fetch cluster data from server
+   * Returns { clusters: Array, totalCount: number }
    */
   function fetchClusterData(zoom) {
     return fetch('/gateway.php?action=get-clusters&zoom=' + zoom)
       .then(function(response) { return response.json(); })
       .then(function(data) {
-        return (data.success && Array.isArray(data.clusters)) ? data.clusters : [];
+        return {
+          clusters: (data.success && Array.isArray(data.clusters)) ? data.clusters : [],
+          totalCount: (data.success && typeof data.total_count === 'number') ? data.total_count : 0
+        };
       });
   }
 

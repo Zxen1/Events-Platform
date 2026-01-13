@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 13, 2026 at 07:27 AM
+-- Generation Time: Jan 13, 2026 at 12:07 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -311,10 +311,10 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (305, 'spin_zoom_max', '4', 'integer', 'Maximum zoom spin threshold', '2025-11-13 16:17:10', '2025-12-30 06:22:01'),
 (306, 'spin_speed', '0.2', 'decimal', 'Speed of globe spin rotation', '2025-11-13 16:17:10', '2025-12-30 06:22:01'),
 (307, 'map_card_display', 'always', 'string', 'Map card display mode: hover_only or always', '2025-11-23 11:24:22', '2025-12-30 06:22:01'),
-(308, 'starting_address', 'Fghal, Fghal, Byblos, Lebanon', 'string', 'Default map starting location for new visitors (address or coordinates)', '2025-12-08 07:21:39', '2026-01-11 21:35:45'),
+(308, 'starting_address', 'Perth, Western Australia, Australia', 'string', 'Default map starting location for new visitors (address or coordinates)', '2025-12-08 07:21:39', '2026-01-12 22:25:11'),
 (309, 'starting_zoom', '2', 'integer', 'Default map zoom level for new visitors (1-18)', '2025-12-08 07:49:50', '2025-12-30 06:22:01'),
-(310, 'starting_lat', '34.208469', 'decimal', 'Starting location latitude coordinate', '2025-12-08 11:43:09', '2026-01-11 21:35:45'),
-(311, 'starting_lng', '35.677776', 'decimal', 'Starting location longitude coordinate', '2025-12-08 11:43:09', '2026-01-11 21:35:45'),
+(310, 'starting_lat', '-31.951263', 'decimal', 'Starting location latitude coordinate', '2025-12-08 11:43:09', '2026-01-12 22:25:11'),
+(311, 'starting_lng', '115.85805', 'decimal', 'Starting location longitude coordinate', '2025-12-08 11:43:09', '2026-01-12 22:25:11'),
 (312, 'starting_pitch', '0', 'integer', NULL, '2025-12-20 06:10:19', '2025-12-30 06:22:01'),
 (313, 'wait_for_map_tiles', 'true', 'boolean', NULL, '2025-12-10 05:16:15', '2026-01-06 11:03:58'),
 (314, 'location_wallpaper_mode', 'orbit', 'string', 'Location wallpaper mode: off|orbit|still', '2026-01-08 22:27:47', '2026-01-09 03:14:30'),
@@ -410,10 +410,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_logic`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`, `created_at`, `updated_at`) VALUES
-(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2026-01-13 06:28:05'),
-(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2026-01-13 06:28:05'),
-(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2026-01-13 06:28:05'),
-(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2026-01-13 06:28:05');
+(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2026-01-13 09:25:11'),
+(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2026-01-13 09:25:11'),
+(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2026-01-13 09:25:11'),
+(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2026-01-13 09:25:11');
 
 -- --------------------------------------------------------
 
@@ -1971,13 +1971,75 @@ CREATE TABLE `posts` (
 --
 
 INSERT INTO `posts` (`id`, `post_key`, `member_id`, `member_name`, `subcategory_key`, `loc_qty`, `visibility`, `moderation_status`, `flag_reason`, `checkout_title`, `payment_status`, `expires_at`, `deleted_at`, `created_at`, `updated_at`) VALUES
-(1, '1-e5tt5t5', 5, 'test', 'test-subcategory', 3, 'paused', 'pending', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
-(2, '2-gdjggdf', 1, 'Administrator', 'live-gigs', 2, 'paused', 'pending', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 06:41:30', '2026-01-13 06:41:30'),
-(3, '3-vxbnn', 1, 'Administrator', 'live-gigs', 2, 'paused', 'pending', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 06:59:46', '2026-01-13 06:59:46'),
-(4, '4-sgshskjks', 1, 'Administrator', 'live-gigs', 2, 'paused', 'pending', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 07:06:01', '2026-01-13 07:06:01'),
-(5, '5-aefaa', 1, 'Administrator', 'live-gigs', 1, 'paused', 'pending', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 07:10:04', '2026-01-13 07:10:04'),
-(6, '6-hfgjjj', 1, 'Administrator', 'live-gigs', 1, 'paused', 'pending', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 07:13:23', '2026-01-13 07:13:23'),
-(7, '7-test-for-the-sydney-opera-house-post', 1, 'Administrator', 'live-gigs', 2, 'paused', 'pending', NULL, 'Array', 'paid', NULL, NULL, '2026-01-13 07:25:56', '2026-01-13 07:25:56');
+(1, '1-e5tt5t5', 5, 'test', 'test-subcategory', 3, 'active', 'clean', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 05:23:59', '2026-01-13 07:40:20'),
+(2, '2-gdjggdf', 1, 'Administrator', 'live-gigs', 2, 'active', 'clean', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 06:41:30', '2026-01-13 07:40:20'),
+(3, '3-vxbnn', 1, 'Administrator', 'live-gigs', 2, 'active', 'clean', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 06:59:46', '2026-01-13 07:40:20'),
+(4, '4-sgshskjks', 1, 'Administrator', 'live-gigs', 2, 'active', 'clean', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 07:06:01', '2026-01-13 07:40:20'),
+(5, '5-aefaa', 1, 'Administrator', 'live-gigs', 1, 'active', 'clean', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 07:10:04', '2026-01-13 07:40:20'),
+(6, '6-hfgjjj', 1, 'Administrator', 'live-gigs', 1, 'active', 'clean', NULL, 'Array', 'pending', NULL, NULL, '2026-01-13 07:13:23', '2026-01-13 07:40:20'),
+(7, '7-test-for-the-sydney-opera-house-post', 1, 'Administrator', 'live-gigs', 2, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-13 07:25:56', '2026-01-13 07:40:20');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `post_amenities`
+--
+
+CREATE TABLE `post_amenities` (
+  `id` int(11) NOT NULL,
+  `map_card_id` int(11) NOT NULL,
+  `amenity_key` varchar(50) NOT NULL,
+  `value` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Triggers `post_amenities`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_post_amenities_after_delete` AFTER DELETE ON `post_amenities` FOR EACH ROW BEGIN
+  UPDATE post_map_cards 
+  SET amenity_summary = (
+    SELECT IF(COUNT(*) > 0,
+      JSON_ARRAYAGG(JSON_OBJECT('amenity', amenity_key, 'value', CAST(value AS CHAR))),
+      NULL
+    )
+    FROM post_amenities 
+    WHERE map_card_id = OLD.map_card_id
+  )
+  WHERE id = OLD.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_amenities_after_insert` AFTER INSERT ON `post_amenities` FOR EACH ROW BEGIN
+  UPDATE post_map_cards 
+  SET amenity_summary = (
+    SELECT JSON_ARRAYAGG(
+      JSON_OBJECT('amenity', amenity_key, 'value', CAST(value AS CHAR))
+    )
+    FROM post_amenities 
+    WHERE map_card_id = NEW.map_card_id
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_amenities_after_update` AFTER UPDATE ON `post_amenities` FOR EACH ROW BEGIN
+  UPDATE post_map_cards 
+  SET amenity_summary = (
+    SELECT JSON_ARRAYAGG(
+      JSON_OBJECT('amenity', amenity_key, 'value', CAST(value AS CHAR))
+    )
+    FROM post_amenities 
+    WHERE map_card_id = NEW.map_card_id
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2004,6 +2066,87 @@ INSERT INTO `post_item_pricing` (`id`, `map_card_id`, `item_name`, `item_variant
 (1, 1, 'ghfffhghfg', '[\"hghfghgh\",\"kljlklk\",\";lk\'\"]', 56.00, 'ALL', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
 (2, 2, 'gfghhggh', '[\"hgfgf\",\"ghhfghgh\",\"ghghfg\",\"gfhhgfg\"]', 55.00, 'USD', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
 (3, 3, 'hgdghd', '[\"dgfdgd\",\"gffdgg\",\"fggfdfg\",\"fgg\"]', 56.00, 'USD', '2026-01-13 05:23:59', '2026-01-13 05:23:59');
+
+--
+-- Triggers `post_item_pricing`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_post_item_pricing_after_delete` AFTER DELETE ON `post_item_pricing` FOR EACH ROW BEGIN
+  DECLARE ticket_json JSON;
+  DECLARE item_json JSON;
+  
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO ticket_json
+  FROM post_ticket_pricing 
+  WHERE map_card_id = OLD.map_card_id;
+  
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO item_json
+  FROM post_item_pricing 
+  WHERE map_card_id = OLD.map_card_id;
+  
+  UPDATE post_map_cards 
+  SET price_summary = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    JSON_OBJECT('ticket', ticket_json, 'item', item_json)
+  )
+  WHERE id = OLD.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_item_pricing_after_insert` AFTER INSERT ON `post_item_pricing` FOR EACH ROW BEGIN
+  DECLARE ticket_json JSON;
+  DECLARE item_json JSON;
+  
+  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
+  INTO ticket_json
+  FROM post_ticket_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
+  INTO item_json
+  FROM post_item_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  UPDATE post_map_cards 
+  SET price_summary = JSON_OBJECT(
+    'ticket', ticket_json,
+    'item', item_json
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_item_pricing_after_update` AFTER UPDATE ON `post_item_pricing` FOR EACH ROW BEGIN
+  DECLARE ticket_json JSON;
+  DECLARE item_json JSON;
+  
+  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
+  INTO ticket_json
+  FROM post_ticket_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
+  INTO item_json
+  FROM post_item_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  UPDATE post_map_cards 
+  SET price_summary = JSON_OBJECT(
+    'ticket', ticket_json,
+    'item', item_json
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2033,13 +2176,13 @@ CREATE TABLE `post_map_cards` (
   `longitude` decimal(10,7) NOT NULL,
   `country_code` varchar(2) DEFAULT NULL,
   `timezone` varchar(50) DEFAULT NULL,
-  `amenities` text DEFAULT NULL,
   `age_rating` varchar(50) DEFAULT NULL,
   `website_url` varchar(500) DEFAULT NULL,
   `tickets_url` varchar(500) DEFAULT NULL,
   `coupon_code` varchar(100) DEFAULT NULL,
   `session_summary` varchar(255) DEFAULT NULL,
   `price_summary` varchar(255) DEFAULT NULL,
+  `amenity_summary` text DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -2048,20 +2191,20 @@ CREATE TABLE `post_map_cards` (
 -- Dumping data for table `post_map_cards`
 --
 
-INSERT INTO `post_map_cards` (`id`, `post_id`, `subcategory_key`, `title`, `description`, `media_ids`, `custom_text`, `custom_textarea`, `custom_dropdown`, `custom_checklist`, `custom_radio`, `public_email`, `phone_prefix`, `public_phone`, `venue_name`, `address_line`, `city`, `latitude`, `longitude`, `country_code`, `timezone`, `amenities`, `age_rating`, `website_url`, `tickets_url`, `coupon_code`, `session_summary`, `price_summary`, `created_at`, `updated_at`) VALUES
-(1, 1, 'test-subcategory', 'e5tt5t5', '5ee5t5eret', NULL, 'Custom Text: dfgggd', 'Custom TextArea: dgffgggg gfg', 'Custom Dropdown: rawfrwrfwwfr', 'cxvvvx: vcvxcxcxvcxvxvvvv', 'Custom Radio: awrfwrfarwrfa', 'dgdg@hjg.hgkh', NULL, NULL, NULL, 'Dathiwang', 'Dathiwang', 27.8810100, 83.2131206, 'NP', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Accessible Parking\",\"value\":\"1\"},{\"amenity\":\"Food & Beverages\",\"value\":\"0\"},{\"amenity\":\"BYO Allowed\",\"value\":\"1\"},{\"amenity\":\"Licensed Venue\",\"value\":\"1\"}]', '12', 'https://hhjv.jgff', 'https://fjfh.hjf', 'gfhfghgf', '{\"start\":\"2026-01-24\",\"end\":\"2026-02-16\"}', '{\"ticket\":{\"min\":45,\"max\":565,\"currency\":\"DZD\"},\"item\":{\"price\":56,\"currency\":\"ALL\"}}', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
-(2, 1, 'test-subcategory', 'e5tt5t5', '5ee5t5eret', NULL, 'Custom Text: dsfds', 'Custom TextArea: dsfdsffffsf f ds', 'Custom Dropdown: wrffrawrfaw', 'cxvvvx: cvvv C cdDcecCEc  ecEA', 'Custom Radio: afarwf wfa r awr rwrar fr arwf', 'dgdg@hjg.hgkh', NULL, NULL, NULL, 'D.G.Peta', 'D.G.Peta', 15.1729316, 79.1788374, 'IN', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Accessible Parking\",\"value\":\"1\"},{\"amenity\":\"Food & Beverages\",\"value\":\"1\"},{\"amenity\":\"BYO Allowed\",\"value\":\"1\"},{\"amenity\":\"Licensed Venue\",\"value\":\"1\"}]', '12', 'https://hhjv.jgff', 'https://dhh.gfhgfhg', 'fhgfgh', '{\"start\":\"2026-01-28\",\"end\":\"2026-05-12\"}', '{\"ticket\":{\"min\":45,\"max\":565,\"currency\":\"DZD\"},\"item\":{\"price\":55,\"currency\":\"USD\"}}', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
-(3, 1, 'test-subcategory', 'e5tt5t5', '5ee5t5eret', NULL, 'Custom Text: fhfghgh', 'Custom TextArea: fgfgfdg fgd', 'Custom Dropdown: wrffrawrfaw', 'cxvvvx: vxcvcxvxcvxcv', 'Custom Radio: awrfarwf', 'dgdg@hjg.hgkh', NULL, NULL, NULL, 'San Francisco', 'San Francisco', 37.7749295, -122.4194155, 'US', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Accessible Parking\",\"value\":\"0\"},{\"amenity\":\"Food & Beverages\",\"value\":\"0\"},{\"amenity\":\"BYO Allowed\",\"value\":\"0\"},{\"amenity\":\"Licensed Venue\",\"value\":\"1\"}]', '15', 'https://hhjv.jgff', 'https://sfds.dh', 'hghgd', '{\"start\":\"2026-01-24\",\"end\":\"2026-02-24\"}', '{\"ticket\":{\"min\":45,\"max\":565,\"currency\":\"DZD\"},\"item\":{\"price\":56,\"currency\":\"USD\"}}', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
-(4, 2, 'live-gigs', 'gdjggdf', 'gjdjggjgd djg g', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'Louisville International Airport', '600 Terminal Drive, Louisville, KY 40209, USA', NULL, 38.1706549, -85.7307673, 'US', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, '', '', '', '{\"start\":\"2026-01-23\",\"end\":\"2026-02-22\"}', '{\"ticket\":{\"min\":23,\"max\":42,\"currency\":\"USD\"}}', '2026-01-13 06:41:30', '2026-01-13 06:41:30'),
-(5, 2, 'live-gigs', 'gdjggdf', 'gjdjggjgd djg g', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'Tychy, Poland', 'Tychy, Poland', NULL, 50.1218007, 19.0200022, 'PL', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, '', '', '', '{\"start\":\"2026-01-22\",\"end\":\"2026-02-23\"}', '{\"ticket\":{\"min\":23,\"max\":42,\"currency\":\"USD\"}}', '2026-01-13 06:41:30', '2026-01-13 06:41:30'),
-(6, 3, 'live-gigs', 'vxbnn', 'vcnnxnxcfbxfb', NULL, NULL, NULL, NULL, NULL, NULL, '', '+244', '3535553555', 'SGT University', 'Gurgaon-Badli Road Chandu, Budhera, Gurugram, Haryana 122505, India', NULL, 28.4830607, 76.9067928, 'IN', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"0\"}]', NULL, '', '', '', '{\"start\":\"2026-01-15\",\"end\":\"2026-02-16\"}', '{\"ticket\":{\"min\":34,\"max\":34,\"currency\":\"USD\"}}', '2026-01-13 06:59:46', '2026-01-13 06:59:46'),
-(7, 3, 'live-gigs', 'vxbnn', 'vcnnxnxcfbxfb', NULL, NULL, NULL, NULL, NULL, NULL, '', '+244', '3535553555', 'AFI Cotroceni', 'Bulevardul General Paul Teodorescu 4, BucureÈ™ti 061344, Romania', NULL, 44.4308561, 26.0524643, 'RO', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"0\"}]', NULL, '', '', '', '{\"start\":\"2026-01-27\",\"end\":\"2026-03-17\"}', '{\"ticket\":{\"min\":34,\"max\":34,\"currency\":\"USD\"}}', '2026-01-13 06:59:46', '2026-01-13 06:59:46'),
-(8, 4, 'live-gigs', 'sgshskjks', 'hffhsfhffsh', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'TTD Temple Parking Entrance', '20, MLA Colony, Jubilee Hills, Hyderabad, Telangana 500096, India', NULL, 17.4149828, 78.4167064, 'IN', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, '', '', '', '{\"start\":\"2026-01-21\",\"end\":\"2026-03-20\"}', '{\"ticket\":{\"min\":12,\"max\":12,\"currency\":\"USD\"}}', '2026-01-13 07:06:01', '2026-01-13 07:06:01'),
-(9, 4, 'live-gigs', 'sgshskjks', 'hffhsfhffsh', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, '4FåŠ‡å ´å’–å•¡ï¼ˆå‡æ—¥æš«ä¸æä¾›è¨‚ä½ï¼‰', '100, Taiwan, Taipei City, Zhongzheng District, Yanping S Rd, 98è™Ÿ4æ¨“', NULL, 25.0429975, 121.5101957, 'TW', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, '', '', '', '{\"start\":\"2026-01-22\",\"end\":\"2026-02-17\"}', '{\"ticket\":{\"min\":12,\"max\":12,\"currency\":\"USD\"}}', '2026-01-13 07:06:01', '2026-01-13 07:06:01'),
-(10, 5, 'live-gigs', 'aefaa', 'fafaffeefeea', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'Effingham, IL 62401, USA', 'Effingham, IL 62401, USA', NULL, 39.1200418, -88.5433829, 'US', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, '', '', '', '{\"start\":\"2026-01-20\",\"end\":\"2026-02-22\"}', '{\"ticket\":{\"min\":3,\"max\":3,\"currency\":\"USD\"}}', '2026-01-13 07:10:04', '2026-01-13 07:10:04'),
-(11, 6, 'live-gigs', 'hfgjjj', 'jfjjffjtyjtj', '[1,2,3,4,5]', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'RSGM LADOKGI TNI AL R.E MARTADINATA', 'Jl. Farmasi No.1, Bend. Hilir, Kecamatan Tanah Abang, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10210, Indonesia', NULL, -6.2118348, 106.8084567, 'ID', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, '', '', '', '{\"start\":\"2026-02-20\",\"end\":\"2026-03-18\"}', '{\"ticket\":{\"min\":12,\"max\":12,\"currency\":\"USD\"}}', '2026-01-13 07:13:23', '2026-01-13 07:13:39'),
-(12, 7, 'live-gigs', 'Test for the Sydney Opera House post.', 'Testy, testy, testy, testy.', '[6,7,8,9,10,11,12,13,14]', NULL, NULL, NULL, NULL, NULL, 'dgdd@gdfg.dh', '+376', '654366366', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, 'https://dhhgdh.dhgh', 'https://dghgdh.dhfgdh', 'dghhdhhdd', '{\"start\":\"2026-01-29\",\"end\":\"2026-03-25\"}', '{\"ticket\":{\"min\":23,\"max\":23,\"currency\":\"USD\"}}', '2026-01-13 07:25:56', '2026-01-13 07:26:22'),
-(13, 7, 'live-gigs', 'Test for the Sydney Opera House post.', 'Testy, testy, testy, testy.', '[6,7,8,9,10,11,12,13,14]', NULL, NULL, NULL, NULL, NULL, 'dgdd@gdfg.dh', '+376', '654366366', 'Federation Square, Melbourne VIC 3000, Australia', 'Federation Square, Melbourne VIC 3000, Australia', NULL, -37.8179789, 144.9690576, 'AU', NULL, '[{\"amenity\":\"Parking\",\"value\":\"0\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', NULL, 'https://dhhgdh.dhgh', 'https://dghgdh.dhfgdh', 'dghhdhhdd', '{\"start\":\"2026-01-29\",\"end\":\"2027-01-13\"}', '{\"ticket\":{\"min\":23,\"max\":23,\"currency\":\"USD\"}}', '2026-01-13 07:25:56', '2026-01-13 07:26:22');
+INSERT INTO `post_map_cards` (`id`, `post_id`, `subcategory_key`, `title`, `description`, `media_ids`, `custom_text`, `custom_textarea`, `custom_dropdown`, `custom_checklist`, `custom_radio`, `public_email`, `phone_prefix`, `public_phone`, `venue_name`, `address_line`, `city`, `latitude`, `longitude`, `country_code`, `timezone`, `age_rating`, `website_url`, `tickets_url`, `coupon_code`, `session_summary`, `price_summary`, `amenity_summary`, `created_at`, `updated_at`) VALUES
+(1, 1, 'test-subcategory', 'e5tt5t5', '5ee5t5eret', NULL, 'Custom Text: dfgggd', 'Custom TextArea: dgffgggg gfg', 'Custom Dropdown: rawfrwrfwwfr', 'cxvvvx: vcvxcxcxvcxvxvvvv', 'Custom Radio: awrfwrfarwrfa', 'dgdg@hjg.hgkh', NULL, NULL, NULL, 'Dathiwang', 'Dathiwang', 27.8810100, 83.2131206, 'NP', NULL, '12', 'https://hhjv.jgff', 'https://fjfh.hjf', 'gfhfghgf', '{\"start\":\"2026-01-24\",\"end\":\"2026-02-16\"}', '{\"ticket\":{\"min\":45,\"max\":565,\"currency\":\"DZD\"},\"item\":{\"price\":56,\"currency\":\"ALL\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Accessible Parking\",\"value\":\"1\"},{\"amenity\":\"Food & Beverages\",\"value\":\"0\"},{\"amenity\":\"BYO Allowed\",\"value\":\"1\"},{\"amenity\":\"Licensed Venue\",\"value\":\"1\"}]', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
+(2, 1, 'test-subcategory', 'e5tt5t5', '5ee5t5eret', NULL, 'Custom Text: dsfds', 'Custom TextArea: dsfdsffffsf f ds', 'Custom Dropdown: wrffrawrfaw', 'cxvvvx: cvvv C cdDcecCEc  ecEA', 'Custom Radio: afarwf wfa r awr rwrar fr arwf', 'dgdg@hjg.hgkh', NULL, NULL, NULL, 'D.G.Peta', 'D.G.Peta', 15.1729316, 79.1788374, 'IN', NULL, '12', 'https://hhjv.jgff', 'https://dhh.gfhgfhg', 'fhgfgh', '{\"start\":\"2026-01-28\",\"end\":\"2026-05-12\"}', '{\"ticket\":{\"min\":45,\"max\":565,\"currency\":\"DZD\"},\"item\":{\"price\":55,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Accessible Parking\",\"value\":\"1\"},{\"amenity\":\"Food & Beverages\",\"value\":\"1\"},{\"amenity\":\"BYO Allowed\",\"value\":\"1\"},{\"amenity\":\"Licensed Venue\",\"value\":\"1\"}]', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
+(3, 1, 'test-subcategory', 'e5tt5t5', '5ee5t5eret', NULL, 'Custom Text: fhfghgh', 'Custom TextArea: fgfgfdg fgd', 'Custom Dropdown: wrffrawrfaw', 'cxvvvx: vxcvcxvxcvxcv', 'Custom Radio: awrfarwf', 'dgdg@hjg.hgkh', NULL, NULL, NULL, 'San Francisco', 'San Francisco', 37.7749295, -122.4194155, 'US', NULL, '15', 'https://hhjv.jgff', 'https://sfds.dh', 'hghgd', '{\"start\":\"2026-01-24\",\"end\":\"2026-02-24\"}', '{\"ticket\":{\"min\":45,\"max\":565,\"currency\":\"DZD\"},\"item\":{\"price\":56,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Accessible Parking\",\"value\":\"0\"},{\"amenity\":\"Food & Beverages\",\"value\":\"0\"},{\"amenity\":\"BYO Allowed\",\"value\":\"0\"},{\"amenity\":\"Licensed Venue\",\"value\":\"1\"}]', '2026-01-13 05:23:59', '2026-01-13 05:23:59'),
+(4, 2, 'live-gigs', 'gdjggdf', 'gjdjggjgd djg g', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'Louisville International Airport', '600 Terminal Drive, Louisville, KY 40209, USA', NULL, 38.1706549, -85.7307673, 'US', NULL, NULL, '', '', '', '{\"start\":\"2026-01-23\",\"end\":\"2026-02-22\"}', '{\"ticket\":{\"min\":23,\"max\":42,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 06:41:30', '2026-01-13 06:41:30'),
+(5, 2, 'live-gigs', 'gdjggdf', 'gjdjggjgd djg g', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'Tychy, Poland', 'Tychy, Poland', NULL, 50.1218007, 19.0200022, 'PL', NULL, NULL, '', '', '', '{\"start\":\"2026-01-22\",\"end\":\"2026-02-23\"}', '{\"ticket\":{\"min\":23,\"max\":42,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 06:41:30', '2026-01-13 06:41:30'),
+(6, 3, 'live-gigs', 'vxbnn', 'vcnnxnxcfbxfb', NULL, NULL, NULL, NULL, NULL, NULL, '', '+244', '3535553555', 'SGT University', 'Gurgaon-Badli Road Chandu, Budhera, Gurugram, Haryana 122505, India', NULL, 28.4830607, 76.9067928, 'IN', NULL, NULL, '', '', '', '{\"start\":\"2026-01-15\",\"end\":\"2026-02-16\"}', '{\"ticket\":{\"min\":34,\"max\":34,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"0\"}]', '2026-01-13 06:59:46', '2026-01-13 06:59:46'),
+(7, 3, 'live-gigs', 'vxbnn', 'vcnnxnxcfbxfb', NULL, NULL, NULL, NULL, NULL, NULL, '', '+244', '3535553555', 'AFI Cotroceni', 'Bulevardul General Paul Teodorescu 4, BucureÈ™ti 061344, Romania', NULL, 44.4308561, 26.0524643, 'RO', NULL, NULL, '', '', '', '{\"start\":\"2026-01-27\",\"end\":\"2026-03-17\"}', '{\"ticket\":{\"min\":34,\"max\":34,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"0\"}]', '2026-01-13 06:59:46', '2026-01-13 06:59:46'),
+(8, 4, 'live-gigs', 'sgshskjks', 'hffhsfhffsh', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'TTD Temple Parking Entrance', '20, MLA Colony, Jubilee Hills, Hyderabad, Telangana 500096, India', NULL, 17.4149828, 78.4167064, 'IN', NULL, NULL, '', '', '', '{\"start\":\"2026-01-21\",\"end\":\"2026-03-20\"}', '{\"ticket\":{\"min\":12,\"max\":12,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 07:06:01', '2026-01-13 07:06:01'),
+(9, 4, 'live-gigs', 'sgshskjks', 'hffhsfhffsh', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, '4FåŠ‡å ´å’–å•¡ï¼ˆå‡æ—¥æš«ä¸æä¾›è¨‚ä½ï¼‰', '100, Taiwan, Taipei City, Zhongzheng District, Yanping S Rd, 98è™Ÿ4æ¨“', NULL, 25.0429975, 121.5101957, 'TW', NULL, NULL, '', '', '', '{\"start\":\"2026-01-22\",\"end\":\"2026-02-17\"}', '{\"ticket\":{\"min\":12,\"max\":12,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 07:06:01', '2026-01-13 07:06:01'),
+(10, 5, 'live-gigs', 'aefaa', 'fafaffeefeea', NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'Effingham, IL 62401, USA', 'Effingham, IL 62401, USA', NULL, 39.1200418, -88.5433829, 'US', NULL, NULL, '', '', '', '{\"start\":\"2026-01-20\",\"end\":\"2026-02-22\"}', '{\"ticket\":{\"min\":3,\"max\":3,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 07:10:04', '2026-01-13 07:10:04'),
+(11, 6, 'live-gigs', 'hfgjjj', 'jfjjffjtyjtj', '[1,2,3,4,5]', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'RSGM LADOKGI TNI AL R.E MARTADINATA', 'Jl. Farmasi No.1, Bend. Hilir, Kecamatan Tanah Abang, Kota Jakarta Pusat, Daerah Khusus Ibukota Jakarta 10210, Indonesia', NULL, -6.2118348, 106.8084567, 'ID', NULL, NULL, '', '', '', '{\"start\":\"2026-02-20\",\"end\":\"2026-03-18\"}', '{\"ticket\":{\"min\":12,\"max\":12,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 07:13:23', '2026-01-13 07:13:39'),
+(12, 7, 'live-gigs', 'Test for the Sydney Opera House post.', 'Testy, testy, testy, testy.', '[6,7,8,9,10,11,12,13,14]', NULL, NULL, NULL, NULL, NULL, 'dgdd@gdfg.dh', '+376', '654366366', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, NULL, 'https://dhhgdh.dhgh', 'https://dghgdh.dhfgdh', 'dghhdhhdd', '{\"start\":\"2026-01-29\",\"end\":\"2026-03-25\"}', '{\"ticket\":{\"min\":23,\"max\":23,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 07:25:56', '2026-01-13 07:26:22'),
+(13, 7, 'live-gigs', 'Test for the Sydney Opera House post.', 'Testy, testy, testy, testy.', '[6,7,8,9,10,11,12,13,14]', NULL, NULL, NULL, NULL, NULL, 'dgdd@gdfg.dh', '+376', '654366366', 'Federation Square, Melbourne VIC 3000, Australia', 'Federation Square, Melbourne VIC 3000, Australia', NULL, -37.8179789, 144.9690576, 'AU', NULL, NULL, 'https://dhhgdh.dhgh', 'https://dghgdh.dhfgdh', 'dghhdhhdd', '{\"start\":\"2026-01-29\",\"end\":\"2027-01-13\"}', '{\"ticket\":{\"min\":23,\"max\":23,\"currency\":\"USD\"}}', '[{\"amenity\":\"Parking\",\"value\":\"0\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}]', '2026-01-13 07:25:56', '2026-01-13 07:26:22');
 
 -- --------------------------------------------------------
 
@@ -2197,6 +2340,55 @@ INSERT INTO `post_sessions` (`id`, `map_card_id`, `session_date`, `session_time`
 (38, 13, '2026-04-13', '03:00:00', 'A', '2026-01-13 07:25:56', '2026-01-13 07:25:56'),
 (39, 13, '2027-01-13', '03:00:00', 'A', '2026-01-13 07:25:56', '2026-01-13 07:25:56');
 
+--
+-- Triggers `post_sessions`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_post_sessions_after_delete` AFTER DELETE ON `post_sessions` FOR EACH ROW BEGIN
+  UPDATE post_map_cards 
+  SET session_summary = (
+    SELECT IF(COUNT(*) > 0,
+      JSON_OBJECT('start', MIN(session_date), 'end', MAX(session_date)),
+      NULL
+    )
+    FROM post_sessions 
+    WHERE map_card_id = OLD.map_card_id
+  )
+  WHERE id = OLD.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_sessions_after_insert` AFTER INSERT ON `post_sessions` FOR EACH ROW BEGIN
+  UPDATE post_map_cards 
+  SET session_summary = (
+    SELECT JSON_OBJECT(
+      'start', MIN(session_date),
+      'end', MAX(session_date)
+    )
+    FROM post_sessions 
+    WHERE map_card_id = NEW.map_card_id
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_sessions_after_update` AFTER UPDATE ON `post_sessions` FOR EACH ROW BEGIN
+  UPDATE post_map_cards 
+  SET session_summary = (
+    SELECT JSON_OBJECT(
+      'start', MIN(session_date),
+      'end', MAX(session_date)
+    )
+    FROM post_sessions 
+    WHERE map_card_id = NEW.map_card_id
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -2248,6 +2440,89 @@ INSERT INTO `post_ticket_pricing` (`id`, `map_card_id`, `ticket_group_key`, `age
 (25, 11, 'A', 'all', 'egf', 'gese', 12.00, 'USD', '2026-01-13 07:13:23', '2026-01-13 07:13:23'),
 (26, 12, 'A', '7', 'esff', 'fesf', 23.00, 'USD', '2026-01-13 07:25:56', '2026-01-13 07:25:56'),
 (27, 13, 'A', '7', 'esff', 'fesf', 23.00, 'USD', '2026-01-13 07:25:56', '2026-01-13 07:25:56');
+
+--
+-- Triggers `post_ticket_pricing`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_post_ticket_pricing_after_delete` AFTER DELETE ON `post_ticket_pricing` FOR EACH ROW BEGIN
+  DECLARE ticket_json JSON;
+  DECLARE item_json JSON;
+  
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO ticket_json
+  FROM post_ticket_pricing 
+  WHERE map_card_id = OLD.map_card_id;
+  
+  SELECT IF(COUNT(*) > 0,
+    JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency)),
+    NULL
+  )
+  INTO item_json
+  FROM post_item_pricing 
+  WHERE map_card_id = OLD.map_card_id;
+  
+  UPDATE post_map_cards 
+  SET price_summary = IF(ticket_json IS NULL AND item_json IS NULL, NULL,
+    JSON_OBJECT('ticket', ticket_json, 'item', item_json)
+  )
+  WHERE id = OLD.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_ticket_pricing_after_insert` AFTER INSERT ON `post_ticket_pricing` FOR EACH ROW BEGIN
+  DECLARE ticket_json JSON;
+  DECLARE item_json JSON;
+  
+  -- Get ticket min/max
+  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
+  INTO ticket_json
+  FROM post_ticket_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  -- Get existing item pricing
+  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
+  INTO item_json
+  FROM post_item_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  UPDATE post_map_cards 
+  SET price_summary = JSON_OBJECT(
+    'ticket', ticket_json,
+    'item', item_json
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_post_ticket_pricing_after_update` AFTER UPDATE ON `post_ticket_pricing` FOR EACH ROW BEGIN
+  DECLARE ticket_json JSON;
+  DECLARE item_json JSON;
+  
+  SELECT JSON_OBJECT('min', MIN(price), 'max', MAX(price), 'currency', MAX(currency))
+  INTO ticket_json
+  FROM post_ticket_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  SELECT JSON_OBJECT('price', MIN(item_price), 'currency', MAX(currency))
+  INTO item_json
+  FROM post_item_pricing 
+  WHERE map_card_id = NEW.map_card_id;
+  
+  UPDATE post_map_cards 
+  SET price_summary = JSON_OBJECT(
+    'ticket', ticket_json,
+    'item', item_json
+  )
+  WHERE id = NEW.map_card_id;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2561,12 +2836,22 @@ ALTER TABLE `posts`
   ADD KEY `idx_active_posts` (`visibility`,`deleted_at`,`payment_status`);
 
 --
+-- Indexes for table `post_amenities`
+--
+ALTER TABLE `post_amenities`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uniq_map_card_amenity` (`map_card_id`,`amenity_key`),
+  ADD KEY `idx_map_card_id` (`map_card_id`),
+  ADD KEY `idx_amenity_key` (`amenity_key`);
+
+--
 -- Indexes for table `post_item_pricing`
 --
 ALTER TABLE `post_item_pricing`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
-  ADD KEY `price` (`item_price`);
+  ADD KEY `price` (`item_price`),
+  ADD KEY `idx_price_currency` (`item_price`,`currency`);
 
 --
 -- Indexes for table `post_map_cards`
@@ -2648,7 +2933,7 @@ ALTER TABLE `admin_messages`
 -- AUTO_INCREMENT for table `admin_settings`
 --
 ALTER TABLE `admin_settings`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=445;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=451;
 
 --
 -- AUTO_INCREMENT for table `banned_words`
@@ -2777,6 +3062,12 @@ ALTER TABLE `posts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
+-- AUTO_INCREMENT for table `post_amenities`
+--
+ALTER TABLE `post_amenities`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `post_item_pricing`
 --
 ALTER TABLE `post_item_pricing`
@@ -2833,6 +3124,12 @@ ALTER TABLE `transactions`
 --
 ALTER TABLE `posts`
   ADD CONSTRAINT `fk_posts_member` FOREIGN KEY (`member_id`) REFERENCES `members` (`id`) ON UPDATE CASCADE;
+
+--
+-- Constraints for table `post_amenities`
+--
+ALTER TABLE `post_amenities`
+  ADD CONSTRAINT `fk_post_amenities_map_card` FOREIGN KEY (`map_card_id`) REFERENCES `post_map_cards` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `post_item_pricing`

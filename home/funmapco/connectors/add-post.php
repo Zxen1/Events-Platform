@@ -528,7 +528,8 @@ foreach ($byLoc as $locNum => $entries) {
     'website_url' => null,
     'tickets_url' => null,
     'coupon_code' => null,
-    'amenities' => null,
+    'amenity_summary' => null,
+    'amenities_data' => null,
     'age_rating' => null,
     'session_summary' => null,
     'price_summary' => null,
@@ -610,8 +611,9 @@ foreach ($byLoc as $locNum => $entries) {
     if ($baseType === 'tickets-url' && is_string($val)) $card['tickets_url'] = trim($val);
     if ($baseType === 'coupon' && is_string($val)) $card['coupon_code'] = trim($val);
     if ($baseType === 'amenities' && is_array($val)) {
-      // Store as JSON for flexibility; column is TEXT.
-      $card['amenities'] = json_encode($val, JSON_UNESCAPED_UNICODE);
+      // Store JSON summary for quick reference; raw data for post_amenities subtable
+      $card['amenity_summary'] = json_encode($val, JSON_UNESCAPED_UNICODE);
+      $card['amenities_data'] = $val; // Keep raw array for subtable insertion
       continue;
     }
     if ($baseType === 'age_rating' && is_string($val)) {
@@ -733,7 +735,7 @@ foreach ($byLoc as $locNum => $entries) {
     $card['price_summary'] = json_encode($priceSummary, JSON_UNESCAPED_UNICODE);
   }
 
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, amenities, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, created_at, updated_at)
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
@@ -755,13 +757,13 @@ foreach ($byLoc as $locNum => $entries) {
   $latParam = (float)$card['latitude'];
   $lngParam = (float)$card['longitude'];
   $countryCodeParam = $card['country_code'];
-  $amenitiesParam = $card['amenities'];
   $ageRatingParam = $card['age_rating'];
   $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
   $couponCodeParam = $card['coupon_code'];
   $sessSumParam = $card['session_summary'];
   $priceSumParam = $card['price_summary'];
+  $amenitySumParam = $card['amenity_summary'];
 
   // Bind + insert map card
   // Types:
@@ -773,13 +775,13 @@ foreach ($byLoc as $locNum => $entries) {
   // sss (public_email, phone_prefix, public_phone)
   // sss (venue_name, address_line, city)
   // dd (lat,lng)
-  // ss (country_code, amenities)
+  // s (country_code)
   // s (age_rating)
   // ss (website_url, tickets_url)
   // s (coupon_code)
-  // ss (session_summary, price_summary)
+  // sss (session_summary, price_summary, amenity_summary)
   $stmtCard->bind_param(
-    'issssssssssssssddssssssss',
+    'issssssssssssssddsssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
@@ -798,13 +800,13 @@ foreach ($byLoc as $locNum => $entries) {
     $latParam,
     $lngParam,
     $countryCodeParam,
-    $amenitiesParam,
     $ageRatingParam,
     $websiteParam,
     $ticketsParam,
     $couponCodeParam,
     $sessSumParam,
-    $priceSumParam
+    $priceSumParam,
+    $amenitySumParam
   );
   if (!$stmtCard->execute()) { $stmtCard->close(); abort_with_error($mysqli, 500, 'Insert map card', $transactionActive); }
   $mapCardId = $stmtCard->insert_id;
@@ -812,6 +814,26 @@ foreach ($byLoc as $locNum => $entries) {
   $mapCardIds[$locNum] = $mapCardId;
   if ($primaryTitle === '') {
     $primaryTitle = (string) $titleParam;
+  }
+
+  // Insert amenities into post_amenities subtable
+  if (is_array($card['amenities_data']) && count($card['amenities_data']) > 0) {
+    $stmtAmenity = $mysqli->prepare("INSERT INTO post_amenities (map_card_id, amenity_key, value, created_at, updated_at)
+      VALUES (?, ?, ?, NOW(), NOW())");
+    if ($stmtAmenity) {
+      foreach ($card['amenities_data'] as $amenityItem) {
+        if (!is_array($amenityItem)) continue;
+        $amenityName = isset($amenityItem['amenity']) ? trim((string)$amenityItem['amenity']) : '';
+        if ($amenityName === '') continue;
+        // Convert amenity name to key format (lowercase, underscores)
+        $amenityKey = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '_', $amenityName));
+        $amenityKey = trim($amenityKey, '_');
+        $amenityValue = (isset($amenityItem['value']) && ($amenityItem['value'] === '1' || $amenityItem['value'] === 1 || $amenityItem['value'] === true)) ? 1 : 0;
+        $stmtAmenity->bind_param('isi', $mapCardId, $amenityKey, $amenityValue);
+        $stmtAmenity->execute();
+      }
+      $stmtAmenity->close();
+    }
   }
 
   // Insert sessions + ticket pricing

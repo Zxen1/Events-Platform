@@ -95,8 +95,10 @@ try {
     $result = $stmt->get_result();
 
     $clusters = [];
+    $totalCount = 0;
     while ($row = $result->fetch_assoc()) {
         $count = (int)$row['count'];
+        $totalCount += $count;
         
         // Format label (1000 → 1k, 1000000 → 1m)
         if ($count >= 1000000) {
@@ -122,6 +124,7 @@ try {
     echo json_encode([
         'success' => true,
         'clusters' => $clusters,
+        'total_count' => $totalCount,
         'grid_size' => $gridSize,
         'zoom' => $zoom
     ]);

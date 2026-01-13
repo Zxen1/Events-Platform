@@ -78,6 +78,26 @@
   opacity: 0; /* Hidden until mask-image loaded via JS */
 }
 
+/* Filter button count badge */
+.header-filter-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--accent, #ff6b35);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  border-radius: 9px;
+  box-sizing: border-box;
+  pointer-events: none;
+  z-index: 1;
+}
+
 
 /* Mode switch container */
 .header-modeswitch {

@@ -357,12 +357,64 @@ const FilterModule = (function() {
 
 
     /* --------------------------------------------------------------------------
-       SUMMARY
+       SUMMARY & COUNTS
        -------------------------------------------------------------------------- */
+    
+    var lastFilteredCount = 0;
+    var lastTotalCount = 0;
+    var headerFilterBadge = null;
     
     function updateSummary(text) {
         if (summaryEl) {
             summaryEl.textContent = text || '';
+        }
+    }
+    
+    /**
+     * Update filter counts display (summary message + header badge)
+     * @param {number} filtered - Number of filtered results
+     * @param {number} total - Total results in visible area
+     */
+    function updateFilterCounts(filtered, total) {
+        lastFilteredCount = filtered;
+        lastTotalCount = total;
+        
+        // Update summary message in filter panel
+        if (summaryEl) {
+            if (total === 0) {
+                summaryEl.textContent = 'No results in this area.';
+            } else if (filtered === total) {
+                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' in this area.';
+            } else {
+                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' showing out of ' + total + ' in this area.';
+            }
+        }
+        
+        // Update header filter button badge
+        updateHeaderBadge(filtered);
+    }
+    
+    /**
+     * Update the count badge on the header filter button
+     */
+    function updateHeaderBadge(count) {
+        // Find or create badge element
+        var headerFilterBtn = document.querySelector('.header-filter');
+        if (!headerFilterBtn) return;
+        
+        headerFilterBadge = headerFilterBtn.querySelector('.header-filter-badge');
+        if (!headerFilterBadge) {
+            headerFilterBadge = document.createElement('span');
+            headerFilterBadge.className = 'header-filter-badge';
+            headerFilterBtn.appendChild(headerFilterBadge);
+        }
+        
+        // Update badge content
+        if (count > 0) {
+            headerFilterBadge.textContent = count > 999 ? '999+' : String(count);
+            headerFilterBadge.style.display = '';
+        } else {
+            headerFilterBadge.style.display = 'none';
         }
     }
 
@@ -756,7 +808,7 @@ const FilterModule = (function() {
         
         // Expired toggle
         expiredInput = container.querySelector('.filter-expired-input');
-        expiredSlider = container.querySelector('.component-bigorange-switch-slider');
+        expiredSlider = expiredInput ? expiredInput.nextElementSibling : null;
         
         if (expiredInput) {
             expiredInput.addEventListener('change', function() {
@@ -772,6 +824,7 @@ const FilterModule = (function() {
         updateClearButtons();
     }
     
+
     function updateClearButtons() {
         // Keyword
         if (keywordClear && keywordInput) {
@@ -1201,6 +1254,28 @@ const FilterModule = (function() {
         // Save filters when map moves (debounced via saveFilters)
         App.on('map:boundsChanged', function() {
             saveFilters();
+        });
+        
+        // Listen for filter count updates from PostModule (detailed, after posts loaded)
+        App.on('filter:countsUpdated', function(data) {
+            if (data && typeof data.filtered === 'number' && typeof data.total === 'number') {
+                updateFilterCounts(data.filtered, data.total);
+            }
+        });
+        
+        // Listen for cluster count updates from MapModule (fast, before posts loaded)
+        // This provides an early count for the header badge on initial load
+        App.on('clusters:countUpdated', function(data) {
+            if (data && typeof data.total === 'number') {
+                // Only update badge if we don't have detailed counts yet
+                if (lastTotalCount === 0 && lastFilteredCount === 0) {
+                    updateHeaderBadge(data.total);
+                    // Also update summary with cluster count
+                    if (summaryEl) {
+                        summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' in this area.';
+                    }
+                }
+            }
         });
     }
 
