@@ -851,12 +851,13 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   /**
-   * Convert API post data to marker-friendly format
-   * @param {Object} post - Post data from API
-   * @returns {Object} Marker-friendly post object
+   * Convert a map card to marker-friendly format
+   * @param {Object} post - Parent post data
+   * @param {Object} mapCard - Map card data
+   * @param {number} mapCardIndex - Index of this map card within the post
+   * @returns {Object} Marker-friendly object
    */
-  function convertPostForMarker(post) {
-    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+  function convertMapCardToMarker(post, mapCard, mapCardIndex) {
     if (!mapCard) return null;
 
     var lat = mapCard.latitude;
@@ -879,9 +880,14 @@ const PostModule = (function() {
     var rawUrl = (mapCard.media_urls && mapCard.media_urls.length) ? mapCard.media_urls[0] : '';
     var thumbnailUrl = addImageClass(rawUrl, 'minithumb');
 
+    // Check if this post has multiple locations
+    var isMultiLocation = post.map_cards && post.map_cards.length > 1;
+
     return {
       id: post.id,
       post_key: post.post_key,
+      map_card_id: mapCard.id,
+      map_card_index: mapCardIndex,
       title: title,
       venue: venueName,
       sub: subcategoryKey,
@@ -889,8 +895,10 @@ const PostModule = (function() {
       thumbnailUrl: thumbnailUrl,
       lat: lat,
       lng: lng,
-      // Keep reference to original post
-      _originalPost: post
+      isMultiLocation: isMultiLocation,
+      // Keep reference to original post and map card
+      _originalPost: post,
+      _mapCard: mapCard
     };
   }
 
@@ -924,16 +932,21 @@ const PostModule = (function() {
       mapModule.clearAllMapCardMarkers();
     }
 
-    // Create markers for each post with valid coordinates
+    // Create markers for each map card (not each post)
+    // A post can have multiple locations, each gets its own map marker
     var markerCount = 0;
     posts.forEach(function(post) {
-      var markerPost = convertPostForMarker(post);
-      if (!markerPost) return;
+      if (!post.map_cards || !post.map_cards.length) return;
+      
+      post.map_cards.forEach(function(mapCard, index) {
+        var markerData = convertMapCardToMarker(post, mapCard, index);
+        if (!markerData) return;
 
-      if (mapModule.createMapCardMarker) {
-        mapModule.createMapCardMarker(markerPost, markerPost.lng, markerPost.lat);
-        markerCount++;
-      }
+        if (mapModule.createMapCardMarker) {
+          mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat);
+          markerCount++;
+        }
+      });
     });
 
     console.log('[Post] Rendered ' + markerCount + ' map markers');
@@ -1076,27 +1089,32 @@ const PostModule = (function() {
     var bounds = (lastZoom >= threshold) ? getMapBounds() : null;
 
     return posts.filter(function(post) {
-      var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+      var mapCards = post.map_cards || [];
+      if (!mapCards.length) return false;
 
-      // Map area filter (viewport bounds)
-      if (bounds && mapCard) {
-        var lng = mapCard.longitude;
-        var lat = mapCard.latitude;
-        if (!pointWithinBounds(lng, lat, bounds)) {
-          return false;
-        }
+      // Map area filter (viewport bounds) - include post if ANY map card is in bounds
+      if (bounds) {
+        var anyInBounds = mapCards.some(function(mc) {
+          return mc && pointWithinBounds(mc.longitude, mc.latitude, bounds);
+        });
+        if (!anyInBounds) return false;
       }
 
-      // Keyword filter
+      // Keyword filter - match against ANY map card's content
       if (filters.keyword) {
         var kw = filters.keyword.toLowerCase();
-        var title = ((mapCard && mapCard.title) || post.checkout_title || '').toLowerCase();
-        var description = ((mapCard && mapCard.description) || '').toLowerCase();
-        var venue = ((mapCard && mapCard.venue_name) || '').toLowerCase();
-
-        if (title.indexOf(kw) === -1 && description.indexOf(kw) === -1 && venue.indexOf(kw) === -1) {
-          return false;
-        }
+        var checkoutTitle = (post.checkout_title || '').toLowerCase();
+        
+        var keywordMatch = mapCards.some(function(mc) {
+          if (!mc) return false;
+          var title = (mc.title || '').toLowerCase();
+          var description = (mc.description || '').toLowerCase();
+          var venue = (mc.venue_name || '').toLowerCase();
+          return title.indexOf(kw) !== -1 || description.indexOf(kw) !== -1 || 
+                 venue.indexOf(kw) !== -1 || checkoutTitle.indexOf(kw) !== -1;
+        });
+        
+        if (!keywordMatch) return false;
       }
 
       // Price filter (if price_summary contains a number)

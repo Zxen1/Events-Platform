@@ -243,11 +243,15 @@ if (!$mysqli->begin_transaction()) {
 $transactionActive = true;
 
 // Determine payment status - admins can skip payment if requested, others get 'pending'
-$paymentStatus = $skipPayment ? 'paid' : 'pending';
+// TEMPORARY: No payment gateway yet - all posts go live immediately
+// TODO: Revert to ($skipPayment ? 'paid' : 'pending') when payment gateway is ready
+$paymentStatus = 'paid';
 
 // Admin free submit: post goes live immediately
 // Regular member: post stays paused until payment received
-$visibility = $skipPayment ? 'active' : 'paused';
+// TEMPORARY: No payment gateway yet - all posts go live immediately
+// TODO: Revert to ($skipPayment ? 'active' : 'paused') when payment gateway is ready
+$visibility = 'active';
 
 // Moderation status: 'clean' for all new posts
 // Moderation system only deals with flagged/reported content later, not initial submission
