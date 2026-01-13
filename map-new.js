@@ -1572,8 +1572,9 @@ const MapModule = (function() {
   function createMapCardMarker(post, lng, lat) {
     if (!map || !post || !post.id) return null;
 
-    // Remove existing marker for this post
-    removeMapCardMarker(post.id);
+    // Note: We don't call removeMapCardMarker here because renderMapMarkers
+    // already clears all markers at the start. Calling it here would break
+    // multi-post venues where different venues share the same post ID.
 
     // Create marker element
     const el = document.createElement('div');
