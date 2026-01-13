@@ -211,6 +211,11 @@ const PostModule = (function() {
       if (!data) return;
       filterFavourites(data.enabled);
     });
+
+    // Listen for new post created - refresh to show the new post
+    App.on('post:created', function() {
+      refreshPosts();
+    });
   }
 
   /**
@@ -1245,15 +1250,14 @@ const PostModule = (function() {
         if (!hasCurrentSession) return false;
       }
 
-      // Category filter - check if ANY map card's subcategory is enabled
+      // Category filter - check post's subcategory
       if (filters.disabledSubcategories && filters.disabledSubcategories.length > 0) {
-        var categoryMatch = mapCards.some(function(mc) {
-          if (!mc || !mc.subcategory_key) return true; // No subcategory = include
-          // Include if subcategory is NOT in the disabled list
-          return filters.disabledSubcategories.indexOf(mc.subcategory_key) === -1;
-        });
-        
-        if (!categoryMatch) return false;
+        var subKey = post.subcategory_key;
+        if (!subKey) return true; // No subcategory = include
+        // Exclude if subcategory is in the disabled list
+        if (filters.disabledSubcategories.indexOf(subKey) !== -1) {
+          return false;
+        }
       }
 
       // Favorites filter

@@ -937,9 +937,9 @@ const FilterModule = (function() {
             
             // Get all subcategories in this category
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
-                var subName = opt.querySelector('.filter-categoryfilter-accordion-option-text');
-                if (!subName) return;
-                var subKey = subName.textContent.trim();
+                // Use data-subcategory-key attribute (matches post.subcategory_key)
+                var subKey = opt.getAttribute('data-subcategory-key');
+                if (!subKey) return;
                 
                 if (!catEnabled) {
                     // Entire category disabled - all subs are disabled
@@ -1144,6 +1144,7 @@ const FilterModule = (function() {
                 var categories = res.formData.categories || [];
                 var categoryIconPaths = res.formData.categoryIconPaths || {};
                 var subcategoryIconPaths = res.formData.subcategoryIconPaths || {};
+                var subcategoryMarkerIds = res.formData.subcategoryMarkerIds || {};
                 
                 // Categories loaded
                 if (categories.length === 0) {
@@ -1194,6 +1195,10 @@ const FilterModule = (function() {
                     subs.forEach(function(subName) {
                         var option = document.createElement('div');
                         option.className = 'filter-categoryfilter-accordion-option';
+                        
+                        // Store the subcategory_key for filtering
+                        var subKey = subcategoryMarkerIds[subName] || subName;
+                        option.setAttribute('data-subcategory-key', subKey);
                         
                         var optImg = document.createElement('img');
                         optImg.className = 'filter-categoryfilter-accordion-option-image';
