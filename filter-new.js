@@ -914,48 +914,8 @@ const FilterModule = (function() {
             dateEnd: dateEnd,
             expired: expiredInput ? expiredInput.checked : false,
             favourites: favouritesOn,
-            sort: currentSort,
-            disabledSubcategories: getDisabledSubcategories()
+            sort: currentSort
         };
-    }
-    
-    /**
-     * Get flat list of disabled subcategory names for filtering
-     * Returns null if all subcategories are enabled (no filtering needed)
-     */
-    function getDisabledSubcategories() {
-        var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
-        if (!container) return null;
-        
-        var disabled = [];
-        
-        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
-        accordions.forEach(function(accordion) {
-            // Check category toggle
-            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle input');
-            var catEnabled = headerToggle && headerToggle.checked;
-            
-            // Get all subcategories in this category
-            accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
-                // Use data-subcategory-key attribute (matches post.subcategory_key)
-                var subKey = opt.getAttribute('data-subcategory-key');
-                if (!subKey) return;
-                
-                if (!catEnabled) {
-                    // Entire category disabled - all subs are disabled
-                    disabled.push(subKey);
-                } else {
-                    // Check individual subcategory toggle
-                    var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
-                    if (!subToggle || !subToggle.checked) {
-                        disabled.push(subKey);
-                    }
-                }
-            });
-        });
-        
-        // If nothing disabled, return null (no filtering needed)
-        return disabled.length > 0 ? disabled : null;
     }
     
     function buildCalendar() {
@@ -1144,7 +1104,6 @@ const FilterModule = (function() {
                 var categories = res.formData.categories || [];
                 var categoryIconPaths = res.formData.categoryIconPaths || {};
                 var subcategoryIconPaths = res.formData.subcategoryIconPaths || {};
-                var subcategoryMarkerIds = res.formData.subcategoryMarkerIds || {};
                 
                 // Categories loaded
                 if (categories.length === 0) {
@@ -1195,10 +1154,6 @@ const FilterModule = (function() {
                     subs.forEach(function(subName) {
                         var option = document.createElement('div');
                         option.className = 'filter-categoryfilter-accordion-option';
-                        
-                        // Store the subcategory_key for filtering
-                        var subKey = subcategoryMarkerIds[subName] || subName;
-                        option.setAttribute('data-subcategory-key', subKey);
                         
                         var optImg = document.createElement('img');
                         optImg.className = 'filter-categoryfilter-accordion-option-image';

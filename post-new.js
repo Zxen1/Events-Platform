@@ -1158,114 +1158,15 @@ const PostModule = (function() {
         if (!keywordMatch) return false;
       }
 
-      // Price filter - check if ANY map card has price in range
-      if (filters.minPrice || filters.maxPrice) {
-        var minP = filters.minPrice ? parseFloat(filters.minPrice) : null;
-        var maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : null;
-        
-        var priceMatch = mapCards.some(function(mc) {
-          if (!mc || !mc.price_summary) return false;
-          var summary = mc.price_summary;
-          
-          // Parse price_summary JSON (already parsed if object)
-          if (typeof summary === 'string') {
-            summary = JSON.parse(summary);
-          }
-          
-          // Extract prices from summary
-          var ticketMin = (summary.ticket && summary.ticket.min) || null;
-          var ticketMax = (summary.ticket && summary.ticket.max) || null;
-          var itemPrice = (summary.item && summary.item.price) || null;
-          
-          // Check if any price falls within range
-          var prices = [ticketMin, ticketMax, itemPrice].filter(function(p) {
-            return p !== null && p !== undefined && !isNaN(p);
-          });
-          
-          if (!prices.length) return false;
-          
-          return prices.some(function(price) {
-            if (minP !== null && price < minP) return false;
-            if (maxP !== null && price > maxP) return false;
-            return true;
-          });
-        });
-        
-        if (!priceMatch) return false;
-      }
-
-      // Date range filter - check if ANY map card has sessions in range
-      if (filters.dateStart || filters.dateEnd) {
-        var startDate = filters.dateStart ? new Date(filters.dateStart) : null;
-        var endDate = filters.dateEnd ? new Date(filters.dateEnd) : null;
-        
-        var dateMatch = mapCards.some(function(mc) {
-          if (!mc || !mc.session_summary) return false;
-          var summary = mc.session_summary;
-          
-          // Parse session_summary JSON (already parsed if object)
-          if (typeof summary === 'string') {
-            summary = JSON.parse(summary);
-          }
-          
-          var sessStart = summary.start ? new Date(summary.start) : null;
-          var sessEnd = summary.end ? new Date(summary.end) : null;
-          
-          // No session dates = no match for date filter
-          if (!sessStart && !sessEnd) return false;
-          
-          // If filtering start date, session must end on or after it
-          if (startDate && sessEnd && sessEnd < startDate) return false;
-          
-          // If filtering end date, session must start on or before it
-          if (endDate && sessStart && sessStart > endDate) return false;
-          
-          return true;
-        });
-        
-        if (!dateMatch) return false;
-      }
-
-      // Expired filter - if NOT showing expired, exclude past events
-      // Note: posts without session info are items for sale (not timed), so they're included
-      if (!filters.expired) {
-        var now = new Date();
-        now.setHours(0, 0, 0, 0);
-        
-        var hasCurrentSession = mapCards.some(function(mc) {
-          // No session info means item for sale (not a timed event) - include
-          if (!mc || !mc.session_summary) return true;
-          var summary = mc.session_summary;
-          
-          // Parse session_summary JSON (already parsed if object)
-          if (typeof summary === 'string') {
-            summary = JSON.parse(summary);
-          }
-          
-          var sessEnd = summary.end ? new Date(summary.end) : null;
-          // Include if no end date or end date is today or future
-          return !sessEnd || sessEnd >= now;
-        });
-        
-        if (!hasCurrentSession) return false;
-      }
-
-      // Category filter - check post's subcategory
-      if (filters.disabledSubcategories && filters.disabledSubcategories.length > 0) {
-        var subKey = post.subcategory_key;
-        if (!subKey) return true; // No subcategory = include
-        // Exclude if subcategory is in the disabled list
-        if (filters.disabledSubcategories.indexOf(subKey) !== -1) {
-          return false;
-        }
-      }
-
       // Favorites filter
       if (filters.favourites) {
         if (!isFavorite(post.id)) {
           return false;
         }
       }
+
+      // TODO: Price, date, expired, category filters need server-side implementation
+      // using post_sessions, post_ticket_pricing, post_item_pricing tables
 
       return true;
     });
