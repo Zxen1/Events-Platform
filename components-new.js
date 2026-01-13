@@ -995,7 +995,7 @@ const CurrencyComponent = (function(){
         menu.className = 'component-currencycompact-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-currencycompact-menu-button menu-button" role="button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input menu-input" placeholder="Search" autocomplete="off"><span class="component-currencycompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencycompact-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencycompact-menu-button menu-button" role="button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input menu-input" placeholder="Select" autocomplete="off"><span class="component-currencycompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencycompact-menu-options menu-options"></div>';
 
         var btn = menu.querySelector('.component-currencycompact-menu-button');
         var opts = menu.querySelector('.component-currencycompact-menu-options');
@@ -1036,6 +1036,7 @@ const CurrencyComponent = (function(){
                 btnImg.src = '';
                 btnImg.style.display = 'none';
                 btnInput.value = '';
+                btnInput.placeholder = 'Select';
                 selectedCode = null;
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
@@ -1053,6 +1054,7 @@ const CurrencyComponent = (function(){
                     btnImg.style.display = 'none';
                 }
                 btnInput.value = found.value;
+                btnInput.placeholder = 'Search';
                 selectedCode = code;
                 try { menu.dataset.value = String(code || '').trim(); } catch (e1) {}
             }
@@ -1725,7 +1727,7 @@ const PhonePrefixComponent = (function(){
         menu.className = 'component-phoneprefixcompact-menu menu-class-1';
 
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-phoneprefixcompact-menu-button menu-button"><img class="component-phoneprefixcompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefixcompact-menu-button-input menu-input" placeholder="Search" autocomplete="off"><span class="component-phoneprefixcompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-phoneprefixcompact-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-phoneprefixcompact-menu-button menu-button"><img class="component-phoneprefixcompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefixcompact-menu-button-input menu-input" placeholder="Select" autocomplete="off"><span class="component-phoneprefixcompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-phoneprefixcompact-menu-options menu-options"></div>';
 
         var btn = menu.querySelector('.component-phoneprefixcompact-menu-button');
         var opts = menu.querySelector('.component-phoneprefixcompact-menu-options');
@@ -1763,6 +1765,16 @@ const PhonePrefixComponent = (function(){
 
         // Find and set value
         function setValue(code) {
+            // Handle null/empty - revert to placeholder state
+            if (!code) {
+                btnImg.src = '';
+                btnImg.style.display = 'none';
+                btnInput.value = '';
+                btnInput.placeholder = 'Select';
+                selectedCode = null;
+                try { menu.dataset.value = ''; } catch (e0) {}
+                return;
+            }
             var found = prefixData.find(function(item) {
                 return item.value === code;
             });
@@ -1776,7 +1788,9 @@ const PhonePrefixComponent = (function(){
                     btnImg.style.display = 'none';
                 }
                 btnInput.value = found.value;
+                btnInput.placeholder = 'Search';
                 selectedCode = code;
+                try { menu.dataset.value = String(code || '').trim(); } catch (e1) {}
             }
         }
 

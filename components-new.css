@@ -833,8 +833,7 @@
 .component-currencycompact-menu-button-input {
     flex: 1;
     text-align: left;
-    padding-left: 6px;
-    font-size: 12px;
+    font-size: 13px;
     min-width: 0;
 }
 
@@ -925,8 +924,7 @@
 .component-phoneprefixcompact-menu-button-input {
     flex: 1;
     text-align: left;
-    padding-left: 6px;
-    font-size: 12px;
+    font-size: 13px;
     min-width: 0;
 }
 

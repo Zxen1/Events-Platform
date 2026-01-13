@@ -2091,8 +2091,8 @@ const FieldsetBuilder = (function(){
                 itemCurrencySub.textContent = 'Currency';
                 itemCurrencyCol.appendChild(itemCurrencySub);
                 
-                // Build currency menu for item
-                var initialCurrencyCode = defaultCurrency || null;
+                // Build currency menu for item (no default - user must select if required)
+                var initialCurrencyCode = null;
                 if (typeof CurrencyComponent === 'undefined') {
                     console.error('[FieldsetBuilder] CurrencyComponent not available');
                     var placeholderMenu = document.createElement('div');
