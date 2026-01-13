@@ -107,6 +107,20 @@ const MapModule = (function() {
   let hoverToken = 0;
   let currentHoverPostIds = [];
   
+  // Live-site-style hover/click manager (adapted for DOM markers):
+  // - Hover is driven by pointer hit-testing (not per-marker mouseenter/mouseleave)
+  // - Hover clears with a small delay to avoid flicker during press/drag
+  // - Click is resolved on pointerup with a tiny movement threshold (works during fly/drag)
+  let hoverManagerBound = false;
+  let hoveredVenueKey = '';
+  let hoverClearTimerId = 0;
+  let pointerDownActive = false;
+  let pointerDownVenueKey = '';
+  let pointerDownClientX = 0;
+  let pointerDownClientY = 0;
+  const HOVER_CLEAR_DELAY_MS = 50;
+  const CLICK_MOVE_THRESHOLD_PX = 6;
+  
   // Settings cache
   let adminSettings = {};
   
@@ -1629,6 +1643,7 @@ const MapModule = (function() {
 
     // Store reference by venue coordinates (prevents duplicate entries for multi-post venues)
     const venueKey = lng.toFixed(6) + ',' + lat.toFixed(6);
+    el.dataset.venueKey = venueKey;
     const entry = {
       marker: marker,
       element: el,
@@ -1646,13 +1661,8 @@ const MapModule = (function() {
     // Store by venue key to avoid duplicates
     mapCardMarkers.set(venueKey, entry);
 
-    // Bind events
-    el.addEventListener('mouseenter', () => onMapCardHoverByVenueKey(entry.venueKey, true));
-    el.addEventListener('mouseleave', () => onMapCardHoverByVenueKey(entry.venueKey, false));
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      onMapCardClick(entry.venueKey);
-    });
+    // Bind hover/click manager once (centralized, live-site style).
+    bindMapCardPointerManager();
 
     return entry;
   }
@@ -1846,6 +1856,122 @@ const MapModule = (function() {
     
     // Emit event for post module to open the post
     App.emit('map:cardClicked', { postId: entry.post && entry.post.id ? entry.post.id : null });
+  }
+
+  function clearHoverClearTimer() {
+    if (hoverClearTimerId) {
+      clearTimeout(hoverClearTimerId);
+      hoverClearTimerId = 0;
+    }
+  }
+
+  function getVenueKeyFromTarget(target) {
+    if (!target || typeof target.closest !== 'function') return '';
+    const container = target.closest('.map-card-container');
+    if (!container || !container.dataset) return '';
+    return container.dataset.venueKey ? String(container.dataset.venueKey) : '';
+  }
+
+  function getVenueKeyFromPoint(clientX, clientY) {
+    try {
+      const el = document.elementFromPoint(clientX, clientY);
+      return getVenueKeyFromTarget(el);
+    } catch (_e) {
+      return '';
+    }
+  }
+
+  function setHoveredVenueKey(nextVenueKey) {
+    const nextKey = nextVenueKey ? String(nextVenueKey) : '';
+    if (nextKey === hoveredVenueKey) return;
+
+    // End previous hover (if any)
+    if (hoveredVenueKey) {
+      onMapCardHoverByVenueKey(hoveredVenueKey, false);
+    }
+    hoveredVenueKey = nextKey;
+    if (hoveredVenueKey) {
+      onMapCardHoverByVenueKey(hoveredVenueKey, true);
+    }
+  }
+
+  function scheduleHoverClear(clientX, clientY) {
+    clearHoverClearTimer();
+    hoverClearTimerId = setTimeout(() => {
+      // Recheck under pointer before clearing (matches live-site behavior)
+      const stillKey = getVenueKeyFromPoint(clientX, clientY);
+      if (stillKey) {
+        setHoveredVenueKey(stillKey);
+        return;
+      }
+      setHoveredVenueKey('');
+    }, HOVER_CLEAR_DELAY_MS);
+  }
+
+  function bindMapCardPointerManager() {
+    if (hoverManagerBound) return;
+    if (!map || typeof map.getContainer !== 'function') return;
+    const container = map.getContainer();
+    if (!container) return;
+
+    hoverManagerBound = true;
+
+    container.addEventListener('pointermove', (e) => {
+      if (!e) return;
+      if (pointerDownActive) {
+        // Keep hover stable while pressed (prevents hover->inactive while mouse is down)
+        return;
+      }
+      clearHoverClearTimer();
+      const key = getVenueKeyFromPoint(e.clientX, e.clientY);
+      if (key) {
+        setHoveredVenueKey(key);
+      } else {
+        scheduleHoverClear(e.clientX, e.clientY);
+      }
+    }, { passive: true });
+
+    container.addEventListener('pointerleave', (e) => {
+      if (pointerDownActive) return;
+      const x = e && typeof e.clientX === 'number' ? e.clientX : 0;
+      const y = e && typeof e.clientY === 'number' ? e.clientY : 0;
+      scheduleHoverClear(x, y);
+    }, { passive: true });
+
+    // Resolve click based on pointerup (works during fly/drag; no waiting for map to stop).
+    document.addEventListener('pointerdown', (e) => {
+      const key = getVenueKeyFromTarget(e && e.target);
+      if (!key) return;
+      pointerDownActive = true;
+      pointerDownVenueKey = key;
+      pointerDownClientX = e.clientX || 0;
+      pointerDownClientY = e.clientY || 0;
+      clearHoverClearTimer();
+      setHoveredVenueKey(key);
+    }, true);
+
+    document.addEventListener('pointerup', (e) => {
+      if (!pointerDownActive) return;
+      const upX = e && typeof e.clientX === 'number' ? e.clientX : 0;
+      const upY = e && typeof e.clientY === 'number' ? e.clientY : 0;
+      const keyUp = getVenueKeyFromPoint(upX, upY);
+      const dx = upX - pointerDownClientX;
+      const dy = upY - pointerDownClientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      const clickedKey = pointerDownVenueKey;
+      pointerDownActive = false;
+      pointerDownVenueKey = '';
+
+      if (clickedKey && keyUp === clickedKey && dist <= CLICK_MOVE_THRESHOLD_PX) {
+        onMapCardClick(clickedKey);
+      }
+    }, true);
+
+    document.addEventListener('pointercancel', () => {
+      pointerDownActive = false;
+      pointerDownVenueKey = '';
+    }, true);
   }
 
   /**
