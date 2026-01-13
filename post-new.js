@@ -932,15 +932,48 @@ const PostModule = (function() {
       mapModule.clearAllMapCardMarkers();
     }
 
-    // Create markers for each map card (not each post)
-    // A post can have multiple locations, each gets its own map marker
-    var markerCount = 0;
+    // First pass: collect all map cards and group by venue coordinates
+    // Multi-post venues (same location, different posts) use multi_post_icon
+    var COORD_PRECISION = 6;
+    var venueGroups = {}; // key: "lng,lat" -> array of {post, mapCard, index}
+    
     posts.forEach(function(post) {
       if (!post.map_cards || !post.map_cards.length) return;
       
       post.map_cards.forEach(function(mapCard, index) {
-        var markerData = convertMapCardToMarker(post, mapCard, index);
+        if (!mapCard) return;
+        var lat = mapCard.latitude;
+        var lng = mapCard.longitude;
+        if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
+        
+        var venueKey = lng.toFixed(COORD_PRECISION) + ',' + lat.toFixed(COORD_PRECISION);
+        if (!venueGroups[venueKey]) {
+          venueGroups[venueKey] = [];
+        }
+        venueGroups[venueKey].push({ post: post, mapCard: mapCard, index: index });
+      });
+    });
+
+    // Second pass: create markers, marking multi-post venues
+    var markerCount = 0;
+    Object.keys(venueGroups).forEach(function(venueKey) {
+      var group = venueGroups[venueKey];
+      if (!group.length) return;
+      
+      // Check if this venue has multiple posts (different post IDs)
+      var uniquePostIds = {};
+      group.forEach(function(item) { uniquePostIds[item.post.id] = true; });
+      var isMultiPostVenue = Object.keys(uniquePostIds).length > 1;
+      
+      // Create a marker for each map card at this venue
+      group.forEach(function(item) {
+        var markerData = convertMapCardToMarker(item.post, item.mapCard, item.index);
         if (!markerData) return;
+        
+        // Override isMultiPost if this is a multi-post venue
+        if (isMultiPostVenue) {
+          markerData.isMultiPost = true;
+        }
 
         if (mapModule.createMapCardMarker) {
           mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat);
