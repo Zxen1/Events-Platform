@@ -99,6 +99,14 @@ const MapModule = (function() {
   let clusterLayerVisible = true;
   let lastMapZoom = 0;               // Track zoom for threshold crossing detection
   
+  // Track which specific marker (venueKey) was last made active for a given postId
+  // (Needed for multi-location posts: one post can have multiple markers.)
+  const lastActiveVenueKeyByPostId = new Map(); // postId(string) -> venueKey(string)
+  
+  // Hover state coordination (prevents flicker when moving between markers)
+  let hoverToken = 0;
+  let currentHoverPostIds = [];
+  
   // Settings cache
   let adminSettings = {};
   
@@ -1629,18 +1637,21 @@ const MapModule = (function() {
       lng: lng,
       lat: lat,
       venueKey: venueKey,
-      postIds: post.isMultiPost && Array.isArray(post.venuePostIds) ? post.venuePostIds.map(function(pid) { return Number(pid) || pid; }) : [post.id]
+      // IMPORTANT: store IDs as STRINGS (matches live-site behavior and avoids number/string mismatches)
+      postIds: post.isMultiPost && Array.isArray(post.venuePostIds)
+        ? post.venuePostIds.map(function(pid) { return String(pid); })
+        : [String(post.id)]
     };
     
     // Store by venue key to avoid duplicates
     mapCardMarkers.set(venueKey, entry);
 
     // Bind events
-    el.addEventListener('mouseenter', () => onMapCardHover(post.id, true));
-    el.addEventListener('mouseleave', () => onMapCardHover(post.id, false));
+    el.addEventListener('mouseenter', () => onMapCardHoverByVenueKey(entry.venueKey, true));
+    el.addEventListener('mouseleave', () => onMapCardHoverByVenueKey(entry.venueKey, false));
     el.addEventListener('click', (e) => {
       e.stopPropagation();
-      onMapCardClick(post.id);
+      onMapCardClick(entry.venueKey);
     });
 
     return entry;
@@ -1705,21 +1716,35 @@ const MapModule = (function() {
    * Find marker entry by post ID (searches through venue-keyed entries)
    */
   function findMarkerByPostId(postId) {
+    const target = String(postId);
     for (const [key, entry] of mapCardMarkers) {
-      if (entry.postIds && entry.postIds.includes(postId)) {
+      if (entry.postIds && entry.postIds.includes(target)) {
         return entry;
       }
     }
     return null;
   }
-
-  /**
-   * Handle map card hover
-   */
-  function onMapCardHover(postId, isHovering) {
-    const entry = findMarkerByPostId(postId);
-    if (!entry || entry.state === 'big') return;
-
+  
+  function findMarkersByPostId(postId) {
+    const target = String(postId);
+    const out = [];
+    for (const [key, entry] of mapCardMarkers) {
+      if (entry.postIds && entry.postIds.includes(target)) {
+        out.push(entry);
+      }
+    }
+    return out;
+  }
+  
+  function findMarkerByVenueKey(venueKey) {
+    return mapCardMarkers.get(venueKey) || null;
+  }
+  
+  function setMarkerHoverState(entry, isHovering) {
+    if (!entry || !entry.element) return;
+    // Never override the active/big state on hover (matches live-site expectation)
+    if (entry.state === 'big') return;
+    
     if (isHovering) {
       entry.element.classList.add('is-hovered');
       updateMapCardStateByKey(entry.venueKey, 'hover');
@@ -1727,32 +1752,120 @@ const MapModule = (function() {
       entry.element.classList.remove('is-hovered');
       updateMapCardStateByKey(entry.venueKey, 'small');
     }
+  }
+  
+  function setHoverGroupForPostIds(postIds, isHovering) {
+    const ids = Array.isArray(postIds) ? postIds.map(String) : [];
+    // Apply hover to all markers for each postId (multi-location posts)
+    ids.forEach((pid) => {
+      findMarkersByPostId(pid).forEach((entry) => {
+        setMarkerHoverState(entry, isHovering);
+      });
+    });
+  }
+  
+  function setCurrentHoverPostIds(postIds) {
+    currentHoverPostIds = Array.isArray(postIds) ? postIds.map(String) : [];
+  }
 
-    // Emit both the primary postId and all post IDs associated with this marker
-    // (multi-post venues should highlight all related post cards).
-    const postIds = Array.isArray(entry.postIds) ? entry.postIds.slice() : [postId];
-    App.emit('map:cardHover', { postId, postIds, isHovering });
+  /**
+   * Handle map card hover
+   */
+  function onMapCardHoverByVenueKey(venueKey, isHovering) {
+    const entry = findMarkerByVenueKey(venueKey);
+    if (!entry) return;
+    
+    // Determine the hover group:
+    // - Multi-post venues: all post IDs at this venue
+    // - Single/multi-location post: hover applies to all markers for that postId
+    const postIds = Array.isArray(entry.postIds) ? entry.postIds.slice() : [];
+    
+    // Tokenize to avoid hover flicker when moving between markers quickly
+    const token = ++hoverToken;
+    
+    if (isHovering) {
+      // Clear previous hover group (immediate)
+      if (currentHoverPostIds && currentHoverPostIds.length) {
+        setHoverGroupForPostIds(currentHoverPostIds, false);
+      }
+      setCurrentHoverPostIds(postIds);
+      setHoverGroupForPostIds(postIds, true);
+      
+      // Emit to PostModule to highlight corresponding post cards
+      App.emit('map:cardHover', { postId: entry.post && entry.post.id ? String(entry.post.id) : '', postIds, isHovering: true });
+      return;
+    }
+    
+    // Hover end: defer one tick so an adjacent marker's mouseenter can win
+    setTimeout(() => {
+      if (token !== hoverToken) return;
+      if (currentHoverPostIds && currentHoverPostIds.length) {
+        setHoverGroupForPostIds(currentHoverPostIds, false);
+      }
+      setCurrentHoverPostIds([]);
+      App.emit('map:cardHover', { postId: entry.post && entry.post.id ? String(entry.post.id) : '', postIds, isHovering: false });
+    }, 0);
+  }
+  
+  // Hover coming from PostModule (post card hover): apply hover to all markers for that postId.
+  // This should NOT emit map:cardHover back to PostModule (prevents event loops / double work).
+  function onMapCardHoverByPostId(postId, isHovering) {
+    const pid = String(postId);
+    const token = ++hoverToken;
+    
+    if (isHovering) {
+      if (currentHoverPostIds && currentHoverPostIds.length) {
+        setHoverGroupForPostIds(currentHoverPostIds, false);
+      }
+      setCurrentHoverPostIds([pid]);
+      setHoverGroupForPostIds([pid], true);
+      return;
+    }
+    
+    setTimeout(() => {
+      if (token !== hoverToken) return;
+      if (currentHoverPostIds && currentHoverPostIds.length) {
+        setHoverGroupForPostIds(currentHoverPostIds, false);
+      }
+      setCurrentHoverPostIds([]);
+    }, 0);
   }
 
   /**
    * Handle map card click
    */
-  function onMapCardClick(postId) {
-    // Set this card to active
-    setActiveMapCard(postId);
+  function onMapCardClick(venueKey) {
+    const entry = findMarkerByVenueKey(venueKey);
+    if (!entry) return;
+    
+    // Set this specific marker to active (do not guess by postId)
+    setActiveMapCard(entry.post && entry.post.id ? String(entry.post.id) : '', { venueKey: entry.venueKey });
     
     // Stop spin
     stopSpin();
     
     // Emit event for post module to open the post
-    App.emit('map:cardClicked', { postId });
+    App.emit('map:cardClicked', { postId: entry.post && entry.post.id ? entry.post.id : null });
   }
 
   /**
    * Set a map card to active (big) state
    */
-  function setActiveMapCard(postId) {
-    const targetEntry = findMarkerByPostId(postId);
+  function setActiveMapCard(postId, options) {
+    const pid = String(postId);
+    const venueKey = options && options.venueKey ? String(options.venueKey) : '';
+    
+    // Prefer an explicit venueKey (clicked marker), then the last active marker for this postId, else first match.
+    let targetEntry = null;
+    if (venueKey) {
+      targetEntry = findMarkerByVenueKey(venueKey);
+    }
+    if (!targetEntry && lastActiveVenueKeyByPostId.has(pid)) {
+      targetEntry = findMarkerByVenueKey(lastActiveVenueKeyByPostId.get(pid));
+    }
+    if (!targetEntry) {
+      targetEntry = findMarkerByPostId(pid);
+    }
     const targetKey = targetEntry ? targetEntry.venueKey : null;
     
     // Deactivate all other cards
@@ -1765,6 +1878,8 @@ const MapModule = (function() {
 
     // Activate this card
     if (targetEntry) {
+      // Remember which marker is active for this post (multi-location posts)
+      lastActiveVenueKeyByPostId.set(pid, targetKey);
       updateMapCardStateByKey(targetKey, 'big');
       targetEntry.element.classList.add('is-active');
     }
@@ -2201,8 +2316,8 @@ const MapModule = (function() {
     clearAllMapCardMarkers,
     setActiveMapCard,
     // MapCards-style hover API (compat layer for PostModule)
-    setMapCardHover: (postId) => onMapCardHover(postId, true),
-    removeMapCardHover: (postId) => onMapCardHover(postId, false),
+    setMapCardHover: (postId) => onMapCardHoverByPostId(postId, true),
+    removeMapCardHover: (postId) => onMapCardHoverByPostId(postId, false),
     refreshMapCardStyles,
     
     // Map card utilities (for PostModule)
