@@ -777,6 +777,8 @@
     display: grid;
     grid-auto-flow: column;
     column-gap: 16px;
+    height: 100%;
+    align-self: stretch;
 }
 
 .fieldset-amenities-option {
@@ -790,6 +792,7 @@
     border: none;
     background: transparent;
     transition: color 0.15s;
+    height: 100%;
 }
 
 .fieldset-amenities-option:hover {
