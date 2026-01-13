@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 14, 2026 at 02:03 AM
+-- Generation Time: Jan 14, 2026 at 07:03 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -410,10 +410,10 @@ CREATE TABLE `checkout_options` (
 --
 
 INSERT INTO `checkout_options` (`id`, `checkout_key`, `checkout_title`, `checkout_description`, `checkout_logic`, `checkout_currency`, `checkout_flagfall_price`, `checkout_basic_day_rate`, `checkout_discount_day_rate`, `checkout_featured`, `checkout_sidebar_ad`, `sort_order`, `hidden`, `created_at`, `updated_at`) VALUES
-(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2026-01-13 09:25:11'),
-(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2026-01-13 09:25:11'),
-(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2026-01-13 09:25:11'),
-(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2026-01-13 09:25:11');
+(1, 'free-listing', 'Free Listing', 'Standard post cards.', 'probably wont exist to prevent spam', 'USD', 0.00, NULL, 0.00, 0, 0, 1, 1, '2025-11-30 05:45:21', '2026-01-14 07:02:13'),
+(2, 'standard-listing', 'Standard Listing', 'Standard post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.15, 0.08, 0, 0, 2, 0, '2025-11-30 05:45:21', '2026-01-14 07:02:13'),
+(3, 'featured-listing', 'Featured Listing', 'Featured post cards.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.30, 0.15, 1, 0, 3, 0, '2025-11-30 05:45:21', '2026-01-14 07:02:13'),
+(4, 'premium-listing', 'Premium Listing', 'Featured Post Cards. Appearance on the Marquee.', 'General: 30 day and 365 presets at checkout. For new posts, flagfall applies. Basic Day Rate is for 364 days or less. Discount Day Rate is for 365 days or more. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Editing posts is free but increasing duration requires extra payment based on days added. Upgrading to a higher tier checkout option is priced at the difference in rates based on the number of days remaining or added. \n\nEvents: End of day in the world\'s final timezone marks the end of the listing in regards to pricing and at that time the event stops being displayed. The event continues to be searchable if people want to use the show expired events filter to see what they missed up to 12 months ago. After that, the event is not shown on the website at all. Upgrading to a new tier is the only option for events. The lowest tier pricing cannot be reduced through automation and requires manual intervention based on refund requests. Session cancellations resulting in a reduced listing period are the same situation. Refunds are at the discretion of the administrator and the terms and conditions checkbox makes the member agree to the refund policy before submission. Event Posts contain a venue menu and a session menu. Each extra venue is added at discount day rates for the final date of each venue. The longest season venue uses the basic Day Rate.\n\nStorefront: A subcategory type called \'storefront\' has a storefront menu instead of a session menu. If a post in this subcategory has more than one type of item for sale, the map marker becomes the avatar of the member. Pricing for this system is flagfall for first time listing the post + Basic Day Rates for first type of item + Discount Day Rates for every type of item after that. So listing a Tshirt that comes in red, blue and green with XS,S,M,L,XL,XXL,XXXL is one item type. Adding a new type would be pants. Upgrading to higher checkout tiers cannot be done for items only, only for the storefront. This could result in massive listing prices for storefronts, so to be fair, maybe there should be discounts. We\'ll see.', 'USD', 10.00, 0.40, 0.20, 1, 1, 4, 0, '2025-11-30 05:45:21', '2026-01-14 07:02:13');
 
 -- --------------------------------------------------------
 
@@ -1966,6 +1966,15 @@ CREATE TABLE `posts` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `posts`
+--
+
+INSERT INTO `posts` (`id`, `post_key`, `member_id`, `member_name`, `subcategory_key`, `loc_qty`, `visibility`, `moderation_status`, `flag_reason`, `checkout_title`, `payment_status`, `expires_at`, `deleted_at`, `created_at`, `updated_at`) VALUES
+(1, '1-test', 1, 'Administrator', 'live-gigs', 2, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(4, '4-dshhfdfh', 1, 'Administrator', 'screenings', 2, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(12, '12-dhtd', 1, 'Administrator', 'goods-and-services', 1, 'active', 'clean', NULL, 'Array', 'paid', NULL, NULL, '2026-01-14 06:51:31', '2026-01-14 06:51:31');
+
 -- --------------------------------------------------------
 
 --
@@ -1980,6 +1989,24 @@ CREATE TABLE `post_amenities` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `post_amenities`
+--
+
+INSERT INTO `post_amenities` (`id`, `map_card_id`, `amenity_key`, `value`, `created_at`, `updated_at`) VALUES
+(1, 1, 'parking', 1, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(2, 1, 'wheelchair_access', 0, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(3, 1, 'kid_friendly', 1, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(4, 2, 'parking', 1, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(5, 2, 'wheelchair_access', 0, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(6, 2, 'kid_friendly', 1, '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(19, 5, 'parking', 1, '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(20, 5, 'wheelchair_access', 1, '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(21, 5, 'kid_friendly', 0, '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(22, 6, 'parking', 1, '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(23, 6, 'wheelchair_access', 0, '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(24, 6, 'kid_friendly', 1, '2026-01-14 04:08:08', '2026-01-14 04:08:08');
 
 --
 -- Triggers `post_amenities`
@@ -2158,12 +2185,23 @@ CREATE TABLE `post_map_cards` (
   `website_url` varchar(500) DEFAULT NULL,
   `tickets_url` varchar(500) DEFAULT NULL,
   `coupon_code` varchar(100) DEFAULT NULL,
-  `session_summary` varchar(255) DEFAULT NULL,
-  `price_summary` varchar(255) DEFAULT NULL,
-  `amenity_summary` text DEFAULT NULL,
+  `session_summary` varchar(255) DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_sessions.',
+  `price_summary` varchar(255) DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_ticket_pricing/post_item_pricing.',
+  `amenity_summary` text DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_amenities.',
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `post_map_cards`
+--
+
+INSERT INTO `post_map_cards` (`id`, `post_id`, `subcategory_key`, `title`, `description`, `media_ids`, `custom_text`, `custom_textarea`, `custom_dropdown`, `custom_checklist`, `custom_radio`, `public_email`, `phone_prefix`, `public_phone`, `venue_name`, `address_line`, `city`, `latitude`, `longitude`, `country_code`, `timezone`, `age_rating`, `website_url`, `tickets_url`, `coupon_code`, `session_summary`, `price_summary`, `amenity_summary`, `created_at`, `updated_at`) VALUES
+(1, 1, 'live-gigs', 'Test.', 'Test test test test test test.', '[1,2,3,4,5,6,7]', NULL, NULL, NULL, NULL, NULL, 'dfgdgf@hdhd.rddtrh', 'us', '255255', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, NULL, 'https://dhdtht.dhdt', 'https://dthtdth.hh', 'hdtrhthht', '{\"start\": \"2026-01-22\", \"end\": \"2026-05-12\"}', '{\"ticket\": \"{\\\"min\\\": 12.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 02:08:41', '2026-01-14 02:08:59'),
+(2, 1, 'live-gigs', 'Test.', 'Test test test test test test.', '[1,2,3,4,5,6,7]', NULL, NULL, NULL, NULL, NULL, 'dfgdgf@hdhd.rddtrh', 'us', '255255', 'Marvel Stadium', '740 Bourke St, Docklands VIC 3008, Australia', NULL, -37.8164974, 144.9475972, 'AU', NULL, NULL, 'https://dhdtht.dhdt', 'https://dthtdth.hh', 'hdtrhthht', '{\"start\": \"2026-01-23\", \"end\": \"2026-06-26\"}', '{\"ticket\": \"{\\\"min\\\": 12.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 02:08:41', '2026-01-14 02:08:59'),
+(5, 4, 'screenings', 'dshhfdfh', 'fdhdfhdfhdfhdfdfhddhf', '[8,9]', NULL, NULL, NULL, NULL, NULL, '', '+376', '42544552', 'Sydney Opera House', 'Bennelong Point, Sydney NSW 2000, Australia', NULL, -33.8567844, 151.2152967, 'AU', NULL, NULL, '', '', '', '{\"start\": \"2026-01-21\", \"end\": \"2026-02-24\"}', '{\"ticket\": \"{\\\"min\\\": 34.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"1\"},{\"amenity\": \"kid_friendly\", \"value\": \"0\"}]', '2026-01-14 04:08:08', '2026-01-14 04:08:15'),
+(6, 4, 'screenings', 'dshhfdfh', 'fdhdfhdfhdfhdfdfhddhf', '[8,9]', NULL, NULL, NULL, NULL, NULL, '', '+376', '42544552', 'Federation Square, Melbourne VIC 3000, Australia', 'Federation Square, Melbourne VIC 3000, Australia', NULL, -37.8179789, 144.9690576, 'AU', NULL, NULL, '', '', '', '{\"start\": \"2026-01-28\", \"end\": \"2026-02-15\"}', '{\"ticket\": \"{\\\"min\\\": 34.00, \\\"max\\\": 34.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-14 04:08:08', '2026-01-14 04:08:15'),
+(14, 12, 'goods-and-services', 'dhtd', 'thdthhthtdhtdhtd', '[10,11,12]', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'SHG Hotel Antonella', 'Via Pontina, km 28, 00071 Pomezia RM, Italy', NULL, 41.6836536, 12.4944635, 'IT', NULL, NULL, '', NULL, NULL, '{\"start\": \"2026-01-21\", \"end\": \"2026-02-23\"}', '{\"ticket\": \"{\\\"min\\\": 54.00, \\\"max\\\": 54.00, \\\"currency\\\": \\\"USD\\\"}\", \"item\": \"{\\\"price\\\": null, \\\"currency\\\": null}\"}', NULL, '2026-01-14 06:51:31', '2026-01-14 06:51:39');
 
 -- --------------------------------------------------------
 
@@ -2185,6 +2223,24 @@ CREATE TABLE `post_media` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `post_media`
+--
+
+INSERT INTO `post_media` (`id`, `member_id`, `post_id`, `file_name`, `file_url`, `file_size`, `settings_json`, `backup_json`, `deleted_at`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, '1-782991.jpg', 'https://cdn.funmap.com/post-images/2026-01/1-782991.jpg', 862566, '{\"file_name\":\"Firefly_cute little monkey in red cape shrugging 346494.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":862566,\"crop\":{\"x1\":0,\"y1\":211,\"x2\":1440,\"y2\":1651}}', NULL, NULL, '2026-01-14 02:08:43', '2026-01-14 02:08:43'),
+(2, 1, 1, '1-1b6c5e.jpg', 'https://cdn.funmap.com/post-images/2026-01/1-1b6c5e.jpg', 823246, '{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 609041 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":823246,\"crop\":null}', NULL, NULL, '2026-01-14 02:08:46', '2026-01-14 02:08:46'),
+(3, 1, 1, '1-89e506.jpg', 'https://cdn.funmap.com/post-images/2026-01/1-89e506.jpg', 823246, '{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":823246,\"crop\":null}', NULL, NULL, '2026-01-14 02:08:48', '2026-01-14 02:08:48'),
+(4, 1, 1, '1-0dcfc6.jpg', 'https://cdn.funmap.com/post-images/2026-01/1-0dcfc6.jpg', 781823, '{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 946979.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":781823,\"crop\":null}', NULL, NULL, '2026-01-14 02:08:51', '2026-01-14 02:08:51'),
+(5, 1, 1, '1-951d83.jpg', 'https://cdn.funmap.com/post-images/2026-01/1-951d83.jpg', 462404, '{\"file_name\":\"Firefly_cute monkey shrugging 578443.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":462404,\"crop\":null}', NULL, NULL, '2026-01-14 02:08:53', '2026-01-14 02:08:53'),
+(6, 1, 1, '1-418752.jpg', 'https://cdn.funmap.com/post-images/2026-01/1-418752.jpg', 1132247, '{\"file_name\":\"Firefly_cute monkey shrugging sadly and wearing a red cape. 287360.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1132247,\"crop\":null}', NULL, NULL, '2026-01-14 02:08:56', '2026-01-14 02:08:56'),
+(7, 1, 1, '1-b8e162.jpg', 'https://cdn.funmap.com/post-images/2026-01/1-b8e162.jpg', 942004, '{\"file_name\":\"Firefly_cute monkey shrugging sadly and wearing a red cape. 842295.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":942004,\"crop\":null}', NULL, NULL, '2026-01-14 02:08:59', '2026-01-14 02:08:59'),
+(8, 1, 4, '4-93b0b6.png', 'https://cdn.funmap.com/post-images/2026-01/4-93b0b6.png', 3002902, '{\"file_name\":\"balloon-png-28080 - Copy.png\",\"file_type\":\"image\\/png\",\"file_size\":3002902,\"crop\":null}', NULL, NULL, '2026-01-14 04:08:12', '2026-01-14 04:08:12'),
+(9, 1, 4, '4-23e83e.png', 'https://cdn.funmap.com/post-images/2026-01/4-23e83e.png', 3002902, '{\"file_name\":\"balloon-png-28080.png\",\"file_type\":\"image\\/png\",\"file_size\":3002902,\"crop\":null}', NULL, NULL, '2026-01-14 04:08:15', '2026-01-14 04:08:15'),
+(10, 1, 12, '12-df3c85.jpg', 'https://cdn.funmap.com/post-images/2026-01/12-df3c85.jpg', 966239, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":966239,\"crop\":null}', NULL, NULL, '2026-01-14 06:51:33', '2026-01-14 06:51:33'),
+(11, 1, 12, '12-7ca2ab.jpg', 'https://cdn.funmap.com/post-images/2026-01/12-7ca2ab.jpg', 1151956, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}', NULL, NULL, '2026-01-14 06:51:36', '2026-01-14 06:51:36'),
+(12, 1, 12, '12-d21deb.jpg', 'https://cdn.funmap.com/post-images/2026-01/12-d21deb.jpg', 1151956, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}', NULL, NULL, '2026-01-14 06:51:39', '2026-01-14 06:51:39');
+
 -- --------------------------------------------------------
 
 --
@@ -2205,6 +2261,15 @@ CREATE TABLE `post_revisions` (
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `post_revisions`
+--
+
+INSERT INTO `post_revisions` (`id`, `post_id`, `post_title`, `editor_id`, `editor_name`, `edited_at`, `change_type`, `change_summary`, `data_json`, `created_at`, `updated_at`) VALUES
+(10, 1, 'Test.', 1, 'Administrator', '2026-01-14 02:08:59', 'create', 'Created', '{\"subcategory_key\":\"live-gigs\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":2,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"Test.\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"Test test test test test test.\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"Firefly_cute little monkey in red cape shrugging 346494.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":862566,\"crop\":{\"x1\":0,\"y1\":211,\"x2\":1440,\"y2\":1651}},{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 609041 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":823246,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":823246,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape with arms outstretched in welcome 946979.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":781823,\"crop\":null},{\"file_name\":\"Firefly_cute monkey shrugging 578443.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":462404,\"crop\":null},{\"file_name\":\"Firefly_cute monkey shrugging sadly and wearing a red cape. 287360.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1132247,\"crop\":null},{\"file_name\":\"Firefly_cute monkey shrugging sadly and wearing a red cape. 842295.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":942004,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":{\"phone_prefix\":\"us\",\"public_phone\":\"255255\"},\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"dfgdgf@hdhd.rddtrh\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"https:\\/\\/dhdtht.dhdt\",\"location_number\":1},{\"key\":\"tickets-url\",\"type\":\"tickets-url\",\"name\":\"Tickets (URL)\",\"value\":\"https:\\/\\/dthtdth.hh\",\"location_number\":1},{\"key\":\"coupon\",\"type\":\"coupon\",\"name\":\"Coupon\",\"value\":\"hdtrhthht\",\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue\",\"value\":{\"venue_name\":\"Sydney Opera House\",\"address_line\":\"Bennelong Point, Sydney NSW 2000, Australia\",\"latitude\":\"-33.856784399999995\",\"longitude\":\"151.21529669999998\",\"country_code\":\"AU\"},\"location_number\":1},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}],\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-22\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-03-19\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"},{\"time\":\"15:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-04-20\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-05-12\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"},{\"time\":\"15:00\",\"ticket_group_key\":\"A\"},{\"time\":\"19:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dfdshdht\",\"tiers\":[{\"pricing_tier\":\"dthdtthth\",\"currency\":\"USD\",\"price\":\"12.00\"},{\"pricing_tier\":\"drgrddr\",\"currency\":\"USD\",\"price\":\"23.00\"},{\"pricing_tier\":\"rdgdgrd\",\"currency\":\"USD\",\"price\":\"34.00\"}]},{\"seating_area\":\"dgrrgdgr\",\"tiers\":[{\"pricing_tier\":\"grddrgrgdgdr\",\"currency\":\"USD\",\"price\":\"12.00\"}]}]},\"age_ratings\":{\"A\":\"15\"}},\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue 2\",\"value\":{\"venue_name\":\"Marvel Stadium\",\"address_line\":\"740 Bourke St, Docklands VIC 3008, Australia\",\"latitude\":\"-37.816497399999996\",\"longitude\":\"144.9475972\",\"country_code\":\"AU\"},\"location_number\":2},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}],\"location_number\":2},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-23\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-17\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-06-16\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-06-26\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dfdshdht\",\"tiers\":[{\"pricing_tier\":\"dthdtthth\",\"currency\":\"USD\",\"price\":\"12.00\"},{\"pricing_tier\":\"drgrddr\",\"currency\":\"USD\",\"price\":\"23.00\"},{\"pricing_tier\":\"rdgdgrd\",\"currency\":\"USD\",\"price\":\"34.00\"}]},{\"seating_area\":\"dgrrgdgr\",\"tiers\":[{\"pricing_tier\":\"grddrgrgdgdr\",\"currency\":\"USD\",\"price\":\"12.00\"}]}]},\"age_ratings\":{\"A\":\"15\"}},\"location_number\":2},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"4\",\"option_id\":\"4\",\"days\":164,\"price\":null},\"location_number\":1}]}', '2026-01-14 02:08:59', '2026-01-14 02:08:59'),
+(11, 4, 'dshhfdfh', 1, 'Administrator', '2026-01-14 04:08:15', 'create', 'Created', '{\"subcategory_key\":\"screenings\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":2,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"dshhfdfh\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"fdhdfhdfhdfhdfdfhddhf\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"balloon-png-28080 - Copy.png\",\"file_type\":\"image\\/png\",\"file_size\":3002902,\"crop\":null},{\"file_name\":\"balloon-png-28080.png\",\"file_type\":\"image\\/png\",\"file_size\":3002902,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":{\"phone_prefix\":\"+376\",\"public_phone\":\"42544552\"},\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"tickets-url\",\"type\":\"tickets-url\",\"name\":\"Tickets (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"coupon\",\"type\":\"coupon\",\"name\":\"Coupon\",\"value\":\"\",\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue\",\"value\":{\"venue_name\":\"Sydney Opera House\",\"address_line\":\"Bennelong Point, Sydney NSW 2000, Australia\",\"latitude\":\"-33.856784399999995\",\"longitude\":\"151.21529669999998\",\"country_code\":\"AU\"},\"location_number\":1},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"1\"},{\"amenity\":\"Kid Friendly\",\"value\":\"0\"}],\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-21\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-09\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-24\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dsfdsf\",\"tiers\":[{\"pricing_tier\":\"fdsa\",\"currency\":\"USD\",\"price\":\"34.00\"}]}]},\"age_ratings\":{\"A\":\"12\"}},\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue 2\",\"value\":{\"venue_name\":\"Federation Square, Melbourne VIC 3000, Australia\",\"address_line\":\"Federation Square, Melbourne VIC 3000, Australia\",\"latitude\":\"-37.8179789\",\"longitude\":\"144.96905759999999\",\"country_code\":\"AU\"},\"location_number\":2},{\"key\":\"amenities\",\"type\":\"amenities\",\"name\":\"Amenities\",\"value\":[{\"amenity\":\"Parking\",\"value\":\"1\"},{\"amenity\":\"Wheelchair Access\",\"value\":\"0\"},{\"amenity\":\"Kid Friendly\",\"value\":\"1\"}],\"location_number\":2},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-28\",\"times\":[{\"time\":\"13:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-09\",\"times\":[{\"time\":\"13:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-15\",\"times\":[{\"time\":\"13:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"dsfdsf\",\"tiers\":[{\"pricing_tier\":\"fdsa\",\"currency\":\"USD\",\"price\":\"34.00\"}]}]},\"age_ratings\":{\"A\":\"12\"}},\"location_number\":2},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"4\",\"option_id\":\"4\",\"days\":41,\"price\":null},\"location_number\":1}]}', '2026-01-14 04:08:15', '2026-01-14 04:08:15'),
+(12, 12, 'dhtd', 1, 'Administrator', '2026-01-14 06:51:39', 'create', 'Created', '{\"subcategory_key\":\"goods-and-services\",\"member_id\":1,\"member_name\":\"Administrator\",\"member_type\":\"admin\",\"skip_payment\":false,\"loc_qty\":1,\"fields\":[{\"key\":\"title\",\"type\":\"title\",\"name\":\"Title\",\"value\":\"dhtd\",\"location_number\":1},{\"key\":\"description\",\"type\":\"description\",\"name\":\"Description\",\"value\":\"thdthhthtdhtdhtd\",\"location_number\":1},{\"key\":\"images\",\"type\":\"images\",\"name\":\"Images\",\"value\":[{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 609041.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":966239,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null},{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}],\"location_number\":1},{\"key\":\"public_phone\",\"type\":\"public_phone\",\"name\":\"Public Phone\",\"value\":\"\",\"location_number\":1},{\"key\":\"public_email\",\"type\":\"public_email\",\"name\":\"Public Email\",\"value\":\"\",\"location_number\":1},{\"key\":\"website-url\",\"type\":\"website-url\",\"name\":\"Website (URL)\",\"value\":\"\",\"location_number\":1},{\"key\":\"venue\",\"type\":\"venue\",\"name\":\"Venue\",\"value\":{\"venue_name\":\"SHG Hotel Antonella\",\"address_line\":\"Via Pontina, km 28, 00071 Pomezia RM, Italy\",\"latitude\":\"41.6836536\",\"longitude\":\"12.4944635\",\"country_code\":\"IT\"},\"location_number\":1},{\"key\":\"session_pricing\",\"type\":\"session_pricing\",\"name\":\"Session Pricing\",\"value\":{\"sessions\":[{\"date\":\"2026-01-21\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]},{\"date\":\"2026-02-23\",\"times\":[{\"time\":\"12:00\",\"ticket_group_key\":\"A\"}]}],\"pricing_groups\":{\"A\":[{\"seating_area\":\"sg\",\"tiers\":[{\"pricing_tier\":\"gsf\",\"currency\":\"USD\",\"price\":\"54.00\"}]}]},\"age_ratings\":{\"A\":\"all\"}},\"location_number\":1},{\"key\":\"checkout\",\"type\":\"checkout\",\"name\":\"Checkout Options\",\"value\":{\"value\":\"4\",\"option_id\":\"4\",\"days\":40,\"price\":null},\"location_number\":1}]}', '2026-01-14 06:51:39', '2026-01-14 06:51:39');
+
 -- --------------------------------------------------------
 
 --
@@ -2220,6 +2285,31 @@ CREATE TABLE `post_sessions` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `post_sessions`
+--
+
+INSERT INTO `post_sessions` (`id`, `map_card_id`, `session_date`, `session_time`, `ticket_group_key`, `created_at`, `updated_at`) VALUES
+(1, 1, '2026-01-22', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(2, 1, '2026-03-19', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(3, 1, '2026-03-19', '15:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(4, 1, '2026-04-20', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(5, 1, '2026-05-12', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(6, 1, '2026-05-12', '15:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(7, 1, '2026-05-12', '19:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(8, 2, '2026-01-23', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(9, 2, '2026-02-17', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(10, 2, '2026-06-16', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(11, 2, '2026-06-26', '12:00:00', 'A', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(12, 5, '2026-01-21', '12:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(13, 5, '2026-02-09', '12:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(14, 5, '2026-02-24', '12:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(15, 6, '2026-01-28', '13:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(16, 6, '2026-02-09', '13:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(17, 6, '2026-02-15', '13:00:00', 'A', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(18, 14, '2026-01-21', '12:00:00', 'A', '2026-01-14 06:51:31', '2026-01-14 06:51:31'),
+(19, 14, '2026-02-23', '12:00:00', 'A', '2026-01-14 06:51:31', '2026-01-14 06:51:31');
 
 --
 -- Triggers `post_sessions`
@@ -2288,6 +2378,23 @@ CREATE TABLE `post_ticket_pricing` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `post_ticket_pricing`
+--
+
+INSERT INTO `post_ticket_pricing` (`id`, `map_card_id`, `ticket_group_key`, `age_rating`, `seating_area`, `pricing_tier`, `price`, `currency`, `created_at`, `updated_at`) VALUES
+(1, 1, 'A', '15', 'dfdshdht', 'dthdtthth', 12.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(2, 1, 'A', '15', 'dfdshdht', 'drgrddr', 23.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(3, 1, 'A', '15', 'dfdshdht', 'rdgdgrd', 34.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(4, 1, 'A', '15', 'dgrrgdgr', 'grddrgrgdgdr', 12.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(5, 2, 'A', '15', 'dfdshdht', 'dthdtthth', 12.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(6, 2, 'A', '15', 'dfdshdht', 'drgrddr', 23.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(7, 2, 'A', '15', 'dfdshdht', 'rdgdgrd', 34.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(8, 2, 'A', '15', 'dgrrgdgr', 'grddrgrgdgdr', 12.00, 'USD', '2026-01-14 02:08:41', '2026-01-14 02:08:41'),
+(9, 5, 'A', '12', 'dsfdsf', 'fdsa', 34.00, 'USD', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(10, 6, 'A', '12', 'dsfdsf', 'fdsa', 34.00, 'USD', '2026-01-14 04:08:08', '2026-01-14 04:08:08'),
+(11, 14, 'A', 'all', 'sg', 'gsf', 54.00, 'USD', '2026-01-14 06:51:31', '2026-01-14 06:51:31');
 
 --
 -- Triggers `post_ticket_pricing`
@@ -2428,7 +2535,7 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (401, 4, 'Buy and Sell', 'Freebies', 'freebies', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '1', 0, 'buy-and-sell-purple.svg', '#2ECC71', 'General', NULL, 'City', '2025-10-29 12:32:47', '2026-01-05 15:43:47'),
 (402, 4, 'Buy and Sell', 'Wanted', 'wanted', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '2', 0, 'buy-and-sell-yellow.svg', '#2ECC71', 'General', NULL, 'City', '2025-10-29 12:32:47', '2026-01-05 15:43:47'),
 (403, 4, 'Buy and Sell', 'For Sale', 'for-sale', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '3', 0, 'buy-and-sell-blue.svg', '#2ECC71', 'General', NULL, 'City', '2025-10-29 12:32:47', '2026-01-05 15:43:47'),
-(501, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '1', 0, 'for-hire-green.svg', '#9B59B6', 'General', NULL, 'City', '2025-10-29 12:32:47', '2026-01-05 15:43:47'),
+(501, 5, 'For Hire', 'Goods and Services', 'goods-and-services', '1,2,12,8,27,10,9,21', 'Title, Description, Images, Public Phone, Public Email, Website (URL), Address, Session Pricing', '1,1,1,0,0,0,1,1', NULL, '0,0,0,0,0,0,1,1', NULL, '1', 0, 'for-hire-green.svg', '#9B59B6', 'General', NULL, 'Address', '2025-10-29 12:32:47', '2026-01-13 20:02:13'),
 (502, 5, 'For Hire', 'Performers', 'performers', '1,2,12,8,27,10,9,5', 'Title, Description, Images, Public Phone, Public Email, Website (URL), Address, Custom Dropdown', '1,1,1,0,0,0,1,1', '{\"custom_dropdown\":{\"name\":\"Dropify\",\"options\":[\"Who\",\"Let\",\"The\",\"Dogs\",\"Out\"]}}', '0,0,0,0,0,0,1,1', NULL, '2', 0, 'for-hire-blue.svg', '#9B59B6', 'General', NULL, 'Address', '2025-10-29 12:32:47', '2026-01-05 15:43:47'),
 (503, 5, 'For Hire', 'Staff', 'staff', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '3', 0, 'for-hire-yellow.svg', '#9B59B6', 'General', NULL, 'City', '2025-10-29 12:32:47', '2026-01-05 15:43:47'),
 (601, 6, 'Eat & Drink', 'Restaurants', 'restaurants', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '1', 0, 'eat-and-drink-blue.svg', '#E67E22', 'General', NULL, 'City', '2025-12-14 13:12:42', '2026-01-05 15:43:47'),
@@ -2450,7 +2557,7 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (803, 8, 'Get Around', 'Tours & Experiences', 'tours-experiences', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '3', 0, 'get-around-pink.svg', '#34495E', 'General', NULL, 'City', '2025-12-14 13:12:42', '2026-01-05 15:43:47'),
 (804, 8, 'Get Around', 'Transfers', 'transfers', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '4', 0, 'get-around-orange.svg', '#34495E', 'General', NULL, 'City', '2025-12-14 13:12:42', '2026-01-05 15:43:47'),
 (805, 8, 'Get Around', 'Other Transport', 'other-transport', '1,2,12,8,27,10,16', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '5', 0, 'get-around-gray.svg', '#34495E', 'General', NULL, 'City', '2025-12-14 13:12:42', '2026-01-05 15:43:47'),
-(4701, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,12,8,27,10,16,11,13,14,18,19,3,5,4,6,107', 'Title, Description, Images, Public Phone, Public Email, Website (URL), City, Tickets (URL), Coupon, Item Pricing, Amenities, Age Rating, Custom Text, Custom Dropdown, Custom TextArea, Custom Radio, Custom Checklist', '1,1,1,0,0,0,1,1,1,1,1,1,1,1,1,1,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Food & Beverages\",\"BYO Allowed\",\"Licensed Venue\"]},\"custom_dropdown\":{\"options\":[\"1fewwfa\",\"rawfwrfarwf\",\"rawfrwrfwwfr\",\"wrffrawrfaw\",\"awrffrwrffwrfr\",\"awfwarrwf\",\"rfawraarwrfrfa\",\"awrfrrrwfra\"]},\"custom_radio\":{\"options\":[\"awrfarwf\",\"awrfwrfarwrfa\",\"awrfrwrw\",\"afarwf wfa r awr rwrar fr arwf\",\"rawfrw wrfwffrwfrwrf\"]},\"custom_checklist\":{\"name\":\"cxvvvx\",\"options\":[\"vxcvcxvxcvxcv\",\"vcvxcxcxvcxvxvvvv\",\"cvvv C cdDcecCEc  ecEA\",\"eda aDE  EDDE  DA\",\"edaEDea eA DEA EAEAEDD\",\"ead aeaeD   EAEDA\"]}}', '0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1', NULL, '1', 0, 'opportunities-pink.svg', NULL, 'General', NULL, 'City', '2025-11-16 17:46:29', '2026-01-12 19:28:05');
+(4701, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,12,27,8,11,13,14,18,19,3,4,5,6,107,10,16', 'Title, Description, Images, Public Email, Public Phone, Tickets (URL), Coupon, Item Pricing, Amenities, Age Rating, Custom Text, Custom TextArea, Custom Dropdown, Custom Radio, Custom Checklist, Website (URL), City', '1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Food & Beverages\",\"BYO Allowed\",\"Licensed Venue\"]},\"custom_dropdown\":{\"options\":[\"1fewwfa\",\"rawfwrfarwf\",\"rawfrwrfwwfr\",\"wrffrawrfaw\",\"awrffrwrffwrfr\",\"awfwarrwf\",\"rfawraarwrfrfa\",\"awrfrrrwfra\"]},\"custom_radio\":{\"options\":[\"awrfarwf\",\"awrfwrfarwrfa\",\"awrfrwrw\",\"afarwf wfa r awr rwrar fr arwf\",\"rawfrw wrfwffrwfrwrf\"]},\"custom_checklist\":{\"name\":\"cxvvvx\",\"options\":[\"vxcvcxvxcvxcv\",\"vcvxcxcxvcxvxvvvv\",\"cvvv C cdDcecCEc  ecEA\",\"eda aDE  EDDE  DA\",\"edaEDea eA DEA EAEAEDD\",\"ead aeaeD   EAEDA\"]}}', '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1', NULL, '1', 0, 'opportunities-pink.svg', NULL, 'General', NULL, 'City', '2025-11-16 17:46:29', '2026-01-13 17:15:19');
 
 -- --------------------------------------------------------
 
@@ -2907,13 +3014,13 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `post_amenities`
 --
 ALTER TABLE `post_amenities`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `post_item_pricing`
@@ -2925,31 +3032,31 @@ ALTER TABLE `post_item_pricing`
 -- AUTO_INCREMENT for table `post_map_cards`
 --
 ALTER TABLE `post_map_cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `post_media`
 --
 ALTER TABLE `post_media`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `post_revisions`
 --
 ALTER TABLE `post_revisions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `post_sessions`
 --
 ALTER TABLE `post_sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `post_ticket_pricing`
 --
 ALTER TABLE `post_ticket_pricing`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `subcategories`

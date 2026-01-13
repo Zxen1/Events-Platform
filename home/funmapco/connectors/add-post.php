@@ -144,7 +144,8 @@ function table_exists(mysqli $mysqli, string $table): bool
   if ($table === '' || preg_match('/[^A-Za-z0-9_]/', $table)) {
     return false;
   }
-  $sql = "SHOW TABLES LIKE ?";
+  // Use INFORMATION_SCHEMA (works with prepared statements; SHOW TABLES does not reliably support placeholders).
+  $sql = "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1";
   $stmt = $mysqli->prepare($sql);
   if (!$stmt) return false;
   $stmt->bind_param('s', $table);
