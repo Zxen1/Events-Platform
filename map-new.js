@@ -1589,25 +1589,21 @@ const MapModule = (function() {
       .setLngLat([lng, lat])
       .addTo(map);
 
-    // Store reference
+    // Store reference by venue coordinates (prevents duplicate entries for multi-post venues)
+    const venueKey = lng.toFixed(6) + ',' + lat.toFixed(6);
     const entry = {
       marker: marker,
       element: el,
       post: post,
       state: 'small',
       lng: lng,
-      lat: lat
+      lat: lat,
+      venueKey: venueKey,
+      postIds: post.isMultiPost && Array.isArray(post.venuePostIds) ? post.venuePostIds.map(function(pid) { return Number(pid) || pid; }) : [post.id]
     };
     
-    // For multi-post venues, store reference under ALL post IDs at this venue
-    // This allows highlighting/activating from any post at the venue
-    if (post.isMultiPost && Array.isArray(post.venuePostIds) && post.venuePostIds.length > 1) {
-      post.venuePostIds.forEach(function(pid) {
-        mapCardMarkers.set(Number(pid) || pid, entry);
-      });
-    } else {
-      mapCardMarkers.set(post.id, entry);
-    }
+    // Store by venue key to avoid duplicates
+    mapCardMarkers.set(venueKey, entry);
 
     // Bind events
     el.addEventListener('mouseenter', () => onMapCardHover(post.id, true));
@@ -1676,18 +1672,30 @@ const MapModule = (function() {
   }
 
   /**
+   * Find marker entry by post ID (searches through venue-keyed entries)
+   */
+  function findMarkerByPostId(postId) {
+    for (const [key, entry] of mapCardMarkers) {
+      if (entry.postIds && entry.postIds.includes(postId)) {
+        return entry;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Handle map card hover
    */
   function onMapCardHover(postId, isHovering) {
-    const entry = mapCardMarkers.get(postId);
+    const entry = findMarkerByPostId(postId);
     if (!entry || entry.state === 'big') return;
 
     if (isHovering) {
       entry.element.classList.add('is-hovered');
-      updateMapCardState(postId, 'hover');
+      updateMapCardStateByKey(entry.venueKey, 'hover');
     } else {
       entry.element.classList.remove('is-hovered');
-      updateMapCardState(postId, 'small');
+      updateMapCardStateByKey(entry.venueKey, 'small');
     }
 
     App.emit('map:cardHover', { postId, isHovering });
@@ -1711,27 +1719,29 @@ const MapModule = (function() {
    * Set a map card to active (big) state
    */
   function setActiveMapCard(postId) {
+    const targetEntry = findMarkerByPostId(postId);
+    const targetKey = targetEntry ? targetEntry.venueKey : null;
+    
     // Deactivate all other cards
-    mapCardMarkers.forEach((entry, id) => {
-      if (id !== postId && entry.state === 'big') {
-        updateMapCardState(id, 'small');
+    mapCardMarkers.forEach((entry, venueKey) => {
+      if (venueKey !== targetKey && entry.state === 'big') {
+        updateMapCardStateByKey(venueKey, 'small');
         entry.element.classList.remove('is-active');
       }
     });
 
     // Activate this card
-    const entry = mapCardMarkers.get(postId);
-    if (entry) {
-      updateMapCardState(postId, 'big');
-      entry.element.classList.add('is-active');
+    if (targetEntry) {
+      updateMapCardStateByKey(targetKey, 'big');
+      targetEntry.element.classList.add('is-active');
     }
   }
 
   /**
-   * Update map card visual state
+   * Update map card visual state by venue key
    */
-  function updateMapCardState(postId, newState) {
-    const entry = mapCardMarkers.get(postId);
+  function updateMapCardStateByKey(venueKey, newState) {
+    const entry = mapCardMarkers.get(venueKey);
     if (!entry || entry.state === newState) return;
 
     entry.state = newState;
@@ -1794,14 +1804,25 @@ const MapModule = (function() {
   }
 
   /**
-   * Remove a map card marker
+   * Remove a map card marker by venue key
    */
-  function removeMapCardMarker(postId) {
-    const entry = mapCardMarkers.get(postId);
+  function removeMapCardMarker(venueKey) {
+    const entry = mapCardMarkers.get(venueKey);
     if (!entry) return;
 
     entry.marker.remove();
-    mapCardMarkers.delete(postId);
+    mapCardMarkers.delete(venueKey);
+  }
+  
+  /**
+   * Remove a map card marker by post ID
+   */
+  function removeMapCardMarkerByPostId(postId) {
+    const entry = findMarkerByPostId(postId);
+    if (!entry) return;
+
+    entry.marker.remove();
+    mapCardMarkers.delete(entry.venueKey);
   }
 
   /**

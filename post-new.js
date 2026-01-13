@@ -138,8 +138,9 @@ const PostModule = (function() {
           lastZoom = map.getZoom();
           updatePostsButtonState();
         }
-        // Re-render markers if we have cached posts
-        if (cachedPosts && cachedPosts.length) {
+        // Re-render markers if we have cached posts AND above zoom threshold
+        var threshold = getPostsMinZoom();
+        if (cachedPosts && cachedPosts.length && lastZoom >= threshold) {
           renderMapMarkers(cachedPosts);
         }
       } catch (e) {
@@ -842,8 +843,11 @@ const PostModule = (function() {
       postListEl.appendChild(card);
     });
 
-    // Render markers on the map
-    renderMapMarkers(posts);
+    // Render markers on the map (only if above zoom threshold)
+    var threshold = getPostsMinZoom();
+    if (lastZoom >= threshold) {
+      renderMapMarkers(posts);
+    }
   }
 
   /* --------------------------------------------------------------------------
@@ -937,27 +941,14 @@ const PostModule = (function() {
     var COORD_PRECISION = 6;
     var venueGroups = {}; // key: "lng,lat" -> array of {post, mapCard, index}
     
-    console.log('[Post] renderMapMarkers called with', posts.length, 'posts');
-    
     posts.forEach(function(post) {
-      if (!post.map_cards || !post.map_cards.length) {
-        console.log('[Post] Post', post.id, 'has no map_cards');
-        return;
-      }
-      
-      console.log('[Post] Post', post.id, 'has', post.map_cards.length, 'map_cards');
+      if (!post.map_cards || !post.map_cards.length) return;
       
       post.map_cards.forEach(function(mapCard, index) {
         if (!mapCard) return;
         var lat = mapCard.latitude;
         var lng = mapCard.longitude;
-        
-        console.log('[Post] Post', post.id, 'mapCard[' + index + ']:', mapCard.venue_name, 'lat:', lat, 'lng:', lng, 'types:', typeof lat, typeof lng);
-        
-        if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) {
-          console.log('[Post] Post', post.id, 'mapCard[' + index + '] SKIPPED - invalid coordinates');
-          return;
-        }
+        if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
         
         var venueKey = lng.toFixed(COORD_PRECISION) + ',' + lat.toFixed(COORD_PRECISION);
         if (!venueGroups[venueKey]) {
@@ -966,8 +957,6 @@ const PostModule = (function() {
         venueGroups[venueKey].push({ post: post, mapCard: mapCard, index: index });
       });
     });
-    
-    console.log('[Post] venueGroups:', Object.keys(venueGroups));
 
     // Second pass: create ONE marker per venue
     var markerCount = 0;
@@ -997,8 +986,6 @@ const PostModule = (function() {
         markerCount++;
       }
     });
-
-    console.log('[Post] Rendered ' + markerCount + ' map markers');
   }
 
   /**
