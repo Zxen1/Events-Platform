@@ -162,7 +162,28 @@ const PostModule = (function() {
         if (crossedUp && !cachedPosts && !postsLoading) {
           var b0 = getMapBounds();
           var boundsParam0 = b0 ? boundsToApiParam(b0) : '';
-          loadPosts({ bounds: boundsParam0, limit: 200, offset: 0 });
+          var boundsKey0 = b0 ? boundsToKey(b0, 2) : '';
+          if (boundsKey0) {
+            lastLoadedBoundsKey = boundsKey0;
+          }
+          
+          // IMPORTANT: render markers as soon as posts arrive (do not wait for moveend/zoomend)
+          loadPosts({ bounds: boundsParam0, limit: 200, offset: 0 }).then(function() {
+            // If filters exist, let applyFilters handle marker + list rendering to preserve state logic
+            if (currentFilters) {
+              applyFilters(currentFilters);
+              return;
+            }
+            // Otherwise, render markers immediately if we are still above threshold
+            var threshold0 = getPostsMinZoom();
+            if (lastZoom >= threshold0 && cachedPosts && cachedPosts.length) {
+              // Defer one frame so Mapbox marker DOM injection doesn't fight the zoom animation
+              requestAnimationFrame(function() {
+                renderMapMarkers(cachedPosts);
+                emitFilterCounts();
+              });
+            }
+          });
         }
         // Render markers when above threshold
         if (lastZoom >= threshold && cachedPosts && cachedPosts.length) {
@@ -1012,6 +1033,28 @@ const PostModule = (function() {
         markerCount++;
       }
     });
+    
+    // Preserve the active (big) state for the currently open post (if any).
+    // Markers are cleared/recreated above, so we re-apply the association here.
+    restoreActiveMapCardFromOpenPost();
+  }
+
+  function getOpenPostIdFromDom() {
+    try {
+      var openEl = document.querySelector('.open-post[data-id]');
+      if (!openEl) return null;
+      var id = openEl.getAttribute('data-id');
+      return id ? id : null;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function restoreActiveMapCardFromOpenPost() {
+    var postId = getOpenPostIdFromDom();
+    if (!postId) return;
+    if (!window.MapModule || !MapModule.setActiveMapCard) return;
+    MapModule.setActiveMapCard(postId);
   }
 
   /**
@@ -1111,6 +1154,8 @@ const PostModule = (function() {
     
     // Refresh map markers based on filtered results
     renderMapMarkers(filteredPosts);
+    // Ensure active map card state stays in sync if a post is currently open
+    restoreActiveMapCardFromOpenPost();
     
     // Refresh map clusters to reflect filtered results
     if (window.MapModule && MapModule.refreshClusters) {
