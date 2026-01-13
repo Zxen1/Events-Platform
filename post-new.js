@@ -1845,15 +1845,10 @@ const PostModule = (function() {
 
     // Card click does not close post (removed per user request)
 
-    // Favorite button (check both card types)
-    var favBtn = wrap.querySelector('.post-card-button-fav, .recent-card-button-fav');
-    if (favBtn) {
-      favBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        e.preventDefault();
-        toggleFavorite(post, favBtn);
-      });
-    }
+    // Favorite button:
+    // IMPORTANT: do not bind a second handler here.
+    // The reused `cardEl` already has its own favourite handler from `renderPostCard` / `renderRecentCard`.
+    // Double-binding causes a double-toggle (appears "not working") when the post is open.
 
     // Share button
     var shareBtn = wrap.querySelector('.open-post-button-share');
