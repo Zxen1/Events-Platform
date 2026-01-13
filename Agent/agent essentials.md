@@ -207,3 +207,4 @@ UI sections are called **panels** (e.g., "Recent panel", "Post panel").
 3. If still unsure, ASK the user
 4. Never guess, never invent
 
+
