@@ -1320,6 +1320,15 @@ const PostModule = (function() {
       var mapCards = post.map_cards || [];
       if (!mapCards.length) return false;
 
+      // Category/Subcategory filter (matches live-site category selection behavior).
+      // FilterModule provides `subcategoryKeys` based on the get-form reference data.
+      if (filters.subcategoryKeys && Array.isArray(filters.subcategoryKeys)) {
+        if (filters.subcategoryKeys.length === 0) return false;
+        var postSubKey = String(post.subcategory_key || '');
+        if (!postSubKey) return false;
+        if (filters.subcategoryKeys.indexOf(postSubKey) === -1) return false;
+      }
+
       // Map area filter (viewport bounds) - include post if ANY map card is in bounds
       if (bounds) {
         var anyInBounds = mapCards.some(function(mc) {

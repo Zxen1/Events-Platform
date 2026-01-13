@@ -113,6 +113,45 @@ const FilterModule = (function() {
         });
         return state;
     }
+
+    /**
+     * Get selected subcategory keys for filtering posts.
+     * This matches the live-site "selection.subs" concept, but uses subcategory_key
+     * because the new API returns `post.subcategory_key` as the source-of-truth.
+     *
+     * - Category OFF => none of its subs are included
+     * - Category ON + no subs selected => yields zero keys for that category (filters out those posts)
+     */
+    function getSelectedSubcategoryKeys() {
+        var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
+        if (!container) return null;
+        
+        var keys = [];
+        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
+        accordions.forEach(function(accordion) {
+            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle input');
+            var catEnabled = headerToggle && headerToggle.checked;
+            if (!catEnabled) return;
+            
+            accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
+                var subEnabled = subToggle && subToggle.checked;
+                if (!subEnabled) return;
+                
+                var subKey = opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
+                if (subKey) keys.push(String(subKey));
+            });
+        });
+        
+        // De-dupe, preserve order
+        var seen = {};
+        return keys.filter(function(k) {
+            if (!k) return false;
+            if (seen[k]) return false;
+            seen[k] = true;
+            return true;
+        });
+    }
     
     function applyCategoryState(state) {
         if (!state) return;
@@ -882,7 +921,10 @@ const FilterModule = (function() {
             dateEnd: dateEnd,
             expired: expiredInput ? expiredInput.checked : false,
             favourites: favouritesOn,
-            sort: currentSort
+            sort: currentSort,
+            // Category filter
+            categories: getCategoryState(),
+            subcategoryKeys: getSelectedSubcategoryKeys()
         };
     }
     
@@ -1119,9 +1161,20 @@ const FilterModule = (function() {
                     body.className = 'filter-categoryfilter-accordion-body accordion-body';
                     
                     var subs = cat.subs || [];
-                    subs.forEach(function(subName) {
+                    subs.forEach(function(sub) {
+                        var subName = (typeof sub === 'string') ? sub : (sub && sub.name);
+                        if (!subName) return;
+
                         var option = document.createElement('div');
                         option.className = 'filter-categoryfilter-accordion-option';
+                        // Store subcategory_key on the option for PostModule filtering (source-of-truth is DB dump).
+                        try {
+                            var feeInfo = cat && cat.subFees && cat.subFees[subName];
+                            var subKey = feeInfo && feeInfo.subcategory_key ? String(feeInfo.subcategory_key) : '';
+                            if (subKey) {
+                                option.dataset.subcategoryKey = subKey;
+                            }
+                        } catch (_eSubKey) {}
                         
                         var optImg = document.createElement('img');
                         optImg.className = 'filter-categoryfilter-accordion-option-image';
