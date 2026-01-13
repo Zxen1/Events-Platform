@@ -40,6 +40,7 @@ const PostModule = (function() {
   var lastZoom = null;
   var postsEnabled = false;
   var favToTop = false; // matches live site: "Favourites on top" is a sort behavior, not a filter
+  var favSortDirty = true; // live-site behavior: fav changes don't reorder until user presses the toggle again
 
   var modeButtonsBound = false;
 
@@ -272,6 +273,9 @@ const PostModule = (function() {
     App.on('filter:favouritesToggle', function(data) {
       if (!data) return;
       favToTop = !!data.enabled;
+      // Live-site behavior: enabling favToTop makes ordering "clean" (applies immediately).
+      // Any subsequent favourite toggles mark it dirty again until the user presses the toggle.
+      favSortDirty = favToTop ? false : true;
       // Re-apply sorting/rendering without filtering out non-favourites.
       // Keep existing sort key if available; default to 'az'.
       sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'az') : 'az');
@@ -1380,8 +1384,8 @@ const PostModule = (function() {
       var mcA = (a.map_cards && a.map_cards.length) ? a.map_cards[0] : null;
       var mcB = (b.map_cards && b.map_cards.length) ? b.map_cards[0] : null;
       
-      // Live-site behavior: "Favourites on top" is applied as a primary ordering when enabled.
-      if (favToTop) {
+      // Live-site behavior: "Favourites on top" only applies when not dirty.
+      if (favToTop && !favSortDirty) {
         var favA = isFavorite(a.id) ? 1 : 0;
         var favB = isFavorite(b.id) ? 1 : 0;
         if (favA !== favB) return favB - favA;
@@ -1534,6 +1538,7 @@ const PostModule = (function() {
   // Keep it as a no-op wrapper that toggles favToTop (do not hide non-favourites).
   function filterFavourites(favouritesOnTop) {
     favToTop = !!favouritesOnTop;
+    favSortDirty = favToTop ? false : true;
     sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'az') : 'az');
   }
 
@@ -2169,6 +2174,16 @@ const PostModule = (function() {
      FAVORITES
      -------------------------------------------------------------------------- */
 
+  function getCurrentSortKeyForPosts() {
+    try {
+      if (window.FilterModule && typeof FilterModule.getFilterState === 'function') {
+        var st = FilterModule.getFilterState();
+        if (st && st.sort) return String(st.sort);
+      }
+    } catch (_e) {}
+    return 'az';
+  }
+
   /**
    * Toggle favorite status
    * Uses aria-pressed and CSS attribute selectors for styling
@@ -2189,6 +2204,10 @@ const PostModule = (function() {
 
     // Save to localStorage
     saveFavorite(post.id, newFav);
+    // Live-site behavior: do NOT reorder immediately on star/unstar.
+    if (favToTop) {
+      favSortDirty = true;
+    }
   }
 
   /**
@@ -2560,6 +2579,10 @@ const PostModule = (function() {
       if (otherBtn === btn) return;
       otherBtn.setAttribute('aria-pressed', newFav ? 'true' : 'false');
     });
+
+    if (favToTop) {
+      favSortDirty = true;
+    }
   }
 
   /**
