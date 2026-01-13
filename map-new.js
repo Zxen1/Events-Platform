@@ -1198,11 +1198,26 @@ const MapModule = (function() {
       });
     });
 
-    // Click to stop spin and close welcome modal
-    map.on('click', () => {
+    // Click handler - stop spin, close modals, and handle click-away
+    map.on('click', (e) => {
       if (spinning) stopSpin();
       if (window.WelcomeModalComponent && WelcomeModalComponent.isVisible()) {
         WelcomeModalComponent.close();
+      }
+      
+      // Check if clicking on a map card container
+      const originalTarget = e.originalEvent && e.originalEvent.target;
+      const mapCardContainer = originalTarget && typeof originalTarget.closest === 'function'
+        ? originalTarget.closest('.map-card-container')
+        : null;
+      
+      if (!mapCardContainer) {
+        // Clicked elsewhere on the map - clear active and hover states
+        clearActiveMapCard();
+        clearAllMapCardHoverStates();
+        
+        // Emit event so post module can clear highlights
+        App.emit('map:clickedAway');
       }
     });
   }
@@ -1756,6 +1771,61 @@ const MapModule = (function() {
   }
 
   /**
+   * Clear all active map cards (deactivate all)
+   */
+  function clearActiveMapCard() {
+    mapCardMarkers.forEach((entry, venueKey) => {
+      if (entry.state === 'big') {
+        updateMapCardStateByKey(venueKey, 'small');
+        entry.element.classList.remove('is-active');
+      }
+      // Also clear any hover states
+      entry.element.classList.remove('is-hovered');
+    });
+  }
+
+  /**
+   * Set hover state on a map card by post ID
+   */
+  function setMapCardHover(postId) {
+    const entry = findMarkerByPostId(postId);
+    if (!entry || entry.state === 'big') return; // Don't change if already active
+    entry.element.classList.add('is-hovered');
+    updateMapCardStateByKey(entry.venueKey, 'hover');
+  }
+
+  /**
+   * Remove hover state from a map card by post ID
+   */
+  function removeMapCardHover(postId) {
+    const entry = findMarkerByPostId(postId);
+    if (!entry || entry.state === 'big') return; // Don't change if active
+    entry.element.classList.remove('is-hovered');
+    updateMapCardStateByKey(entry.venueKey, 'small');
+  }
+
+  /**
+   * Clear all hover states from all map cards
+   */
+  function clearAllMapCardHoverStates() {
+    mapCardMarkers.forEach((entry, venueKey) => {
+      if (entry.element.classList.contains('is-hovered') || entry.state === 'hover') {
+        entry.element.classList.remove('is-hovered');
+        if (entry.state === 'hover') {
+          updateMapCardStateByKey(venueKey, 'small');
+        }
+      }
+    });
+  }
+
+  /**
+   * Get all map card markers
+   */
+  function getAllMapCardMarkers() {
+    return mapCardMarkers;
+  }
+
+  /**
    * Update map card visual state by venue key
    */
   function updateMapCardStateByKey(venueKey, newState) {
@@ -2185,6 +2255,12 @@ const MapModule = (function() {
     removeMapCardMarker,
     clearAllMapCardMarkers,
     setActiveMapCard,
+    clearActiveMapCard,
+    setMapCardHover,
+    removeMapCardHover,
+    clearAllMapCardHoverStates,
+    getAllMapCardMarkers,
+    findMarkerByPostId,
     refreshMapCardStyles,
     
     // Map card utilities (for PostModule)

@@ -188,6 +188,27 @@ const PostModule = (function() {
       openPostById(data.postId, { fromMap: true });
     });
 
+    // Listen for map card hover to sync post card highlights
+    App.on('map:cardHover', function(data) {
+      if (!data) return;
+      var postId = String(data.postId);
+      var postCards = document.querySelectorAll('.post-card[data-id="' + postId + '"]');
+      postCards.forEach(function(card) {
+        if (data.isHovering) {
+          card.classList.add('post-card--map-highlight');
+        } else {
+          card.classList.remove('post-card--map-highlight');
+        }
+      });
+    });
+
+    // Listen for click-away on map to clear post card highlights
+    App.on('map:clickedAway', function() {
+      document.querySelectorAll('.post-card--map-highlight').forEach(function(card) {
+        card.classList.remove('post-card--map-highlight');
+      });
+    });
+
     // Listen for filter changes
     App.on('filter:changed', function(filterState) {
       applyFilters(filterState);
@@ -801,14 +822,13 @@ const PostModule = (function() {
    * @param {boolean} isHovering - Whether hovering
    */
   function syncMapMarkerHover(postId, isHovering) {
-    // Use MapCards API if available (from map.js)
-    if (window.MapCards) {
-      if (isHovering && MapCards.setMapCardHover) {
-        MapCards.setMapCardHover(postId);
-      } else if (!isHovering && MapCards.removeMapCardHover) {
-        MapCards.removeMapCardHover(postId);
-      }
-      return;
+    // Use MapModule API
+    if (!window.MapModule) return;
+    
+    if (isHovering && MapModule.setMapCardHover) {
+      MapModule.setMapCardHover(postId);
+    } else if (!isHovering && MapModule.removeMapCardHover) {
+      MapModule.removeMapCardHover(postId);
     }
   }
 
