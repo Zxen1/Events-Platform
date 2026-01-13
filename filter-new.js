@@ -363,10 +363,50 @@ const FilterModule = (function() {
     var lastFilteredCount = 0;
     var lastTotalCount = 0;
     var headerFilterBadge = null;
+    var summaryLoadingEl = null;
+    var isCountsLoading = false;
     
     function updateSummary(text) {
         if (summaryEl) {
             summaryEl.textContent = text || '';
+        }
+    }
+    
+    /**
+     * Show loading state for counts
+     */
+    function showCountsLoading() {
+        isCountsLoading = true;
+        
+        if (summaryEl) {
+            // Create or show loading spinner in summary
+            if (!summaryLoadingEl) {
+                summaryLoadingEl = document.createElement('span');
+                summaryLoadingEl.className = 'filter-panel-summary-loading';
+                summaryLoadingEl.innerHTML = '<span class="filter-loading-spinner"></span> Counting...';
+            }
+            summaryEl.textContent = '';
+            summaryEl.appendChild(summaryLoadingEl);
+        }
+        
+        // Show loading state on header badge
+        if (headerFilterBadge) {
+            headerFilterBadge.classList.add('filter-badge--loading');
+        }
+    }
+    
+    /**
+     * Hide loading state for counts
+     */
+    function hideCountsLoading() {
+        isCountsLoading = false;
+        
+        if (summaryLoadingEl && summaryLoadingEl.parentNode) {
+            summaryLoadingEl.parentNode.removeChild(summaryLoadingEl);
+        }
+        
+        if (headerFilterBadge) {
+            headerFilterBadge.classList.remove('filter-badge--loading');
         }
     }
     
@@ -376,6 +416,8 @@ const FilterModule = (function() {
      * @param {number} total - Total results in visible area
      */
     function updateFilterCounts(filtered, total) {
+        hideCountsLoading();
+        
         lastFilteredCount = filtered;
         lastTotalCount = total;
         
@@ -872,8 +914,48 @@ const FilterModule = (function() {
             dateEnd: dateEnd,
             expired: expiredInput ? expiredInput.checked : false,
             favourites: favouritesOn,
-            sort: currentSort
+            sort: currentSort,
+            disabledSubcategories: getDisabledSubcategories()
         };
+    }
+    
+    /**
+     * Get flat list of disabled subcategory names for filtering
+     * Returns null if all subcategories are enabled (no filtering needed)
+     */
+    function getDisabledSubcategories() {
+        var container = panelEl ? panelEl.querySelector('.filter-categoryfilter-container') : null;
+        if (!container) return null;
+        
+        var disabled = [];
+        
+        var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
+        accordions.forEach(function(accordion) {
+            // Check category toggle
+            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle input');
+            var catEnabled = headerToggle && headerToggle.checked;
+            
+            // Get all subcategories in this category
+            accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                var subName = opt.querySelector('.filter-categoryfilter-accordion-option-text');
+                if (!subName) return;
+                var subKey = subName.textContent.trim();
+                
+                if (!catEnabled) {
+                    // Entire category disabled - all subs are disabled
+                    disabled.push(subKey);
+                } else {
+                    // Check individual subcategory toggle
+                    var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
+                    if (!subToggle || !subToggle.checked) {
+                        disabled.push(subKey);
+                    }
+                }
+            });
+        });
+        
+        // If nothing disabled, return null (no filtering needed)
+        return disabled.length > 0 ? disabled : null;
     }
     
     function buildCalendar() {
@@ -1256,6 +1338,11 @@ const FilterModule = (function() {
             saveFilters();
         });
         
+        // Listen for counting started (show loading state)
+        App.on('filter:countingStarted', function() {
+            showCountsLoading();
+        });
+        
         // Listen for filter count updates from PostModule (detailed, after posts loaded)
         App.on('filter:countsUpdated', function(data) {
             if (data && typeof data.filtered === 'number' && typeof data.total === 'number') {
@@ -1299,7 +1386,9 @@ const FilterModule = (function() {
         setDateRange: setDateRange,
         openCalendar: openCalendar,
         closeCalendar: closeCalendar,
-        resetAllFilters: resetAllFilters
+        resetAllFilters: resetAllFilters,
+        showCountsLoading: showCountsLoading,
+        hideCountsLoading: hideCountsLoading
     };
 
 })();
