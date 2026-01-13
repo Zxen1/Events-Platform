@@ -1335,6 +1335,7 @@ const MapModule = (function() {
   // Cluster state
   let clusterIconLoaded = false;
   let lastClusterBucketKey = null;
+  let lastClusterRequestKey = null;
 
   /**
    * Get cluster grid size based on zoom level
@@ -1494,9 +1495,11 @@ const MapModule = (function() {
     
     var zoomValue = Number.isFinite(zoom) ? zoom : (map.getZoom() || 0);
     var bucketKey = getClusterBucketKey(zoomValue);
+    var filterKey = getClusterFilterKey();
+    var requestKey = bucketKey + '|' + filterKey;
     
-    // Skip if same bucket key (no grid size change)
-    if (lastClusterBucketKey === bucketKey) return;
+    // Skip only if BOTH bucket AND filter key match
+    if (lastClusterRequestKey === requestKey) return;
     
     // Clear clusters immediately so we never show wrong numbers during calculation.
     // (No loading GIF on clusters; labels simply disappear until correct data arrives.)
@@ -1507,12 +1510,22 @@ const MapModule = (function() {
       var data = buildClusterFeatureCollectionFromServer(result.clusters);
       source.setData(data);
       lastClusterBucketKey = bucketKey;
+      lastClusterRequestKey = requestKey;
       
       // Emit cluster count for header badge (fast initial load)
       if (typeof result.totalCount === 'number') {
         App.emit('clusters:countUpdated', { total: result.totalCount });
       }
     });
+  }
+
+  function getClusterFilterKey() {
+    try {
+      // localStorage value is the current filter snapshot. Use raw string as a stable key.
+      return String(localStorage.getItem('funmap_filters') || '');
+    } catch (_e) {
+      return '';
+    }
   }
 
   /**
@@ -1622,6 +1635,7 @@ const MapModule = (function() {
   function refreshClusters() {
     if (!map) return;
     lastClusterBucketKey = null; // Force refresh
+    lastClusterRequestKey = null; // Force refresh (filters may have changed)
     var zoom = map.getZoom() || 0;
     updateClusterData(zoom);
   }

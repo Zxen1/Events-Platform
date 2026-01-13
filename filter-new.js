@@ -45,6 +45,8 @@ const FilterModule = (function() {
     // Persistence
     var STORAGE_KEY = 'funmap_filters';
     var saveDebounceTimer = null;
+    var requestCountsFn = null;
+    var serverCountsOk = false;
 
 
     /* --------------------------------------------------------------------------
@@ -397,6 +399,9 @@ const FilterModule = (function() {
         
         // Bring panel to front of stack
         App.bringToTop(panelEl);
+
+        // Authoritative counts (worldwide + in-area)
+        try { if (typeof requestCountsFn === 'function') requestCountsFn(); } catch (_eCounts) {}
     }
     
     function closePanel() {
@@ -1218,7 +1223,7 @@ const FilterModule = (function() {
                     headerText.textContent = cat.name;
 
                     var headerCount = document.createElement('span');
-                    headerCount.className = 'filter-categoryfilter-count filter-categoryfilter-count--loading';
+                    headerCount.className = 'filter-categoryfilter-count';
                     headerCount.textContent = '';
                     
                     var headerArrow = document.createElement('span');
@@ -1270,7 +1275,7 @@ const FilterModule = (function() {
                         optText.textContent = subName;
 
                         var optCount = document.createElement('span');
-                        optCount.className = 'filter-categoryfilter-count filter-categoryfilter-count--loading';
+                        optCount.className = 'filter-categoryfilter-count';
                         optCount.textContent = '';
                         
                         var optSwitch = SwitchComponent.create({
@@ -1410,6 +1415,7 @@ const FilterModule = (function() {
         
         // Listen for filter count updates from PostModule (legacy). Keep, but server-side counts override it.
         App.on('filter:countsUpdated', function(data) {
+            if (serverCountsOk) return;
             if (data && typeof data.filtered === 'number' && typeof data.total === 'number') {
                 updateFilterCounts(data.filtered, data.total, !!data.areaActive);
             }
@@ -1424,7 +1430,14 @@ const FilterModule = (function() {
                     updateHeaderBadge(data.total);
                     // Also update summary with cluster count
                     if (summaryEl) {
-                        summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' in this area.';
+                        var scopeText = 'worldwide';
+                        try {
+                            if (window.MapModule && typeof MapModule.getMap === 'function') {
+                                var m = MapModule.getMap();
+                                if (m && typeof m.getZoom === 'function' && m.getZoom() >= 8) scopeText = 'in this area';
+                            }
+                        } catch (_eScope) {}
+                        summaryEl.textContent = data.total + ' result' + (data.total !== 1 ? 's' : '') + ' ' + scopeText + '.';
                     }
                 }
             }
@@ -1483,16 +1496,26 @@ const FilterModule = (function() {
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
                     if (myToken !== countsToken) return;
-                    if (!res || res.success !== true) return;
                     clearTimeout(loadingTimer);
+                    if (!res || res.success !== true) {
+                        setCategoryCountsLoading(false);
+                        return;
+                    }
                     setCategoryCountsLoading(false);
+                    serverCountsOk = true;
                     updateFilterCounts(Number(res.total_showing || 0), Number(res.total_available || 0), !!res.area_active);
                     if (res.facet_subcategories && typeof res.facet_subcategories === 'object') {
                         applyFacetCounts(res.facet_subcategories);
                     }
                 })
-                .catch(function() { /* ignore */ });
+                .catch(function() {
+                    clearTimeout(loadingTimer);
+                    setCategoryCountsLoading(false);
+                });
         }
+
+        requestCountsFn = requestCounts;
+        requestCounts();
 
         // Recompute counts when filters change or map moves
         App.on('filter:changed', function() { requestCounts(); });
