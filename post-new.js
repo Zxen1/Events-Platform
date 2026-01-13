@@ -1074,7 +1074,7 @@ const PostModule = (function() {
         // If no bounds or map area filter is off, count all
         if (!bounds) {
           count++;
-        } else if (pointWithinBounds(mc.longitude, mc.latitude, bounds)) {
+        } else if (inBounds(mc.longitude, mc.latitude, bounds)) {
           count++;
         }
       }
@@ -1135,16 +1135,12 @@ const PostModule = (function() {
    */
   /**
    * Check if a point is within bounds
+   * Following live site pattern: index.js lines 24113-24117
    */
-  function pointWithinBounds(lng, lat, bounds) {
+  function inBounds(lng, lat, bounds) {
     if (!bounds) return true;
-    var withinLat = lat >= bounds.south && lat <= bounds.north;
-    if (!withinLat) return false;
-    if (bounds.west <= bounds.east) {
-      return lng >= bounds.west && lng <= bounds.east;
-    }
-    // Handle antimeridian crossing
-    return lng >= bounds.west || lng <= bounds.east;
+    return lng >= bounds.getWest() && lng <= bounds.getEast() &&
+           lat >= bounds.getSouth() && lat <= bounds.getNorth();
   }
 
   /**
@@ -1168,10 +1164,10 @@ const PostModule = (function() {
 
       // Map area filter (viewport bounds) - include post if ANY map card is in bounds
       if (bounds) {
-        var anyInBounds = mapCards.some(function(mc) {
-          return mc && pointWithinBounds(mc.longitude, mc.latitude, bounds);
+        var anyCardInBounds = mapCards.some(function(mc) {
+          return mc && inBounds(mc.longitude, mc.latitude, bounds);
         });
-        if (!anyInBounds) return false;
+        if (!anyCardInBounds) return false;
       }
 
       // Keyword filter - match against ANY map card's content
@@ -1191,19 +1187,83 @@ const PostModule = (function() {
         if (!keywordMatch) return false;
       }
 
-      // Price filter (if price_summary contains a number)
+      // Price filter - check if ANY map card's price is within range
       if (filters.minPrice || filters.maxPrice) {
-        var priceSummary = (mapCard && mapCard.price_summary) || '';
-        var priceMatch = priceSummary.match(/[\d,.]+/);
-        var price = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : null;
+        var minP = filters.minPrice ? parseFloat(filters.minPrice) : null;
+        var maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : null;
+        
+        var priceInRange = mapCards.some(function(mc) {
+          if (!mc || !mc.price_summary) return false;
+          var priceMatch = mc.price_summary.match(/[\d,.]+/);
+          if (!priceMatch) return false;
+          var price = parseFloat(priceMatch[0].replace(/,/g, ''));
+          if (!Number.isFinite(price)) return false;
+          if (minP !== null && price < minP) return false;
+          if (maxP !== null && price > maxP) return false;
+          return true;
+        });
+        
+        if (!priceInRange) return false;
+      }
 
-        if (price !== null) {
-          if (filters.minPrice && price < parseFloat(filters.minPrice)) {
-            return false;
-          }
-          if (filters.maxPrice && price > parseFloat(filters.maxPrice)) {
-            return false;
-          }
+      // Date filter - check if ANY map card has sessions within range
+      // Following live site pattern: index.js lines 24186-24202
+      var hasDateFilter = filters.dateStart || filters.dateEnd;
+      var showExpired = filters.expired;
+      
+      if (hasDateFilter || !showExpired) {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        var startDate = filters.dateStart ? new Date(filters.dateStart) : null;
+        var endDate = filters.dateEnd ? new Date(filters.dateEnd) : null;
+        
+        var dateMatch = mapCards.some(function(mc) {
+          if (!mc || !mc.sessions || !mc.sessions.length) return false;
+          return mc.sessions.some(function(sess) {
+            var sessDate = sess.date || sess.full;
+            if (!sessDate) return false;
+            var dt = new Date(sessDate);
+            dt.setHours(0, 0, 0, 0);
+            
+            // If no range set, just check not expired (unless showExpired)
+            if (!startDate && !endDate) {
+              return showExpired || dt >= today;
+            }
+            
+            // Check within range
+            if (startDate && dt < startDate) return false;
+            if (endDate && dt > endDate) return false;
+            return true;
+          });
+        });
+        
+        if (!dateMatch) return false;
+      }
+
+      // Category filter - check if post's category/subcategory is enabled
+      // Following live site pattern: index.js lines 24203-24217
+      if (filters.categories) {
+        var catState = filters.categories;
+        var hasCatFilters = Object.keys(catState).length > 0;
+        
+        if (hasCatFilters) {
+          var catMatch = mapCards.some(function(mc) {
+            if (!mc) return false;
+            var category = mc.category || '';
+            var subcategory = mc.subcategory || '';
+            
+            var catConfig = catState[category];
+            if (!catConfig || !catConfig.enabled) return false;
+            
+            // Check subcategory if subs exist
+            if (catConfig.subs && Object.keys(catConfig.subs).length > 0) {
+              return catConfig.subs[subcategory] === true;
+            }
+            return true;
+          });
+          
+          if (!catMatch) return false;
         }
       }
 

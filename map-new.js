@@ -1149,22 +1149,18 @@ const MapModule = (function() {
   function bindMapEvents() {
     if (!map) return;
 
-    // Zoom event - fires DURING zoom animation (not just at end)
-    // This allows map cards to appear instantly as zoom crosses threshold
+    // Zoom event - only clear markers when going below threshold (like live site)
+    // Following live site pattern: index.js lines 21132-21161
     map.on('zoom', () => {
       const zoom = map.getZoom();
       
-      App.emit('map:boundsChanged', {
-        bounds: map.getBounds(),
-        zoom: zoom,
-        center: map.getCenter()
-      });
+      // Clear markers when zoom drops below threshold
+      if (zoom < MARKER_ZOOM_THRESHOLD) {
+        clearAllMapCardMarkers();
+      }
       
       // Update cluster visibility
       updateClusterVisibility(zoom);
-      
-      // Update markers visibility
-      updateMarkersVisibility(zoom);
     });
 
     // Bounds change events (when animation completes)
@@ -1740,6 +1736,7 @@ const MapModule = (function() {
 
   /**
    * Handle map card click
+   * Following live site pattern: map.js lines 380-399
    */
   function onMapCardClick(postId) {
     // Set this card to active
@@ -1748,19 +1745,9 @@ const MapModule = (function() {
     // Stop spin
     stopSpin();
     
-    // Find the marker entry to check if multi-post
-    const entry = findMarkerByPostId(postId);
-    
-    // Check if this is a multi-post venue (more than 1 post at this location)
-    if (entry && entry.postIds && entry.postIds.length > 1) {
-      // Multi-post venue: highlight all posts, don't auto-open
-      App.emit('map:multiPostClicked', { 
-        postIds: entry.postIds,
-        venueKey: entry.venueKey
-      });
-    } else {
-      // Single post: open the post
-      App.emit('map:cardClicked', { postId });
+    // Open the post directly (like live site)
+    if (window.PostModule && PostModule.openPostById) {
+      PostModule.openPostById(postId, { fromMap: true });
     }
   }
 
