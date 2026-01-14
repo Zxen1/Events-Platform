@@ -653,7 +653,16 @@ const PostModule = (function() {
       if (f.dateStart) params.append('date_start', String(f.dateStart));
       if (f.dateEnd) params.append('date_end', String(f.dateEnd));
       if (f.expired) params.append('expired', '1');
-      if (Array.isArray(f.subcategoryKeys) && f.subcategoryKeys.length) {
+      if (Array.isArray(f.subcategoryKeys)) {
+        // IMPORTANT: empty array means "no subcategories selected" → show nothing (don't fetch worldwide).
+        if (f.subcategoryKeys.length === 0) {
+          postsLoading = false;
+          cachedPosts = [];
+          filteredPosts = null;
+          renderPostsEmptyState();
+          App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
+          return Promise.resolve([]);
+        }
         params.append('subcategory_keys', f.subcategoryKeys.map(String).join(','));
       }
     } else if (options && options.subcategory_key) {

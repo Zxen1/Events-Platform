@@ -196,18 +196,43 @@ const MapModule = (function() {
         const zoom = map.getZoom();
 
         // Rule: if the user leaves while zoomed out (<8), do NOT persist their view.
-        // Instead, clear the saved view so next visit starts in the normal world/admin-start/spin state.
+        // Don't overwrite the last saved in-area view; simply don't save a new one.
+        // (We clear/ignore low-zoom views during restore in applySavedMapViewToStart.)
         if (!Number.isFinite(zoom) || zoom < MARKER_ZOOM_THRESHOLD) {
-          try { localStorage.removeItem(MAP_VIEW_STORAGE_KEY); } catch (_eRm) {}
-          hasSavedMapView = false;
           return;
         }
         const c = map.getCenter();
         const center = c && typeof c.toArray === 'function' ? c.toArray() : [startCenter[0], startCenter[1]];
         const pitch = typeof map.getPitch === 'function' ? map.getPitch() : startPitch;
         const bearing = typeof map.getBearing === 'function' ? map.getBearing() : startBearing;
-        localStorage.setItem(MAP_VIEW_STORAGE_KEY, JSON.stringify({ center, zoom, pitch, bearing }));
+        const viewState = { center, zoom, pitch, bearing };
+
+        // Device memory (everyone)
+        localStorage.setItem(MAP_VIEW_STORAGE_KEY, JSON.stringify(viewState));
         hasSavedMapView = true;
+
+        // Account memory (members/admins): persist viewport into filters_json.map so it follows the account.
+        // This is required because the FilterModule is lazy-loaded and may never run saveFilters() in a session.
+        try {
+          const rawUser = localStorage.getItem('member-auth-current');
+          if (rawUser) {
+            const u = JSON.parse(rawUser);
+            if (u && u.id && u.account_email && typeof u.filters_json === 'string' && u.filters_json) {
+              const filters = JSON.parse(u.filters_json);
+              if (filters && typeof filters === 'object') {
+                filters.map = viewState;
+                const nextFiltersJson = JSON.stringify(filters);
+                if (nextFiltersJson !== u.filters_json) {
+                  u.filters_json = nextFiltersJson;
+                  localStorage.setItem('member-auth-current', JSON.stringify(u));
+                  if (window.MemberModule && typeof MemberModule.saveSetting === 'function') {
+                    MemberModule.saveSetting('filters_json', nextFiltersJson);
+                  }
+                }
+              }
+            }
+          }
+        } catch (_ePersistAccount) {}
       } catch (e) {
         // ignore
       }
