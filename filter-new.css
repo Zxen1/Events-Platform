@@ -622,6 +622,11 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* Subcategory OFF (still clickable, but visually subdued) */
+.filter-categoryfilter-accordion-option--suboff {
+  opacity: 0.6;
+}
+
 .filter-categoryfilter-accordion-option-image {
   width: 20px;
   height: 20px;

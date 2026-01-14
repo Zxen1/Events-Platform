@@ -205,6 +205,7 @@ const FilterModule = (function() {
                         if (subToggleInput && subToggleSlider) {
                             subToggleInput.checked = catState.subs[subKey];
                             subToggleSlider.classList.toggle('component-small-switch-slider--on', catState.subs[subKey]);
+                            opt.classList.toggle('filter-categoryfilter-accordion-option--suboff', !catState.subs[subKey]);
                         }
                         opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', !catState.enabled);
                     }
@@ -1167,31 +1168,30 @@ const FilterModule = (function() {
             }
         });
 
-        // Category header counts = sum of ENABLED subs (fractions).
+        // Category header counts:
+        // - If all subs are enabled => show a single number (total).
+        // - If any sub is disabled => show a fraction enabled/total (even if disabled subs are 0),
+        //   so users can see at a glance that the drawer has internal filters.
         // Sub counts always show "would be" counts regardless of enabled state.
         container.querySelectorAll('.filter-categoryfilter-accordion').forEach(function(acc) {
-            var total = 0;
-            var headerToggle = acc.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle input');
-            var catEnabled = !!(headerToggle && headerToggle.checked);
+            var enabledTotal = 0;
+            var allTotal = 0;
+            var anySubOff = false;
             acc.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
-                // If category is disabled, its subs are disabled for filtering, but we still show the
-                // fraction of enabled subs (their internal toggle state) as requested.
                 var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
                 var subEnabled = !!(subToggle && subToggle.checked);
-                if (!catEnabled || !subEnabled) {
-                    // When category is enabled: only enabled subs count.
-                    // When category is disabled: still only enabled subs count (fraction display).
-                    if (!subEnabled) return;
-                }
+                if (!subEnabled) anySubOff = true;
                 var key = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
                 if (!key) return;
                 if (facetMap.hasOwnProperty(key)) {
-                    total += Number(facetMap[key] || 0);
+                    var n = Number(facetMap[key] || 0);
+                    allTotal += n;
+                    if (subEnabled) enabledTotal += n;
                 }
             });
             var headerCount = acc.querySelector('.filter-categoryfilter-accordion-header .filter-categoryfilter-count');
             if (headerCount) {
-                var t = String(total);
+                var t = anySubOff ? (String(enabledTotal) + '/' + String(allTotal)) : String(allTotal);
                 if (headerCount.textContent !== t) headerCount.textContent = t;
             }
         });
@@ -1303,9 +1303,13 @@ const FilterModule = (function() {
                         optCount.textContent = '';
                         
                         var optSwitch = SwitchComponent.create({
-                            size: 'big',
+                            size: 'small',
                             checked: true,
                             onChange: function() {
+                                // Grey out when subcategory is off (but still allow toggling back on)
+                                try {
+                                    option.classList.toggle('filter-categoryfilter-accordion-option--suboff', !optSwitch.isChecked());
+                                } catch (_eSubOff) {}
                                 applyFilters();
                                 updateResetCategoriesButton();
                             }
