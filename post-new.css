@@ -713,6 +713,14 @@
   object-fit: cover;
 }
 
+.open-post-image-avatar {
+  flex: 0 0 auto;
+}
+
+.open-post-text-postedby {
+  line-height: 1.3;
+}
+
 /* ============================================================================
    OPEN POST IMAGES [FUTURE: ImageGalleryComponent]
    Hero image + thumbnail row. Will become a separate component.

@@ -264,6 +264,8 @@ try {
             p.post_key,
             p.member_id,
             p.member_name,
+            a.avatar_file AS admin_avatar_file,
+            m.avatar_file AS member_avatar_file,
             p.subcategory_key,
             p.loc_qty,
             p.visibility,
@@ -296,6 +298,8 @@ try {
             mc.session_summary,
             mc.price_summary
         FROM `posts` p
+        LEFT JOIN `admins` a ON a.id = p.member_id AND a.username = p.member_name
+        LEFT JOIN `members` m ON m.id = p.member_id AND m.username = p.member_name
         LEFT JOIN `subcategories` sc ON sc.subcategory_key = p.subcategory_key
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
         WHERE {$whereClause}
@@ -337,6 +341,9 @@ try {
                 'post_key' => $row['post_key'],
                 'member_id' => (int)$row['member_id'],
                 'member_name' => $row['member_name'],
+                // Avatar is stored as filename (preferred) or empty string.
+                // Resolve to a URL client-side using folder_avatars / folder_site_avatars.
+                'member_avatar' => (string)($row['admin_avatar_file'] ?? $row['member_avatar_file'] ?? ''),
                 'subcategory_key' => $row['subcategory_key'],
                 'subcategory_icon_url' => $subcategoryIconUrl,
                 'loc_qty' => (int)$row['loc_qty'],

@@ -1798,12 +1798,13 @@ const PostModule = (function() {
     var posterName = post.member_name || 'Anonymous';
     var postedTime = formatPostTimestamp(post.created_at);
     var postedMeta = postedTime ? 'Posted by ' + posterName + ' · ' + postedTime : 'Posted by ' + posterName;
+    var avatarSrc = resolveAvatarSrcForUser(post.member_avatar || '', post.member_id);
 
     // Default session info display
-    var basePrice = loc0.price_summary || '';
+    var priceText = formatPriceSummaryText(loc0.price_summary || '');
     var defaultInfo = datesText
-      ? '💲 ' + basePrice + ' | 📅 ' + datesText
-      : '💲 ' + basePrice;
+      ? ((priceText ? (priceText + ' | ') : '') + '📅 ' + datesText)
+      : (priceText ? priceText : '');
 
     // Check favorite status
     var isFav = isFavorite(post.id);
@@ -1879,7 +1880,10 @@ const PostModule = (function() {
         '</div>',
         '<div class="open-post-container-desc">',
           '<div class="open-post-text-desc" tabindex="0" aria-expanded="false">' + escapeHtml(description) + '</div>',
-          '<div class="open-post-row-member"><span>' + escapeHtml(postedMeta) + '</span></div>',
+          '<div class="open-post-row-member">',
+            (avatarSrc ? '<img class="open-post-image-avatar" src="' + escapeHtml(avatarSrc) + '" alt="">' : ''),
+            '<span class="open-post-text-postedby">' + escapeHtml(postedMeta) + '</span>',
+          '</div>',
         '</div>',
       '</div>',
       '<div class="open-post-container-images">',
@@ -1940,6 +1944,81 @@ const PostModule = (function() {
     } catch (e) {
       return '';
     }
+  }
+
+  // price_summary is stored as JSON in post_map_cards (reference/UI only).
+  // Convert it to a clean display string for the open-post header.
+  // Expected shape:
+  //   { "ticket": { "min": 12, "max": 34, "currency": "USD" }, "item": null }
+  //   { "item": { "price": 10, "currency": "USD" }, "ticket": null }
+  function formatPriceSummaryText(priceSummary) {
+    var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
+    if (!raw) return '';
+
+    function fmtCurrency(value, currencyCode) {
+      var n = Number(value);
+      if (!Number.isFinite(n)) return '';
+      var code = currencyCode ? String(currencyCode).trim().toUpperCase() : '';
+      if (!code) return String(n);
+      try {
+        return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(n);
+      } catch (_e) {
+        // If Intl rejects the code, still show a readable value.
+        return String(n) + ' ' + code;
+      }
+    }
+
+    // New site contract: price_summary is JSON (DB enforces json_valid).
+    // Do not silently fall back if parsing fails (AgentEssentials: no fallbacks).
+    if (raw[0] !== '{' && raw[0] !== '[') {
+      throw new Error('[Post] price_summary expected JSON but got: ' + raw);
+    }
+
+    var obj = JSON.parse(raw);
+    if (!obj || typeof obj !== 'object') return '';
+
+    var ticket = obj.ticket && typeof obj.ticket === 'object' ? obj.ticket : null;
+    var item = obj.item && typeof obj.item === 'object' ? obj.item : null;
+
+    if (ticket && (ticket.min !== undefined || ticket.max !== undefined)) {
+      var c = ticket.currency || '';
+      var min = (ticket.min !== undefined && ticket.min !== null) ? Number(ticket.min) : null;
+      var max = (ticket.max !== undefined && ticket.max !== null) ? Number(ticket.max) : null;
+      if (Number.isFinite(min) && Number.isFinite(max)) {
+        if (min === max) return fmtCurrency(min, c);
+        return fmtCurrency(min, c) + ' - ' + fmtCurrency(max, c);
+      }
+      if (Number.isFinite(min)) return fmtCurrency(min, c);
+      if (Number.isFinite(max)) return fmtCurrency(max, c);
+    }
+
+    if (item && (item.price !== undefined || item.item_price !== undefined)) {
+      var priceVal = (item.price !== undefined) ? item.price : item.item_price;
+      var cc = item.currency || '';
+      var p = Number(priceVal);
+      if (Number.isFinite(p)) return fmtCurrency(p, cc);
+    }
+
+    return '';
+  }
+
+  // Avatar values are stored as filenames (preferred) or occasionally absolute URLs (legacy).
+  // Resolve to a usable src based on folder settings:
+  // - user uploads: {id}-avatar.ext -> folder_avatars
+  // - library picks: any other filename -> folder_site_avatars
+  function resolveAvatarSrcForUser(value, userId) {
+    var v = (value || '').trim();
+    if (!v) return '';
+    if (v.indexOf('data:') === 0) return v;
+    if (v.indexOf('http://') === 0 || v.indexOf('https://') === 0) return v;
+    if (v.indexOf('/') === 0) return v;
+    if (!window.App || typeof App.getImageUrl !== 'function') {
+      throw new Error('[Post] App.getImageUrl is required to resolve avatar filenames.');
+    }
+    if (/^\d+-avatar\./.test(v)) {
+      return App.getImageUrl('avatars', v);
+    }
+    return App.getImageUrl('siteAvatars', v);
   }
 
   /**
