@@ -305,12 +305,8 @@ const FilterModule = (function() {
             } catch (_eSortRestore) {}
         }
         
-        // Map state is restored separately after map is ready
-        if (saved.map) {
-            App.on('map:ready', function() {
-                applyMapState(saved.map);
-            });
-        }
+        // Map viewport restore is handled by MapModule at init (DB-first for logged-in users, localStorage for guests)
+        // to avoid a visible "world first, then jump" flicker caused by restoring on map:ready here.
         
         updateClearButtons();
     }

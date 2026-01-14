@@ -718,6 +718,75 @@ const PostModule = (function() {
     return url + separator + 'class=' + className;
   }
 
+  // Some deployments may not have the Bunny Optimizer "thumbnail" preset configured.
+  // If we see a thumbnail-class load failure once, we stop using it globally and serve raw URLs
+  // so postcard images never appear broken/missing.
+  var thumbnailClassSupported = null; // null=unknown, true/false=known
+
+  /**
+   * Pick a safe postcard thumbnail src.
+   * @param {string} rawUrl - Full raw image URL
+   * @returns {string} URL to use for <img src>
+   */
+  function getCardThumbSrc(rawUrl) {
+    if (!rawUrl) return '';
+    if (thumbnailClassSupported === false) return rawUrl;
+    return addImageClass(rawUrl, 'thumbnail');
+  }
+
+  /**
+   * Attach a robust loader to a postcard thumbnail image.
+   * - If the first attempt using ?class=thumbnail fails, retry using the raw URL.
+   * - Remember support globally to avoid repeated broken-image attempts.
+   * @param {HTMLImageElement} imgEl
+   * @param {string} rawUrl
+   */
+  function wireCardThumbImage(imgEl, rawUrl) {
+    if (!imgEl || !rawUrl) return;
+
+    // If we already know thumbnails aren't supported, force raw URL.
+    if (thumbnailClassSupported === false) {
+      imgEl.src = rawUrl;
+      return;
+    }
+
+    // Only wire once per element.
+    if (imgEl.dataset && imgEl.dataset.wiredThumb === '1') return;
+    if (imgEl.dataset) imgEl.dataset.wiredThumb = '1';
+
+    var usedClass = (thumbnailClassSupported !== false);
+    var primarySrc = usedClass ? addImageClass(rawUrl, 'thumbnail') : rawUrl;
+
+    // Set initial src if caller didn't.
+    if (!imgEl.getAttribute('src')) {
+      imgEl.src = primarySrc;
+    }
+
+    // On successful load, remember support if we were using the class.
+    imgEl.addEventListener('load', function() {
+      // If the loaded src includes class=thumbnail, treat that as support.
+      try {
+        var s = String(imgEl.currentSrc || imgEl.src || '');
+        if (s.indexOf('class=thumbnail') !== -1) {
+          thumbnailClassSupported = true;
+        }
+      } catch (_e) {}
+    }, { once: true });
+
+    // On error, retry once without the class. Also mark global support as false.
+    imgEl.addEventListener('error', function onErr() {
+      // If we already tried raw, stop.
+      if (imgEl.dataset && imgEl.dataset.thumbRetry === '1') return;
+      if (imgEl.dataset) imgEl.dataset.thumbRetry = '1';
+
+      // Mark unsupported so future card thumbs skip ?class=thumbnail.
+      thumbnailClassSupported = false;
+
+      console.warn('[Post] Card thumbnail failed with class=thumbnail; retrying without class:', rawUrl);
+      imgEl.src = rawUrl;
+    });
+  }
+
   /**
    * Get thumbnail URL for a post
    * Uses first image from first map card's media_urls
@@ -887,11 +956,14 @@ const PostModule = (function() {
     // Format dates (if sessions exist)
     var datesText = formatPostDates(post);
 
-    // Get thumbnail - use 'thumbnail' class (100x100) for post cards
-    var thumbUrl = addImageClass(getPostThumbnailUrl(post), 'thumbnail');
+    // Postcard thumbnail (100x100 in CSS). We try ?class=thumbnail if supported, otherwise raw URL.
+    var rawThumbUrl = getPostThumbnailUrl(post);
+    var thumbUrl = getCardThumbSrc(rawThumbUrl);
 
     // Build HTML - proper class naming: .{section}-{name}-{type}-{part}
-    var thumbHtml = '<img class="post-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />';
+    var thumbHtml = rawThumbUrl
+      ? '<img class="post-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
+      : '<div class="post-card-image post-card-image--empty" aria-hidden="true"></div>';
 
     var iconHtml = iconUrl
       ? '<span class="post-card-icon-sub"><img src="' + iconUrl + '" alt="" /></span>'
@@ -919,6 +991,11 @@ const PostModule = (function() {
         '</button>',
       '</div>'
     ].join('');
+
+    // Robust thumbnail loader (prevents broken/missing thumbnails if class=thumbnail isn't supported).
+    if (rawThumbUrl) {
+      wireCardThumbImage(el.querySelector('.post-card-image'), rawThumbUrl);
+    }
 
     // Click handler for opening post
     el.addEventListener('click', function(e) {
@@ -2437,6 +2514,10 @@ const PostModule = (function() {
       var targetId = (post && post.id !== undefined && post.id !== null) ? String(post.id) : '';
       if (!targetId) return;
 
+      // Store thumbnail URL directly in recent history so Recents can render thumbnails
+      // even when cachedPosts isn't loaded yet (e.g., page refresh while zoomed out).
+      var rawThumbUrl = getPostThumbnailUrl(post);
+
       // Deduplicate (string-safe) and update "last seen" timestamp if already present.
       var seen = {};
       var next = [];
@@ -2446,6 +2527,7 @@ const PostModule = (function() {
         id: targetId,
         post_key: post.post_key,
         title: (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '',
+        thumb_url: rawThumbUrl || '',
         timestamp: now
       });
       seen[targetId] = true;
@@ -2621,6 +2703,9 @@ const PostModule = (function() {
       var card = renderRecentCard(entry);
       if (card) {
         listEl.appendChild(card);
+        // Robust hydration: if this entry was stored without a thumb_url (older data),
+        // fetch the post once and persist thumb_url so future refreshes always have images.
+        hydrateRecentCardIfNeeded(card, entry);
       }
     });
 
@@ -2684,8 +2769,9 @@ const PostModule = (function() {
     // Get data from post or entry
     var title = entry.title || (post && post.checkout_title) || '';
     var mapCard = post && post.map_cards && post.map_cards.length ? post.map_cards[0] : null;
-    // Use 'thumbnail' class (100x100) for recent cards
-    var thumbUrl = addImageClass(mapCard && mapCard.media_urls && mapCard.media_urls.length ? mapCard.media_urls[0] : '', 'thumbnail');
+    // Recents postcard thumbnail (100x100 in CSS). Prefer stored thumb_url (works even before cachedPosts loads).
+    var rawThumbUrl = entry.thumb_url || (mapCard && mapCard.media_urls && mapCard.media_urls.length ? mapCard.media_urls[0] : '');
+    var thumbUrl = getCardThumbSrc(rawThumbUrl);
     var city = mapCard ? (mapCard.city || mapCard.venue_name || '') : '';
 
     // Get subcategory info
@@ -2697,7 +2783,9 @@ const PostModule = (function() {
     var lastOpenedText = formatLastOpened(entry.timestamp);
 
     // Build card HTML - proper class naming: .{section}-{name}-{type}-{part}
-    var thumbHtml = '<img class="recent-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />';
+    var thumbHtml = rawThumbUrl
+      ? '<img class="recent-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
+      : '<div class="recent-card-image recent-card-image--empty" aria-hidden="true"></div>';
 
     var iconHtml = iconUrl
       ? '<span class="recent-card-icon-sub"><img src="' + iconUrl + '" alt="" /></span>'
@@ -2727,6 +2815,11 @@ const PostModule = (function() {
       '</div>'
     ].join('');
 
+    // Robust thumbnail loader (prevents broken/missing thumbnails if class=thumbnail isn't supported).
+    if (rawThumbUrl) {
+      wireCardThumbImage(el.querySelector('.recent-card-image'), rawThumbUrl);
+    }
+
     // Click handler
     el.addEventListener('click', function(e) {
       if (e.target.closest('.recent-card-button-fav')) return;
@@ -2738,6 +2831,32 @@ const PostModule = (function() {
         // Need to fetch the post
         loadPostById(entry.id).then(function(fetchedPost) {
           if (fetchedPost) {
+            // Update the card thumbnail immediately (fresh reloads often don't have cachedPosts yet).
+            try {
+              var fetchedRawThumb = getPostThumbnailUrl(fetchedPost);
+              if (fetchedRawThumb) {
+                var img = el.querySelector('.recent-card-image');
+                if (img && img.tagName === 'IMG') {
+                  img.src = getCardThumbSrc(fetchedRawThumb);
+                  wireCardThumbImage(img, fetchedRawThumb);
+                } else {
+                  // If we rendered an empty placeholder, replace it with an <img>.
+                  var holder = el.querySelector('.recent-card-image--empty');
+                  if (holder) {
+                    var newImg = document.createElement('img');
+                    newImg.className = 'recent-card-image';
+                    newImg.alt = '';
+                    newImg.loading = 'lazy';
+                    newImg.setAttribute('referrerpolicy', 'no-referrer');
+                    newImg.src = getCardThumbSrc(fetchedRawThumb);
+                    holder.replaceWith(newImg);
+                    wireCardThumbImage(newImg, fetchedRawThumb);
+                  }
+                }
+              }
+            } catch (e) {
+              // ignore
+            }
             openPost(fetchedPost, { fromRecent: true, originEl: el });
           }
         });
@@ -2765,6 +2884,73 @@ const PostModule = (function() {
     }
 
     return el;
+  }
+
+  /**
+   * Hydrate a recent card from the database if the stored history entry is missing key fields
+   * (most importantly thumb_url). This fixes "missing thumbnail on refresh" for older stored entries.
+   * @param {HTMLElement} cardEl
+   * @param {Object} entry
+   */
+  function hydrateRecentCardIfNeeded(cardEl, entry) {
+    try {
+      if (!cardEl || !entry || !entry.id) return;
+      if (entry.thumb_url) return;
+      if (cardEl.dataset && cardEl.dataset.hydrating === '1') return;
+      if (cardEl.dataset) cardEl.dataset.hydrating = '1';
+
+      loadPostById(entry.id).then(function(post) {
+        if (!post) return;
+
+        var rawThumb = getPostThumbnailUrl(post);
+        if (rawThumb) {
+          // 1) Update DOM thumbnail
+          try {
+            var img = cardEl.querySelector('.recent-card-image');
+            if (img && img.tagName === 'IMG') {
+              img.src = getCardThumbSrc(rawThumb);
+              wireCardThumbImage(img, rawThumb);
+            } else {
+              var holder = cardEl.querySelector('.recent-card-image--empty');
+              if (holder) {
+                var newImg = document.createElement('img');
+                newImg.className = 'recent-card-image';
+                newImg.alt = '';
+                newImg.loading = 'lazy';
+                newImg.setAttribute('referrerpolicy', 'no-referrer');
+                newImg.src = getCardThumbSrc(rawThumb);
+                holder.replaceWith(newImg);
+                wireCardThumbImage(newImg, rawThumb);
+              }
+            }
+          } catch (eThumb) {
+            // ignore
+          }
+
+          // 2) Persist thumb_url back into localStorage so refreshes always have it.
+          try {
+            var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
+            if (!Array.isArray(history)) history = [];
+            var targetId = String(entry.id);
+            for (var i = 0; i < history.length; i++) {
+              if (!history[i]) continue;
+              if (String(history[i].id) !== targetId) continue;
+              history[i].thumb_url = rawThumb;
+              // Keep title fresh too (safe improvement).
+              history[i].title = history[i].title || (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '';
+              break;
+            }
+            localStorage.setItem('recentPosts', JSON.stringify(history));
+          } catch (eStore) {
+            // ignore
+          }
+        }
+      }).catch(function() {
+        // ignore
+      });
+    } catch (e) {
+      // ignore
+    }
   }
 
   /**

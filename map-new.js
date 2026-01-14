@@ -93,6 +93,126 @@ const MapModule = (function() {
   let startPitch = DEFAULT_PITCH;
   let startBearing = 0;
   let waitForMapTiles = false; // Default false = show immediately; database can override
+
+  // Persist/restore the user's last map viewport so refresh/return doesn't snap back to world view.
+  // This is the map equivalent of saved filters.
+  const MAP_VIEW_STORAGE_KEY = 'mapView';
+  let hasSavedMapView = false;
+  let saveMapViewTimer = null;
+
+  function loadSavedMapView() {
+    try {
+      const raw = localStorage.getItem(MAP_VIEW_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      if (!Array.isArray(parsed.center) || parsed.center.length !== 2) return null;
+      const lng = Number(parsed.center[0]);
+      const lat = Number(parsed.center[1]);
+      const zoom = Number(parsed.zoom);
+      const pitch = (parsed.pitch === undefined || parsed.pitch === null) ? null : Number(parsed.pitch);
+      const bearing = (parsed.bearing === undefined || parsed.bearing === null) ? null : Number(parsed.bearing);
+      if (!Number.isFinite(lng) || !Number.isFinite(lat) || !Number.isFinite(zoom)) return null;
+      return {
+        center: [lng, lat],
+        zoom: zoom,
+        pitch: Number.isFinite(pitch) ? pitch : null,
+        bearing: Number.isFinite(bearing) ? bearing : null
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function getLoggedInUserFiltersJson() {
+    try {
+      // DB-first without fallback chains: read the stored auth payload directly so map init
+      // never depends on module load order and logged-in users are never influenced by mapView.
+      const raw = localStorage.getItem('member-auth-current');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      if (!parsed.id || !parsed.account_email) return null;
+      if (!parsed.filters_json || typeof parsed.filters_json !== 'string') return null;
+      return parsed.filters_json;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function loadMapViewFromFiltersJson(filtersJsonStr) {
+    try {
+      if (!filtersJsonStr || typeof filtersJsonStr !== 'string') return null;
+      const parsed = JSON.parse(filtersJsonStr);
+      if (!parsed || typeof parsed !== 'object') return null;
+      const m = parsed.map;
+      if (!m || typeof m !== 'object') return null;
+      // map state is { center: [lng,lat], zoom, pitch, bearing }
+      if (!Array.isArray(m.center) || m.center.length !== 2) return null;
+      const lng = Number(m.center[0]);
+      const lat = Number(m.center[1]);
+      const zoom = Number(m.zoom);
+      const pitch = (m.pitch === undefined || m.pitch === null) ? null : Number(m.pitch);
+      const bearing = (m.bearing === undefined || m.bearing === null) ? null : Number(m.bearing);
+      if (!Number.isFinite(lng) || !Number.isFinite(lat) || !Number.isFinite(zoom)) return null;
+      return {
+        center: [lng, lat],
+        zoom: zoom,
+        pitch: Number.isFinite(pitch) ? pitch : null,
+        bearing: Number.isFinite(bearing) ? bearing : null
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function applySavedMapViewToStart(view) {
+    if (!view) return false;
+    // Only restore (and therefore "persist") a user viewport when they last used the site at zoom 8+.
+    // If their last view was zoomed out (<8), we treat it as "world view" and use admin starting/spin logic.
+    if (!Number.isFinite(view.zoom) || view.zoom < MARKER_ZOOM_THRESHOLD) {
+      try { localStorage.removeItem(MAP_VIEW_STORAGE_KEY); } catch (_eRm) {}
+      hasSavedMapView = false;
+      return false;
+    }
+    try {
+      startCenter = view.center.slice();
+      startZoom = view.zoom;
+      if (view.pitch !== null) startPitch = view.pitch;
+      if (view.bearing !== null) startBearing = view.bearing;
+      hasSavedMapView = true;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function scheduleSaveMapView() {
+    if (!map) return;
+    if (saveMapViewTimer) clearTimeout(saveMapViewTimer);
+    saveMapViewTimer = setTimeout(function() {
+      try {
+        if (!map) return;
+        const zoom = map.getZoom();
+
+        // Rule: if the user leaves while zoomed out (<8), do NOT persist their view.
+        // Instead, clear the saved view so next visit starts in the normal world/admin-start/spin state.
+        if (!Number.isFinite(zoom) || zoom < MARKER_ZOOM_THRESHOLD) {
+          try { localStorage.removeItem(MAP_VIEW_STORAGE_KEY); } catch (_eRm) {}
+          hasSavedMapView = false;
+          return;
+        }
+        const c = map.getCenter();
+        const center = c && typeof c.toArray === 'function' ? c.toArray() : [startCenter[0], startCenter[1]];
+        const pitch = typeof map.getPitch === 'function' ? map.getPitch() : startPitch;
+        const bearing = typeof map.getBearing === 'function' ? map.getBearing() : startBearing;
+        localStorage.setItem(MAP_VIEW_STORAGE_KEY, JSON.stringify({ center, zoom, pitch, bearing }));
+        hasSavedMapView = true;
+      } catch (e) {
+        // ignore
+      }
+    }, 250);
+  }
   
   // Markers
   let mapCardMarkers = new Map();    // postId -> { marker, element, state }
@@ -538,6 +658,17 @@ const MapModule = (function() {
     }
     mapboxgl.accessToken = MAPBOX_TOKEN;
 
+    // DB-first viewport restore:
+    // - If logged in, restore from the user's DB snapshot (filters_json.map) so localStorage cannot override them.
+    // - If logged out, restore from localStorage mapView (device-only).
+    // Admin starting location is only used when there is no eligible saved view.
+    const filtersJsonStr = getLoggedInUserFiltersJson();
+    if (filtersJsonStr) {
+      applySavedMapViewToStart(loadMapViewFromFiltersJson(filtersJsonStr));
+    } else {
+      applySavedMapViewToStart(loadSavedMapView());
+    }
+
     // Try to get settings synchronously if already loaded (non-blocking)
     // Prefetch started in HTML head, so it may already be resolved
     try {
@@ -786,7 +917,7 @@ const MapModule = (function() {
           // Apply starting position if map was at default (0,0)
           // applySettings() already updated startCenter, startZoom, startPitch from admin settings
           var currentCenter = map.getCenter();
-          if (currentCenter && Math.abs(currentCenter.lng) < 0.01 && Math.abs(currentCenter.lat) < 0.01) {
+          if (!hasSavedMapView && currentCenter && Math.abs(currentCenter.lng) < 0.01 && Math.abs(currentCenter.lat) < 0.01) {
             // Map is at default 0,0 - jump to admin starting position
             if (startCenter[0] !== 0 || startCenter[1] !== 0) {
               logDebug('[Map] loadSettings: Jumping to starting position:', startCenter, 'zoom:', startZoom);
@@ -870,28 +1001,30 @@ const MapModule = (function() {
    */
   function applySettings(settings) {
     // Starting position
-    if (settings.starting_lat && settings.starting_lng) {
-      const lat = parseFloat(settings.starting_lat);
-      const lng = parseFloat(settings.starting_lng);
-      if (Number.isFinite(lat) && Number.isFinite(lng)) {
-        startCenter = [lng, lat];
-        logDebug('[Map] applySettings: startCenter =', startCenter);
+    if (!hasSavedMapView) {
+      if (settings.starting_lat && settings.starting_lng) {
+        const lat = parseFloat(settings.starting_lat);
+        const lng = parseFloat(settings.starting_lng);
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          startCenter = [lng, lat];
+          logDebug('[Map] applySettings: startCenter =', startCenter);
+        }
       }
-    }
-    
-    if (settings.starting_zoom) {
-      const zoom = parseFloat(settings.starting_zoom);
-      if (Number.isFinite(zoom)) {
-        startZoom = zoom;
-        logDebug('[Map] applySettings: startZoom =', startZoom);
+      
+      if (settings.starting_zoom) {
+        const zoom = parseFloat(settings.starting_zoom);
+        if (Number.isFinite(zoom)) {
+          startZoom = zoom;
+          logDebug('[Map] applySettings: startZoom =', startZoom);
+        }
       }
-    }
-    
-    if (settings.starting_pitch !== undefined) {
-      const pitch = parseFloat(settings.starting_pitch);
-      if (Number.isFinite(pitch)) {
-        startPitch = pitch;
-        logDebug('[Map] applySettings: startPitch =', startPitch);
+      
+      if (settings.starting_pitch !== undefined) {
+        const pitch = parseFloat(settings.starting_pitch);
+        if (Number.isFinite(pitch)) {
+          startPitch = pitch;
+          logDebug('[Map] applySettings: startPitch =', startPitch);
+        }
       }
     }
     
@@ -1218,6 +1351,16 @@ const MapModule = (function() {
         
         // Keep lastMapZoom in sync
         lastMapZoom = zoom;
+
+        // Persist viewport so refresh/return stays in the same area/zoom.
+        scheduleSaveMapView();
+      });
+    });
+
+    // Persist camera-only changes too (e.g. rotate/pitch without moving).
+    ['rotateend', 'pitchend'].forEach(event => {
+      map.on(event, () => {
+        scheduleSaveMapView();
       });
     });
 
