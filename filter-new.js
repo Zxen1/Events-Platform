@@ -1386,6 +1386,11 @@ const FilterModule = (function() {
                 if (saved && saved.categories) {
                     applyCategoryState(saved.categories);
                 }
+
+                // The category DOM is built async (get-form). The initial requestCounts() can complete
+                // before the accordions exist, so facet counters have nowhere to render.
+                // Now that the DOM exists, request counts again to paint counters immediately.
+                try { if (typeof requestCountsFn === 'function') requestCountsFn(); } catch (_eCounts2) {}
             })
             .catch(function(err) {
                 console.error('[Filter] Failed to load categories:', err);
