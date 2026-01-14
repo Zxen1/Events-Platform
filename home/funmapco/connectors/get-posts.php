@@ -154,13 +154,18 @@ try {
     $types .= 'ss';
 
     // Subcategory filters
+    //
+    // IMPORTANT:
+    // Clusters + filter counts operate on map cards (`post_map_cards.subcategory_key`).
+    // The zoom 8+ post loader must match that behavior, otherwise category toggles can appear to work
+    // at low zoom (clusters) but not at high zoom (posts list).
     if ($subcategoryKey !== '') {
-        $where[] = 'p.subcategory_key = ?';
+        $where[] = 'mc.subcategory_key = ?';
         $params[] = $subcategoryKey;
         $types .= 's';
     } elseif (!empty($subcategoryKeys)) {
         $placeholders = implode(',', array_fill(0, count($subcategoryKeys), '?'));
-        $where[] = "p.subcategory_key IN ($placeholders)";
+        $where[] = "mc.subcategory_key IN ($placeholders)";
         foreach ($subcategoryKeys as $k) {
             $params[] = $k;
             $types .= 's';
@@ -282,6 +287,7 @@ try {
             p.created_at,
             sc.icon_path AS subcategory_icon_path,
             mc.id AS map_card_id,
+            mc.subcategory_key AS map_card_subcategory_key,
             mc.title,
             mc.description,
             mc.media_ids,
@@ -308,8 +314,8 @@ try {
         FROM `posts` p
         LEFT JOIN `admins` a ON a.id = p.member_id AND a.username = p.member_name
         LEFT JOIN `members` m ON m.id = p.member_id AND m.username = p.member_name
-        LEFT JOIN `subcategories` sc ON sc.subcategory_key = p.subcategory_key
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
+        LEFT JOIN `subcategories` sc ON sc.subcategory_key = mc.subcategory_key
         WHERE {$whereClause}
         ORDER BY p.created_at DESC
         LIMIT ? OFFSET ?
@@ -344,6 +350,11 @@ try {
                 $subcategoryIconUrl = $folderCategoryIcons . '/' . $row['subcategory_icon_path'];
             }
             
+            // Prefer the map-card subcategory key when present (source-of-truth for map filtering).
+            $postSubKey = (isset($row['map_card_subcategory_key']) && is_string($row['map_card_subcategory_key']) && trim($row['map_card_subcategory_key']) !== '')
+                ? trim($row['map_card_subcategory_key'])
+                : (string)($row['subcategory_key'] ?? '');
+
             $postsById[$postId] = [
                 'id' => $postId,
                 'post_key' => $row['post_key'],
@@ -352,7 +363,7 @@ try {
                 // Avatar is stored as filename (preferred) or empty string.
                 // Resolve to a URL client-side using folder_avatars / folder_site_avatars.
                 'member_avatar' => (string)($row['admin_avatar_file'] ?? $row['member_avatar_file'] ?? ''),
-                'subcategory_key' => $row['subcategory_key'],
+                'subcategory_key' => $postSubKey,
                 'subcategory_icon_url' => $subcategoryIconUrl,
                 'loc_qty' => (int)$row['loc_qty'],
                 'visibility' => $row['visibility'],
@@ -375,6 +386,7 @@ try {
             
             $postsById[$postId]['map_cards'][] = [
                 'id' => (int)$row['map_card_id'],
+                'subcategory_key' => (string)($row['map_card_subcategory_key'] ?? ''),
                 'title' => $row['title'],
                 'description' => $row['description'],
                 'media_ids' => $mediaIds,
