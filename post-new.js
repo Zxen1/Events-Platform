@@ -81,6 +81,10 @@ const PostModule = (function() {
     // Initialize zoom gating if we can.
     primeZoomFromMapIfAvailable();
     updatePostsButtonState();
+
+    // Deep link: allow shared URLs like `/?post=<post_key>` or `/post/<post_key>` to open in Recent panel.
+    // NOTE: `/post/*` requires server routing to reach index page; `?post=` works without rewrites.
+    try { setTimeout(maybeOpenDeepLinkedPost, 0); } catch (_eDL) {}
   }
 
   function loadSavedFiltersFromLocalStorage() {
@@ -2293,7 +2297,10 @@ const PostModule = (function() {
   function sharePost(post) {
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
     var title = (mapCard && mapCard.title) || post.checkout_title || '';
-    var url = window.location.origin + '/post/' + (post.post_key || post.id);
+    // Use a query-string deep link to avoid 404s on servers without /post/* routing.
+    // Requirement: viewing a post link should open that post in the Recent panel.
+    var key = post.post_key || post.id;
+    var url = window.location.origin + '/?post=' + encodeURIComponent(String(key));
 
     // Use Web Share API if available, otherwise copy to clipboard
     if (navigator.share) {
@@ -2832,6 +2839,76 @@ const PostModule = (function() {
       .catch(function() {
         return null;
       });
+  }
+
+  function loadPostByKey(postKey) {
+    var key = (postKey === null || postKey === undefined) ? '' : String(postKey).trim();
+    if (!key) return Promise.resolve(null);
+    return fetch('/gateway.php?action=get-posts&limit=1&post_key=' + encodeURIComponent(key))
+      .then(function(response) {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then(function(data) {
+        if (data && data.success && data.posts && data.posts.length) {
+          return data.posts[0];
+        }
+        return null;
+      })
+      .catch(function() {
+        return null;
+      });
+  }
+
+  function getDeepLinkKeyFromUrl() {
+    // Accept either:
+    // - `/?post=<post_key>` (works without server rewrites)
+    // - `/post/<post_key>` (requires server routing to index page)
+    try {
+      var qs = new URLSearchParams(window.location.search || '');
+      var q = String(qs.get('post') || qs.get('post_key') || '').trim();
+      if (q) return q;
+    } catch (_eQs) {}
+
+    try {
+      var path = String(window.location.pathname || '');
+      var idx = path.indexOf('/post/');
+      if (idx !== -1) {
+        var rest = path.slice(idx + '/post/'.length);
+        rest = rest.split('?')[0].split('#')[0].split('/')[0];
+        return String(rest || '').trim();
+      }
+    } catch (_ePath) {}
+
+    return '';
+  }
+
+  function maybeOpenDeepLinkedPost() {
+    var key = getDeepLinkKeyFromUrl();
+    if (!key) return;
+
+    // Only act once per page load.
+    if (maybeOpenDeepLinkedPost._ran) return;
+    maybeOpenDeepLinkedPost._ran = true;
+
+    // Open in Recent panel (per requirement).
+    var recentBtn = getModeButton('recent');
+    if (recentBtn) {
+      try { recentBtn.click(); } catch (_eClick) {}
+    }
+
+    // If the key starts with a numeric id (e.g. "1-test"), prefer loading by id.
+    var m = String(key).match(/^(\d+)/);
+    var id = m ? m[1] : '';
+    var loader = id ? loadPostById(id) : loadPostByKey(key);
+
+    loader.then(function(post) {
+      if (!post) {
+        console.error('[Post] Deep link post not found:', key);
+        return;
+      }
+      openPost(post, { fromRecent: true, originEl: null });
+    });
   }
 
   /* --------------------------------------------------------------------------

@@ -109,6 +109,7 @@ try {
     $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
     $visibility = isset($_GET['visibility']) ? trim($_GET['visibility']) : 'active';
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
+    $postKey = isset($_GET['post_key']) ? trim((string)$_GET['post_key']) : '';
     
     // Parse bounds for map viewport filtering (sw_lng,sw_lat,ne_lng,ne_lat)
     $bounds = null;
@@ -207,6 +208,13 @@ try {
         $where[] = 'p.id = ?';
         $params[] = $postId;
         $types .= 'i';
+    }
+
+    // Single post by key filter
+    if ($postKey !== '') {
+        $where[] = 'p.post_key = ?';
+        $params[] = $postKey;
+        $types .= 's';
     }
 
     // Bounds filter (for map viewport)

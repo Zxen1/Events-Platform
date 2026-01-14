@@ -19803,6 +19803,57 @@ function makePosts(){
         window.__wrapForInputYield('openPost');
       }
 
+      // Deep link support:
+      // - `/?post=<id-or-post_key>` opens in the Recents board (show-history) and opens the post.
+      // - `/post/<id-or-post_key>` requires server routing to index.html (otherwise it's a 404).
+      (function(){
+        function parseDeepLinkKey(){
+          try{
+            const qs = new URLSearchParams(location.search || '');
+            const q = (qs.get('post') || qs.get('post_key') || '').trim();
+            if(q) return q;
+          }catch(e){}
+          try{
+            const path = String(location.pathname || '');
+            const idx = path.indexOf('/post/');
+            if(idx !== -1){
+              let rest = path.slice(idx + '/post/'.length);
+              rest = rest.split('?')[0].split('#')[0].split('/')[0];
+              return String(rest || '').trim();
+            }
+          }catch(e){}
+          return '';
+        }
+        function openDeepLinkedPost(){
+          const key = parseDeepLinkKey();
+          if(!key) return;
+          const m = String(key).match(/^(\d+)/);
+          const id = m ? m[1] : '';
+          if(!id) return;
+
+          // Show recents board (regular website requirement).
+          try{
+            if(!document.body.classList.contains('show-history')){
+              document.body.classList.add('show-history');
+              try{ adjustBoards(); }catch(e){}
+              try{ updateModeToggle(); }catch(e){}
+            }
+          }catch(e){}
+
+          try{
+            callWhenDefined('openPost', (fn)=>{
+              requestAnimationFrame(() => {
+                try{
+                  // Parameters: (id, fromHistory=true, fromMap=false, originEl=null)
+                  fn(id, true, false, null);
+                }catch(err){ console.error(err); }
+              });
+            });
+          }catch(e){}
+        }
+        try{ setTimeout(openDeepLinkedPost, 0); }catch(e){}
+      })();
+
       const resLists = $$('.recents-board');
       resLists.forEach(list=>{
           list.addEventListener('click', (e)=>{
