@@ -1720,9 +1720,11 @@ const PostModule = (function() {
     }
 
     // Scroll to top
-    if (postPanelContentEl) {
-      postPanelContentEl.scrollTop = 0;
-    }
+    try {
+      // Post panel scrolls in postListEl; recent panel scrolls in recentPanelContentEl.
+      if (fromRecent && recentPanelContentEl) recentPanelContentEl.scrollTop = 0;
+      if (!fromRecent && postListEl) postListEl.scrollTop = 0;
+    } catch (_eScrollTop) {}
 
     // Highlight the map marker
     highlightMapMarker(post.id);
@@ -1743,23 +1745,17 @@ const PostModule = (function() {
 
     var postId = openPost.dataset.id;
 
-    // Find the original post data
-    var post = null;
-    if (cachedPosts) {
-      for (var i = 0; i < cachedPosts.length; i++) {
-        if (String(cachedPosts[i].id) === postId) {
-          post = cachedPosts[i];
-          break;
-        }
+    // Restore the original card element (recent-card stays recent-card).
+    // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
+    try {
+      var cardEl = openPost.querySelector('.post-card, .recent-card');
+      if (cardEl && openPost.parentElement) {
+        openPost.parentElement.replaceChild(cardEl, openPost);
+      } else {
+        openPost.remove();
       }
-    }
-
-    // Replace with card, or remove
-    if (post) {
-      var card = renderPostCard(post);
-      openPost.parentElement.replaceChild(card, openPost);
-    } else {
-      openPost.remove();
+    } catch (_eRestore) {
+      try { openPost.remove(); } catch (_eRemove) {}
     }
 
     // Emit close event
@@ -2189,23 +2185,16 @@ const PostModule = (function() {
 
     var container = openPost.parentElement;
 
-    // Find the original post data
-    var post = null;
-    if (cachedPosts) {
-      for (var i = 0; i < cachedPosts.length; i++) {
-        if (String(cachedPosts[i].id) === String(postId)) {
-          post = cachedPosts[i];
-          break;
-        }
+    // Restore the original card element (recent-card stays recent-card).
+    try {
+      var cardEl = openPost.querySelector('.post-card, .recent-card');
+      if (cardEl && openPost.parentElement) {
+        openPost.parentElement.replaceChild(cardEl, openPost);
+      } else {
+        openPost.remove();
       }
-    }
-
-    // Replace with card, or remove
-    if (post) {
-      var card = renderPostCard(post);
-      openPost.parentElement.replaceChild(card, openPost);
-    } else {
-      openPost.remove();
+    } catch (_eRestore) {
+      try { openPost.remove(); } catch (_eRemove) {}
     }
 
     // Emit close event
@@ -2357,18 +2346,39 @@ const PostModule = (function() {
   function addToRecentHistory(post) {
     try {
       var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
-      // Remove if already exists
-      history = history.filter(function(h) { return h.id !== post.id; });
-      // Add to front
-      history.unshift({
-        id: post.id,
+      if (!Array.isArray(history)) history = [];
+
+      var now = Date.now();
+      var targetId = (post && post.id !== undefined && post.id !== null) ? String(post.id) : '';
+      if (!targetId) return;
+
+      // Deduplicate (string-safe) and update "last seen" timestamp if already present.
+      var seen = {};
+      var next = [];
+
+      // 1) Insert/refresh this post at the top.
+      next.push({
+        id: targetId,
         post_key: post.post_key,
         title: (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '',
-        timestamp: Date.now()
+        timestamp: now
       });
+      seen[targetId] = true;
+
+      // 2) Carry over existing entries (skip duplicates + skip this id).
+      for (var i = 0; i < history.length; i++) {
+        var h = history[i];
+        if (!h) continue;
+        var hid = (h.id !== undefined && h.id !== null) ? String(h.id) : '';
+        if (!hid) continue;
+        if (seen[hid]) continue;
+        seen[hid] = true;
+        next.push(h);
+      }
+
       // Keep only last 50
-      history = history.slice(0, 50);
-      localStorage.setItem('recentPosts', JSON.stringify(history));
+      next = next.slice(0, 50);
+      localStorage.setItem('recentPosts', JSON.stringify(next));
     } catch (e) {
       // ignore
     }
@@ -2477,7 +2487,25 @@ const PostModule = (function() {
   function getRecentHistory() {
     try {
       var history = JSON.parse(localStorage.getItem('recentPosts') || '[]');
-      return Array.isArray(history) ? history : [];
+      if (!Array.isArray(history)) return [];
+
+      // Defensive: de-dup by id (string-safe), keeping the most recent timestamp.
+      var bestById = {};
+      for (var i = 0; i < history.length; i++) {
+        var h = history[i];
+        if (!h) continue;
+        var hid = (h.id !== undefined && h.id !== null) ? String(h.id) : '';
+        if (!hid) continue;
+        var ts = Number(h.timestamp) || 0;
+        if (!bestById[hid] || ts > (Number(bestById[hid].timestamp) || 0)) {
+          bestById[hid] = h;
+        }
+      }
+
+      // Return newest-first list (matches UI expectation).
+      var out = Object.keys(bestById).map(function(id) { return bestById[id]; });
+      out.sort(function(a, b) { return (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0); });
+      return out.slice(0, 50);
     } catch (e) {
       return [];
     }
