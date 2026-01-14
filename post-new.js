@@ -197,6 +197,7 @@ const PostModule = (function() {
           if (window.MapModule && MapModule.clearAllMapCardMarkers) {
             MapModule.clearAllMapCardMarkers();
           }
+          lastRenderedVenueMarkerSigByKey = {};
         }
       }
     });
@@ -962,6 +963,10 @@ const PostModule = (function() {
      MAP MARKER INTEGRATION
      -------------------------------------------------------------------------- */
 
+  // Track which venue markers are currently rendered so we can update in-place
+  // (matches live-site behavior: don't clear everything on every refresh).
+  var lastRenderedVenueMarkerSigByKey = {};
+
   /**
    * Convert a map card to marker-friendly format
    * @param {Object} post - Parent post data
@@ -1039,10 +1044,7 @@ const PostModule = (function() {
       return;
     }
 
-    // Clear existing markers
-    if (mapModule.clearAllMapCardMarkers) {
-      mapModule.clearAllMapCardMarkers();
-    }
+    // Live-site style: update markers in-place (diff by venueKey) to avoid flashing.
 
     // First pass: collect all map cards and group by venue coordinates
     // Multi-post venues (same location, different posts) use multi_post_icon
@@ -1066,22 +1068,44 @@ const PostModule = (function() {
       });
     });
 
-    // Second pass: create ONE marker per venue
-    var markerCount = 0;
+    function buildMarkerSignature(markerData) {
+      // Only include fields that affect marker visuals/behavior.
+      // Keep this stable to avoid unnecessary remove/recreate cycles.
+      var ids = [];
+      if (markerData && markerData.isMultiPost && Array.isArray(markerData.venuePostIds)) {
+        ids = markerData.venuePostIds.map(String).slice().sort();
+      } else if (markerData && markerData.id !== undefined && markerData.id !== null) {
+        ids = [String(markerData.id)];
+      }
+      return [
+        markerData && markerData.isMultiPost ? '1' : '0',
+        ids.join(','),
+        markerData && markerData.title ? String(markerData.title) : '',
+        markerData && markerData.venue ? String(markerData.venue) : '',
+        markerData && markerData.sub ? String(markerData.sub) : '',
+        markerData && markerData.iconUrl ? String(markerData.iconUrl) : '',
+        markerData && markerData.thumbnailUrl ? String(markerData.thumbnailUrl) : ''
+      ].join('|');
+    }
+
+    // Second pass: build desired markers (one per venueKey), then diff-update.
+    var nextSigByKey = {};
+    var nextMarkerDataByKey = {};
+
     Object.keys(venueGroups).forEach(function(venueKey) {
       var group = venueGroups[venueKey];
       if (!group.length) return;
-      
+
       // Check if this venue has multiple posts (different post IDs)
       var uniquePostIds = {};
       group.forEach(function(item) { uniquePostIds[item.post.id] = true; });
       var isMultiPostVenue = Object.keys(uniquePostIds).length > 1;
-      
+
       // Use the first item for the marker, but store all post IDs for the venue
       var firstItem = group[0];
       var markerData = convertMapCardToMarker(firstItem.post, firstItem.mapCard, firstItem.index);
       if (!markerData) return;
-      
+
       if (isMultiPostVenue) {
         // Multi-post venue: use multi-post icon and store all post IDs
         markerData.isMultiPost = true;
@@ -1089,14 +1113,42 @@ const PostModule = (function() {
         markerData.venuePostCount = markerData.venuePostIds.length;
       }
 
+      nextMarkerDataByKey[venueKey] = markerData;
+      nextSigByKey[venueKey] = buildMarkerSignature(markerData);
+    });
+
+    // Remove markers that are no longer needed
+    if (mapModule.removeMapCardMarker) {
+      Object.keys(lastRenderedVenueMarkerSigByKey || {}).forEach(function(venueKey) {
+        if (!nextSigByKey[venueKey]) {
+          mapModule.removeMapCardMarker(venueKey);
+        }
+      });
+    }
+
+    // Create/update markers that are new or changed
+    Object.keys(nextMarkerDataByKey).forEach(function(venueKey) {
+      var markerData = nextMarkerDataByKey[venueKey];
+      var nextSig = nextSigByKey[venueKey];
+      var prevSig = lastRenderedVenueMarkerSigByKey ? lastRenderedVenueMarkerSigByKey[venueKey] : null;
+
+      if (prevSig && prevSig === nextSig) {
+        return; // keep existing marker as-is
+      }
+
+      // Changed: remove then recreate (MapModule does not expose an update-by-key API)
+      if (prevSig && mapModule.removeMapCardMarker) {
+        mapModule.removeMapCardMarker(venueKey);
+      }
       if (mapModule.createMapCardMarker) {
         mapModule.createMapCardMarker(markerData, markerData.lng, markerData.lat);
-        markerCount++;
       }
     });
+
+    lastRenderedVenueMarkerSigByKey = nextSigByKey;
     
     // Preserve the active (big) state for the currently open post (if any).
-    // Markers are cleared/recreated above, so we re-apply the association here.
+    // Markers may have been updated above, so we re-apply the association here.
     restoreActiveMapCardFromOpenPost();
   }
 
@@ -1207,23 +1259,8 @@ const PostModule = (function() {
     if (typeof lastZoom === 'number' && lastZoom >= threshold) {
       var b = getMapBounds();
       var boundsParam = b ? boundsToApiParam(b) : '';
-      // Clear current markers/list so we never show wrong results during calculation.
-      if (window.MapModule && MapModule.clearAllMapCardMarkers) {
-        MapModule.clearAllMapCardMarkers();
-      }
-      if (postListEl) {
-        // Keep open-post DOM intact (map movement must not close an open post),
-        // but blank everything else so we never show wrong results while server filtering runs.
-        var preservedOpenPost = postListEl.querySelector('.open-post');
-        if (preservedOpenPost && preservedOpenPost.parentElement === postListEl) {
-          try { postListEl.removeChild(preservedOpenPost); } catch (_eDetach) {}
-        }
-        postListEl.innerHTML = '';
-        if (preservedOpenPost) {
-          preservedOpenPost.style.display = '';
-          postListEl.appendChild(preservedOpenPost);
-        }
-      }
+      // Live-site behavior: keep current cards/markers visible while the server recalculates,
+      // then swap to the new results when they arrive (avoids flashing).
       loadPosts({ bounds: boundsParam, limit: 200, offset: 0, filters: filterState || {} }).then(function() {
         // Server returned filtered posts; renderMapMarkers is called by loadPosts->renderPostList path.
         // Keep active state synced if open post still exists.
