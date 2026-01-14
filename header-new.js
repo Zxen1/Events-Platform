@@ -32,6 +32,106 @@ const HeaderModule = (function() {
     var filterModuleLoaded = false;
     var filterModuleLoading = false;
 
+    /* --------------------------------------------------------------------------
+       FILTER ACTIVE VISUAL (no lazy-load required)
+       -------------------------------------------------------------------------- */
+    
+    function getCurrentMapZoomSafe() {
+        try {
+            if (window.MapModule && typeof MapModule.getMap === 'function') {
+                var m = MapModule.getMap();
+                if (m && typeof m.getZoom === 'function') return m.getZoom();
+            }
+        } catch (_e) {}
+        return null;
+    }
+    
+    function isMapAreaFilterActive() {
+        // In this app, "map area" is a filter at zoom >= postsLoadZoom (server queries use bounds).
+        var z = getCurrentMapZoomSafe();
+        var threshold = 8;
+        try {
+            if (window.App && typeof window.App.getConfig === 'function') {
+                var t = window.App.getConfig('postsLoadZoom');
+                if (typeof t === 'number' && isFinite(t)) threshold = t;
+            }
+        } catch (_eCfg) {}
+        return (typeof z === 'number' && isFinite(z) && z >= threshold);
+    }
+    
+    function loadSavedFiltersSnapshot() {
+        try {
+            var raw = localStorage.getItem('funmap_filters');
+            if (!raw) return null;
+            var parsed = JSON.parse(raw);
+            return (parsed && typeof parsed === 'object') ? parsed : null;
+        } catch (_e) {
+            return null;
+        }
+    }
+    
+    function hasAnyCategoryOrSubcategoryTogglesOff(categoriesObj) {
+        if (!categoriesObj || typeof categoriesObj !== 'object') return false;
+        try {
+            var keys = Object.keys(categoriesObj);
+            for (var i = 0; i < keys.length; i++) {
+                var cat = categoriesObj[keys[i]];
+                if (!cat || typeof cat !== 'object') continue;
+                if (cat.enabled === false) return true;
+                var subs = cat.subs;
+                if (subs && typeof subs === 'object') {
+                    var subKeys = Object.keys(subs);
+                    for (var j = 0; j < subKeys.length; j++) {
+                        if (subs[subKeys[j]] === false) return true;
+                    }
+                }
+            }
+        } catch (_e2) {}
+        return false;
+    }
+    
+    function areAnyFiltersActiveNow() {
+        // This is a *UI signal*, not an authoritative filter engine:
+        // - Must be fast
+        // - Must not require loading the filter module
+        // - Must not do any network work
+        var st = loadSavedFiltersSnapshot() || {};
+        
+        // Text/date/expired/price filters (matches FilterModule reset button logic)
+        var hasKeyword = !!(st.keyword && String(st.keyword).trim() !== '');
+        var hasMinPrice = !!(st.minPrice && String(st.minPrice).trim() !== '');
+        var hasMaxPrice = !!(st.maxPrice && String(st.maxPrice).trim() !== '');
+        var hasDate = !!(st.dateStart || st.dateEnd);
+        var hasExpired = !!st.expired;
+        
+        // Category/subcategory toggles (if any off, it's active filtering)
+        var hasCategoryFiltering = hasAnyCategoryOrSubcategoryTogglesOff(st.categories);
+        
+        // Map area (scope) is a filter at zoom>=8
+        var hasMapArea = isMapAreaFilterActive();
+        
+        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasCategoryFiltering || hasMapArea;
+    }
+    
+    function setHeaderFilterIconActive(active) {
+        var filterIcon = document.querySelector('.header-filter-button-icon');
+        if (!filterIcon) return;
+        if (active) {
+            // Color is intentionally inline so it stays correct even if filter module is never loaded.
+            // Paul may change this color later; this is the single place to do it.
+            // Use the platform variable (base-new.css) instead of hardcoding.
+            filterIcon.style.backgroundColor = 'var(--filter-active-color)';
+        } else {
+            filterIcon.style.backgroundColor = '';
+        }
+    }
+    
+    function refreshHeaderFilterActiveVisual() {
+        try {
+            setHeaderFilterIconActive(areAnyFiltersActiveNow());
+        } catch (_e) {}
+    }
+
     function setAccessButtonActiveVisual(btn, isActive) {
         if (!btn) return;
         btn.classList.toggle('button--active', !!isActive);
@@ -320,6 +420,16 @@ const HeaderModule = (function() {
         filterBtn = document.querySelector('.header-filter');
         if (!filterBtn) return;
         
+        // Set the correct visual state on boot without loading filter-new.js.
+        refreshHeaderFilterActiveVisual();
+        
+        // Keep it updated as filters/scope change.
+        App.on('map:ready', function() { refreshHeaderFilterActiveVisual(); });
+        App.on('map:boundsChanged', function() { refreshHeaderFilterActiveVisual(); });
+        App.on('filter:changed', function() { refreshHeaderFilterActiveVisual(); });
+        App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
+        App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });
+        
         filterBtn.addEventListener('click', function() {
             filterPanelOpen = !filterPanelOpen;
             
@@ -357,13 +467,12 @@ const HeaderModule = (function() {
         
         // Listen for filter active state changes (show orange icon when filters active)
         App.on('filter:activeState', function(data) {
-            var filterIcon = document.querySelector('.header-filter-button-icon');
-            if (filterIcon) {
-                if (data.active) {
-                    filterIcon.style.backgroundColor = '#cc6600';
-                } else {
-                    filterIcon.style.backgroundColor = '';
-                }
+            // Keep this hook for the FilterModule (when loaded), but also allow HeaderModule
+            // to compute active state without lazy-loading the filter panel.
+            if (data && typeof data.active === 'boolean') {
+                setHeaderFilterIconActive(!!data.active);
+            } else {
+                refreshHeaderFilterActiveVisual();
             }
         });
     }

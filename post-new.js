@@ -56,6 +56,130 @@ const PostModule = (function() {
   };
 
   /* --------------------------------------------------------------------------
+     UI PERSISTENCE (panel mode + scroll positions)
+     -------------------------------------------------------------------------- */
+
+  var UI_STATE_STORAGE_KEY = 'funmap_ui_state';
+  var uiScrollSaveTimers = { post: 0, recent: 0 };
+  var uiRestoreApplied = { post: false, recent: false };
+  var pendingModeRestore = ''; // 'map' | 'posts' | 'recent' | ''
+
+  function loadUiState() {
+    try {
+      var raw = localStorage.getItem(UI_STATE_STORAGE_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') return null;
+      return parsed;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function writeUiState(next) {
+    try {
+      var clean = next && typeof next === 'object' ? next : {};
+      localStorage.setItem(UI_STATE_STORAGE_KEY, JSON.stringify(clean));
+    } catch (_e) {}
+  }
+
+  function mergeUiState(patch) {
+    var prev = loadUiState() || {};
+    var next = Object.assign({}, prev, patch || {});
+    // Always include a timestamp for debugging / future migrations.
+    next.updated_at = Date.now();
+    writeUiState(next);
+    return next;
+  }
+
+  function scheduleSavePanelScroll(panelKey) {
+    if (!panelKey) return;
+    if (uiScrollSaveTimers[panelKey]) {
+      clearTimeout(uiScrollSaveTimers[panelKey]);
+      uiScrollSaveTimers[panelKey] = 0;
+    }
+    uiScrollSaveTimers[panelKey] = setTimeout(function() {
+      uiScrollSaveTimers[panelKey] = 0;
+      try {
+        if (panelKey === 'post' && postListEl) {
+          mergeUiState({ postScrollTop: postListEl.scrollTop || 0 });
+        }
+        if (panelKey === 'recent' && recentPanelContentEl) {
+          mergeUiState({ recentScrollTop: recentPanelContentEl.scrollTop || 0 });
+        }
+      } catch (_e) {}
+    }, 180);
+  }
+
+  function bindUiPersistence() {
+    // Scroll positions (always-save, regardless of which mode is active).
+    try {
+      if (postListEl) {
+        postListEl.addEventListener('scroll', function() { scheduleSavePanelScroll('post'); }, { passive: true });
+      }
+    } catch (_ePostScroll) {}
+    try {
+      if (recentPanelContentEl) {
+        recentPanelContentEl.addEventListener('scroll', function() { scheduleSavePanelScroll('recent'); }, { passive: true });
+      }
+    } catch (_eRecentScroll) {}
+  }
+
+  function applySavedPanelScroll(panelKey) {
+    if (!panelKey) return;
+    if (uiRestoreApplied[panelKey]) return;
+
+    var st = loadUiState() || {};
+    try {
+      if (panelKey === 'post' && postListEl && typeof st.postScrollTop === 'number') {
+        postListEl.scrollTop = Math.max(0, st.postScrollTop);
+        uiRestoreApplied.post = true;
+      }
+      if (panelKey === 'recent' && recentPanelContentEl && typeof st.recentScrollTop === 'number') {
+        recentPanelContentEl.scrollTop = Math.max(0, st.recentScrollTop);
+        uiRestoreApplied.recent = true;
+      }
+    } catch (_e) {}
+  }
+
+  function maybeRestoreModeOnBoot() {
+    // Deep links are authoritative: they decide the mode (recent) and scroll to top.
+    // Do not override that with a prior saved UI state.
+    try {
+      if (getDeepLinkKeyFromUrl()) return;
+    } catch (_eDLKey) {}
+
+    var st = loadUiState() || {};
+    var savedMode = st && st.mode ? String(st.mode) : '';
+    if (!savedMode) return;
+    if (savedMode !== 'map' && savedMode !== 'posts' && savedMode !== 'recent') return;
+
+    // If we can't restore posts yet (zoom gating), defer until map:ready updates postsEnabled.
+    pendingModeRestore = savedMode;
+    tryRestorePendingMode();
+  }
+
+  function tryRestorePendingMode() {
+    var m = pendingModeRestore;
+    if (!m) return;
+
+    if (m === 'posts' && !postsEnabled) {
+      return; // wait until postsEnabled is true
+    }
+
+    // Avoid click-toggles ("already active returns to map").
+    if (currentMode === m) {
+      pendingModeRestore = '';
+      return;
+    }
+
+    var btn = getModeButton(m);
+    if (!btn) return;
+    try { btn.click(); } catch (_eClick) {}
+    pendingModeRestore = '';
+  }
+
+  /* --------------------------------------------------------------------------
      INIT
      -------------------------------------------------------------------------- */
 
@@ -66,6 +190,7 @@ const PostModule = (function() {
     }
 
     ensurePanelsDom();
+    bindUiPersistence();
     attachButtonAnchors();
     bindAppEvents();
     bindModeButtons();
@@ -77,6 +202,9 @@ const PostModule = (function() {
     // Capture initial mode (HeaderModule already ran, but PostModule may have missed the event).
     currentMode = inferCurrentModeFromHeader() || 'map';
     applyMode(currentMode);
+    // Restore panel mode + scroll position from last session (guest + logged-in).
+    // (Account-wide persistence can be layered later; for now this is fast and robust.)
+    try { maybeRestoreModeOnBoot(); } catch (_eUiRestore) {}
 
     // Initialize zoom gating if we can.
     primeZoomFromMapIfAvailable();
@@ -160,6 +288,8 @@ const PostModule = (function() {
       if (!data || !data.mode) return;
       currentMode = data.mode;
       applyMode(currentMode);
+      // Persist last used mode so refresh returns to the same panel.
+      try { mergeUiState({ mode: currentMode }); } catch (_eModeStore) {}
     });
 
     App.on('map:ready', function(data) {
@@ -169,6 +299,22 @@ const PostModule = (function() {
           lastZoom = map.getZoom();
           updatePostsButtonState();
         }
+        // If we were waiting for zoom gating to allow restoring Posts mode, try now.
+        try { tryRestorePendingMode(); } catch (_eModeRestore) {}
+        // If the page loads directly into a saved zoom>=threshold view, Mapbox may not emit a
+        // boundsChanged/move event on its own. That would leave posts/map-cards empty until the user nudges the map.
+        // Fix: kick an initial in-area load once on map:ready when we're already above threshold.
+        try {
+          var threshold0 = getPostsMinZoom();
+          if (typeof lastZoom === 'number' && lastZoom >= threshold0) {
+            var bInit = getMapBounds();
+            var boundsKeyInit = bInit ? boundsToKey(bInit, 2) : '';
+            if (boundsKeyInit && boundsKeyInit !== lastLoadedBoundsKey && !postsLoading && !cachedPosts) {
+              lastLoadedBoundsKey = boundsKeyInit;
+              applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
+            }
+          }
+        } catch (_eInitLoad) {}
         // Re-render markers if we have cached posts AND above zoom threshold
         var threshold = getPostsMinZoom();
         if (cachedPosts && cachedPosts.length && lastZoom >= threshold) {
@@ -534,6 +680,10 @@ const PostModule = (function() {
             if (focusEl2 && typeof focusEl2.focus === 'function') focusEl2.focus();
           } catch (_eFocus2) {}
         }
+
+        // Restore the last scroll position for this panel (once per page load).
+        // This makes refresh feel like "nothing moved" for users browsing long lists.
+        try { applySavedPanelScroll(panelKey); } catch (_eScrollRestore) {}
       });
       return;
     }
