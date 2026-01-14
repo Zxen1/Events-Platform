@@ -1336,6 +1336,9 @@ const MapModule = (function() {
   let clusterIconLoaded = false;
   let lastClusterBucketKey = null;
   let lastClusterRequestKey = null;
+  let clusterRequestToken = 0;
+  let clusterInFlightKey = null;
+  let clusterAbort = null;
 
   /**
    * Get cluster grid size based on zoom level
@@ -1500,23 +1503,48 @@ const MapModule = (function() {
     
     // Skip only if BOTH bucket AND filter key match
     if (lastClusterRequestKey === requestKey) return;
-    
-    // Clear clusters immediately so we never show wrong numbers during calculation.
-    // (No loading GIF on clusters; labels simply disappear until correct data arrives.)
-    source.setData({ type: 'FeatureCollection', features: [] });
 
-    // Fetch cluster data from server
-    fetchClusterData(zoomValue).then(function(result) {
-      var data = buildClusterFeatureCollectionFromServer(result.clusters);
-      source.setData(data);
-      lastClusterBucketKey = bucketKey;
-      lastClusterRequestKey = requestKey;
-      
-      // Emit cluster count for header badge (fast initial load)
-      if (typeof result.totalCount === 'number') {
-        App.emit('clusters:countUpdated', { total: result.totalCount });
-      }
-    });
+    // If the same request is already in-flight, don't start another.
+    if (clusterInFlightKey === requestKey) return;
+    
+    clusterRequestToken++;
+    var myToken = clusterRequestToken;
+    clusterInFlightKey = requestKey;
+
+    // Cancel any in-flight request (map moves / filter changes can happen quickly).
+    try { if (clusterAbort) clusterAbort.abort(); } catch (_eAbort) {}
+    clusterAbort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+
+    // Keep existing clusters visible until new correct data arrives (no flashing).
+    fetchClusterData(zoomValue, clusterAbort ? clusterAbort.signal : null)
+      .then(function(result) {
+        if (myToken !== clusterRequestToken) return;
+        if (clusterInFlightKey !== requestKey) return;
+
+        var data = buildClusterFeatureCollectionFromServer(result.clusters);
+        source.setData(data);
+        lastClusterBucketKey = bucketKey;
+        lastClusterRequestKey = requestKey;
+
+        // Emit cluster count for header badge (fast initial load)
+        if (typeof result.totalCount === 'number') {
+          App.emit('clusters:countUpdated', { total: result.totalCount });
+        }
+      })
+      .catch(function(err) {
+        // Abort is expected during rapid interactions; ignore.
+        try {
+          if (err && (err.name === 'AbortError' || String(err.message || '').toLowerCase().indexOf('abort') !== -1)) {
+            return;
+          }
+        } catch (_eName) {}
+        console.error('[Map] Cluster fetch failed:', err);
+      })
+      .finally(function() {
+        if (myToken === clusterRequestToken && clusterInFlightKey === requestKey) {
+          clusterInFlightKey = null;
+        }
+      });
   }
 
   function getClusterFilterKey() {
@@ -1532,7 +1560,7 @@ const MapModule = (function() {
    * Fetch cluster data from server
    * Returns { clusters: Array, totalCount: number }
    */
-  function fetchClusterData(zoom) {
+  function fetchClusterData(zoom, signal) {
     // Include current filters so clusters are never wrong.
     // Filters are loaded from localStorage so they apply before the filter panel is opened.
     var qs = new URLSearchParams();
@@ -1557,7 +1585,7 @@ const MapModule = (function() {
       }
     } catch (_e) {}
 
-    return fetch('/gateway.php?' + qs.toString())
+    return fetch('/gateway.php?' + qs.toString(), signal ? { signal: signal } : undefined)
       .then(function(response) { return response.json(); })
       .then(function(data) {
         return {
