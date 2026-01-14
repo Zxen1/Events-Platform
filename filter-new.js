@@ -384,6 +384,21 @@ const FilterModule = (function() {
     
     function openPanel() {
         if (!panelEl || !contentEl) return;
+
+        // Avoid "jolt": reserve the summary line before the slide-in finishes.
+        // Show last known counts immediately if we have them.
+        try {
+            if (summaryEl && typeof lastFilteredCount === 'number' && typeof lastTotalCount === 'number') {
+                var areaActive = false;
+                try {
+                    if (window.MapModule && typeof MapModule.getMap === 'function') {
+                        var m = MapModule.getMap();
+                        if (m && typeof m.getZoom === 'function' && m.getZoom() >= 8) areaActive = true;
+                    }
+                } catch (_eArea) {}
+                updateFilterCounts(lastFilteredCount, lastTotalCount, areaActive);
+            }
+        } catch (_eSummary) {}
         
         panelEl.classList.add('show');
         panelEl.setAttribute('aria-hidden', 'false');
@@ -458,14 +473,11 @@ const FilterModule = (function() {
         
         // Update summary message in filter panel
         if (summaryEl) {
-            var scopeText = areaActive ? 'in this area' : 'worldwide';
-            if (total === 0) {
-                summaryEl.textContent = 'No results ' + scopeText + '.';
-            } else if (filtered === total) {
-                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' ' + scopeText + '.';
-            } else {
-                summaryEl.textContent = filtered + ' result' + (filtered !== 1 ? 's' : '') + ' showing out of ' + total + ' ' + scopeText + '.';
-            }
+            var scopeText = areaActive ? 'in this map area' : 'worldwide';
+            summaryEl.textContent =
+                String(filtered) + ' result' + (filtered !== 1 ? 's' : '') +
+                ' showing out of ' + String(total) +
+                ' ' + scopeText + '.';
         }
         
         // Update header filter button badge
@@ -1155,10 +1167,22 @@ const FilterModule = (function() {
             }
         });
 
-        // Category header counts = sum of subs
+        // Category header counts = sum of ENABLED subs (fractions).
+        // Sub counts always show "would be" counts regardless of enabled state.
         container.querySelectorAll('.filter-categoryfilter-accordion').forEach(function(acc) {
             var total = 0;
+            var headerToggle = acc.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle input');
+            var catEnabled = !!(headerToggle && headerToggle.checked);
             acc.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                // If category is disabled, its subs are disabled for filtering, but we still show the
+                // fraction of enabled subs (their internal toggle state) as requested.
+                var subToggle = opt.querySelector('.filter-categoryfilter-toggle input');
+                var subEnabled = !!(subToggle && subToggle.checked);
+                if (!catEnabled || !subEnabled) {
+                    // When category is enabled: only enabled subs count.
+                    // When category is disabled: still only enabled subs count (fraction display).
+                    if (!subEnabled) return;
+                }
                 var key = opt && opt.dataset ? (opt.dataset.subcategoryKey || '') : '';
                 if (!key) return;
                 if (facetMap.hasOwnProperty(key)) {
@@ -1445,6 +1469,7 @@ const FilterModule = (function() {
 
         // Authoritative counts (worldwide + in-area) from server.
         var countsToken = 0;
+        var countsAbort = null;
         function requestCounts() {
             countsToken++;
             var myToken = countsToken;
@@ -1492,7 +1517,11 @@ const FilterModule = (function() {
                 setCategoryCountsLoading(true);
             }, 120);
 
-            fetch('/gateway.php?' + qs.toString())
+            // Cancel any in-flight count request (counters must be cancellable).
+            try { if (countsAbort) countsAbort.abort(); } catch (_eAbort) {}
+            countsAbort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+
+            fetch('/gateway.php?' + qs.toString(), countsAbort ? { signal: countsAbort.signal } : undefined)
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
                     if (myToken !== countsToken) return;

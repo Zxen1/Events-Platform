@@ -97,87 +97,85 @@ try {
     }
   }
 
-  // Base visibility rules (same spirit as get-posts.php): paid + clean
-  $whereBase = [];
-  $paramsBase = [];
-  $typesBase = '';
+  // Baseline (NOT user filters): visibility/moderation/payment/deleted only.
+  // All counts are MAP CARDS (post_map_cards rows), not posts.
+  $whereBaseline = [];
+  $paramsBaseline = [];
+  $typesBaseline = '';
 
-  $whereBase[] = 'p.deleted_at IS NULL';
-  $whereBase[] = 'p.payment_status = ?';
-  $paramsBase[] = 'paid';
-  $typesBase .= 's';
+  $whereBaseline[] = 'p.deleted_at IS NULL';
+  $whereBaseline[] = 'p.payment_status = ?';
+  $paramsBaseline[] = 'paid';
+  $typesBaseline .= 's';
 
   if ($includeExpired) {
-    $whereBase[] = 'p.visibility IN (?, ?)';
-    $paramsBase[] = 'active';
-    $paramsBase[] = 'expired';
-    $typesBase .= 'ss';
+    $whereBaseline[] = 'p.visibility IN (?, ?)';
+    $paramsBaseline[] = 'active';
+    $paramsBaseline[] = 'expired';
+    $typesBaseline .= 'ss';
   } else {
-    $whereBase[] = 'p.visibility = ?';
-    $paramsBase[] = 'active';
-    $typesBase .= 's';
+    $whereBaseline[] = 'p.visibility = ?';
+    $paramsBaseline[] = 'active';
+    $typesBaseline .= 's';
   }
 
-  // Moderation: include clean + pending (matches get-posts.php default)
-  $whereBase[] = 'p.moderation_status IN (?, ?)';
-  $paramsBase[] = 'clean';
-  $paramsBase[] = 'pending';
-  $typesBase .= 'ss';
+  $whereBaseline[] = 'p.moderation_status IN (?, ?)';
+  $paramsBaseline[] = 'clean';
+  $paramsBaseline[] = 'pending';
+  $typesBaseline .= 'ss';
 
-  // Keyword filter (applies to map card + checkout title)
+  // Scope = baseline + (bounds if zoom>=8)
+  $whereScope = $whereBaseline;
+  $paramsScope = $paramsBaseline;
+  $typesScope = $typesBaseline;
+  if ($bounds !== null) {
+    $whereScope[] = 'pmc.latitude BETWEEN ? AND ?';
+    $whereScope[] = 'pmc.longitude BETWEEN ? AND ?';
+    $paramsScope[] = $bounds['sw_lat'];
+    $paramsScope[] = $bounds['ne_lat'];
+    $paramsScope[] = $bounds['sw_lng'];
+    $paramsScope[] = $bounds['ne_lng'];
+    $typesScope .= 'dddd';
+  }
+
+  // User filters (excluding subcategory selection) apply on top of scope.
+  $whereFiltered = $whereScope;
+  $paramsFiltered = $paramsScope;
+  $typesFiltered = $typesScope;
+
   if ($keyword !== '') {
     $kw = '%' . $keyword . '%';
-    $whereBase[] = '(pmc.title LIKE ? OR pmc.description LIKE ? OR pmc.venue_name LIKE ? OR pmc.city LIKE ? OR p.checkout_title LIKE ?)';
-    $paramsBase[] = $kw; $paramsBase[] = $kw; $paramsBase[] = $kw; $paramsBase[] = $kw; $paramsBase[] = $kw;
-    $typesBase .= 'sssss';
+    $whereFiltered[] = '(pmc.title LIKE ? OR pmc.description LIKE ? OR pmc.venue_name LIKE ? OR pmc.city LIKE ? OR p.checkout_title LIKE ?)';
+    $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw;
+    $typesFiltered .= 'sssss';
   }
 
-  // Date range filter (correct source of truth: post_sessions)
   if ($dateStart !== '' || $dateEnd !== '') {
     $start = $dateStart !== '' ? $dateStart : $dateEnd;
     $end = $dateEnd !== '' ? $dateEnd : $dateStart;
-    if ($start === '' || $end === '') {
-      // Should not happen, but guard
-      $start = $dateStart !== '' ? $dateStart : $dateEnd;
-      $end = $start;
-    }
-    $whereBase[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = pmc.id AND ps.session_date BETWEEN ? AND ?)';
-    $paramsBase[] = $start;
-    $paramsBase[] = $end;
-    $typesBase .= 'ss';
+    if ($start === '' || $end === '') { $end = $start; }
+    $whereFiltered[] = 'EXISTS (SELECT 1 FROM post_sessions ps WHERE ps.map_card_id = pmc.id AND ps.session_date BETWEEN ? AND ?)';
+    $paramsFiltered[] = $start;
+    $paramsFiltered[] = $end;
+    $typesFiltered .= 'ss';
   }
 
-  // Price range filter (correct source: pricing tables)
   if ($minPrice !== null || $maxPrice !== null) {
     $min = $minPrice !== null ? $minPrice : null;
     $max = $maxPrice !== null ? $maxPrice : null;
     if ($min !== null && $max !== null) {
-      $whereBase[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price BETWEEN ? AND ?))';
-      $paramsBase[] = $min; $paramsBase[] = $max; $paramsBase[] = $min; $paramsBase[] = $max;
-      $typesBase .= 'dddd';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price BETWEEN ? AND ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price BETWEEN ? AND ?))';
+      $paramsFiltered[] = $min; $paramsFiltered[] = $max; $paramsFiltered[] = $min; $paramsFiltered[] = $max;
+      $typesFiltered .= 'dddd';
     } elseif ($min !== null) {
-      $whereBase[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price >= ?))';
-      $paramsBase[] = $min; $paramsBase[] = $min;
-      $typesBase .= 'dd';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price >= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price >= ?))';
+      $paramsFiltered[] = $min; $paramsFiltered[] = $min;
+      $typesFiltered .= 'dd';
     } elseif ($max !== null) {
-      $whereBase[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price <= ?))';
-      $paramsBase[] = $max; $paramsBase[] = $max;
-      $typesBase .= 'dd';
+      $whereFiltered[] = '(EXISTS (SELECT 1 FROM post_ticket_pricing tp WHERE tp.map_card_id = pmc.id AND tp.price <= ?) OR EXISTS (SELECT 1 FROM post_item_pricing ip WHERE ip.map_card_id = pmc.id AND ip.item_price <= ?))';
+      $paramsFiltered[] = $max; $paramsFiltered[] = $max;
+      $typesFiltered .= 'dd';
     }
-  }
-
-  // Area bounds are applied only to the "area" counts (not to worldwide facet counts).
-  $whereArea = $whereBase;
-  $paramsArea = $paramsBase;
-  $typesArea = $typesBase;
-  if ($bounds !== null) {
-    $whereArea[] = 'pmc.latitude BETWEEN ? AND ?';
-    $whereArea[] = 'pmc.longitude BETWEEN ? AND ?';
-    $paramsArea[] = $bounds['sw_lat'];
-    $paramsArea[] = $bounds['ne_lat'];
-    $paramsArea[] = $bounds['sw_lng'];
-    $paramsArea[] = $bounds['ne_lng'];
-    $typesArea .= 'dddd';
   }
 
   // Selection (subcategory filter) applies only to "showing", not to facet counts.
@@ -193,41 +191,40 @@ try {
     }
   }
 
-  $baseWhereSql = implode(' AND ', $whereBase);
-  $areaWhereSql = implode(' AND ', $whereArea);
-  $showingWhereSqlWorld = $baseWhereSql . (count($whereSelection) ? (' AND ' . implode(' AND ', $whereSelection)) : '');
-  $showingWhereSqlArea = $areaWhereSql . (count($whereSelection) ? (' AND ' . implode(' AND ', $whereSelection)) : '');
+  $scopeWhereSql = implode(' AND ', $whereScope);
+  $filteredWhereSql = implode(' AND ', $whereFiltered);
+  $showingWhereSql = $filteredWhereSql . (count($whereSelection) ? (' AND ' . implode(' AND ', $whereSelection)) : '');
 
-  // total_available: baseline + (bounds if areaActive)
+  // total_available: baseline only (plus scope bounds if zoom>=8)
   $totalAvailableSql = "
     SELECT COUNT(*) AS total
     FROM post_map_cards pmc
     INNER JOIN posts p ON pmc.post_id = p.id
-    WHERE {$areaWhereSql}
+    WHERE {$scopeWhereSql}
   ";
   $stmtAvail = $mysqli->prepare($totalAvailableSql);
   if (!$stmtAvail) fail(500, 'Prepare failed (total_available)');
-  if ($typesArea !== '') {
-    $paramsAreaBind = $paramsArea;
-    bind_params_array($stmtAvail, $typesArea, $paramsAreaBind);
+  if ($typesScope !== '') {
+    $paramsScopeBind = $paramsScope;
+    bind_params_array($stmtAvail, $typesScope, $paramsScopeBind);
   }
   $stmtAvail->execute();
   $resAvail = $stmtAvail->get_result();
   $totalAvailable = $resAvail ? (int)($resAvail->fetch_assoc()['total'] ?? 0) : 0;
   $stmtAvail->close();
 
-  // total_showing: all filters + (bounds if areaActive)
+  // total_showing: baseline + user filters + selection (plus scope bounds if zoom>=8)
   $totalShowingSql = "
     SELECT COUNT(*) AS total
     FROM post_map_cards pmc
     INNER JOIN posts p ON pmc.post_id = p.id
-    WHERE " . ($bounds !== null ? $showingWhereSqlArea : $showingWhereSqlWorld) . "
+    WHERE {$showingWhereSql}
   ";
   $stmtShow = $mysqli->prepare($totalShowingSql);
   if (!$stmtShow) fail(500, 'Prepare failed (total_showing)');
 
-  $typesShow = ($bounds !== null ? $typesArea : $typesBase) . $typesSelection;
-  $paramsShow = array_merge(($bounds !== null ? $paramsArea : $paramsBase), $paramsSelection);
+  $typesShow = $typesFiltered . $typesSelection;
+  $paramsShow = array_merge($paramsFiltered, $paramsSelection);
   if ($typesShow !== '') {
     $paramsShowBind = $paramsShow;
     bind_params_array($stmtShow, $typesShow, $paramsShowBind);
@@ -237,19 +234,19 @@ try {
   $totalShowing = $resShow ? (int)($resShow->fetch_assoc()['total'] ?? 0) : 0;
   $stmtShow->close();
 
-  // facet_subcategory_counts (worldwide, ignore selection; respect all other filters)
+  // facet_subcategory_counts (current scope, ignore selection; respect all other filters)
   $facetSql = "
     SELECT pmc.subcategory_key AS subcategory_key, COUNT(*) AS total
     FROM post_map_cards pmc
     INNER JOIN posts p ON pmc.post_id = p.id
-    WHERE {$baseWhereSql}
+    WHERE {$filteredWhereSql}
     GROUP BY pmc.subcategory_key
   ";
   $stmtFacet = $mysqli->prepare($facetSql);
   if (!$stmtFacet) fail(500, 'Prepare failed (facet)');
-  if ($typesBase !== '') {
-    $paramsBaseBind = $paramsBase;
-    bind_params_array($stmtFacet, $typesBase, $paramsBaseBind);
+  if ($typesFiltered !== '') {
+    $paramsFilteredBind = $paramsFiltered;
+    bind_params_array($stmtFacet, $typesFiltered, $paramsFilteredBind);
   }
   $stmtFacet->execute();
   $resFacet = $stmtFacet->get_result();
