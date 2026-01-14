@@ -135,6 +135,16 @@ const PostModule = (function() {
       postListEl.className = 'post-list';
       postPanelContentEl.appendChild(postListEl);
     }
+
+    // Ensure panels are keyboard-focusable so arrow keys / PageUp/Down can scroll.
+    // (Divs are not focusable by default.)
+    try { postListEl.setAttribute('tabindex', '0'); } catch (_eTab0) {}
+    try { recentPanelContentEl.setAttribute('tabindex', '0'); } catch (_eTab1) {}
+
+    // Disable BottomSlack click-hold behavior inside these panels (it can block scrolling).
+    // The filter/admin/member panels are where the anti-jank spacer is actually needed.
+    try { postListEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack0) {}
+    try { recentPanelContentEl.setAttribute('data-bottomslack', 'false'); } catch (_eSlack1) {}
   }
 
   function bindAppEvents() {
@@ -251,6 +261,41 @@ const PostModule = (function() {
       // Keep existing sort key if available; default to 'az'.
       sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'az') : 'az');
     });
+
+    // Panel-level keyboard behavior (Post/Recent):
+    // - Escape closes open post first, then returns to map mode
+    // Note: index-new.js global Escape handler does not manage Post/Recent panels.
+    document.addEventListener('keydown', function(e) {
+      try {
+        if (!e || (e.key !== 'Escape')) return;
+        if (e.defaultPrevented) return;
+        if (currentMode !== 'posts' && currentMode !== 'recent') return;
+
+        var container = (currentMode === 'recent') ? recentPanelContentEl : postListEl;
+        if (!container) return;
+
+        // Only handle if the event originated inside the panel (avoid closing while typing elsewhere).
+        var t = e.target;
+        if (!t || !container.contains(t)) return;
+
+        // 1) Close an open post if present
+        var open = container.querySelector('.open-post[data-id]');
+        if (open) {
+          var pid = open.getAttribute('data-id');
+          if (pid) {
+            closePost(pid);
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+        }
+
+        // 2) Otherwise return to map mode
+        forceMapMode();
+        e.preventDefault();
+        e.stopPropagation();
+      } catch (_e) {}
+    }, true);
   }
 
   var lastMapHoverPostIds = [];
@@ -472,6 +517,19 @@ const PostModule = (function() {
         if (m.token !== token) return;
         contentEl.classList.remove(hiddenClass);
         contentEl.classList.add(visibleClass);
+
+        // Focus the scroll container so wheel + arrow keys target the panel immediately.
+        try {
+          var focusEl = (panelKey === 'post') ? postListEl : contentEl;
+          if (focusEl && typeof focusEl.focus === 'function') {
+            focusEl.focus({ preventScroll: true });
+          }
+        } catch (_eFocus) {
+          try {
+            var focusEl2 = (panelKey === 'post') ? postListEl : contentEl;
+            if (focusEl2 && typeof focusEl2.focus === 'function') focusEl2.focus();
+          } catch (_eFocus2) {}
+        }
       });
       return;
     }
@@ -805,6 +863,8 @@ const PostModule = (function() {
     el.className = 'post-card';
     el.dataset.id = String(post.id);
     el.dataset.postKey = post.post_key || '';
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
 
     // Get first map card data
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
@@ -860,6 +920,16 @@ const PostModule = (function() {
     el.addEventListener('click', function(e) {
       // Don't open if clicking favorite button
       if (e.target.closest('.post-card-button-fav')) return;
+      openPost(post, { originEl: el });
+    });
+
+    // Keyboard: Enter/Space opens card (matches button behavior)
+    el.addEventListener('keydown', function(e) {
+      if (!e) return;
+      var k = String(e.key || e.code || '');
+      if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
+      if (e.target && e.target.closest && e.target.closest('.post-card-button-fav')) return;
+      e.preventDefault();
       openPost(post, { originEl: el });
     });
 
@@ -2495,6 +2565,8 @@ const PostModule = (function() {
     var el = document.createElement('article');
     el.className = 'recent-card';
     el.dataset.id = String(entry.id);
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
 
     // Get data from post or entry
     var title = entry.title || (post && post.checkout_title) || '';
@@ -2557,6 +2629,17 @@ const PostModule = (function() {
           }
         });
       }
+    });
+
+    // Keyboard: Enter/Space opens card (matches button behavior)
+    el.addEventListener('keydown', function(e) {
+      if (!e) return;
+      var k = String(e.key || e.code || '');
+      if (k !== 'Enter' && k !== ' ' && k !== 'Spacebar' && k !== 'Space') return;
+      if (e.target && e.target.closest && e.target.closest('.recent-card-button-fav')) return;
+      e.preventDefault();
+      // Reuse click logic path
+      try { el.click(); } catch (_eClick) {}
     });
 
     // Favorite toggle
@@ -2650,14 +2733,15 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function attachButtonAnchors() {
-    if (!postPanelContentEl || !recentPanelContentEl) return;
+    if (!postListEl || !recentPanelContentEl) return;
     if (!window.BottomSlack) {
       throw new Error('[Post] BottomSlack is required (components-new.js).');
     }
 
     // Same options used elsewhere (keep site-wide feel consistent).
     var options = { stopDelayMs: 180, clickHoldMs: 250, scrollbarFadeMs: 160 };
-    BottomSlack.attach(postPanelContentEl, options);
+    // Attach to the actual scroll containers.
+    BottomSlack.attach(postListEl, options);
     BottomSlack.attach(recentPanelContentEl, options);
   }
 
