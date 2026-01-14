@@ -2297,10 +2297,9 @@ const PostModule = (function() {
   function sharePost(post) {
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
     var title = (mapCard && mapCard.title) || post.checkout_title || '';
-    // Use a query-string deep link to avoid 404s on servers without /post/* routing.
-    // Requirement: viewing a post link should open that post in the Recent panel.
+    // Share the "pretty" link. Root .htaccess redirects it to `/?post=<key>` for the SPA deep-link.
     var key = post.post_key || post.id;
-    var url = window.location.origin + '/?post=' + encodeURIComponent(String(key));
+    var url = window.location.origin + '/post/' + encodeURIComponent(String(key));
 
     // Use Web Share API if available, otherwise copy to clipboard
     if (navigator.share) {
@@ -2908,6 +2907,18 @@ const PostModule = (function() {
         return;
       }
       openPost(post, { fromRecent: true, originEl: null });
+
+      // Clean the address bar after we’ve used the deep link so the URL doesn’t stay “stuck”.
+      // (One-page app UX: keep it looking like the homepage.)
+      try {
+        var path = String(window.location.pathname || '/');
+        // If the server routed /post/<key> to index.html directly, normalize back to "/".
+        if (path.indexOf('/post/') !== -1) {
+          path = path.split('/post/')[0] || '/';
+          if (!path.endsWith('/')) path += '/';
+        }
+        window.history.replaceState({}, document.title, path);
+      } catch (_eUrl) {}
     });
   }
 
