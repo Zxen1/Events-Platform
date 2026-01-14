@@ -204,7 +204,8 @@ const FilterModule = (function() {
                         var subToggleSlider = subToggleLabel ? subToggleLabel.querySelector('span') : null;
                         if (subToggleInput && subToggleSlider) {
                             subToggleInput.checked = catState.subs[subKey];
-                            subToggleSlider.classList.toggle('component-small-switch-slider--on', catState.subs[subKey]);
+                            // Project rule: category filter uses BIG switches (no small switches).
+                            subToggleSlider.classList.toggle('component-big-switch-slider--on', catState.subs[subKey]);
                             opt.classList.toggle('filter-categoryfilter-accordion-option--suboff', !catState.subs[subKey]);
                         }
                         opt.classList.toggle('filter-categoryfilter-accordion-option--disabled', !catState.enabled);
@@ -626,8 +627,9 @@ const FilterModule = (function() {
             var slider = toggle.querySelector('span');
             if (input) input.checked = true;
             if (slider) {
+                // Project rule: category filter uses BIG switches (no small switches).
+                slider.classList.remove('component-big-switch-slider--on');
                 slider.classList.add('component-big-switch-slider--on');
-                slider.classList.add('component-small-switch-slider--on');
             }
         });
         
@@ -635,6 +637,11 @@ const FilterModule = (function() {
         var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
         accordions.forEach(function(accordion) {
             accordion.classList.remove('filter-categoryfilter-accordion--disabled');
+            var header = accordion.querySelector('.filter-categoryfilter-accordion-header');
+            if (header) header.classList.remove('filter-categoryfilter-accordion-header--disabled');
+            accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
+                opt.classList.remove('filter-categoryfilter-accordion-option--disabled');
+            });
         });
         
         applyFilters();
@@ -1298,8 +1305,9 @@ const FilterModule = (function() {
                         optCount.className = 'filter-categoryfilter-count';
                         optCount.textContent = '';
                         
+                        // Project rule: category filter uses BIG switches (no small switches).
                         var optSwitch = SwitchComponent.create({
-                            size: 'small',
+                            size: 'big',
                             checked: true,
                             onChange: function() {
                                 // Grey out when subcategory is off (but still allow toggling back on)
@@ -1346,6 +1354,12 @@ const FilterModule = (function() {
                     
                     // Category toggle area click - disable and force close
                     headerToggleArea.addEventListener('click', function(e) {
+                        // IMPORTANT:
+                        // SwitchComponent renders a <label><input type="checkbox">...</label>.
+                        // Clicking it will toggle the checkbox by default. We also toggle manually below.
+                        // Without preventDefault(), that can double-toggle and leave the checkbox unchanged,
+                        // which breaks category filtering at zoom 8+ (subcategoryKeys won't update).
+                        e.preventDefault();
                         e.stopPropagation();
                         headerSwitch.toggle();
                         if (headerSwitch.isChecked()) {
