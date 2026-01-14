@@ -142,8 +142,10 @@ const FilterModule = (function() {
         var keys = [];
         var accordions = container.querySelectorAll('.filter-categoryfilter-accordion');
         accordions.forEach(function(accordion) {
-            var headerToggle = accordion.querySelector('.filter-categoryfilter-accordion-header-togglearea .filter-categoryfilter-toggle input');
-            var catEnabled = headerToggle && headerToggle.checked;
+            // Category OFF => none of its subs are included.
+            // Use the accordion disabled class as the source-of-truth (it is what the UI sets),
+            // because relying on the checkbox alone can drift when events are cancelled/handled.
+            var catEnabled = !accordion.classList.contains('filter-categoryfilter-accordion--disabled');
             if (!catEnabled) return;
             
             accordion.querySelectorAll('.filter-categoryfilter-accordion-option').forEach(function(opt) {
