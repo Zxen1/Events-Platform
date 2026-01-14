@@ -97,20 +97,19 @@ const HeaderModule = (function() {
         // - Must not do any network work
         var st = loadSavedFiltersSnapshot() || {};
         
-        // Text/date/expired/price filters (matches FilterModule reset button logic)
+        // Text/date/expired/price filters (EXACTLY matches FilterModule "Reset Filters" active logic)
         var hasKeyword = !!(st.keyword && String(st.keyword).trim() !== '');
         var hasMinPrice = !!(st.minPrice && String(st.minPrice).trim() !== '');
         var hasMaxPrice = !!(st.maxPrice && String(st.maxPrice).trim() !== '');
-        var hasDate = !!(st.dateStart || st.dateEnd);
-        var hasExpired = !!st.expired;
-        
-        // Category/subcategory toggles (if any off, it's active filtering)
-        var hasCategoryFiltering = hasAnyCategoryOrSubcategoryTogglesOff(st.categories);
-        
-        // Map area (scope) is a filter at zoom>=8
-        var hasMapArea = isMapAreaFilterActive();
-        
-        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasCategoryFiltering || hasMapArea;
+        var hasDate = !!(
+            (st.dateStart && String(st.dateStart).trim() !== '') ||
+            (st.dateEnd && String(st.dateEnd).trim() !== '')
+        );
+        // Be strict: localStorage can contain strings ("false"/"0") depending on DB snapshots.
+        // Only treat expired as active when it is truthy in a boolean sense.
+        var exp = st.expired;
+        var hasExpired = (exp === true || exp === 1 || exp === '1' || String(exp).toLowerCase() === 'true');
+        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired;
     }
     
     function setHeaderFilterIconActive(active) {
@@ -424,8 +423,6 @@ const HeaderModule = (function() {
         refreshHeaderFilterActiveVisual();
         
         // Keep it updated as filters/scope change.
-        App.on('map:ready', function() { refreshHeaderFilterActiveVisual(); });
-        App.on('map:boundsChanged', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:changed', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetAll', function() { refreshHeaderFilterActiveVisual(); });
         App.on('filter:resetCategories', function() { refreshHeaderFilterActiveVisual(); });

@@ -591,11 +591,19 @@ const PostModule = (function() {
       var showPosts = (mode === 'posts');
       togglePanel(postPanelEl, postPanelContentEl, 'post', showPosts);
       if (showPosts) {
-        // Load posts from API (or use cached data)
-        if (cachedPosts && cachedPosts.length) {
-          renderPostList(cachedPosts);
+        // IMPORTANT:
+        // At zoom >= threshold, Posts are an "in this map area" view (bounds-filtered).
+        // Do NOT load worldwide posts on open/refresh — that causes the "whole world" flash
+        // until the user moves the map and triggers boundsChanged.
+        var threshold = getPostsMinZoom();
+        if (typeof lastZoom === 'number' && lastZoom >= threshold) {
+          applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
         } else {
-          loadPosts();
+          // Fallback for safety: if we somehow show Posts without knowing zoom yet,
+          // render cached data if any, otherwise wait for map:ready/boundsChanged to drive the first load.
+          if (cachedPosts && cachedPosts.length) {
+            renderPostList(cachedPosts);
+          }
         }
       }
     }
@@ -3301,7 +3309,34 @@ const PostModule = (function() {
       throw new Error('[Post] App.getState and App.getImageUrl are required to load system images.');
     }
 
-    var sys = App.getState('system_images') || {};
+    // Startup settings (including system_images) are loaded async.
+    // When panels are restored early on boot, this function can be called before system_images exists.
+    // In that case, wait for App.whenStartupSettingsReady() then retry once.
+    var sys = App.getState('system_images');
+    if (!sys || typeof sys !== 'object') {
+      try {
+        if (typeof App.whenStartupSettingsReady === 'function') {
+          // Only attach one waiter per element/key to avoid repeated retries.
+          var mark = (folderKey || '') + ':' + (systemImageKey || '');
+          if (imgEl.dataset && imgEl.dataset.awaitingSystemImages === mark) return;
+          if (imgEl.dataset) imgEl.dataset.awaitingSystemImages = mark;
+
+          App.whenStartupSettingsReady().then(function() {
+            try {
+              // If the element is still in the DOM, retry normally (now system_images should exist).
+              if (!imgEl || !imgEl.isConnected) return;
+              if (imgEl.dataset) delete imgEl.dataset.awaitingSystemImages;
+              applySystemImage(imgEl, folderKey, systemImageKey);
+            } catch (e) {
+              console.error(e);
+            }
+          });
+          return;
+        }
+      } catch (_eWait) {}
+      throw new Error('[Post] system_images not loaded and App.whenStartupSettingsReady() is unavailable.');
+    }
+    sys = sys || {};
     var filename = sys && sys[systemImageKey] ? String(sys[systemImageKey]) : '';
     if (!filename) {
       imgEl.dataset.missingSystemImageKey = systemImageKey;
