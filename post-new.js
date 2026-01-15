@@ -1270,6 +1270,21 @@ const PostModule = (function() {
     // Show empty state if no posts
     if (!posts || !posts.length) {
       renderPostsEmptyState();
+
+      // CRITICAL SYNC RULE:
+      // At zoom >= postsLoadZoom, map cards MUST reflect the same result set as the Postcards.
+      // If the server returns 0 results (e.g., category/subcategory switched off), we must clear
+      // any existing map card markers immediately (otherwise old markers "stick" and appear unfiltered).
+      try {
+        var threshold0 = getPostsMinZoom();
+        if (typeof lastZoom === 'number' && lastZoom >= threshold0) {
+          if (window.MapModule && typeof MapModule.clearAllMapCardMarkers === 'function') {
+            MapModule.clearAllMapCardMarkers();
+          }
+          lastRenderedVenueMarkerSigByKey = {};
+        }
+      } catch (_eClear0) {}
+
       return;
     }
 
@@ -1333,7 +1348,8 @@ const PostModule = (function() {
 
     var title = mapCard.title || post.checkout_title || '';
     var venueName = mapCard.venue_name || '';
-    var subcategoryKey = post.subcategory_key || mapCard.subcategory_key || '';
+    // Prefer map-card key (mc.subcategory_key) — it's the server-side filter key at zoom>=postsLoadZoom.
+    var subcategoryKey = mapCard.subcategory_key || post.subcategory_key || '';
 
     // Get icon URL from API response (subcategory_icon_url) - primary source
     // Falls back to global subcategoryIconPaths lookup if not in response
@@ -1488,10 +1504,21 @@ const PostModule = (function() {
 
     // Remove markers that are no longer needed
     if (mapModule.removeMapCardMarker) {
-      Object.keys(lastRenderedVenueMarkerSigByKey || {}).forEach(function(venueKey) {
-        if (!nextSigByKey[venueKey]) {
-          mapModule.removeMapCardMarker(venueKey);
+      // IMPORTANT: removals must be based on what markers actually exist on the map,
+      // not only on PostModule's lastRenderedVenueMarkerSigByKey (which can drift after refresh/rebuilds).
+      var existingKeys = [];
+      try {
+        if (typeof mapModule.getMapCardMarkerVenueKeys === 'function') {
+          existingKeys = mapModule.getMapCardMarkerVenueKeys() || [];
+        } else {
+          existingKeys = Object.keys(lastRenderedVenueMarkerSigByKey || {});
         }
+      } catch (_eKeys) {
+        existingKeys = Object.keys(lastRenderedVenueMarkerSigByKey || {});
+      }
+
+      existingKeys.forEach(function(venueKey) {
+        if (!nextSigByKey[venueKey]) mapModule.removeMapCardMarker(venueKey);
       });
     }
 

@@ -2727,6 +2727,8 @@ const MapModule = (function() {
     clearAllMapCardMarkers,
     clearActiveMapCards,
     setActiveMapCard,
+    // Expose current marker keys so PostModule can remove stale markers without "drift".
+    getMapCardMarkerVenueKeys: () => Array.from(mapCardMarkers.keys()),
     // MapCards-style hover API (compat layer for PostModule)
     setMapCardHover: (postId) => onMapCardHoverByPostId(postId, true),
     removeMapCardHover: (postId) => onMapCardHoverByPostId(postId, false),
