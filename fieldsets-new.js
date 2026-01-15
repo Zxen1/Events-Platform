@@ -677,18 +677,37 @@ const FieldsetBuilder = (function(){
         // Extract raw number from input, handling different decimal separators
         function parseInput(val) {
             var str = String(val || '').trim();
-            // Remove symbol and currency code
+            // Remove symbol and currency code - keep only digits, comma, period, minus
             str = str.replace(/[^0-9.,\-]/g, '');
-            // Normalize: if comma is the decimal separator, convert it
-            if (currentFormatting && currentFormatting.decimalSeparator === ',') {
-                // Remove thousands separator (period) first
-                str = str.replace(/\./g, '');
-                // Convert decimal comma to period for parsing
-                str = str.replace(/,/g, '.');
-            } else {
-                // Remove thousands separator (comma)
+            
+            // Smart decimal detection: users don't type thousands separators manually
+            // If there's exactly one comma or period, treat it as decimal separator
+            var commaCount = (str.match(/,/g) || []).length;
+            var periodCount = (str.match(/\./g) || []).length;
+            
+            if (commaCount === 1 && periodCount === 0) {
+                // Only comma present - treat as decimal (e.g., "12,56" → 12.56)
+                str = str.replace(',', '.');
+            } else if (commaCount === 0 && periodCount === 1) {
+                // Only period present - already correct (e.g., "12.56")
+                // No change needed
+            } else if (commaCount >= 1 && periodCount >= 1) {
+                // Both present - the LAST one is the decimal separator
+                var lastComma = str.lastIndexOf(',');
+                var lastPeriod = str.lastIndexOf('.');
+                if (lastComma > lastPeriod) {
+                    // Comma is decimal (e.g., "1.234,56" → 1234.56)
+                    str = str.replace(/\./g, '').replace(',', '.');
+                } else {
+                    // Period is decimal (e.g., "1,234.56" → 1234.56)
+                    str = str.replace(/,/g, '');
+                }
+            } else if (commaCount > 1) {
+                // Multiple commas, no period - commas are thousands separators (e.g., "1,234,567")
                 str = str.replace(/,/g, '');
             }
+            // Multiple periods with no comma is unusual - leave as is and let parseFloat handle it
+            
             return str;
         }
         
