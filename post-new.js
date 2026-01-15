@@ -62,15 +62,13 @@ const PostModule = (function() {
 
   var modeButtonsBound = false;
 
-  // Post data cache
-  var cachedPosts = null;
+  // NOTE: We intentionally do NOT keep an in-memory cache of post responses.
+  // We render directly from the latest server response and keep the DOM as the source of truth.
+  // (Agent Essentials: No Snapshots / no caching during development.)
   var postsLoading = false;
   var postsError = null;
   var postsRequestToken = 0;
   var postsAbort = null;
-  // Only treat cachedPosts as reusable when we know which request produced it.
-  var cachedPostsRequestKey = '';
-  var inFlightPostsRequestKey = '';
 
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
@@ -349,17 +347,12 @@ const PostModule = (function() {
           if (typeof lastZoom === 'number' && lastZoom >= threshold0) {
             var bInit = getMapBounds();
             var boundsKeyInit = bInit ? boundsToKey(bInit, 2) : '';
-            if (boundsKeyInit && boundsKeyInit !== lastLoadedBoundsKey && !postsLoading && !cachedPosts) {
+            if (boundsKeyInit && boundsKeyInit !== lastLoadedBoundsKey && !postsLoading) {
               lastLoadedBoundsKey = boundsKeyInit;
               applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
             }
           }
         } catch (_eInitLoad) {}
-        // Re-render markers if we have cached posts AND above zoom threshold
-        var threshold = getPostsMinZoom();
-        if (cachedPosts && cachedPosts.length && lastZoom >= threshold) {
-          renderMapMarkers(cachedPosts);
-        }
       } catch (e) {
         // ignore
       }
@@ -534,36 +527,29 @@ const PostModule = (function() {
   function openPostById(postId, options) {
     options = options || {};
 
-    // Find post in cache
-    var post = null;
-    if (cachedPosts) {
-      for (var i = 0; i < cachedPosts.length; i++) {
-        if (String(cachedPosts[i].id) === String(postId)) {
-          post = cachedPosts[i];
-          break;
-        }
-      }
-    }
-
-    if (!post) {
-      console.warn('[Post] Post not found in cache:', postId);
-      return;
-    }
-
-    // Switch to posts mode if coming from map
-    if (options.fromMap && currentMode !== 'posts') {
-      var postsBtn = getModeButton('posts');
-      if (postsBtn && postsEnabled) {
-        postsBtn.click();
-        // Wait for mode change then open
-        setTimeout(function() {
-          openPost(post, options);
-        }, 50);
+    // No in-memory cache: always load the post fresh by ID.
+    // This keeps development honest (no stale snapshots masking filter/category bugs).
+    loadPostById(postId).then(function(post) {
+      if (!post) {
+        console.warn('[Post] Post not found:', postId);
         return;
       }
-    }
 
-    openPost(post, options);
+      // Switch to posts mode if coming from map
+      if (options.fromMap && currentMode !== 'posts') {
+        var postsBtn = getModeButton('posts');
+        if (postsBtn && postsEnabled) {
+          postsBtn.click();
+          // Wait for mode change then open
+          setTimeout(function() {
+            openPost(post, options);
+          }, 50);
+          return;
+        }
+      }
+
+      openPost(post, options);
+    });
   }
 
   function bindModeButtons() {
@@ -638,12 +624,6 @@ const PostModule = (function() {
         var threshold = getPostsMinZoom();
         if (typeof lastZoom === 'number' && lastZoom >= threshold) {
           applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
-        } else {
-          // Fallback for safety: if we somehow show Posts without knowing zoom yet,
-          // render cached data if any, otherwise wait for map:ready/boundsChanged to drive the first load.
-          if (cachedPosts && cachedPosts.length) {
-            renderPostList(cachedPosts);
-          }
         }
       }
     }
@@ -856,8 +836,6 @@ const PostModule = (function() {
           try { if (postsAbort) postsAbort.abort(); } catch (_eAbort0) {}
           postsAbort = null;
           postsLoading = false;
-          cachedPosts = [];
-          filteredPosts = null;
           renderPostsEmptyState();
           App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
           return Promise.resolve([]);
@@ -870,10 +848,6 @@ const PostModule = (function() {
     }
 
     var requestKey = params.toString();
-    // Safe reuse: only when our cache is known to match this exact request.
-    if (requestKey && requestKey === cachedPostsRequestKey && Array.isArray(cachedPosts)) {
-      return Promise.resolve(cachedPosts);
-    }
 
     // New request: abort any in-flight request so category toggles / map moves take effect immediately.
     postsRequestToken++;
@@ -882,7 +856,6 @@ const PostModule = (function() {
     postsAbort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
 
     postsLoading = true;
-    inFlightPostsRequestKey = requestKey;
 
     return fetch('/gateway.php?action=get-posts&' + requestKey, postsAbort ? { signal: postsAbort.signal } : undefined)
       .then(function(response) {
@@ -893,15 +866,12 @@ const PostModule = (function() {
       })
       .then(function(data) {
         // Ignore stale responses
-        if (myToken !== postsRequestToken) return cachedPosts || [];
+        if (myToken !== postsRequestToken) return [];
         postsLoading = false;
         if (data.success && Array.isArray(data.posts)) {
-          cachedPosts = data.posts;
-          cachedPostsRequestKey = inFlightPostsRequestKey || requestKey || '';
-          filteredPosts = null; // Reset filtered posts on fresh load
           renderPostList(data.posts);
-          // Emit initial filter counts
-          emitFilterCounts();
+          // Emit counts for the current viewport (server-filtered)
+          emitFilterCounts(data.posts);
           // Refresh map clusters with new post data
           if (window.MapModule && MapModule.refreshClusters) {
             MapModule.refreshClusters();
@@ -920,10 +890,10 @@ const PostModule = (function() {
           if (err && (err.name === 'AbortError' || String(err.message || '').toLowerCase().indexOf('abort') !== -1)) {
             // Only clear loading if this request is still the latest.
             if (myToken === postsRequestToken) postsLoading = false;
-            return cachedPosts || [];
+            return [];
           }
         } catch (_eAbortName) {}
-        if (myToken !== postsRequestToken) return cachedPosts || [];
+        if (myToken !== postsRequestToken) return [];
         postsLoading = false;
         postsError = err.message || 'Network error';
         console.error('[Post] loadPosts error:', err);
@@ -1164,6 +1134,22 @@ const PostModule = (function() {
 
     // Format dates (if sessions exist)
     var datesText = formatPostDates(post);
+
+    // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
+    // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
+    try {
+      el.dataset.sortTitle = String(title || '').toLowerCase();
+      el.dataset.sortCreatedAt = String(new Date(post.created_at || 0).getTime() || 0);
+      el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
+      el.dataset.sortSoonTs = String(getPostSoonestTimestamp(post) || '');
+      if (mapCard && Number.isFinite(Number(mapCard.longitude)) && Number.isFinite(Number(mapCard.latitude))) {
+        el.dataset.sortLng = String(mapCard.longitude);
+        el.dataset.sortLat = String(mapCard.latitude);
+      } else {
+        el.dataset.sortLng = '';
+        el.dataset.sortLat = '';
+      }
+    } catch (_eSortMeta) {}
 
     // Postcard thumbnail (100x100 in CSS). We try ?class=thumbnail if supported, otherwise raw URL.
     var rawThumbUrl = getPostThumbnailUrl(post);
@@ -1411,11 +1397,34 @@ const PostModule = (function() {
     var COORD_PRECISION = 6;
     var venueGroups = {}; // key: "lng,lat" -> array of {post, mapCard, index}
     
+    // Category/Subcategory filtering for map cards:
+    // At zoom>=postsLoadZoom, the server filters POSTS by map-card subcategory keys (mc.subcategory_key).
+    // However, a post can contain multiple map cards; we must also filter the *map cards* we render so
+    // toggling category switches affects map markers exactly like it affects visible results.
+    var allowedSubKeys = null;
+    try {
+      if (currentFilters && Array.isArray(currentFilters.subcategoryKeys)) {
+        allowedSubKeys = new Set(currentFilters.subcategoryKeys.map(function(v) { return String(v); }));
+      }
+    } catch (_eAllowed) {
+      allowedSubKeys = null;
+    }
+
     posts.forEach(function(post) {
       if (!post.map_cards || !post.map_cards.length) return;
       
       post.map_cards.forEach(function(mapCard, index) {
         if (!mapCard) return;
+
+        // If category/subcategory filtering is active, only render map cards whose subcategory_key is allowed.
+        // Prefer the map-card key (mc.subcategory_key), fall back to post key only if map-card key is missing.
+        if (allowedSubKeys) {
+          var mcKey = (mapCard.subcategory_key !== undefined && mapCard.subcategory_key !== null)
+            ? String(mapCard.subcategory_key)
+            : String(post.subcategory_key || '');
+          if (!mcKey || !allowedSubKeys.has(mcKey)) return;
+        }
+
         var lat = mapCard.latitude;
         var lng = mapCard.longitude;
         if (lat === null || lng === null || !Number.isFinite(lat) || !Number.isFinite(lng)) return;
@@ -1554,7 +1563,6 @@ const PostModule = (function() {
 
   // Current filter state
   var currentFilters = null;
-  var filteredPosts = null;
   
   // Track last viewport used for server-side post loads (prevents refetch on same bounds)
   var lastLoadedBoundsKey = '';
@@ -1593,10 +1601,13 @@ const PostModule = (function() {
   /**
    * Emit filter count updates to the filter panel
    */
-  function emitFilterCounts() {
-    var totalInArea = countMapCardsInView(cachedPosts);
-    var filteredCount = countMapCardsInView(filteredPosts || cachedPosts);
-    
+  function emitFilterCounts(posts) {
+    var list = Array.isArray(posts) ? posts : [];
+    // At zoom>=threshold, `list` is already server-filtered.
+    // We still emit counts so the filter UI can reflect the current viewport result size.
+    var totalInArea = countMapCardsInView(list);
+    var filteredCount = totalInArea;
+
     App.emit('filter:countsUpdated', {
       total: totalInArea,
       filtered: filteredCount
@@ -1621,17 +1632,17 @@ const PostModule = (function() {
       var boundsParam = b ? boundsToApiParam(b) : '';
       // Live-site behavior: keep current cards/markers visible while the server recalculates,
       // then swap to the new results when they arrive (avoids flashing).
-      loadPosts({ bounds: boundsParam, limit: 200, offset: 0, filters: filterState || {} }).then(function() {
+      loadPosts({ bounds: boundsParam, limit: 200, offset: 0, filters: filterState || {} }).then(function(posts) {
         // Server returned filtered posts; renderMapMarkers is called by loadPosts->renderPostList path.
         // Keep active state synced if open post still exists.
+        emitFilterCounts(posts);
         restoreActiveMapCardFromOpenPost();
       });
       return;
     }
 
     // Below threshold: no posts list should be shown; keep counts/clusters updated elsewhere.
-    filteredPosts = cachedPosts;
-    emitFilterCounts();
+    App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
   }
 
   /**
@@ -1779,59 +1790,88 @@ const PostModule = (function() {
    * @param {string} sortKey - Sort key (az, za, newest, oldest, price-low, price-high)
    */
   function sortPosts(sortKey) {
-    var posts = filteredPosts || cachedPosts;
-    if (!posts || !posts.length) return;
+    // Agent Essentials: no post response caching.
+    // Sorting is applied to the CURRENT rendered cards (DOM), not an in-memory snapshot.
+    if (!postListEl) return;
 
-    var sorted = posts.slice().sort(function(a, b) {
-      var mcA = (a.map_cards && a.map_cards.length) ? a.map_cards[0] : null;
-      var mcB = (b.map_cards && b.map_cards.length) ? b.map_cards[0] : null;
-      
+    // Preserve summary + open-post wrapper positions.
+    var summaryEl = postListEl.querySelector('.post-panel-summary');
+    var openWrap = postListEl.querySelector('.open-post');
+
+    var cards = [];
+    try {
+      // Direct children only (avoid grabbing the embedded open-post header card).
+      cards = Array.prototype.slice.call(postListEl.querySelectorAll(':scope > .post-card'));
+    } catch (_eScope) {
+      cards = Array.prototype.slice.call(postListEl.querySelectorAll('.post-card'));
+      // Filter out cards that live inside an open-post wrapper.
+      cards = cards.filter(function(el) {
+        var p = el && el.parentElement;
+        while (p) {
+          if (p.classList && p.classList.contains('open-post')) return false;
+          if (p === postListEl) break;
+          p = p.parentElement;
+        }
+        return true;
+      });
+    }
+    if (!cards.length) return;
+
+    var center = getMapCenter();
+    function distanceToCenterKm(cardEl) {
+      if (!center || !cardEl || !cardEl.dataset) return Number.POSITIVE_INFINITY;
+      var lng = Number(cardEl.dataset.sortLng);
+      var lat = Number(cardEl.dataset.sortLat);
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) return Number.POSITIVE_INFINITY;
+      return distKm({ lng: lng, lat: lat }, { lng: Number(center.lng), lat: Number(center.lat) });
+    }
+
+    cards.sort(function(aEl, bEl) {
       // Live-site behavior: "Favourites on top" only applies when not dirty.
       if (favToTop && !favSortDirty) {
-        var favA = isFavorite(a.id) ? 1 : 0;
-        var favB = isFavorite(b.id) ? 1 : 0;
-        if (favA !== favB) return favB - favA;
+        var favA = isFavorite(aEl && aEl.dataset ? aEl.dataset.id : '');
+        var favB = isFavorite(bEl && bEl.dataset ? bEl.dataset.id : '');
+        if (favA !== favB) return (favB ? 1 : 0) - (favA ? 1 : 0);
       }
+
+      var a = aEl && aEl.dataset ? aEl.dataset : {};
+      var b = bEl && bEl.dataset ? bEl.dataset : {};
 
       switch (sortKey) {
         case 'az':
-          var titleA = ((mcA && mcA.title) || a.checkout_title || '').toLowerCase();
-          var titleB = ((mcB && mcB.title) || b.checkout_title || '').toLowerCase();
-          return titleA.localeCompare(titleB);
-
-        case 'nearest':
-          return compareNearestToMapCenter(a, b);
-
-        case 'soon':
-          return compareSoonest(a, b);
-
+          return String(a.sortTitle || '').localeCompare(String(b.sortTitle || ''));
+        case 'za':
+          return String(b.sortTitle || '').localeCompare(String(a.sortTitle || ''));
         case 'newest':
-          var dateA = new Date(a.created_at || 0).getTime();
-          var dateB = new Date(b.created_at || 0).getTime();
-          return dateB - dateA;
-
+          return (Number(b.sortCreatedAt) || 0) - (Number(a.sortCreatedAt) || 0);
         case 'oldest':
-          var dateA2 = new Date(a.created_at || 0).getTime();
-          var dateB2 = new Date(b.created_at || 0).getTime();
-          return dateA2 - dateB2;
-
+          return (Number(a.sortCreatedAt) || 0) - (Number(b.sortCreatedAt) || 0);
         case 'price-low':
-          var priceA = extractPrice(mcA);
-          var priceB = extractPrice(mcB);
-          return priceA - priceB;
-
+          return (Number(a.sortPrice) || 0) - (Number(b.sortPrice) || 0);
         case 'price-high':
-          var priceA2 = extractPrice(mcA);
-          var priceB2 = extractPrice(mcB);
-          return priceB2 - priceA2;
-
+          return (Number(b.sortPrice) || 0) - (Number(a.sortPrice) || 0);
+        case 'nearest':
+          return distanceToCenterKm(aEl) - distanceToCenterKm(bEl);
+        case 'soon':
+          return (Number(a.sortSoonTs) || Number.POSITIVE_INFINITY) - (Number(b.sortSoonTs) || Number.POSITIVE_INFINITY);
         default:
           return 0;
       }
     });
 
-    filteredPosts = sorted;
-    renderFilteredPosts();
+    // Re-append in sorted order (DOM is the source of truth).
+    cards.forEach(function(card) {
+      try { postListEl.appendChild(card); } catch (_eAppend) {}
+    });
+
+    // Keep summary at the top if present.
+    if (summaryEl) {
+      try { postListEl.insertBefore(summaryEl, postListEl.firstChild); } catch (_eSum) {}
+    }
+    // Keep open post at the top if present.
+    if (openWrap) {
+      try { postListEl.insertBefore(openWrap, postListEl.firstChild); } catch (_eOpen) {}
+    }
   }
 
   /**
@@ -1948,10 +1988,7 @@ const PostModule = (function() {
    * Render filtered posts (used after sort)
    */
   function renderFilteredPosts() {
-    var posts = filteredPosts || cachedPosts;
-    if (!posts) return;
-    // Use the standard renderer so open posts are preserved correctly
-    renderPostList(posts);
+    // No-op: legacy hook. Sorting now reorders the DOM directly (no cached arrays).
   }
 
   /* --------------------------------------------------------------------------
@@ -2723,9 +2760,12 @@ const PostModule = (function() {
       var targetId = (post && post.id !== undefined && post.id !== null) ? String(post.id) : '';
       if (!targetId) return;
 
-      // Store thumbnail URL directly in recent history so Recents can render thumbnails
-      // even when cachedPosts isn't loaded yet (e.g., page refresh while zoomed out).
+      // Store key display fields directly in recent history so Recents can render without any in-memory caching.
       var rawThumbUrl = getPostThumbnailUrl(post);
+      var mapCard0 = (post && post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+      var subKey0 = (mapCard0 && mapCard0.subcategory_key) ? String(mapCard0.subcategory_key) : String(post.subcategory_key || '');
+      var iconUrl0 = post.subcategory_icon_url || getSubcategoryIconUrl(subKey0);
+      var loc0 = (mapCard0 && (mapCard0.city || mapCard0.venue_name)) ? String(mapCard0.city || mapCard0.venue_name) : '';
 
       // Deduplicate (string-safe) and update "last seen" timestamp if already present.
       var seen = {};
@@ -2737,6 +2777,9 @@ const PostModule = (function() {
         post_key: post.post_key,
         title: (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '',
         thumb_url: rawThumbUrl || '',
+        subcategory_key: subKey0 || '',
+        subcategory_icon_url: iconUrl0 || '',
+        location_text: loc0 || '',
         timestamp: now
       });
       seen[targetId] = true;
@@ -2958,35 +3001,22 @@ const PostModule = (function() {
   function renderRecentCard(entry) {
     if (!entry || !entry.id) return null;
 
-    // Try to find full post data in cache
-    var post = null;
-    if (cachedPosts) {
-      for (var i = 0; i < cachedPosts.length; i++) {
-        if (String(cachedPosts[i].id) === String(entry.id)) {
-          post = cachedPosts[i];
-          break;
-        }
-      }
-    }
-
     var el = document.createElement('article');
     el.className = 'recent-card';
     el.dataset.id = String(entry.id);
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
 
-    // Get data from post or entry
-    var title = entry.title || (post && post.checkout_title) || '';
-    var mapCard = post && post.map_cards && post.map_cards.length ? post.map_cards[0] : null;
-    // Recents postcard thumbnail (100x100 in CSS). Prefer stored thumb_url (works even before cachedPosts loads).
-    var rawThumbUrl = entry.thumb_url || (mapCard && mapCard.media_urls && mapCard.media_urls.length ? mapCard.media_urls[0] : '');
+    // Recents store lightweight display fields in localStorage (not full post payload).
+    var title = entry.title || '';
+    var rawThumbUrl = entry.thumb_url || '';
     var thumbUrl = getCardThumbSrc(rawThumbUrl);
-    var city = mapCard ? (mapCard.city || mapCard.venue_name || '') : '';
+    var city = entry.location_text || '';
 
     // Get subcategory info
-    var subcategoryKey = post ? (post.subcategory_key || '') : '';
+    var subcategoryKey = entry.subcategory_key || '';
     var subInfo = getSubcategoryInfo(subcategoryKey);
-    var iconUrl = post ? (post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey)) : '';
+    var iconUrl = entry.subcategory_icon_url || (subcategoryKey ? getSubcategoryIconUrl(subcategoryKey) : '');
 
     // Format last opened time
     var lastOpenedText = formatLastOpened(entry.timestamp);
@@ -3032,44 +3062,11 @@ const PostModule = (function() {
     // Click handler
     el.addEventListener('click', function(e) {
       if (e.target.closest('.recent-card-button-fav')) return;
-
-      // If we have full post data, open it
-      if (post) {
-        openPost(post, { fromRecent: true, originEl: el });
-      } else {
-        // Need to fetch the post
-        loadPostById(entry.id).then(function(fetchedPost) {
-          if (fetchedPost) {
-            // Update the card thumbnail immediately (fresh reloads often don't have cachedPosts yet).
-            try {
-              var fetchedRawThumb = getPostThumbnailUrl(fetchedPost);
-              if (fetchedRawThumb) {
-                var img = el.querySelector('.recent-card-image');
-                if (img && img.tagName === 'IMG') {
-                  img.src = getCardThumbSrc(fetchedRawThumb);
-                  wireCardThumbImage(img, fetchedRawThumb);
-                } else {
-                  // If we rendered an empty placeholder, replace it with an <img>.
-                  var holder = el.querySelector('.recent-card-image--empty');
-                  if (holder) {
-                    var newImg = document.createElement('img');
-                    newImg.className = 'recent-card-image';
-                    newImg.alt = '';
-                    newImg.loading = 'lazy';
-                    newImg.setAttribute('referrerpolicy', 'no-referrer');
-                    newImg.src = getCardThumbSrc(fetchedRawThumb);
-                    holder.replaceWith(newImg);
-                    wireCardThumbImage(newImg, fetchedRawThumb);
-                  }
-                }
-              }
-            } catch (e) {
-              // ignore
-            }
-            openPost(fetchedPost, { fromRecent: true, originEl: el });
-          }
-        });
-      }
+      // No in-memory post cache: always fetch the post payload before opening.
+      loadPostById(entry.id).then(function(fetchedPost) {
+        if (!fetchedPost) return;
+        openPost(fetchedPost, { fromRecent: true, originEl: el });
+      });
     });
 
     // Keyboard: Enter/Space opens card (matches button behavior)
@@ -3462,25 +3459,16 @@ const PostModule = (function() {
    * @returns {Promise}
    */
   function refreshPosts(options) {
-    cachedPosts = null;
-    return loadPosts(options);
+    // No cache to clear. Re-apply filters for the current viewport (zoom>=threshold).
+    // This avoids accidental worldwide loads.
+    try { applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {}); } catch (_e) {}
+    return Promise.resolve([]);
   }
 
   return {
     init: init,
     loadPosts: loadPosts,
     refreshPosts: refreshPosts,
-    getCachedPosts: function() { return cachedPosts; },
-    getVisiblePosts: function() { return filteredPosts || cachedPosts; },
-    getVisibleMapCardCount: function() {
-      var posts = filteredPosts || cachedPosts || [];
-      var count = 0;
-      for (var i = 0; i < posts.length; i++) {
-        var mc = posts[i].map_cards;
-        count += (Array.isArray(mc) ? mc.length : 0);
-      }
-      return count;
-    },
     openPost: openPost,
     openPostById: openPostById,
     closePost: closePost,
