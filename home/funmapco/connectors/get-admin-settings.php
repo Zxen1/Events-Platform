@@ -221,9 +221,9 @@ try {
     try {
         $dropdownOptions = [];
         
-        // Fetch currencies
+        // Fetch currencies (including formatting properties for price display)
         try {
-            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `sort_order` FROM `list_currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
+            $stmt = $pdo->query('SELECT `option_value`, `option_label`, `option_filename`, `option_symbol`, `option_symbol_position`, `option_decimal_separator`, `option_decimal_places`, `option_thousands_separator`, `sort_order` FROM `list_currencies` WHERE `is_active` = 1 ORDER BY `sort_order` ASC');
             $currencyRows = $stmt->fetchAll();
             $dropdownOptions['currency'] = [];
             foreach ($currencyRows as $row) {
@@ -235,6 +235,11 @@ try {
                     'value' => $row['option_value'],
                     'label' => $row['option_label'],
                     'filename' => $row['option_filename'] ? $row['option_filename'] : null,
+                    'symbol' => $row['option_symbol'],
+                    'symbolPosition' => $row['option_symbol_position'],
+                    'decimalSeparator' => $row['option_decimal_separator'],
+                    'decimalPlaces' => (int)$row['option_decimal_places'],
+                    'thousandsSeparator' => $row['option_thousands_separator'],
                 ];
             }
         } catch (Throwable $e) {

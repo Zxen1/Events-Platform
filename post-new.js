@@ -2331,40 +2331,12 @@ const PostModule = (function() {
     }
   }
 
-  // price_summary is stored as JSON in post_map_cards (reference/UI only).
-  // Convert it to a clean display string for post cards and open-post header.
-  // Expected shape:
-  //   { "ticket": { "min": 12, "max": 34, "currency": "USD" }, "item": null }
-  // NOTE: Shows ticket pricing first. Falls back to item pricing if no ticket pricing.
-  // Format: symbol + amount + ISO code (e.g., "$12 USD", "€12 EUR")
+  // price_summary is stored as JSON in post_map_cards with pre-formatted display strings.
+  // Expected shape: { "ticket": "$12 - $34 USD", "item": null }
+  // Shows ticket pricing first. Falls back to item pricing if no ticket pricing.
   function formatPriceSummaryText(priceSummary) {
     var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
     if (!raw) return '';
-
-    function fmtCurrency(value, currencyCode, includeCode) {
-      var n = Number(value);
-      if (!Number.isFinite(n)) return '';
-      // Handle free
-      if (n === 0) return 'Free';
-      var code = currencyCode ? String(currencyCode).trim().toUpperCase() : '';
-      if (!code) return String(n);
-      // Show decimals only if the amount has them (12 → $12, 12.50 → $12.50)
-      var hasDecimals = n % 1 !== 0;
-      var minDecimals = hasDecimals ? 2 : 0;
-      var formatted;
-      try {
-        // Use 'en-US' locale for consistent symbol formatting ($12 not USD 12)
-        formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: code, minimumFractionDigits: minDecimals, maximumFractionDigits: 2 }).format(n);
-      } catch (_e) {
-        // If Intl rejects the code, still show a readable value.
-        formatted = String(n);
-      }
-      // Always append ISO code for clarity
-      if (includeCode && code) {
-        formatted = formatted + ' ' + code;
-      }
-      return formatted;
-    }
 
     // Parse JSON
     if (raw[0] !== '{' && raw[0] !== '[') {
@@ -2374,40 +2346,22 @@ const PostModule = (function() {
     var obj = JSON.parse(raw);
     if (!obj || typeof obj !== 'object') return '';
 
-    // Try ticket pricing first
-    var ticket = obj.ticket && typeof obj.ticket === 'object' ? obj.ticket : null;
-    if (ticket) {
-      var c = ticket.currency ? String(ticket.currency).trim().toUpperCase() : '';
-      var min = (ticket.min !== undefined && ticket.min !== null) ? Number(ticket.min) : null;
-      var max = (ticket.max !== undefined && ticket.max !== null) ? Number(ticket.max) : null;
-
-      // Both min and max are 0 = Free
-      if (Number.isFinite(min) && Number.isFinite(max) && min === 0 && max === 0) {
-        return 'Free';
-      }
-
-      if (Number.isFinite(min) && Number.isFinite(max)) {
-        if (min === max) {
-          return fmtCurrency(min, c, true);
-        }
-        // Range: only append code once at the end
-        var minFmt = fmtCurrency(min, c, false);
-        var maxFmt = fmtCurrency(max, c, true);
-        return minFmt + ' - ' + maxFmt;
-      }
-      if (Number.isFinite(min)) return fmtCurrency(min, c, true);
-      if (Number.isFinite(max)) return fmtCurrency(max, c, true);
+    // Ticket pricing (pre-formatted string)
+    if (obj.ticket && typeof obj.ticket === 'string') {
+      return obj.ticket;
+    }
+    
+    // Item pricing (pre-formatted string)
+    if (obj.item && typeof obj.item === 'string') {
+      return obj.item;
     }
 
-    // Fall back to item pricing if no ticket pricing
-    var item = obj.item && typeof obj.item === 'object' ? obj.item : null;
-    if (item) {
-      var priceVal = (item.price !== undefined) ? item.price : item.item_price;
-      var itemCurrency = item.currency ? String(item.currency).trim().toUpperCase() : '';
-      var p = Number(priceVal);
-      if (Number.isFinite(p)) {
-        return fmtCurrency(p, itemCurrency, true);
-      }
+    // Old format not supported - data must be re-saved
+    if (obj.ticket && typeof obj.ticket === 'object') {
+      throw new Error('[Post] price_summary has old format - post must be re-saved');
+    }
+    if (obj.item && typeof obj.item === 'object') {
+      throw new Error('[Post] price_summary has old format - post must be re-saved');
     }
 
     return '';

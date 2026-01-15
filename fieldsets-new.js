@@ -617,97 +617,194 @@ const FieldsetBuilder = (function(){
         });
     }
 
-    // Money input behavior (prices): digits + one dot, max 2 decimals; format to 2 decimals on blur.
-    // Uses text input with inputMode=decimal to avoid browser 'number' quirks (e/E, locale issues).
-    function attachMoneyInputBehavior(input) {
-        if (!input) return;
+    // Format a price value with currency formatting
+    // Returns formatted string like "$1,234.56" or "1.234,56 €"
+    function formatPriceWithCurrency(value, formatting) {
+        if (value === '' || value === null || value === undefined) return '';
+        var num = parseFloat(String(value).replace(/[^0-9.-]/g, ''));
+        if (!isFinite(num)) return '';
+        
+        if (!formatting) {
+            throw new Error('[FieldsetBuilder] formatPriceWithCurrency requires formatting data');
+        }
+        
+        var symbol = formatting.symbol;
+        var position = formatting.symbolPosition;
+        var decSep = formatting.decimalSeparator;
+        var decPlaces = formatting.decimalPlaces;
+        var thousSep = formatting.thousandsSeparator;
+        
+        // Format the number
+        var fixed = num.toFixed(decPlaces);
+        var parts = fixed.split('.');
+        var intPart = parts[0];
+        var decPart = parts[1] || '';
+        
+        // Add thousands separator
+        if (thousSep) {
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousSep);
+        }
+        
+        // Build number string with decimal
+        var numStr = intPart;
+        if (decPlaces > 0 && decPart) {
+            // Strip trailing zeros if all zeros
+            var stripped = decPart.replace(/0+$/, '');
+            if (stripped.length > 0) {
+                numStr = intPart + decSep + decPart;
+            }
+        }
+        
+        // Apply symbol with proper spacing (left = no space, right = space)
+        if (position === 'right') {
+            return numStr + ' ' + symbol;
+        } else {
+            return symbol + numStr;
+        }
+    }
+    
+    // Currency-aware price input: shows formatted price inside input with symbol
+    // Returns object with methods: updateCurrency(formatting), getRawValue(), setRawValue(num)
+    function attachCurrencyPriceInput(input, initialFormatting) {
+        if (!input) return null;
         input.type = 'text';
         input.inputMode = 'decimal';
         input.autocomplete = 'off';
-
-        function sanitize(raw) {
-            var val = (raw || '').toString();
-            val = val.trim();
-
-            // Support comma decimal when no dot is present (e.g. "14,5" -> "14.5")
-            if (val.indexOf(',') !== -1 && val.indexOf('.') === -1) {
-                val = val.replace(/,/g, '.');
+        
+        var currentFormatting = initialFormatting; // null until currency is selected
+        var rawValue = ''; // Stores numeric value as string (e.g., "1234.56")
+        
+        // Extract raw number from input, handling different decimal separators
+        function parseInput(val) {
+            var str = String(val || '').trim();
+            // Remove symbol and currency code
+            str = str.replace(/[^0-9.,\-]/g, '');
+            // Normalize: if comma is the decimal separator, convert it
+            if (currentFormatting && currentFormatting.decimalSeparator === ',') {
+                // Remove thousands separator (period) first
+                str = str.replace(/\./g, '');
+                // Convert decimal comma to period for parsing
+                str = str.replace(/,/g, '.');
             } else {
-                val = val.replace(/,/g, '');
+                // Remove thousands separator (comma)
+                str = str.replace(/,/g, '');
             }
-
-            // Keep only digits and dot
-            val = val.replace(/[^0-9.]/g, '');
-
-            // Only one dot
-            var firstDot = val.indexOf('.');
-            if (firstDot !== -1) {
-                var before = val.slice(0, firstDot + 1);
-                var after = val.slice(firstDot + 1).replace(/\./g, '');
-                // Max 2 decimals
-                after = after.slice(0, 2);
-                val = before + after;
-            }
-
-            return val;
+            return str;
         }
-
+        
+        // Format for display with full currency formatting
+        function formatDisplay(val) {
+            if (!val && val !== 0) return '';
+            var num = parseFloat(val);
+            if (!isFinite(num)) return '';
+            // If no currency selected yet, just show raw number
+            if (!currentFormatting) return num.toFixed(2);
+            return formatPriceWithCurrency(num, currentFormatting);
+        }
+        
+        // Allow digits and decimal separator while typing
         input.addEventListener('keydown', function(e) {
-            if (!e) return;
             var k = e.key;
             // Allow navigation/control keys
-            if (
-                k === 'Backspace' || k === 'Delete' || k === 'Tab' || k === 'Enter' ||
+            if (k === 'Backspace' || k === 'Delete' || k === 'Tab' || k === 'Enter' ||
                 k === 'ArrowLeft' || k === 'ArrowRight' || k === 'ArrowUp' || k === 'ArrowDown' ||
-                k === 'Home' || k === 'End' || k === 'Escape'
-            ) {
+                k === 'Home' || k === 'End' || k === 'Escape') {
                 return;
             }
             // Allow Ctrl/Cmd shortcuts
             if (e.ctrlKey || e.metaKey) return;
             if (typeof k !== 'string' || k.length !== 1) return;
-
-            // Block anything not digit/dot
-            if (!(/[0-9.]/.test(k))) {
-                e.preventDefault();
-                return;
-            }
-            // Block second dot
-            if (k === '.' && this.value.indexOf('.') !== -1) {
+            
+            // Allow digits, dot, and comma (for different decimal separators)
+            if (!(/[0-9.,]/.test(k))) {
                 e.preventDefault();
                 return;
             }
         });
-
-        input.addEventListener('input', function() {
-            var next = sanitize(this.value);
-            if (this.value !== next) {
-                this.value = next;
-            }
-            if (typeof this.setCustomValidity === 'function') {
-                this.setCustomValidity('');
+        
+        // On focus, show raw editable value (just number with appropriate decimal sep)
+        input.addEventListener('focus', function() {
+            if (rawValue) {
+                var num = parseFloat(rawValue);
+                if (isFinite(num)) {
+                    // If no currency selected, just show number with period
+                    if (!currentFormatting) {
+                        this.value = num.toFixed(2);
+                        return;
+                    }
+                    // Show number with currency's decimal separator
+                    var decPlaces = currentFormatting.decimalPlaces;
+                    var fixed = num.toFixed(decPlaces);
+                    if (currentFormatting.decimalSeparator === ',') {
+                        fixed = fixed.replace('.', ',');
+                    }
+                    // Strip trailing zeros after decimal
+                    var parts = fixed.split(currentFormatting.decimalSeparator);
+                    if (parts[1]) {
+                        var stripped = parts[1].replace(/0+$/, '');
+                        if (stripped.length > 0) {
+                            this.value = parts[0] + currentFormatting.decimalSeparator + parts[1];
+                        } else {
+                            this.value = parts[0];
+                        }
+                    } else {
+                        this.value = fixed;
+                    }
+                }
             }
         });
-
+        
+        // On blur, parse and format with full currency display
         input.addEventListener('blur', function() {
-            var cleaned = sanitize(this.value);
-            if (cleaned === '') {
+            var parsed = parseInput(this.value);
+            if (parsed === '') {
+                rawValue = '';
                 this.value = '';
-                if (typeof this.setCustomValidity === 'function') {
-                    this.setCustomValidity('');
-                }
                 return;
             }
-            var num = parseFloat(cleaned);
+            var num = parseFloat(parsed);
             if (!isFinite(num)) {
-                if (typeof this.setCustomValidity === 'function') {
-                    this.setCustomValidity('Please enter a valid price.');
-                    if (typeof this.reportValidity === 'function') this.reportValidity();
-                }
+                rawValue = '';
+                this.value = '';
                 return;
             }
-            this.value = num.toFixed(2);
+            rawValue = String(num);
+            this.value = formatDisplay(num);
         });
+        
+        return {
+            // Update currency formatting and re-format display
+            updateCurrency: function(formatting) {
+                currentFormatting = formatting;
+                if (rawValue && document.activeElement !== input) {
+                    var num = parseFloat(rawValue);
+                    if (isFinite(num)) {
+                        input.value = formatDisplay(num);
+                    }
+                }
+            },
+            // Get raw numeric value (for saving to database)
+            getRawValue: function() {
+                return rawValue;
+            },
+            // Set raw numeric value (when loading from database)
+            setRawValue: function(val) {
+                var num = parseFloat(val);
+                if (isFinite(num)) {
+                    rawValue = String(num);
+                    if (document.activeElement !== input) {
+                        input.value = formatDisplay(num);
+                    }
+                } else {
+                    rawValue = '';
+                    input.value = '';
+                }
+            },
+            // Get input element
+            getElement: function() {
+                return input;
+            }
+        };
     }
     
     // URL auto-prepend https://
@@ -2093,23 +2190,9 @@ const FieldsetBuilder = (function(){
                 
                 // Build currency menu for item (no default - user must select if required)
                 var initialCurrencyCode = null;
-                if (typeof CurrencyComponent === 'undefined') {
-                    console.error('[FieldsetBuilder] CurrencyComponent not available');
-                    var placeholderMenu = document.createElement('div');
-                    itemCurrencyCol.appendChild(placeholderMenu);
-                } else {
-                    var result = CurrencyComponent.buildCompactMenu({
-                        initialValue: initialCurrencyCode,
-                        onSelect: function(value, label, countryCode) {
-                            // Currency selected for entire item
-                        }
-                    });
-                    result.element.classList.add('fieldset-itempricing-menu-currency');
-                    itemCurrencyCol.appendChild(result.element);
-                }
-                itemPriceRow.appendChild(itemCurrencyCol);
+                var itemPriceController = null; // Will hold the currency price input controller
                 
-                // Item Price column (flexible width)
+                // Item Price column (flexible width) - create first so we can reference it
                 var itemPriceCol = document.createElement('div');
                 itemPriceCol.style.flex = '1';
                 
@@ -2119,13 +2202,33 @@ const FieldsetBuilder = (function(){
                 itemPriceSub.textContent = 'Item Price';
                 itemPriceCol.appendChild(itemPriceSub);
                 
-                // Item Price input
+                // Item Price input with currency formatting
                 var itemPriceInput = document.createElement('input');
                 itemPriceInput.type = 'text';
                 itemPriceInput.className = 'fieldset-itempricing-input-itemprice input-class-1';
                 itemPriceInput.placeholder = '0.00';
-                attachMoneyInputBehavior(itemPriceInput);
+                itemPriceController = attachCurrencyPriceInput(itemPriceInput, null);
                 itemPriceCol.appendChild(itemPriceInput);
+                
+                if (typeof CurrencyComponent === 'undefined') {
+                    console.error('[FieldsetBuilder] CurrencyComponent not available');
+                    var placeholderMenu = document.createElement('div');
+                    itemCurrencyCol.appendChild(placeholderMenu);
+                } else {
+                    var result = CurrencyComponent.buildCompactMenu({
+                        initialValue: initialCurrencyCode,
+                        onSelect: function(value, label, countryCode, formatting) {
+                            // Currency selected - update price input formatting
+                            if (itemPriceController && formatting) {
+                                itemPriceController.updateCurrency(formatting);
+                            }
+                        }
+                    });
+                    result.element.classList.add('fieldset-itempricing-menu-currency');
+                    itemCurrencyCol.appendChild(result.element);
+                }
+                itemPriceRow.appendChild(itemCurrencyCol);
+                
                 itemPriceRow.appendChild(itemPriceCol);
                 applyFieldsetRowItemClasses(itemPriceRow);
                 
@@ -2311,8 +2414,9 @@ const FieldsetBuilder = (function(){
                         spInitialCurrency = { flag: spCountryCode, code: spInitialCurrencyCode };
                     }
                 }
-                var spTicketCurrencyState = spInitialCurrency || { flag: null, code: null };
+                var spTicketCurrencyState = spInitialCurrency || { flag: null, code: null, formatting: null };
                 var spTicketCurrencyMenus = []; // [{ element, setValue }]
+                var spPriceInputControllers = []; // Track all price input controllers for currency updates
 
                 function spSyncAllTicketCurrencies() {
                     spTicketCurrencyMenus.forEach(function(menuObj) {
@@ -2321,6 +2425,16 @@ const FieldsetBuilder = (function(){
                             menuObj.setValue(spTicketCurrencyState.code || null);
                         } catch (e0) {}
                     });
+                    // Update all price input controllers with new formatting
+                    if (spTicketCurrencyState.formatting) {
+                        spPriceInputControllers.forEach(function(ctrl) {
+                            try {
+                                if (ctrl && typeof ctrl.updateCurrency === 'function') {
+                                    ctrl.updateCurrency(spTicketCurrencyState.formatting);
+                                }
+                            } catch (e1) {}
+                        });
+                    }
                 }
                 function spBuildTicketCurrencyMenu() {
                     if (typeof CurrencyComponent === 'undefined') {
@@ -2329,30 +2443,15 @@ const FieldsetBuilder = (function(){
                     }
                     var result = CurrencyComponent.buildCompactMenu({
                         initialValue: spTicketCurrencyState.code,
-                        onSelect: function(value, label, countryCode) {
+                        onSelect: function(value, label, countryCode, formatting) {
                             spTicketCurrencyState.flag = countryCode;
                             spTicketCurrencyState.code = value;
+                            spTicketCurrencyState.formatting = formatting;
                             spSyncAllTicketCurrencies();
                         }
                     });
                     spTicketCurrencyMenus.push(result);
                     return result.element;
-                }
-                function spAttachMoneyInputBehavior(inputEl) {
-                    if (!inputEl) return;
-                    inputEl.addEventListener('input', function() {
-                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
-                        var parts = raw.split('.');
-                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
-                        this.value = raw;
-                    });
-                    inputEl.addEventListener('blur', function() {
-                        var v = String(this.value || '').trim();
-                        if (v === '') return;
-                        var num = parseFloat(v);
-                        if (isNaN(num)) { this.value = ''; return; }
-                        this.value = num.toFixed(2);
-                    });
                 }
 
                 // --- Pricing editor builders ---
@@ -2438,7 +2537,11 @@ const FieldsetBuilder = (function(){
                     var priceInput = document.createElement('input');
                     priceInput.className = 'fieldset-input input-class-1';
                     priceInput.placeholder = '0.00';
-                    spAttachMoneyInputBehavior(priceInput);
+                    // Use currency-aware price input with current formatting
+                    var priceController = attachCurrencyPriceInput(priceInput, spTicketCurrencyState.formatting);
+                    if (priceController) {
+                        spPriceInputControllers.push(priceController);
+                    }
                     priceCol.appendChild(priceSub);
                     priceCol.appendChild(priceInput);
                     priceRow.appendChild(priceCol);
