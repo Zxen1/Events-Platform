@@ -272,7 +272,7 @@ const MapModule = (function() {
   
   // Live-site-style hover/click manager (adapted for DOM markers):
   // - Hover is driven by pointer hit-testing (not per-marker mouseenter/mouseleave)
-  // - Hover clears with a small delay to avoid flicker during press/drag
+  // - Hover clears immediately (no linger); any fade-out should be CSS-only
   // - Click is resolved on pointerup with a tiny movement threshold (works during fly/drag)
   let hoverManagerBound = false;
   let hoveredVenueKey = '';
@@ -281,7 +281,8 @@ const MapModule = (function() {
   let pointerDownVenueKey = '';
   let pointerDownClientX = 0;
   let pointerDownClientY = 0;
-  const HOVER_CLEAR_DELAY_MS = 50;
+  // Keep hover clear effectively instant; avoids "sticky" hover feeling.
+  const HOVER_CLEAR_DELAY_MS = 0;
   const CLICK_MOVE_THRESHOLD_PX = 6;
   
   // Settings cache
@@ -2188,15 +2189,16 @@ const MapModule = (function() {
       if (key) {
         setHoveredVenueKey(key);
       } else {
-        scheduleHoverClear(e.clientX, e.clientY);
+        // Clear immediately when not over a marker (no linger).
+        setHoveredVenueKey('');
       }
     }, { passive: true });
 
     container.addEventListener('pointerleave', (e) => {
       if (pointerDownActive) return;
-      const x = e && typeof e.clientX === 'number' ? e.clientX : 0;
-      const y = e && typeof e.clientY === 'number' ? e.clientY : 0;
-      scheduleHoverClear(x, y);
+      // Leaving the map container should clear hover immediately.
+      clearHoverClearTimer();
+      setHoveredVenueKey('');
     }, { passive: true });
 
     // Resolve click based on pointerup (works during fly/drag; no waiting for map to stop).
