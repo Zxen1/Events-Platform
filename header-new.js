@@ -110,10 +110,10 @@ const HeaderModule = (function() {
         var exp = st.expired;
         var hasExpired = (exp === true || exp === 1 || exp === '1' || String(exp).toLowerCase() === 'true');
 
-        // Category/subcategory toggles: if any are OFF, that is active filtering (must show orange).
-        var hasCategoryFiltering = hasAnyCategoryOrSubcategoryTogglesOff(st.categories);
-
-        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasCategoryFiltering;
+        // IMPORTANT:
+        // Category/subcategory toggles must NOT affect the orange icon state.
+        // The orange icon indicates only "active filters" (keyword/price/date/expired).
+        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired;
     }
     
     function setHeaderFilterIconActive(active) {
