@@ -1148,9 +1148,24 @@ const CurrencyComponent = (function(){
             }).catch(function() {});
         }
 
-        // Set initial value
+        // Set initial value and call onSelect with formatting
         if (initialValue) {
             setValue(initialValue);
+            // Find currency data and call onSelect for initial value
+            var found = currencyData.find(function(item) {
+                return item.value === initialValue;
+            });
+            if (found) {
+                var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
+                var formatting = {
+                    symbol: found.symbol,
+                    symbolPosition: found.symbolPosition,
+                    decimalSeparator: found.decimalSeparator,
+                    decimalPlaces: found.decimalPlaces,
+                    thousandsSeparator: found.thousandsSeparator
+                };
+                onSelect(initialValue, found.label, countryCode, formatting);
+            }
         }
 
         // Data must be loaded BEFORE building menu (via FieldsetBuilder.setPicklist)
