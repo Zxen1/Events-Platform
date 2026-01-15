@@ -5,6 +5,34 @@
 const FilterModule = (function() {
     'use strict';
 
+    /* ==========================================================================
+       IMPORTANT (Developer Note): TWO FILTERING PIPELINES EXIST
+       --------------------------------------------------------------------------
+       This file (`filter-new.js`) DOES NOT filter posts directly.
+
+       It is the Filter PANEL UI + persistence layer only:
+       - Builds the UI, reads/writes saved state to `localStorage['funmap_filters']`
+       - Emits `App.emit('filter:changed', state)` whenever the user changes filters
+
+       The actual filtering/rendering happens in TWO different modules depending on zoom:
+
+       1) LOW ZOOM (worldwide clusters): `map-new.js`
+          - Reads `localStorage['funmap_filters']`
+          - Calls `/gateway.php?action=get-clusters` (+ filter params)
+          - Renders cluster markers (aggregated, lightweight)
+
+       2) HIGH ZOOM (zoom >= postsLoadZoom; default 8): `post-new.js`
+          - Listens to `filter:changed` AND `map:boundsChanged`
+          - Calls `/gateway.php?action=get-posts` with BOTH:
+              - saved filter params
+              - `bounds` (map area filter)
+          - Renders Post cards + Map cards (detailed)
+
+       This split is intentional for performance:
+       - Worldwide is cheap for clusters/counts
+       - Detailed posts are only fetched "in this map area" at high zoom
+       ========================================================================== */
+
     /* --------------------------------------------------------------------------
        STATE
        -------------------------------------------------------------------------- */

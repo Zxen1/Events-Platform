@@ -90,6 +90,15 @@ try {
     }
 
     // Parse query parameters
+    //
+    // IMPORTANT (Developer Note):
+    // This endpoint is used by the HIGH-ZOOM pipeline (zoom >= postsLoadZoom; default 8) in `post-new.js`.
+    // It must respect BOTH:
+    // - the saved filter state (keyword/date/price/subcategory keys/etc.)
+    // - the map area filter (`bounds`)
+    //
+    // LOW-ZOOM worldwide filtering is handled by the cluster pipeline in `map-new.js`
+    // via `/gateway.php?action=get-clusters` (aggregated results).
     $limit = isset($_GET['limit']) ? min(200, max(1, intval($_GET['limit']))) : 50;
     $offset = isset($_GET['offset']) ? max(0, intval($_GET['offset'])) : 0;
     $subcategoryKey = isset($_GET['subcategory_key']) ? trim($_GET['subcategory_key']) : '';

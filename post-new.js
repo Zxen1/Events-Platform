@@ -25,6 +25,24 @@
 const PostModule = (function() {
   'use strict';
 
+  /* ==========================================================================
+     IMPORTANT (Developer Note): TWO FILTERING PIPELINES EXIST
+     --------------------------------------------------------------------------
+     This file (`post-new.js`) owns the HIGH-ZOOM filtering pipeline:
+       zoom >= postsLoadZoom (default 8)
+     
+     High zoom is "in this map area" mode:
+     - We listen for `App.emit('filter:changed', state)` from `filter-new.js`
+     - We also listen for `App.emit('map:boundsChanged', { zoom, ... })` from `map-new.js`
+     - We fetch detailed posts via `/gateway.php?action=get-posts` using:
+         - saved filter params (keyword/date/price/subcategory keys/etc.)
+         - `bounds` (the map area filter)
+     - We render Post cards + Map cards (detailed payload)
+     
+     Low zoom (< postsLoadZoom) does NOT load detailed posts worldwide.
+     That mode is handled by clusters in `map-new.js` via `/gateway.php?action=get-clusters`.
+     ========================================================================== */
+
   /* --------------------------------------------------------------------------
      STATE
      -------------------------------------------------------------------------- */
@@ -48,6 +66,11 @@ const PostModule = (function() {
   var cachedPosts = null;
   var postsLoading = false;
   var postsError = null;
+  var postsRequestToken = 0;
+  var postsAbort = null;
+  // Only treat cachedPosts as reusable when we know which request produced it.
+  var cachedPostsRequestKey = '';
+  var inFlightPostsRequestKey = '';
 
   // Panel motion state (kept in-module for cleanliness; no DOM-stashed handlers).
   var panelMotion = {
@@ -348,7 +371,7 @@ const PostModule = (function() {
         if (lastZoom >= threshold) {
           var b = getMapBounds();
           var boundsKey = b ? boundsToKey(b, 2) : '';
-          if (boundsKey && boundsKey !== lastLoadedBoundsKey && !postsLoading) {
+          if (boundsKey && boundsKey !== lastLoadedBoundsKey) {
             lastLoadedBoundsKey = boundsKey;
             applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
           }
@@ -790,9 +813,6 @@ const PostModule = (function() {
    * @returns {Promise}
    */
   function loadPosts(options) {
-    if (postsLoading) return Promise.resolve(cachedPosts);
-
-    postsLoading = true;
     postsError = null;
 
     var params = new URLSearchParams();
@@ -814,6 +834,10 @@ const PostModule = (function() {
       if (Array.isArray(f.subcategoryKeys)) {
         // IMPORTANT: empty array means "no subcategories selected" → show nothing (don't fetch worldwide).
         if (f.subcategoryKeys.length === 0) {
+          // Cancel any in-flight request and invalidate stale responses.
+          postsRequestToken++;
+          try { if (postsAbort) postsAbort.abort(); } catch (_eAbort0) {}
+          postsAbort = null;
           postsLoading = false;
           cachedPosts = [];
           filteredPosts = null;
@@ -828,7 +852,22 @@ const PostModule = (function() {
       params.append('subcategory_key', options.subcategory_key);
     }
 
-    return fetch('/gateway.php?action=get-posts&' + params.toString())
+    var requestKey = params.toString();
+    // Safe reuse: only when our cache is known to match this exact request.
+    if (requestKey && requestKey === cachedPostsRequestKey && Array.isArray(cachedPosts)) {
+      return Promise.resolve(cachedPosts);
+    }
+
+    // New request: abort any in-flight request so category toggles / map moves take effect immediately.
+    postsRequestToken++;
+    var myToken = postsRequestToken;
+    try { if (postsAbort) postsAbort.abort(); } catch (_eAbort) {}
+    postsAbort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+
+    postsLoading = true;
+    inFlightPostsRequestKey = requestKey;
+
+    return fetch('/gateway.php?action=get-posts&' + requestKey, postsAbort ? { signal: postsAbort.signal } : undefined)
       .then(function(response) {
         if (!response.ok) {
           throw new Error('Failed to load posts: ' + response.status);
@@ -836,9 +875,12 @@ const PostModule = (function() {
         return response.json();
       })
       .then(function(data) {
+        // Ignore stale responses
+        if (myToken !== postsRequestToken) return cachedPosts || [];
         postsLoading = false;
         if (data.success && Array.isArray(data.posts)) {
           cachedPosts = data.posts;
+          cachedPostsRequestKey = inFlightPostsRequestKey || requestKey || '';
           filteredPosts = null; // Reset filtered posts on fresh load
           renderPostList(data.posts);
           // Emit initial filter counts
@@ -856,6 +898,15 @@ const PostModule = (function() {
         }
       })
       .catch(function(err) {
+        // Abort is expected when filters/map change quickly.
+        try {
+          if (err && (err.name === 'AbortError' || String(err.message || '').toLowerCase().indexOf('abort') !== -1)) {
+            // Only clear loading if this request is still the latest.
+            if (myToken === postsRequestToken) postsLoading = false;
+            return cachedPosts || [];
+          }
+        } catch (_eAbortName) {}
+        if (myToken !== postsRequestToken) return cachedPosts || [];
         postsLoading = false;
         postsError = err.message || 'Network error';
         console.error('[Post] loadPosts error:', err);

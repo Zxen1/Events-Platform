@@ -32,6 +32,24 @@ const MapModule = (function() {
   'use strict';
 
   /* ==========================================================================
+     IMPORTANT (Developer Note): TWO FILTERING PIPELINES EXIST
+     --------------------------------------------------------------------------
+     This file (`map-new.js`) owns the LOW-ZOOM filtering pipeline (clusters).
+     It is designed to stay fast at worldwide zoom levels by fetching AGGREGATED data.
+     
+     - Source of truth for current filters is `localStorage['funmap_filters']`
+     - Cluster requests include those filter params and return grouped counts
+       via `/gateway.php?action=get-clusters`
+     
+     At HIGH ZOOM (zoom >= postsLoadZoom; default 8), the app switches to the
+     detailed pipeline in `post-new.js`:
+     - Fetches actual posts/map-cards "in this map area" using `bounds`
+       via `/gateway.php?action=get-posts`
+     
+     So: clusters = worldwide aggregated; posts/map-cards = in-area detailed.
+     ========================================================================== */
+
+  /* ==========================================================================
      SECTION 1: CONSTANTS & STATE
      ========================================================================== */
   
