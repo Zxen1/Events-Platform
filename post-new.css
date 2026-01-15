@@ -1120,6 +1120,20 @@
   padding: 2px 4px;
 }
 
+/* Recent panel: "last opened" label above each recent card (live-site parity) */
+.recent-last-opened-label {
+  display: inline-block;
+  max-width: calc(100% - 24px);
+  font-size: 12px;
+  margin: 10px 12px 6px;
+  background: #000;
+  color: #fff;
+  padding: 2px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ============================================================================
    FAV TOGGLE (header)
    ============================================================================ */

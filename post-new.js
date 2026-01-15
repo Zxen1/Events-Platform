@@ -3009,6 +3009,15 @@ const PostModule = (function() {
 
     // Render each recent entry
     history.forEach(function(entry) {
+      // Live-site parity: show a small "last opened" label above each recent card.
+      var lastOpenedLabelText = formatLastOpened(entry && entry.timestamp);
+      if (lastOpenedLabelText) {
+        var labelEl = document.createElement('div');
+        labelEl.className = 'recent-last-opened-label';
+        labelEl.textContent = lastOpenedLabelText;
+        listEl.appendChild(labelEl);
+      }
+
       var card = renderRecentCard(entry);
       if (card) {
         listEl.appendChild(card);
@@ -3086,9 +3095,6 @@ const PostModule = (function() {
     var subInfo = getSubcategoryInfo(subcategoryKey);
     var iconUrl = entry.subcategory_icon_url || (subcategoryKey ? getSubcategoryIconUrl(subcategoryKey) : '');
 
-    // Format last opened time
-    var lastOpenedText = formatLastOpened(entry.timestamp);
-
     // Build card HTML - proper class naming: .{section}-{name}-{type}-{part}
     var thumbHtml = rawThumbUrl
       ? '<img class="recent-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
@@ -3112,7 +3118,6 @@ const PostModule = (function() {
         '<div class="recent-card-container-info">',
           catLineText ? '<div class="recent-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>' : '',
           city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
-          lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
         '</div>',
       '</div>',
       '<div class="recent-card-container-actions">',
@@ -3230,7 +3235,7 @@ const PostModule = (function() {
   /**
    * Format last opened timestamp
    * @param {number} timestamp - Unix timestamp in ms
-   * @returns {string} Formatted string like "Last opened 5 minutes ago"
+   * @returns {string} Formatted string like "Last opened 5 minutes ago - Wed 15 Jan, 2026 07:32"
    */
   function formatLastOpened(timestamp) {
     if (!timestamp) return '';
@@ -3249,7 +3254,16 @@ const PostModule = (function() {
       ago = days + ' day' + (days === 1 ? '' : 's');
     }
 
-    return 'Last opened ' + ago + ' ago';
+    // Live-site parity: include a concrete date/time after the relative "ago".
+    var d = new Date(timestamp);
+    var weekday = d.toLocaleDateString('en-GB', { weekday: 'short' });
+    var day = d.getDate();
+    var month = d.toLocaleDateString('en-GB', { month: 'short' });
+    var year = d.getFullYear();
+    var hour = String(d.getHours()).padStart(2, '0');
+    var minute = String(d.getMinutes()).padStart(2, '0');
+
+    return 'Last opened ' + ago + ' ago - ' + weekday + ' ' + day + ' ' + month + ', ' + year + ' ' + hour + ':' + minute;
   }
 
   /**
