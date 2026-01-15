@@ -396,7 +396,8 @@ const MarqueeModule = (function() {
       const minDecimals = hasDecimals ? 2 : 0;
       let formatted;
       try {
-        formatted = new Intl.NumberFormat(undefined, { style: 'currency', currency: code, minimumFractionDigits: minDecimals, maximumFractionDigits: 2 }).format(n);
+        // Use 'en-US' locale for consistent symbol formatting ($12 not USD 12)
+        formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: code, minimumFractionDigits: minDecimals, maximumFractionDigits: 2 }).format(n);
       } catch (_e) {
         formatted = String(n);
       }

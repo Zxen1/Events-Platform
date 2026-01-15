@@ -2353,7 +2353,8 @@ const PostModule = (function() {
       var minDecimals = hasDecimals ? 2 : 0;
       var formatted;
       try {
-        formatted = new Intl.NumberFormat(undefined, { style: 'currency', currency: code, minimumFractionDigits: minDecimals, maximumFractionDigits: 2 }).format(n);
+        // Use 'en-US' locale for consistent symbol formatting ($12 not USD 12)
+        formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: code, minimumFractionDigits: minDecimals, maximumFractionDigits: 2 }).format(n);
       } catch (_e) {
         // If Intl rejects the code, still show a readable value.
         formatted = String(n);
@@ -2440,14 +2441,18 @@ const PostModule = (function() {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
-    // Card click toggles collapsed state (collapses post back to card)
+    // Card click closes the post (restores it to a normal card)
     if (cardEl) {
       cardEl.addEventListener('click', function(e) {
-        // Don't collapse if clicking on interactive elements (buttons, links)
+        // Don't close if clicking on interactive elements (buttons, links)
         if (e.target.closest('button, a, .post-card-button-fav, .recent-card-button-fav')) {
           return;
         }
-        wrap.classList.toggle('open-post--collapsed');
+        // Use closePost to properly restore the card and notify the map
+        var postId = wrap.getAttribute('data-id');
+        if (postId) {
+          closePost(postId);
+        }
       });
     }
 
