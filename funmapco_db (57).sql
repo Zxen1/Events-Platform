@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 16, 2026 at 08:27 AM
+-- Generation Time: Jan 16, 2026 at 09:05 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1217,8 +1217,8 @@ INSERT INTO `list_currencies` (`id`, `option_filename`, `option_value`, `option_
 (23, 'bg.svg', 'BGN', 'Bulgarian Lev', 'лв', 'right', ',', 2, '.', 23, 1),
 (24, 'bi.svg', 'BIF', 'Burundian Franc', 'FBu', 'right', '.', 0, ',', 24, 1),
 (25, 'kh.svg', 'KHR', 'Cambodian Riel', '៛', 'right', '.', 2, ',', 25, 1),
-(26, 'ca.svg', 'CAD', 'Canadian Dollar ($ left)', '$', 'left', '.', 2, ',', 26, 1),
-(27, 'ca.svg', 'CAD', 'Canadian Dollar (right $)', '$', 'right', ',', 2, '', 27, 1),
+(26, 'ca.svg', 'CAD-L', 'Canadian Dollar ($ left)', '$', 'left', '.', 2, ',', 26, 1),
+(27, 'ca.svg', 'CAD-R', 'Canadian Dollar (right $)', '$', 'right', ',', 2, '', 27, 1),
 (28, 'cv.svg', 'CVE', 'Cape Verdean Escudo', '$', 'left', '.', 2, ',', 28, 1),
 (29, 'ky.svg', 'KYD', 'Cayman Islands Dollar', '$', 'left', '.', 2, ',', 29, 1),
 (30, 'cm.svg', 'XAF', 'Central African CFA', 'FCFA', 'right', '.', 0, '', 30, 1),
@@ -1239,8 +1239,8 @@ INSERT INTO `list_currencies` (`id`, `option_filename`, `option_value`, `option_
 (45, 'eg.svg', 'EGP', 'Egyptian Pound', 'E£', 'right', '.', 2, ',', 45, 1),
 (46, 'er.svg', 'ERN', 'Eritrean Nakfa', 'Nfk', 'right', '.', 2, ',', 46, 1),
 (47, 'et.svg', 'ETB', 'Ethiopian Birr', 'Br', 'right', '.', 2, ',', 47, 1),
-(48, 'eu.svg', 'EUR', 'Euro (right €)', '€', 'right', ',', 2, '.', 48, 1),
-(49, 'eu.svg', 'EUR', 'Euro (€ left)', '€', 'left', ',', 2, '.', 49, 1),
+(48, 'eu.svg', 'EUR-R', 'Euro (right €)', '€', 'right', ',', 2, '.', 48, 1),
+(49, 'eu.svg', 'EUR-L', 'Euro (€ left)', '€', 'left', ',', 2, '.', 49, 1),
 (50, 'fk.svg', 'FKP', 'Falkland Islands Pound', '£', 'left', '.', 2, ',', 50, 1),
 (51, 'fj.svg', 'FJD', 'Fijian Dollar', '$', 'left', '.', 2, ',', 51, 1),
 (52, 'gm.svg', 'GMD', 'Gambian Dalasi', 'D', 'left', '.', 2, ',', 52, 1),
@@ -1325,8 +1325,8 @@ INSERT INTO `list_currencies` (`id`, `option_filename`, `option_value`, `option_
 (131, 'sr.svg', 'SRD', 'Surinamese Dollar', '$', 'left', '.', 2, ',', 131, 1),
 (132, 'sz.svg', 'SZL', 'Swazi Lilangeni', 'E', 'right', '.', 2, ',', 132, 1),
 (133, 'se.svg', 'SEK', 'Swedish Krona', 'kr', 'right', ',', 2, '.', 133, 1),
-(134, 'ch.svg', 'CHF', 'Swiss Franc (CHF left)', 'CHF', 'left', '.', 2, '\'', 134, 1),
-(135, 'ch.svg', 'CHF', 'Swiss Franc (right CHF)', 'CHF', 'right', '.', 2, '\'', 135, 1),
+(134, 'ch.svg', 'CHF-L', 'Swiss Franc (CHF left)', 'CHF', 'left', '.', 2, '\'', 134, 1),
+(135, 'ch.svg', 'CHF-R', 'Swiss Franc (right CHF)', 'CHF', 'right', '.', 2, '\'', 135, 1),
 (136, 'sy.svg', 'SYP', 'Syrian Pound', '£', 'right', '.', 2, ',', 136, 1),
 (137, 'tw.svg', 'TWD', 'Taiwan Dollar', 'NT$', 'left', '.', 2, ',', 137, 1),
 (138, 'tj.svg', 'TJS', 'Tajikistani Somoni', 'SM', 'right', '.', 2, ',', 138, 1),
