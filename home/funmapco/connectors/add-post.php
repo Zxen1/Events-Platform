@@ -241,7 +241,9 @@ function format_price_range($minPrice, $maxPrice, $currencyCode, $formatting): s
   
   // Get clean ISO code (strip -L/-R suffix for display at end)
   $isoCode = $currencyCode;
-  if (str_ends_with($currencyCode, '-L') || str_ends_with($currencyCode, '-R')) {
+  // PHP 7 compatible: check if ends with -L or -R
+  $len = strlen($currencyCode);
+  if ($len >= 2 && (substr($currencyCode, -2) === '-L' || substr($currencyCode, -2) === '-R')) {
     $isoCode = substr($currencyCode, 0, -2);
   }
   
