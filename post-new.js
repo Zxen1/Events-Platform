@@ -994,40 +994,56 @@ const PostModule = (function() {
   }
 
   /**
-   * Format dates display for a post (matches live site formatDates)
-   * @param {Object} post - Post data from API
-   * @returns {string} Formatted date string or empty
+   * Format session_summary JSON for display
+   * @param {string|null} sessionSummary - JSON string: {"start":"2026-01-22","end":"2026-05-12"}
+   * @returns {string} Formatted date string like "Jan 22 - May 12, 2026" or empty
    */
-  function formatPostDates(post) {
-    // Get sessions from first map card
-    var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-    if (!mapCard) return '';
+  function formatSessionSummary(sessionSummary) {
+    var raw = (sessionSummary === null || sessionSummary === undefined) ? '' : String(sessionSummary).trim();
+    if (!raw) return '';
 
-    // Try sessions array
-    var sessions = mapCard.sessions;
-    if (!Array.isArray(sessions) || !sessions.length) return '';
-
-    // Sort by date
-    var sortedSessions = sessions.slice().sort(function(a, b) {
-      var dateA = a.date || a.full || '';
-      var dateB = b.date || b.full || '';
-      return dateA.localeCompare(dateB);
-    });
-
-    // Get first and last dates
-    var first = sortedSessions[0];
-    var last = sortedSessions[sortedSessions.length - 1];
-
-    var firstDate = first.date || first.full || '';
-    var lastDate = last.date || last.full || '';
-
-    if (!firstDate) return '';
-
-    // Format: "Jan 1 - Jan 15" or just "Jan 1" if same/single
-    if (firstDate === lastDate || sortedSessions.length === 1) {
-      return formatDateShort(firstDate);
+    // Parse JSON
+    var obj;
+    try {
+      if (raw[0] !== '{') return '';
+      obj = JSON.parse(raw);
+    } catch (_e) {
+      return '';
     }
-    return formatDateShort(firstDate) + ' - ' + formatDateShort(lastDate);
+
+    if (!obj || typeof obj !== 'object') return '';
+
+    var startStr = obj.start || '';
+    var endStr = obj.end || '';
+
+    if (!startStr) return '';
+
+    // Parse dates
+    var startDate = new Date(startStr);
+    var endDate = endStr ? new Date(endStr) : null;
+
+    if (isNaN(startDate.getTime())) return '';
+
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    // Single date or same start/end
+    if (!endDate || isNaN(endDate.getTime()) || startStr === endStr) {
+      return months[startDate.getMonth()] + ' ' + startDate.getDate() + ', ' + startDate.getFullYear();
+    }
+
+    // Date range
+    var startYear = startDate.getFullYear();
+    var endYear = endDate.getFullYear();
+
+    if (startYear === endYear) {
+      // Same year: "Jan 22 - May 12, 2026"
+      return months[startDate.getMonth()] + ' ' + startDate.getDate() + ' - ' +
+             months[endDate.getMonth()] + ' ' + endDate.getDate() + ', ' + endYear;
+    } else {
+      // Different years: "Dec 28, 2025 - Jan 15, 2026"
+      return months[startDate.getMonth()] + ' ' + startDate.getDate() + ', ' + startYear + ' - ' +
+             months[endDate.getMonth()] + ' ' + endDate.getDate() + ', ' + endYear;
+    }
   }
 
   /**
@@ -1127,20 +1143,27 @@ const PostModule = (function() {
 
     // Get first map card data
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+    var locationCount = post.loc_qty || (post.map_cards ? post.map_cards.length : 0);
 
     // Get display data
     var title = (mapCard && mapCard.title) || post.checkout_title || '';
     var venueName = (mapCard && mapCard.venue_name) || '';
     var city = (mapCard && mapCard.city) || '';
-    var locationDisplay = venueName || city || '';
+    // Show "X locations" for multiple locations, otherwise show venue/city
+    var locationDisplay = locationCount > 1
+      ? locationCount + ' locations'
+      : (venueName || city || '');
 
     // Get subcategory info
     var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
     var subInfo = getSubcategoryInfo(subcategoryKey);
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Format dates (if sessions exist)
-    var datesText = formatPostDates(post);
+    // Format dates from session_summary
+    var datesText = formatSessionSummary(mapCard && mapCard.session_summary);
+
+    // Format price from price_summary
+    var priceText = formatPriceSummaryText(mapCard && mapCard.price_summary);
 
     // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
     // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
@@ -1185,6 +1208,7 @@ const PostModule = (function() {
           '<div class="post-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>',
           locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
+          priceText ? '<div class="post-card-row-price"><span class="post-card-badge" title="Price">💰</span><span>' + escapeHtml(priceText) + '</span></div>' : '',
         '</div>',
       '</div>',
       '<div class="post-card-container-actions">',
@@ -2152,8 +2176,8 @@ const PostModule = (function() {
     var subInfo = getSubcategoryInfo(subcategoryKey);
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Format dates
-    var datesText = formatPostDates(post);
+    // Format dates from session_summary
+    var datesText = formatSessionSummary(loc0.session_summary);
 
     // Posted by info
     var posterName = post.member_name || 'Anonymous';
@@ -2308,29 +2332,40 @@ const PostModule = (function() {
   }
 
   // price_summary is stored as JSON in post_map_cards (reference/UI only).
-  // Convert it to a clean display string for the open-post header.
+  // Convert it to a clean display string for post cards and open-post header.
   // Expected shape:
   //   { "ticket": { "min": 12, "max": 34, "currency": "USD" }, "item": null }
-  //   { "item": { "price": 10, "currency": "USD" }, "ticket": null }
+  // NOTE: Shows ticket pricing first. Falls back to item pricing if no ticket pricing.
+  // Format: symbol + amount + ISO code (e.g., "$12 USD", "€12 EUR")
   function formatPriceSummaryText(priceSummary) {
     var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
     if (!raw) return '';
 
-    function fmtCurrency(value, currencyCode) {
+    function fmtCurrency(value, currencyCode, includeCode) {
       var n = Number(value);
       if (!Number.isFinite(n)) return '';
+      // Handle free
+      if (n === 0) return 'Free';
       var code = currencyCode ? String(currencyCode).trim().toUpperCase() : '';
       if (!code) return String(n);
+      // Show decimals only if the amount has them (12 → $12, 12.50 → $12.50)
+      var hasDecimals = n % 1 !== 0;
+      var minDecimals = hasDecimals ? 2 : 0;
+      var formatted;
       try {
-        return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(n);
+        formatted = new Intl.NumberFormat(undefined, { style: 'currency', currency: code, minimumFractionDigits: minDecimals, maximumFractionDigits: 2 }).format(n);
       } catch (_e) {
         // If Intl rejects the code, still show a readable value.
-        return String(n) + ' ' + code;
+        formatted = String(n);
       }
+      // Always append ISO code for clarity
+      if (includeCode && code) {
+        formatted = formatted + ' ' + code;
+      }
+      return formatted;
     }
 
-    // New site contract: price_summary is JSON (DB enforces json_valid).
-    // Do not silently fall back if parsing fails (AgentEssentials: no fallbacks).
+    // Parse JSON
     if (raw[0] !== '{' && raw[0] !== '[') {
       throw new Error('[Post] price_summary expected JSON but got: ' + raw);
     }
@@ -2338,26 +2373,40 @@ const PostModule = (function() {
     var obj = JSON.parse(raw);
     if (!obj || typeof obj !== 'object') return '';
 
+    // Try ticket pricing first
     var ticket = obj.ticket && typeof obj.ticket === 'object' ? obj.ticket : null;
-    var item = obj.item && typeof obj.item === 'object' ? obj.item : null;
-
-    if (ticket && (ticket.min !== undefined || ticket.max !== undefined)) {
-      var c = ticket.currency || '';
+    if (ticket) {
+      var c = ticket.currency ? String(ticket.currency).trim().toUpperCase() : '';
       var min = (ticket.min !== undefined && ticket.min !== null) ? Number(ticket.min) : null;
       var max = (ticket.max !== undefined && ticket.max !== null) ? Number(ticket.max) : null;
-      if (Number.isFinite(min) && Number.isFinite(max)) {
-        if (min === max) return fmtCurrency(min, c);
-        return fmtCurrency(min, c) + ' - ' + fmtCurrency(max, c);
+
+      // Both min and max are 0 = Free
+      if (Number.isFinite(min) && Number.isFinite(max) && min === 0 && max === 0) {
+        return 'Free';
       }
-      if (Number.isFinite(min)) return fmtCurrency(min, c);
-      if (Number.isFinite(max)) return fmtCurrency(max, c);
+
+      if (Number.isFinite(min) && Number.isFinite(max)) {
+        if (min === max) {
+          return fmtCurrency(min, c, true);
+        }
+        // Range: only append code once at the end
+        var minFmt = fmtCurrency(min, c, false);
+        var maxFmt = fmtCurrency(max, c, true);
+        return minFmt + ' - ' + maxFmt;
+      }
+      if (Number.isFinite(min)) return fmtCurrency(min, c, true);
+      if (Number.isFinite(max)) return fmtCurrency(max, c, true);
     }
 
-    if (item && (item.price !== undefined || item.item_price !== undefined)) {
+    // Fall back to item pricing if no ticket pricing
+    var item = obj.item && typeof obj.item === 'object' ? obj.item : null;
+    if (item) {
       var priceVal = (item.price !== undefined) ? item.price : item.item_price;
-      var cc = item.currency || '';
+      var itemCurrency = item.currency ? String(item.currency).trim().toUpperCase() : '';
       var p = Number(priceVal);
-      if (Number.isFinite(p)) return fmtCurrency(p, cc);
+      if (Number.isFinite(p)) {
+        return fmtCurrency(p, itemCurrency, true);
+      }
     }
 
     return '';
@@ -2391,7 +2440,16 @@ const PostModule = (function() {
     // Get card element (first child)
     var cardEl = wrap.querySelector('.post-card, .recent-card');
 
-    // Card click does not close post (removed per user request)
+    // Card click toggles collapsed state (collapses post back to card)
+    if (cardEl) {
+      cardEl.addEventListener('click', function(e) {
+        // Don't collapse if clicking on interactive elements (buttons, links)
+        if (e.target.closest('button, a, .post-card-button-fav, .recent-card-button-fav')) {
+          return;
+        }
+        wrap.classList.toggle('open-post--collapsed');
+      });
+    }
 
     // Favorite button:
     // IMPORTANT: do not bind a second handler here.
