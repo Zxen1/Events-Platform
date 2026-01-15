@@ -2068,15 +2068,13 @@ const MapModule = (function() {
       return;
     }
     
-    // Hover end: defer one tick so an adjacent marker's mouseenter can win
-    setTimeout(() => {
-      if (token !== hoverToken) return;
-      if (currentHoverPostIds && currentHoverPostIds.length) {
-        setHoverGroupForPostIds(currentHoverPostIds, false);
-      }
-      setCurrentHoverPostIds([]);
-      App.emit('map:cardHover', { postId: entry.post && entry.post.id ? String(entry.post.id) : '', postIds, isHovering: false });
-    }, 0);
+    // Hover end: clear immediately (no linger).
+    if (token !== hoverToken) return;
+    if (currentHoverPostIds && currentHoverPostIds.length) {
+      setHoverGroupForPostIds(currentHoverPostIds, false);
+    }
+    setCurrentHoverPostIds([]);
+    App.emit('map:cardHover', { postId: entry.post && entry.post.id ? String(entry.post.id) : '', postIds, isHovering: false });
   }
   
   // Hover coming from PostModule (post card hover): apply hover to all markers for that postId.
@@ -2094,13 +2092,37 @@ const MapModule = (function() {
       return;
     }
     
-    setTimeout(() => {
-      if (token !== hoverToken) return;
+    if (token !== hoverToken) return;
+    if (currentHoverPostIds && currentHoverPostIds.length) {
+      setHoverGroupForPostIds(currentHoverPostIds, false);
+    }
+    setCurrentHoverPostIds([]);
+  }
+
+  /**
+   * Clear ALL active (big) map cards.
+   * Requirement: no map card should remain active if there is no open post context.
+   */
+  function clearActiveMapCards() {
+    try {
+      // Clear active marker visuals
+      mapCardMarkers.forEach((entry, venueKey) => {
+        if (!entry || !entry.element) return;
+        if (entry.state === 'big') {
+          updateMapCardStateByKey(venueKey, 'small');
+        }
+        entry.element.classList.remove('is-active');
+      });
+      // Clear hover group too (avoid sticky hover feeling)
       if (currentHoverPostIds && currentHoverPostIds.length) {
         setHoverGroupForPostIds(currentHoverPostIds, false);
       }
       setCurrentHoverPostIds([]);
-    }, 0);
+      hoveredVenueKey = '';
+      clearHoverClearTimer();
+      // Clear remembered active associations
+      lastActiveVenueKeyByPostId.clear();
+    } catch (_e) {}
   }
 
   /**
@@ -2703,6 +2725,7 @@ const MapModule = (function() {
     createMapCardMarker,
     removeMapCardMarker,
     clearAllMapCardMarkers,
+    clearActiveMapCards,
     setActiveMapCard,
     // MapCards-style hover API (compat layer for PostModule)
     setMapCardHover: (postId) => onMapCardHoverByPostId(postId, true),

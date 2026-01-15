@@ -313,6 +313,23 @@ const PostModule = (function() {
       applyMode(currentMode);
       // Persist last used mode so refresh returns to the same panel.
       try { mergeUiState({ mode: currentMode }); } catch (_eModeStore) {}
+
+      // Requirement: no map card should remain active when panels are closed / no open post is visible.
+      // When we return to Map mode, clear active/big markers.
+      try {
+        if (currentMode === 'map' && window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
+          MapModule.clearActiveMapCards();
+        }
+      } catch (_eClearActive) {}
+    });
+
+    // When a post is closed, clear active/big markers (there is no longer an "open post" context).
+    App.on('post:closed', function() {
+      try {
+        if (window.MapModule && typeof MapModule.clearActiveMapCards === 'function') {
+          MapModule.clearActiveMapCards();
+        }
+      } catch (_eClearOnClose) {}
     });
 
     App.on('map:ready', function(data) {
@@ -936,11 +953,6 @@ const PostModule = (function() {
     return url + separator + 'class=' + className;
   }
 
-  // Some deployments may not have the Bunny Optimizer "thumbnail" preset configured.
-  // If we see a thumbnail-class load failure once, we stop using it globally and serve raw URLs
-  // so postcard images never appear broken/missing.
-  var thumbnailClassSupported = null; // null=unknown, true/false=known
-
   /**
    * Pick a safe postcard thumbnail src.
    * @param {string} rawUrl - Full raw image URL
@@ -948,60 +960,39 @@ const PostModule = (function() {
    */
   function getCardThumbSrc(rawUrl) {
     if (!rawUrl) return '';
-    if (thumbnailClassSupported === false) return rawUrl;
     return addImageClass(rawUrl, 'thumbnail');
   }
 
   /**
    * Attach a robust loader to a postcard thumbnail image.
-   * - If the first attempt using ?class=thumbnail fails, retry using the raw URL.
-   * - Remember support globally to avoid repeated broken-image attempts.
+   * Agent Essentials: NO FALLBACKS.
+   * If Bunny presets are misconfigured, we want to SEE it (broken image + console error),
+   * not silently retry with a different URL.
    * @param {HTMLImageElement} imgEl
    * @param {string} rawUrl
    */
   function wireCardThumbImage(imgEl, rawUrl) {
     if (!imgEl || !rawUrl) return;
 
-    // If we already know thumbnails aren't supported, force raw URL.
-    if (thumbnailClassSupported === false) {
-      imgEl.src = rawUrl;
-      return;
-    }
-
     // Only wire once per element.
     if (imgEl.dataset && imgEl.dataset.wiredThumb === '1') return;
     if (imgEl.dataset) imgEl.dataset.wiredThumb = '1';
 
-    var usedClass = (thumbnailClassSupported !== false);
-    var primarySrc = usedClass ? addImageClass(rawUrl, 'thumbnail') : rawUrl;
+    var primarySrc = addImageClass(rawUrl, 'thumbnail');
 
     // Set initial src if caller didn't.
     if (!imgEl.getAttribute('src')) {
       imgEl.src = primarySrc;
     }
-
-    // On successful load, remember support if we were using the class.
-    imgEl.addEventListener('load', function() {
-      // If the loaded src includes class=thumbnail, treat that as support.
-      try {
-        var s = String(imgEl.currentSrc || imgEl.src || '');
-        if (s.indexOf('class=thumbnail') !== -1) {
-          thumbnailClassSupported = true;
-        }
-      } catch (_e) {}
-    }, { once: true });
-
-    // On error, retry once without the class. Also mark global support as false.
+    
+    // If the image fails to load, do not retry. Make it loud for debugging.
     imgEl.addEventListener('error', function onErr() {
-      // If we already tried raw, stop.
-      if (imgEl.dataset && imgEl.dataset.thumbRetry === '1') return;
-      if (imgEl.dataset) imgEl.dataset.thumbRetry = '1';
-
-      // Mark unsupported so future card thumbs skip ?class=thumbnail.
-      thumbnailClassSupported = false;
-
-      console.warn('[Post] Card thumbnail failed with class=thumbnail; retrying without class:', rawUrl);
-      imgEl.src = rawUrl;
+      try { if (imgEl.dataset) imgEl.dataset.thumbLoadError = '1'; } catch (_eDs) {}
+      var srcNow = '';
+      try { srcNow = String(imgEl.currentSrc || imgEl.src || ''); } catch (_eSrc) {}
+      console.error('[Post] Thumbnail failed to load (no fallback). Check Bunny preset "thumbnail":', srcNow, 'raw:', rawUrl);
+      // Throwing here surfaces the problem clearly in devtools without masking it.
+      throw new Error('[Post] Thumbnail failed to load (no fallback). Bunny preset "thumbnail" may be misconfigured.');
     });
   }
 
