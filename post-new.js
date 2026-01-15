@@ -767,10 +767,17 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function getPostsMinZoom() {
-    if (window.App && typeof App.getConfig === 'function') {
-      return App.getConfig('postsLoadZoom');
+    // Agent Essentials: NO HARDCODE.
+    // postsLoadZoom must be configured (admin setting / config) for every deployment.
+    if (!window.App || typeof App.getConfig !== 'function') {
+      throw new Error('[Post] App.getConfig is required for postsLoadZoom (no hardcoded fallback).');
     }
-    return 8;
+    var v = App.getConfig('postsLoadZoom');
+    var n = Number(v);
+    if (!Number.isFinite(n)) {
+      throw new Error('[Post] postsLoadZoom config is missing/invalid (no hardcoded fallback).');
+    }
+    return n;
   }
 
   function updatePostsButtonState() {
@@ -2866,7 +2873,19 @@ const PostModule = (function() {
     var img = document.createElement('img');
     img.alt = 'Posts empty state image';
     img.className = 'post-panel-empty-image';
-    applySystemImage(img, 'postSystemImages', 'post_panel_empty_image');
+    // Hide until loaded so we don't show a broken image icon during refresh/startup.
+    try { img.style.opacity = '0'; } catch (_eOp0) {}
+    try {
+      img.addEventListener('load', function() { try { img.style.opacity = '1'; } catch (_eOp1) {} }, { once: true });
+      img.addEventListener('error', function() { try { img.style.opacity = '0'; } catch (_eOp2) {} }, { once: true });
+    } catch (_eEvt0) {}
+    // Load only after startup settings are ready (Agent Essentials: no retries/fallbacks in applySystemImage).
+    if (!window.App || typeof App.whenStartupSettingsReady !== 'function') {
+      throw new Error('[Post] App.whenStartupSettingsReady is required before loading system images.');
+    }
+    App.whenStartupSettingsReady().then(function() {
+      try { applySystemImage(img, 'postSystemImages', 'post_panel_empty_image'); } catch (e) { console.error(e); }
+    });
     wrap.appendChild(img);
 
     var msg = document.createElement('p');
@@ -2900,7 +2919,18 @@ const PostModule = (function() {
     var reminderImg = document.createElement('img');
     reminderImg.alt = 'Recents reminder image';
     reminderImg.className = 'recent-panel-reminder-image';
-    applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image');
+    // Hide until loaded so we don't show a broken image icon during refresh/startup.
+    try { reminderImg.style.opacity = '0'; } catch (_eOp0) {}
+    try {
+      reminderImg.addEventListener('load', function() { try { reminderImg.style.opacity = '1'; } catch (_eOp1) {} }, { once: true });
+      reminderImg.addEventListener('error', function() { try { reminderImg.style.opacity = '0'; } catch (_eOp2) {} }, { once: true });
+    } catch (_eEvt0) {}
+    if (!window.App || typeof App.whenStartupSettingsReady !== 'function') {
+      throw new Error('[Post] App.whenStartupSettingsReady is required before loading system images.');
+    }
+    App.whenStartupSettingsReady().then(function() {
+      try { applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image'); } catch (e) { console.error(e); }
+    });
     reminderWrap.appendChild(reminderImg);
 
     var reminderMsg = document.createElement('p');
@@ -2997,7 +3027,18 @@ const PostModule = (function() {
     var reminderImg = document.createElement('img');
     reminderImg.alt = 'Recents reminder image';
     reminderImg.className = 'recent-panel-reminder-image';
-    applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image');
+    // Hide until loaded so we don't show a broken image icon during refresh/startup.
+    try { reminderImg.style.opacity = '0'; } catch (_eOp0) {}
+    try {
+      reminderImg.addEventListener('load', function() { try { reminderImg.style.opacity = '1'; } catch (_eOp1) {} }, { once: true });
+      reminderImg.addEventListener('error', function() { try { reminderImg.style.opacity = '0'; } catch (_eOp2) {} }, { once: true });
+    } catch (_eEvt0) {}
+    if (!window.App || typeof App.whenStartupSettingsReady !== 'function') {
+      throw new Error('[Post] App.whenStartupSettingsReady is required before loading system images.');
+    }
+    App.whenStartupSettingsReady().then(function() {
+      try { applySystemImage(reminderImg, 'recentSystemImages', 'recent_panel_footer_image'); } catch (e) { console.error(e); }
+    });
     reminderWrap.appendChild(reminderImg);
 
     var reminderMsg = document.createElement('p');
@@ -3375,32 +3416,11 @@ const PostModule = (function() {
       throw new Error('[Post] App.getState and App.getImageUrl are required to load system images.');
     }
 
-    // Startup settings (including system_images) are loaded async.
-    // When panels are restored early on boot, this function can be called before system_images exists.
-    // In that case, wait for App.whenStartupSettingsReady() then retry once.
+    // Agent Essentials: NO FALLBACKS / NO RETRY CHAINS.
+    // Callers must only call this after startup settings are ready.
     var sys = App.getState('system_images');
     if (!sys || typeof sys !== 'object') {
-      try {
-        if (typeof App.whenStartupSettingsReady === 'function') {
-          // Only attach one waiter per element/key to avoid repeated retries.
-          var mark = (folderKey || '') + ':' + (systemImageKey || '');
-          if (imgEl.dataset && imgEl.dataset.awaitingSystemImages === mark) return;
-          if (imgEl.dataset) imgEl.dataset.awaitingSystemImages = mark;
-
-          App.whenStartupSettingsReady().then(function() {
-            try {
-              // If the element is still in the DOM, retry normally (now system_images should exist).
-              if (!imgEl || !imgEl.isConnected) return;
-              if (imgEl.dataset) delete imgEl.dataset.awaitingSystemImages;
-              applySystemImage(imgEl, folderKey, systemImageKey);
-            } catch (e) {
-              console.error(e);
-            }
-          });
-          return;
-        }
-      } catch (_eWait) {}
-      throw new Error('[Post] system_images not loaded and App.whenStartupSettingsReady() is unavailable.');
+      throw new Error('[Post] system_images not loaded. Ensure App.whenStartupSettingsReady() has resolved before calling applySystemImage().');
     }
     sys = sys || {};
     var filename = sys && sys[systemImageKey] ? String(sys[systemImageKey]) : '';

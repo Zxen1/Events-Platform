@@ -109,7 +109,11 @@ const HeaderModule = (function() {
         // Only treat expired as active when it is truthy in a boolean sense.
         var exp = st.expired;
         var hasExpired = (exp === true || exp === 1 || exp === '1' || String(exp).toLowerCase() === 'true');
-        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired;
+
+        // Category/subcategory toggles: if any are OFF, that is active filtering (must show orange).
+        var hasCategoryFiltering = hasAnyCategoryOrSubcategoryTogglesOff(st.categories);
+
+        return hasKeyword || hasMinPrice || hasMaxPrice || hasDate || hasExpired || hasCategoryFiltering;
     }
     
     function setHeaderFilterIconActive(active) {

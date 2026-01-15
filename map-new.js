@@ -471,9 +471,9 @@ const MapModule = (function() {
     if (baseUrl && filename) {
       return baseUrl + '/' + filename;
     }
-    
-    console.error('[Map] multi_post_icon not configured in Admin > Map tab');
-    return '';
+
+    // Agent Essentials: NO FALLBACKS. Missing required config must be loud.
+    throw new Error('[Map] multi_post_icon not configured in Admin > Map tab');
   }
   
   /**
@@ -486,11 +486,11 @@ const MapModule = (function() {
       return getMultiPostIconUrl();
     }
     
-    // Single post: use subcategory icon from post data
+    // Single post: subcategory icon from post data is REQUIRED.
     if (post.iconUrl) return post.iconUrl;
-    
-    // No subcategory icon - fall back to multi-post icon
-    return getMultiPostIconUrl();
+
+    // Agent Essentials: NO FALLBACKS. Missing subcategory icon must be loud.
+    throw new Error('[Map] Missing subcategory iconUrl for map card marker (single post).');
   }
   
   /**

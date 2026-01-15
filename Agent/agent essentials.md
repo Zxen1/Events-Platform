@@ -19,7 +19,11 @@ Never hardcode values. Everything must be configurable/dynamic. This platform wi
 Never create fallback chains (if X fails, try Y). If something fails, throw an error - don't silently fall back.
 
 ### No !important Tags
-Never use `!important` in CSS except with user's explicit approval as a last resort.
+Never use `!important` in CSS.
+
+**Exceptions (allowed):**
+1. **Mapbox overrides** (Mapbox/third-party injected styles that require `!important`)
+2. **Browser-specific overrides** (rare, only when needed to fix a browser quirk/override)
 
 ### No Workarounds
 Never create workarounds or hacks. Find the proper solution or ask the user.
