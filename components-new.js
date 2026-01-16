@@ -1429,6 +1429,8 @@ const CurrencyComponent = (function(){
     function formatAmount(amount, currencyCode, options) {
         options = options || {};
         var includeCode = options.includeCode !== false; // Default true
+        var trimZeroDecimals = options.trimZeroDecimals !== false; // Default true
+        
         var currency = getCurrencyByCode(currencyCode);
         if (!currency) {
             throw new Error('[CurrencyComponent] formatAmount: currency not found for code: ' + currencyCode);
@@ -1454,8 +1456,18 @@ const CurrencyComponent = (function(){
             intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousSep);
         }
         
-        // Build the number string
-        var numStr = decPlaces > 0 ? (intPart + decSep + decPart) : intPart;
+        // Build the number string - trim .00 if whole number and requested
+        var numStr;
+        if (decPlaces > 0) {
+            var hasCents = (num % 1 !== 0);
+            if (!hasCents && trimZeroDecimals) {
+                numStr = intPart;
+            } else {
+                numStr = intPart + decSep + decPart;
+            }
+        } else {
+            numStr = intPart;
+        }
         
         // Apply symbol position
         var formatted;
@@ -1554,7 +1566,10 @@ const CurrencyComponent = (function(){
     }
     
     // Format for display on blur (number only, correct decimal places)
-    function formatForDisplay(input, currencyCode) {
+    function formatForDisplay(input, currencyCode, options) {
+        options = options || {};
+        var trimZeroDecimals = options.trimZeroDecimals !== false; // Default true
+        
         var currency = getCurrencyByCode(currencyCode);
         var val = String(input || '').trim();
         if (val === '') return '';
@@ -1569,6 +1584,11 @@ const CurrencyComponent = (function(){
         // Format with correct decimal places
         var fixed = num.toFixed(decPlaces);
         
+        // Trim zero decimals if requested
+        if (decPlaces > 0 && trimZeroDecimals && num % 1 === 0) {
+            fixed = num.toFixed(0);
+        }
+        
         // Replace dot with currency's decimal separator
         if (decSep !== '.') {
             fixed = fixed.replace('.', decSep);
@@ -1576,9 +1596,9 @@ const CurrencyComponent = (function(){
         
         return fixed;
     }
-    
+
     // Format for display WITH symbol (for showing in input after blur)
-    function formatWithSymbol(input, currencyCode) {
+    function formatWithSymbol(input, currencyCode, options) {
         if (!currencyCode) {
             throw new Error('[CurrencyComponent] formatWithSymbol: currencyCode is required');
         }
@@ -1587,7 +1607,7 @@ const CurrencyComponent = (function(){
         if (val === '') return '';
         
         // First get the number formatted correctly
-        var numFormatted = formatForDisplay(val, currencyCode);
+        var numFormatted = formatForDisplay(val, currencyCode, options);
         if (numFormatted === '') return '';
         
         if (!currency) {
