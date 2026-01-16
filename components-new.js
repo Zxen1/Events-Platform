@@ -1538,7 +1538,7 @@ const CurrencyComponent = (function(){
         return val;
     }
     
-    // Format for display on blur (ensures correct decimal places)
+    // Format for display on blur (number only, correct decimal places)
     function formatForDisplay(input, currencyCode) {
         var currency = getCurrencyByCode(currencyCode);
         var val = String(input || '').trim();
@@ -1561,6 +1561,47 @@ const CurrencyComponent = (function(){
         
         return fixed;
     }
+    
+    // Format for display WITH symbol (for showing in input after blur)
+    function formatWithSymbol(input, currencyCode) {
+        var currency = getCurrencyByCode(currencyCode);
+        var val = String(input || '').trim();
+        if (val === '') return '';
+        
+        // First get the number formatted correctly
+        var numFormatted = formatForDisplay(val, currencyCode);
+        if (numFormatted === '') return '';
+        
+        // If no currency data, just return the number
+        if (!currency || !currency.symbol) return numFormatted;
+        
+        // Add the symbol in the correct position
+        if (currency.symbolPosition === 'right') {
+            return numFormatted + ' ' + currency.symbol;
+        } else {
+            return currency.symbol + numFormatted;
+        }
+    }
+    
+    // Strip symbol from input value (for editing)
+    function stripSymbol(input, currencyCode) {
+        var currency = getCurrencyByCode(currencyCode);
+        var val = String(input || '').trim();
+        if (val === '') return '';
+        
+        if (!currency || !currency.symbol) return val;
+        
+        // Remove the symbol
+        var symbol = currency.symbol;
+        if (val.startsWith(symbol)) {
+            val = val.substring(symbol.length).trim();
+        }
+        if (val.endsWith(symbol)) {
+            val = val.substring(0, val.length - symbol.length).trim();
+        }
+        
+        return val;
+    }
 
     return {
         getData: getData,
@@ -1574,7 +1615,9 @@ const CurrencyComponent = (function(){
         formatAmount: formatAmount,
         parseInput: parseInput,
         sanitizeInput: sanitizeInput,
-        formatForDisplay: formatForDisplay
+        formatForDisplay: formatForDisplay,
+        formatWithSymbol: formatWithSymbol,
+        stripSymbol: stripSymbol
     };
 })();
 

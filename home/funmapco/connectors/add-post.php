@@ -700,8 +700,47 @@ foreach ($byLoc as $locNum => $entries) {
     ], JSON_UNESCAPED_UNICODE);
   }
 
-  // price_summary (JSON: {ticket: {min, max, currency}, item: {price, currency}})
-  $priceSummary = [];
+  // price_summary: Pre-formatted display string (e.g., "$12.00 - $34.50 USD")
+  // Fetches currency formatting rules from list_currencies table
+  
+  // Helper function to format a price with currency symbol
+  function formatPriceWithCurrency($amount, $currencyCode, $mysqli) {
+    if (!$currencyCode || $amount === null) {
+      return number_format((float)$amount, 2, '.', ',');
+    }
+    
+    // Fetch currency formatting rules
+    $stmt = $mysqli->prepare("SELECT option_symbol, option_symbol_position, option_decimal_separator, option_decimal_places, option_thousands_separator FROM list_currencies WHERE option_value = ? AND is_active = 1 LIMIT 1");
+    if (!$stmt) return number_format((float)$amount, 2, '.', ',');
+    
+    $stmt->bind_param('s', $currencyCode);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $currency = $result->fetch_assoc();
+    $stmt->close();
+    
+    if (!$currency) {
+      return number_format((float)$amount, 2, '.', ',');
+    }
+    
+    $symbol = $currency['option_symbol'] ?? '';
+    $symbolPos = $currency['option_symbol_position'] ?? 'left';
+    $decSep = $currency['option_decimal_separator'] ?? '.';
+    $decPlaces = (int)($currency['option_decimal_places'] ?? 2);
+    $thousSep = $currency['option_thousands_separator'] ?? ',';
+    
+    // Format the number
+    $formatted = number_format((float)$amount, $decPlaces, $decSep, $thousSep);
+    
+    // Apply symbol position
+    if ($symbolPos === 'right') {
+      return $formatted . ($symbol ? ' ' . $symbol : '');
+    } else {
+      return $symbol . $formatted;
+    }
+  }
+  
+  $priceSummaryText = '';
   
   // Ticket pricing: find min/max across all tiers
   $ticketPrices = [];
@@ -739,26 +778,31 @@ foreach ($byLoc as $locNum => $entries) {
     }
   }
   if (!empty($ticketPrices)) {
-    $priceSummary['ticket'] = [
-      'min' => min($ticketPrices),
-      'max' => max($ticketPrices),
-      'currency' => $ticketCurrency ?: ''
-    ];
-  }
-  
-  // Item pricing: single price
-  if (is_array($itemPricing) && !empty($itemPricing['item_price'])) {
-    $itemPrice = (float)$itemPricing['item_price'];
-    if ($itemPrice > 0) {
-      $priceSummary['item'] = [
-        'price' => $itemPrice,
-        'currency' => isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : ''
-      ];
+    $minPrice = min($ticketPrices);
+    $maxPrice = max($ticketPrices);
+    $displayCode = preg_replace('/-[LR]$/', '', $ticketCurrency ?: '');
+    
+    if ($minPrice === $maxPrice) {
+      // Single price: "$12.00 USD"
+      $priceSummaryText = formatPriceWithCurrency($minPrice, $ticketCurrency, $mysqli) . ($displayCode ? ' ' . $displayCode : '');
+    } else {
+      // Range: "$12.00 - $34.50 USD"
+      $priceSummaryText = formatPriceWithCurrency($minPrice, $ticketCurrency, $mysqli) . ' - ' . formatPriceWithCurrency($maxPrice, $ticketCurrency, $mysqli) . ($displayCode ? ' ' . $displayCode : '');
     }
   }
   
-  if (!empty($priceSummary)) {
-    $card['price_summary'] = json_encode($priceSummary, JSON_UNESCAPED_UNICODE);
+  // Item pricing: single price (only if no ticket pricing)
+  if (empty($priceSummaryText) && is_array($itemPricing) && !empty($itemPricing['item_price'])) {
+    $itemPrice = (float)$itemPricing['item_price'];
+    if ($itemPrice > 0) {
+      $itemCurrency = isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : '';
+      $displayCode = preg_replace('/-[LR]$/', '', $itemCurrency);
+      $priceSummaryText = formatPriceWithCurrency($itemPrice, $itemCurrency, $mysqli) . ($displayCode ? ' ' . $displayCode : '');
+    }
+  }
+  
+  if (!empty($priceSummaryText)) {
+    $card['price_summary'] = $priceSummaryText;
   }
 
   $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)

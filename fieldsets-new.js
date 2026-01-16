@@ -712,6 +712,18 @@ const FieldsetBuilder = (function(){
             }
         });
 
+        input.addEventListener('focus', function() {
+            var v = String(this.value || '').trim();
+            if (v === '') return;
+            
+            var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
+            
+            // Strip symbol on focus so user can edit just the number
+            if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.stripSymbol) {
+                this.value = CurrencyComponent.stripSymbol(v, currencyCode);
+            }
+        });
+        
         input.addEventListener('blur', function() {
             var cleaned = sanitize(this.value);
             if (cleaned === '') {
@@ -724,12 +736,12 @@ const FieldsetBuilder = (function(){
             
             var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
             
-            // If currency is selected, use currency-aware formatting
+            // If currency is selected, format WITH symbol
             if (currencyCode) {
-                if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatForDisplay) {
-                    throw new Error('[FieldsetBuilder] CurrencyComponent.formatForDisplay required but not available');
+                if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
+                    throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol required but not available');
                 }
-                var formatted = CurrencyComponent.formatForDisplay(cleaned, currencyCode);
+                var formatted = CurrencyComponent.formatWithSymbol(cleaned, currencyCode);
                 if (formatted !== '') {
                     this.value = formatted;
                     return;
@@ -2200,14 +2212,26 @@ const FieldsetBuilder = (function(){
                     var result = CurrencyComponent.buildCompactMenu({
                         initialValue: null,
                         onSelect: function(value, label, countryCode) {
+                            var oldCurrency = ipSelectedCurrency;
                             ipSelectedCurrency = value;
                             // Update price input placeholder based on currency
                             var priceInput = fieldset.querySelector('.fieldset-itempricing-input-itemprice');
                             if (priceInput) {
                                 updatePricePlaceholder(priceInput, value);
-                                // Re-format existing value if any
-                                if (priceInput.value && priceInput.value.trim()) {
-                                    priceInput.dispatchEvent(new Event('blur'));
+                                // Re-format existing value with new currency
+                                var val = String(priceInput.value || '').trim();
+                                if (val) {
+                                    // Parse with old currency to get numeric value
+                                    var numericValue;
+                                    if (oldCurrency && CurrencyComponent.parseInput) {
+                                        numericValue = CurrencyComponent.parseInput(val, oldCurrency);
+                                    } else {
+                                        numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                                    }
+                                    // Format with new currency
+                                    if (Number.isFinite(numericValue) && CurrencyComponent.formatWithSymbol) {
+                                        priceInput.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), value);
+                                    }
                                 }
                             }
                         }
@@ -2447,6 +2471,32 @@ const FieldsetBuilder = (function(){
                     });
                 }
                 
+                // Reformat existing price values when currency changes
+                function spReformatAllPriceValues(oldCurrencyCode, newCurrencyCode) {
+                    if (!newCurrencyCode) return;
+                    var priceInputs = fieldset.querySelectorAll('.fieldset-sessionpricing-input-price');
+                    priceInputs.forEach(function(inp) {
+                        var val = String(inp.value || '').trim();
+                        if (val === '') return;
+                        
+                        // Parse the value (strip old currency symbol if present)
+                        var numericValue;
+                        if (oldCurrencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput) {
+                            numericValue = CurrencyComponent.parseInput(val, oldCurrencyCode);
+                        } else {
+                            // Try to parse as plain number
+                            numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                        }
+                        
+                        if (!Number.isFinite(numericValue)) return;
+                        
+                        // Reformat with new currency
+                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), newCurrencyCode);
+                        }
+                    });
+                }
+                
                 function spBuildTicketCurrencyMenu() {
                     if (typeof CurrencyComponent === 'undefined') {
                         console.error('[FieldsetBuilder] CurrencyComponent not available');
@@ -2455,9 +2505,12 @@ const FieldsetBuilder = (function(){
                     var result = CurrencyComponent.buildCompactMenu({
                         initialValue: spTicketCurrencyState.code,
                         onSelect: function(value, label, countryCode) {
+                            var oldCode = spTicketCurrencyState.code;
                             spTicketCurrencyState.flag = countryCode;
                             spTicketCurrencyState.code = value;
                             spSyncAllTicketCurrencies();
+                            // Reformat existing values with new currency
+                            spReformatAllPriceValues(oldCode, value);
                         }
                     });
                     spTicketCurrencyMenus.push(result);
@@ -2485,18 +2538,30 @@ const FieldsetBuilder = (function(){
                         this.value = raw;
                     });
                     
+                    inputEl.addEventListener('focus', function() {
+                        var v = String(this.value || '').trim();
+                        if (v === '') return;
+                        
+                        var currencyCode = spGetTicketCurrencyCode();
+                        
+                        // Strip symbol on focus so user can edit just the number
+                        if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.stripSymbol) {
+                            this.value = CurrencyComponent.stripSymbol(v, currencyCode);
+                        }
+                    });
+                    
                     inputEl.addEventListener('blur', function() {
                         var v = String(this.value || '').trim();
                         if (v === '') return;
                         
                         var currencyCode = spGetTicketCurrencyCode();
                         
-                        // If currency is selected, use currency-aware formatting
+                        // If currency is selected, format WITH symbol
                         if (currencyCode) {
-                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatForDisplay) {
-                                throw new Error('[FieldsetBuilder] CurrencyComponent.formatForDisplay required but not available');
+                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
+                                throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol required but not available');
                             }
-                            var formatted = CurrencyComponent.formatForDisplay(v, currencyCode);
+                            var formatted = CurrencyComponent.formatWithSymbol(v, currencyCode);
                             if (formatted !== '') {
                                 this.value = formatted;
                                 return;

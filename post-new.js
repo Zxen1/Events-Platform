@@ -2307,90 +2307,12 @@ const PostModule = (function() {
     }
   }
 
-  // price_summary is stored as JSON in post_map_cards (reference/UI only).
-  // Convert it to a clean display string for the open-post header.
-  // Expected shape:
-  //   { "ticket": { "min": 12, "max": 34, "currency": "USD" }, "item": null }
-  //   { "item": { "price": 10, "currency": "USD" }, "ticket": null }
-  // Output format: "$12 - $34.50 USD" (symbol + amount, with code at end only once)
+  // price_summary is now stored as a pre-formatted display string in post_map_cards.
+  // e.g., "$12.00 - $34.50 USD" or "12,00 € EUR"
+  // Just return it directly - no parsing needed.
   function formatPriceSummaryText(priceSummary) {
     var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
-    if (!raw) return '';
-
-    // Format a single price value using CurrencyComponent
-    // Returns { display: "$12.50", code: "USD" } or null if invalid
-    function fmtPrice(value, currencyCode) {
-      var n = Number(value);
-      if (!Number.isFinite(n)) return null;
-      var code = currencyCode ? String(currencyCode).trim() : '';
-      
-      // No currency code - return plain number (valid case for free items)
-      if (!code) {
-        return { display: n.toFixed(2), code: '' };
-      }
-      
-      // Currency code provided - CurrencyComponent is required
-      if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatAmount) {
-        throw new Error('[Post] CurrencyComponent.formatAmount required but not available');
-      }
-      
-      // Use CurrencyComponent.formatAmount for proper formatting based on database rules
-      var formatted = CurrencyComponent.formatAmount(n, code, { includeCode: false });
-      // Extract base code (remove -L or -R suffix for display)
-      var displayCode = code.replace(/-[LR]$/, '');
-      return { display: formatted, code: displayCode };
-    }
-
-    // New site contract: price_summary is JSON (DB enforces json_valid).
-    // Do not silently fall back if parsing fails (AgentEssentials: no fallbacks).
-    if (raw[0] !== '{' && raw[0] !== '[') {
-      throw new Error('[Post] price_summary expected JSON but got: ' + raw);
-    }
-
-    var obj = JSON.parse(raw);
-    if (!obj || typeof obj !== 'object') return '';
-
-    var ticket = obj.ticket && typeof obj.ticket === 'object' ? obj.ticket : null;
-    var item = obj.item && typeof obj.item === 'object' ? obj.item : null;
-
-    if (ticket && (ticket.min !== undefined || ticket.max !== undefined)) {
-      var c = ticket.currency || '';
-      var min = (ticket.min !== undefined && ticket.min !== null) ? Number(ticket.min) : null;
-      var max = (ticket.max !== undefined && ticket.max !== null) ? Number(ticket.max) : null;
-      
-      if (Number.isFinite(min) && Number.isFinite(max)) {
-        var minFmt = fmtPrice(min, c);
-        var maxFmt = fmtPrice(max, c);
-        if (!minFmt || !maxFmt) return '';
-        
-        if (min === max) {
-          // Single price: "$12.50 USD"
-          return minFmt.display + (minFmt.code ? ' ' + minFmt.code : '');
-        }
-        // Range: "$12 - $34.50 USD" (code only at the end)
-        return minFmt.display + ' - ' + maxFmt.display + (maxFmt.code ? ' ' + maxFmt.code : '');
-      }
-      if (Number.isFinite(min)) {
-        var mFmt = fmtPrice(min, c);
-        return mFmt ? mFmt.display + (mFmt.code ? ' ' + mFmt.code : '') : '';
-      }
-      if (Number.isFinite(max)) {
-        var xFmt = fmtPrice(max, c);
-        return xFmt ? xFmt.display + (xFmt.code ? ' ' + xFmt.code : '') : '';
-      }
-    }
-
-    if (item && (item.price !== undefined || item.item_price !== undefined)) {
-      var priceVal = (item.price !== undefined) ? item.price : item.item_price;
-      var cc = item.currency || '';
-      var p = Number(priceVal);
-      if (Number.isFinite(p)) {
-        var pFmt = fmtPrice(p, cc);
-        return pFmt ? pFmt.display + (pFmt.code ? ' ' + pFmt.code : '') : '';
-      }
-    }
-
-    return '';
+    return raw;
   }
 
   // Avatar values are stored as filenames (preferred) or occasionally absolute URLs (legacy).
