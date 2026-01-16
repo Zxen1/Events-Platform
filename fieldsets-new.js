@@ -2374,7 +2374,6 @@ const FieldsetBuilder = (function(){
                 var spActivePicker = null; // { dateStr, idx, timeInput, ticketBtn, rowEl }
 
                 var spOpenGroupKey = null;
-                var spOpenGroupSnapshot = null; // pricing snapshot array
 
                 function spGetSystemTicketIconUrl() {
                     try {
@@ -2990,7 +2989,6 @@ const FieldsetBuilder = (function(){
                     if (g) try { g.remove(); } catch (e1) {}
                     delete spTicketGroups[lastKey];
                     spOpenGroupKey = null;
-                    spOpenGroupSnapshot = null;
                     Object.keys(spSessionData).forEach(function(ds) {
                         var data = spSessionData[ds];
                         if (!data || !Array.isArray(data.groups)) return;
@@ -3014,7 +3012,7 @@ const FieldsetBuilder = (function(){
                 var spTicketGroupFooterCancel = document.createElement('button');
                 spTicketGroupFooterCancel.type = 'button';
                 spTicketGroupFooterCancel.className = 'fieldset-sessionpricing-ticketgroups-button-cancel button-class-2';
-                spTicketGroupFooterCancel.textContent = 'Cancel';
+                spTicketGroupFooterCancel.textContent = 'Close';
                 spTicketGroupFooter.appendChild(spTicketGroupFooterOk);
                 spTicketGroupFooter.appendChild(spTicketGroupFooterCancel);
                 spPricingGroupsWrap.appendChild(spTicketGroupFooter);
@@ -3286,7 +3284,6 @@ const FieldsetBuilder = (function(){
                         spSetGroupEditorOpen(k, false);
                     });
                     spOpenGroupKey = null;
-                    spOpenGroupSnapshot = null;
                 }
 
                 function spAssignGroupToActive(groupKey) {
@@ -3365,22 +3362,6 @@ const FieldsetBuilder = (function(){
                 
                 var spTicketMenuKeyHandler = null;
                 
-                function spCaptureGroupSnapshot(editorEl) {
-                    var pricing = spExtractPricingFromEditor(editorEl);
-                    var ageMenu = editorEl ? editorEl.querySelector('.component-ageratingpicker-menu') : null;
-                    var ageRating = ageMenu ? String(ageMenu.dataset.value || '').trim() : '';
-                    return { pricing: pricing, ageRating: ageRating };
-                }
-                
-                function spHasUnsavedChanges() {
-                    if (!spOpenGroupKey || !spOpenGroupSnapshot) return false;
-                    var grpEl = spTicketGroups[spOpenGroupKey];
-                    if (!grpEl) return false;
-                    var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
-                    var currentSnapshot = spCaptureGroupSnapshot(editorEl);
-                    return JSON.stringify(currentSnapshot) !== JSON.stringify(spOpenGroupSnapshot);
-                }
-                
                 function spSyncAllAndClose() {
                     spCloseAllGroupEditors();
                     try {
@@ -3407,47 +3388,9 @@ const FieldsetBuilder = (function(){
                     spCloseTicketMenu();
                 }
                 
-                function spDiscardAndClose() {
-                    if (spOpenGroupKey && spOpenGroupSnapshot) {
-                        var g = spTicketGroups[String(spOpenGroupKey || '')];
-                        if (g) {
-                            var editorEl = g.querySelector('.fieldset-sessionpricing-pricing-editor');
-                            if (editorEl) {
-                                spReplaceEditorFromPricing(editorEl, spOpenGroupSnapshot.pricing || []);
-                                // Restore age rating using component API
-                                var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
-                                if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
-                                    ageMenu._ageRatingSetValue(spOpenGroupSnapshot.ageRating || null);
-                                }
-                            }
-                        }
-                    }
-                    spCloseAllGroupEditors();
-                    spCloseTicketMenu();
-                }
-                
                 function spHandleEscapeOrClickOutside() {
                     if (!spTicketMenuOpen) return;
-                    if (spHasUnsavedChanges()) {
-                        if (typeof ThreeButtonDialogComponent !== 'undefined' && ThreeButtonDialogComponent.show) {
-                            ThreeButtonDialogComponent.show({
-                                titleText: 'Unsaved Changes',
-                                messageText: 'You have unsaved changes to your ticket pricing.'
-                            }).then(function(result) {
-                                if (result === 'save') {
-                                    spSyncAllAndClose();
-                                } else if (result === 'discard') {
-                                    spDiscardAndClose();
-                                }
-                            });
-                        } else {
-                            spCloseAllGroupEditors();
-                            spCloseTicketMenu();
-                        }
-                    } else {
-                        spCloseAllGroupEditors();
-                        spCloseTicketMenu();
-                    }
+                    spSyncAllAndClose();
                 }
 
                 // Footer buttons (OK/Cancel) for the ticket-group pop-up
@@ -3458,7 +3401,7 @@ const FieldsetBuilder = (function(){
 
                 spTicketGroupFooterCancel.addEventListener('click', function(e) {
                     try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                    spDiscardAndClose();
+                    spSyncAllAndClose();
                 });
 
                 function spOpenTicketMenu(anchorRowEl, pickerObj) {
@@ -3482,8 +3425,6 @@ const FieldsetBuilder = (function(){
                         spCloseAllGroupEditors();
                         spOpenGroupKey = currentKey;
                         var grpEl0 = spTicketGroups[currentKey];
-                        var editorEl0 = grpEl0 ? grpEl0.querySelector('.fieldset-sessionpricing-pricing-editor') : null;
-                        spOpenGroupSnapshot = spCaptureGroupSnapshot(editorEl0);
                         spSetGroupEditorOpen(currentKey, true);
                     } catch (eAutoOpen) {}
 
@@ -3615,12 +3556,9 @@ const FieldsetBuilder = (function(){
                         }
                         var isOpen = group.classList.contains('fieldset-sessionpricing-ticketgroup-item--open');
                         if (!isOpen) {
-                            var editorEl0 = group.querySelector('.fieldset-sessionpricing-pricing-editor');
-                            spOpenGroupSnapshot = spCaptureGroupSnapshot(editorEl0);
                             spOpenGroupKey = key;
                             spAssignGroupToActive(key);
                         } else {
-                            spOpenGroupSnapshot = null;
                             spOpenGroupKey = null;
                         }
                         spSetGroupEditorOpen(key, !isOpen);
