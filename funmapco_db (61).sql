@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 16, 2026 at 02:19 PM
+-- Generation Time: Jan 16, 2026 at 06:18 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -2221,7 +2221,7 @@ CREATE TABLE `post_map_cards` (
   `tickets_url` varchar(500) DEFAULT NULL,
   `coupon_code` varchar(100) DEFAULT NULL,
   `session_summary` varchar(255) DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_sessions.',
-  `price_summary` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_ticket_pricing/post_item_pricing.' CHECK (json_valid(`price_summary`)),
+  `price_summary` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Pre-formatted price display string for fast frontend rendering.',
   `amenity_summary` text DEFAULT NULL COMMENT 'REFERENCE ONLY (UI/debug). Do NOT use for filtering, querying, or business logic. Source-of-truth is post_amenities.',
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -3071,7 +3071,7 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `post_amenities`
