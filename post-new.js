@@ -205,6 +205,11 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function init() {
+    // Preload currency data for price summary parsing (handles old data flags)
+    if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function') {
+      CurrencyComponent.loadFromDatabase().catch(function() {});
+    }
+
     panelsContainerEl = document.querySelector('.post-mode-panels');
     if (!panelsContainerEl) {
       throw new Error('[Post] .post-mode-panels container not found.');
@@ -1958,9 +1963,9 @@ const PostModule = (function() {
       countryCode = match[1].toLowerCase();
       displayText = match[2].trim();
     } else {
-      // 2. Fallback: Detect ISO code at the end (e.g., "$10.00 USD")
+      // 2. Fallback: Detect ISO code at the end (e.g., "$10.00 USD" or "10.00USD")
       // This handles old data and cases where prefix wasn't saved.
-      var isoMatch = raw.match(/\s+([A-Z]{3})$/);
+      var isoMatch = raw.match(/\s*([A-Z]{3})$/);
       if (isoMatch) {
         var isoCode = isoMatch[1];
         // Look up country code from CurrencyComponent if available

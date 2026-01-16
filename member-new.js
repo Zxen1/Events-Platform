@@ -1587,7 +1587,8 @@ const MemberModule = (function() {
                     App.emit('post:updated', { post_id: postId });
                     return res;
                 } else {
-                    throw new Error(res.error || 'Failed to save post ' + postId);
+                    var errorMsg = (res && res.error) ? res.error : 'Failed to save post ' + postId;
+                    throw new Error(errorMsg);
                 }
             });
     }
