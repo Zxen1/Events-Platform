@@ -13,6 +13,10 @@ if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
   echo json_encode(['success' => false, 'message' => 'Forbidden']);
   exit;
 }
+
+// Increase execution time for potentially slow image uploads
+set_time_limit(300);
+
 $configCandidates = [
   __DIR__ . '/../config/config-db.php',
   dirname(__DIR__) . '/config/config-db.php',
@@ -206,11 +210,12 @@ function normalize_price_amount($value): ?string
   return number_format((float) $filtered, 2, '.', '');
 }
 
-function bind_statement_params(mysqli_stmt $stmt, string $types, &...$params): bool
+function bind_statement_params(mysqli_stmt $stmt, string $types, ...$params): bool
 {
+  if ($types === '') return true;
   $arguments = [$types];
-  foreach ($params as &$param) {
-    $arguments[] = &$param;
+  foreach ($params as $k => $v) {
+    $arguments[] = &$params[$k];
   }
   return call_user_func_array([$stmt, 'bind_param'], $arguments);
 }
@@ -297,7 +302,12 @@ if (is_array($fieldsArr)) {
     $fldKey = isset($fld['key']) ? strtolower(trim((string)$fld['key'])) : '';
     if ($fldKey === 'checkout') {
       if (!empty($fld['value'])) {
-        $checkoutTitle = (string)$fld['value'];
+        $val = $fld['value'];
+        if (is_array($val)) {
+          $checkoutTitle = isset($val['option_id']) ? (string)$val['option_id'] : (isset($val['checkout_title']) ? (string)$val['checkout_title'] : 'Array');
+        } else {
+          $checkoutTitle = (string)$val;
+        }
       } elseif (!empty($fld['option_id'])) {
         $checkoutTitle = (string)$fld['option_id'];
       }
@@ -720,9 +730,6 @@ foreach ($byLoc as $locNum => $entries) {
   
   $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
-
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
@@ -740,8 +747,8 @@ foreach ($byLoc as $locNum => $entries) {
   $venueNameParam = $card['venue_name'];
   $addrLineParam = $card['address_line'];
   $cityParam = $card['city'];
-  $latParam = (float)$card['latitude'];
-  $lngParam = (float)$card['longitude'];
+  $latParam = (float)($card['latitude'] ?? 0);
+  $lngParam = (float)($card['longitude'] ?? 0);
   $countryCodeParam = $card['country_code'];
   $ageRatingParam = $card['age_rating'];
   $websiteParam = $card['website_url'];
@@ -752,20 +759,6 @@ foreach ($byLoc as $locNum => $entries) {
   $amenitySumParam = $card['amenity_summary'];
 
   // Bind + insert map card
-  // Types:
-  // i (post_id)
-  // s (subcategory_key)
-  // s (title)
-  // s (description)
-  // sssss (custom_*)
-  // sss (public_email, phone_prefix, public_phone)
-  // sss (venue_name, address_line, city)
-  // dd (lat,lng)
-  // s (country_code)
-  // s (age_rating)
-  // ss (website_url, tickets_url)
-  // s (coupon_code)
-  // sss (session_summary, price_summary, amenity_summary)
   $stmtCard->bind_param(
     'issssssssssssssddssssssss',
     $postIdParam,
