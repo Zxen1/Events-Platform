@@ -700,6 +700,7 @@
   margin-right: auto;
 }
 
+.open-post:not(.open-post--desc-expanded) .open-post-container-nav,
 .open-post:not(.open-post--desc-expanded) .open-post-container-venueselect,
 .open-post:not(.open-post--desc-expanded) .open-post-container-sessionselect,
 .open-post:not(.open-post--desc-expanded) .open-post-container-info,
@@ -709,6 +710,12 @@
 
 .open-post:not(.open-post--desc-expanded) .open-post-text-desc {
   margin-top: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Description */
