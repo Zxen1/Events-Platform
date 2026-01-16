@@ -3342,6 +3342,8 @@ const MemberModule = (function() {
                     // Age ratings per group: { [ticket_group_key]: 'rating_value' }
                     var pricingGroups = {};
                     var ageRatings = {};
+                    var allPrices = [];
+                    var sharedCurrency = '';
                     var groupsWrap = el.querySelector('.fieldset-sessionpricing-ticketgroups-container');
                     if (groupsWrap) {
                         groupsWrap.querySelectorAll('.fieldset-sessionpricing-ticketgroup-item').forEach(function(groupEl) {
@@ -3369,6 +3371,8 @@ const MemberModule = (function() {
                                     if (tierInput) tierName = String(tierInput.value || '').trim();
                                     var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
                                     var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                    if (curr && !sharedCurrency) sharedCurrency = curr;
+
                                     var priceInput = null;
                                     var inputs = tier.querySelectorAll('input.fieldset-input');
                                     if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
@@ -3383,10 +3387,17 @@ const MemberModule = (function() {
                                                 throw new Error('[Member] CurrencyComponent.parseInput is required');
                                             }
                                             var numericValue = CurrencyComponent.parseInput(rawPrice, curr);
-                                            price = Number.isFinite(numericValue) ? numericValue.toString() : '';
+                                            if (Number.isFinite(numericValue)) {
+                                                price = numericValue.toString();
+                                                allPrices.push(numericValue);
+                                            }
                                         } else {
                                             // No currency selected - value should already be standard format
-                                            price = rawPrice.replace(/[^0-9.-]/g, '');
+                                            var numericValue = parseFloat(rawPrice.replace(/[^0-9.-]/g, ''));
+                                            if (Number.isFinite(numericValue)) {
+                                                price = numericValue.toString();
+                                                allPrices.push(numericValue);
+                                            }
                                         }
                                     }
                                     
@@ -3398,10 +3409,27 @@ const MemberModule = (function() {
                         });
                     }
 
+                    // Generate pre-formatted price_summary for fast display
+                    var priceSummary = '';
+                    if (allPrices.length > 0 && sharedCurrency) {
+                        var min = Math.min.apply(null, allPrices);
+                        var max = Math.max.apply(null, allPrices);
+                        var displayCode = sharedCurrency.replace(/-[LR]$/, '');
+                        
+                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            if (min === max) {
+                                priceSummary = CurrencyComponent.formatWithSymbol(min.toString(), sharedCurrency) + ' ' + displayCode;
+                            } else {
+                                priceSummary = CurrencyComponent.formatWithSymbol(min.toString(), sharedCurrency) + ' - ' + CurrencyComponent.formatWithSymbol(max.toString(), sharedCurrency) + ' ' + displayCode;
+                            }
+                        }
+                    }
+
                     return {
                         sessions: sessionsOut,
                         pricing_groups: pricingGroups,
-                        age_ratings: ageRatings
+                        age_ratings: ageRatings,
+                        price_summary: priceSummary
                     };
                 } catch (e33) {
                     throw e33; // Do not swallow errors
@@ -3438,7 +3466,17 @@ const MemberModule = (function() {
                         var variantName = variantInput ? String(variantInput.value || '').trim() : '';
                         item_variants.push(variantName);
                     });
-                    return { item_name: item_name, currency: currency, item_price: item_price, item_variants: item_variants };
+
+                    // Generate pre-formatted price_summary for fast display
+                    var priceSummary = '';
+                    if (item_price && currency) {
+                        var displayCode = currency.replace(/-[LR]$/, '');
+                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            priceSummary = CurrencyComponent.formatWithSymbol(item_price, currency) + ' ' + displayCode;
+                        }
+                    }
+
+                    return { item_name: item_name, currency: currency, item_price: item_price, item_variants: item_variants, price_summary: priceSummary };
                 } catch (e5) {
                     throw e5; // Do not swallow errors
                 }

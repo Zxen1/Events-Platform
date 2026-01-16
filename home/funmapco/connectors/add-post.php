@@ -587,6 +587,9 @@ foreach ($byLoc as $locNum => $entries) {
     }
     if ($baseType === 'session_pricing') {
       $sessionPricing = is_array($val) ? $val : null;
+      if ($sessionPricing && isset($sessionPricing['price_summary']) && is_string($sessionPricing['price_summary']) && trim($sessionPricing['price_summary']) !== '') {
+        $card['price_summary'] = trim($sessionPricing['price_summary']);
+      }
       continue;
     }
     if ($baseType === 'sessions') {
@@ -599,6 +602,9 @@ foreach ($byLoc as $locNum => $entries) {
     }
     if ($baseType === 'item-pricing') {
       $itemPricing = $val;
+      if ($itemPricing && isset($itemPricing['price_summary']) && is_string($itemPricing['price_summary']) && trim($itemPricing['price_summary']) !== '') {
+        $card['price_summary'] = trim($itemPricing['price_summary']);
+      }
       continue;
     }
 
@@ -708,107 +714,10 @@ foreach ($byLoc as $locNum => $entries) {
     ], JSON_UNESCAPED_UNICODE);
   }
 
-  // price_summary: Pre-formatted display string (e.g., "$12.00 - $34.50 USD")
-  // Collect pricing data first, then format using currency rules from database
+  // No recalculation needed: price_summary is now provided by the frontend payload
   
-  $priceSummaryText = '';
-  
-  // Ticket pricing: find min/max across all tiers
-  $ticketPrices = [];
-  $ticketCurrency = null;
-  $pricingGroupsForSummary = null;
-  if (is_array($sessionPricing) && isset($sessionPricing['pricing_groups']) && is_array($sessionPricing['pricing_groups'])) {
-    $pricingGroupsForSummary = $sessionPricing['pricing_groups'];
-  }
-  if (is_array($pricingGroupsForSummary)) {
-    foreach ($pricingGroupsForSummary as $gk => $seats) {
-      if (!is_array($seats)) continue;
-      foreach ($seats as $seat) {
-        if (!is_array($seat)) continue;
-        $tiers = $seat['tiers'] ?? [];
-        if (!is_array($tiers)) continue;
-        foreach ($tiers as $tier) {
-          if (!is_array($tier)) continue;
-          $p = isset($tier['price']) ? (float)$tier['price'] : null;
-          if ($p !== null && $p > 0) $ticketPrices[] = $p;
-          if (!$ticketCurrency && isset($tier['currency'])) $ticketCurrency = trim((string)$tier['currency']);
-        }
-      }
-    }
-  } else if (is_array($ticketPricing)) {
-    foreach ($ticketPricing as $seat) {
-      if (!is_array($seat)) continue;
-      $tiers = $seat['tiers'] ?? [];
-      if (!is_array($tiers)) continue;
-      foreach ($tiers as $tier) {
-        if (!is_array($tier)) continue;
-        $p = isset($tier['price']) ? (float)$tier['price'] : null;
-        if ($p !== null && $p > 0) $ticketPrices[] = $p;
-        if (!$ticketCurrency && isset($tier['currency'])) $ticketCurrency = trim((string)$tier['currency']);
-      }
-    }
-  }
-  
-  // Item pricing data
-  $itemPrice = null;
-  $itemCurrency = '';
-  if (is_array($itemPricing) && !empty($itemPricing['item_price'])) {
-    $itemPrice = (float)$itemPricing['item_price'];
-    $itemCurrency = isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : '';
-  }
-  
-  // Determine which currency to use for formatting
-  $formatCurrency = !empty($ticketCurrency) ? $ticketCurrency : $itemCurrency;
-  
-  // Only generate price_summary if we have pricing data AND a currency
-  if (!empty($formatCurrency) && (!empty($ticketPrices) || ($itemPrice !== null && $itemPrice > 0))) {
-    // Fetch currency formatting rules once
-    $currencyData = null;
-    $stmtCurr = $mysqli->prepare("SELECT option_symbol, option_symbol_position, option_decimal_separator, option_decimal_places, option_thousands_separator FROM list_currencies WHERE option_value = ? AND is_active = 1 LIMIT 1");
-    if ($stmtCurr) {
-      $stmtCurr->bind_param('s', $formatCurrency);
-      $stmtCurr->execute();
-      $currResult = $stmtCurr->get_result();
-      $currencyData = $currResult->fetch_assoc();
-      $stmtCurr->close();
-    }
-    
-    // Only format if we have currency data
-    if ($currencyData) {
-      $symbol = $currencyData['option_symbol'] ?? '';
-      $symbolPos = $currencyData['option_symbol_position'] ?? 'left';
-      $decSep = $currencyData['option_decimal_separator'] ?? '.';
-      $decPlaces = (int)($currencyData['option_decimal_places'] ?? 2);
-      $thousSep = $currencyData['option_thousands_separator'] ?? ',';
-      $displayCode = preg_replace('/-[LR]$/', '', $formatCurrency);
-      
-      // Format a single price value
-      $formatPrice = function($amount) use ($symbol, $symbolPos, $decSep, $decPlaces, $thousSep) {
-        $formatted = number_format((float)$amount, $decPlaces, $decSep, $thousSep);
-        if ($symbolPos === 'right') {
-          return $formatted . ($symbol ? ' ' . $symbol : '');
-        } else {
-          return $symbol . $formatted;
-        }
-      };
-      
-      if (!empty($ticketPrices)) {
-        $minPrice = min($ticketPrices);
-        $maxPrice = max($ticketPrices);
-        if ($minPrice === $maxPrice) {
-          $priceSummaryText = $formatPrice($minPrice) . ($displayCode ? ' ' . $displayCode : '');
-        } else {
-          $priceSummaryText = $formatPrice($minPrice) . ' - ' . $formatPrice($maxPrice) . ($displayCode ? ' ' . $displayCode : '');
-        }
-      } else if ($itemPrice !== null && $itemPrice > 0) {
-        $priceSummaryText = $formatPrice($itemPrice) . ($displayCode ? ' ' . $displayCode : '');
-      }
-    }
-  }
-  
-  if (!empty($priceSummaryText)) {
-    $card['price_summary'] = $priceSummaryText;
-  }
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
 
   $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
