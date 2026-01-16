@@ -1014,11 +1014,14 @@ const PostModule = (function() {
   function formatPostDates(post) {
     // 1. Try pre-formatted session_summary from first map card (fast display)
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-    if (mapCard && mapCard.session_summary && typeof mapCard.session_summary === 'string' && mapCard.session_summary.trim() !== '' && mapCard.session_summary.indexOf('{') !== 0) {
-      return mapCard.session_summary;
+    var summary = mapCard ? mapCard.session_summary : post.session_summary;
+    
+    // Safety: If it's a string and NOT JSON, use it directly for speed.
+    if (summary && typeof summary === 'string' && summary.trim() !== '' && summary.indexOf('{') !== 0) {
+      return summary;
     }
 
-    // 2. Fallback to sessions array (backwards compatibility / initial load)
+    // 2. Fallback to sessions array (backwards compatibility / initial load / if summary is JSON)
     if (!mapCard) return '';
     var sessions = mapCard.sessions;
     if (!Array.isArray(sessions) || !sessions.length) return '';
@@ -1149,8 +1152,8 @@ const PostModule = (function() {
     var subInfo = getSubcategoryInfo(subcategoryKey);
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Format dates (if sessions exist) - use pre-formatted session_summary from database
-    var datesText = (mapCard ? mapCard.session_summary : post.session_summary) || '';
+    // Format dates (if sessions exist) - prioritizes pre-formatted session_summary from database
+    var datesText = formatPostDates(post);
 
     // Format price summary
     var priceParts = parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary || '');

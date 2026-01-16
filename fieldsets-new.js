@@ -907,6 +907,16 @@ const FieldsetBuilder = (function(){
             el.placeholder = v;
         }
         
+        // Default _setValue handles simple input/textarea/select
+        fieldset._setValue = function(val) {
+            var main = fieldset.querySelector('input:not([type="hidden"]), textarea, select');
+            if (main) {
+                if (main.type === 'checkbox') main.checked = !!val;
+                else main.value = (val === null || val === undefined) ? '' : val;
+                main.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        };
+
         // Build based on fieldset type
         // CRITICAL: No fallbacks. Fieldset keys must match DB-defined keys exactly.
         switch (key) {
@@ -1526,6 +1536,30 @@ const FieldsetBuilder = (function(){
                     entry.fileUrl = '';
                 }
 
+                fieldset._setValue = function(val) {
+                    // val: array of objects with url and optional crop
+                    imageEntries.forEach(revokeEntryUrls);
+                    imageEntries = [];
+                    
+                    if (Array.isArray(val)) {
+                        val.forEach(function(img) {
+                            if (!img || !img.url) return;
+                            imageEntries.push({
+                                _imageEntryId: String(nextImageEntryId++),
+                                id: img.id || null,
+                                file: null,
+                                fileUrl: img.url,
+                                previewUrl: img.url,
+                                cropState: null,
+                                cropRect: img.crop || null
+                            });
+                        });
+                    }
+                    
+                    updateImagesMeta();
+                    renderImages();
+                };
+
                 // ------------------------------------------------------------------
                 // Cropper - uses PostCropperComponent (non-destructive for post images)
                 // Uses Bunny Dynamic Image API crop params later (server-side + cached).
@@ -2123,13 +2157,38 @@ const FieldsetBuilder = (function(){
                     row.appendChild(optionsEl);
                     amenitiesGrid.appendChild(row);
                 });
+
+                fieldset._setValue = function(val) {
+                    // val: array of { amenity, value }
+                    if (!Array.isArray(val)) return;
+                    val.forEach(function(item) {
+                        var row = fieldset.querySelector('.fieldset-amenities-row[data-amenity="' + item.amenity + '"]');
+                        if (row) {
+                            var valStr = String(item.value);
+                            row.dataset.value = valStr;
+                            row.querySelectorAll('.fieldset-amenities-option').forEach(function(btn) {
+                                var isYes = btn.textContent.trim() === 'Yes';
+                                btn.classList.toggle('fieldset-amenities-option--selected', (isYes && valStr === '1') || (!isYes && valStr === '0'));
+                                var selImg = btn.querySelector('.fieldset-amenities-option-radio-selected');
+                                if (selImg) selImg.style.display = ((isYes && valStr === '1') || (!isYes && valStr === '0')) ? 'block' : 'none';
+                            });
+                        }
+                    });
+                    updateCompleteFromDom();
+                };
                 
                 fieldset.appendChild(amenitiesGrid);
                 break;
             
             case 'age_rating':
                 fieldset.appendChild(buildLabel(name, tooltip));
-                fieldset.appendChild(buildAgeRatingMenu(container));
+                var ageMenu = buildAgeRatingMenu(container);
+                fieldset.appendChild(ageMenu);
+                fieldset._setValue = function(val) {
+                    if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
+                        ageMenu._ageRatingSetValue(val || null);
+                    }
+                };
                 break;
                 
             case 'item-pricing':
@@ -2255,6 +2314,37 @@ const FieldsetBuilder = (function(){
                 applyFieldsetRowItemClasses(itemPriceRow);
                 
                 fieldset.appendChild(itemPriceRow);
+
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    
+                    if (itemNameInput) itemNameInput.value = val.item_name || '';
+                    if (itemPriceInput) itemPriceInput.value = val.item_price || '';
+                    if (ipCurrencyMenu && typeof ipCurrencyMenu.setValue === 'function') {
+                        ipCurrencyMenu.setValue(val.currency || null);
+                    }
+                    
+                    // Variants
+                    if (itemVariantsContainer) {
+                        itemVariantsContainer.innerHTML = '';
+                        if (Array.isArray(val.item_variants)) {
+                            val.item_variants.forEach(function(v) {
+                                var row = createItemVariantRow();
+                                var inp = row.querySelector('.fieldset-itempricing-input-itemvariantname');
+                                if (inp) inp.value = v;
+                                itemVariantsContainer.appendChild(row);
+                            });
+                        }
+                        if (itemVariantsContainer.children.length === 0) {
+                            itemVariantsContainer.appendChild(createItemVariantRow());
+                        }
+                        updateItemVariantButtons();
+                    }
+                    
+                    if (itemNameInput) itemNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    if (itemPriceInput) itemPriceInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    updateCompleteFromDom();
+                };
                 
                 // Variants section sublabel
                 var variantsSectionLabel = document.createElement('div');
@@ -3919,6 +4009,48 @@ const FieldsetBuilder = (function(){
                     } catch (eDispatch) {}
                 };
 
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    
+                    // Reset internal state
+                    spSessionData = {};
+                    spTicketGroups = {};
+                    spTicketGroupList.innerHTML = '';
+                    
+                    // 1. Sessions
+                    if (Array.isArray(val.sessions)) {
+                        val.sessions.forEach(function(s) {
+                            var date = s.date;
+                            if (!date) return;
+                            var times = [];
+                            var groups = [];
+                            if (Array.isArray(s.times)) {
+                                s.times.forEach(function(t) {
+                                    times.push(t.time || '');
+                                    groups.push(t.ticket_group_key || 'A');
+                                });
+                            }
+                            spSessionData[date] = { times: times, groups: groups, edited: times.map(function(){return false;}) };
+                        });
+                    }
+                    
+                    // 2. Pricing Groups
+                    if (val.pricing_groups && typeof val.pricing_groups === 'object') {
+                        Object.keys(val.pricing_groups).forEach(function(gk) {
+                            var pricing = val.pricing_groups[gk];
+                            var ageRating = (val.age_ratings && val.age_ratings[gk]) || '';
+                            spEnsureTicketGroup(gk);
+                            fieldset._syncTicketGroup(gk, pricing, ageRating);
+                        });
+                    }
+                    
+                    // Always ensure at least Group A exists
+                    spEnsureDefaultGroup();
+                    
+                    spRenderSessions();
+                    updateCompleteFromDom();
+                };
+
                 break;
                 
             case 'venue':
@@ -3980,7 +4112,19 @@ const FieldsetBuilder = (function(){
                     smartAddrDisplay.textContent = v ? v : 'Address';
                 }
                 syncSmartAddrDisplay();
-                
+
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    smartVenueInput.value = val.venue_name || '';
+                    smartAddrInput.value = val.address_line || '';
+                    smartLatInput.value = val.latitude || '';
+                    smartLngInput.value = val.longitude || '';
+                    smartCountryInput.value = val.country_code || '';
+                    syncSmartAddrDisplay();
+                    smartVenueInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    smartAddrInput.dispatchEvent(new Event('input', { bubbles: true }));
+                };
+
                 smartAddrDisplay.addEventListener('click', function() {
                     smartAddrDisplay.classList.add('fieldset-venue-address-display--hidden');
                     smartAddrInput.classList.remove('fieldset-venue-address-input--hidden');

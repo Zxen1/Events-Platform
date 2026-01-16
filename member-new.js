@@ -1324,18 +1324,18 @@ const MemberModule = (function() {
     }
 
     function collectAccordionFormData(accordion, originalPost) {
-        // Similar to validateAndCollectFormData but scoped to an accordion
-        // This is a simplified version for now
+        // Use the robust validation and collection logic from Create Post flow
         var fields = [];
         var fieldsetEls = accordion.querySelectorAll('[data-fieldset-key]');
         
         for (var i = 0; i < fieldsetEls.length; i++) {
             var el = fieldsetEls[i];
             var key = el.dataset.fieldsetKey;
-            var input = el.querySelector('input, textarea, select');
-            if (input) {
-                fields.push({ key: key, value: input.value });
-            }
+            var type = el.dataset.fieldsetType || '';
+            var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
+            
+            var value = extractFieldValue(el, baseType);
+            fields.push({ key: key, value: value });
         }
         return fields;
     }
@@ -3572,41 +3572,137 @@ const MemberModule = (function() {
             container.addEventListener('fieldset:sessions-change', function() {
                 updateHeaderSaveDiscardState();
             });
+
+            // 4. Add "Save Changes" button at the bottom of the accordion
+            var footer = document.createElement('div');
+            footer.className = 'member-mypost-edit-footer';
+            footer.style.marginTop = '20px';
+            footer.style.display = 'flex';
+            footer.style.justifyContent = 'flex-end';
+            
+            var saveBtn = document.createElement('button');
+            saveBtn.type = 'button';
+            saveBtn.className = 'member-mypost-edit-button-save button-class-1';
+            saveBtn.textContent = 'Save Changes';
+            saveBtn.addEventListener('click', function() {
+                saveAccordionPost(post.id).then(function() {
+                    showStatus('Changes saved successfully.', { success: true });
+                    updateHeaderSaveDiscardState();
+                }).catch(function(err) {
+                    showStatus('Failed to save changes: ' + err.message, { error: true });
+                });
+            });
+            
+            footer.appendChild(saveBtn);
+            container.appendChild(footer);
         }
     }
 
     function populateAccordionWithPostData(post, container) {
         if (!post || !post.map_cards || post.map_cards.length === 0 || !container) return;
         
-        // For now, assume single map card populated like Create Post
+        // Assume single map card for now (matches existing pattern)
         var mapCard = post.map_cards[0];
         
-        var fields = [
-            { key: 'title', value: mapCard.title },
-            { key: 'description', value: mapCard.description },
-            { key: 'venue_name', value: mapCard.venue_name },
-            { key: 'address_line', value: mapCard.address_line },
-            { key: 'city', value: mapCard.city },
-            { key: 'public_email', value: mapCard.public_email },
-            { key: 'public_phone', value: mapCard.public_phone },
-            { key: 'website_url', value: mapCard.website_url },
-            { key: 'tickets_url', value: mapCard.tickets_url },
-            { key: 'coupon_code', value: mapCard.coupon_code },
-            { key: 'custom_text', value: mapCard.custom_text },
-            { key: 'custom_textarea', value: mapCard.custom_textarea }
-        ];
-
-        fields.forEach(function(f) {
-            if (f.value !== null && f.value !== undefined) {
-                var input = container.querySelector('[data-fieldset-key="' + f.key + '"] input, [data-fieldset-key="' + f.key + '"] textarea');
+        // Find all fieldsets in this accordion
+        var fieldsetEls = container.querySelectorAll('.fieldset[data-fieldset-key]');
+        
+        fieldsetEls.forEach(function(fs) {
+            var key = fs.dataset.fieldsetKey;
+            var type = fs.dataset.fieldsetType || key;
+            var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
+            
+            // If the fieldset has a custom _setValue, use it
+            if (typeof fs._setValue === 'function') {
+                var val = null;
+                
+                // Map common fields from mapCard
+                switch (baseType) {
+                    case 'title': val = mapCard.title; break;
+                    case 'description': val = mapCard.description; break;
+                    case 'venue':
+                        val = {
+                            venue_name: mapCard.venue_name,
+                            address_line: mapCard.address_line,
+                            latitude: mapCard.latitude,
+                            longitude: mapCard.longitude,
+                            country_code: mapCard.country_code
+                        };
+                        break;
+                    case 'address':
+                    case 'city':
+                        val = {
+                            address_line: mapCard.address_line,
+                            latitude: mapCard.latitude,
+                            longitude: mapCard.longitude,
+                            country_code: mapCard.country_code
+                        };
+                        break;
+                    case 'public_email': val = mapCard.public_email; break;
+                    case 'public_phone':
+                        val = {
+                            phone_prefix: mapCard.phone_prefix,
+                            public_phone: mapCard.public_phone
+                        };
+                        break;
+                    case 'website_url':
+                    case 'url':
+                        val = mapCard.website_url;
+                        break;
+                    case 'tickets_url': val = mapCard.tickets_url; break;
+                    case 'coupon': val = mapCard.coupon_code; break;
+                    case 'custom_text': val = mapCard.custom_text; break;
+                    case 'custom_textarea': val = mapCard.custom_textarea; break;
+                    case 'age_rating': val = mapCard.age_rating; break;
+                    
+                    case 'session_pricing':
+                        val = {
+                            sessions: mapCard.sessions || [],
+                            pricing_groups: mapCard.pricing_groups || {},
+                            age_ratings: mapCard.age_ratings || {}
+                        };
+                        break;
+                        
+                    case 'item-pricing':
+                        val = {
+                            item_name: mapCard.item_name,
+                            item_price: mapCard.item_price,
+                            currency: mapCard.currency,
+                            item_variants: mapCard.item_variants || []
+                        };
+                        break;
+                        
+                    case 'amenities':
+                        try {
+                            val = JSON.parse(mapCard.amenity_summary || '[]');
+                        } catch (e) { val = []; }
+                        break;
+                        
+                    case 'images':
+                        // Map media_ids and media_urls into objects for the fieldset
+                        var ids = (mapCard.media_ids || '').split(',').filter(Boolean);
+                        var urls = mapCard.media_urls || [];
+                        val = ids.map(function(id, idx) {
+                            return { id: id, url: urls[idx] || '' };
+                        });
+                        break;
+                }
+                
+                if (val !== null && val !== undefined) {
+                    fs._setValue(val);
+                }
+            } else {
+                // Fallback for simple inputs if _setValue not present
+                var input = fs.querySelector('input:not([type="hidden"]), textarea, select');
                 if (input) {
-                    input.value = f.value;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    var val = mapCard[key] || '';
+                    if (val !== null && val !== undefined) {
+                        input.value = val;
+                        input.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                 }
             }
         });
-        
-        // TODO: Handle complex fieldsets in accordions as well
     }
 
     function updateFormpickerSelections(catName, subName) {
@@ -3935,17 +4031,20 @@ const MemberModule = (function() {
                 case 'session_pricing':
                 try {
                     // Sessions portion: each time includes ticket_group_key
-                    var selectedDays2 = el.querySelectorAll('.fieldset-sessionpricing-session-field-label--selected[data-iso]');
+                    // Source of truth: .calendar-day.selected
+                    var selectedDays2 = el.querySelectorAll('.calendar-day.selected[data-iso]');
                     var dates2 = [];
                     selectedDays2.forEach(function(d) {
                         var iso = d.dataset.iso;
                         if (iso) dates2.push(String(iso));
                     });
                     dates2.sort();
+                    
                     var sessionsOut = [];
                     for (var i2 = 0; i2 < dates2.length; i2++) {
                         var dateStr2 = dates2[i2];
                         var times2 = [];
+                        // Source of truth for times: input.fieldset-sessionpricing-session-field-time-input
                         el.querySelectorAll('input.fieldset-sessionpricing-session-field-time-input[data-date="' + dateStr2 + '"]').forEach(function(t) {
                             if (!t) return;
                             var v = String(t.value || '').trim();
@@ -3955,7 +4054,7 @@ const MemberModule = (function() {
                         sessionsOut.push({ date: dateStr2, times: times2 });
                     }
 
-                    // Generate pre-formatted session_summary for fast display
+                    // Generate pre-formatted session_summary for fast display (Mon 1 Jan format)
                     var sessionSummary = '';
                     if (dates2.length > 0) {
                         var firstDate = dates2[0];
@@ -3963,7 +4062,6 @@ const MemberModule = (function() {
                         if (firstDate === lastDate) {
                             sessionSummary = App.formatDateShort(firstDate);
                         } else {
-                            // Ensure same format as price summary: simple text for postcards/marquee
                             sessionSummary = App.formatDateShort(firstDate) + ' - ' + App.formatDateShort(lastDate);
                         }
                     }
