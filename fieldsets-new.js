@@ -2778,7 +2778,10 @@ const FieldsetBuilder = (function(){
                     });
                     
                     spRenderSessions();
-                    try { fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); } catch (e1) {}
+                    try { 
+                        fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); 
+                        fieldset.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (e1) {}
                 }
 
                 // Single source of truth: use CalendarComponent (same calendar used elsewhere).
@@ -3313,6 +3316,10 @@ const FieldsetBuilder = (function(){
                             }
                         });
                     } catch (eSel) {}
+                    
+                    try {
+                        fieldset.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (eDispatch) {}
                 }
 
                 function spUpdateAllTicketButtonsFromData() {
@@ -3333,6 +3340,9 @@ const FieldsetBuilder = (function(){
                             try { btn.setAttribute('aria-label', g ? ('Ticket Group ' + g) : 'Ticket Group unassigned'); } catch (eAria2) {}
                         });
                     } catch (eUp) {}
+                    try {
+                        fieldset.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (eDispatch) {}
                 }
 
                 function spCloseTicketMenu() {
@@ -3386,6 +3396,11 @@ const FieldsetBuilder = (function(){
                         }
                     } catch (eSyncAll) {}
                     spCloseTicketMenu();
+                    
+                    // Trigger completeness re-check on the main fieldset
+                    try {
+                        fieldset.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (eDispatch) {}
                 }
                 
                 function spHandleEscapeOrClickOutside() {
@@ -4296,8 +4311,8 @@ const FieldsetBuilder = (function(){
                             return !!(ageRatingMenu && String(ageRatingMenu.dataset.value || '').trim());
                         }
                         case 'session_pricing': {
-                            var selected2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
-                            if (selected2 && selected2.length > 0) return true;
+                            // Check source of truth (spSessionData)
+                            if (Object.keys(spSessionData).length > 0) return true;
                             var t2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-session-field-time-input');
                             for (var i2 = 0; i2 < t2.length; i2++) {
                                 if (t2[i2] && String(t2[i2].value || '').trim()) return true;
@@ -4528,8 +4543,8 @@ const FieldsetBuilder = (function(){
                     return !!(String(lat.value || '').trim() && String(lng.value || '').trim());
                 }
                 case 'session_pricing': {
-                    var selectedDays2 = fieldset.querySelectorAll('.calendar-day.selected[data-iso]');
-                    if (!selectedDays2 || selectedDays2.length === 0) return false;
+                    // Check source of truth (spSessionData) for selected dates
+                    if (Object.keys(spSessionData).length === 0) return false;
 
                     var timeInputs2 = fieldset.querySelectorAll('input.fieldset-sessionpricing-session-field-time-input');
                     if (!timeInputs2 || timeInputs2.length === 0) return false;
