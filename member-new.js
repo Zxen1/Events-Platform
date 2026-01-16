@@ -3472,7 +3472,7 @@ const MemberModule = (function() {
                 expandedPostAccordions[postId] = true;
             } else {
                 showStatus('Loading post data...', { success: true });
-                fetch('/gateway.php?action=get-posts&post_id=' + postId)
+                fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId)
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (res && res.success && res.posts && res.posts.length > 0) {

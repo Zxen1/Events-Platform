@@ -199,15 +199,16 @@ const FieldsetBuilder = (function(){
         
         // Create dropdown for suggestions
         // menu-class-2 supplies appearance; component CSS supplies layout only.
-        var dropdown = document.createElement('div');
-        dropdown.className = 'fieldset-location-dropdown menu-class-2 menu-dropdown';
-        dropdown.style.display = 'none';
-        
-        // Insert dropdown after input element
         var parent = inputElement.parentNode;
-        if (parent) {
+        var dropdown = parent ? parent.querySelector('.fieldset-location-dropdown') : null;
+        if (!dropdown && parent) {
+            dropdown = document.createElement('div');
+            dropdown.className = 'fieldset-location-dropdown menu-class-2 menu-dropdown';
+            dropdown.style.display = 'none';
             parent.appendChild(dropdown);
         }
+        if (dropdown) dropdown.innerHTML = '';
+        
         var kb = installLocationDropdownKeyboard(inputElement, dropdown, parent);
         
         // Track whether the current value is confirmed from Google Places (required for "complete")
@@ -414,6 +415,8 @@ const FieldsetBuilder = (function(){
             initialValue: initialValue,
             container: container
         });
+        // Store setValue on the element for external access
+        result.element._phonePrefixSetValue = result.setValue;
         return result.element;
     }
     
@@ -1343,7 +1346,8 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(buildLabel(name, tooltip, minLength, maxLength));
                 var phoneRow = document.createElement('div');
                 phoneRow.className = 'fieldset-row';
-                phoneRow.appendChild(buildPhonePrefixMenu(container));
+                var prefixMenu = buildPhonePrefixMenu(container);
+                phoneRow.appendChild(prefixMenu);
                 var phoneInput = document.createElement('input');
                 phoneInput.type = 'tel';
                 phoneInput.className = 'fieldset-input input-class-1';
@@ -1354,6 +1358,15 @@ const FieldsetBuilder = (function(){
                 applyFieldsetRowItemClasses(phoneRow);
                 fieldset.appendChild(phoneRow);
                 fieldset.appendChild(phoneValidation.charCount);
+
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    if (phoneInput) phoneInput.value = val.public_phone || '';
+                    if (prefixMenu && typeof prefixMenu._phonePrefixSetValue === 'function') {
+                        prefixMenu._phonePrefixSetValue(val.phone_prefix || null);
+                    }
+                    if (phoneInput) phoneInput.dispatchEvent(new Event('input', { bubbles: true }));
+                };
                 break;
                 
             case 'address':
@@ -1387,6 +1400,15 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(addrStatus);
                 // Init Google Places
                 initGooglePlaces(addrInputEl, 'address', addrLatInput, addrLngInput, addrCountryInput, addrStatus);
+
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    if (addrInputEl) addrInputEl.value = val.address_line || '';
+                    if (addrLatInput) addrLatInput.value = val.latitude || '';
+                    if (addrLngInput) addrLngInput.value = val.longitude || '';
+                    if (addrCountryInput) addrCountryInput.value = val.country_code || '';
+                    if (addrInputEl) addrInputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                };
                 break;
                 
             case 'city':
@@ -1418,6 +1440,15 @@ const FieldsetBuilder = (function(){
                 fieldset.appendChild(cityStatus);
                 // Init Google Places (cities only)
                 initGooglePlaces(cityInputEl, '(cities)', cityLatInput, cityLngInput, cityCountryInput, cityStatus);
+
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    if (cityInputEl) cityInputEl.value = val.address_line || '';
+                    if (cityLatInput) cityLatInput.value = val.latitude || '';
+                    if (cityLngInput) cityLngInput.value = val.longitude || '';
+                    if (cityCountryInput) cityCountryInput.value = val.country_code || '';
+                    if (cityInputEl) cityInputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                };
                 break;
                 
             case 'website-url':
@@ -4163,14 +4194,16 @@ const FieldsetBuilder = (function(){
                     
                     // Create dropdown for suggestions
                     // menu-class-2 supplies appearance; component CSS supplies layout only.
-                    var dropdown = document.createElement('div');
-                    dropdown.className = 'fieldset-location-dropdown menu-class-2 menu-dropdown';
-                    dropdown.style.display = 'none';
-                    
                     var parent = inputEl.parentNode;
-                    if (parent) {
+                    var dropdown = parent ? parent.querySelector('.fieldset-location-dropdown') : null;
+                    if (!dropdown && parent) {
+                        dropdown = document.createElement('div');
+                        dropdown.className = 'fieldset-location-dropdown menu-class-2 menu-dropdown';
+                        dropdown.style.display = 'none';
                         parent.appendChild(dropdown);
                     }
+                    if (dropdown) dropdown.innerHTML = ''; // Clear any existing items
+                    
                     var kb = installLocationDropdownKeyboard(inputEl, dropdown, parent);
                     
                     // Fetch suggestions using new API (unrestricted - finds both venues and addresses)

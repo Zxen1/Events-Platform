@@ -1014,14 +1014,27 @@ const PostModule = (function() {
   function formatPostDates(post) {
     // 1. Try pre-formatted session_summary from first map card (fast display)
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-    var summary = mapCard ? mapCard.session_summary : post.session_summary;
+    var summary = (mapCard ? mapCard.session_summary : post.session_summary) || '';
     
     // Safety: If it's a string and NOT JSON, use it directly for speed.
     if (summary && typeof summary === 'string' && summary.trim() !== '' && summary.indexOf('{') !== 0) {
       return summary;
     }
 
-    // 2. Fallback to sessions array (backwards compatibility / initial load / if summary is JSON)
+    // Fallback: If summary is JSON, parse it (legacy support)
+    if (summary && typeof summary === 'string' && summary.indexOf('{') === 0) {
+      try {
+        var parsed = JSON.parse(summary);
+        if (parsed.start) {
+          if (parsed.end && parsed.end !== parsed.start) {
+            return App.formatDateShort(parsed.start) + ' - ' + App.formatDateShort(parsed.end);
+          }
+          return App.formatDateShort(parsed.start);
+        }
+      } catch (e) {}
+    }
+
+    // 2. Fallback to sessions array (backwards compatibility / initial load)
     if (!mapCard) return '';
     var sessions = mapCard.sessions;
     if (!Array.isArray(sessions) || !sessions.length) return '';
