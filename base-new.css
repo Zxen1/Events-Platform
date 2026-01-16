@@ -11,7 +11,10 @@
    --layer-panel: 60      (side panels: filter, admin, member)
    --layer-header: 40     (header bar)
    --layer-card: 30       (floating cards)
+   --layer-popover: 25    (popovers, tooltips)
    --layer-post-panel: 20 (post/recent panels - below filter panel)
+   --layer-marquee: 15    (ambient marquee)
+   --layer-sticky: 10     (sticky headers within panels)
    --layer-content: 10    (primary content)
    --layer-base: 0        (map/base)
    
@@ -31,7 +34,10 @@
   --layer-panel: 60;
   --layer-header: 40;
   --layer-card: 30;
+  --layer-popover: 25;
   --layer-post-panel: 20;
+  --layer-marquee: 15;
+  --layer-sticky: 10;
   --layer-content: 10;
   --layer-base: 0;
 

@@ -367,7 +367,7 @@
   width: 100%;
   max-height: 300px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: var(--layer-menu);
 }
 
 .filter-sort-menu-options--open {

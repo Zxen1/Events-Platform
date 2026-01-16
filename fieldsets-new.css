@@ -1206,7 +1206,7 @@
     margin-top: -10px;
     background: #222;
     border-radius: 0 0 4px 4px;
-    z-index: 10;
+    z-index: var(--layer-sticky);
 }
 
 /* Content row inside header: appearance from button-class-2 */

@@ -608,7 +608,7 @@
 .open-post .recent-card {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--layer-sticky);
   background: #1f2750;
   border-bottom: none;
   margin-bottom: 0;

@@ -14,7 +14,7 @@
   top: 0;
   left: 0;
   right: 0;
-  z-index: 40;
+  z-index: var(--layer-header);
   background: rgba(0,0,0,0.7);
   box-sizing: border-box;
 }

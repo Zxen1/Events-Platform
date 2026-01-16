@@ -135,7 +135,7 @@
   width: auto;
   max-width: calc(100% - 20px);
   min-width: 0;
-  z-index: 10;
+  z-index: var(--layer-sticky);
   flex-wrap: nowrap;
   justify-content: center;
   box-sizing: border-box;
@@ -231,7 +231,7 @@
   width: 30px;
   height: 30px;
   pointer-events: none;
-  z-index: 10;
+  z-index: var(--layer-sticky);
   flex: 0 0 30px;
   cursor: pointer;
 }
