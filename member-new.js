@@ -56,6 +56,8 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var currentUser = null;
+    var isEditingPostId = null;
+    var isSubmittingPost = false;
 
     // DOM references
     var panel = null;
@@ -63,7 +65,17 @@ const MemberModule = (function() {
     var closeBtn = null;
     var tabButtons = null;
     var tabPanels = null;
+    var createTabBtn = null;
     var myPostsPanel = null;
+    
+    // Create post elements
+    var submitBtn = null;
+    var adminSubmitBtn = null;
+    var termsAgreed = false;
+    var selectedCategory = '';
+    var selectedSubcategory = '';
+    var formWrapper = null;
+    var formFields = null;
     
     // Auth elements
     var authForm = null;
@@ -173,11 +185,6 @@ const MemberModule = (function() {
 
     // Unsaved prompt uses ThreeButtonDialogComponent (components-new.js)
     
-    // Create post elements
-    var submitBtn = null;
-    var adminSubmitBtn = null;
-    var termsAgreed = false;
-    
     // Terms modal elements
     var termsModalContainer = null;
 
@@ -253,6 +260,13 @@ const MemberModule = (function() {
         tabButtons = panel.querySelectorAll('.member-tab-bar > .button-class-2');
         tabPanels = panel.querySelectorAll('.member-tab-contents');
         myPostsPanel = document.getElementById('member-tab-myposts');
+        
+        // Tab button for Create Post (needed for renaming during Edit)
+        if (tabButtons) {
+            tabButtons.forEach(function(btn) {
+                if (btn.dataset.tab === 'create') createTabBtn = btn;
+            });
+        }
         
         // Auth elements (Profile tab only). NOTE: Create Post also contains a .member-auth (inline auth container),
         // so scope this to the profile tab to avoid ambiguous selectors.
@@ -1796,10 +1810,6 @@ const MemberModule = (function() {
     var memberCategories = [];
     var memberCategoryIconPaths = {};
     var memberSubcategoryIconPaths = {};
-    var selectedCategory = '';
-    var selectedSubcategory = '';
-    var formWrapper = null;
-    var formFields = null;
     var checkoutOptions = [];
     var siteCurrency = null;
     var checkoutInstance = null;
@@ -2891,8 +2901,6 @@ const MemberModule = (function() {
     /* --------------------------------------------------------------------------
        POST SUBMISSION
        -------------------------------------------------------------------------- */
-    
-    var isSubmittingPost = false;
     
     function handleCreatePostSubmit(isAdminFree) {
         if (isSubmittingPost) return;
