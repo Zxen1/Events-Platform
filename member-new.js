@@ -3162,7 +3162,9 @@ const MemberModule = (function() {
         } else {
             cardEl = document.createElement('div');
             cardEl.className = 'post-card';
-            cardEl.textContent = post.checkout_title || 'Post #' + post.id;
+            var fallbackTitle = post.checkout_title || 'Post #' + post.id;
+            if (fallbackTitle === 'Array') fallbackTitle = 'Post #' + post.id;
+            cardEl.textContent = fallbackTitle;
         }
         
         // Add Edit button to the card actions container

@@ -501,6 +501,7 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
     if ($subcatStmt->fetch()) {
       $fieldsetIdsCsv = $fieldsetIdsCsv ?? '';
       $locationFlagsCsv = $locationFlagsCsv ?? '';
+      $subcatStmt->close(); // Close immediately after fetching into local variables
       
       $fieldsetIds = $fieldsetIdsCsv !== '' ? explode(',', $fieldsetIdsCsv) : [];
       $locationFlags = $locationFlagsCsv !== '' ? explode(',', $locationFlagsCsv) : [];
@@ -543,8 +544,9 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
           $byLoc[$locNum][] = $shared;
         }
       }
+    } else {
+      $subcatStmt->close();
     }
-    $subcatStmt->close();
   }
 }
 
