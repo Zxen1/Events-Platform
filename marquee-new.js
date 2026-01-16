@@ -91,7 +91,14 @@ const MarqueeModule = (function() {
    * Handle window resize - enforce 1920px visibility rule
    */
   function handleResize() {
-    const isWideEnough = window.innerWidth >= 1920;
+    let threshold = 1920;
+    if (window.App && typeof App.getConfig === 'function') {
+      const configVal = App.getConfig('marqueeWidthThreshold');
+      if (typeof configVal === 'number' && isFinite(configVal)) {
+        threshold = configVal;
+      }
+    }
+    const isWideEnough = window.innerWidth >= threshold;
     if (isWideEnough) {
       if (!isVisible && posts.length > 0) {
         show();

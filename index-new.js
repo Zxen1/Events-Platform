@@ -197,7 +197,8 @@ const App = (function() {
      Centralized configuration - change values here, not in individual modules
      -------------------------------------------------------------------------- */
   const config = {
-    postsLoadZoom: 8      // Posts and marquee only load when map zoom > this value
+    postsLoadZoom: 8,      // Posts and marquee only load when map zoom > this value
+    marqueeWidthThreshold: 1920 // Minimum screen width required to display the marquee
   };
 
   function getConfig(key) {
