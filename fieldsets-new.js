@@ -762,41 +762,31 @@ const FieldsetBuilder = (function(){
     }
     
     // Update placeholder text based on currency's format (symbol + decimal format)
-    // If no currency selected or formatting data not available, shows "0.00"
-    // If currency has formatting data, shows formatted placeholder like "$0.00"
+    // No currency selected: shows "0.00" (valid initial state)
+    // Currency selected: requires CurrencyComponent and valid currency data
     function updatePricePlaceholder(input, currencyCode) {
         if (!input) return;
         
-        // No currency selected yet
+        // No currency selected yet - valid initial state
         if (!currencyCode) {
             input.placeholder = '0.00';
             return;
         }
         
-        // Try to get currency formatting data (enhancement - may not be available yet)
+        // Currency selected - CurrencyComponent is required
         if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.getCurrencyByCode) {
-            input.placeholder = '0.00';
-            return;
+            throw new Error('[FieldsetBuilder] CurrencyComponent.getCurrencyByCode required but not available');
         }
         
         var currency = CurrencyComponent.getCurrencyByCode(currencyCode);
         if (!currency) {
-            input.placeholder = '0.00';
-            return;
+            throw new Error('[FieldsetBuilder] Currency not found: ' + currencyCode);
         }
         
-        // Check if formatting properties are available (new enhancement fields)
-        var hasFormattingData = (
-            currency.decimalPlaces !== undefined &&
-            currency.decimalSeparator &&
-            currency.symbol &&
-            currency.symbolPosition
-        );
-        
-        if (!hasFormattingData) {
-            // Formatting data not deployed yet - use standard placeholder
-            input.placeholder = '0.00';
-            return;
+        // Formatting properties are required
+        if (currency.symbol === undefined || currency.symbolPosition === undefined ||
+            currency.decimalSeparator === undefined || currency.decimalPlaces === undefined) {
+            throw new Error('[FieldsetBuilder] Currency data incomplete for: ' + currencyCode);
         }
         
         // Build formatted placeholder with currency symbol

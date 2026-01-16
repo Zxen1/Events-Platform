@@ -1563,7 +1563,11 @@ const CurrencyComponent = (function(){
     }
     
     // Format for display WITH symbol (for showing in input after blur)
+    // Requires valid currency code with symbol data
     function formatWithSymbol(input, currencyCode) {
+        if (!currencyCode) {
+            throw new Error('[CurrencyComponent] formatWithSymbol requires currency code');
+        }
         var currency = getCurrencyByCode(currencyCode);
         var val = String(input || '').trim();
         if (val === '') return '';
@@ -1572,8 +1576,13 @@ const CurrencyComponent = (function(){
         var numFormatted = formatForDisplay(val, currencyCode);
         if (numFormatted === '') return '';
         
-        // If no currency data, just return the number
-        if (!currency || !currency.symbol) return numFormatted;
+        // Currency data is required
+        if (!currency) {
+            throw new Error('[CurrencyComponent] Currency not found: ' + currencyCode);
+        }
+        if (!currency.symbol) {
+            throw new Error('[CurrencyComponent] Currency symbol not found for: ' + currencyCode);
+        }
         
         // Add the symbol in the correct position
         if (currency.symbolPosition === 'right') {
@@ -1584,12 +1593,21 @@ const CurrencyComponent = (function(){
     }
     
     // Strip symbol from input value (for editing)
+    // Requires valid currency code with symbol data
     function stripSymbol(input, currencyCode) {
+        if (!currencyCode) {
+            throw new Error('[CurrencyComponent] stripSymbol requires currency code');
+        }
         var currency = getCurrencyByCode(currencyCode);
         var val = String(input || '').trim();
         if (val === '') return '';
         
-        if (!currency || !currency.symbol) return val;
+        if (!currency) {
+            throw new Error('[CurrencyComponent] Currency not found: ' + currencyCode);
+        }
+        if (!currency.symbol) {
+            throw new Error('[CurrencyComponent] Currency symbol not found for: ' + currencyCode);
+        }
         
         // Remove the symbol
         var symbol = currency.symbol;
