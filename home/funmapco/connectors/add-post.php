@@ -1,4 +1,12 @@
 <?php
+// Debug: show actual PHP errors in response
+set_exception_handler(function($e) {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code(500);
+  echo json_encode(['success' => false, 'error' => $e->getMessage(), 'file' => basename($e->getFile()), 'line' => $e->getLine()]);
+  exit;
+});
+
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(403);
