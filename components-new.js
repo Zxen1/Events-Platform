@@ -1482,8 +1482,14 @@ const CurrencyComponent = (function(){
         var val = String(input || '').trim();
         
         if (!currency) {
-            // No currency - assume dot as decimal, comma as thousands
-            val = val.replace(/,/g, '');
+            // No currency - assume dot or comma as decimal
+            val = val.replace(/,/g, '.');
+            // Remove all but the last dot if multiple exist (unlikely but safe)
+            var parts = val.split('.');
+            if (parts.length > 2) {
+                var last = parts.pop();
+                val = parts.join('') + '.' + last;
+            }
             val = val.replace(/[^0-9.-]/g, '');
             return parseFloat(val) || 0;
         }
@@ -1496,9 +1502,16 @@ const CurrencyComponent = (function(){
             val = val.split(thousSep).join('');
         }
         
-        // Replace decimal separator with dot for parsing
+        // Normalize: if user used the "wrong" separator (e.g. dot instead of comma), 
+        // treat it as a decimal separator anyway as long as it's not the thousands separator.
+        var otherSep = (decSep === '.' ? ',' : '.');
+        if (otherSep !== thousSep) {
+            val = val.split(otherSep).join(decSep);
+        }
+        
+        // Replace decimal separator with dot for final JS parsing
         if (decSep !== '.') {
-            val = val.replace(decSep, '.');
+            val = val.split(decSep).join('.');
         }
         
         // Keep only digits, dot, and minus
@@ -1506,7 +1519,7 @@ const CurrencyComponent = (function(){
         
         return parseFloat(val) || 0;
     }
-    
+
     // Sanitize user input as they type (allow digits + separator)
     function sanitizeInput(input, currencyCode) {
         var currency = getCurrencyByCode(currencyCode);
@@ -1515,15 +1528,18 @@ const CurrencyComponent = (function(){
         var decSep = currency ? (currency.decimalSeparator || '.') : '.';
         var decPlaces = currency ? (currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2) : 2;
         
-        // Allow digits and the decimal separator
-        var regex = new RegExp('[^0-9' + (decSep === '.' ? '\\.' : decSep) + ']', 'g');
-        val = val.replace(regex, '');
+        // Allow digits and BOTH decimal separators (dot and comma) for better UX
+        val = val.replace(/[^0-9.,]/g, '');
+        
+        // Normalize the input to use the currency's preferred separator
+        var otherSep = (decSep === '.' ? ',' : '.');
+        val = val.split(otherSep).join(decSep);
         
         // Ensure only one decimal separator
         var sepIndex = val.indexOf(decSep);
         if (sepIndex !== -1) {
             var before = val.slice(0, sepIndex + 1);
-            var after = val.slice(sepIndex + 1).replace(new RegExp('\\' + decSep, 'g'), '');
+            var after = val.slice(sepIndex + 1).split(decSep).join('');
             // Limit decimal places
             if (decPlaces > 0) {
                 after = after.slice(0, decPlaces);

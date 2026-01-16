@@ -679,7 +679,15 @@ const FieldsetBuilder = (function(){
             if (e.ctrlKey || e.metaKey) return;
             if (typeof k !== 'string' || k.length !== 1) return;
 
-            // Determine allowed decimal separator based on currency
+            // Allow digits and both decimal separators (dot and comma) for better UX.
+            // CurrencyComponent.sanitizeInput will normalize them to the correct one.
+            var allowedPattern = /[0-9.,]/;
+            if (!allowedPattern.test(k)) {
+                e.preventDefault();
+                return;
+            }
+
+            // Determine preferred decimal separator based on currency
             var currencyCode = getCurrencyCode ? getCurrencyCode() : null;
             var decSep = '.';
             if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.getCurrencyByCode) {
@@ -689,14 +697,8 @@ const FieldsetBuilder = (function(){
                 }
             }
 
-            // Block anything not digit or allowed decimal separator
-            var allowedPattern = new RegExp('[0-9' + (decSep === '.' ? '\\.' : decSep) + ']');
-            if (!allowedPattern.test(k)) {
-                e.preventDefault();
-                return;
-            }
-            // Block second decimal separator
-            if (k === decSep && this.value.indexOf(decSep) !== -1) {
+            // Block second decimal separator (regardless of whether they typed . or ,)
+            if ((k === '.' || k === ',') && (this.value.indexOf('.') !== -1 || this.value.indexOf(',') !== -1)) {
                 e.preventDefault();
                 return;
             }

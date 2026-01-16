@@ -3652,8 +3652,9 @@ const MemberModule = (function() {
                                                 allPrices.push(numericValue);
                                             }
                                         } else {
-                                            // No currency selected - value should already be standard format
-                                            var numericValue = parseFloat(rawPrice.replace(/[^0-9.-]/g, ''));
+                                            // No currency selected - support both dot and comma
+                                            var normalized = rawPrice.replace(/,/g, '.');
+                                            var numericValue = parseFloat(normalized.replace(/[^0-9.-]/g, ''));
                                             if (Number.isFinite(numericValue)) {
                                                 price = numericValue.toString();
                                                 allPrices.push(numericValue);
@@ -3715,8 +3716,9 @@ const MemberModule = (function() {
                             var numericValue = CurrencyComponent.parseInput(rawPrice, currency);
                             item_price = Number.isFinite(numericValue) ? numericValue.toString() : '';
                         } else {
-                            // No currency selected - value should already be standard format
-                            item_price = rawPrice.replace(/[^0-9.-]/g, '');
+                            // No currency selected - support both dot and comma
+                            var normalized = rawPrice.replace(/,/g, '.');
+                            item_price = normalized.replace(/[^0-9.-]/g, '');
                         }
                     }
                     
