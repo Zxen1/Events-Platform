@@ -1133,13 +1133,9 @@ const FilterModule = (function() {
     function formatDateShort(date) {
         if (!date) return '';
         var d = new Date(date);
-        var currentYear = new Date().getFullYear();
-        var dateYear = d.getFullYear();
-        var formatted = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).replace(/,/g, '');
-        if (dateYear !== currentYear) {
-            formatted += ', ' + dateYear;
-        }
-        return formatted;
+        var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
     }
     
     function resetAllFilters() {

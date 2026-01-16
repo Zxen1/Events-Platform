@@ -573,6 +573,7 @@ foreach ($byLoc as $locNum => $entries) {
   $itemPricing = null;
   $checkout = null;
   $sessionPricing = null;
+  $hasTicketPrice = false;
 
   foreach ($entries as $e) {
     $type = isset($e['type']) ? (string)$e['type'] : '';
@@ -589,6 +590,7 @@ foreach ($byLoc as $locNum => $entries) {
       $sessionPricing = is_array($val) ? $val : null;
       if ($sessionPricing && isset($sessionPricing['price_summary']) && is_string($sessionPricing['price_summary']) && trim($sessionPricing['price_summary']) !== '') {
         $card['price_summary'] = trim($sessionPricing['price_summary']);
+        $hasTicketPrice = true;
       }
       continue;
     }
@@ -602,7 +604,7 @@ foreach ($byLoc as $locNum => $entries) {
     }
     if ($baseType === 'item-pricing') {
       $itemPricing = $val;
-      if ($itemPricing && isset($itemPricing['price_summary']) && is_string($itemPricing['price_summary']) && trim($itemPricing['price_summary']) !== '') {
+      if ($itemPricing && isset($itemPricing['price_summary']) && is_string($itemPricing['price_summary']) && trim($itemPricing['price_summary']) !== '' && !$hasTicketPrice) {
         $card['price_summary'] = trim($itemPricing['price_summary']);
       }
       continue;

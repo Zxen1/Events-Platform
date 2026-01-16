@@ -271,7 +271,11 @@ foreach ($byLoc as $locNum => $entries) {
     'session_summary' => null, 'price_summary' => null,
   ];
   
-  $sessionPricing = null; $itemPricing = null; $sessions = []; $ticketPricing = [];
+  $sessionPricing = null;
+  $itemPricing = null;
+  $sessions = [];
+  $ticketPricing = [];
+  $hasTicketPrice = false;
 
   foreach ($entries as $e) {
     $type = (string)($e['type'] ?? '');
@@ -281,12 +285,17 @@ foreach ($byLoc as $locNum => $entries) {
 
     if ($baseType === 'session_pricing') {
       $sessionPricing = is_array($val) ? $val : null;
-      if ($sessionPricing && !empty($sessionPricing['price_summary'])) $card['price_summary'] = trim($sessionPricing['price_summary']);
+      if ($sessionPricing && !empty($sessionPricing['price_summary'])) {
+        $card['price_summary'] = trim($sessionPricing['price_summary']);
+        $hasTicketPrice = true;
+      }
       continue;
     }
     if ($baseType === 'item-pricing') {
       $itemPricing = $val;
-      if ($itemPricing && !empty($itemPricing['price_summary'])) $card['price_summary'] = trim($itemPricing['price_summary']);
+      if ($itemPricing && !empty($itemPricing['price_summary']) && !$hasTicketPrice) {
+        $card['price_summary'] = trim($itemPricing['price_summary']);
+      }
       continue;
     }
     // ... map other fields (title, desc, venue, etc.) ...

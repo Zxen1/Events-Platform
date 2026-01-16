@@ -1040,8 +1040,9 @@ const PostModule = (function() {
     try {
       var d = new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
+      var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return months[d.getMonth()] + ' ' + d.getDate();
+      return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
     } catch (e) {
       return dateStr;
     }
@@ -1142,6 +1143,9 @@ const PostModule = (function() {
     // Format dates (if sessions exist)
     var datesText = formatPostDates(post);
 
+    // Format price summary
+    var priceText = formatPriceSummaryText(mapCard ? mapCard.price_summary : '');
+
     // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
     // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
     try {
@@ -1185,6 +1189,7 @@ const PostModule = (function() {
           '<div class="post-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>',
           locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
+          priceText ? '<div class="post-card-row-price"><span class="post-card-badge" title="Price">💰</span><span>' + escapeHtml(priceText) + '</span></div>' : '',
         '</div>',
       '</div>',
       '<div class="post-card-container-actions">',

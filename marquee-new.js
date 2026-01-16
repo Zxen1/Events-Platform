@@ -336,6 +336,17 @@ const MarqueeModule = (function() {
     dateText.textContent = formatDates(post.dates);
     dateLine.appendChild(dateText);
     info.appendChild(dateLine);
+
+    // Price line
+    if (post.price_summary) {
+      const priceLine = document.createElement('div');
+      priceLine.className = 'marquee-slide-info-price';
+      priceLine.innerHTML = '<span class="marquee-badge" title="Price">💰</span>';
+      const priceText = document.createElement('span');
+      priceText.textContent = post.price_summary;
+      priceLine.appendChild(priceText);
+      info.appendChild(priceLine);
+    }
     
     return info;
   }
@@ -452,11 +463,10 @@ const MarqueeModule = (function() {
     if (!date) return '';
     try {
       const d = new Date(date);
-      return d.toLocaleDateString(undefined, { 
-        month: 'short', 
-        day: 'numeric',
-        year: 'numeric'
-      });
+      if (isNaN(d.getTime())) return String(date);
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
     } catch (e) {
       return String(date);
     }
