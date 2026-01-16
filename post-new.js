@@ -1148,7 +1148,7 @@ const PostModule = (function() {
     var datesText = formatPostDates(post);
 
     // Format price summary
-    var priceText = formatPriceSummaryText(mapCard ? mapCard.price_summary : '');
+    var priceParts = parsePriceSummary(mapCard ? mapCard.price_summary : '');
 
     // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
     // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
@@ -1193,7 +1193,12 @@ const PostModule = (function() {
           '<div class="post-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>',
           locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
-          priceText ? '<div class="post-card-row-price"><span class="post-card-badge" title="Price">💰</span><span>' + escapeHtml(priceText) + '</span></div>' : '',
+          priceParts.text ? (function() {
+            var badge = priceParts.flagUrl 
+              ? '<img class="post-card-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain;">'
+              : '<span class="post-card-badge" title="Price">💰</span>';
+            return '<div class="post-card-row-price">' + badge + '<span>' + escapeHtml(priceParts.text) + '</span></div>';
+          })() : '',
         '</div>',
       '</div>',
       '<div class="post-card-container-actions">',
@@ -1929,8 +1934,37 @@ const PostModule = (function() {
    */
   function extractPrice(mapCard) {
     if (!mapCard || !mapCard.price_summary) return 0;
+    // Pattern matches numbers with decimals or commas.
+    // Skips any leading [cc] flag pattern.
     var match = mapCard.price_summary.match(/[\d,.]+/);
     return match ? parseFloat(match[0].replace(/,/g, '')) : 0;
+  }
+
+  /**
+   * Parse price summary into parts (flag and text)
+   * @param {string} priceSummary - Raw price summary string
+   * @returns {Object} { flagUrl, countryCode, text }
+   */
+  function parsePriceSummary(priceSummary) {
+    var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
+    if (!raw) return { flagUrl: '', countryCode: '', text: '' };
+
+    var countryCode = '';
+    var displayText = raw;
+
+    // Detect [cc] pattern (e.g., "[us] $10.00")
+    var match = raw.match(/^\[([a-z0-9_-]+)\]\s*(.*)$/i);
+    if (match) {
+      countryCode = match[1].toLowerCase();
+      displayText = match[2].trim();
+    }
+
+    var flagUrl = '';
+    if (countryCode && window.App && typeof App.getImageUrl === 'function') {
+      flagUrl = App.getImageUrl('currencies', countryCode + '.svg');
+    }
+
+    return { flagUrl: flagUrl, countryCode: countryCode, text: displayText };
   }
   
   function getMapCenter() {
@@ -2176,10 +2210,18 @@ const PostModule = (function() {
     var avatarSrc = resolveAvatarSrcForUser(post.member_avatar || '', post.member_id);
 
     // Default session info display
-    var priceText = formatPriceSummaryText(loc0.price_summary || '');
+    var priceParts = parsePriceSummary(loc0.price_summary || '');
+    var priceHtml = '';
+    if (priceParts.text) {
+      var badge = priceParts.flagUrl 
+        ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain;">'
+        : '💰 ';
+      priceHtml = '<span>' + badge + escapeHtml(priceParts.text) + '</span>';
+    }
+
     var defaultInfo = datesText
-      ? ((priceText ? (priceText + ' | ') : '') + '📅 ' + datesText)
-      : (priceText ? priceText : '');
+      ? ((priceHtml ? (priceHtml + ' | ') : '') + '📅 ' + datesText)
+      : (priceHtml ? priceHtml : '');
 
     // Check favorite status
     var isFav = isFavorite(post.id);
@@ -3514,7 +3556,8 @@ const PostModule = (function() {
     getSubcategoryInfo: getSubcategoryInfo,
     getSubcategoryIconUrl: getSubcategoryIconUrl,
     formatPostDates: formatPostDates,
-    formatPriceSummaryText: formatPriceSummaryText
+    formatPriceSummaryText: formatPriceSummaryText,
+    parsePriceSummary: parsePriceSummary
   };
 
 })();

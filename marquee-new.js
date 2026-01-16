@@ -334,9 +334,9 @@ const MarqueeModule = (function() {
       : formatDates(post.dates || (mapCard && mapCard.session_summary));
 
     // Format price summary
-    const priceText = (window.PostModule && typeof PostModule.formatPriceSummaryText === 'function')
-      ? PostModule.formatPriceSummaryText(mapCard ? mapCard.price_summary : post.price_summary)
-      : (mapCard ? mapCard.price_summary : post.price_summary || '');
+    const priceParts = (window.PostModule && typeof PostModule.parsePriceSummary === 'function')
+      ? PostModule.parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary)
+      : { flagUrl: '', countryCode: '', text: (mapCard ? mapCard.price_summary : post.price_summary || '') };
 
     // 1. Title line
     const titleLine = document.createElement('div');
@@ -391,12 +391,20 @@ const MarqueeModule = (function() {
     }
 
     // 5. Price line
-    if (priceText) {
+    if (priceParts.text) {
       const priceLine = document.createElement('div');
       priceLine.className = 'marquee-slide-info-price';
-      priceLine.innerHTML = '<span class="marquee-badge" title="Price">💰</span>';
+      
+      let badgeHtml = '';
+      if (priceParts.flagUrl) {
+        badgeHtml = '<img class="marquee-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain;">';
+      } else {
+        badgeHtml = '<span class="marquee-badge" title="Price">💰</span>';
+      }
+      
+      priceLine.innerHTML = badgeHtml;
       const priceTextEl = document.createElement('span');
-      priceTextEl.textContent = priceText;
+      priceTextEl.textContent = priceParts.text;
       priceLine.appendChild(priceTextEl);
       info.appendChild(priceLine);
     }

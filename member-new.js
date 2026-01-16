@@ -4019,13 +4019,21 @@ const MemberModule = (function() {
                     if (allPrices.length > 0 && sharedCurrency) {
                         var min = Math.min.apply(null, allPrices);
                         var max = Math.max.apply(null, allPrices);
-                        var displayCode = sharedCurrency.replace(/-[LR]$/, '');
                         
                         if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            var countryCode = '';
+                            if (typeof CurrencyComponent.getCurrencyByCode === 'function') {
+                                var currData = CurrencyComponent.getCurrencyByCode(sharedCurrency);
+                                if (currData && currData.filename) {
+                                    countryCode = currData.filename.replace('.svg', '');
+                                }
+                            }
+
+                            var prefix = countryCode ? '[' + countryCode + '] ' : '';
                             if (min === max) {
-                                priceSummary = CurrencyComponent.formatWithSymbol(min.toString(), sharedCurrency) + ' ' + displayCode;
+                                priceSummary = prefix + CurrencyComponent.formatWithSymbol(min.toString(), sharedCurrency);
                             } else {
-                                priceSummary = CurrencyComponent.formatWithSymbol(min.toString(), sharedCurrency) + ' - ' + CurrencyComponent.formatWithSymbol(max.toString(), sharedCurrency) + ' ' + displayCode;
+                                priceSummary = prefix + CurrencyComponent.formatWithSymbol(min.toString(), sharedCurrency) + ' - ' + CurrencyComponent.formatWithSymbol(max.toString(), sharedCurrency);
                             }
                         }
                     }
@@ -4077,9 +4085,17 @@ const MemberModule = (function() {
                     // Generate pre-formatted price_summary for fast display
                     var priceSummary = '';
                     if (item_price && currency) {
-                        var displayCode = currency.replace(/-[LR]$/, '');
                         if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
-                            priceSummary = CurrencyComponent.formatWithSymbol(item_price, currency) + ' ' + displayCode;
+                            var countryCode = '';
+                            if (typeof CurrencyComponent.getCurrencyByCode === 'function') {
+                                var currData = CurrencyComponent.getCurrencyByCode(currency);
+                                if (currData && currData.filename) {
+                                    countryCode = currData.filename.replace('.svg', '');
+                                }
+                            }
+
+                            var prefix = countryCode ? '[' + countryCode + '] ' : '';
+                            priceSummary = prefix + CurrencyComponent.formatWithSymbol(item_price, currency);
                         }
                     }
 
