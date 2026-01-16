@@ -3467,6 +3467,27 @@ const PostModule = (function() {
     }
   }
 
+  /**
+   * Get the URL for a post
+   * @param {Object} post - Post object
+   * @returns {string} Post URL
+   */
+  function getPostUrl(post) {
+    if (!post) return '';
+    var key = post.post_key || post.id;
+    if (!key) return '';
+    return window.location.origin + '/post/' + encodeURIComponent(String(key));
+  }
+
+  /**
+   * Get the hero image URL for a post
+   * @param {Object} post - Post object
+   * @returns {string} Hero image URL
+   */
+  function getHeroUrl(post) {
+    return getPostThumbnailUrl(post);
+  }
+
   /* --------------------------------------------------------------------------
      PUBLIC API
      -------------------------------------------------------------------------- */
@@ -3492,7 +3513,9 @@ const PostModule = (function() {
     closePost: closePost,
     renderPostCard: renderPostCard,
     renderMapMarkers: renderMapMarkers,
-    highlightMapMarker: highlightMapMarker
+    highlightMapMarker: highlightMapMarker,
+    getPostUrl: getPostUrl,
+    getHeroUrl: getHeroUrl
   };
 
 })();
