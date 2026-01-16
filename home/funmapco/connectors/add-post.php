@@ -701,50 +701,7 @@ foreach ($byLoc as $locNum => $entries) {
   }
 
   // price_summary: Pre-formatted display string (e.g., "$12.00 - $34.50 USD")
-  // Fetches currency formatting rules from list_currencies table
-  
-  // Helper closure to format a price with currency symbol
-  $formatPriceWithCurrency = function($amount, $currencyCode) use ($mysqli) {
-    // Currency code is required - no silent fallback
-    if (!$currencyCode) {
-      throw new Exception('formatPriceWithCurrency requires currency code');
-    }
-    if ($amount === null) {
-      throw new Exception('formatPriceWithCurrency requires amount');
-    }
-    
-    // Fetch currency formatting rules
-    $stmt = $mysqli->prepare("SELECT option_symbol, option_symbol_position, option_decimal_separator, option_decimal_places, option_thousands_separator FROM list_currencies WHERE option_value = ? AND is_active = 1 LIMIT 1");
-    if (!$stmt) {
-      throw new Exception('Failed to prepare currency query: ' . $mysqli->error);
-    }
-    
-    $stmt->bind_param('s', $currencyCode);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $currency = $result->fetch_assoc();
-    $stmt->close();
-    
-    if (!$currency) {
-      throw new Exception('Currency not found in database: ' . $currencyCode);
-    }
-    
-    $symbol = $currency['option_symbol'] ?? '';
-    $symbolPos = $currency['option_symbol_position'] ?? 'left';
-    $decSep = $currency['option_decimal_separator'] ?? '.';
-    $decPlaces = (int)($currency['option_decimal_places'] ?? 2);
-    $thousSep = $currency['option_thousands_separator'] ?? ',';
-    
-    // Format the number
-    $formatted = number_format((float)$amount, $decPlaces, $decSep, $thousSep);
-    
-    // Apply symbol position
-    if ($symbolPos === 'right') {
-      return $formatted . ($symbol ? ' ' . $symbol : '');
-    } else {
-      return $symbol . $formatted;
-    }
-  };
+  // Collect pricing data first, then format using currency rules from database
   
   $priceSummaryText = '';
   
@@ -783,27 +740,61 @@ foreach ($byLoc as $locNum => $entries) {
       }
     }
   }
-  if (!empty($ticketPrices)) {
-    $minPrice = min($ticketPrices);
-    $maxPrice = max($ticketPrices);
-    $displayCode = preg_replace('/-[LR]$/', '', $ticketCurrency ?: '');
-    
-    if ($minPrice === $maxPrice) {
-      // Single price: "$12.00 USD"
-      $priceSummaryText = $formatPriceWithCurrency($minPrice, $ticketCurrency) . ($displayCode ? ' ' . $displayCode : '');
-    } else {
-      // Range: "$12.00 - $34.50 USD"
-      $priceSummaryText = $formatPriceWithCurrency($minPrice, $ticketCurrency) . ' - ' . $formatPriceWithCurrency($maxPrice, $ticketCurrency) . ($displayCode ? ' ' . $displayCode : '');
-    }
+  
+  // Item pricing data
+  $itemPrice = null;
+  $itemCurrency = '';
+  if (is_array($itemPricing) && !empty($itemPricing['item_price'])) {
+    $itemPrice = (float)$itemPricing['item_price'];
+    $itemCurrency = isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : '';
   }
   
-  // Item pricing: single price (only if no ticket pricing)
-  if (empty($priceSummaryText) && is_array($itemPricing) && !empty($itemPricing['item_price'])) {
-    $itemPrice = (float)$itemPricing['item_price'];
-    if ($itemPrice > 0) {
-      $itemCurrency = isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : '';
-      $displayCode = preg_replace('/-[LR]$/', '', $itemCurrency);
-      $priceSummaryText = $formatPriceWithCurrency($itemPrice, $itemCurrency) . ($displayCode ? ' ' . $displayCode : '');
+  // Determine which currency to use for formatting
+  $formatCurrency = !empty($ticketCurrency) ? $ticketCurrency : $itemCurrency;
+  
+  // Only generate price_summary if we have pricing data AND a currency
+  if (!empty($formatCurrency) && (!empty($ticketPrices) || ($itemPrice !== null && $itemPrice > 0))) {
+    // Fetch currency formatting rules once
+    $currencyData = null;
+    $stmtCurr = $mysqli->prepare("SELECT option_symbol, option_symbol_position, option_decimal_separator, option_decimal_places, option_thousands_separator FROM list_currencies WHERE option_value = ? AND is_active = 1 LIMIT 1");
+    if ($stmtCurr) {
+      $stmtCurr->bind_param('s', $formatCurrency);
+      $stmtCurr->execute();
+      $currResult = $stmtCurr->get_result();
+      $currencyData = $currResult->fetch_assoc();
+      $stmtCurr->close();
+    }
+    
+    // Only format if we have currency data
+    if ($currencyData) {
+      $symbol = $currencyData['option_symbol'] ?? '';
+      $symbolPos = $currencyData['option_symbol_position'] ?? 'left';
+      $decSep = $currencyData['option_decimal_separator'] ?? '.';
+      $decPlaces = (int)($currencyData['option_decimal_places'] ?? 2);
+      $thousSep = $currencyData['option_thousands_separator'] ?? ',';
+      $displayCode = preg_replace('/-[LR]$/', '', $formatCurrency);
+      
+      // Format a single price value
+      $formatPrice = function($amount) use ($symbol, $symbolPos, $decSep, $decPlaces, $thousSep) {
+        $formatted = number_format((float)$amount, $decPlaces, $decSep, $thousSep);
+        if ($symbolPos === 'right') {
+          return $formatted . ($symbol ? ' ' . $symbol : '');
+        } else {
+          return $symbol . $formatted;
+        }
+      };
+      
+      if (!empty($ticketPrices)) {
+        $minPrice = min($ticketPrices);
+        $maxPrice = max($ticketPrices);
+        if ($minPrice === $maxPrice) {
+          $priceSummaryText = $formatPrice($minPrice) . ($displayCode ? ' ' . $displayCode : '');
+        } else {
+          $priceSummaryText = $formatPrice($minPrice) . ' - ' . $formatPrice($maxPrice) . ($displayCode ? ' ' . $displayCode : '');
+        }
+      } else if ($itemPrice !== null && $itemPrice > 0) {
+        $priceSummaryText = $formatPrice($itemPrice) . ($displayCode ? ' ' . $displayCode : '');
+      }
     }
   }
   
