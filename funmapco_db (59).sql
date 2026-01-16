@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 16, 2026 at 09:05 AM
+-- Generation Time: Jan 16, 2026 at 02:19 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -1240,7 +1240,7 @@ INSERT INTO `list_currencies` (`id`, `option_filename`, `option_value`, `option_
 (46, 'er.svg', 'ERN', 'Eritrean Nakfa', 'Nfk', 'right', '.', 2, ',', 46, 1),
 (47, 'et.svg', 'ETB', 'Ethiopian Birr', 'Br', 'right', '.', 2, ',', 47, 1),
 (48, 'eu.svg', 'EUR-R', 'Euro (right €)', '€', 'right', ',', 2, '.', 48, 1),
-(49, 'eu.svg', 'EUR-L', 'Euro (€ left)', '€', 'left', ',', 2, '.', 49, 1),
+(49, 'eu.svg', 'EUR-L', 'Euro (€ left)', '€', 'left', '.', 2, ',', 49, 1),
 (50, 'fk.svg', 'FKP', 'Falkland Islands Pound', '£', 'left', '.', 2, ',', 50, 1),
 (51, 'fj.svg', 'FJD', 'Fijian Dollar', '$', 'left', '.', 2, ',', 51, 1),
 (52, 'gm.svg', 'GMD', 'Gambian Dalasi', 'D', 'left', '.', 2, ',', 52, 1),
