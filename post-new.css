@@ -77,7 +77,6 @@
   flex-direction: column;
   /* Scroll lives in .post-list so sticky headers work and wheel/keys target the list */
   overflow: hidden;
-  overscroll-behavior: contain;
   pointer-events: auto;
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
@@ -136,8 +135,6 @@
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
   pointer-events: auto;
   transition: transform var(--panel-transition-duration, 0.3s) ease;
   will-change: transform;
@@ -427,10 +424,8 @@
 /* Info rows */
 .post-card-row-loc,
 .post-card-row-date,
-.post-card-row-price,
 .recent-card-row-loc,
-.recent-card-row-date,
-.recent-card-row-price {
+.recent-card-row-date {
   display: flex;
   align-items: center;
   gap: 0;
@@ -1123,20 +1118,6 @@
   background: #000;
   color: #fff;
   padding: 2px 4px;
-}
-
-/* Recent panel: "last opened" label above each recent card (live-site parity) */
-.recent-last-opened-label {
-  display: inline-block;
-  max-width: calc(100% - 24px);
-  font-size: 12px;
-  margin: 10px 12px 6px;
-  background: #000;
-  color: #fff;
-  padding: 2px 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* ============================================================================

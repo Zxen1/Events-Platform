@@ -328,124 +328,16 @@ const MarqueeModule = (function() {
     locLine.appendChild(locText);
     info.appendChild(locLine);
     
-    // Date line - try sessionSummary (raw JSON) first, then dates (pre-processed)
-    const datesDisplay = formatSessionSummaryForMarquee(post.sessionSummary) || formatDates(post.dates);
+    // Date line
     const dateLine = document.createElement('div');
     dateLine.className = 'marquee-slide-info-date';
     dateLine.innerHTML = '<span class="marquee-badge" title="Dates">📅</span>';
     const dateText = document.createElement('span');
-    dateText.textContent = datesDisplay;
+    dateText.textContent = formatDates(post.dates);
     dateLine.appendChild(dateText);
     info.appendChild(dateLine);
     
-    // Price line - try priceSummary (raw JSON)
-    const priceDisplay = formatPriceSummaryForMarquee(post.priceSummary);
-    if (priceDisplay) {
-      const priceLine = document.createElement('div');
-      priceLine.className = 'marquee-slide-info-price';
-      priceLine.innerHTML = '<span class="marquee-badge" title="Price">💰</span>';
-      const priceText = document.createElement('span');
-      priceText.textContent = priceDisplay;
-      priceLine.appendChild(priceText);
-      info.appendChild(priceLine);
-    }
-    
     return info;
-  }
-  
-  /**
-   * Format session_summary JSON for marquee display
-   * @param {string|null} sessionSummary - JSON string: {"start":"2026-01-22","end":"2026-05-12"}
-   * @returns {string} Formatted date string or empty
-   */
-  function formatSessionSummaryForMarquee(sessionSummary) {
-    if (!sessionSummary) return '';
-    const raw = String(sessionSummary).trim();
-    if (!raw || raw[0] !== '{') return '';
-    
-    try {
-      const obj = JSON.parse(raw);
-      if (!obj || !obj.start) return '';
-      // Use formatDates which handles {start, end} objects
-      return formatDates(obj);
-    } catch (_e) {
-      return '';
-    }
-  }
-  
-  /**
-   * Format price_summary JSON for marquee display
-   * Shows ticket pricing first, falls back to item pricing.
-   * Format: symbol + amount + ISO code (e.g., "$12 USD", "€12 EUR")
-   * @param {string|null} priceSummary - JSON string
-   * @returns {string} Formatted price string or empty
-   */
-  function formatPriceSummaryForMarquee(priceSummary) {
-    if (!priceSummary) return '';
-    const raw = String(priceSummary).trim();
-    if (!raw || raw[0] !== '{') return '';
-    
-    function fmtCurrency(value, currencyCode, includeCode) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return '';
-      if (n === 0) return 'Free';
-      const code = currencyCode ? String(currencyCode).trim().toUpperCase() : '';
-      if (!code) return String(n);
-      // Show decimals only if the amount has them (12 → $12, 12.50 → $12.50)
-      const hasDecimals = n % 1 !== 0;
-      const minDecimals = hasDecimals ? 2 : 0;
-      let formatted;
-      try {
-        // Use 'en-US' locale for consistent symbol formatting ($12 not USD 12)
-        formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: code, minimumFractionDigits: minDecimals, maximumFractionDigits: 2 }).format(n);
-      } catch (_e) {
-        formatted = String(n);
-      }
-      // Always append ISO code for clarity
-      if (includeCode && code) {
-        formatted = formatted + ' ' + code;
-      }
-      return formatted;
-    }
-    
-    try {
-      const obj = JSON.parse(raw);
-      if (!obj || typeof obj !== 'object') return '';
-      
-      // Try ticket pricing first
-      const ticket = obj.ticket && typeof obj.ticket === 'object' ? obj.ticket : null;
-      if (ticket) {
-        const c = ticket.currency ? String(ticket.currency).trim().toUpperCase() : '';
-        const min = (ticket.min !== undefined && ticket.min !== null) ? Number(ticket.min) : null;
-        const max = (ticket.max !== undefined && ticket.max !== null) ? Number(ticket.max) : null;
-        
-        if (Number.isFinite(min) && Number.isFinite(max) && min === 0 && max === 0) {
-          return 'Free';
-        }
-        
-        if (Number.isFinite(min) && Number.isFinite(max)) {
-          if (min === max) return fmtCurrency(min, c, true);
-          return fmtCurrency(min, c, false) + ' - ' + fmtCurrency(max, c, true);
-        }
-        if (Number.isFinite(min)) return fmtCurrency(min, c, true);
-        if (Number.isFinite(max)) return fmtCurrency(max, c, true);
-      }
-      
-      // Fall back to item pricing
-      const item = obj.item && typeof obj.item === 'object' ? obj.item : null;
-      if (item) {
-        const priceVal = (item.price !== undefined) ? item.price : item.item_price;
-        const itemCurrency = item.currency ? String(item.currency).trim().toUpperCase() : '';
-        const p = Number(priceVal);
-        if (Number.isFinite(p)) {
-          return fmtCurrency(p, itemCurrency, true);
-        }
-      }
-      
-      return '';
-    } catch (_e) {
-      return '';
-    }
   }
 
   /* --------------------------------------------------------------------------

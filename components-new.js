@@ -960,26 +960,6 @@ const CurrencyComponent = (function(){
         return dataLoaded;
     }
     
-    // Look up formatting properties for a currency code
-    function getFormatting(currencyCode) {
-        if (!currencyCode) {
-            throw new Error('[CurrencyComponent] getFormatting requires a currency code');
-        }
-        var found = currencyData.find(function(item) {
-            return item.value === currencyCode;
-        });
-        if (!found) {
-            throw new Error('[CurrencyComponent] Currency not found: ' + currencyCode);
-        }
-        return {
-            symbol: found.symbol,
-            symbolPosition: found.symbolPosition,
-            decimalSeparator: found.decimalSeparator,
-            decimalPlaces: found.decimalPlaces,
-            thousandsSeparator: found.thousandsSeparator
-        };
-    }
-    
     // Load currency data from database via gateway
     function loadFromDatabase() {
         if (loadPromise) return loadPromise;
@@ -1115,15 +1095,7 @@ const CurrencyComponent = (function(){
                     try { menu.dataset.value = String(item.value || '').trim(); } catch (e1) {}
                     applyOpenState(false);
                     filterOptions('');
-                    // Pass formatting properties: symbol, position, separators, decimal places
-                    var formatting = {
-                        symbol: item.symbol,
-                        symbolPosition: item.symbolPosition,
-                        decimalSeparator: item.decimalSeparator,
-                        decimalPlaces: item.decimalPlaces,
-                        thousandsSeparator: item.thousandsSeparator
-                    };
-                    onSelect(item.value, item.label, countryCode, formatting);
+                    onSelect(item.value, item.label, countryCode);
                     try { menu.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                 };
                 opts.appendChild(op);
@@ -1148,24 +1120,9 @@ const CurrencyComponent = (function(){
             }).catch(function() {});
         }
 
-        // Set initial value and call onSelect with formatting
+        // Set initial value
         if (initialValue) {
             setValue(initialValue);
-            // Find currency data and call onSelect for initial value
-            var found = currencyData.find(function(item) {
-                return item.value === initialValue;
-            });
-            if (found) {
-                var countryCode = found.filename ? found.filename.replace('.svg', '') : null;
-                var formatting = {
-                    symbol: found.symbol,
-                    symbolPosition: found.symbolPosition,
-                    decimalSeparator: found.decimalSeparator,
-                    decimalPlaces: found.decimalPlaces,
-                    thousandsSeparator: found.thousandsSeparator
-                };
-                onSelect(initialValue, found.label, countryCode, formatting);
-            }
         }
 
         // Data must be loaded BEFORE building menu (via FieldsetBuilder.setPicklist)
@@ -1466,8 +1423,7 @@ const CurrencyComponent = (function(){
         loadFromDatabase: loadFromDatabase,
         buildCompactMenu: buildCompactMenu,
         buildFullMenu: buildFullMenu,
-        parseCurrencyValue: parseCurrencyValue,
-        getFormatting: getFormatting
+        parseCurrencyValue: parseCurrencyValue
     };
 })();
 

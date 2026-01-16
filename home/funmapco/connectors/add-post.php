@@ -162,99 +162,8 @@ function normalize_currency($currency): string
     return '';
   }
   $normalized = strtoupper(trim((string) $currency));
-  // Allow letters and hyphen (for -L/-R variants like CAD-L, EUR-R)
-  $normalized = preg_replace('/[^A-Z\-]/', '', $normalized);
+  $normalized = preg_replace('/[^A-Z]/', '', $normalized);
   return $normalized !== null ? substr($normalized, 0, 12) : '';
-}
-
-// Get currency formatting data from list_currencies table
-function get_currency_formatting($mysqli, $currencyCode): ?array
-{
-  if (!$currencyCode) return null;
-  $stmt = $mysqli->prepare("SELECT option_symbol, option_symbol_position, option_decimal_separator, option_decimal_places, option_thousands_separator FROM list_currencies WHERE option_value = ? LIMIT 1");
-  if (!$stmt) return null;
-  $stmt->bind_param('s', $currencyCode);
-  $stmt->execute();
-  $result = $stmt->get_result();
-  $row = $result->fetch_assoc();
-  $stmt->close();
-  if (!$row) return null;
-  return [
-    'symbol' => $row['option_symbol'],
-    'position' => $row['option_symbol_position'],
-    'decimal_sep' => $row['option_decimal_separator'],
-    'decimal_places' => (int)$row['option_decimal_places'],
-    'thousands_sep' => $row['option_thousands_separator']
-  ];
-}
-
-// Format a price value with currency formatting
-function format_price_display($value, $formatting): string
-{
-  if ($value === null || !is_numeric($value)) return '';
-  $num = (float)$value;
-  if ($num == 0) return 'Free';
-  
-  if (!$formatting) {
-    throw new RuntimeException('format_price_display requires formatting data');
-  }
-  
-  $symbol = $formatting['symbol'];
-  $position = $formatting['position'];
-  $decSep = $formatting['decimal_sep'];
-  $decPlaces = $formatting['decimal_places'];
-  $thousSep = $formatting['thousands_sep'];
-  
-  // Format number
-  $formatted = number_format($num, $decPlaces, '.', '');
-  $parts = explode('.', $formatted);
-  $intPart = $parts[0];
-  $decPart = $parts[1] ?? '';
-  
-  // Add thousands separator
-  if ($thousSep !== '') {
-    $intPart = preg_replace('/\B(?=(\d{3})+(?!\d))/', $thousSep, $intPart);
-  }
-  
-  // Build number string
-  $numStr = $intPart;
-  if ($decPlaces > 0 && $decPart !== '') {
-    // Strip trailing zeros if all zeros
-    $stripped = rtrim($decPart, '0');
-    if ($stripped !== '') {
-      $numStr = $intPart . $decSep . $decPart;
-    }
-  }
-  
-  // Apply symbol with proper spacing (left = no space, right = space)
-  if ($position === 'right') {
-    return $numStr . ' ' . $symbol;
-  } else {
-    return $symbol . $numStr;
-  }
-}
-
-// Format price range for display (e.g., "$12 - $34 USD")
-function format_price_range($minPrice, $maxPrice, $currencyCode, $formatting): string
-{
-  if ($minPrice == 0 && $maxPrice == 0) return 'Free';
-  
-  // Get clean ISO code (strip -L/-R suffix for display at end)
-  $isoCode = $currencyCode;
-  // PHP 7 compatible: check if ends with -L or -R
-  $len = strlen($currencyCode);
-  if ($len >= 2 && (substr($currencyCode, -2) === '-L' || substr($currencyCode, -2) === '-R')) {
-    $isoCode = substr($currencyCode, 0, -2);
-  }
-  
-  $minFmt = format_price_display($minPrice, $formatting);
-  $maxFmt = format_price_display($maxPrice, $formatting);
-  
-  if ($minPrice == $maxPrice) {
-    return $maxFmt . ' ' . $isoCode;
-  } else {
-    return $minFmt . ' - ' . $maxFmt . ' ' . $isoCode;
-  }
 }
 
 function normalize_price_amount($value): ?string
@@ -791,9 +700,8 @@ foreach ($byLoc as $locNum => $entries) {
     ], JSON_UNESCAPED_UNICODE);
   }
 
-  // price_summary: pre-formatted display string for instant rendering
-  // Format: {"ticket":"$12 - $34 USD","item":null}
-  $priceSummary = ['ticket' => null, 'item' => null];
+  // price_summary (JSON: {ticket: {min, max, currency}, item: {price, currency}})
+  $priceSummary = [];
   
   // Ticket pricing: find min/max across all tiers
   $ticketPrices = [];
@@ -830,27 +738,26 @@ foreach ($byLoc as $locNum => $entries) {
       }
     }
   }
-  if (!empty($ticketPrices) && $ticketCurrency) {
-    $ticketFormatting = get_currency_formatting($mysqli, $ticketCurrency);
-    if ($ticketFormatting) {
-      $priceSummary['ticket'] = format_price_range(min($ticketPrices), max($ticketPrices), $ticketCurrency, $ticketFormatting);
-    }
+  if (!empty($ticketPrices)) {
+    $priceSummary['ticket'] = [
+      'min' => min($ticketPrices),
+      'max' => max($ticketPrices),
+      'currency' => $ticketCurrency ?: ''
+    ];
   }
   
   // Item pricing: single price
   if (is_array($itemPricing) && !empty($itemPricing['item_price'])) {
     $itemPrice = (float)$itemPricing['item_price'];
-    $itemCurrency = isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : '';
-    if ($itemPrice > 0 && $itemCurrency) {
-      $itemFormatting = get_currency_formatting($mysqli, $itemCurrency);
-      if ($itemFormatting) {
-        $priceSummary['item'] = format_price_range($itemPrice, $itemPrice, $itemCurrency, $itemFormatting);
-      }
+    if ($itemPrice > 0) {
+      $priceSummary['item'] = [
+        'price' => $itemPrice,
+        'currency' => isset($itemPricing['currency']) ? trim((string)$itemPricing['currency']) : ''
+      ];
     }
   }
   
-  // Only set if we have at least one price
-  if ($priceSummary['ticket'] !== null || $priceSummary['item'] !== null) {
+  if (!empty($priceSummary)) {
     $card['price_summary'] = json_encode($priceSummary, JSON_UNESCAPED_UNICODE);
   }
 
@@ -1054,18 +961,6 @@ foreach ($byLoc as $locNum => $entries) {
       abort_with_error($mysqli, 500, 'Insert item pricing', $transactionActive); 
     }
     $stmtItem->close();
-  }
-}
-
-// After all pricing inserts (and triggers), update price_summary with formatted display string
-// This overwrites whatever the triggers set, giving PHP final control
-if ($card['price_summary'] !== null) {
-  $stmtUpdatePrice = $mysqli->prepare("UPDATE post_map_cards SET price_summary = ? WHERE id = ?");
-  if ($stmtUpdatePrice) {
-    $priceSumForUpdate = $card['price_summary'];
-    $stmtUpdatePrice->bind_param('si', $priceSumForUpdate, $mapCardId);
-    $stmtUpdatePrice->execute();
-    $stmtUpdatePrice->close();
   }
 }
 
