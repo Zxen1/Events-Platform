@@ -209,6 +209,10 @@ const MemberModule = (function() {
         if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function') {
             CurrencyComponent.loadFromDatabase();
         }
+        
+        // Preload categories/forms for My Posts and Create Post tabs
+        ensureCategoriesLoaded();
+        
         // Avatar filenames are loaded via ensureSiteAvatarFilenames() which is already called in showPanel()
         
         cacheElements();
@@ -221,6 +225,57 @@ const MemberModule = (function() {
         initHeaderDrag();
         loadStoredSession();
         render();
+    }
+
+    var categoriesLoadingPromise = null;
+    function ensureCategoriesLoaded() {
+        if (categoriesLoadingPromise) return categoriesLoadingPromise;
+        if (formpickerLoaded) return Promise.resolve();
+
+        categoriesLoadingPromise = Promise.all([
+            fetch('/gateway.php?action=get-form', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            }).then(function(r) { return r.json(); }),
+            fetch('/gateway.php?action=get-admin-settings', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            }).then(function(r) { return r.json(); })
+        ]).then(function(results) {
+            var formResponse = results[0];
+            var settingsResponse = results[1];
+            
+            if (formResponse && formResponse.success && formResponse.formData) {
+                memberCategories = formResponse.formData.categories || [];
+                memberCategoryIconPaths = formResponse.formData.categoryIconPaths || {};
+                memberSubcategoryIconPaths = formResponse.formData.subcategoryIconPaths || {};
+            }
+            
+            // Get checkout options, currency, and dropdown options from admin settings
+            if (settingsResponse && settingsResponse.checkout_options) {
+                checkoutOptions = (settingsResponse.checkout_options || []).filter(function(opt) {
+                    if (!opt) {
+                        throw new Error('[Member] Invalid checkout option entry (null/undefined) in get-admin-settings response.');
+                    }
+                    if (opt.hidden === true || opt.hidden === 1 || opt.hidden === '1') return false;
+                    if (opt.admin_only === true || opt.admin_only === 1 || opt.admin_only === '1') return false;
+                    return true;
+                });
+            }
+            if (settingsResponse && settingsResponse.settings && settingsResponse.settings.website_currency) {
+                siteCurrency = settingsResponse.settings.website_currency;
+            }
+
+            // Note: formpickerLoaded is only set to true by loadFormpicker after UI is rendered.
+            // But we have the data now.
+            return results;
+        }).catch(function(err) {
+            console.error('[Member] Failed to preload categories:', err);
+            categoriesLoadingPromise = null;
+            throw err;
+        });
+
+        return categoriesLoadingPromise;
     }
     
     function initHeaderDrag() {
@@ -1973,41 +2028,7 @@ const MemberModule = (function() {
         container.innerHTML = '<p class="member-create-intro">Loading categories...</p>';
         
         // Fetch form data and checkout options from database
-        Promise.all([
-            fetch('/gateway.php?action=get-form', {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            }).then(function(r) { return r.json(); }),
-            fetch('/gateway.php?action=get-admin-settings', {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' }
-            }).then(function(r) { return r.json(); })
-        ]).then(function(results) {
-            var formResponse = results[0];
-            var settingsResponse = results[1];
-            
-            if (formResponse && formResponse.success && formResponse.formData) {
-                memberCategories = formResponse.formData.categories || [];
-                memberCategoryIconPaths = formResponse.formData.categoryIconPaths || {};
-                memberSubcategoryIconPaths = formResponse.formData.subcategoryIconPaths || {};
-            }
-            
-            // Get checkout options, currency, and dropdown options from admin settings
-            if (settingsResponse && settingsResponse.checkout_options) {
-                checkoutOptions = (settingsResponse.checkout_options || []).filter(function(opt) {
-                    if (!opt) {
-                        throw new Error('[Member] Invalid checkout option entry (null/undefined) in get-admin-settings response.');
-                    }
-                    // get-admin-settings.php provides: hidden (bool), admin_only (bool)
-                    if (opt.hidden === true || opt.hidden === 1 || opt.hidden === '1') return false;
-                    if (opt.admin_only === true || opt.admin_only === 1 || opt.admin_only === '1') return false;
-                    return true;
-                });
-            }
-            if (settingsResponse && settingsResponse.settings && settingsResponse.settings.website_currency) {
-                siteCurrency = settingsResponse.settings.website_currency;
-            }
-
+        ensureCategoriesLoaded().then(function() {
             if (memberCategories.length > 0) {
                 renderFormpicker(container);
                 formpickerLoaded = true;
@@ -2015,7 +2036,7 @@ const MemberModule = (function() {
                 container.innerHTML = '<p class="member-create-intro member-create-intro--error">Failed to load categories.</p>';
             }
         }).catch(function(err) {
-            console.error('[Member] Failed to load form data:', err);
+            console.error('[Member] loadFormpicker error:', err);
             container.innerHTML = '<p class="member-create-intro member-create-intro--error">Failed to load categories.</p>';
         });
     }
