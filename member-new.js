@@ -2976,6 +2976,13 @@ const MemberModule = (function() {
                     }
                     // Update placeholder to show success
                     updateMyPostsLoadingPlaceholder('success', result);
+
+                    // Notify the rest of the app that a post was created so it appears on the map/list immediately.
+                    if (isEditingPostId) {
+                        App.emit('post:updated', { post_id: isEditingPostId });
+                    } else {
+                        App.emit('post:created', { post_id: result.insert_id });
+                    }
                 } else {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         // Prefer message system keys from backend (no hardcoded server strings).

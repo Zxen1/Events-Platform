@@ -330,6 +330,14 @@ const PostModule = (function() {
       } catch (_eClearOnClose) {}
     });
 
+    // Refresh posts when a new one is created or an existing one is updated
+    App.on('post:created', function() {
+      refreshPosts();
+    });
+    App.on('post:updated', function() {
+      refreshPosts();
+    });
+
     App.on('map:ready', function(data) {
       try {
         var map = data && data.map;
@@ -1651,6 +1659,11 @@ const PostModule = (function() {
     App.emit('filter:countsUpdated', {
       total: totalInArea,
       filtered: filteredCount
+    });
+
+    // Notify marquee and other subscribers
+    App.emit('filter:applied', {
+      marqueePosts: list.slice(0, 10) // Show top 10 in marquee
     });
   }
 
