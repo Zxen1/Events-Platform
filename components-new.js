@@ -1416,6 +1416,152 @@ const CurrencyComponent = (function(){
         };
     }
     
+    // Get full currency data by code (includes formatting properties)
+    function getCurrencyByCode(code) {
+        if (!code) return null;
+        return currencyData.find(function(item) {
+            return item.value === code;
+        }) || null;
+    }
+    
+    // Format a numeric amount according to currency rules
+    // Returns formatted string like "$1,234.56" or "1.234,56 €"
+    // Requires valid currency code - throws if currency not found
+    function formatAmount(amount, currencyCode, options) {
+        options = options || {};
+        var includeCode = options.includeCode !== false; // Default true
+        var currency = getCurrencyByCode(currencyCode);
+        if (!currency) {
+            throw new Error('[CurrencyComponent] formatAmount requires valid currency code. Got: ' + currencyCode);
+        }
+        
+        var num = parseFloat(amount);
+        if (isNaN(num)) return '';
+        
+        var decPlaces = currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2;
+        var decSep = currency.decimalSeparator || '.';
+        var thousSep = currency.thousandsSeparator || ',';
+        var symbol = currency.symbol || '';
+        var symbolPos = currency.symbolPosition || 'left';
+        
+        // Format the number
+        var fixed = num.toFixed(decPlaces);
+        var parts = fixed.split('.');
+        var intPart = parts[0];
+        var decPart = parts[1] || '';
+        
+        // Add thousands separators
+        if (thousSep) {
+            intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, thousSep);
+        }
+        
+        // Build the number string
+        var numStr = decPlaces > 0 ? (intPart + decSep + decPart) : intPart;
+        
+        // Apply symbol position
+        var formatted;
+        if (symbolPos === 'right') {
+            formatted = numStr + (symbol ? ' ' + symbol : '');
+        } else {
+            formatted = (symbol || '') + numStr;
+        }
+        
+        // Append currency code if requested
+        if (includeCode) {
+            // Extract base code (remove -L or -R suffix for display)
+            var displayCode = currencyCode.replace(/-[LR]$/, '');
+            formatted = formatted + ' ' + displayCode;
+        }
+        
+        return formatted;
+    }
+    
+    // Parse user input according to currency rules
+    // Converts "1,234.56" or "1.234,56" to numeric value
+    function parseInput(input, currencyCode) {
+        var currency = getCurrencyByCode(currencyCode);
+        var val = String(input || '').trim();
+        
+        if (!currency) {
+            // No currency - assume dot as decimal, comma as thousands
+            val = val.replace(/,/g, '');
+            val = val.replace(/[^0-9.-]/g, '');
+            return parseFloat(val) || 0;
+        }
+        
+        var decSep = currency.decimalSeparator || '.';
+        var thousSep = currency.thousandsSeparator || ',';
+        
+        // Remove thousands separator
+        if (thousSep) {
+            val = val.split(thousSep).join('');
+        }
+        
+        // Replace decimal separator with dot for parsing
+        if (decSep !== '.') {
+            val = val.replace(decSep, '.');
+        }
+        
+        // Keep only digits, dot, and minus
+        val = val.replace(/[^0-9.-]/g, '');
+        
+        return parseFloat(val) || 0;
+    }
+    
+    // Sanitize user input as they type (allow digits + separator)
+    function sanitizeInput(input, currencyCode) {
+        var currency = getCurrencyByCode(currencyCode);
+        var val = String(input || '');
+        
+        var decSep = currency ? (currency.decimalSeparator || '.') : '.';
+        var decPlaces = currency ? (currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2) : 2;
+        
+        // Allow digits and the decimal separator
+        var regex = new RegExp('[^0-9' + (decSep === '.' ? '\\.' : decSep) + ']', 'g');
+        val = val.replace(regex, '');
+        
+        // Ensure only one decimal separator
+        var sepIndex = val.indexOf(decSep);
+        if (sepIndex !== -1) {
+            var before = val.slice(0, sepIndex + 1);
+            var after = val.slice(sepIndex + 1).replace(new RegExp('\\' + decSep, 'g'), '');
+            // Limit decimal places
+            if (decPlaces > 0) {
+                after = after.slice(0, decPlaces);
+            } else {
+                after = '';
+                before = before.slice(0, -1); // Remove separator if no decimals allowed
+            }
+            val = before + after;
+        }
+        
+        return val;
+    }
+    
+    // Format for display on blur (ensures correct decimal places)
+    function formatForDisplay(input, currencyCode) {
+        var currency = getCurrencyByCode(currencyCode);
+        var val = String(input || '').trim();
+        if (val === '') return '';
+        
+        var decSep = currency ? (currency.decimalSeparator || '.') : '.';
+        var decPlaces = currency ? (currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2) : 2;
+        
+        // Parse the value
+        var num = parseInput(val, currencyCode);
+        if (isNaN(num)) return '';
+        
+        // Format with correct decimal places
+        var fixed = num.toFixed(decPlaces);
+        
+        // Replace dot with currency's decimal separator
+        if (decSep !== '.') {
+            fixed = fixed.replace('.', decSep);
+        }
+        
+        return fixed;
+    }
+
     return {
         getData: getData,
         setData: setData,
@@ -1423,7 +1569,12 @@ const CurrencyComponent = (function(){
         loadFromDatabase: loadFromDatabase,
         buildCompactMenu: buildCompactMenu,
         buildFullMenu: buildFullMenu,
-        parseCurrencyValue: parseCurrencyValue
+        parseCurrencyValue: parseCurrencyValue,
+        getCurrencyByCode: getCurrencyByCode,
+        formatAmount: formatAmount,
+        parseInput: parseInput,
+        sanitizeInput: sanitizeInput,
+        formatForDisplay: formatForDisplay
     };
 })();
 

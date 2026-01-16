@@ -3372,7 +3372,24 @@ const MemberModule = (function() {
                                     var priceInput = null;
                                     var inputs = tier.querySelectorAll('input.fieldset-input');
                                     if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
-                                    var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                    var rawPrice = priceInput ? String(priceInput.value || '').trim() : '';
+                                    
+                                    // Convert displayed price to standard numeric format for database
+                                    var price = '';
+                                    if (rawPrice) {
+                                        if (curr) {
+                                            // Currency selected - use CurrencyComponent to parse
+                                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
+                                                throw new Error('[Member] CurrencyComponent.parseInput required but not available');
+                                            }
+                                            var numericValue = CurrencyComponent.parseInput(rawPrice, curr);
+                                            price = Number.isFinite(numericValue) ? numericValue.toString() : '';
+                                        } else {
+                                            // No currency selected - value should already be standard format
+                                            price = rawPrice;
+                                        }
+                                    }
+                                    
                                     tiers.push({ pricing_tier: tierName, currency: curr, price: price });
                                 });
                                 seatOut2.push({ seating_area: seatName, tiers: tiers });
@@ -3397,7 +3414,24 @@ const MemberModule = (function() {
                     var currencyInput = el.querySelector('input.component-currencycompact-menu-button-input');
                     var currency = currencyInput ? String(currencyInput.value || '').trim() : '';
                     var priceInput = el.querySelector('input.fieldset-itempricing-input-itemprice');
-                    var item_price = priceInput ? String(priceInput.value || '').trim() : '';
+                    var rawPrice = priceInput ? String(priceInput.value || '').trim() : '';
+                    
+                    // Convert displayed price to standard numeric format for database
+                    var item_price = '';
+                    if (rawPrice) {
+                        if (currency) {
+                            // Currency selected - use CurrencyComponent to parse
+                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
+                                throw new Error('[Member] CurrencyComponent.parseInput required but not available');
+                            }
+                            var numericValue = CurrencyComponent.parseInput(rawPrice, currency);
+                            item_price = Number.isFinite(numericValue) ? numericValue.toString() : '';
+                        } else {
+                            // No currency selected - value should already be standard format
+                            item_price = rawPrice;
+                        }
+                    }
+                    
                     var item_variants = [];
                     el.querySelectorAll('.fieldset-itempricing-row-itemvariant').forEach(function(row) {
                         var variantInput = row.querySelector('input.fieldset-itempricing-input-itemvariantname');

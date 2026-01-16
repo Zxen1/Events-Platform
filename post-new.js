@@ -2312,21 +2312,33 @@ const PostModule = (function() {
   // Expected shape:
   //   { "ticket": { "min": 12, "max": 34, "currency": "USD" }, "item": null }
   //   { "item": { "price": 10, "currency": "USD" }, "ticket": null }
+  // Output format: "$12 - $34.50 USD" (symbol + amount, with code at end only once)
   function formatPriceSummaryText(priceSummary) {
     var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
     if (!raw) return '';
 
-    function fmtCurrency(value, currencyCode) {
+    // Format a single price value using CurrencyComponent
+    // Returns { display: "$12.50", code: "USD" } or null if invalid
+    function fmtPrice(value, currencyCode) {
       var n = Number(value);
-      if (!Number.isFinite(n)) return '';
-      var code = currencyCode ? String(currencyCode).trim().toUpperCase() : '';
-      if (!code) return String(n);
-      try {
-        return new Intl.NumberFormat(undefined, { style: 'currency', currency: code }).format(n);
-      } catch (_e) {
-        // If Intl rejects the code, still show a readable value.
-        return String(n) + ' ' + code;
+      if (!Number.isFinite(n)) return null;
+      var code = currencyCode ? String(currencyCode).trim() : '';
+      
+      // No currency code - return plain number (valid case for free items)
+      if (!code) {
+        return { display: n.toFixed(2), code: '' };
       }
+      
+      // Currency code provided - CurrencyComponent is required
+      if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatAmount) {
+        throw new Error('[Post] CurrencyComponent.formatAmount required but not available');
+      }
+      
+      // Use CurrencyComponent.formatAmount for proper formatting based on database rules
+      var formatted = CurrencyComponent.formatAmount(n, code, { includeCode: false });
+      // Extract base code (remove -L or -R suffix for display)
+      var displayCode = code.replace(/-[LR]$/, '');
+      return { display: formatted, code: displayCode };
     }
 
     // New site contract: price_summary is JSON (DB enforces json_valid).
@@ -2345,19 +2357,37 @@ const PostModule = (function() {
       var c = ticket.currency || '';
       var min = (ticket.min !== undefined && ticket.min !== null) ? Number(ticket.min) : null;
       var max = (ticket.max !== undefined && ticket.max !== null) ? Number(ticket.max) : null;
+      
       if (Number.isFinite(min) && Number.isFinite(max)) {
-        if (min === max) return fmtCurrency(min, c);
-        return fmtCurrency(min, c) + ' - ' + fmtCurrency(max, c);
+        var minFmt = fmtPrice(min, c);
+        var maxFmt = fmtPrice(max, c);
+        if (!minFmt || !maxFmt) return '';
+        
+        if (min === max) {
+          // Single price: "$12.50 USD"
+          return minFmt.display + (minFmt.code ? ' ' + minFmt.code : '');
+        }
+        // Range: "$12 - $34.50 USD" (code only at the end)
+        return minFmt.display + ' - ' + maxFmt.display + (maxFmt.code ? ' ' + maxFmt.code : '');
       }
-      if (Number.isFinite(min)) return fmtCurrency(min, c);
-      if (Number.isFinite(max)) return fmtCurrency(max, c);
+      if (Number.isFinite(min)) {
+        var mFmt = fmtPrice(min, c);
+        return mFmt ? mFmt.display + (mFmt.code ? ' ' + mFmt.code : '') : '';
+      }
+      if (Number.isFinite(max)) {
+        var xFmt = fmtPrice(max, c);
+        return xFmt ? xFmt.display + (xFmt.code ? ' ' + xFmt.code : '') : '';
+      }
     }
 
     if (item && (item.price !== undefined || item.item_price !== undefined)) {
       var priceVal = (item.price !== undefined) ? item.price : item.item_price;
       var cc = item.currency || '';
       var p = Number(priceVal);
-      if (Number.isFinite(p)) return fmtCurrency(p, cc);
+      if (Number.isFinite(p)) {
+        var pFmt = fmtPrice(p, cc);
+        return pFmt ? pFmt.display + (pFmt.code ? ' ' + pFmt.code : '') : '';
+      }
     }
 
     return '';
