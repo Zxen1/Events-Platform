@@ -2293,14 +2293,6 @@ const PostModule = (function() {
     var postBody = document.createElement('div');
     postBody.className = 'open-post-body';
     postBody.innerHTML = [
-      '<div class="open-post-container-images">',
-        '<div class="open-post-container-hero">',
-          '<div class="open-post-track-hero">',
-            '<img class="open-post-image-hero open-post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
-          '</div>',
-        '</div>',
-        '<div class="open-post-container-thumbs"></div>',
-      '</div>',
       '<div class="open-post-container-nav">',
         '<button class="open-post-button-venue" type="button" aria-label="View Map" aria-haspopup="true" aria-expanded="false" data-nav="map">',
           '<div class="open-post-image-navpreview open-post-image-navpreview--map"></div>',
@@ -2338,6 +2330,14 @@ const PostModule = (function() {
             '<span class="open-post-text-postedby">' + escapeHtml(postedMeta) + '</span>',
           '</div>',
         '</div>',
+      '</div>',
+      '<div class="open-post-container-images">',
+        '<div class="open-post-container-hero">',
+          '<div class="open-post-track-hero">',
+            '<img class="open-post-image-hero open-post-image-hero--loading" src="' + heroUrl + '" data-full="' + (mediaUrls[0] || '') + '" alt="" loading="eager" fetchpriority="high" referrerpolicy="no-referrer" />',
+          '</div>',
+        '</div>',
+        '<div class="open-post-container-thumbs"></div>',
       '</div>'
     ].join('');
 

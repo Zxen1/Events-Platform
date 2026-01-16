@@ -712,14 +712,15 @@ foreach ($byLoc as $locNum => $entries) {
 
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
   
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   if (!$stmtCard) abort_with_error($mysqli, 500, 'Prepare map card', $transactionActive);
 
   $postIdParam = $insertId;
   $subKeyParam = $subcategoryKey;
   $titleParam = $card['title'];
   $descParam = $card['description'];
+  $mediaIdsParam = null; // Reference only
   $customTextParam = $card['custom_text'];
   $customTextareaParam = $card['custom_textarea'];
   $customDropdownParam = $card['custom_dropdown'];
@@ -734,6 +735,7 @@ foreach ($byLoc as $locNum => $entries) {
   $latParam = (float)($card['latitude'] ?? 0);
   $lngParam = (float)($card['longitude'] ?? 0);
   $countryCodeParam = $card['country_code'];
+  $timezoneParam = null;
   $ageRatingParam = $card['age_rating'];
   $websiteParam = $card['website_url'];
   $ticketsParam = $card['tickets_url'];
@@ -744,11 +746,12 @@ foreach ($byLoc as $locNum => $entries) {
 
   // Bind + insert map card
   $stmtCard->bind_param(
-    'issssssssssssssddssssssss',
+    'issssssssssssssddssssssssss',
     $postIdParam,
     $subKeyParam,
     $titleParam,
     $descParam,
+    $mediaIdsParam,
     $customTextParam,
     $customTextareaParam,
     $customDropdownParam,
@@ -763,6 +766,7 @@ foreach ($byLoc as $locNum => $entries) {
     $latParam,
     $lngParam,
     $countryCodeParam,
+    $timezoneParam,
     $ageRatingParam,
     $websiteParam,
     $ticketsParam,

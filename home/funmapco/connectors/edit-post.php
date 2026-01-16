@@ -335,6 +335,7 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
       } else {
         $subcatStmt->close();
       }
+    }
   }
 }
 
@@ -455,19 +456,22 @@ foreach ($byLoc as $locNum => $entries) {
   // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
 
   // Insert map card
-  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+  $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, media_ids, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, timezone, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
   
   if ($stmtCard) {
     $lat = (float)($card['latitude'] ?? 0);
     $lng = (float)($card['longitude'] ?? 0);
+    $timezone = null;
+    $mediaIds = null; // We use media_urls from loc0 but post_map_cards stores media_ids as reference
+    
     $stmtCard->bind_param(
-      'issssssssssssssddssssssss',
-      $postId, $subcategoryKey, $card['title'], $card['description'],
+      'issssssssssssssddssssssssss',
+      $postId, $subcategoryKey, $card['title'], $card['description'], $mediaIds,
       $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
       $card['public_email'], $card['phone_prefix'], $card['public_phone'],
       $card['venue_name'], $card['address_line'], $card['city'],
-      $lat, $lng, $card['country_code'],
+      $lat, $lng, $card['country_code'], $timezone,
       $card['age_rating'], $card['website_url'], $card['tickets_url'], $card['coupon_code'],
       $card['session_summary'], $card['price_summary'], $card['amenity_summary']
     );
