@@ -632,7 +632,7 @@ const FieldsetBuilder = (function(){
             // If currency is selected, use currency-aware sanitization
             if (currencyCode) {
                 if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
-                    throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput required but not available');
+                    throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
                 }
                 return CurrencyComponent.sanitizeInput(raw, currencyCode);
             }
@@ -739,7 +739,7 @@ const FieldsetBuilder = (function(){
             // If currency is selected, format WITH symbol
             if (currencyCode) {
                 if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
-                    throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol required but not available');
+                    throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol is required');
                 }
                 var formatted = CurrencyComponent.formatWithSymbol(cleaned, currencyCode);
                 if (formatted !== '') {
@@ -775,7 +775,7 @@ const FieldsetBuilder = (function(){
         
         // Currency selected - CurrencyComponent is required
         if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.getCurrencyByCode) {
-            throw new Error('[FieldsetBuilder] CurrencyComponent.getCurrencyByCode required but not available');
+            throw new Error('[FieldsetBuilder] CurrencyComponent.getCurrencyByCode is required');
         }
         
         var currency = CurrencyComponent.getCurrencyByCode(currencyCode);
@@ -2515,7 +2515,7 @@ const FieldsetBuilder = (function(){
                         // If currency is selected, use currency-aware sanitization
                         if (currencyCode) {
                             if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
-                                throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput required but not available');
+                                throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
                             }
                             this.value = CurrencyComponent.sanitizeInput(this.value, currencyCode);
                             return;
@@ -2549,7 +2549,7 @@ const FieldsetBuilder = (function(){
                         // If currency is selected, format WITH symbol
                         if (currencyCode) {
                             if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
-                                throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol required but not available');
+                                throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol is required');
                             }
                             var formatted = CurrencyComponent.formatWithSymbol(v, currencyCode);
                             if (formatted !== '') {

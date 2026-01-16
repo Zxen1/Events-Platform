@@ -1426,13 +1426,12 @@ const CurrencyComponent = (function(){
     
     // Format a numeric amount according to currency rules
     // Returns formatted string like "$1,234.56" or "1.234,56 €"
-    // Requires valid currency code - throws if currency not found
     function formatAmount(amount, currencyCode, options) {
         options = options || {};
         var includeCode = options.includeCode !== false; // Default true
         var currency = getCurrencyByCode(currencyCode);
         if (!currency) {
-            throw new Error('[CurrencyComponent] formatAmount requires valid currency code. Got: ' + currencyCode);
+            throw new Error('[CurrencyComponent] formatAmount: currency not found for code: ' + currencyCode);
         }
         
         var num = parseFloat(amount);
@@ -1563,10 +1562,9 @@ const CurrencyComponent = (function(){
     }
     
     // Format for display WITH symbol (for showing in input after blur)
-    // Requires valid currency code with symbol data
     function formatWithSymbol(input, currencyCode) {
         if (!currencyCode) {
-            throw new Error('[CurrencyComponent] formatWithSymbol requires currency code');
+            throw new Error('[CurrencyComponent] formatWithSymbol: currencyCode is required');
         }
         var currency = getCurrencyByCode(currencyCode);
         var val = String(input || '').trim();
@@ -1576,12 +1574,11 @@ const CurrencyComponent = (function(){
         var numFormatted = formatForDisplay(val, currencyCode);
         if (numFormatted === '') return '';
         
-        // Currency data is required
         if (!currency) {
-            throw new Error('[CurrencyComponent] Currency not found: ' + currencyCode);
+            throw new Error('[CurrencyComponent] formatWithSymbol: currency not found for code: ' + currencyCode);
         }
         if (!currency.symbol) {
-            throw new Error('[CurrencyComponent] Currency symbol not found for: ' + currencyCode);
+            throw new Error('[CurrencyComponent] formatWithSymbol: symbol not found for currency: ' + currencyCode);
         }
         
         // Add the symbol in the correct position
@@ -1593,20 +1590,19 @@ const CurrencyComponent = (function(){
     }
     
     // Strip symbol from input value (for editing)
-    // Requires valid currency code with symbol data
     function stripSymbol(input, currencyCode) {
         if (!currencyCode) {
-            throw new Error('[CurrencyComponent] stripSymbol requires currency code');
+            throw new Error('[CurrencyComponent] stripSymbol: currencyCode is required');
         }
         var currency = getCurrencyByCode(currencyCode);
         var val = String(input || '').trim();
         if (val === '') return '';
         
         if (!currency) {
-            throw new Error('[CurrencyComponent] Currency not found: ' + currencyCode);
+            throw new Error('[CurrencyComponent] stripSymbol: currency not found for code: ' + currencyCode);
         }
         if (!currency.symbol) {
-            throw new Error('[CurrencyComponent] Currency symbol not found for: ' + currencyCode);
+            throw new Error('[CurrencyComponent] stripSymbol: symbol not found for currency: ' + currencyCode);
         }
         
         // Remove the symbol

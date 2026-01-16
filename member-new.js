@@ -3380,13 +3380,13 @@ const MemberModule = (function() {
                                         if (curr) {
                                             // Currency selected - use CurrencyComponent to parse
                                             if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
-                                                throw new Error('[Member] CurrencyComponent.parseInput required but not available');
+                                                throw new Error('[Member] CurrencyComponent.parseInput is required');
                                             }
                                             var numericValue = CurrencyComponent.parseInput(rawPrice, curr);
                                             price = Number.isFinite(numericValue) ? numericValue.toString() : '';
                                         } else {
                                             // No currency selected - value should already be standard format
-                                            price = rawPrice;
+                                            price = rawPrice.replace(/[^0-9.-]/g, '');
                                         }
                                     }
                                     
@@ -3404,7 +3404,7 @@ const MemberModule = (function() {
                         age_ratings: ageRatings
                     };
                 } catch (e33) {
-                    return { sessions: [], pricing_groups: {}, age_ratings: {} };
+                    throw e33; // Do not swallow errors
                 }
 
             case 'item-pricing':
@@ -3422,13 +3422,13 @@ const MemberModule = (function() {
                         if (currency) {
                             // Currency selected - use CurrencyComponent to parse
                             if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.parseInput) {
-                                throw new Error('[Member] CurrencyComponent.parseInput required but not available');
+                                throw new Error('[Member] CurrencyComponent.parseInput is required');
                             }
                             var numericValue = CurrencyComponent.parseInput(rawPrice, currency);
                             item_price = Number.isFinite(numericValue) ? numericValue.toString() : '';
                         } else {
                             // No currency selected - value should already be standard format
-                            item_price = rawPrice;
+                            item_price = rawPrice.replace(/[^0-9.-]/g, '');
                         }
                     }
                     
@@ -3440,7 +3440,7 @@ const MemberModule = (function() {
                     });
                     return { item_name: item_name, currency: currency, item_price: item_price, item_variants: item_variants };
                 } catch (e5) {
-                    return { item_name: '', currency: '', item_price: '', item_variants: [] };
+                    throw e5; // Do not swallow errors
                 }
                 
             case 'currency':
