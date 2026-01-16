@@ -85,10 +85,14 @@
   opacity: 0;
 }
 
-@media (min-width: 1900px) {
-  .marquee-content {
+@media (min-width: 1920px) {
+  .marquee {
     display: block;
   }
+}
+
+.marquee--show {
+  display: block !important;
 }
 
 /* ============================================================================

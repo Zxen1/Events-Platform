@@ -3515,7 +3515,11 @@ const PostModule = (function() {
     renderMapMarkers: renderMapMarkers,
     highlightMapMarker: highlightMapMarker,
     getPostUrl: getPostUrl,
-    getHeroUrl: getHeroUrl
+    getHeroUrl: getHeroUrl,
+    getSubcategoryInfo: getSubcategoryInfo,
+    getSubcategoryIconUrl: getSubcategoryIconUrl,
+    formatPostDates: formatPostDates,
+    formatPriceSummaryText: formatPriceSummaryText
   };
 
 })();

@@ -79,8 +79,28 @@ const MarqueeModule = (function() {
     App.on('marquee:show', show);
     App.on('marquee:hide', hide);
     App.on('marquee:toggle', toggle);
+
+    // Watch for window resize to handle 1920px rule
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial check
     
     console.log('[Marquee] Marquee module initialized');
+  }
+
+  /**
+   * Handle window resize - enforce 1920px visibility rule
+   */
+  function handleResize() {
+    const isWideEnough = window.innerWidth >= 1920;
+    if (isWideEnough) {
+      if (!isVisible && posts.length > 0) {
+        show();
+      }
+    } else {
+      if (isVisible) {
+        hide();
+      }
+    }
   }
 
   /* --------------------------------------------------------------------------
@@ -283,68 +303,94 @@ const MarqueeModule = (function() {
     const info = document.createElement('div');
     info.className = 'marquee-slide-info';
     
-    // Title line
+    // Get first map card data
+    const mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+
+    // Get display data (mirroring PostModule.renderPostCard)
+    let title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
+    if (title === 'Array') title = 'Post #' + post.id;
+    const venueName = (mapCard && mapCard.venue_name) || '';
+    const city = (mapCard && mapCard.city) || '';
+    const locationDisplay = venueName || city || post.location || post.venue || '';
+
+    // Get subcategory info
+    const subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
+    const subInfo = (window.PostModule && typeof PostModule.getSubcategoryInfo === 'function') 
+      ? PostModule.getSubcategoryInfo(subcategoryKey)
+      : { category: post.category || '', subcategory: post.subcategory || subcategoryKey };
+    
+    const iconUrl = post.subcategory_icon_url || post.subIcon || (window.PostModule && typeof PostModule.getSubcategoryIconUrl === 'function' ? PostModule.getSubcategoryIconUrl(subcategoryKey) : '');
+
+    // Format dates
+    const datesText = (window.PostModule && typeof PostModule.formatPostDates === 'function')
+      ? PostModule.formatPostDates(post)
+      : formatDates(post.dates || (mapCard && mapCard.session_summary));
+
+    // Format price summary
+    const priceText = (window.PostModule && typeof PostModule.formatPriceSummaryText === 'function')
+      ? PostModule.formatPriceSummaryText(mapCard ? mapCard.price_summary : post.price_summary)
+      : (mapCard ? mapCard.price_summary : post.price_summary || '');
+
+    // 1. Title line
     const titleLine = document.createElement('div');
     titleLine.className = 'marquee-slide-info-title';
-    if (!post || !post.title || String(post.title).trim() === '') {
-      throw new Error('[Marquee] Post is missing required title');
-    }
-    titleLine.textContent = escapeHtml(String(post.title).trim());
+    titleLine.textContent = escapeHtml(String(title).trim());
     info.appendChild(titleLine);
     
-    // Category line with icon
+    // 2. Category line with icon
     const catLine = document.createElement('div');
     catLine.className = 'marquee-slide-info-cat';
     
-    if (post.subIcon) {
+    if (iconUrl) {
       const iconWrap = document.createElement('span');
       iconWrap.className = 'marquee-subicon';
       const iconImg = document.createElement('img');
       iconImg.className = 'marquee-subicon-image';
-      iconImg.src = post.subIcon;
+      iconImg.src = iconUrl;
       iconImg.alt = '';
       iconWrap.appendChild(iconImg);
       catLine.appendChild(iconWrap);
     }
     
+    const catLineText = subInfo.category && subInfo.subcategory
+      ? subInfo.category + ' › ' + subInfo.subcategory
+      : subInfo.subcategory || subcategoryKey;
+
     const catText = document.createElement('span');
-    catText.textContent = escapeHtml(post.category || '');
-    if (post.subcategory) {
-      catText.textContent += ' › ' + escapeHtml(post.subcategory);
-    }
+    catText.innerHTML = catLineText; // It might contain &rsaquo; or similar
     catLine.appendChild(catText);
     info.appendChild(catLine);
     
-    // Location line
-    const locLine = document.createElement('div');
-    locLine.className = 'marquee-slide-info-loc';
-    locLine.innerHTML = '<span class="marquee-badge" title="Location">📍</span>';
-    const locText = document.createElement('span');
-    const loc = post.location || post.venue;
-    if (!loc || String(loc).trim() === '') {
-      throw new Error('[Marquee] Post is missing required location/venue text');
+    // 3. Location line
+    if (locationDisplay) {
+      const locLine = document.createElement('div');
+      locLine.className = 'marquee-slide-info-loc';
+      locLine.innerHTML = '<span class="marquee-badge" title="Location">📍</span>';
+      const locText = document.createElement('span');
+      locText.textContent = escapeHtml(String(locationDisplay).trim());
+      locLine.appendChild(locText);
+      info.appendChild(locLine);
     }
-    locText.textContent = escapeHtml(String(loc).trim());
-    locLine.appendChild(locText);
-    info.appendChild(locLine);
     
-    // Date line
-    const dateLine = document.createElement('div');
-    dateLine.className = 'marquee-slide-info-date';
-    dateLine.innerHTML = '<span class="marquee-badge" title="Dates">📅</span>';
-    const dateText = document.createElement('span');
-    dateText.textContent = formatDates(post.dates);
-    dateLine.appendChild(dateText);
-    info.appendChild(dateLine);
+    // 4. Date line
+    if (datesText) {
+      const dateLine = document.createElement('div');
+      dateLine.className = 'marquee-slide-info-date';
+      dateLine.innerHTML = '<span class="marquee-badge" title="Dates">📅</span>';
+      const dateText = document.createElement('span');
+      dateText.textContent = datesText;
+      dateLine.appendChild(dateText);
+      info.appendChild(dateLine);
+    }
 
-    // Price line
-    if (post.price_summary) {
+    // 5. Price line
+    if (priceText) {
       const priceLine = document.createElement('div');
       priceLine.className = 'marquee-slide-info-price';
       priceLine.innerHTML = '<span class="marquee-badge" title="Price">💰</span>';
-      const priceText = document.createElement('span');
-      priceText.textContent = post.price_summary;
-      priceLine.appendChild(priceText);
+      const priceTextEl = document.createElement('span');
+      priceTextEl.textContent = priceText;
+      priceLine.appendChild(priceTextEl);
       info.appendChild(priceLine);
     }
     
@@ -387,7 +433,8 @@ const MarqueeModule = (function() {
     if (postModule && typeof postModule.getPostUrl === 'function') {
       return postModule.getPostUrl(post);
     }
-    throw new Error('[Marquee] Post module is required for getPostUrl()');
+    console.warn('[Marquee] Post module not ready for getPostUrl()');
+    return '';
   }
   
   /**
@@ -407,7 +454,8 @@ const MarqueeModule = (function() {
       return post.heroImage;
     }
     
-    throw new Error('[Marquee] Missing hero image for post id ' + String(post && post.id));
+    console.warn('[Marquee] Missing hero image for post id ' + String(post && post.id));
+    return '';
   }
   
   /**
