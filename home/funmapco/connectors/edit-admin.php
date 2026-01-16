@@ -135,8 +135,33 @@ $newPass = isset($input['password']) ? (string)$input['password'] : '';
 $confirm = isset($input['confirm']) ? (string)$input['confirm'] : '';
 if ($newPass !== '' || $confirm !== '') {
   if ($newPass === '' || $confirm === '') fail(400,'Password/confirm required');
-  if ($newPass !== $confirm) fail(400,'Passwords do not match');
-  if (strlen($newPass) < 4) fail(400,'Password too short');
+  if ($newPass !== $confirm) fail_key(400,'msg_auth_register_password_mismatch');
+  
+  // Validate password against member_settings requirements
+  $pwSettings = [];
+  $pwStmt = $mysqli->prepare("SELECT member_setting_key, member_setting_value FROM member_settings WHERE member_setting_key LIKE 'password_%'");
+  if ($pwStmt) {
+    $pwStmt->execute();
+    $pwResult = $pwStmt->get_result();
+    while ($pwRow = $pwResult->fetch_assoc()) {
+      $pwSettings[$pwRow['member_setting_key']] = $pwRow['member_setting_value'];
+    }
+    $pwStmt->close();
+  }
+  $pwMinLen = isset($pwSettings['password_min_length']) ? (int)$pwSettings['password_min_length'] : 8;
+  $pwMaxLen = isset($pwSettings['password_max_length']) ? (int)$pwSettings['password_max_length'] : 128;
+  $pwReqLower = isset($pwSettings['password_require_lowercase']) && $pwSettings['password_require_lowercase'] === '1';
+  $pwReqUpper = isset($pwSettings['password_require_uppercase']) && $pwSettings['password_require_uppercase'] === '1';
+  $pwReqNumber = isset($pwSettings['password_require_number']) && $pwSettings['password_require_number'] === '1';
+  $pwReqSymbol = isset($pwSettings['password_require_symbol']) && $pwSettings['password_require_symbol'] === '1';
+
+  if (strlen($newPass) < $pwMinLen) fail(400, 'Password must be at least ' . $pwMinLen . ' characters');
+  if (strlen($newPass) > $pwMaxLen) fail(400, 'Password must be no more than ' . $pwMaxLen . ' characters');
+  if ($pwReqLower && !preg_match('/[a-z]/', $newPass)) fail(400, 'Password must contain a lowercase letter');
+  if ($pwReqUpper && !preg_match('/[A-Z]/', $newPass)) fail(400, 'Password must contain an uppercase letter');
+  if ($pwReqNumber && !preg_match('/[0-9]/', $newPass)) fail(400, 'Password must contain a number');
+  if ($pwReqSymbol && !preg_match('/[!@#$%^&*()_+\-=\[\]{};\'":\\|,.<>\/?`~]/', $newPass)) fail(400, 'Password must contain a special character');
+
   $hash = password_hash($newPass, PASSWORD_BCRYPT);
   if (!$hash) fail(500,'Hash failed');
   $updates[] = 'password_hash=?';
