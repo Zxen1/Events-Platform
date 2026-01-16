@@ -253,7 +253,11 @@ const FilterModule = (function() {
         try {
             var mapModule = App.getModule('map');
             if (mapModule && typeof mapModule.getMapState === 'function') {
-                return mapModule.getMapState();
+                var state = mapModule.getMapState();
+                // Rule: Only persist map memory if zoom level is 8 or above.
+                if (state && state.zoom >= 8) {
+                    return state;
+                }
             }
         } catch (e) {
             // Map module not available

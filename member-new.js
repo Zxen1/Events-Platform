@@ -777,6 +777,11 @@ const MemberModule = (function() {
         // Update local state
         if (currentUser) {
             currentUser[key] = value;
+            
+            // Also update the stored auth payload so other modules see the change immediately
+            try {
+                localStorage.setItem('member-auth-current', JSON.stringify(currentUser));
+            } catch (_e) {}
         }
     }
 

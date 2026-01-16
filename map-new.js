@@ -214,11 +214,33 @@ const MapModule = (function() {
         const zoom = map.getZoom();
 
         // Rule: if the user leaves while zoomed out (<8), do NOT persist their view.
-        // Don't overwrite the last saved in-area view; simply don't save a new one.
-        // (We clear/ignore low-zoom views during restore in applySavedMapViewToStart.)
+        // We clear the memory so it reverts to the default worldwide view on next load.
         if (!Number.isFinite(zoom) || zoom < MARKER_ZOOM_THRESHOLD) {
+          try {
+            localStorage.removeItem(MAP_VIEW_STORAGE_KEY);
+            hasSavedMapView = false;
+            
+            // Also clear from account memory if logged in
+            const rawUser = localStorage.getItem('member-auth-current');
+            if (rawUser) {
+              const u = JSON.parse(rawUser);
+              if (u && u.filters_json && typeof u.filters_json === 'string') {
+                const filters = JSON.parse(u.filters_json);
+                if (filters && filters.map) {
+                  delete filters.map;
+                  const nextFiltersJson = JSON.stringify(filters);
+                  u.filters_json = nextFiltersJson;
+                  localStorage.setItem('member-auth-current', JSON.stringify(u));
+                  if (window.MemberModule && typeof MemberModule.saveSetting === 'function') {
+                    MemberModule.saveSetting('filters_json', nextFiltersJson);
+                  }
+                }
+              }
+            }
+          } catch (_eClear) {}
           return;
         }
+
         const c = map.getCenter();
         const center = c && typeof c.toArray === 'function' ? c.toArray() : [startCenter[0], startCenter[1]];
         const pitch = typeof map.getPitch === 'function' ? map.getPitch() : startPitch;
@@ -230,13 +252,17 @@ const MapModule = (function() {
         hasSavedMapView = true;
 
         // Account memory (members/admins): persist viewport into filters_json.map so it follows the account.
-        // This is required because the FilterModule is lazy-loaded and may never run saveFilters() in a session.
         try {
           const rawUser = localStorage.getItem('member-auth-current');
           if (rawUser) {
             const u = JSON.parse(rawUser);
-            if (u && u.id && u.account_email && typeof u.filters_json === 'string' && u.filters_json) {
-              const filters = JSON.parse(u.filters_json);
+            if (u && u.id && u.account_email) {
+              // Ensure filters_json exists as an object
+              let filters = {};
+              if (typeof u.filters_json === 'string' && u.filters_json) {
+                try { filters = JSON.parse(u.filters_json); } catch(_e) { filters = {}; }
+              }
+              
               if (filters && typeof filters === 'object') {
                 filters.map = viewState;
                 const nextFiltersJson = JSON.stringify(filters);
