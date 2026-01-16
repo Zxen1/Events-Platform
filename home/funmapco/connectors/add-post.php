@@ -1,4 +1,16 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+
+// Temporary debug: catch all errors
+set_exception_handler(function($e) {
+  header('Content-Type: application/json; charset=utf-8');
+  http_response_code(500);
+  echo json_encode(['success' => false, 'message' => 'Exception: ' . $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
+  exit;
+});
+
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
   header('Content-Type: application/json; charset=utf-8');
   http_response_code(403);
