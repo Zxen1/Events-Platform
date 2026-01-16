@@ -2424,12 +2424,17 @@ const FieldsetBuilder = (function(){
                 }
                 
                 function spUpdateAllPricePlaceholders() {
-                    var priceInputs = fieldset.querySelectorAll('.fieldset-input[placeholder]');
-                    priceInputs.forEach(function(inp) {
-                        // Only update price-like inputs (those in price rows)
-                        var row = inp.closest('.fieldset-row');
-                        if (row && row.style.marginRight === '92px') {
-                            updatePricePlaceholder(inp, spTicketCurrencyState.code);
+                    // Find all pricing tier blocks and update their price inputs
+                    var tierBlocks = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block');
+                    tierBlocks.forEach(function(block) {
+                        // Price input is in the second row (after tier name row)
+                        var rows = block.querySelectorAll('.fieldset-row');
+                        if (rows.length >= 2) {
+                            var priceRow = rows[1];
+                            var priceInput = priceRow.querySelector('.fieldset-input');
+                            if (priceInput) {
+                                updatePricePlaceholder(priceInput, spTicketCurrencyState.code);
+                            }
                         }
                     });
                 }
