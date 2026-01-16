@@ -1403,11 +1403,16 @@ const FieldsetBuilder = (function(){
 
                 fieldset._setValue = function(val) {
                     if (!val || typeof val !== 'object') return;
-                    if (addrInputEl) addrInputEl.value = val.address_line || '';
+                    if (addrInputEl) {
+                        addrInputEl.value = val.address_line || '';
+                        if (val.latitude && val.longitude) {
+                            addrInputEl.dataset.placesConfirmed = 'true';
+                        }
+                    }
                     if (addrLatInput) addrLatInput.value = val.latitude || '';
                     if (addrLngInput) addrLngInput.value = val.longitude || '';
                     if (addrCountryInput) addrCountryInput.value = val.country_code || '';
-                    if (addrInputEl) addrInputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                 };
                 break;
                 
@@ -1443,11 +1448,16 @@ const FieldsetBuilder = (function(){
 
                 fieldset._setValue = function(val) {
                     if (!val || typeof val !== 'object') return;
-                    if (cityInputEl) cityInputEl.value = val.address_line || '';
+                    if (cityInputEl) {
+                        cityInputEl.value = val.address_line || '';
+                        if (val.latitude && val.longitude) {
+                            cityInputEl.dataset.placesConfirmed = 'true';
+                        }
+                    }
                     if (cityLatInput) cityLatInput.value = val.latitude || '';
                     if (cityLngInput) cityLngInput.value = val.longitude || '';
                     if (cityCountryInput) cityCountryInput.value = val.country_code || '';
-                    if (cityInputEl) cityInputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                 };
                 break;
                 
@@ -3732,6 +3742,10 @@ const FieldsetBuilder = (function(){
                     spCloseTicketMenu();
                     spSessionsContainer.innerHTML = '';
                     var sortedDates = Object.keys(spSessionData).sort();
+                    
+                    // Sync selected dates to a data attribute for fast external lookup (e.g. checkout)
+                    fieldset.dataset.selectedIsos = sortedDates.join(',');
+
                     // Update the date selector box text
                     if (sortedDates.length === 0) {
                         // Only show the date selector row when there are no dates yet.
@@ -4151,9 +4165,16 @@ const FieldsetBuilder = (function(){
                     smartLatInput.value = val.latitude || '';
                     smartLngInput.value = val.longitude || '';
                     smartCountryInput.value = val.country_code || '';
+                    
+                    // Mark as confirmed if we have coordinates
+                    if (val.latitude && val.longitude) {
+                        smartAddrInput.dataset.placesConfirmed = 'true';
+                    }
+                    
                     syncSmartAddrDisplay();
-                    smartVenueInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    smartAddrInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    // Don't trigger input event to avoid opening the dropdown during population
+                    // but we do need to notify the fieldset of the change for validation
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
                 };
 
                 smartAddrDisplay.addEventListener('click', function() {

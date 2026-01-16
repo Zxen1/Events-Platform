@@ -1216,7 +1216,7 @@ const PostModule = (function() {
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
           priceParts.text ? (function() {
             var badge = priceParts.flagUrl 
-              ? '<img class="post-card-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 16px; height: 16px; object-fit: contain;">'
+              ? '<img class="post-card-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; object-fit: contain; vertical-align: text-bottom;">'
               : '<span class="post-card-badge" title="Price">💰</span>';
             return '<div class="post-card-row-price">' + badge + '<span>' + escapeHtml(priceParts.text) + '</span></div>';
           })() : '',
@@ -1975,6 +1975,28 @@ const PostModule = (function() {
   function parsePriceSummary(priceSummary) {
     var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
     if (!raw) return { flagUrl: '', countryCode: '', text: '' };
+
+    // 0. Detect JSON pattern (legacy format fallback)
+    if (raw.indexOf('{') === 0) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed.ticket && parsed.ticket.currency) {
+          var t = parsed.ticket;
+          var min = t.min;
+          var max = t.max;
+          var curr = t.currency;
+          var text = (min === max) ? (min.toFixed(2) + ' ' + curr) : (min.toFixed(2) + ' - ' + max.toFixed(2) + ' ' + curr);
+          return parsePriceSummary(text); // Recursive call to handle flag lookup
+        }
+        if (parsed.item && parsed.item.currency) {
+          var item = parsed.item;
+          var text = item.price.toFixed(2) + ' ' + item.currency;
+          return parsePriceSummary(text);
+        }
+      } catch (e) {
+        // Not valid JSON or unknown format, continue to normal parsing
+      }
+    }
 
     var countryCode = '';
     var displayText = raw;

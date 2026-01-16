@@ -117,6 +117,7 @@ try {
     $dateEnd = isset($_GET['date_end']) ? trim((string)$_GET['date_end']) : '';
     $includeExpired = isset($_GET['expired']) && ((string)$_GET['expired'] === '1' || (string)$_GET['expired'] === 'true');
     $visibility = isset($_GET['visibility']) ? trim($_GET['visibility']) : 'active';
+    $full = isset($_GET['full']) ? (int)$_GET['full'] : 0; // NEW: Only join extra tables if requested (e.g. for editing)
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     $postKey = isset($_GET['post_key']) ? trim((string)$_GET['post_key']) : '';
     $memberId = isset($_GET['member_id']) ? intval($_GET['member_id']) : 0;
@@ -431,18 +432,22 @@ try {
                 'session_summary' => $row['session_summary'],
                 'price_summary' => $row['price_summary'],
                 'media_urls' => [], // Will be populated below
+                'sessions' => [], // Will be populated below
+                'pricing_groups' => [], // Will be populated below
+                'age_ratings' => [] // Will be populated below
             ];
         }
     }
 
     $stmt->close();
 
-    // Batch lookup media URLs with crop settings
+    // 1. Batch lookup media URLs
     $mediaUrlsById = [];
+    $mediaMetaById = [];
     if (!empty($allMediaIds)) {
         $allMediaIds = array_unique($allMediaIds);
         $placeholders = implode(',', array_fill(0, count($allMediaIds), '?'));
-        $mediaStmt = $mysqli->prepare("SELECT id, file_url, settings_json FROM `post_media` WHERE id IN ($placeholders) AND deleted_at IS NULL");
+        $mediaStmt = $mysqli->prepare("SELECT id, file_url, original_filename, settings_json FROM `post_media` WHERE id IN ($placeholders) AND deleted_at IS NULL");
         if ($mediaStmt) {
             $types = str_repeat('i', count($allMediaIds));
             $mediaBind = $allMediaIds;
@@ -451,39 +456,149 @@ try {
             $mediaResult = $mediaStmt->get_result();
             while ($mediaRow = $mediaResult->fetch_assoc()) {
                 $url = $mediaRow['file_url'];
-                // Append crop parameters if settings_json contains crop data
-                if (!empty($mediaRow['settings_json'])) {
-                    $settings = json_decode($mediaRow['settings_json'], true);
-                    if (is_array($settings) && !empty($settings['crop'])) {
-                        $crop = $settings['crop'];
-                        if (isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
-                            $cropParam = intval($crop['x1']) . ',' . intval($crop['y1']) . ',' . intval($crop['x2']) . ',' . intval($crop['y2']);
-                            $url .= (strpos($url, '?') === false ? '?' : '&') . 'crop=' . $cropParam;
-                        }
+                $settings = !empty($mediaRow['settings_json']) ? json_decode($mediaRow['settings_json'], true) : [];
+                $cropRect = null;
+                $cropState = null;
+
+                if (is_array($settings) && !empty($settings['crop'])) {
+                    $crop = $settings['crop'];
+                    $cropState = $crop; // Store raw crop state
+                    if (isset($crop['x1'], $crop['y1'], $crop['x2'], $crop['y2'])) {
+                        $cropRect = [
+                            'x' => $crop['x1'],
+                            'y' => $crop['y1'],
+                            'width' => $crop['x2'] - $crop['x1'],
+                            'height' => $crop['y2'] - $crop['y1']
+                        ];
+                        $cropParam = intval($crop['x1']) . ',' . intval($crop['y1']) . ',' . intval($crop['x2']) . ',' . intval($crop['y2']);
+                        $url .= (strpos($url, '?') === false ? '?' : '&') . 'crop=' . $cropParam;
                     }
                 }
-                $mediaUrlsById[(int)$mediaRow['id']] = $url;
+                $mediaId = (int)$mediaRow['id'];
+                $mediaUrlsById[$mediaId] = $url;
+                $mediaMetaById[$mediaId] = [
+                    'media_id' => $mediaId,
+                    'original_filename' => $mediaRow['original_filename'],
+                    'cropRect' => $cropRect,
+                    'cropState' => $cropState
+                ];
             }
             $mediaStmt->close();
         }
     }
 
-    // Attach media URLs to map cards
-    foreach ($postsById as &$post) {
-        foreach ($post['map_cards'] as &$mapCard) {
-            if (!empty($mapCard['media_ids'])) {
-                $ids = array_filter(array_map('intval', explode(',', $mapCard['media_ids'])));
-                $urls = [];
-                foreach ($ids as $mediaId) {
-                    if (isset($mediaUrlsById[$mediaId])) {
-                        $urls[] = $mediaUrlsById[$mediaId];
-                    }
-                }
-                $mapCard['media_urls'] = $urls;
+    // 2. Batch lookup sessions, pricing, and item pricing (ONLY if full data requested)
+    $allMapCardIds = [];
+    if ($full) {
+        foreach ($postsById as $p) {
+            foreach ($p['map_cards'] as $mc) {
+                $allMapCardIds[] = $mc['id'];
             }
         }
     }
-    unset($post, $mapCard);
+
+    if (!empty($allMapCardIds) && $full) {
+        $cardIdsCsv = implode(',', $allMapCardIds);
+        
+        // Sessions
+        $sessRes = $mysqli->query("SELECT map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
+        $sessionsByCard = [];
+        while ($sRow = $sessRes->fetch_assoc()) {
+            $cid = (int)$sRow['map_card_id'];
+            if (!isset($sessionsByCard[$cid])) $sessionsByCard[$cid] = [];
+            
+            $date = $sRow['session_date'];
+            if (!isset($sessionsByCard[$cid][$date])) {
+                $sessionsByCard[$cid][$date] = ['date' => $date, 'times' => []];
+            }
+            $sessionsByCard[$cid][$date]['times'][] = [
+                'time' => $sRow['session_time'],
+                'ticket_group_key' => $sRow['ticket_group_key']
+            ];
+        }
+
+        // Ticket Pricing
+        $priceRes = $mysqli->query("SELECT map_card_id, ticket_group_key, age_rating, seating_area, pricing_tier, price, currency FROM post_ticket_pricing WHERE map_card_id IN ($cardIdsCsv)");
+        $pricingByCard = [];
+        $ageRatingsByCard = [];
+        while ($pRow = $priceRes->fetch_assoc()) {
+            $cid = (int)$pRow['map_card_id'];
+            $gk = $pRow['ticket_group_key'];
+            if (!isset($pricingByCard[$cid])) $pricingByCard[$cid] = [];
+            if (!isset($pricingByCard[$cid][$gk])) $pricingByCard[$cid][$gk] = [];
+            
+            $seat = $pRow['seating_area'];
+            if (!isset($pricingByCard[$cid][$gk][$seat])) {
+                $pricingByCard[$cid][$gk][$seat] = ['seating_area' => $seat, 'tiers' => []];
+            }
+            $pricingByCard[$cid][$gk][$seat]['tiers'][] = [
+                'pricing_tier' => $pRow['pricing_tier'],
+                'price' => $pRow['price'],
+                'currency' => $pRow['currency']
+            ];
+            
+            if (!isset($ageRatingsByCard[$cid])) $ageRatingsByCard[$cid] = [];
+            $ageRatingsByCard[$cid][$gk] = $pRow['age_rating'];
+        }
+
+        // Item Pricing
+        $itemRes = $mysqli->query("SELECT map_card_id, item_name, item_variants, item_price, currency FROM post_item_pricing WHERE map_card_id IN ($cardIdsCsv)");
+        $itemsByCard = [];
+        while ($iRow = $itemRes->fetch_assoc()) {
+            $cid = (int)$iRow['map_card_id'];
+            $itemsByCard[$cid] = [
+                'item_name' => $iRow['item_name'],
+                'item_variants' => json_decode($iRow['item_variants'], true) ?: [],
+                'item_price' => $iRow['item_price'],
+                'currency' => $iRow['currency']
+            ];
+        }
+
+        // Attach to map cards
+        foreach ($postsById as &$post) {
+            foreach ($post['map_cards'] as &$mapCard) {
+                $cid = $mapCard['id'];
+                
+                // Attach Media
+                if (!empty($mapCard['media_ids'])) {
+                    $ids = array_filter(array_map('intval', explode(',', $mapCard['media_ids'])));
+                    $urls = [];
+                    $meta = [];
+                    foreach ($ids as $mediaId) {
+                        if (isset($mediaUrlsById[$mediaId])) {
+                            $urls[] = $mediaUrlsById[$mediaId];
+                            $meta[] = $mediaMetaById[$mediaId] ?? null;
+                        }
+                    }
+                    $mapCard['media_urls'] = $urls;
+                    $mapCard['media_meta'] = $meta;
+                }
+
+                // Attach Sessions (as array, not grouped by date for frontend compat)
+                if (isset($sessionsByCard[$cid])) {
+                    $mapCard['sessions'] = array_values($sessionsByCard[$cid]);
+                }
+
+                // Attach Ticket Pricing
+                if (isset($pricingByCard[$cid])) {
+                    $mapCard['pricing_groups'] = $pricingByCard[$cid];
+                }
+                if (isset($ageRatingsByCard[$cid])) {
+                    $mapCard['age_ratings'] = $ageRatingsByCard[$cid];
+                }
+
+                // Attach Item Pricing
+                if (isset($itemsByCard[$cid])) {
+                    $item = $itemsByCard[$cid];
+                    $mapCard['item_name'] = $item['item_name'];
+                    $mapCard['item_price'] = $item['item_price'];
+                    $mapCard['currency'] = $item['currency'];
+                    $mapCard['item_variants'] = $item['item_variants'];
+                }
+            }
+        }
+        unset($post, $mapCard);
+    }
 
     // Convert to array
     $posts = array_values($postsById);

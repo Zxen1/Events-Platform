@@ -2023,6 +2023,12 @@ const PhonePrefixComponent = (function(){
 
         // Find and set value
         function setValue(code) {
+            // Ensure code is a string or null
+            if (code !== null && typeof code === 'object') {
+                console.warn('[PhonePrefix] setValue received an object instead of a string:', code);
+                code = null;
+            }
+            
             // Handle null/empty - revert to placeholder state
             if (!code) {
                 btnImg.src = '';

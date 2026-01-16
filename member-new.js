@@ -2606,15 +2606,21 @@ const MemberModule = (function() {
 
             function getMaxSelectedIso(fieldsetEl) {
                 if (!fieldsetEl) return null;
-                // CalendarComponent uses .calendar-day.selected for all calendar types
-                var days = fieldsetEl.querySelectorAll('.calendar-day.selected[data-iso]');
-                var latest = null;
-                days.forEach(function(el) {
-                    var iso = el.dataset.iso;
-                    if (!iso) return;
-                    if (!latest || iso > latest) latest = iso;
-                });
-                return latest;
+                // Source of truth in DOM: data-selected-isos attribute synced by fieldset logic
+                var isoCsv = fieldsetEl.dataset.selectedIsos || '';
+                if (!isoCsv) {
+                    // Fallback to labels if attribute not synced yet
+                    var days = fieldsetEl.querySelectorAll('.fieldset-sessionpricing-session-field-label--selected[data-iso]');
+                    var latest = null;
+                    days.forEach(function(el) {
+                        var iso = el.dataset.iso;
+                        if (!iso) return;
+                        if (!latest || iso > latest) latest = iso;
+                    });
+                    return latest;
+                }
+                var sorted = isoCsv.split(',').filter(Boolean).sort();
+                return sorted.length > 0 ? sorted[sorted.length - 1] : null;
             }
 
             var result = [];
@@ -3472,25 +3478,29 @@ const MemberModule = (function() {
                 expandedPostAccordions[postId] = true;
             } else {
                 showStatus('Loading post data...', { success: true });
-                fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId)
-                    .then(function(r) { return r.json(); })
-                    .then(function(res) {
-                        if (res && res.success && res.posts && res.posts.length > 0) {
-                            var post = res.posts[0];
-                            editingPostsData[postId] = { original: post, current: {} };
-                            renderPostEditForm(post, accordion);
-                            accordion.hidden = false;
-                            accordion.classList.remove('member-mypost-edit-accordion--hidden');
-                            expandedPostAccordions[postId] = true;
-                            showStatus('Post data loaded.', { success: true });
-                        } else {
-                            showStatus('Failed to load post data.', { error: true });
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error('[Member] Failed to fetch post for edit:', err);
+                
+                // Ensure categories are loaded before fetching post data
+                ensureCategoriesLoaded().then(function() {
+                    return fetch('/gateway.php?action=get-posts&full=1&post_id=' + postId);
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    if (res && res.success && res.posts && res.posts.length > 0) {
+                        var post = res.posts[0];
+                        editingPostsData[postId] = { original: post, current: {} };
+                        renderPostEditForm(post, accordion);
+                        accordion.hidden = false;
+                        accordion.classList.remove('member-mypost-edit-accordion--hidden');
+                        expandedPostAccordions[postId] = true;
+                        showStatus('Post data loaded.', { success: true });
+                    } else {
                         showStatus('Failed to load post data.', { error: true });
-                    });
+                    }
+                })
+                .catch(function(err) {
+                    console.error('[Member] Failed to fetch post for edit:', err);
+                    showStatus('Failed to load post data.', { error: true });
+                });
             }
         }
     }
@@ -3601,13 +3611,39 @@ const MemberModule = (function() {
     function populateAccordionWithPostData(post, container) {
         if (!post || !post.map_cards || post.map_cards.length === 0 || !container) return;
         
-        // Assume single map card for now (matches existing pattern)
-        var mapCard = post.map_cards[0];
-        
-        // Find all fieldsets in this accordion
+        // 1. Populate non-repeating fieldsets (title, description, etc.)
+        // These are in .form-primary-container
+        var primaryMapCard = post.map_cards[0];
+        var primaryContainer = container.querySelector('.form-primary-container');
+        if (primaryContainer) {
+            populateFieldsetsInContainer(primaryContainer, primaryMapCard);
+        }
+
+        // 2. Populate location containers (repeating fieldsets)
+        post.map_cards.forEach(function(mapCard, idx) {
+            var locationNum = idx + 1;
+            var locContainer = container.querySelector('.member-location-container[data-location-number="' + locationNum + '"]');
+            if (locContainer) {
+                var content = locContainer.querySelector('.member-location-container-content');
+                if (content) {
+                    populateFieldsetsInContainer(content, mapCard);
+                }
+            }
+        });
+    }
+
+    function populateFieldsetsInContainer(container, mapCard) {
+        if (!container || !mapCard) return;
+
+        // Find all fieldsets IN THIS CONTAINER only (not nested)
         var fieldsetEls = container.querySelectorAll('.fieldset[data-fieldset-key]');
         
         fieldsetEls.forEach(function(fs) {
+            // Ensure this fieldset belongs directly to this container (not a nested one)
+            // But since our containers are usually shallow, querySelectorAll is mostly fine.
+            // However, to be safe, we check if it's a descendant of another .fieldset
+            if (fs.parentElement.closest('.fieldset')) return;
+
             var key = fs.dataset.fieldsetKey;
             var type = fs.dataset.fieldsetType || key;
             var baseType = type.replace(/-locked$/, '').replace(/-hidden$/, '');
@@ -3631,6 +3667,7 @@ const MemberModule = (function() {
                         break;
                     case 'address':
                     case 'city':
+                    case 'location':
                         val = {
                             address_line: mapCard.address_line,
                             latitude: mapCard.latitude,
@@ -3641,8 +3678,8 @@ const MemberModule = (function() {
                     case 'public_email': val = mapCard.public_email; break;
                     case 'public_phone':
                         val = {
-                            phone_prefix: mapCard.phone_prefix,
-                            public_phone: mapCard.public_phone
+                            phone_prefix: mapCard.phone_prefix || null,
+                            public_phone: mapCard.public_phone || ''
                         };
                         break;
                     case 'website_url':
@@ -3679,12 +3716,10 @@ const MemberModule = (function() {
                         break;
                         
                     case 'images':
-                        // Map media_ids and media_urls into objects for the fieldset
-                        var ids = (mapCard.media_ids || '').split(',').filter(Boolean);
-                        var urls = mapCard.media_urls || [];
-                        val = ids.map(function(id, idx) {
-                            return { id: id, url: urls[idx] || '' };
-                        });
+                        val = {
+                            media_urls: mapCard.media_urls || [],
+                            media_meta: mapCard.media_meta || []
+                        };
                         break;
                 }
                 
@@ -4031,13 +4066,19 @@ const MemberModule = (function() {
                 case 'session_pricing':
                 try {
                     // Sessions portion: each time includes ticket_group_key
-                    // Source of truth: .calendar-day.selected
-                    var selectedDays2 = el.querySelectorAll('.calendar-day.selected[data-iso]');
+                    // Source of truth in DOM: data-selected-isos attribute synced by fieldset logic
+                    var isoCsv2 = el.dataset.selectedIsos || '';
                     var dates2 = [];
-                    selectedDays2.forEach(function(d) {
-                        var iso = d.dataset.iso;
-                        if (iso) dates2.push(String(iso));
-                    });
+                    if (isoCsv2) {
+                        dates2 = isoCsv2.split(',').filter(Boolean);
+                    } else {
+                        // Fallback to labels
+                        var selectedDays2 = el.querySelectorAll('.fieldset-sessionpricing-session-field-label--selected[data-iso]');
+                        selectedDays2.forEach(function(d) {
+                            var iso = d.dataset.iso;
+                            if (iso) dates2.push(String(iso));
+                        });
+                    }
                     dates2.sort();
                     
                     var sessionsOut = [];
