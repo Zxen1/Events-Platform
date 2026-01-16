@@ -395,7 +395,7 @@ const MarqueeModule = (function() {
       
       let badgeHtml = '';
       if (priceParts.flagUrl) {
-        badgeHtml = '<img class="marquee-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain;">';
+        badgeHtml = '<img class="marquee-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 16px; height: 16px; object-fit: contain; margin-right: 5px; vertical-align: text-bottom;">';
       } else {
         badgeHtml = '<span class="marquee-badge" title="Price">💰</span>';
       }

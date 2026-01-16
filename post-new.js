@@ -1216,7 +1216,7 @@ const PostModule = (function() {
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
           priceParts.text ? (function() {
             var badge = priceParts.flagUrl 
-              ? '<img class="post-card-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain;">'
+              ? '<img class="post-card-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 16px; height: 16px; object-fit: contain;">'
               : '<span class="post-card-badge" title="Price">💰</span>';
             return '<div class="post-card-row-price">' + badge + '<span>' + escapeHtml(priceParts.text) + '</span></div>';
           })() : '',
@@ -1234,11 +1234,17 @@ const PostModule = (function() {
       wireCardThumbImage(el.querySelector('.post-card-image'), rawThumbUrl);
     }
 
-    // Click handler for opening post
+    // Click handler for opening/closing post (toggle)
     el.addEventListener('click', function(e) {
-      // Don't open if clicking favorite button
+      // Don't toggle if clicking favorite button
       if (e.target.closest('.post-card-button-fav')) return;
-      openPost(post, { originEl: el });
+      
+      // If this card is already inside an .open-post section, click means "close"
+      if (el.closest('.open-post')) {
+        closePost(post.id);
+      } else {
+        openPost(post, { originEl: el });
+      }
     });
 
     // Keyboard: Enter/Space opens card (matches button behavior)
@@ -3180,9 +3186,16 @@ const PostModule = (function() {
       wireCardThumbImage(el.querySelector('.recent-card-image'), rawThumbUrl);
     }
 
-    // Click handler
+    // Click handler for opening/closing post (toggle)
     el.addEventListener('click', function(e) {
       if (e.target.closest('.recent-card-button-fav')) return;
+      
+      // If this card is already inside an .open-post section, click means "close"
+      if (el.closest('.open-post')) {
+        closePost(entry.id);
+        return;
+      }
+
       // No in-memory post cache: always fetch the post payload before opening.
       loadPostById(entry.id).then(function(fetchedPost) {
         if (!fetchedPost) return;
