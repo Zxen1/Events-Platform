@@ -1504,3 +1504,44 @@
   border-color: var(--blue-500);
 }
 
+/* ============================================================================
+   MY POSTS EDIT ACCORDION
+   ============================================================================ */
+
+.member-mypost-edit-accordion,
+.member-mypost-manage-accordion {
+  margin-top: 10px;
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+}
+
+.member-mypost-edit-accordion--hidden,
+.member-mypost-manage-accordion--hidden {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+
+.member-mypost-manage-content {
+  padding: 5px 0;
+}
+
+.member-mypost-manage-section {
+  margin-bottom: 15px;
+}
+
+.member-mypost-manage-section:last-child {
+  margin-bottom: 0;
+}
+
+.member-mypost-item {
+  margin-bottom: 12px;
+}
+
+

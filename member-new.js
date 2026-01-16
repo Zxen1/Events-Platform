@@ -56,8 +56,10 @@ const MemberModule = (function() {
        -------------------------------------------------------------------------- */
     
     var currentUser = null;
-    var isEditingPostId = null;
+    var isEditingPostId = null; // Still used for "Create Post" tab if we ever use it for edits again
     var isSubmittingPost = false;
+    var editingPostsData = {}; // { [postId]: { original: postObj, current: {} } }
+    var expandedPostAccordions = {}; // { [postId]: boolean }
 
     // DOM references
     var panel = null;
@@ -1234,10 +1236,50 @@ const MemberModule = (function() {
     }
 
     function updateHeaderSaveDiscardState() {
-        // For now: header buttons mirror profile edit dirty state
-        // (we can expand later to include other profile preferences)
-        var enabled = isProfileDirty();
+        var enabled = isProfileDirty() || isAnyPostDirty();
         setHeaderButtonsEnabled(enabled);
+    }
+
+    function isAnyPostDirty() {
+        var anyDirty = false;
+        Object.keys(expandedPostAccordions).forEach(function(postId) {
+            if (expandedPostAccordions[postId] === true) {
+                if (isPostDirty(postId)) {
+                    anyDirty = true;
+                }
+            }
+        });
+        return anyDirty;
+    }
+
+    function isPostDirty(postId) {
+        var data = editingPostsData[postId];
+        if (!data) return false;
+        
+        var accordion = document.querySelector('.member-mypost-item[data-post-id="' + postId + '"] .member-mypost-edit-accordion');
+        if (!accordion) return false;
+
+        // Collect current form data and compare with original
+        var current = collectAccordionFormData(accordion, data.original);
+        // Simple JSON stringify comparison for deep check
+        return JSON.stringify(current) !== JSON.stringify(data.original_extracted_fields);
+    }
+
+    function collectAccordionFormData(accordion, originalPost) {
+        // Similar to validateAndCollectFormData but scoped to an accordion
+        // This is a simplified version for now
+        var fields = [];
+        var fieldsetEls = accordion.querySelectorAll('[data-fieldset-key]');
+        
+        for (var i = 0; i < fieldsetEls.length; i++) {
+            var el = fieldsetEls[i];
+            var key = el.dataset.fieldsetKey;
+            var input = el.querySelector('input, textarea, select');
+            if (input) {
+                fields.push({ key: key, value: input.value });
+            }
+        }
+        return fields;
     }
 
     function getEditUserAction() {
@@ -1440,48 +1482,143 @@ const MemberModule = (function() {
     }
 
     function handleHeaderSave() {
-        // If a site avatar is selected, copy it into the user's avatar file (as a square PNG)
-        // so it follows the same naming/overwrite rules as uploads.
-        if (pendingProfileSiteUrl && !pendingProfileAvatarBlob) {
-            var url = String(pendingProfileSiteUrl);
-            fetch(url)
-                .then(function(r) { return r.blob(); })
-                .then(function(blob) {
-                    return new Promise(function(resolve) {
-                        squarePngFromImageBlob(blob, function(out) { resolve(out); });
-                    });
-                })
-                .then(function(squareBlob) {
-                    if (!squareBlob) throw new Error('Could not prepare avatar image');
-                    pendingProfileAvatarBlob = squareBlob;
-                    pendingProfileSiteUrl = '';
-                    try { pendingProfileAvatarPreviewUrl = URL.createObjectURL(squareBlob); } catch (e) { pendingProfileAvatarPreviewUrl = ''; }
-                    if (profileAvatar && pendingProfileAvatarPreviewUrl) profileAvatar.src = pendingProfileAvatarPreviewUrl;
-                    if (avatarPickerProfile && typeof avatarPickerProfile.setSelfBlob === 'function') {
-                        avatarPickerProfile.setSelfBlob(squareBlob, pendingProfileAvatarPreviewUrl);
-                    } else {
-                        renderAvatarPickers();
-                    }
-                    handleProfileSave(function() { updateHeaderSaveDiscardState(); });
-                })
-                .catch(function(err) {
-                    console.warn('[Member] Failed to prepare site avatar', err);
-                    if (window.ToastComponent && ToastComponent.showError) {
-                        ToastComponent.showError('Could not use that avatar.');
-                    }
-                });
-            return;
+        if (!currentUser) return;
+
+        var profileDirty = isProfileDirty();
+        var dirtyPostIds = Object.keys(expandedPostAccordions).filter(function(id) {
+            return expandedPostAccordions[id] === true && isPostDirty(id);
+        });
+
+        if (!profileDirty && dirtyPostIds.length === 0) return;
+
+        showStatus('Saving changes...', { success: true });
+        setHeaderButtonsEnabled(false);
+
+        var savePromises = [];
+
+        // 1. Profile save logic (including site avatar preparation)
+        if (profileDirty) {
+            savePromises.push(new Promise(function(resolve) {
+                if (pendingProfileSiteUrl && !pendingProfileAvatarBlob) {
+                    var url = String(pendingProfileSiteUrl);
+                    fetch(url)
+                        .then(function(r) { return r.blob(); })
+                        .then(function(blob) {
+                            return new Promise(function(resSq) {
+                                squarePngFromImageBlob(blob, function(out) { resSq(out); });
+                            });
+                        })
+                        .then(function(squareBlob) {
+                            if (!squareBlob) throw new Error('Could not prepare avatar image');
+                            pendingProfileAvatarBlob = squareBlob;
+                            pendingProfileSiteUrl = '';
+                            handleProfileSave(function() { resolve(); });
+                        })
+                        .catch(function(err) {
+                            console.warn('[Member] Failed to prepare site avatar', err);
+                            handleProfileSave(function() { resolve(); }); // Save profile anyway
+                        });
+                } else {
+                    handleProfileSave(function() { resolve(); });
+                }
+            }));
         }
 
-        // Header save should save profile edits if any
-        handleProfileSave(function() {
-            updateHeaderSaveDiscardState();
+        // 2. Posts save
+        dirtyPostIds.forEach(function(postId) {
+            savePromises.push(saveAccordionPost(postId));
         });
+
+        Promise.all(savePromises)
+            .then(function() {
+                showStatus('All changes saved.', { success: true });
+                updateHeaderSaveDiscardState();
+            })
+            .catch(function(err) {
+                console.error('[Member] Global save failed:', err);
+                showStatus('Some changes could not be saved.', { error: true });
+                updateHeaderSaveDiscardState();
+            });
+    }
+
+    function saveAccordionPost(postId) {
+        var data = editingPostsData[postId];
+        var accordion = document.querySelector('.member-mypost-item[data-post-id="' + postId + '"] .member-mypost-edit-accordion');
+        if (!data || !accordion) return Promise.resolve();
+
+        // Collect current fields from form
+        var fields = collectAccordionFormData(accordion, data.original);
+        
+        // Resolve category/subcategory names
+        var categoryName = '';
+        for (var i = 0; i < memberCategories.length; i++) {
+            var cat = memberCategories[i];
+            if (cat.subs) {
+                for (var j = 0; j < cat.subs.length; j++) {
+                    var sub = cat.subs[j];
+                    var subKey = (typeof sub === 'string') ? sub : (sub && sub.name);
+                    var feeInfo = cat && cat.subFees && cat.subFees[subKey];
+                    var key = feeInfo && feeInfo.subcategory_key ? String(feeInfo.subcategory_key) : '';
+                    if (key === data.original.subcategory_key) {
+                        categoryName = cat.name;
+                        break;
+                    }
+                }
+            }
+            if (categoryName) break;
+        }
+
+        var payload = {
+            post_id: postId,
+            category: categoryName,
+            subcategory: data.original.subcategory_name || data.original.subcategory_key,
+            fields: fields
+        };
+
+        // Reuse submitPostData but ensure it doesn't switch tabs or clear form
+        return submitPostData(payload, false, [], '[]')
+            .then(function(res) {
+                if (res && res.success) {
+                    // Update original data so it's no longer dirty
+                    data.original_extracted_fields = fields;
+                    App.emit('post:updated', { post_id: postId });
+                    return res;
+                } else {
+                    throw new Error(res.error || 'Failed to save post ' + postId);
+                }
+            });
     }
 
     function handleHeaderDiscard() {
-        discardProfileEdits();
+        if (isProfileDirty()) {
+            discardProfileEdits();
+        }
+
+        // Discard all post edits
+        Object.keys(expandedPostAccordions).forEach(function(postId) {
+            if (expandedPostAccordions[postId] === true) {
+                discardPostAccordionEdits(postId);
+            }
+        });
+
         updateHeaderSaveDiscardState();
+    }
+
+    function discardPostAccordionEdits(postId) {
+        var data = editingPostsData[postId];
+        var container = document.querySelector('.member-mypost-item[data-post-id="' + postId + '"]');
+        var accordion = container ? container.querySelector('.member-mypost-edit-accordion') : null;
+        
+        if (data && accordion) {
+            // Close accordion and reset to original
+            accordion.hidden = true;
+            accordion.classList.add('member-mypost-edit-accordion--hidden');
+            expandedPostAccordions[postId] = false;
+            
+            // Clear data so it's re-loaded if opened again
+            accordion.innerHTML = '';
+            delete editingPostsData[postId];
+        }
     }
 
     function isProfileDirty() {
@@ -1784,6 +1921,12 @@ const MemberModule = (function() {
             panel.classList.toggle('member-tab-contents--active', isActive);
             panel.hidden = !isActive;
         });
+
+        // Reset editing state if we leave the create tab
+        if (tabName !== 'create' && isEditingPostId !== null) {
+            isEditingPostId = null;
+            if (createTabBtn) createTabBtn.textContent = 'Create Post';
+        }
         
         // Lazy load Create Post tab content
         if (tabName === 'create') {
@@ -3161,6 +3304,7 @@ const MemberModule = (function() {
         // Reuse PostModule's rendering logic but wrap it with an Edit button
         var container = document.createElement('div');
         container.className = 'member-mypost-item';
+        container.dataset.postId = post.id;
         
         // Use PostModule if available, otherwise fallback to simple display
         var cardEl = null;
@@ -3174,63 +3318,162 @@ const MemberModule = (function() {
             cardEl.textContent = fallbackTitle;
         }
         
-        // Add Edit button to the card actions container
+        // Add Edit and Manage buttons to the card actions container
         var actionsContainer = cardEl.querySelector('.post-card-container-actions');
         if (actionsContainer) {
+            // Edit Button
             var editBtn = document.createElement('button');
             editBtn.className = 'post-card-button-edit button-class-1';
-            editBtn.title = 'Edit Post';
+            editBtn.title = 'Edit Post Content';
             editBtn.innerHTML = 'Edit';
             editBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                editPost(post.id);
+                togglePostEdit(post.id, container);
             });
-            // Insert before favorite button
+            
+            // Manage Button (New placeholder)
+            var manageBtn = document.createElement('button');
+            manageBtn.className = 'post-card-button-manage button-class-1';
+            manageBtn.title = 'Manage Plan & Time';
+            manageBtn.innerHTML = 'Manage';
+            manageBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                togglePostManage(post.id, container);
+            });
+
+            // Insert buttons
+            actionsContainer.insertBefore(manageBtn, actionsContainer.firstChild);
             actionsContainer.insertBefore(editBtn, actionsContainer.firstChild);
         }
 
         container.appendChild(cardEl);
+
+        // Add accordion container for editing content
+        var editAccordion = document.createElement('div');
+        editAccordion.className = 'member-mypost-edit-accordion member-mypost-edit-accordion--hidden';
+        editAccordion.hidden = true;
+        container.appendChild(editAccordion);
+
+        // Add accordion container for management (plans, time, etc.)
+        var manageAccordion = document.createElement('div');
+        manageAccordion.className = 'member-mypost-manage-accordion member-mypost-manage-accordion--hidden';
+        manageAccordion.hidden = true;
+        container.appendChild(manageAccordion);
+
         return container;
     }
 
-    function editPost(postId) {
-        if (!postId || !currentUser) return;
+    function togglePostManage(postId, container) {
+        if (!postId || !container) return;
         
-        // Show status
-        showStatus('Loading post data...', { success: true });
+        var accordion = container.querySelector('.member-mypost-manage-accordion');
+        if (!accordion) return;
+
+        // If edit accordion is open, close it
+        var editAcc = container.querySelector('.member-mypost-edit-accordion');
+        if (editAcc && !editAcc.hidden) {
+            editAcc.hidden = true;
+            editAcc.classList.add('member-mypost-edit-accordion--hidden');
+            expandedPostAccordions[postId] = false;
+        }
+
+        var isExpanded = accordion.dataset.expanded === 'true';
         
-        // Fetch full post data
-        fetch('/gateway.php?action=get-posts&post_id=' + postId)
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res && res.success && res.posts && res.posts.length > 0) {
-                    var post = res.posts[0];
-                    loadPostIntoForm(post);
-                } else {
-                    showStatus('Failed to load post data.', { error: true });
-                }
-            })
-            .catch(function(err) {
-                console.error('[Member] Failed to fetch post for edit:', err);
-                showStatus('Failed to load post data.', { error: true });
-            });
+        if (isExpanded) {
+            accordion.hidden = true;
+            accordion.classList.add('member-mypost-manage-accordion--hidden');
+            accordion.dataset.expanded = 'false';
+        } else {
+            // Render placeholder management UI if empty
+            if (accordion.innerHTML === '') {
+                renderPostManagePlaceholder(postId, accordion);
+            }
+            accordion.hidden = false;
+            accordion.classList.remove('member-mypost-manage-accordion--hidden');
+            accordion.dataset.expanded = 'true';
+        }
     }
 
-    function loadPostIntoForm(post) {
-        if (!post) return;
+    function renderPostManagePlaceholder(postId, container) {
+        container.innerHTML = [
+            '<div class="member-mypost-manage-content">',
+                '<div class="member-mypost-manage-section">',
+                    '<div class="member-panel-label">Extend Listing Time</div>',
+                    '<div class="member-mypost-manage-row">',
+                        '<p class="member-supporter-message">Your post is currently active. You can add extra time to your listing below.</p>',
+                        '<button class="button-class-2c" style="width:100%">Add 30 Days (Placeholder)</button>',
+                    '</div>',
+                '</div>',
+                '<div class="member-mypost-manage-section" style="margin-top:15px">',
+                    '<div class="member-panel-label">Change Plan</div>',
+                    '<div class="member-mypost-manage-row">',
+                        '<p class="member-supporter-message">Current Plan: Basic. Upgrade to Premium for higher visibility and map priority.</p>',
+                        '<button class="button-class-2b" style="width:100%">Upgrade Plan (Placeholder)</button>',
+                    '</div>',
+                '</div>',
+            '</div>'
+        ].join('');
+    }
+
+    function togglePostEdit(postId, container) {
+        if (!postId || !container) return;
         
-        // 1. Switch to create tab
-        switchTab('create');
+        var accordion = container.querySelector('.member-mypost-edit-accordion');
+        if (!accordion) return;
+
+        // If manage accordion is open, close it
+        var manageAcc = container.querySelector('.member-mypost-manage-accordion');
+        if (manageAcc && !manageAcc.hidden) {
+            manageAcc.hidden = true;
+            manageAcc.classList.add('member-mypost-manage-accordion--hidden');
+            manageAcc.dataset.expanded = 'false';
+        }
+
+        var isExpanded = expandedPostAccordions[postId];
         
-        // 2. Set editing state
-        isEditingPostId = post.id;
+        if (isExpanded) {
+            // Collapse
+            accordion.hidden = true;
+            accordion.classList.add('member-mypost-edit-accordion--hidden');
+            expandedPostAccordions[postId] = false;
+        } else {
+            // Expand
+            // Check if we need to load data first
+            if (editingPostsData[postId]) {
+                accordion.hidden = false;
+                accordion.classList.remove('member-mypost-edit-accordion--hidden');
+                expandedPostAccordions[postId] = true;
+            } else {
+                showStatus('Loading post data...', { success: true });
+                fetch('/gateway.php?action=get-posts&post_id=' + postId)
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res && res.success && res.posts && res.posts.length > 0) {
+                            var post = res.posts[0];
+                            editingPostsData[postId] = { original: post, current: {} };
+                            renderPostEditForm(post, accordion);
+                            accordion.hidden = false;
+                            accordion.classList.remove('member-mypost-edit-accordion--hidden');
+                            expandedPostAccordions[postId] = true;
+                            showStatus('Post data loaded.', { success: true });
+                        } else {
+                            showStatus('Failed to load post data.', { error: true });
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('[Member] Failed to fetch post for edit:', err);
+                        showStatus('Failed to load post data.', { error: true });
+                    });
+            }
+        }
+    }
+
+    function renderPostEditForm(post, container) {
+        if (!post || !container) return;
         
-        // 3. Update tab label and submit button
-        if (createTabBtn) createTabBtn.textContent = 'Edit Post';
-        
-        // 4. Pre-select category and subcategory
-        // Note: get-posts returns subcategory_key. We need to find the display name.
+        // 1. Resolve category and subcategory
         var categoryName = '';
         var subcategoryName = '';
         
@@ -3253,20 +3496,92 @@ const MemberModule = (function() {
         }
         
         if (!categoryName || !subcategoryName) {
-            console.error('[Member] Could not resolve category/subcategory for post:', post.subcategory_key);
-            showStatus('This post uses a category that is no longer available.', { error: true });
+            container.innerHTML = '<p class="member-myposts-status--error">This post uses a category that is no longer available.</p>';
             return;
         }
 
-        // Set selected values
-        selectedCategory = categoryName;
-        selectedSubcategory = subcategoryName;
+        // 2. Render fields into container
+        var fields = getFieldsForSelection(categoryName, subcategoryName);
+        container.innerHTML = '';
         
-        // Update formpicker UI
-        updateFormpickerSelections(categoryName, subcategoryName);
+        if (fields.length === 0) {
+            container.innerHTML = '<p class="member-myposts-status">No fields configured for this subcategory yet.</p>';
+            return;
+        }
+
+        // 3. Build form structure using shared FormBuilder
+        if (window.FormbuilderModule && typeof FormbuilderModule.organizeFieldsIntoLocationContainers === 'function') {
+            var locationData = FormbuilderModule.organizeFieldsIntoLocationContainers({
+                fields: fields,
+                container: container,
+                buildFieldset: function(fieldData, options) {
+                    var field = ensureFieldDefaults(fieldData);
+                    return FieldsetBuilder.buildFieldset(field, {
+                        idPrefix: 'editPost' + post.id,
+                        fieldIndex: options.fieldIndex || 0,
+                        container: options.container,
+                        defaultCurrency: getDefaultCurrencyForForms()
+                    });
+                },
+                initialQuantity: (post.map_cards && post.map_cards.length) || 1,
+                getMessage: function(key, params, fallback) {
+                    return typeof window.getMessage === 'function' ? window.getMessage(key, params, fallback) : Promise.resolve(null);
+                },
+                setupHeaderRenaming: true
+            });
+            
+            // Populate data
+            populateAccordionWithPostData(post, container);
+            
+            // Store initial extracted fields for dirty checking
+            editingPostsData[post.id].original_extracted_fields = collectAccordionFormData(container, post);
+
+            // Attach change listener to mark global save state as dirty
+            container.addEventListener('input', function() {
+                updateHeaderSaveDiscardState();
+            });
+            container.addEventListener('change', function() {
+                updateHeaderSaveDiscardState();
+            });
+            // Also custom events from fieldsets
+            container.addEventListener('fieldset:sessions-change', function() {
+                updateHeaderSaveDiscardState();
+            });
+        }
+    }
+
+    function populateAccordionWithPostData(post, container) {
+        if (!post || !post.map_cards || post.map_cards.length === 0 || !container) return;
         
-        // 5. Render fields and populate them
-        renderConfiguredFieldsWithData(post);
+        // For now, assume single map card populated like Create Post
+        var mapCard = post.map_cards[0];
+        
+        var fields = [
+            { key: 'title', value: mapCard.title },
+            { key: 'description', value: mapCard.description },
+            { key: 'venue_name', value: mapCard.venue_name },
+            { key: 'address_line', value: mapCard.address_line },
+            { key: 'city', value: mapCard.city },
+            { key: 'public_email', value: mapCard.public_email },
+            { key: 'public_phone', value: mapCard.public_phone },
+            { key: 'website_url', value: mapCard.website_url },
+            { key: 'tickets_url', value: mapCard.tickets_url },
+            { key: 'coupon_code', value: mapCard.coupon_code },
+            { key: 'custom_text', value: mapCard.custom_text },
+            { key: 'custom_textarea', value: mapCard.custom_textarea }
+        ];
+
+        fields.forEach(function(f) {
+            if (f.value !== null && f.value !== undefined) {
+                var input = container.querySelector('[data-fieldset-key="' + f.key + '"] input, [data-fieldset-key="' + f.key + '"] textarea');
+                if (input) {
+                    input.value = f.value;
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        });
+        
+        // TODO: Handle complex fieldsets in accordions as well
     }
 
     function updateFormpickerSelections(catName, subName) {
@@ -3836,6 +4151,8 @@ const MemberModule = (function() {
                 }
             }
             
+            var effectivePostId = payload.post_id || isEditingPostId;
+
             var postData = {
                 subcategory_key: actualSubcategoryKey,
                 member_id: currentUser ? currentUser.id : null,
@@ -3847,24 +4164,22 @@ const MemberModule = (function() {
             };
             
             // Include post_id if editing
-            if (isEditingPostId) {
-                postData.post_id = isEditingPostId;
+            if (effectivePostId) {
+                postData.post_id = effectivePostId;
             }
 
             var fd = new FormData();
             fd.set('payload', JSON.stringify(postData));
 
             // Attach image files (passed from validateAndCollectFormData, collected before form cleared)
-            console.log('[Post] files to upload:', imageFiles ? imageFiles.length : 0);
             if (imageFiles && imageFiles.length > 0) {
                 imageFiles.forEach(function(file) {
                     if (file) fd.append('images[]', file, file.name || 'image');
                 });
             }
             fd.set('images_meta', imagesMeta || '[]');
-            console.log('[Post] images_meta:', imagesMeta);
 
-            var action = isEditingPostId ? 'edit-post' : 'add-post';
+            var action = effectivePostId ? 'edit-post' : 'add-post';
             fetch('/gateway.php?action=' + action, {
                 method: 'POST',
                 body: fd
