@@ -750,21 +750,36 @@ const FieldsetBuilder = (function(){
     }
     
     // Update placeholder text based on currency's format (symbol + decimal format)
+    // If no currency selected yet, shows "0.00" (valid initial state)
+    // If currency selected, requires CurrencyComponent and valid currency data
     function updatePricePlaceholder(input, currencyCode) {
         if (!input) return;
-        if (!currencyCode || typeof CurrencyComponent === 'undefined') {
+        
+        // No currency selected yet - valid initial state
+        if (!currencyCode) {
             input.placeholder = '0.00';
             return;
         }
-        var currency = CurrencyComponent.getCurrencyByCode ? CurrencyComponent.getCurrencyByCode(currencyCode) : null;
+        
+        // Currency selected - CurrencyComponent is required
+        if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.getCurrencyByCode) {
+            throw new Error('[FieldsetBuilder] CurrencyComponent.getCurrencyByCode required but not available');
+        }
+        
+        var currency = CurrencyComponent.getCurrencyByCode(currencyCode);
         if (!currency) {
-            input.placeholder = '0.00';
-            return;
+            throw new Error('[FieldsetBuilder] Currency not found: ' + currencyCode);
         }
-        var decPlaces = currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2;
-        var decSep = currency.decimalSeparator || '.';
-        var symbol = currency.symbol || '';
-        var symbolPos = currency.symbolPosition || 'left';
+        
+        // Currency data must include formatting properties
+        var decPlaces = currency.decimalPlaces;
+        var decSep = currency.decimalSeparator;
+        var symbol = currency.symbol;
+        var symbolPos = currency.symbolPosition;
+        
+        if (decPlaces === undefined || !decSep || !symbol || !symbolPos) {
+            throw new Error('[FieldsetBuilder] Currency data incomplete for: ' + currencyCode);
+        }
         
         // Build the numeric part
         var numPart;
@@ -775,14 +790,10 @@ const FieldsetBuilder = (function(){
         }
         
         // Add symbol in correct position
-        if (symbol) {
-            if (symbolPos === 'right') {
-                input.placeholder = numPart + ' ' + symbol;
-            } else {
-                input.placeholder = symbol + numPart;
-            }
+        if (symbolPos === 'right') {
+            input.placeholder = numPart + ' ' + symbol;
         } else {
-            input.placeholder = numPart;
+            input.placeholder = symbol + numPart;
         }
     }
     
@@ -2424,18 +2435,10 @@ const FieldsetBuilder = (function(){
                 }
                 
                 function spUpdateAllPricePlaceholders() {
-                    // Find all pricing tier blocks and update their price inputs
-                    var tierBlocks = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block');
-                    tierBlocks.forEach(function(block) {
-                        // Price input is in the second row (after tier name row)
-                        var rows = block.querySelectorAll('.fieldset-row');
-                        if (rows.length >= 2) {
-                            var priceRow = rows[1];
-                            var priceInput = priceRow.querySelector('.fieldset-input');
-                            if (priceInput) {
-                                updatePricePlaceholder(priceInput, spTicketCurrencyState.code);
-                            }
-                        }
+                    // Find all session pricing price inputs directly by class
+                    var priceInputs = fieldset.querySelectorAll('.fieldset-sessionpricing-input-price');
+                    priceInputs.forEach(function(inp) {
+                        updatePricePlaceholder(inp, spTicketCurrencyState.code);
                     });
                 }
                 
@@ -2583,7 +2586,7 @@ const FieldsetBuilder = (function(){
                     priceSub.className = 'fieldset-sublabel';
                     priceSub.textContent = 'Price';
                     var priceInput = document.createElement('input');
-                    priceInput.className = 'fieldset-input input-class-1';
+                    priceInput.className = 'fieldset-sessionpricing-input-price fieldset-input input-class-1';
                     // Set placeholder based on current currency (if selected)
                     updatePricePlaceholder(priceInput, spTicketCurrencyState.code);
                     spAttachMoneyInputBehavior(priceInput);
