@@ -1952,11 +1952,34 @@ const PostModule = (function() {
     var countryCode = '';
     var displayText = raw;
 
-    // Detect [cc] pattern (e.g., "[us] $10.00")
+    // 1. Detect [cc] pattern (e.g., "[us] $10.00")
     var match = raw.match(/^\[([a-z0-9_-]+)\]\s*(.*)$/i);
     if (match) {
       countryCode = match[1].toLowerCase();
       displayText = match[2].trim();
+    } else {
+      // 2. Fallback: Detect ISO code at the end (e.g., "$10.00 USD")
+      // This handles old data and cases where prefix wasn't saved.
+      var isoMatch = raw.match(/\s+([A-Z]{3})$/);
+      if (isoMatch) {
+        var isoCode = isoMatch[1];
+        // Look up country code from CurrencyComponent if available
+        if (window.CurrencyComponent && typeof CurrencyComponent.getCurrencyByCode === 'function') {
+          // We might need to try both the raw ISO and variants like ISO-L/ISO-R
+          var variants = [isoCode, isoCode + '-L', isoCode + '-R'];
+          var currData = null;
+          for (var i = 0; i < variants.length; i++) {
+            currData = CurrencyComponent.getCurrencyByCode(variants[i]);
+            if (currData) break;
+          }
+
+          if (currData && currData.filename) {
+            countryCode = currData.filename.replace('.svg', '').toLowerCase();
+            // Remove the ISO code from the display text as requested
+            displayText = raw.substring(0, isoMatch.index).trim();
+          }
+        }
+      }
     }
 
     var flagUrl = '';

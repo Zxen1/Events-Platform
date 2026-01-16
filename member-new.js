@@ -206,6 +206,9 @@ const MemberModule = (function() {
         if (window.CountryComponent && typeof CountryComponent.loadFromDatabase === 'function') {
             CountryComponent.loadFromDatabase();
         }
+        if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function') {
+            CurrencyComponent.loadFromDatabase();
+        }
         // Avatar filenames are loaded via ensureSiteAvatarFilenames() which is already called in showPanel()
         
         cacheElements();
