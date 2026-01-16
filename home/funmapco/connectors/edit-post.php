@@ -369,6 +369,9 @@ foreach ($byLoc as $locNum => $entries) {
         $card['price_summary'] = trim($sessionPricing['price_summary']);
         $hasTicketPrice = true;
       }
+      if ($sessionPricing && !empty($sessionPricing['session_summary'])) {
+        $card['session_summary'] = trim($sessionPricing['session_summary']);
+      }
       continue;
     }
     if ($baseType === 'sessions') {
@@ -449,26 +452,7 @@ foreach ($byLoc as $locNum => $entries) {
     }
   }
 
-  // session_summary
-  $sessionsForSummary = $sessions;
-  if (is_array($sessionPricing) && isset($sessionPricing['sessions']) && is_array($sessionPricing['sessions'])) {
-    $sessionsForSummary = $sessionPricing['sessions'];
-  }
-  $allSessionDates = [];
-  if (is_array($sessionsForSummary)) {
-    foreach ($sessionsForSummary as $s0) {
-      if (!is_array($s0)) continue;
-      $d = $s0['date'] ?? null;
-      if ($d && is_string($d)) $allSessionDates[] = $d;
-    }
-  }
-  if (!empty($allSessionDates)) {
-    sort($allSessionDates);
-    $card['session_summary'] = json_encode([
-      'start' => $allSessionDates[0],
-      'end' => $allSessionDates[count($allSessionDates) - 1]
-    ], JSON_UNESCAPED_UNICODE);
-  }
+  // No recalculation needed: session_summary and price_summary are now provided by the frontend payload
 
   // Insert map card
   $stmtCard = $mysqli->prepare("INSERT INTO post_map_cards (post_id, subcategory_key, title, description, custom_text, custom_textarea, custom_dropdown, custom_checklist, custom_radio, public_email, phone_prefix, public_phone, venue_name, address_line, city, latitude, longitude, country_code, age_rating, website_url, tickets_url, coupon_code, session_summary, price_summary, amenity_summary, created_at, updated_at)

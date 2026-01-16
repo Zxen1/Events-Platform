@@ -1007,11 +1007,14 @@ const PostModule = (function() {
    * @returns {string} Formatted date string or empty
    */
   function formatPostDates(post) {
-    // Get sessions from first map card
+    // 1. Try pre-formatted session_summary from first map card (fast display)
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-    if (!mapCard) return '';
+    if (mapCard && mapCard.session_summary && typeof mapCard.session_summary === 'string' && mapCard.session_summary.trim() !== '' && mapCard.session_summary.indexOf('{') !== 0) {
+      return mapCard.session_summary;
+    }
 
-    // Try sessions array
+    // 2. Fallback to sessions array (backwards compatibility / initial load)
+    if (!mapCard) return '';
     var sessions = mapCard.sessions;
     if (!Array.isArray(sessions) || !sessions.length) return '';
 
@@ -1032,10 +1035,11 @@ const PostModule = (function() {
     if (!firstDate) return '';
 
     // Format: "Jan 1 - Jan 15" or just "Jan 1" if same/single
+    // Format: "Sun 16 Jan - Fri 20 Jan" or just "Sun 16 Jan" if same/single
     if (firstDate === lastDate || sortedSessions.length === 1) {
-      return formatDateShort(firstDate);
+      return App.formatDateShort(firstDate);
     }
-    return formatDateShort(firstDate) + ' - ' + formatDateShort(lastDate);
+    return App.formatDateShort(firstDate) + ' - ' + App.formatDateShort(lastDate);
   }
 
   /**
@@ -1044,16 +1048,7 @@ const PostModule = (function() {
    * @returns {string} Formatted date like "Jan 1"
    */
   function formatDateShort(dateStr) {
-    if (!dateStr) return '';
-    try {
-      var d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
-    } catch (e) {
-      return dateStr;
-    }
+    return App.formatDateShort(dateStr);
   }
 
   /**

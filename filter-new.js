@@ -1135,11 +1135,7 @@ const FilterModule = (function() {
     }
     
     function formatDateShort(date) {
-        if (!date) return '';
-        var d = new Date(date);
-        var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+        return App.formatDateShort(date);
     }
     
     function resetAllFilters() {

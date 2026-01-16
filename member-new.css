@@ -1510,8 +1510,8 @@
 
 .member-mypost-edit-accordion,
 .member-mypost-manage-accordion {
-  margin-top: 10px;
-  padding: 10px;
+  margin-top: 12px; /* 10-12-6 Rule: 12px between sibling containers */
+  padding: 10px 10px 0; /* Visible containers use padding: 10px 10px 0 */
   background: #1a1a1a;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 5px;
@@ -1529,11 +1529,11 @@
 }
 
 .member-mypost-manage-content {
-  padding: 5px 0;
+  padding: 0;
 }
 
 .member-mypost-manage-section {
-  margin-bottom: 15px;
+  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
 }
 
 .member-mypost-manage-section:last-child {

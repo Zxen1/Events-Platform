@@ -3930,6 +3930,18 @@ const MemberModule = (function() {
                         sessionsOut.push({ date: dateStr2, times: times2 });
                     }
 
+                    // Generate pre-formatted session_summary for fast display
+                    var sessionSummary = '';
+                    if (dates2.length > 0) {
+                        var firstDate = dates2[0];
+                        var lastDate = dates2[dates2.length - 1];
+                        if (firstDate === lastDate) {
+                            sessionSummary = App.formatDateShort(firstDate);
+                        } else {
+                            sessionSummary = App.formatDateShort(firstDate) + ' - ' + App.formatDateShort(lastDate);
+                        }
+                    }
+
                     // Ticket pricing groups: { [ticket_group_key]: [ { seating_area, tiers:[...] } ] }
                     // Age ratings per group: { [ticket_group_key]: 'rating_value' }
                     var pricingGroups = {};
@@ -4022,6 +4034,7 @@ const MemberModule = (function() {
                         sessions: sessionsOut,
                         pricing_groups: pricingGroups,
                         age_ratings: ageRatings,
+                        session_summary: sessionSummary,
                         price_summary: priceSummary
                     };
                 } catch (e33) {

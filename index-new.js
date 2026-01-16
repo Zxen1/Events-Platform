@@ -294,6 +294,31 @@ const App = (function() {
     return folderPath;
   }
 
+  /**
+   * Format a date string into "Sun 16 Jan" format.
+   * Includes year only if it's not the current year.
+   * @param {string} dateStr - YYYY-MM-DD format
+   * @returns {string} Formatted date
+   */
+  function formatDateShort(dateStr) {
+    if (!dateStr) return '';
+    try {
+      var d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      var formatted = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+      
+      var currentYear = new Date().getFullYear();
+      if (d.getFullYear() !== currentYear) {
+        formatted += ', ' + d.getFullYear();
+      }
+      return formatted;
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
 
   /* --------------------------------------------------------------------------
      SHARED STATE
@@ -843,7 +868,8 @@ const App = (function() {
     
     // Image URL helpers
     getImageUrl,
-    getImageFolder
+    getImageFolder,
+    formatDateShort
   };
 
 })();

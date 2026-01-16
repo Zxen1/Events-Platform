@@ -488,43 +488,48 @@ const MarqueeModule = (function() {
     if (!dates) return 'Dates TBA';
     
     // If string, return as-is
-    if (typeof dates === 'string') return dates;
+    if (typeof dates === 'string') {
+      // If it's a JSON string, try to parse it (legacy fallback)
+      if (dates.indexOf('{') === 0) {
+        try {
+          const parsed = JSON.parse(dates);
+          if (parsed.start) {
+            if (parsed.end && parsed.end !== parsed.start) {
+              return App.formatDateShort(parsed.start) + ' - ' + App.formatDateShort(parsed.end);
+            }
+            return App.formatDateShort(parsed.start);
+          }
+        } catch (e) {}
+      }
+      return dates;
+    }
     
     // If array with start/end
     if (Array.isArray(dates) && dates.length > 0) {
       const start = dates[0];
       const end = dates[dates.length - 1];
-      if (start === end) return formatDate(start);
-      return formatDate(start) + ' - ' + formatDate(end);
+      if (start === end) return App.formatDateShort(start);
+      return App.formatDateShort(start) + ' - ' + App.formatDateShort(end);
     }
     
     // If object with start/end
     if (dates.start) {
       if (dates.end && dates.end !== dates.start) {
-        return formatDate(dates.start) + ' - ' + formatDate(dates.end);
+        return App.formatDateShort(dates.start) + ' - ' + App.formatDateShort(dates.end);
       }
-      return formatDate(dates.start);
+      return App.formatDateShort(dates.start);
     }
     
     return 'Dates TBA';
   }
-  
+
   /**
    * Format a single date
    * @param {string|Date} date - Date to format
    * @returns {string} Formatted date
    */
   function formatDate(date) {
-    if (!date) return '';
-    try {
-      const d = new Date(date);
-      if (isNaN(d.getTime())) return String(date);
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
-    } catch (e) {
-      return String(date);
-    }
+    return App.formatDateShort(date);
   }
   
   /**
