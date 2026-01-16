@@ -207,6 +207,70 @@ function normalize_price_amount($value): ?string
   return number_format((float) $filtered, 2, '.', '');
 }
 
+function load_bunny_settings(mysqli $mysqli): array
+{
+  $out = [
+    'folder_post_images' => '',
+    'storage_api_key' => '',
+    'storage_zone_name' => '',
+    'image_min_width' => 1000,
+    'image_min_height' => 1000,
+    'image_max_size' => 5242880, // 5MB default
+  ];
+  $res = $mysqli->query("SELECT setting_key, setting_value FROM admin_settings WHERE setting_key IN ('folder_post_images','storage_api_key','storage_zone_name','image_min_width','image_min_height','image_max_size')");
+  if ($res) {
+    while ($row = $res->fetch_assoc()) {
+      $k = $row['setting_key'] ?? '';
+      $v = isset($row['setting_value']) ? trim((string)$row['setting_value']) : '';
+      if ($k === 'image_min_width' || $k === 'image_min_height' || $k === 'image_max_size') {
+        $out[$k] = (int)$v ?: $out[$k];
+      } elseif (array_key_exists($k, $out)) {
+        $out[$k] = $v;
+      }
+    }
+    $res->free();
+  }
+  return $out;
+}
+
+function bunny_upload_bytes(string $storageApiKey, string $storageZoneName, string $fullPath, string $bytes, int &$httpCodeOut, string &$respOut): bool
+{
+  $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . ltrim($fullPath, '/');
+  $ch = curl_init($apiUrl);
+  curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST => 'PUT',
+    CURLOPT_POSTFIELDS => $bytes,
+    CURLOPT_HTTPHEADER => [
+      'AccessKey: ' . $storageApiKey,
+      'Content-Type: application/octet-stream',
+    ],
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 60,
+  ]);
+  $resp = curl_exec($ch);
+  $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  curl_close($ch);
+  $httpCodeOut = $httpCode;
+  $respOut = is_string($resp) ? $resp : '';
+  return ($httpCode >= 200 && $httpCode < 300);
+}
+
+function bunny_delete_path(string $storageApiKey, string $storageZoneName, string $fullPath): void
+{
+  $apiUrl = 'https://storage.bunnycdn.com/' . $storageZoneName . '/' . ltrim($fullPath, '/');
+  $ch = curl_init($apiUrl);
+  curl_setopt_array($ch, [
+    CURLOPT_CUSTOMREQUEST => 'DELETE',
+    CURLOPT_HTTPHEADER => [
+      'AccessKey: ' . $storageApiKey,
+    ],
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 30,
+  ]);
+  curl_exec($ch);
+  curl_close($ch);
+}
+
 function bind_statement_params(mysqli_stmt $stmt, string $types, ...$params): bool
 {
   if ($types === '') return true;
@@ -247,6 +311,105 @@ $transactionActive = true;
 
 // 1. Update primary post entry
 $fieldsArr = $data['fields'] ?? [];
+
+// IMAGE UPLOAD (identically to add-post.php, but using existing $postId)
+$existingMediaIds = [];
+$newMediaIds = [];
+
+// Extract existing media IDs from the images fieldset if present
+foreach ($fieldsArr as $fld) {
+  $fType = preg_replace('/(-locked|-hidden)$/', '', (string)($fld['type'] ?? ''));
+  if ($fType === 'images' && is_array($fld['value'])) {
+    foreach ($fld['value'] as $img) {
+      if (isset($img['id']) && (int)$img['id'] > 0) {
+        $existingMediaIds[] = (int)$img['id'];
+      }
+    }
+  }
+}
+
+if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
+  $settings = load_bunny_settings($mysqli);
+  $folder = rtrim((string)$settings['folder_post_images'], '/');
+  if ($folder !== '') {
+    $isExternal = preg_match('#^https?://#i', $folder);
+    if ($isExternal) {
+      $storageApiKey = (string)$settings['storage_api_key'];
+      $storageZoneName = (string)$settings['storage_zone_name'];
+      $cdnPath = preg_replace('#^https?://[^/]+/#', '', $folder);
+      $cdnPath = rtrim((string)$cdnPath, '/');
+    } else {
+      $localBasePath = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/') . '/' . ltrim($folder, '/');
+    }
+
+    $utcMinus12 = new DateTimeZone('Etc/GMT+12');
+    $now = new DateTime('now', $utcMinus12);
+    $monthFolder = $now->format('Y-m');
+
+    $imgMeta = [];
+    if (!empty($_POST['images_meta'])) {
+      $m = json_decode((string)$_POST['images_meta'], true);
+      if (is_array($m)) $imgMeta = $m;
+    }
+
+    $count = count($_FILES['images']['name']);
+    $stmtMedia = $mysqli->prepare("INSERT INTO post_media (member_id, post_id, file_name, file_url, file_size, settings_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
+    if ($stmtMedia) {
+      $imageMinWidth = (int)($settings['image_min_width'] ?? 1000);
+      $imageMinHeight = (int)($settings['image_min_height'] ?? 1000);
+      $imageMaxSize = (int)($settings['image_max_size'] ?? 5242880);
+
+      for ($i = 0; $i < $count; $i++) {
+        $tmp = $_FILES['images']['tmp_name'][$i] ?? '';
+        if (!$tmp || !is_uploaded_file($tmp)) continue;
+        
+        $fileSize = (int)($_FILES['images']['size'][$i] ?? 0);
+        if ($fileSize > $imageMaxSize) continue;
+        
+        $imageInfo = @getimagesize($tmp);
+        if ($imageInfo === false || $imageInfo[0] < $imageMinWidth || $imageInfo[1] < $imageMinHeight) continue;
+        
+        $origName = (string)($_FILES['images']['name'][$i] ?? 'image');
+        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+        if ($ext === '') $ext = 'jpg';
+        $hash = substr(md5(uniqid('', true) . random_bytes(8)), 0, 6);
+        $finalFilename = $postId . '-' . $hash . '.' . $ext;
+
+        $bytes = file_get_contents($tmp);
+        if ($bytes === false) continue;
+        
+        if ($isExternal) {
+          $fullPath = $cdnPath . '/' . $monthFolder . '/' . $finalFilename;
+          $hCode = 0; $hResp = '';
+          if (bunny_upload_bytes($storageApiKey, $storageZoneName, $fullPath, $bytes, $hCode, $hResp)) {
+            $publicUrl = $folder . '/' . $monthFolder . '/' . $finalFilename;
+          } else { continue; }
+        } else {
+          $localDir = $localBasePath . '/' . $monthFolder;
+          if (!is_dir($localDir)) { mkdir($localDir, 0755, true); }
+          $localPath = $localDir . '/' . $finalFilename;
+          if (file_put_contents($localPath, $bytes) !== false) {
+            $publicUrl = '/' . ltrim($folder, '/') . '/' . $monthFolder . '/' . $finalFilename;
+          } else { continue; }
+        }
+        
+        $settingsJson = null;
+        if (isset($imgMeta[$i]) && is_array($imgMeta[$i])) {
+          $settingsJson = json_encode($imgMeta[$i], JSON_UNESCAPED_UNICODE);
+        }
+        $stmtMedia->bind_param('iissis', $memberId, $postId, $finalFilename, $publicUrl, $fileSize, $settingsJson);
+        if ($stmtMedia->execute()) {
+          $newMediaIds[] = $stmtMedia->insert_id;
+        }
+      }
+      $stmtMedia->close();
+    }
+  }
+}
+
+$allMediaIds = array_merge($existingMediaIds, $newMediaIds);
+$mediaString = !empty($allMediaIds) ? implode(',', $allMediaIds) : null;
+
 $checkoutTitle = null;
 foreach ($fieldsArr as $fld) {
   if (isset($fld['key']) && strtolower(trim($fld['key'])) === 'checkout') {
@@ -431,6 +594,15 @@ foreach ($byLoc as $locNum => $entries) {
       $card['age_rating'] = trim($val);
       continue;
     }
+    if ($baseType === 'images' && is_array($val)) {
+      // Collect existing media IDs from the fieldset value (sent as array of objects)
+      foreach ($val as $img) {
+        if (isset($img['id']) && (int)$img['id'] > 0) {
+          $existingMediaIds[] = (int)$img['id'];
+        }
+      }
+      continue;
+    }
     if ($baseType === 'venue' && is_array($val)) {
       $card['venue_name'] = isset($val['venue_name']) ? trim((string)$val['venue_name']) : null;
       $card['address_line'] = isset($val['address_line']) ? trim((string)$val['address_line']) : null;
@@ -463,11 +635,10 @@ foreach ($byLoc as $locNum => $entries) {
     $lat = (float)($card['latitude'] ?? 0);
     $lng = (float)($card['longitude'] ?? 0);
     $timezone = null;
-    $mediaIds = null; // We use media_urls from loc0 but post_map_cards stores media_ids as reference
     
     $stmtCard->bind_param(
       'issssssssssssssddssssssssss',
-      $postId, $subcategoryKey, $card['title'], $card['description'], $mediaIds,
+      $postId, $subcategoryKey, $card['title'], $card['description'], $mediaString,
       $card['custom_text'], $card['custom_textarea'], $card['custom_dropdown'], $card['custom_checklist'], $card['custom_radio'],
       $card['public_email'], $card['phone_prefix'], $card['public_phone'],
       $card['venue_name'], $card['address_line'], $card['city'],
@@ -567,7 +738,7 @@ foreach ($byLoc as $locNum => $entries) {
   }
 }
 
-// 4. Revision
+// 5. Revision
 $revJson = json_encode($data, JSON_UNESCAPED_UNICODE);
 $stmtRev = $mysqli->prepare("INSERT INTO post_revisions (post_id, post_title, editor_id, editor_name, change_type, change_summary, data_json, created_at, updated_at) VALUES (?, ?, ?, ?, 'edit', 'Edited', ?, NOW(), NOW())");
 if ($stmtRev) {

@@ -1149,11 +1149,11 @@ const PostModule = (function() {
     var subInfo = getSubcategoryInfo(subcategoryKey);
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Format dates (if sessions exist)
-    var datesText = formatPostDates(post);
+    // Format dates (if sessions exist) - use pre-formatted session_summary from database
+    var datesText = (mapCard ? mapCard.session_summary : post.session_summary) || '';
 
     // Format price summary
-    var priceParts = parsePriceSummary(mapCard ? mapCard.price_summary : '');
+    var priceParts = parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary || '');
 
     // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
     // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
@@ -2228,8 +2228,8 @@ const PostModule = (function() {
     var subInfo = getSubcategoryInfo(subcategoryKey);
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
-    // Format dates
-    var datesText = formatPostDates(post);
+    // Format dates - use pre-formatted session_summary from database
+    var datesText = (loc0 ? loc0.session_summary : post.session_summary) || '';
 
     // Posted by info
     var posterName = post.member_name || 'Anonymous';
@@ -2247,8 +2247,9 @@ const PostModule = (function() {
       priceHtml = '<span>' + badge + escapeHtml(priceParts.text) + '</span>';
     }
 
+    // Sort postcards/marquee/info text order: Date range comes BEFORE Price range.
     var defaultInfo = datesText
-      ? ((priceHtml ? (priceHtml + ' | ') : '') + '📅 ' + datesText)
+      ? ('📅 ' + datesText + (priceHtml ? (' | ' + priceHtml) : ''))
       : (priceHtml ? priceHtml : '');
 
     // Check favorite status

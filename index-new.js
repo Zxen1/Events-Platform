@@ -303,7 +303,8 @@ const App = (function() {
   function formatDateShort(dateStr) {
     if (!dateStr) return '';
     try {
-      var d = new Date(dateStr);
+      // If only date provided (YYYY-MM-DD), append time to avoid UTC shift
+      var d = (typeof dateStr === 'string' && dateStr.length === 10) ? new Date(dateStr + 'T00:00:00') : new Date(dateStr);
       if (isNaN(d.getTime())) return dateStr;
       var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

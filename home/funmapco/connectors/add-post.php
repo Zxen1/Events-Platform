@@ -1034,11 +1034,11 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
 }
 
 // Update map cards with media_ids (same list for now)
-if ($mediaIds) {
-  $mediaJson = json_encode($mediaIds, JSON_UNESCAPED_UNICODE);
+if (!empty($mediaIds)) {
+  $mediaString = implode(',', $mediaIds);
   $stmtUpd = $mysqli->prepare("UPDATE post_map_cards SET media_ids = ? WHERE post_id = ?");
   if ($stmtUpd) {
-    $stmtUpd->bind_param('si', $mediaJson, $insertId);
+    $stmtUpd->bind_param('si', $mediaString, $insertId);
     $stmtUpd->execute();
     $stmtUpd->close();
   }

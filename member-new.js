@@ -3963,6 +3963,7 @@ const MemberModule = (function() {
                         if (firstDate === lastDate) {
                             sessionSummary = App.formatDateShort(firstDate);
                         } else {
+                            // Ensure same format as price summary: simple text for postcards/marquee
                             sessionSummary = App.formatDateShort(firstDate) + ' - ' + App.formatDateShort(lastDate);
                         }
                     }

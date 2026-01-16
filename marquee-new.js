@@ -328,10 +328,8 @@ const MarqueeModule = (function() {
     
     const iconUrl = post.subcategory_icon_url || post.subIcon || (window.PostModule && typeof PostModule.getSubcategoryIconUrl === 'function' ? PostModule.getSubcategoryIconUrl(subcategoryKey) : '');
 
-    // Format dates
-    const datesText = (window.PostModule && typeof PostModule.formatPostDates === 'function')
-      ? PostModule.formatPostDates(post)
-      : formatDates(post.dates || (mapCard && mapCard.session_summary));
+    // Format dates - use pre-formatted session_summary from database
+    const datesText = (mapCard ? mapCard.session_summary : post.session_summary) || '';
 
     // Format price summary
     const priceParts = (window.PostModule && typeof PostModule.parsePriceSummary === 'function')

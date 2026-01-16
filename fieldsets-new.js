@@ -3627,11 +3627,7 @@ const FieldsetBuilder = (function(){
                         } catch (e0) {}
                     } else {
                         try {
-                            var d0 = new Date(sortedDates[0] + 'T00:00:00');
-                            var wd0 = d0.toLocaleDateString('en-AU', { weekday: 'short' });
-                            var dm0 = d0.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-                            var yy0 = d0.toLocaleDateString('en-AU', { year: 'numeric' });
-                            spDatePickerBox.textContent = (wd0 + ' ' + dm0 + ', ' + yy0).replace(/\s+/g, ' ').trim();
+                            spDatePickerBox.textContent = App.formatDateShort(sortedDates[0]);
                         } catch (eFmt0) {
                             spDatePickerBox.textContent = sortedDates[0];
                         }
@@ -3647,14 +3643,10 @@ const FieldsetBuilder = (function(){
                                 var dateDisplay = document.createElement('div');
                                 dateDisplay.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--selected button-class-4';
                                 dateDisplay.dataset.iso = dateStr;
-                                var d = new Date(dateStr + 'T00:00:00');
                                 try {
-                                    var wd = d.toLocaleDateString('en-AU', { weekday: 'short' });
-                                    var dm = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
-                                    var yy = d.toLocaleDateString('en-AU', { year: 'numeric' });
-                                    dateDisplay.textContent = (wd + ' ' + dm + ', ' + yy).replace(/\s+/g, ' ').trim();
+                                    dateDisplay.textContent = App.formatDateShort(dateStr);
                                 } catch (eFmt) {
-                                    dateDisplay.textContent = d.toDateString();
+                                    dateDisplay.textContent = dateStr;
                                 }
                                 // Clicking any date box opens the date picker pop-up
                                 try {
