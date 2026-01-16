@@ -1425,3 +1425,18 @@ body {
 .member-myposts-placeholder--error .member-myposts-placeholder-card {
   border-color: var(--error-color, #f44336);
 }
+
+/* My Posts List */
+.member-myposts-status {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.member-myposts-status--error {
+  color: var(--error-color, #f44336);
+}
+
+.member-mypost-item {
+  margin-bottom: 12px;
+}

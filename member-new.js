@@ -1660,6 +1660,11 @@ const MemberModule = (function() {
     }
 
     function requestTabSwitch(tabName) {
+        // Clear editing state when switching TO create tab from elsewhere (unless triggered by editPost)
+        if (tabName === 'create' && isEditingPostId === null) {
+            resetCreatePostForm();
+        }
+
         // Only guard when leaving Profile tab with dirty edits
         var leavingProfile = false;
         if (tabButtons) {
@@ -1769,6 +1774,11 @@ const MemberModule = (function() {
         // Lazy load Create Post tab content
         if (tabName === 'create') {
             loadFormpicker();
+        }
+        
+        // Load user's posts when My Posts tab is activated
+        if (tabName === 'myposts') {
+            loadMyPosts();
         }
         
         // Initialize Register tab content when activated
@@ -3059,11 +3069,12 @@ const MemberModule = (function() {
                 '<div class="member-myposts-placeholder-text">Posted!</div>';
             placeholder.classList.add('member-myposts-placeholder--success');
             
-            // Remove after a short delay (the real post list will be loaded)
+            // Remove after a short delay and refresh the list
             setTimeout(function() {
                 if (placeholder.parentNode) {
                     placeholder.parentNode.removeChild(placeholder);
                 }
+                loadMyPosts();
             }, 2000);
         } else {
             // Show error state
@@ -3079,6 +3090,250 @@ const MemberModule = (function() {
                 }
             }, 4000);
         }
+    }
+
+    /* --------------------------------------------------------------------------
+       MY POSTS LIST
+       -------------------------------------------------------------------------- */
+    function loadMyPosts() {
+        if (!myPostsPanel || !currentUser) return;
+        
+        // Show loading state if empty
+        if (myPostsPanel.innerHTML === '') {
+            myPostsPanel.innerHTML = '<p class="member-myposts-status">Loading your posts...</p>';
+        }
+        
+        var memberId = parseInt(currentUser.id, 10);
+        if (!memberId) return;
+
+        fetch('/gateway.php?action=get-posts&member_id=' + memberId)
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.success && Array.isArray(res.posts)) {
+                    renderMyPosts(res.posts);
+                } else {
+                    myPostsPanel.innerHTML = '<p class="member-myposts-status">You haven\'t created any posts yet.</p>';
+                }
+            })
+            .catch(function(err) {
+                console.error('[Member] Failed to load my posts:', err);
+                myPostsPanel.innerHTML = '<p class="member-myposts-status member-myposts-status--error">Failed to load posts.</p>';
+            });
+    }
+
+    function renderMyPosts(posts) {
+        if (!myPostsPanel) return;
+        
+        if (!posts || posts.length === 0) {
+            myPostsPanel.innerHTML = '<p class="member-myposts-status">You haven\'t created any posts yet.</p>';
+            return;
+        }
+
+        // Keep the uploading placeholder if it exists
+        var placeholder = document.getElementById('member-myposts-uploading');
+        myPostsPanel.innerHTML = '';
+        if (placeholder) {
+            myPostsPanel.appendChild(placeholder);
+        }
+
+        posts.forEach(function(post) {
+            var card = renderMyPostCard(post);
+            myPostsPanel.appendChild(card);
+        });
+    }
+
+    function renderMyPostCard(post) {
+        // Reuse PostModule's rendering logic but wrap it with an Edit button
+        var container = document.createElement('div');
+        container.className = 'member-mypost-item';
+        
+        // Use PostModule if available, otherwise fallback to simple display
+        var cardEl = null;
+        if (window.PostModule && typeof PostModule.renderPostCard === 'function') {
+            cardEl = PostModule.renderPostCard(post);
+        } else {
+            cardEl = document.createElement('div');
+            cardEl.className = 'post-card';
+            cardEl.textContent = post.checkout_title || 'Post #' + post.id;
+        }
+        
+        // Add Edit button to the card actions container
+        var actionsContainer = cardEl.querySelector('.post-card-container-actions');
+        if (actionsContainer) {
+            var editBtn = document.createElement('button');
+            editBtn.className = 'post-card-button-edit button-class-1';
+            editBtn.title = 'Edit Post';
+            editBtn.innerHTML = 'Edit';
+            editBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                editPost(post.id);
+            });
+            // Insert before favorite button
+            actionsContainer.insertBefore(editBtn, actionsContainer.firstChild);
+        }
+
+        container.appendChild(cardEl);
+        return container;
+    }
+
+    function editPost(postId) {
+        if (!postId || !currentUser) return;
+        
+        // Show status
+        showStatus('Loading post data...', { success: true });
+        
+        // Fetch full post data
+        fetch('/gateway.php?action=get-posts&post_id=' + postId)
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res && res.success && res.posts && res.posts.length > 0) {
+                    var post = res.posts[0];
+                    loadPostIntoForm(post);
+                } else {
+                    showStatus('Failed to load post data.', { error: true });
+                }
+            })
+            .catch(function(err) {
+                console.error('[Member] Failed to fetch post for edit:', err);
+                showStatus('Failed to load post data.', { error: true });
+            });
+    }
+
+    function loadPostIntoForm(post) {
+        if (!post) return;
+        
+        // 1. Switch to create tab
+        switchTab('create');
+        
+        // 2. Set editing state
+        isEditingPostId = post.id;
+        
+        // 3. Update tab label and submit button
+        if (createTabBtn) createTabBtn.textContent = 'Edit Post';
+        
+        // 4. Pre-select category and subcategory
+        // Note: get-posts returns subcategory_key. We need to find the display name.
+        var categoryName = '';
+        var subcategoryName = '';
+        
+        for (var i = 0; i < memberCategories.length; i++) {
+            var cat = memberCategories[i];
+            if (cat.subs) {
+                for (var j = 0; j < cat.subs.length; j++) {
+                    var sub = cat.subs[j];
+                    var subKey = (typeof sub === 'string') ? sub : (sub && sub.name);
+                    var feeInfo = cat && cat.subFees && cat.subFees[subKey];
+                    var key = feeInfo && feeInfo.subcategory_key ? String(feeInfo.subcategory_key) : '';
+                    if (key === post.subcategory_key) {
+                        categoryName = cat.name;
+                        subcategoryName = subKey;
+                        break;
+                    }
+                }
+            }
+            if (categoryName) break;
+        }
+        
+        if (!categoryName || !subcategoryName) {
+            console.error('[Member] Could not resolve category/subcategory for post:', post.subcategory_key);
+            showStatus('This post uses a category that is no longer available.', { error: true });
+            return;
+        }
+
+        // Set selected values
+        selectedCategory = categoryName;
+        selectedSubcategory = subcategoryName;
+        
+        // Update formpicker UI
+        updateFormpickerSelections(categoryName, subcategoryName);
+        
+        // 5. Render fields and populate them
+        renderConfiguredFieldsWithData(post);
+    }
+
+    function updateFormpickerSelections(catName, subName) {
+        var catBtn = document.querySelector('#member-formpicker-cats .member-formpicker-menu-button');
+        var subBtn = document.querySelector('#member-formpicker-cats div[hidden=""] .member-formpicker-menu-button') 
+                  || document.querySelector('#member-formpicker-cats .member-formpicker-menu:last-child .member-formpicker-menu-button');
+        
+        if (catBtn) {
+            var text = catBtn.querySelector('.menu-text');
+            if (text) text.textContent = catName;
+        }
+        
+        if (subBtn) {
+            var text = subBtn.querySelector('.menu-text');
+            if (text) text.textContent = subName;
+            // Ensure subcategory wrapper is visible
+            var wrapper = subBtn.closest('.member-panel-field');
+            if (wrapper) wrapper.hidden = false;
+        }
+    }
+
+    function renderConfiguredFieldsWithData(post) {
+        if (!selectedCategory || !selectedSubcategory) return;
+
+        // Ensure FieldsetBuilder is ready
+        if (window.FieldsetBuilder && typeof FieldsetBuilder.loadFromDatabase === 'function') {
+            if (!renderConfiguredFields._fieldsetLoadPromise) {
+                renderConfiguredFields._fieldsetLoadPromise = FieldsetBuilder.loadFromDatabase();
+            }
+            renderConfiguredFields._fieldsetLoadPromise.then(function() {
+                renderConfiguredFields._renderBodyWithData(post);
+            });
+            return;
+        }
+
+        renderConfiguredFields._renderBodyWithData(post);
+    }
+
+    renderConfiguredFields._renderBodyWithData = function(post) {
+        // First render the normal empty fields
+        renderConfiguredFields._renderBody();
+        
+        // Then populate them with post data
+        populateFormWithPostData(post);
+        
+        // Update submit button text
+        if (submitBtn) submitBtn.textContent = 'Save Changes';
+        if (adminSubmitBtn) adminSubmitBtn.textContent = 'Save Changes';
+    };
+
+    function populateFormWithPostData(post) {
+        if (!post || !post.map_cards || post.map_cards.length === 0) return;
+        
+        var mapCard = post.map_cards[0]; // Currently supporting single map card edit
+        
+        // Map card fields
+        var fields = [
+            { key: 'title', value: mapCard.title },
+            { key: 'description', value: mapCard.description },
+            { key: 'venue_name', value: mapCard.venue_name },
+            { key: 'address_line', value: mapCard.address_line },
+            { key: 'city', value: mapCard.city },
+            { key: 'public_email', value: mapCard.public_email },
+            { key: 'public_phone', value: mapCard.public_phone },
+            { key: 'website_url', value: mapCard.website_url },
+            { key: 'tickets_url', value: mapCard.tickets_url },
+            { key: 'coupon_code', value: mapCard.coupon_code },
+            { key: 'custom_text', value: mapCard.custom_text },
+            { key: 'custom_textarea', value: mapCard.custom_textarea }
+        ];
+
+        fields.forEach(function(f) {
+            if (f.value !== null && f.value !== undefined) {
+                var input = formFields.querySelector('[data-fieldset-key="' + f.key + '"] input, [data-fieldset-key="' + f.key + '"] textarea');
+                if (input) {
+                    input.value = f.value;
+                    // Trigger input event for character counts etc.
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+        });
+
+        // TODO: Handle complex fieldsets (images, sessions, pricing, checkout)
+        // This will require more specific logic for each field type.
     }
     
     function escapeHtml(str) {
@@ -3571,6 +3826,11 @@ const MemberModule = (function() {
                 loc_qty: window._memberLocationQuantity || 1,
                 fields: payload.fields
             };
+            
+            // Include post_id if editing
+            if (isEditingPostId) {
+                postData.post_id = isEditingPostId;
+            }
 
             var fd = new FormData();
             fd.set('payload', JSON.stringify(postData));
@@ -3585,7 +3845,8 @@ const MemberModule = (function() {
             fd.set('images_meta', imagesMeta || '[]');
             console.log('[Post] images_meta:', imagesMeta);
 
-            fetch('/gateway.php?action=add-post', {
+            var action = isEditingPostId ? 'edit-post' : 'add-post';
+            fetch('/gateway.php?action=' + action, {
                 method: 'POST',
                 body: fd
             })
@@ -3621,6 +3882,10 @@ const MemberModule = (function() {
         selectedCategory = '';
         selectedSubcategory = '';
         termsAgreed = false;
+        isEditingPostId = null;
+        
+        // Reset tab label and buttons
+        if (createTabBtn) createTabBtn.textContent = 'Create Post';
         
         // Hide form wrapper
         if (formWrapper) formWrapper.hidden = true;

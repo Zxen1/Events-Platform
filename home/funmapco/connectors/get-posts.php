@@ -119,6 +119,7 @@ try {
     $visibility = isset($_GET['visibility']) ? trim($_GET['visibility']) : 'active';
     $postId = isset($_GET['post_id']) ? intval($_GET['post_id']) : 0;
     $postKey = isset($_GET['post_key']) ? trim((string)$_GET['post_key']) : '';
+    $memberId = isset($_GET['member_id']) ? intval($_GET['member_id']) : 0;
     
     // Parse bounds for map viewport filtering (sw_lng,sw_lat,ne_lng,ne_lat)
     $bounds = null;
@@ -139,28 +140,31 @@ try {
     $params = [];
     $types = '';
 
-    // Visibility filter (expired toggle can widen this)
-    if ($includeExpired) {
-        $where[] = 'p.visibility IN (?, ?)';
-        $params[] = 'active';
-        $params[] = 'expired';
-        $types .= 'ss';
-    } elseif ($visibility !== '' && $visibility !== 'all') {
-        $where[] = 'p.visibility = ?';
-        $params[] = $visibility;
+    // If filtering by member_id, we show all their posts regardless of status
+    if ($memberId <= 0) {
+        // Visibility filter (expired toggle can widen this)
+        if ($includeExpired) {
+            $where[] = 'p.visibility IN (?, ?)';
+            $params[] = 'active';
+            $params[] = 'expired';
+            $types .= 'ss';
+        } elseif ($visibility !== '' && $visibility !== 'all') {
+            $where[] = 'p.visibility = ?';
+            $params[] = $visibility;
+            $types .= 's';
+        }
+
+        // Payment status (only show paid posts to public)
+        $where[] = 'p.payment_status = ?';
+        $params[] = 'paid';
         $types .= 's';
+
+        // Moderation status (only show clean or pending posts)
+        $where[] = 'p.moderation_status IN (?, ?)';
+        $params[] = 'clean';
+        $params[] = 'pending';
+        $types .= 'ss';
     }
-
-    // Payment status (only show paid posts to public)
-    $where[] = 'p.payment_status = ?';
-    $params[] = 'paid';
-    $types .= 's';
-
-    // Moderation status (only show clean or pending posts)
-    $where[] = 'p.moderation_status IN (?, ?)';
-    $params[] = 'clean';
-    $params[] = 'pending';
-    $types .= 'ss';
 
     // Subcategory filters
     //
@@ -229,6 +233,13 @@ try {
         $where[] = 'p.post_key = ?';
         $params[] = $postKey;
         $types .= 's';
+    }
+
+    // Member ID filter
+    if ($memberId > 0) {
+        $where[] = 'p.member_id = ?';
+        $params[] = $memberId;
+        $types .= 'i';
     }
 
     // Bounds filter (for map viewport)
