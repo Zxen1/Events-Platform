@@ -1215,10 +1215,10 @@ const PostModule = (function() {
           locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
           priceParts.text ? (function() {
-            var badge = priceParts.flagUrl 
-              ? '<img class="post-card-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; object-fit: contain; vertical-align: text-bottom;">'
-              : '<span class="post-card-badge" title="Price">💰</span>';
-            return '<div class="post-card-row-price">' + badge + '<span>' + escapeHtml(priceParts.text) + '</span></div>';
+            var badgeHtml = priceParts.flagUrl 
+              ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; object-fit: contain; vertical-align: middle; position: relative; top: -1px;">'
+              : '💰';
+            return '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
           })() : '',
         '</div>',
       '</div>',
@@ -2285,10 +2285,10 @@ const PostModule = (function() {
     var priceParts = parsePriceSummary(loc0.price_summary || '');
     var priceHtml = '';
     if (priceParts.text) {
-      var badge = priceParts.flagUrl 
-        ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain;">'
+      var badgeHtml = priceParts.flagUrl 
+        ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain; position: relative; top: -1px;">'
         : '💰 ';
-      priceHtml = '<span>' + badge + escapeHtml(priceParts.text) + '</span>';
+      priceHtml = '<span>' + badgeHtml + escapeHtml(priceParts.text) + '</span>';
     }
 
     // Sort postcards/marquee/info text order: Date range comes BEFORE Price range.

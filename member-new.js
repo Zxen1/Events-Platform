@@ -2633,7 +2633,7 @@ const MemberModule = (function() {
 
             // Locations 2+ are in separate containers (siblings of formWrapper)
             for (var i = 2; i <= qty; i++) {
-                var container = document.querySelector('.member-location-container[data-location-number="' + i + '"]');
+                var container = formFields.querySelector('.member-location-container[data-location-number="' + i + '"]');
                 var fs = container ? container.querySelector('.fieldset[data-fieldset-key="session_pricing"]') : null;
                 var iso = getMaxSelectedIso(fs);
                 result.push(iso ? daysToIso(iso) : 0);
@@ -2644,16 +2644,21 @@ const MemberModule = (function() {
 
         function updateCheckoutContext() {
             if (!checkoutInstance || typeof checkoutInstance.updateContext !== 'function') return;
+            
+            // Critical: locationCount must match the number of venueDays returned by getEventVenueDaysFromDom
+            var currentQty = window._memberLocationQuantity || 1;
+            var venueDays = getEventVenueDaysFromDom(currentQty);
+
             if (isEvent) {
                 checkoutInstance.updateContext({
                     surchargePercent: surchargePercent,
-                    locationCount: window._memberLocationQuantity || 1,
-                    eventVenueDays: getEventVenueDaysFromDom(window._memberLocationQuantity || 1)
+                    locationCount: currentQty,
+                    eventVenueDays: venueDays
                 });
             } else {
                 checkoutInstance.updateContext({
                     surchargePercent: surchargePercent,
-                    locationCount: window._memberLocationQuantity || 1
+                    locationCount: currentQty
                 });
             }
         }

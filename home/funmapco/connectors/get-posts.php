@@ -447,7 +447,7 @@ try {
     if (!empty($allMediaIds)) {
         $allMediaIds = array_unique($allMediaIds);
         $placeholders = implode(',', array_fill(0, count($allMediaIds), '?'));
-        $mediaStmt = $mysqli->prepare("SELECT id, file_url, original_filename, settings_json FROM `post_media` WHERE id IN ($placeholders) AND deleted_at IS NULL");
+        $mediaStmt = $mysqli->prepare("SELECT id, file_url, settings_json FROM `post_media` WHERE id IN ($placeholders) AND deleted_at IS NULL");
         if ($mediaStmt) {
             $types = str_repeat('i', count($allMediaIds));
             $mediaBind = $allMediaIds;
@@ -459,6 +459,7 @@ try {
                 $settings = !empty($mediaRow['settings_json']) ? json_decode($mediaRow['settings_json'], true) : [];
                 $cropRect = null;
                 $cropState = null;
+                $originalFilename = $settings['file_name'] ?? ''; // From metadata
 
                 if (is_array($settings) && !empty($settings['crop'])) {
                     $crop = $settings['crop'];
@@ -478,7 +479,7 @@ try {
                 $mediaUrlsById[$mediaId] = $url;
                 $mediaMetaById[$mediaId] = [
                     'media_id' => $mediaId,
-                    'original_filename' => $mediaRow['original_filename'],
+                    'original_filename' => $originalFilename,
                     'cropRect' => $cropRect,
                     'cropState' => $cropState
                 ];
