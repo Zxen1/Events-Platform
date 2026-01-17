@@ -35,56 +35,7 @@
   pointer-events: none;
 }
 
-.marquee--show {
-  display: block;
-}
-
-/* ============================================================================
-   MARQUEE CONTENT (inner container)
-   ============================================================================ */
-
-.marquee-content {
-  position: absolute;
-  top: calc(var(--header-h) + var(--safe-top));
-  bottom: auto;
-  right: 0;
-  width: 440px;
-  padding: 0;
-  background: rgba(0, 0, 0, 0.7);
-  pointer-events: auto;
-  z-index: 2;
-  transform: translateX(0);
-  transition: transform var(--panel-transition-duration, 0.3s) ease,
-              opacity var(--panel-transition-duration, 0.3s) ease;
-  will-change: transform, opacity;
-  height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  max-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  min-height: var(--panel-area-height, calc((var(--vh, 1vh) * 100) - var(--header-h) - var(--safe-top) - var(--footer-h)));
-  box-sizing: border-box;
-  overflow: hidden;
-  border-radius: 0px;
-}
-
-.marquee-content--side-left {
-  right: auto;
-  left: 0;
-  transform: translateX(-110%);
-}
-
-.marquee-content--side-right {
-  transform: translateX(110%);
-}
-
-.marquee-content--visible {
-  transform: translateX(0);
-  opacity: 1;
-}
-
-.marquee-content--hidden {
-  pointer-events: none;
-  opacity: 0;
-}
-
+/* Media Query to show only on large screens (1920px+) */
 @media (min-width: 1920px) {
   .marquee--show {
     display: block;
