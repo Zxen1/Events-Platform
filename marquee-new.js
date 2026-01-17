@@ -35,9 +35,12 @@ const MarqueeModule = (function() {
   'use strict';
 
   /* --------------------------------------------------------------------------
-     CONSTANTS
+     CONSTANTS & CONFIG
      -------------------------------------------------------------------------- */
-  const ROTATION_INTERVAL = 20000; // 20 seconds per slide
+  function getRotationInterval() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('marqueeRotationInterval') || 20000 : 20000;
+  }
+  
   const FADE_DURATION = 1500;      // 1.5 seconds fade transition
 
   /* --------------------------------------------------------------------------
@@ -45,11 +48,12 @@ const MarqueeModule = (function() {
      -------------------------------------------------------------------------- */
   let marqueeEl = null;           // .marquee element
   let contentEl = null;           // .marquee-content element
-  let posts = [];                 // Posts to display
+  let posts = [];                 // Posts to display (internal state for rotation)
   let currentIndex = -1;          // Current slide index
   let rotationTimer = null;       // Interval timer
   let postsKey = '';              // Cache key to detect changes
   let isVisible = false;          // Visibility state
+  let isInitialized = false;      // Module init state
 
   /* --------------------------------------------------------------------------
      INITIALIZATION
@@ -79,35 +83,8 @@ const MarqueeModule = (function() {
     App.on('marquee:show', show);
     App.on('marquee:hide', hide);
     App.on('marquee:toggle', toggle);
-
-    // Watch for window resize to handle 1920px rule
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
     
     console.log('[Marquee] Marquee module initialized');
-  }
-
-  /**
-   * Handle window resize - enforce 1920px visibility rule
-   */
-  function handleResize() {
-    let threshold = 1920;
-    if (window.App && typeof App.getConfig === 'function') {
-      const configVal = App.getConfig('marqueeWidthThreshold');
-      if (typeof configVal === 'number' && isFinite(configVal)) {
-        threshold = configVal;
-      }
-    }
-    const isWideEnough = window.innerWidth >= threshold;
-    if (isWideEnough) {
-      if (!isVisible && posts.length > 0) {
-        show();
-      }
-    } else {
-      if (isVisible) {
-        hide();
-      }
-    }
   }
 
   /* --------------------------------------------------------------------------
@@ -226,7 +203,7 @@ const MarqueeModule = (function() {
    */
   function startRotation() {
     if (rotationTimer) return;
-    rotationTimer = setInterval(showNextSlide, ROTATION_INTERVAL);
+    rotationTimer = setInterval(showNextSlide, getRotationInterval());
   }
   
   /**
@@ -322,19 +299,19 @@ const MarqueeModule = (function() {
 
     // Get subcategory info
     const subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
-    const subInfo = (window.PostModule && typeof PostModule.getSubcategoryInfo === 'function') 
-      ? PostModule.getSubcategoryInfo(subcategoryKey)
-      : { category: post.category || '', subcategory: post.subcategory || subcategoryKey };
+    const postModule = App.getModule('post');
+    if (!postModule) {
+      throw new Error('[Marquee] Post module required for category info');
+    }
     
-    const iconUrl = post.subcategory_icon_url || post.subIcon || (window.PostModule && typeof PostModule.getSubcategoryIconUrl === 'function' ? PostModule.getSubcategoryIconUrl(subcategoryKey) : '');
+    const subInfo = postModule.getSubcategoryInfo(subcategoryKey);
+    const iconUrl = post.subcategory_icon_url || postModule.getSubcategoryIconUrl(subcategoryKey);
 
     // Format dates - prioritizes pre-formatted session_summary from database
     const datesText = formatDates(mapCard ? mapCard.session_summary : post.session_summary);
 
     // Format price summary
-    const priceParts = (window.PostModule && typeof PostModule.parsePriceSummary === 'function')
-      ? PostModule.parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary)
-      : { flagUrl: '', countryCode: '', text: (mapCard ? mapCard.price_summary : post.price_summary || '') };
+    const priceParts = postModule.parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary);
 
     // 1. Title line
     const titleLine = document.createElement('div');
@@ -348,9 +325,8 @@ const MarqueeModule = (function() {
     
     if (iconUrl) {
       const iconWrap = document.createElement('span');
-      iconWrap.className = 'marquee-subicon';
+      iconWrap.className = 'marquee-slide-icon-sub';
       const iconImg = document.createElement('img');
-      iconImg.className = 'marquee-subicon-image';
       iconImg.src = iconUrl;
       iconImg.alt = '';
       iconWrap.appendChild(iconImg);
@@ -571,22 +547,27 @@ const MarqueeModule = (function() {
 // Register with App
 App.registerModule('marquee', MarqueeModule);
 
-// Lazy initialization - only init when posts are loaded and zoom meets threshold
+// Lazy initialization - only init when width is 1920+, posts are loaded, and zoom meets threshold
 (function() {
     var isInitialized = false;
     
+    function isWideEnough() {
+        return window.innerWidth >= 1920;
+    }
+
     function getMinZoom() {
-        return App.getConfig('postsLoadZoom');
+        return (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
     }
     
     function lazyInit() {
-        if (isInitialized) return;
+        if (isInitialized || !isWideEnough()) return;
         MarqueeModule.init();
         isInitialized = true;
     }
     
     function checkZoomAndShow() {
-        var mapModule = App.getModule('map');
+        if (!isWideEnough()) return;
+        var mapModule = (window.App && typeof App.getModule === 'function') ? App.getModule('map') : null;
         if (mapModule && typeof mapModule.getZoom === 'function') {
             var zoom = mapModule.getZoom();
             if (zoom > getMinZoom()) {
@@ -600,6 +581,7 @@ App.registerModule('marquee', MarqueeModule);
     // Listen for posts being loaded/filtered
     if (window.App && App.on) {
         App.on('filter:applied', function(data) {
+            if (!isWideEnough()) return;
             if (data && Array.isArray(data.marqueePosts) && data.marqueePosts.length > 0) {
                 lazyInit();
                 checkZoomAndShow();
@@ -608,13 +590,37 @@ App.registerModule('marquee', MarqueeModule);
         
         // Listen for zoom changes to show/hide based on zoom level
         App.on('map:boundsChanged', function(data) {
-            if (!isInitialized) return;
+            if (!isWideEnough()) {
+                if (isInitialized) {
+                    MarqueeModule.hide();
+                    isInitialized = false; // Mark for re-init if resized
+                }
+                return;
+            }
+            if (!isInitialized) {
+                // If it wasn't wide enough before but now it is, check if we should init
+                // This is a safety catch for resize or late filter applied
+                return; 
+            }
             if (data && data.zoom !== undefined) {
                 if (data.zoom > getMinZoom()) {
                     MarqueeModule.show();
                 } else {
                     MarqueeModule.hide();
                 }
+            }
+        });
+
+        // Watch window resize to handle bootstrap/teardown
+        window.addEventListener('resize', function() {
+            if (!isWideEnough()) {
+                if (isInitialized) {
+                    MarqueeModule.hide();
+                    isInitialized = false;
+                }
+            } else {
+                // If it becomes wide enough, we wait for the next map move or filter change 
+                // to avoid expensive immediate load unless necessary.
             }
         });
     }
