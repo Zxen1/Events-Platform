@@ -549,7 +549,8 @@ App.registerModule('marquee', MarqueeModule);
 
 // Lazy initialization - only init when width is 1920+, posts are loaded, and zoom meets threshold
 (function() {
-    var isInitialized = false;
+    var bootloaded = false;
+    var lastPosts = null; // Memory for posts even when narrow
     
     function isWideEnough() {
         return window.innerWidth >= 1920;
@@ -560,13 +561,17 @@ App.registerModule('marquee', MarqueeModule);
     }
     
     function lazyInit() {
-        if (isInitialized || !isWideEnough()) return;
+        if (bootloaded || !isWideEnough()) return;
         MarqueeModule.init();
-        isInitialized = true;
+        bootloaded = true;
+        // If we have pending posts, apply them immediately
+        if (lastPosts && lastPosts.length > 0) {
+            MarqueeModule.updatePosts(lastPosts);
+        }
     }
     
     function checkZoomAndShow() {
-        if (!isWideEnough()) return;
+        if (!isWideEnough() || !bootloaded) return;
         var mapModule = (window.App && typeof App.getModule === 'function') ? App.getModule('map') : null;
         if (mapModule && typeof mapModule.getZoom === 'function') {
             var zoom = mapModule.getZoom();
@@ -581,8 +586,14 @@ App.registerModule('marquee', MarqueeModule);
     // Listen for posts being loaded/filtered
     if (window.App && App.on) {
         App.on('filter:applied', function(data) {
+            // Always remember the latest posts
+            if (data && Array.isArray(data.marqueePosts)) {
+                lastPosts = data.marqueePosts;
+            }
+            
             if (!isWideEnough()) return;
-            if (data && Array.isArray(data.marqueePosts) && data.marqueePosts.length > 0) {
+            
+            if (lastPosts && lastPosts.length > 0) {
                 lazyInit();
                 checkZoomAndShow();
             }
@@ -591,18 +602,16 @@ App.registerModule('marquee', MarqueeModule);
         // Listen for zoom changes to show/hide based on zoom level
         App.on('map:boundsChanged', function(data) {
             if (!isWideEnough()) {
-                if (isInitialized) {
-                    MarqueeModule.hide();
-                    isInitialized = false; // Mark for re-init if resized
-                }
+                if (bootloaded) MarqueeModule.hide();
                 return;
             }
-            if (!isInitialized) {
-                // If it wasn't wide enough before but now it is, check if we should init
-                // This is a safety catch for resize or late filter applied
-                return; 
+            
+            // If we just became wide enough, check if we can boot
+            if (!bootloaded && lastPosts && lastPosts.length > 0) {
+                lazyInit();
             }
-            if (data && data.zoom !== undefined) {
+            
+            if (bootloaded && data && data.zoom !== undefined) {
                 if (data.zoom > getMinZoom()) {
                     MarqueeModule.show();
                 } else {
@@ -611,16 +620,17 @@ App.registerModule('marquee', MarqueeModule);
             }
         });
 
-        // Watch window resize to handle bootstrap/teardown
+        // Watch window resize to handle immediate detection
         window.addEventListener('resize', function() {
             if (!isWideEnough()) {
-                if (isInitialized) {
-                    MarqueeModule.hide();
-                    isInitialized = false;
-                }
+                if (bootloaded) MarqueeModule.hide();
             } else {
-                // If it becomes wide enough, we wait for the next map move or filter change 
-                // to avoid expensive immediate load unless necessary.
+                // BECAME WIDE ENOUGH - boot if we have data
+                if (!bootloaded && lastPosts && lastPosts.length > 0) {
+                    lazyInit();
+                }
+                // Check if zoom allows showing
+                checkZoomAndShow();
             }
         });
     }

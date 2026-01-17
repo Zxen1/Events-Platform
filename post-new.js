@@ -1304,6 +1304,11 @@ const PostModule = (function() {
   function renderPostList(posts) {
     if (!postListEl) return;
     
+    // Low-opacity hint during re-render (stale responses).
+    // This allows the user to see that data is updating without a blank flicker.
+    postListEl.style.opacity = '0.6';
+    postListEl.style.pointerEvents = 'none';
+    
     // Preserve an open post across re-renders (map moves trigger filter refreshes).
     // If the open post is still in the filtered results, keep it open (do NOT close just because the map moved).
     var preservedOpenPost = postListEl.querySelector('.open-post');
@@ -1315,9 +1320,16 @@ const PostModule = (function() {
     // Clear existing list content (cards + summary)
     postListEl.innerHTML = '';
 
+    // Final paint: restore full opacity once DOM is swapped.
+    function finalizeRender() {
+      postListEl.style.opacity = '1';
+      postListEl.style.pointerEvents = 'auto';
+    }
+
     // Show empty state if no posts
     if (!posts || !posts.length) {
       renderPostsEmptyState();
+      finalizeRender();
 
       // CRITICAL SYNC RULE:
       // At zoom >= postsLoadZoom, map cards MUST reflect the same result set as the Postcards.
@@ -1366,6 +1378,8 @@ const PostModule = (function() {
     if (lastZoom >= threshold) {
       renderMapMarkers(posts);
     }
+
+    finalizeRender();
   }
 
   /* --------------------------------------------------------------------------
