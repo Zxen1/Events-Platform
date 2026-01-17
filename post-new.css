@@ -225,8 +225,8 @@
   background-color: transparent;
   border: none;
   border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 12px;
+  padding: 10px 10px 0; /* 10-12-6 Rule: Visible containers use padding 10px 10px 0 */
+  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
@@ -239,13 +239,6 @@
 .post-card:hover,
 .recent-card:hover {
   background: #2e3a72;
-}
-
-.post-card {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 10px 0; /* Match standard visible container padding rule */
-  margin-bottom: 12px; /* 10-12-6 Rule: 12px between sibling containers */
 }
 
 .post-card,
@@ -335,6 +328,7 @@
   display: block;
   background: var(--panel-bg);
   flex: 0 0 100px;
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
 /* When a post truly has no image (or before a stored thumb_url exists), render a solid block
@@ -346,6 +340,7 @@
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
 /* Meta container */
@@ -356,6 +351,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
 /* Subcategory icon */
@@ -481,6 +477,7 @@
   flex-direction: column;
   gap: 6px;
   align-items: center;
+  margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
 /* Favorite button */
@@ -491,8 +488,14 @@
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background: var(--btn);
-  border: 1px solid var(--btn);
+  background: transparent;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.post-card-button-fav:hover,
+.recent-card-button-fav:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .post-card-button-fav svg,
@@ -666,8 +669,13 @@
   border-radius: 8px;
   display: grid;
   place-items: center;
-  background: var(--btn);
-  border: 1px solid var(--btn);
+  background: transparent;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+.open-post-button-share:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .open-post-button-share svg {
@@ -1232,13 +1240,13 @@
   .post-card {
     margin: 0;
     border-radius: 0;
-    padding: 12px;
+    padding: 10px 10px 0;
   }
   
   .recent-card {
     margin: 0;
     border-radius: 0;
-    padding: 12px;
+    padding: 10px 10px 0;
   }
   
   .post-card-image,
@@ -1283,7 +1291,7 @@
   .post-card {
     grid-template-columns: 100px 1fr 36px;
     gap: 12px;
-    padding: 12px;
+    padding: 10px 10px 0;
     border-radius: 0;
     width: 100%;
     margin: 0;
@@ -1292,7 +1300,7 @@
   .recent-card {
     grid-template-columns: 100px 1fr 36px;
     gap: 12px;
-    padding: 12px;
+    padding: 10px 10px 0;
     border-radius: 0;
     width: 100%;
     margin: 0;

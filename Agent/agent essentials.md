@@ -80,6 +80,7 @@ The standard vertical spacing for the new site:
 | **12px** | `margin-bottom: 12px` | Between sibling containers |
 | **10px** | `margin-bottom: 10px` | Between elements inside containers |
 | **6px** | `margin-bottom: 6px` | Between a label and its element |
+| **6px** | `margin-bottom: 6px` | Between rows of info in postcards/marquee |
 
 ### Container Padding
 Visible containers (with background/border) use: `padding: 10px 10px 0`

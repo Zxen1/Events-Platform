@@ -150,7 +150,7 @@
 .marquee-slide-info-line {
   display: flex;
   align-items: center;
-  margin-bottom: 6px; /* Vertical spacing: 6px */
+  margin-bottom: 6px; /* 6px Rule: Info rows in postcards/marquee use 6px spacing */
 }
 
 .marquee-slide-info-title {
