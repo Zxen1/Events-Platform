@@ -555,26 +555,30 @@ try {
             ];
         }
 
-        // Attach to map cards
-        foreach ($postsById as &$post) {
-            foreach ($post['map_cards'] as &$mapCard) {
-                $cid = $mapCard['id'];
-                
-                // Attach Media
-                if (!empty($mapCard['media_ids'])) {
-                    $ids = array_filter(array_map('intval', explode(',', $mapCard['media_ids'])));
-                    $urls = [];
-                    $meta = [];
-                    foreach ($ids as $mediaId) {
-                        if (isset($mediaUrlsById[$mediaId])) {
-                            $urls[] = $mediaUrlsById[$mediaId];
-                            $meta[] = $mediaMetaById[$mediaId] ?? null;
-                        }
-                    }
-                    $mapCard['media_urls'] = $urls;
-                    $mapCard['media_meta'] = $meta;
-                }
+    }
 
+    // Attach to map cards
+    foreach ($postsById as &$post) {
+        foreach ($post['map_cards'] as &$mapCard) {
+            $cid = $mapCard['id'];
+            
+            // Attach Media (ALWAYS - needed for postcards/marquee)
+            if (!empty($mapCard['media_ids'])) {
+                $ids = array_filter(array_map('intval', explode(',', $mapCard['media_ids'])));
+                $urls = [];
+                $meta = [];
+                foreach ($ids as $mediaId) {
+                    if (isset($mediaUrlsById[$mediaId])) {
+                        $urls[] = $mediaUrlsById[$mediaId];
+                        $meta[] = $mediaMetaById[$mediaId] ?? null;
+                    }
+                }
+                $mapCard['media_urls'] = $urls;
+                $mapCard['media_meta'] = $meta;
+            }
+
+            // Attach Sessions/Pricing/Item details (ONLY if full data requested)
+            if ($full) {
                 // Attach Sessions (as array, not grouped by date for frontend compat)
                 if (isset($sessionsByCard[$cid])) {
                     $mapCard['sessions'] = array_values($sessionsByCard[$cid]);
@@ -598,8 +602,8 @@ try {
                 }
             }
         }
-        unset($post, $mapCard);
     }
+    unset($post, $mapCard);
 
     // Convert to array
     $posts = array_values($postsById);

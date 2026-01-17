@@ -205,11 +205,6 @@ const PostModule = (function() {
      -------------------------------------------------------------------------- */
 
   function init() {
-    // Preload currency data for price summary parsing (handles old data flags)
-    if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function') {
-      CurrencyComponent.loadFromDatabase().catch(function() {});
-    }
-
     panelsContainerEl = document.querySelector('.post-mode-panels');
     if (!panelsContainerEl) {
       throw new Error('[Post] .post-mode-panels container not found.');
@@ -875,6 +870,11 @@ const PostModule = (function() {
     try { if (postsAbort) postsAbort.abort(); } catch (_eAbort) {}
     postsAbort = (typeof AbortController !== 'undefined') ? new AbortController() : null;
 
+    // Lazy-load currency data if needed for price summary parsing
+    if (window.CurrencyComponent && typeof CurrencyComponent.loadFromDatabase === 'function') {
+      CurrencyComponent.loadFromDatabase().catch(function() {});
+    }
+
     postsLoading = true;
 
     return fetch('/gateway.php?action=get-posts&' + requestKey, postsAbort ? { signal: postsAbort.signal } : undefined)
@@ -1216,7 +1216,7 @@ const PostModule = (function() {
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
           priceParts.text ? (function() {
             var badgeHtml = priceParts.flagUrl 
-              ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; object-fit: contain; vertical-align: middle; position: relative; top: -1px;">'
+              ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
               : '💰';
             return '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
           })() : '',
@@ -2286,7 +2286,7 @@ const PostModule = (function() {
     var priceHtml = '';
     if (priceParts.text) {
       var badgeHtml = priceParts.flagUrl 
-        ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; object-fit: contain; position: relative; top: -1px;">'
+        ? '<img class="open-post-badge-image open-post-badge-image--inline" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
         : '💰 ';
       priceHtml = '<span>' + badgeHtml + escapeHtml(priceParts.text) + '</span>';
     }

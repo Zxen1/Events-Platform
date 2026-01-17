@@ -395,14 +395,13 @@ const MarqueeModule = (function() {
       
       let badgeContent = '';
       if (priceParts.flagUrl) {
-        badgeContent = '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '" style="width: 18px; height: 18px; object-fit: contain; vertical-align: middle; position: relative; top: -1px;">';
+        badgeContent = '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">';
       } else {
         badgeContent = '💰';
       }
       
       priceLine.innerHTML = '<span class="marquee-badge" title="Price">' + badgeContent + '</span>';
       const priceTextEl = document.createElement('span');
-      priceTextEl.style.marginLeft = '5px';
       priceTextEl.textContent = priceParts.text;
       priceLine.appendChild(priceTextEl);
       info.appendChild(priceLine);
