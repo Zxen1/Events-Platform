@@ -1102,6 +1102,11 @@ const PostModule = (function() {
    * @param {string} subcategoryKey - Subcategory key
    * @returns {Object} { category: string, subcategory: string }
    */
+  /**
+   * Resolve subcategory and category names for display.
+   * @param {string} subcategoryKey 
+   * @returns {Object} { category, subcategory }
+   */
   function getSubcategoryInfo(subcategoryKey) {
     var result = { category: '', subcategory: '' };
     if (!subcategoryKey) return result;
@@ -1118,20 +1123,20 @@ const PostModule = (function() {
       var subs = cat.subs || [];
       for (var j = 0; j < subs.length; j++) {
         var sub = subs[j];
-        var subName = (typeof sub === 'string') ? sub : (sub && sub.name);
+        var subName = (typeof sub === 'string') ? sub : (sub && (sub.subcategory_name || sub.name));
         if (!subName) continue;
 
         // Convert subcategory name to key format for comparison
-        var keyFromName = subName.toLowerCase().replace(/\s+/g, '-');
-        if (keyFromName === subcategoryKey) {
-          result.category = cat.name;
+        var subKey = (sub && sub.subcategory_key) || sub.key || subName.toLowerCase().replace(/\s+/g, '-');
+        if (subKey === subcategoryKey) {
+          result.category = cat.category_name || cat.name;
           result.subcategory = subName;
           return result;
         }
       }
     }
 
-    // If not found, use key as display name
+    // Fallback: format the key
     result.subcategory = subcategoryKey.replace(/-/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
     return result;
   }
@@ -1163,6 +1168,9 @@ const PostModule = (function() {
     // Get subcategory info
     var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
     var subInfo = getSubcategoryInfo(subcategoryKey);
+    if (!subInfo.subcategory && post.subcategory_name) {
+      subInfo.subcategory = post.subcategory_name;
+    }
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
     // Format dates (if sessions exist) - prioritizes pre-formatted session_summary from database
@@ -2284,6 +2292,9 @@ const PostModule = (function() {
     // Get subcategory info
     var subcategoryKey = post.subcategory_key || loc0.subcategory_key || '';
     var subInfo = getSubcategoryInfo(subcategoryKey);
+    if (!subInfo.subcategory && post.subcategory_name) {
+      subInfo.subcategory = post.subcategory_name;
+    }
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
     // Format dates - use pre-formatted session_summary from database
@@ -2907,6 +2918,7 @@ const PostModule = (function() {
         title: (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '',
         thumb_url: rawThumbUrl || '',
         subcategory_key: subKey0 || '',
+        subcategory_name: post.subcategory_name || (mapCard0 && mapCard0.subcategory_name) || '',
         subcategory_icon_url: iconUrl0 || '',
         location_text: loc0 || '',
         timestamp: now
@@ -3179,6 +3191,9 @@ const PostModule = (function() {
     // Get subcategory info
     var subcategoryKey = entry.subcategory_key || '';
     var subInfo = getSubcategoryInfo(subcategoryKey);
+    if (!subInfo.subcategory && entry.subcategory_name) {
+      subInfo.subcategory = entry.subcategory_name;
+    }
     var iconUrl = entry.subcategory_icon_url || (subcategoryKey ? getSubcategoryIconUrl(subcategoryKey) : '');
 
     // Format last opened time

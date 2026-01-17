@@ -305,6 +305,9 @@ const MarqueeModule = (function() {
     }
     
     const subInfo = postModule.getSubcategoryInfo(subcategoryKey);
+    if (!subInfo.subcategory && post.subcategory_name) {
+      subInfo.subcategory = post.subcategory_name;
+    }
     const iconUrl = post.subcategory_icon_url || postModule.getSubcategoryIconUrl(subcategoryKey);
 
     // Format dates - prioritizes pre-formatted session_summary from database
