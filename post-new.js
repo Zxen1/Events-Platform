@@ -1211,15 +1211,15 @@ const PostModule = (function() {
       '<div class="post-card-meta">',
         '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="post-card-container-info">',
-          '<div class="post-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>',
+          '<div class="post-card-row-cat">' + iconHtml + ' ' + (subInfo.subcategory || subcategoryKey) + '</div>',
           locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
-          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : '',
-          priceParts.text ? (function() {
+          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : 
+          (priceParts.text ? (function() {
             var badgeHtml = priceParts.flagUrl 
               ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
               : '💰';
             return '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
-          })() : '',
+          })() : ''),
         '</div>',
       '</div>',
       '<div class="post-card-container-actions">',
@@ -3205,7 +3205,7 @@ const PostModule = (function() {
       '<div class="recent-card-meta">',
         '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="recent-card-container-info">',
-          catLineText ? '<div class="recent-card-row-cat">' + iconHtml + ' ' + catLineText + '</div>' : '',
+          catLineText ? '<div class="recent-card-row-cat">' + iconHtml + ' ' + (subInfo.subcategory || subcategoryKey) + '</div>' : '',
           city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
           lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
         '</div>',

@@ -415,7 +415,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0; /* Gap: 0 - using margin-bottom on rows instead to comply with 10-12-6 Rule */
+  gap: 0; /* Gap: 0 - using margin-bottom on rows instead */
   font-size: 13px;
   min-width: 0;
   overflow: hidden;
@@ -433,7 +433,7 @@
   display: flex;
   align-items: center;
   gap: 0;
-  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
+  margin-bottom: 6px; /* Vertical spacing: 6px */
 }
 
 /* Prevent double-up on last row */

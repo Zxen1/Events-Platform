@@ -150,37 +150,37 @@
 .marquee-slide-info-line {
   display: flex;
   align-items: center;
-  margin-bottom: 10px; /* 10-12-6 Rule: 10px between elements inside containers */
+  margin-bottom: 6px; /* Vertical spacing: 6px */
 }
 
 .marquee-slide-info-title {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .marquee-slide-info-cat {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .marquee-slide-info-loc {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .marquee-slide-info-date {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .marquee-slide-info-price {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 /* Badge (matching post card style) */

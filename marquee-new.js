@@ -333,12 +333,10 @@ const MarqueeModule = (function() {
       catLine.appendChild(iconWrap);
     }
     
-    const catLineText = subInfo.category && subInfo.subcategory
-      ? subInfo.category + ' › ' + subInfo.subcategory
-      : subInfo.subcategory || subcategoryKey;
+    const subName = subInfo.subcategory || subcategoryKey;
 
     const catText = document.createElement('span');
-    catText.innerHTML = catLineText; // It might contain &rsaquo; or similar
+    catText.innerHTML = subName; 
     catLine.appendChild(catText);
     info.appendChild(catLine);
     
@@ -353,7 +351,7 @@ const MarqueeModule = (function() {
       info.appendChild(locLine);
     }
     
-    // 4. Date line
+    // 4. Date line (Prioritize dates over price to keep to 3 info lines total)
     if (datesText) {
       const dateLine = document.createElement('div');
       dateLine.className = 'marquee-slide-info-date';
@@ -362,10 +360,8 @@ const MarqueeModule = (function() {
       dateText.textContent = datesText;
       dateLine.appendChild(dateText);
       info.appendChild(dateLine);
-    }
-
-    // 5. Price line
-    if (priceParts.text) {
+    } else if (priceParts.text) {
+      // 5. Price line (only if no dates)
       const priceLine = document.createElement('div');
       priceLine.className = 'marquee-slide-info-price';
       
