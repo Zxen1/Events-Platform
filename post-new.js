@@ -456,7 +456,7 @@ const PostModule = (function() {
       favSortDirty = favToTop ? false : true;
       // Re-apply sorting/rendering without filtering out non-favourites.
       // Keep existing sort key if available; default to 'az'.
-      sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'az') : 'az');
+      sortPosts((window.FilterModule && FilterModule.getFilterState) ? (FilterModule.getFilterState().sort || 'recommended') : 'recommended');
     });
 
     // Panel-level keyboard behavior (Post/Recent):
@@ -1113,6 +1113,7 @@ const PostModule = (function() {
     // Store small, per-card sort metadata on the element itself (DOM is the source of truth).
     // This avoids keeping an in-memory posts snapshot while still allowing the sort menu to work.
     try {
+      el.dataset.sortFeatured = post.featured ? '1' : '0';
       el.dataset.sortTitle = String(title || '').toLowerCase();
       el.dataset.sortCreatedAt = String(new Date(post.created_at || 0).getTime() || 0);
       el.dataset.sortPrice = String(extractPrice(mapCard) || 0);
@@ -1870,6 +1871,12 @@ const PostModule = (function() {
       var b = bEl && bEl.dataset ? bEl.dataset : {};
 
       switch (sortKey) {
+        case 'recommended':
+          // Recommended: Featured first (1 before 0), then by created_at DESC
+          var featA = Number(a.sortFeatured) || 0;
+          var featB = Number(b.sortFeatured) || 0;
+          if (featA !== featB) return featB - featA;
+          return (Number(b.sortCreatedAt) || 0) - (Number(a.sortCreatedAt) || 0);
         case 'az':
           return String(a.sortTitle || '').localeCompare(String(b.sortTitle || ''));
         case 'za':

@@ -50,7 +50,7 @@ const FilterModule = (function() {
     var sortMenuEl = null;
     var sortButtonEl = null;
     var sortButtonText = null;
-    var currentSort = 'az';
+    var currentSort = 'recommended';
     var closeBtn = null;
     
     // Filter basics
@@ -800,7 +800,7 @@ const FilterModule = (function() {
         });
         
         // Set initial selected state
-        var firstOption = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="az"]');
+        var firstOption = sortMenuEl.querySelector('.filter-sort-menu-option[data-sort="recommended"]');
         if (firstOption) {
             firstOption.classList.add('filter-sort-menu-option--selected');
         }
