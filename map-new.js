@@ -1694,22 +1694,24 @@ const MapModule = (function() {
       });
     }
 
-    // 3. Featured Icons Layer (symbol)
-    if (!map.getLayer(ICON_LAYER_ID)) {
-      // Background for Icons (the 0.7 black ring)
-      map.addLayer({
-        id: ICON_LAYER_ID + '-bg',
-        type: 'circle',
-        source: DOT_SOURCE_ID,
-        minzoom: getMarkerZoomThreshold(),
-        filter: ['==', ['get', 'type'], 'icon'],
-        paint: {
-          'circle-radius': getIconDotSize() / 2,
-          'circle-color': 'rgba(255,255,255,0.1)',
-          'circle-stroke-color': 'rgba(0,0,0,0.7)',
-          'circle-stroke-width': getDotStrokeWidth()
-        }
-      });
+      // 3. Featured Icons Layer (symbol)
+      if (!map.getLayer(ICON_LAYER_ID)) {
+        // Background for Icons (the 0.7 black ring)
+        // Agent Rules: Black ring at 0.7 opacity, fill at 0.4 for visibility
+        map.addLayer({
+          id: ICON_LAYER_ID + '-bg',
+          type: 'circle',
+          source: DOT_SOURCE_ID,
+          minzoom: getMarkerZoomThreshold(),
+          filter: ['==', ['get', 'type'], 'icon'],
+          paint: {
+            'circle-radius': getIconDotSize() / 2,
+            'circle-color': ['get', 'color'], // Use subcategory color for background too
+            'circle-opacity': 0.4,
+            'circle-stroke-color': 'rgba(0,0,0,0.7)',
+            'circle-stroke-width': getDotStrokeWidth()
+          }
+        });
 
       map.addLayer({
         id: ICON_LAYER_ID,
@@ -1802,6 +1804,13 @@ const MapModule = (function() {
           map.addImage(iconId, img);
         }
         loadedIcons.add(iconId);
+        
+        // Force a redraw of the high-density layer now that the image is ready
+        const source = map.getSource(DOT_SOURCE_ID);
+        if (source && typeof source.setData === 'function') {
+          source.setData(highDensityData);
+        }
+        
         resolve(iconId);
       };
       img.onerror = function() {

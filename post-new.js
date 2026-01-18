@@ -1276,8 +1276,10 @@ const PostModule = (function() {
     
     // Low-opacity hint during re-render (stale responses).
     // This allows the user to see that data is updating without a blank flicker.
-    postListEl.style.opacity = '0.6';
-    postListEl.style.pointerEvents = 'none';
+    if (postListEl) {
+      postListEl.style.opacity = '0.6';
+      postListEl.style.pointerEvents = 'none';
+    }
     
     // Preserve an open post across re-renders (map moves trigger filter refreshes).
     // If the open post is still in the filtered results, keep it open (do NOT close just because the map moved).
@@ -1292,8 +1294,10 @@ const PostModule = (function() {
 
     // Final paint: restore full opacity once DOM is swapped.
     function finalizeRender() {
-      postListEl.style.opacity = '1';
-      postListEl.style.pointerEvents = 'auto';
+      if (postListEl) {
+        postListEl.style.opacity = '1';
+        postListEl.style.pointerEvents = 'auto';
+      }
     }
 
     // Show empty state if no posts
@@ -1578,9 +1582,11 @@ const PostModule = (function() {
       }
 
       // GeoJSON property: type = 'card' | 'icon' | 'dot'
-      var type = 'dot';
-      if (isFeatured) {
-        type = hasCardSlot ? 'card' : 'icon';
+      var type = 'card'; // Default to card
+      if (isHighDensity) {
+        if (!hasCardSlot) {
+          type = isFeatured ? 'icon' : 'dot';
+        }
       }
 
       // High-Density Rule: NO FALLBACKS.
@@ -1594,22 +1600,25 @@ const PostModule = (function() {
         throw new Error('[Map] Subcategory key missing for post ID ' + item.id + ' (required for featured icons).');
       }
 
-      geojsonFeatures.push({
-        type: 'Feature',
-        id: item.id, // Using post ID as numeric ID for Mapbox feature-state
-        geometry: {
-          type: 'Point',
-          coordinates: [item.lng, item.lat]
-        },
-        properties: {
-          postId: item.id,
-          venueKey: item.venueKey,
-          type: type,
-          color: subColor,
-          iconId: subKey,
-          iconUrl: item.iconUrl
-        }
-      });
+      // Only add to GeoJSON if it's NOT a card. Cards are handled by DOM markers.
+      if (type !== 'card') {
+        geojsonFeatures.push({
+          type: 'Feature',
+          id: item.id, // Using post ID as numeric ID for Mapbox feature-state
+          geometry: {
+            type: 'Point',
+            coordinates: [item.lng, item.lat]
+          },
+          properties: {
+            postId: item.id,
+            venueKey: item.venueKey,
+            type: type,
+            color: subColor,
+            iconId: subKey,
+            iconUrl: item.iconUrl
+          }
+        });
+      }
     });
 
     // Update Mapbox high-density layers
@@ -3015,6 +3024,10 @@ const PostModule = (function() {
 
     // Always empty (no posts in this site yet).
     postListEl.innerHTML = '';
+    
+    // Ensure full opacity if we reach empty state (avoids getting stuck at 0.6 from renderPostList).
+    postListEl.style.opacity = '1';
+    postListEl.style.pointerEvents = 'auto';
 
     var wrap = document.createElement('div');
     wrap.className = 'post-panel-empty';
