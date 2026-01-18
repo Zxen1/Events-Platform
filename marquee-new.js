@@ -291,7 +291,6 @@ const MarqueeModule = (function() {
 
     // Get display data (mirroring PostModule.renderPostCard)
     let title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
-    if (title === 'Array') title = 'Post #' + post.id;
     const venueName = (mapCard && mapCard.venue_name) || '';
     const city = (mapCard && mapCard.city) || '';
     const locationDisplay = venueName || city || post.location || post.venue || '';

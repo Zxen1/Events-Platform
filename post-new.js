@@ -1089,7 +1089,6 @@ const PostModule = (function() {
 
     // Get display data
     var title = (mapCard && mapCard.title) || post.checkout_title || '';
-    if (title === 'Array') title = 'Post #' + post.id;
     var venueName = (mapCard && mapCard.venue_name) || '';
     var city = (mapCard && mapCard.city) || '';
     var locationDisplay = venueName || city || '';
