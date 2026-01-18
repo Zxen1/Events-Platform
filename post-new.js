@@ -1641,10 +1641,8 @@ const PostModule = (function() {
     });
 
     // Notify marquee and other subscribers
-    // Only posts with sidebar_ad=1 (Premium) appear in the marquee
-    var marqueePosts = list.filter(function(p) { return !!p.sidebar_ad; });
     App.emit('filter:applied', {
-      marqueePosts: marqueePosts.slice(0, 10) // Show top 10 premium posts in marquee
+      marqueePosts: list.slice(0, 10) // Show top 10 in marquee
     });
   }
 
