@@ -57,8 +57,12 @@ const MapModule = (function() {
   const MAPBOX_TOKEN = "pk.eyJ1IjoienhlbiIsImEiOiJjbWViaDRibXEwM2NrMm1wcDhjODg4em5iIn0.2A9teACgwpiCy33uO4WZJQ";
   
   // Zoom thresholds
-  const MARKER_ZOOM_THRESHOLD = 8;
-  const CLUSTER_ZOOM_MAX = 8;
+  function getMarkerZoomThreshold() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+  }
+  function getClusterZoomMax() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
+  }
   
   // High-Density Layers
   let highDensityData = { type: 'FeatureCollection', features: [] };
@@ -203,7 +207,7 @@ const MapModule = (function() {
     if (!view) return false;
     // Only restore (and therefore "persist") a user viewport when they last used the site at zoom 8+.
     // If their last view was zoomed out (<8), we treat it as "world view" and use admin starting/spin logic.
-    if (!Number.isFinite(view.zoom) || view.zoom < MARKER_ZOOM_THRESHOLD) {
+    if (!Number.isFinite(view.zoom) || view.zoom < getMarkerZoomThreshold()) {
       try { localStorage.removeItem(MAP_VIEW_STORAGE_KEY); } catch (_eRm) {}
       hasSavedMapView = false;
       return false;
@@ -230,7 +234,7 @@ const MapModule = (function() {
 
         // Rule: if the user leaves while zoomed out (<8), do NOT persist their view.
         // We clear the memory so it reverts to the default worldwide view on next load.
-        if (!Number.isFinite(zoom) || zoom < MARKER_ZOOM_THRESHOLD) {
+        if (!Number.isFinite(zoom) || zoom < getMarkerZoomThreshold()) {
           try {
             localStorage.removeItem(MAP_VIEW_STORAGE_KEY);
             hasSavedMapView = false;
@@ -1400,7 +1404,7 @@ const MapModule = (function() {
     // Triggers immediate marker rendering when crossing threshold 8
     map.on('zoom', () => {
       const zoom = map.getZoom();
-      const threshold = MARKER_ZOOM_THRESHOLD;
+      const threshold = getMarkerZoomThreshold();
       const crossedUp = lastMapZoom < threshold && zoom >= threshold;
       
       if (crossedUp) {
@@ -1842,7 +1846,7 @@ const MapModule = (function() {
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
       minzoom: CLUSTER_MIN_ZOOM,
-      maxzoom: CLUSTER_ZOOM_MAX,
+      maxzoom: getClusterZoomMax(),
       layout: {
         'icon-image': CLUSTER_ICON_ID,
         'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
@@ -2036,7 +2040,7 @@ const MapModule = (function() {
   function updateClusterVisibility(zoom) {
     if (!map) return;
     
-    var shouldShow = zoom < CLUSTER_ZOOM_MAX;
+    var shouldShow = zoom < getClusterZoomMax();
     if (shouldShow !== clusterLayerVisible) {
       clusterLayerVisible = shouldShow;
       
@@ -2079,7 +2083,7 @@ const MapModule = (function() {
    * Update markers visibility based on zoom
    */
   function updateMarkersVisibility(zoom) {
-    const shouldShow = zoom >= MARKER_ZOOM_THRESHOLD;
+    const shouldShow = zoom >= getMarkerZoomThreshold();
     
     mapCardMarkers.forEach((entry) => {
       if (entry.element) {

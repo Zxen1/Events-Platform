@@ -483,6 +483,11 @@ const App = (function() {
         setState('settings', settings);
         setState('system_images', data.system_images || {});
 
+        // Sync Map Card Breakpoint from database to application config
+        if (settings.map_card_breakpoint !== undefined) {
+          setConfig('postsLoadZoom', parseFloat(settings.map_card_breakpoint));
+        }
+
         // Apply Devtools Console Filter (database source of truth; no localStorage dependency)
         try {
           window._consoleFilterEnabled = settings.console_filter === true || settings.console_filter === 'true' || settings.console_filter === '1';

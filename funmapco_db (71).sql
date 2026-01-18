@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 18, 2026 at 05:54 PM
+-- Generation Time: Jan 18, 2026 at 06:10 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -323,7 +323,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (313, 'wait_for_map_tiles', 'true', 'boolean', NULL, '2025-12-10 05:16:15', '2026-01-06 11:03:58'),
 (314, 'location_wallpaper_mode', 'orbit', 'string', 'Location wallpaper mode: off|orbit|still', '2026-01-08 22:27:47', '2026-01-09 03:14:30'),
 (315, 'location_wallpaper_dimmer', '50', 'integer', 'Location wallpaper dimmer overlay opacity (0-100)', '2026-01-09 12:12:36', '2026-01-09 17:59:23'),
-(316, 'cluster_zoom_level', '8', 'string', 'Breakpoint Zoom Level for clusters and map cards.', '2026-01-18 06:53:40', '2026-01-18 06:54:18'),
+(316, 'map_card_breakpoint', '8', 'string', 'Zoom level breakpoint where map markers switch from clusters/dots to full Map Cards.', '2026-01-18 06:53:40', '2026-01-18 07:10:34'),
 (400, 'image_min_width', '1000', 'integer', 'Minimum post image width in pixels', '2026-01-03 08:20:33', '2026-01-03 08:24:27'),
 (401, 'image_min_height', '1000', 'integer', 'Minimum post image height in pixels', '2026-01-03 08:20:33', '2026-01-03 08:24:27'),
 (402, 'image_max_size', '5242880', 'integer', 'Maximum post image file size in bytes (5MB)', '2026-01-03 08:20:33', '2026-01-03 08:24:27'),
