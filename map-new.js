@@ -1659,6 +1659,7 @@ const MapModule = (function() {
         id: GLOW_LAYER_ID,
         type: 'circle',
         source: DOT_SOURCE_ID,
+        minzoom: getMarkerZoomThreshold(),
         paint: {
           'circle-radius': [
             'case',
@@ -1679,6 +1680,7 @@ const MapModule = (function() {
         id: DOT_LAYER_ID,
         type: 'circle',
         source: DOT_SOURCE_ID,
+        minzoom: getMarkerZoomThreshold(),
         filter: ['==', ['get', 'type'], 'dot'],
         paint: {
           'circle-radius': getDotSize() / 2,
@@ -1696,6 +1698,7 @@ const MapModule = (function() {
         id: ICON_LAYER_ID + '-bg',
         type: 'circle',
         source: DOT_SOURCE_ID,
+        minzoom: getMarkerZoomThreshold(),
         filter: ['==', ['get', 'type'], 'icon'],
         paint: {
           'circle-radius': getIconDotSize() / 2,
@@ -1709,6 +1712,7 @@ const MapModule = (function() {
         id: ICON_LAYER_ID,
         type: 'symbol',
         source: DOT_SOURCE_ID,
+        minzoom: getMarkerZoomThreshold(),
         filter: ['==', ['get', 'type'], 'icon'],
         layout: {
           'icon-image': ['get', 'iconId'],
@@ -1854,7 +1858,7 @@ const MapModule = (function() {
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
       minzoom: CLUSTER_MIN_ZOOM,
-      maxzoom: getClusterZoomMax(),
+      maxzoom: getClusterZoomMax() - 0.01,
       layout: {
         'icon-image': CLUSTER_ICON_ID,
         'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
