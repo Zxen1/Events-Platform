@@ -263,18 +263,17 @@ const MarqueeModule = (function() {
     slide.dataset.id = post.id;
     slide.href = getPostUrl(post);
     
-    // Create image
+    // 1. Create image first
     const img = document.createElement('img');
     img.className = 'marquee-slide-image';
     img.src = getHeroUrl(post);
     img.alt = '';
-    
-    // Wait for image to load before showing info
-    img.onload = () => {
-      slide.appendChild(createSlideInfo(post));
-    };
-    
     slide.appendChild(img);
+
+    // 2. Create info overlay second (so it sits on top of the image)
+    // We add it immediately instead of waiting for image load
+    slide.appendChild(createSlideInfo(post));
+
     return slide;
   }
   
@@ -311,13 +310,15 @@ const MarqueeModule = (function() {
     const datesText = formatDates(mapCard ? mapCard.session_summary : post.session_summary);
 
     // Format price summary
-    const postModule = App.getModule('post');
-    const priceParts = postModule.parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary);
+    const postModule = (window.App && typeof App.getModule === 'function') ? App.getModule('post') : null;
+    const priceParts = (postModule && typeof postModule.parsePriceSummary === 'function') 
+      ? postModule.parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary)
+      : { flagUrl: '', countryCode: '', text: '' };
 
     // 1. Title line
     const titleLine = document.createElement('div');
     titleLine.className = 'marquee-slide-info-title';
-    titleLine.textContent = escapeHtml(String(title).trim());
+    titleLine.textContent = String(title || '').trim();
     info.appendChild(titleLine);
     
     // 2. Category line with icon
@@ -336,7 +337,7 @@ const MarqueeModule = (function() {
     }
     
     const catText = document.createElement('span');
-    catText.innerHTML = displayName; 
+    catText.textContent = displayName; 
     catLine.appendChild(catText);
     info.appendChild(catLine);
     
@@ -346,7 +347,7 @@ const MarqueeModule = (function() {
       locLine.className = 'marquee-slide-info-loc';
       locLine.innerHTML = '<span class="marquee-badge" title="Location">📍</span>';
       const locText = document.createElement('span');
-      locText.textContent = escapeHtml(String(locationDisplay).trim());
+      locText.textContent = String(locationDisplay).trim();
       locLine.appendChild(locText);
       info.appendChild(locLine);
     }

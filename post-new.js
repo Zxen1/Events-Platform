@@ -423,6 +423,12 @@ const PostModule = (function() {
       openPostById(data.postId, { fromMap: true });
     });
 
+    // Listen for marquee slide clicks
+    App.on('post:open', function(data) {
+      if (!data || !data.id) return;
+      openPostById(data.id, { source: data.source || 'external' });
+    });
+
     // Listen for filter changes
     App.on('filter:changed', function(filterState) {
       applyFilters(filterState);
