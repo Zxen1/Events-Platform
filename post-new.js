@@ -1126,9 +1126,14 @@ const PostModule = (function() {
       }
     } catch (_eSortMeta) {}
 
-    // Postcard thumbnail (100x100 in CSS). We try ?class=thumbnail if supported, otherwise raw URL.
+    // Postcard thumbnail. Featured posts use high-res square (imagebox), others use thumbnail.
     var rawThumbUrl = getPostThumbnailUrl(post);
-    var thumbUrl = getCardThumbSrc(rawThumbUrl);
+    var isFeatured = !!post.featured;
+    if (isFeatured) {
+      el.classList.add('post-card--featured');
+    }
+
+    var thumbUrl = isFeatured ? getHeroUrl(post) : getCardThumbSrc(rawThumbUrl);
 
     // Build HTML - proper class naming: .{section}-{name}-{type}-{part}
     var thumbHtml = rawThumbUrl
@@ -1141,28 +1146,55 @@ const PostModule = (function() {
 
     var isFav = isFavorite(post.id);
 
-    el.innerHTML = [
-      thumbHtml,
-      '<div class="post-card-meta">',
-        '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
-        '<div class="post-card-container-info">',
+    if (isFeatured) {
+      // Featured Design: Square thumbnail with info overlay (marquee style)
+      var priceHtml = '';
+      if (priceParts.text) {
+        var badgeHtml = priceParts.flagUrl 
+          ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+          : '💰';
+        priceHtml = '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
+      }
+
+      el.innerHTML = [
+        thumbHtml,
+        '<div class="post-card-info-overlay">',
+          '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
           '<div class="post-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
           locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
-          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : 
-          (priceParts.text ? (function() {
-            var badgeHtml = priceParts.flagUrl 
-              ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
-              : '💰';
-            return '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
-          })() : ''),
+          datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : priceHtml,
         '</div>',
-      '</div>',
-      '<div class="post-card-container-actions">',
-      '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-      '<svg class="post-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
-      '</button>',
-      '</div>'
-    ].join('');
+        '<div class="post-card-container-actions">',
+          '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+            '<svg class="post-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+          '</button>',
+        '</div>'
+      ].join('');
+    } else {
+      // Standard Design
+      el.innerHTML = [
+        thumbHtml,
+        '<div class="post-card-meta">',
+          '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
+          '<div class="post-card-container-info">',
+            '<div class="post-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
+            locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
+            datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : 
+            (priceParts.text ? (function() {
+              var badgeHtml = priceParts.flagUrl 
+                ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+                : '💰';
+              return '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
+            })() : ''),
+          '</div>',
+        '</div>',
+        '<div class="post-card-container-actions">',
+        '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+        '<svg class="post-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+        '</button>',
+        '</div>'
+      ].join('');
+    }
 
     // Robust thumbnail loader (prevents broken/missing thumbnails if class=thumbnail isn't supported).
     if (rawThumbUrl) {
@@ -1640,8 +1672,10 @@ const PostModule = (function() {
     });
 
     // Notify marquee and other subscribers
+    // Only posts with sidebar_ad=1 (Premium) appear in the marquee
+    var marqueePosts = list.filter(function(p) { return !!p.sidebar_ad; });
     App.emit('filter:applied', {
-      marqueePosts: list.slice(0, 10) // Show top 10 in marquee
+      marqueePosts: marqueePosts.slice(0, 10) // Show top 10 premium posts in marquee
     });
   }
 
@@ -2818,6 +2852,7 @@ const PostModule = (function() {
         subcategory_name: subName0,
         subcategory_icon_url: iconUrl0,
         location_text: loc0 || '',
+        featured: !!post.featured,
         timestamp: now
       });
       seen[targetId] = true;
@@ -3082,7 +3117,6 @@ const PostModule = (function() {
     // Recents store lightweight display fields in localStorage (not full post payload).
     var title = entry.title || '';
     var rawThumbUrl = entry.thumb_url || '';
-    var thumbUrl = getCardThumbSrc(rawThumbUrl);
     var city = entry.location_text || '';
 
     // Get subcategory info
@@ -3099,6 +3133,13 @@ const PostModule = (function() {
     var lastOpenedText = formatLastOpened(entry.timestamp);
 
     // Build card HTML - proper class naming: .{section}-{name}-{type}-{part}
+    var isFeatured = !!entry.featured;
+    if (isFeatured) {
+      el.classList.add('recent-card--featured');
+    }
+
+    var thumbUrl = isFeatured ? addImageClass(rawThumbUrl, 'imagebox') : getCardThumbSrc(rawThumbUrl);
+
     var thumbHtml = rawThumbUrl
       ? '<img class="recent-card-image" loading="lazy" src="' + thumbUrl + '" alt="" referrerpolicy="no-referrer" />'
       : '<div class="recent-card-image recent-card-image--empty" aria-hidden="true"></div>';
@@ -3110,22 +3151,41 @@ const PostModule = (function() {
     // Check favorite status
     var isFav = isFavorite(entry.id);
 
-    el.innerHTML = [
-      thumbHtml,
-      '<div class="recent-card-meta">',
-        '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
-        '<div class="recent-card-container-info">',
+    if (isFeatured) {
+      // Featured Design: Square thumbnail with info overlay
+      el.innerHTML = [
+        thumbHtml,
+        '<div class="recent-card-info-overlay">',
+          '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
           '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
           city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
           lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
         '</div>',
-      '</div>',
-      '<div class="recent-card-container-actions">',
-      '<button class="recent-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-      '<svg class="recent-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
-      '</button>',
-      '</div>'
-    ].join('');
+        '<div class="recent-card-container-actions">',
+          '<button class="recent-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+            '<svg class="recent-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+          '</button>',
+        '</div>'
+      ].join('');
+    } else {
+      // Standard Design
+      el.innerHTML = [
+        thumbHtml,
+        '<div class="recent-card-meta">',
+          '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
+          '<div class="recent-card-container-info">',
+            '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
+            city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
+            lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
+          '</div>',
+        '</div>',
+        '<div class="recent-card-container-actions">',
+        '<button class="recent-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+        '<svg class="recent-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+        '</button>',
+        '</div>'
+      ].join('');
+    }
 
     // Robust thumbnail loader (prevents broken/missing thumbnails if class=thumbnail isn't supported).
     if (rawThumbUrl) {
@@ -3526,7 +3586,8 @@ const PostModule = (function() {
    * @returns {string} Hero image URL
    */
   function getHeroUrl(post) {
-    return getPostThumbnailUrl(post);
+    var rawUrl = getPostThumbnailUrl(post);
+    return addImageClass(rawUrl, 'imagebox');
   }
 
   /* --------------------------------------------------------------------------
