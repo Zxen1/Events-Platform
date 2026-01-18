@@ -307,6 +307,7 @@ try {
             p.expires_at,
             p.created_at,
             sc.icon_path AS subcategory_icon_path,
+            sc.subcategory_name AS subcategory_name,
             mc.id AS map_card_id,
             mc.subcategory_key AS map_card_subcategory_key,
             mc.title,
@@ -385,6 +386,7 @@ try {
                 // Resolve to a URL client-side using folder_avatars / folder_site_avatars.
                 'member_avatar' => (string)($row['admin_avatar_file'] ?? $row['member_avatar_file'] ?? ''),
                 'subcategory_key' => $postSubKey,
+                'subcategory_name' => (string)($row['subcategory_name'] ?? ''),
                 'subcategory_icon_url' => $subcategoryIconUrl,
                 'loc_qty' => (int)$row['loc_qty'],
                 'visibility' => $row['visibility'],
