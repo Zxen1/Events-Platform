@@ -477,4 +477,32 @@ item.setAttribute('role', 'button');  // ← This fixes jumping
 
 **Rule:** Any clickable element that toggles visibility (text↔input, collapsed↔expanded) should have `role="button"` on a stable parent container, not on the element that disappears.
 
+---
 
+### ✅ HIGH-DENSITY MAP MARKER STRATEGY (MANDATORY)
+
+**Purpose:** Maintain 60fps map performance and visual clarity while creating a high-value monetization tier for featured/premium listings.
+
+**1. The 50-Card Threshold:**
+- The map supports a maximum of **50 full Map Cards** (300px interactive elements) per viewport.
+- If the total result count in the current viewport exceeds 50, the system automatically triggers high-density mode.
+
+**2. Visual Hierarchy (Density > 50):**
+- **Tier 1: Top 50 (Featured/Premium)**: Rendered as full **300px Map Cards**. Priority is determined by the active sort order.
+- **Tier 2: Excess Featured**: Rendered as **30px Subcategory Icons**. These act as recognizable landmarks in dense areas.
+- **Tier 3: Standard Listings**: Rendered as **8px Dots**. These represent the mass of data/activity.
+
+**3. Visual Consistency (No-Gasp Transitions):**
+- **Standard Dots**: Filled with `subcategory_color`.
+- **Black Ring/Stroke**: All dots and icons must have a 2px black stroke at **0.7 opacity** (`rgba(0, 0, 0, 0.7)`). This matches the opacity of standard Map Card pills, ensuring smooth visual "blooming" during transitions.
+
+**4. Interactivity & States:**
+- **Non-Active**: Dots/Icons are small data points.
+- **Hover**: When a dot/icon is hovered (or its corresponding postcard in the list is hovered), it displays a **glow/highlight effect**.
+- **Active**: When clicked, any dot/icon instantly becomes a **Big Map Card (300px)**, sitting at the top of the z-index.
+
+**5. Technical Execution:**
+- **Mapbox Layers**: Dots and Icons must be rendered using Mapbox Circle and Symbol layers (GPU-accelerated). This ensures 10,000+ points can be panned/zoomed without lag.
+- **Fluid Threshold**: As the user zooms in and the count drops below 50, dots/icons automatically transition back into full Map Cards.
+
+---

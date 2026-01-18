@@ -338,6 +338,20 @@ const PostModule = (function() {
       refreshPosts();
     });
 
+    // Map hover events (sync from high-density dots/icons)
+    App.on('map:markerHover', function(data) {
+      if (!data || !data.postId) return;
+      var selector = '[data-id="' + data.postId + '"]';
+      var cards = document.querySelectorAll('.post-card' + selector + ', .recent-card' + selector);
+      cards.forEach(function(c) { c.classList.add('post-card--map-highlight'); });
+    });
+
+    App.on('map:markerLeave', function() {
+      document.querySelectorAll('.post-card--map-highlight').forEach(function(el) {
+        el.classList.remove('post-card--map-highlight');
+      });
+    });
+
     App.on('map:ready', function(data) {
       try {
         var map = data && data.map;
@@ -1478,32 +1492,97 @@ const PostModule = (function() {
     var nextSigByKey = {};
     var nextMarkerDataByKey = {};
 
+    var allMarkerData = [];
     Object.keys(venueGroups).forEach(function(venueKey) {
       var group = venueGroups[venueKey];
       if (!group.length) return;
 
-      // Check if this venue has multiple posts (different post IDs)
       var uniquePostIds = {};
       group.forEach(function(item) { uniquePostIds[item.post.id] = true; });
       var isMultiPostVenue = Object.keys(uniquePostIds).length > 1;
 
-      // Use the first item for the marker, but store all post IDs for the venue
       var firstItem = group[0];
       var markerData = convertMapCardToMarker(firstItem.post, firstItem.mapCard, firstItem.index);
       if (!markerData) return;
 
       if (isMultiPostVenue) {
-        // Multi-post venue: use multi-post icon and store all post IDs
         markerData.isMultiPost = true;
         markerData.venuePostIds = Object.keys(uniquePostIds);
         markerData.venuePostCount = markerData.venuePostIds.length;
       }
-
-      nextMarkerDataByKey[venueKey] = markerData;
-      nextSigByKey[venueKey] = buildMarkerSignature(markerData);
+      
+      markerData.venueKey = venueKey;
+      allMarkerData.push(markerData);
     });
 
-    // Remove markers that are no longer needed
+    // --- High-Density Logic ---
+    var MAX_MAP_CARDS = 50;
+    var totalResultCount = allMarkerData.length;
+    var isHighDensity = totalResultCount > MAX_MAP_CARDS;
+    
+    // Determine which featured posts get the 50 "Card" slots
+    // We sort by 'recommended' logic (Featured first, then Newest) to fill slots
+    var sortedForSlots = allMarkerData.slice().sort(function(a, b) {
+      var pA = a._originalPost;
+      var pB = b._originalPost;
+      var featA = (pA.featured === 1);
+      var featB = (pB.featured === 1);
+      if (featA !== featB) return featB ? 1 : -1;
+      return (Number(pB.sortCreatedAt) || 0) - (Number(pA.sortCreatedAt) || 0);
+    });
+
+    var cardSlots = new Set();
+    var geojsonFeatures = [];
+
+    sortedForSlots.forEach(function(item, idx) {
+      var isFeatured = item._originalPost && item._originalPost.featured === 1;
+      var hasCardSlot = idx < MAX_MAP_CARDS;
+
+      if (hasCardSlot) {
+        cardSlots.add(item.venueKey);
+      }
+
+      // GeoJSON property: type = 'card' | 'icon' | 'dot'
+      var type = 'dot';
+      if (isFeatured) {
+        type = hasCardSlot ? 'card' : 'icon';
+      }
+
+      geojsonFeatures.push({
+        type: 'Feature',
+        id: item.id, // Using post ID as numeric ID for Mapbox feature-state
+        geometry: {
+          type: 'Point',
+          coordinates: [item.lng, item.lat]
+        },
+        properties: {
+          postId: item.id,
+          venueKey: item.venueKey,
+          type: type,
+          color: item._originalPost.subcategory_color || '#000000',
+          iconId: item.sub || 'default',
+          iconUrl: item.iconUrl
+        }
+      });
+    });
+
+    // Update Mapbox high-density layers
+    if (mapModule.updateHighDensityData) {
+      mapModule.updateHighDensityData({
+        type: 'FeatureCollection',
+        features: geojsonFeatures
+      });
+    }
+
+    // Prepare markers for DOM rendering (only those in cardSlots)
+    allMarkerData.forEach(function(markerData) {
+      if (cardSlots.has(markerData.venueKey)) {
+        nextMarkerDataByKey[markerData.venueKey] = markerData;
+        nextSigByKey[markerData.venueKey] = buildMarkerSignature(markerData);
+      }
+    });
+
+    // Remove markers that are no longer needed (including those that switched to dots/icons)
     if (mapModule.removeMapCardMarker) {
       // IMPORTANT: removals must be based on what markers actually exist on the map,
       // not only on PostModule's lastRenderedVenueMarkerSigByKey (which can drift after refresh/rebuilds).
