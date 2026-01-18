@@ -291,6 +291,7 @@ const MarqueeModule = (function() {
 
     // Get display data (mirroring PostModule.renderPostCard)
     let title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
+    if (title === 'Array') title = 'Post #' + post.id;
     const venueName = (mapCard && mapCard.venue_name) || '';
     const city = (mapCard && mapCard.city) || '';
     const locationDisplay = venueName || city || post.location || post.venue || '';
@@ -414,7 +415,7 @@ const MarqueeModule = (function() {
    */
   function getPostUrl(post) {
     // Use post module's URL builder if available
-    const postModule = App.getModule('post');
+    const postModule = (window.App && typeof App.getModule === 'function') ? App.getModule('post') : null;
     if (postModule && typeof postModule.getPostUrl === 'function') {
       return postModule.getPostUrl(post);
     }
@@ -429,7 +430,7 @@ const MarqueeModule = (function() {
    */
   function getHeroUrl(post) {
     // Use post module's URL builder if available
-    const postModule = App.getModule('post');
+    const postModule = (window.App && typeof App.getModule === 'function') ? App.getModule('post') : null;
     if (postModule && typeof postModule.getHeroUrl === 'function') {
       return postModule.getHeroUrl(post);
     }

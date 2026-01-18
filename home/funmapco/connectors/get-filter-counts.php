@@ -145,9 +145,9 @@ try {
 
   if ($keyword !== '') {
     $kw = '%' . $keyword . '%';
-    $whereFiltered[] = '(pmc.title LIKE ? OR pmc.description LIKE ? OR pmc.venue_name LIKE ? OR pmc.city LIKE ? OR p.checkout_title LIKE ?)';
-    $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw;
-    $typesFiltered .= 'sssss';
+    $whereFiltered[] = '(pmc.title LIKE ? OR pmc.description LIKE ? OR pmc.venue_name LIKE ? OR pmc.city LIKE ? OR p.checkout_key LIKE ? OR co.checkout_title LIKE ?)';
+    $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw; $paramsFiltered[] = $kw;
+    $typesFiltered .= 'ssssss';
   }
 
   if ($dateStart !== '' || $dateEnd !== '') {
@@ -200,6 +200,7 @@ try {
     SELECT COUNT(*) AS total
     FROM post_map_cards pmc
     INNER JOIN posts p ON pmc.post_id = p.id
+    LEFT JOIN checkout_options co ON p.checkout_key = co.checkout_key
     WHERE {$scopeWhereSql}
   ";
   $stmtAvail = $mysqli->prepare($totalAvailableSql);
@@ -218,6 +219,7 @@ try {
     SELECT COUNT(*) AS total
     FROM post_map_cards pmc
     INNER JOIN posts p ON pmc.post_id = p.id
+    LEFT JOIN checkout_options co ON p.checkout_key = co.checkout_key
     WHERE {$showingWhereSql}
   ";
   $stmtShow = $mysqli->prepare($totalShowingSql);
@@ -239,6 +241,7 @@ try {
     SELECT pmc.subcategory_key AS subcategory_key, COUNT(*) AS total
     FROM post_map_cards pmc
     INNER JOIN posts p ON pmc.post_id = p.id
+    LEFT JOIN checkout_options co ON p.checkout_key = co.checkout_key
     WHERE {$filteredWhereSql}
     GROUP BY pmc.subcategory_key
   ";
@@ -269,7 +272,8 @@ try {
   ], JSON_UNESCAPED_SLASHES);
   exit;
 } catch (Throwable $e) {
-  fail(500, 'Server error');
+  error_log("[get-filter-counts.php] Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
+  fail(500, 'Server error: ' . $e->getMessage());
 }
 
 

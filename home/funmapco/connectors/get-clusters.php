@@ -99,10 +99,10 @@ try {
     $where[] = "p.moderation_status IN ('clean','pending')";
     
     if ($keyword !== '') {
-        $where[] = "(pmc.title LIKE ? OR pmc.description LIKE ? OR pmc.venue_name LIKE ? OR pmc.city LIKE ? OR p.checkout_title LIKE ?)";
         $kw = '%' . $keyword . '%';
-        $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw;
-        $types .= 'sssss';
+        $where[] = "(pmc.title LIKE ? OR pmc.description LIKE ? OR pmc.venue_name LIKE ? OR pmc.city LIKE ? OR p.checkout_key LIKE ? OR co.checkout_title LIKE ?)";
+        $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw;
+        $types .= 'ssssss';
     }
     
     if ($dateStart !== '' || $dateEnd !== '') {
@@ -150,6 +150,7 @@ try {
             AVG(LEAST(GREATEST(pmc.latitude, -85), 85)) AS avg_lat
         FROM post_map_cards pmc
         INNER JOIN posts p ON pmc.post_id = p.id
+        LEFT JOIN checkout_options co ON p.checkout_key = co.checkout_key
         WHERE {$whereSql}
         GROUP BY grid_col, grid_row
         HAVING count > 0
@@ -211,7 +212,8 @@ try {
         'zoom' => $zoom
     ]);
 
-} catch (Exception $e) {
-    echo json_encode(['success' => false, 'message' => 'Server error']);
+} catch (Throwable $e) {
+    error_log("[get-clusters.php] Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
 }
 

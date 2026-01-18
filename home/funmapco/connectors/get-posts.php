@@ -186,12 +186,12 @@ try {
         }
     }
 
-    // Keyword filter (map card + checkout title)
+    // Keyword filter (map card + checkout info)
     if ($keyword !== '') {
         $kw = '%' . $keyword . '%';
-        $where[] = '(mc.title LIKE ? OR mc.description LIKE ? OR mc.venue_name LIKE ? OR mc.city LIKE ? OR p.checkout_title LIKE ?)';
-        $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw;
-        $types .= 'sssss';
+        $where[] = '(mc.title LIKE ? OR mc.description LIKE ? OR mc.venue_name LIKE ? OR mc.city LIKE ? OR p.checkout_key LIKE ? OR co.checkout_title LIKE ?)';
+        $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw; $params[] = $kw;
+        $types .= 'ssssss';
     }
 
     // Date range filter (correct: uses post_sessions)
@@ -261,6 +261,7 @@ try {
         SELECT COUNT(DISTINCT p.id) as total
         FROM `posts` p
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
+        LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
         WHERE {$whereClause}
     ";
 
@@ -303,9 +304,12 @@ try {
             p.subcategory_key,
             p.loc_qty,
             p.visibility,
-            p.checkout_title,
+            p.checkout_key,
+            co.checkout_title,
             p.expires_at,
             p.created_at,
+            co.checkout_featured,
+            co.checkout_sidebar_ad,
             sc.icon_path AS subcategory_icon_path,
             sc.subcategory_name AS subcategory_name,
             mc.id AS map_card_id,
@@ -337,7 +341,8 @@ try {
         LEFT JOIN `admins` a ON a.id = p.member_id AND a.username = p.member_name
         LEFT JOIN `members` m ON m.id = p.member_id AND m.username = p.member_name
         LEFT JOIN `post_map_cards` mc ON mc.post_id = p.id
-        LEFT JOIN `subcategories` sc ON sc.subcategory_key = mc.subcategory_key
+        LEFT JOIN `subcategories` sc ON sc.subcategory_key = COALESCE(p.subcategory_key, mc.subcategory_key)
+        LEFT JOIN `checkout_options` co ON p.checkout_key = co.checkout_key
         WHERE {$whereClause}
         ORDER BY p.created_at DESC
         LIMIT ? OFFSET ?
@@ -390,9 +395,12 @@ try {
                 'subcategory_icon_url' => $subcategoryIconUrl,
                 'loc_qty' => (int)$row['loc_qty'],
                 'visibility' => $row['visibility'],
-                'checkout_title' => $row['checkout_title'],
+                'checkout_key' => $row['checkout_key'],
+                'checkout_title' => (string)($row['checkout_title'] ?? ''),
                 'expires_at' => $row['expires_at'],
                 'created_at' => $row['created_at'],
+                'featured' => (int)($row['checkout_featured'] ?? 0),
+                'sidebar_ad' => (int)($row['checkout_sidebar_ad'] ?? 0),
                 'map_cards' => [],
             ];
         }
@@ -619,6 +627,7 @@ try {
     ], JSON_UNESCAPED_SLASHES);
 
 } catch (Throwable $e) {
-    fail(500, 'Server error.');
+    error_log("[get-posts.php] Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
+    fail(500, 'Server error: ' . $e->getMessage());
 }
 

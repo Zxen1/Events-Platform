@@ -1088,7 +1088,8 @@ const PostModule = (function() {
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
 
     // Get display data
-    var title = (mapCard && mapCard.title) || post.checkout_title || '';
+    var title = (mapCard && mapCard.title) || post.checkout_title || post.title || '';
+    if (title === 'Array') title = 'Post #' + post.id;
     var venueName = (mapCard && mapCard.venue_name) || '';
     var city = (mapCard && mapCard.city) || '';
     var locationDisplay = venueName || city || '';
@@ -2842,10 +2843,13 @@ const PostModule = (function() {
       var next = [];
 
       // 1) Insert/refresh this post at the top.
+      var title = (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || post.title || '';
+      if (title === 'Array') title = 'Post #' + post.id;
+
       next.push({
         id: targetId,
         post_key: post.post_key,
-        title: (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '',
+        title: title,
         thumb_url: rawThumbUrl || '',
         subcategory_key: subKey0 || '',
         subcategory_name: subName0,
