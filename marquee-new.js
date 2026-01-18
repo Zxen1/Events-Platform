@@ -298,16 +298,14 @@ const MarqueeModule = (function() {
     const locationDisplay = venueName || city || post.location || post.venue || '';
 
     // Get subcategory info
-    const subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
-    const postModule = App.getModule('post');
-    if (!postModule) {
-      throw new Error('[Marquee] Post module required for category info');
+    var displayName = post.subcategory_name || '';
+    if (!displayName) {
+      throw new Error('[Marquee] Subcategory name missing for key: ' + (post.subcategory_key || 'unknown'));
     }
-    
-    const subInfo = postModule.getSubcategoryInfo(subcategoryKey, post.subcategory_name);
-    const displayName = subInfo.subcategory;
-
-    const iconUrl = post.subcategory_icon_url || postModule.getSubcategoryIconUrl(subcategoryKey);
+    var iconUrl = post.subcategory_icon_url || '';
+    if (!iconUrl) {
+      throw new Error('[Marquee] Subcategory icon missing for key: ' + (post.subcategory_key || 'unknown'));
+    }
 
     // Format dates - prioritizes pre-formatted session_summary from database
     const datesText = formatDates(mapCard ? mapCard.session_summary : post.session_summary);

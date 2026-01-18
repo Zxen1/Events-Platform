@@ -1033,6 +1033,21 @@ try {
             $sql = 'UPDATE subcategories SET ' . implode(', ', $updateParts) . ' WHERE id = :id';
             $stmt = $pdo->prepare($sql);
             $stmt->execute($params);
+
+            // Sync subcategory key changes to posts and post_map_cards
+            if ($subcategoryRow) {
+                $oldSubKey = (string)($subcategoryRow['subcategory_key'] ?? '');
+                if ($subKey !== '' && $oldSubKey !== '' && $subKey !== $oldSubKey) {
+                    // Update posts table
+                    $updPosts = $pdo->prepare('UPDATE `posts` SET subcategory_key = ? WHERE subcategory_key = ?');
+                    $updPosts->execute([$subKey, $oldSubKey]);
+
+                    // Update post_map_cards table
+                    $updCardKeys = $pdo->prepare('UPDATE `post_map_cards` SET subcategory_key = ? WHERE subcategory_key = ?');
+                    $updCardKeys->execute([$subKey, $oldSubKey]);
+                }
+            }
+
             $updated[] = $subId;
             
             // Track this subcategory as processed

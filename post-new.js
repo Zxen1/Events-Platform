@@ -1047,26 +1047,6 @@ const PostModule = (function() {
    */
   /**
    * Get icon URL for a subcategory.
-   * Required for rendering. Throws error if icon is missing.
-   * @param {string} subcategoryKey 
-   * @returns {string} Icon URL
-   */
-  function getSubcategoryIconUrl(subcategoryKey) {
-    if (!subcategoryKey) {
-      throw new Error('[Post] subcategoryKey is required for icon lookup');
-    }
-
-    var iconPaths = window.subcategoryIconPaths || {};
-
-    // Direct key match
-    if (iconPaths[subcategoryKey]) {
-      return iconPaths[subcategoryKey];
-    }
-
-    // Agent Essentials: NO FALLBACKS.
-    throw new Error('[Post] Missing icon for subcategory: ' + subcategoryKey);
-  }
-
   /**
    * Get subcategory display info (category name, subcategory name)
    * @param {string} subcategoryKey - Subcategory key
@@ -1084,41 +1064,6 @@ const PostModule = (function() {
    * @param {string} [subNameFromDb] - Optional name from database JOIN
    * @returns {Object} { category, subcategory }
    */
-  function getSubcategoryInfo(subcategoryKey, subNameFromDb) {
-    if (!subcategoryKey) {
-      throw new Error('[Post] subcategoryKey is required');
-    }
-
-    // 1. Prioritize the name from the database JOIN (if provided)
-    if (subNameFromDb) {
-      return { category: '', subcategory: subNameFromDb };
-    }
-
-    // 2. Look up in global categories array
-    var categories = window.categories;
-    if (Array.isArray(categories)) {
-      for (var i = 0; i < categories.length; i++) {
-        var cat = categories[i];
-        var subs = cat.subs || [];
-        for (var j = 0; j < subs.length; j++) {
-          var sub = subs[j];
-          var name = (sub && (sub.subcategory_name || sub.name));
-          var key = (sub && (sub.subcategory_key || sub.key));
-          
-          if (key === subcategoryKey) {
-            return {
-              category: cat.category_name || cat.name,
-              subcategory: name
-            };
-          }
-        }
-      }
-    }
-
-    // Agent Essentials: NO FALLBACKS. If we reach here, we failed to resolve the name.
-    throw new Error('[Post] Subcategory name not found for key: ' + subcategoryKey);
-  }
-
   /**
    * Render a single post card
    * Structure: .post-card-image, .post-card-meta, .post-card-text-title, .post-card-container-info
@@ -1144,10 +1089,14 @@ const PostModule = (function() {
     var locationDisplay = venueName || city || '';
 
     // Get subcategory info
-    var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
-    var subInfo = getSubcategoryInfo(subcategoryKey, post.subcategory_name);
-    var displayName = subInfo.subcategory;
-    var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
+    var displayName = post.subcategory_name || '';
+    if (!displayName) {
+      throw new Error('[Post] Subcategory name missing for key: ' + (post.subcategory_key || 'unknown'));
+    }
+    var iconUrl = post.subcategory_icon_url || '';
+    if (!iconUrl) {
+      throw new Error('[Post] Subcategory icon missing for key: ' + (post.subcategory_key || 'unknown'));
+    }
 
     // Format dates (if sessions exist) - prioritizes pre-formatted session_summary from database
     var datesText = formatPostDates(post);
@@ -2231,10 +2180,14 @@ const PostModule = (function() {
     var heroUrl = addImageClass(mediaUrls[0] || '', 'imagebox');
 
     // Get subcategory info
-    var subcategoryKey = post.subcategory_key || loc0.subcategory_key || '';
-    var subInfo = getSubcategoryInfo(subcategoryKey, post.subcategory_name);
-    var displayName = subInfo.subcategory;
-    var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
+    var displayName = post.subcategory_name || '';
+    if (!displayName) {
+      throw new Error('[Post] Subcategory name missing for key: ' + (post.subcategory_key || 'unknown'));
+    }
+    var iconUrl = post.subcategory_icon_url || '';
+    if (!iconUrl) {
+      throw new Error('[Post] Subcategory icon missing for key: ' + (post.subcategory_key || 'unknown'));
+    }
 
     // Format dates - use pre-formatted session_summary from database
     var datesText = (loc0 ? loc0.session_summary : post.session_summary) || '';
@@ -2843,7 +2796,8 @@ const PostModule = (function() {
       var rawThumbUrl = getPostThumbnailUrl(post);
       var mapCard0 = (post && post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
       var subKey0 = (mapCard0 && mapCard0.subcategory_key) ? String(mapCard0.subcategory_key) : String(post.subcategory_key || '');
-      var iconUrl0 = post.subcategory_icon_url || getSubcategoryIconUrl(subKey0);
+      var subName0 = post.subcategory_name || (mapCard0 && mapCard0.subcategory_name) || '';
+      var iconUrl0 = post.subcategory_icon_url || '';
       var loc0 = (mapCard0 && (mapCard0.city || mapCard0.venue_name)) ? String(mapCard0.city || mapCard0.venue_name) : '';
 
       // Deduplicate (string-safe) and update "last seen" timestamp if already present.
@@ -2857,8 +2811,8 @@ const PostModule = (function() {
         title: (post.map_cards && post.map_cards[0] && post.map_cards[0].title) || post.checkout_title || '',
         thumb_url: rawThumbUrl || '',
         subcategory_key: subKey0 || '',
-        subcategory_name: post.subcategory_name || (mapCard0 && mapCard0.subcategory_name) || '',
-        subcategory_icon_url: iconUrl0 || '',
+        subcategory_name: subName0,
+        subcategory_icon_url: iconUrl0,
         location_text: loc0 || '',
         timestamp: now
       });
@@ -3128,10 +3082,14 @@ const PostModule = (function() {
     var city = entry.location_text || '';
 
     // Get subcategory info
-    var subcategoryKey = entry.subcategory_key || '';
-    var subInfo = getSubcategoryInfo(subcategoryKey, entry.subcategory_name);
-    var displayName = subInfo.subcategory;
-    var iconUrl = entry.subcategory_icon_url || (subcategoryKey ? getSubcategoryIconUrl(subcategoryKey) : '');
+    var displayName = entry.subcategory_name || '';
+    if (!displayName) {
+      throw new Error('[Recent] Subcategory name missing for entry: ' + (entry.id || 'unknown'));
+    }
+    var iconUrl = entry.subcategory_icon_url || '';
+    if (!iconUrl) {
+      throw new Error('[Recent] Subcategory icon missing for entry: ' + (entry.id || 'unknown'));
+    }
 
     // Format last opened time
     var lastOpenedText = formatLastOpened(entry.timestamp);
@@ -3145,9 +3103,7 @@ const PostModule = (function() {
       ? '<span class="recent-card-icon-sub"><img class="recent-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
 
-    var catLineText = subInfo.category && subInfo.subcategory
-      ? subInfo.category + ' &gt; ' + subInfo.subcategory
-      : subInfo.subcategory || subcategoryKey;
+    var catLineText = displayName;
 
     // Check favorite status
     var isFav = isFavorite(entry.id);
