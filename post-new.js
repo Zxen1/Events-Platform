@@ -3555,8 +3555,6 @@ const PostModule = (function() {
     highlightMapMarker: highlightMapMarker,
     getPostUrl: getPostUrl,
     getHeroUrl: getHeroUrl,
-    getSubcategoryInfo: getSubcategoryInfo,
-    getSubcategoryIconUrl: getSubcategoryIconUrl,
     formatPostDates: formatPostDates,
     formatPriceSummaryText: formatPriceSummaryText,
     parsePriceSummary: parsePriceSummary
