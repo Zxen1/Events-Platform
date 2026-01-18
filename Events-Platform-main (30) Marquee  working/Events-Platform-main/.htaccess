@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# Safety: do not rewrite real files/folders
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Deep-link support:
+# /post/<post_key> -> /?post=<post_key>
+# Use 302 while testing; switch to 301 later if desired.
+RewriteRule ^post/([^/?#]+)/?$ /?post=$1 [L,R=302,QSA]
+</IfModule>
+
+
