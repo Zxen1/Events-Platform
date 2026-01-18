@@ -2659,7 +2659,7 @@ const AdminModule = (function() {
         avatar.className = 'admin-moderation-item-avatar';
         avatar.alt = '';
         if (member.avatar_file && window.App && App.getImageUrl) {
-            avatar.src = App.getImageUrl('avatar', member.avatar_file);
+            avatar.src = App.getImageUrl('avatars', member.avatar_file);
         } else {
             avatar.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Ccircle cx="12" cy="8" r="4" fill="%23666"/%3E%3Cpath d="M4 20c0-4 4-6 8-6s8 2 8 6" fill="%23666"/%3E%3C/svg%3E';
         }
