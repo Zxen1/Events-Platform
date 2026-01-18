@@ -145,14 +145,14 @@ if ($post_id <= 0) {
 
 // Generate filename following naming convention (rules file):
 // Pattern: {postId}-{hash}.{extension}
-// Example: 123-a7f3b2.jpg
+// 8-digit padding for scalability (00000001-a7f3b2.jpg)
 $originalFilename = basename($_FILES['file']['name']);
 $extension = strtolower(pathinfo($originalFilename, PATHINFO_EXTENSION));
 
 // Generate short hash for uniqueness (6 chars from md5)
 $hash = substr(md5(uniqid('', true) . random_bytes(8)), 0, 6);
 
-$finalFilename = $post_id . '-' . $hash . '.' . $extension;
+$finalFilename = str_pad($post_id, 8, '0', STR_PAD_LEFT) . '-' . $hash . '.' . $extension;
 
 // Read file content
 $fileContent = file_get_contents($_FILES['file']['tmp_name']);

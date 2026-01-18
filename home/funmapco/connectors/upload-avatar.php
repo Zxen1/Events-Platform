@@ -84,7 +84,8 @@ if(!in_array($ext, $allowedExts)) {
 
 // Stable filename (overwrite on update)
 // Naming convention (rules file): {memberId}-avatar.{extension}
-$finalFilename = $userId . '-avatar.' . $ext;
+// 8-digit padding for scalability (00000001-avatar.jpg)
+$finalFilename = str_pad($userId, 8, '0', STR_PAD_LEFT) . '-avatar.' . $ext;
 
 // File size validation
 if (isset($_FILES['file']['size']) && (int)$_FILES['file']['size'] > $avatarMaxSize) {
