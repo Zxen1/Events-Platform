@@ -1865,7 +1865,7 @@ const MapModule = (function() {
       type: 'symbol',
       source: CLUSTER_SOURCE_ID,
       minzoom: CLUSTER_MIN_ZOOM,
-      maxzoom: getClusterZoomMax() - 0.01,
+      maxzoom: getClusterZoomMax(),
       layout: {
         'icon-image': CLUSTER_ICON_ID,
         'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.4, 7.5, 1],
