@@ -304,10 +304,9 @@ const MarqueeModule = (function() {
       throw new Error('[Marquee] Post module required for category info');
     }
     
-    const subInfo = postModule.getSubcategoryInfo(subcategoryKey);
-    if (!subInfo.subcategory && post.subcategory_name) {
-      subInfo.subcategory = post.subcategory_name;
-    }
+    const subInfo = postModule.getSubcategoryInfo(subcategoryKey, post.subcategory_name);
+    const displayName = subInfo.subcategory;
+
     const iconUrl = post.subcategory_icon_url || postModule.getSubcategoryIconUrl(subcategoryKey);
 
     // Format dates - prioritizes pre-formatted session_summary from database
@@ -330,16 +329,15 @@ const MarqueeModule = (function() {
       const iconWrap = document.createElement('span');
       iconWrap.className = 'marquee-slide-icon-sub';
       const iconImg = document.createElement('img');
+      iconImg.className = 'marquee-image-sub';
       iconImg.src = iconUrl;
       iconImg.alt = '';
       iconWrap.appendChild(iconImg);
       catLine.appendChild(iconWrap);
     }
     
-    const subName = subInfo.subcategory || subcategoryKey;
-
     const catText = document.createElement('span');
-    catText.innerHTML = subName; 
+    catText.innerHTML = displayName; 
     catLine.appendChild(catText);
     info.appendChild(catLine);
     
@@ -370,7 +368,7 @@ const MarqueeModule = (function() {
       
       let badgeContent = '';
       if (priceParts.flagUrl) {
-        badgeContent = '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">';
+        badgeContent = '<img class="marquee-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">';
       } else {
         badgeContent = '💰';
       }
@@ -465,43 +463,23 @@ const MarqueeModule = (function() {
    * @param {Object|Array|string} dates - Date data
    * @returns {string} Formatted date string
    */
+  /**
+   * Format dates display for a marquee slide.
+   * Required for instant rendering. Throws error if summary is invalid format.
+   * @param {string} dates - Pre-formatted date summary string
+   * @returns {string} Formatted date string
+   */
   function formatDates(dates) {
-    if (!dates) return 'Dates TBA';
+    // Return empty if no dates provided (valid state)
+    if (!dates) return '';
     
-    // If string, return as-is
-    if (typeof dates === 'string') {
-      // If it's a JSON string, try to parse it (legacy fallback)
-      if (dates.indexOf('{') === 0) {
-        try {
-          const parsed = JSON.parse(dates);
-          if (parsed.start) {
-            if (parsed.end && parsed.end !== parsed.start) {
-              return App.formatDateShort(parsed.start) + ' - ' + App.formatDateShort(parsed.end);
-            }
-            return App.formatDateShort(parsed.start);
-          }
-        } catch (e) {}
-      }
+    // Primary source: pre-formatted string (non-JSON)
+    if (typeof dates === 'string' && dates.indexOf('{') !== 0) {
       return dates;
     }
-    
-    // If array with start/end
-    if (Array.isArray(dates) && dates.length > 0) {
-      const start = dates[0];
-      const end = dates[dates.length - 1];
-      if (start === end) return App.formatDateShort(start);
-      return App.formatDateShort(start) + ' - ' + App.formatDateShort(end);
-    }
-    
-    // If object with start/end
-    if (dates.start) {
-      if (dates.end && dates.end !== dates.start) {
-        return App.formatDateShort(dates.start) + ' - ' + App.formatDateShort(dates.end);
-      }
-      return App.formatDateShort(dates.start);
-    }
-    
-    return 'Dates TBA';
+
+    // Agent Essentials: NO FALLBACKS. Legacy JSON/array support is removed.
+    return '';
   }
 
   /**

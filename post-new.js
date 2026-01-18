@@ -1011,56 +1011,24 @@ const PostModule = (function() {
    * @param {Object} post - Post data from API
    * @returns {string} Formatted date string or empty
    */
+  /**
+   * Format dates display for a post.
+   * Required for instant rendering. Throws error if pre-formatted summary is missing.
+   * @param {Object} post - Post data from API
+   * @returns {string} Formatted date string or empty
+   */
   function formatPostDates(post) {
-    // 1. Try pre-formatted session_summary from first map card (fast display)
     var mapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
     var summary = (mapCard ? mapCard.session_summary : post.session_summary) || '';
     
-    // Safety: If it's a string and NOT JSON, use it directly for speed.
+    // Primary source: pre-formatted string (non-JSON)
     if (summary && typeof summary === 'string' && summary.trim() !== '' && summary.indexOf('{') !== 0) {
       return summary;
     }
 
-    // Fallback: If summary is JSON, parse it (legacy support)
-    if (summary && typeof summary === 'string' && summary.indexOf('{') === 0) {
-      try {
-        var parsed = JSON.parse(summary);
-        if (parsed.start) {
-          if (parsed.end && parsed.end !== parsed.start) {
-            return App.formatDateShort(parsed.start) + ' - ' + App.formatDateShort(parsed.end);
-          }
-          return App.formatDateShort(parsed.start);
-        }
-      } catch (e) {}
-    }
-
-    // 2. Fallback to sessions array (backwards compatibility / initial load)
-    if (!mapCard) return '';
-    var sessions = mapCard.sessions;
-    if (!Array.isArray(sessions) || !sessions.length) return '';
-
-    // Sort by date
-    var sortedSessions = sessions.slice().sort(function(a, b) {
-      var dateA = a.date || a.full || '';
-      var dateB = b.date || b.full || '';
-      return dateA.localeCompare(dateB);
-    });
-
-    // Get first and last dates
-    var first = sortedSessions[0];
-    var last = sortedSessions[sortedSessions.length - 1];
-
-    var firstDate = first.date || first.full || '';
-    var lastDate = last.date || last.full || '';
-
-    if (!firstDate) return '';
-
-    // Format: "Jan 1 - Jan 15" or just "Jan 1" if same/single
-    // Format: "Sun 16 Jan - Fri 20 Jan" or just "Sun 16 Jan" if same/single
-    if (firstDate === lastDate || sortedSessions.length === 1) {
-      return App.formatDateShort(firstDate);
-    }
-    return App.formatDateShort(firstDate) + ' - ' + App.formatDateShort(lastDate);
+    // Agent Essentials: NO FALLBACKS. Legacy JSON/array support is removed.
+    // Return empty if no summary exists (valid for posts without dates).
+    return '';
   }
 
   /**
@@ -1077,24 +1045,26 @@ const PostModule = (function() {
    * @param {string} subcategoryKey - Subcategory key (e.g., 'live-gigs')
    * @returns {string} Icon URL or empty string
    */
+  /**
+   * Get icon URL for a subcategory.
+   * Required for rendering. Throws error if icon is missing.
+   * @param {string} subcategoryKey 
+   * @returns {string} Icon URL
+   */
   function getSubcategoryIconUrl(subcategoryKey) {
-    if (!subcategoryKey) return '';
+    if (!subcategoryKey) {
+      throw new Error('[Post] subcategoryKey is required for icon lookup');
+    }
 
-    // Check global subcategoryIconPaths (populated by form loader)
     var iconPaths = window.subcategoryIconPaths || {};
 
-    // Try direct key match first
+    // Direct key match
     if (iconPaths[subcategoryKey]) {
       return iconPaths[subcategoryKey];
     }
 
-    // Try lowercase name key format
-    var nameKey = 'name:' + subcategoryKey.toLowerCase();
-    if (iconPaths[nameKey]) {
-      return iconPaths[nameKey];
-    }
-
-    return '';
+    // Agent Essentials: NO FALLBACKS.
+    throw new Error('[Post] Missing icon for subcategory: ' + subcategoryKey);
   }
 
   /**
@@ -1107,38 +1077,46 @@ const PostModule = (function() {
    * @param {string} subcategoryKey 
    * @returns {Object} { category, subcategory }
    */
-  function getSubcategoryInfo(subcategoryKey) {
-    var result = { category: '', subcategory: '' };
-    if (!subcategoryKey) return result;
+  /**
+   * Resolve subcategory and category names for display.
+   * Required for instant rendering. Throws error if subcategory name is missing.
+   * @param {string} subcategoryKey 
+   * @param {string} [subNameFromDb] - Optional name from database JOIN
+   * @returns {Object} { category, subcategory }
+   */
+  function getSubcategoryInfo(subcategoryKey, subNameFromDb) {
+    if (!subcategoryKey) {
+      throw new Error('[Post] subcategoryKey is required');
+    }
 
-    // Check global categories array
+    // 1. Prioritize the name from the database JOIN (if provided)
+    if (subNameFromDb) {
+      return { category: '', subcategory: subNameFromDb };
+    }
+
+    // 2. Look up in global categories array
     var categories = window.categories;
-    if (!Array.isArray(categories)) return result;
-
-    for (var i = 0; i < categories.length; i++) {
-      var cat = categories[i];
-      if (!cat || !cat.name) continue;
-
-      // Check if any sub matches the key
-      var subs = cat.subs || [];
-      for (var j = 0; j < subs.length; j++) {
-        var sub = subs[j];
-        var subName = (typeof sub === 'string') ? sub : (sub && (sub.subcategory_name || sub.name));
-        if (!subName) continue;
-
-        // Convert subcategory name to key format for comparison
-        var subKey = (sub && sub.subcategory_key) || sub.key || subName.toLowerCase().replace(/\s+/g, '-');
-        if (subKey === subcategoryKey) {
-          result.category = cat.category_name || cat.name;
-          result.subcategory = subName;
-          return result;
+    if (Array.isArray(categories)) {
+      for (var i = 0; i < categories.length; i++) {
+        var cat = categories[i];
+        var subs = cat.subs || [];
+        for (var j = 0; j < subs.length; j++) {
+          var sub = subs[j];
+          var name = (sub && (sub.subcategory_name || sub.name));
+          var key = (sub && (sub.subcategory_key || sub.key));
+          
+          if (key === subcategoryKey) {
+            return {
+              category: cat.category_name || cat.name,
+              subcategory: name
+            };
+          }
         }
       }
     }
 
-    // Fallback: format the key
-    result.subcategory = subcategoryKey.replace(/-/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
-    return result;
+    // Agent Essentials: NO FALLBACKS. If we reach here, we failed to resolve the name.
+    throw new Error('[Post] Subcategory name not found for key: ' + subcategoryKey);
   }
 
   /**
@@ -1167,10 +1145,8 @@ const PostModule = (function() {
 
     // Get subcategory info
     var subcategoryKey = post.subcategory_key || (mapCard && mapCard.subcategory_key) || '';
-    var subInfo = getSubcategoryInfo(subcategoryKey);
-    if (!subInfo.subcategory && post.subcategory_name) {
-      subInfo.subcategory = post.subcategory_name;
-    }
+    var subInfo = getSubcategoryInfo(subcategoryKey, post.subcategory_name);
+    var displayName = subInfo.subcategory;
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
     // Format dates (if sessions exist) - prioritizes pre-formatted session_summary from database
@@ -1205,7 +1181,7 @@ const PostModule = (function() {
       : '<div class="post-card-image post-card-image--empty" aria-hidden="true"></div>';
 
     var iconHtml = iconUrl
-      ? '<span class="post-card-icon-sub"><img src="' + iconUrl + '" alt="" /></span>'
+      ? '<span class="post-card-icon-sub"><img class="post-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
 
     var catLineText = subInfo.category && subInfo.subcategory
@@ -1219,21 +1195,21 @@ const PostModule = (function() {
       '<div class="post-card-meta">',
         '<div class="post-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="post-card-container-info">',
-          '<div class="post-card-row-cat">' + iconHtml + ' ' + (subInfo.subcategory || subcategoryKey) + '</div>',
+          '<div class="post-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
           locationDisplay ? '<div class="post-card-row-loc"><span class="post-card-badge" title="Venue">📍</span><span>' + escapeHtml(locationDisplay) + '</span></div>' : '',
           datesText ? '<div class="post-card-row-date"><span class="post-card-badge" title="Dates">📅</span><span>' + escapeHtml(datesText) + '</span></div>' : 
           (priceParts.text ? (function() {
             var badgeHtml = priceParts.flagUrl 
-              ? '<img src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+              ? '<img class="post-card-image-badge" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
               : '💰';
             return '<div class="post-card-row-price"><span class="post-card-badge" title="Price">' + badgeHtml + '</span><span>' + escapeHtml(priceParts.text) + '</span></div>';
           })() : ''),
         '</div>',
       '</div>',
       '<div class="post-card-container-actions">',
-        '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-          '<svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
-        '</button>',
+      '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+      '<svg class="post-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+      '</button>',
       '</div>'
     ].join('');
 
@@ -1994,63 +1970,28 @@ const PostModule = (function() {
    * @param {string} priceSummary - Raw price summary string
    * @returns {Object} { flagUrl, countryCode, text }
    */
+  /**
+   * Parse a pre-formatted price summary string.
+   * Expected format: "[cc] $10.00" where cc is the currency flag code.
+   * Throws error if format is invalid.
+   * @param {string} priceSummary 
+   * @returns {Object} { flagUrl, countryCode, text }
+   */
   function parsePriceSummary(priceSummary) {
     var raw = (priceSummary === null || priceSummary === undefined) ? '' : String(priceSummary).trim();
     if (!raw) return { flagUrl: '', countryCode: '', text: '' };
 
-    // 0. Detect JSON pattern (legacy format fallback)
-    if (raw.indexOf('{') === 0) {
-      try {
-        var parsed = JSON.parse(raw);
-        if (parsed.ticket && parsed.ticket.currency) {
-          var t = parsed.ticket;
-          var min = t.min;
-          var max = t.max;
-          var curr = t.currency;
-          var text = (min === max) ? (min.toFixed(2) + ' ' + curr) : (min.toFixed(2) + ' - ' + max.toFixed(2) + ' ' + curr);
-          return parsePriceSummary(text); // Recursive call to handle flag lookup
-        }
-        if (parsed.item && parsed.item.currency) {
-          var item = parsed.item;
-          var text = item.price.toFixed(2) + ' ' + item.currency;
-          return parsePriceSummary(text);
-        }
-      } catch (e) {
-        // Not valid JSON or unknown format, continue to normal parsing
-      }
-    }
-
     var countryCode = '';
     var displayText = raw;
 
-    // 1. Detect [cc] pattern (e.g., "[us] $10.00")
+    // Detect [cc] pattern (e.g., "[us] $10.00")
     var match = raw.match(/^\[([a-z0-9_-]+)\]\s*(.*)$/i);
     if (match) {
       countryCode = match[1].toLowerCase();
       displayText = match[2].trim();
     } else {
-      // 2. Fallback: Detect ISO code at the end (e.g., "$10.00 USD" or "10.00USD")
-      // This handles old data and cases where prefix wasn't saved.
-      var isoMatch = raw.match(/\s*([A-Z]{3})$/);
-      if (isoMatch) {
-        var isoCode = isoMatch[1];
-        // Look up country code from CurrencyComponent if available
-        if (window.CurrencyComponent && typeof CurrencyComponent.getCurrencyByCode === 'function') {
-          // We might need to try both the raw ISO and variants like ISO-L/ISO-R
-          var variants = [isoCode, isoCode + '-L', isoCode + '-R'];
-          var currData = null;
-          for (var i = 0; i < variants.length; i++) {
-            currData = CurrencyComponent.getCurrencyByCode(variants[i]);
-            if (currData) break;
-          }
-
-          if (currData && currData.filename) {
-            countryCode = currData.filename.replace('.svg', '').toLowerCase();
-            // Remove the ISO code from the display text as requested
-            displayText = raw.substring(0, isoMatch.index).trim();
-          }
-        }
-      }
+      // Agent Essentials: NO FALLBACKS. Legacy formats are ignored.
+      // If no [cc] prefix, we treat the whole string as text without a flag.
     }
 
     var flagUrl = '';
@@ -2291,10 +2232,8 @@ const PostModule = (function() {
 
     // Get subcategory info
     var subcategoryKey = post.subcategory_key || loc0.subcategory_key || '';
-    var subInfo = getSubcategoryInfo(subcategoryKey);
-    if (!subInfo.subcategory && post.subcategory_name) {
-      subInfo.subcategory = post.subcategory_name;
-    }
+    var subInfo = getSubcategoryInfo(subcategoryKey, post.subcategory_name);
+    var displayName = subInfo.subcategory;
     var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
 
     // Format dates - use pre-formatted session_summary from database
@@ -2311,7 +2250,7 @@ const PostModule = (function() {
     var priceHtml = '';
     if (priceParts.text) {
       var badgeHtml = priceParts.flagUrl 
-        ? '<img class="open-post-badge-image open-post-badge-image--inline" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
+        ? '<img class="open-post-image-badge open-post-image-badge--inline" src="' + priceParts.flagUrl + '" alt="' + priceParts.countryCode + '" title="Currency: ' + priceParts.countryCode.toUpperCase() + '">'
         : '💰 ';
       priceHtml = '<span>' + badgeHtml + escapeHtml(priceParts.text) + '</span>';
     }
@@ -2349,14 +2288,14 @@ const PostModule = (function() {
         var shareBtn = document.createElement('button');
         shareBtn.className = 'open-post-button-share';
         shareBtn.setAttribute('aria-label', 'Share post');
-        shareBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
+        shareBtn.innerHTML = '<svg class="open-post-icon-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
         cardActions.appendChild(shareBtn);
       }
     }
 
     // Build venue dropdown options
     var venueOptionsHtml = locationList.map(function(loc, i) {
-      return '<button data-index="' + i + '"><span class="open-post-text-venuename">' + escapeHtml(loc.venue_name || '') + '</span><span class="open-post-text-address">' + escapeHtml(loc.address_line || '') + '</span></button>';
+      return '<button class="open-post-button-venueopt" data-index="' + i + '"><span class="open-post-text-venuename">' + escapeHtml(loc.venue_name || '') + '</span><span class="open-post-text-address">' + escapeHtml(loc.address_line || '') + '</span></button>';
     }).join('');
 
     // Create post body - proper class naming
@@ -3190,10 +3129,8 @@ const PostModule = (function() {
 
     // Get subcategory info
     var subcategoryKey = entry.subcategory_key || '';
-    var subInfo = getSubcategoryInfo(subcategoryKey);
-    if (!subInfo.subcategory && entry.subcategory_name) {
-      subInfo.subcategory = entry.subcategory_name;
-    }
+    var subInfo = getSubcategoryInfo(subcategoryKey, entry.subcategory_name);
+    var displayName = subInfo.subcategory;
     var iconUrl = entry.subcategory_icon_url || (subcategoryKey ? getSubcategoryIconUrl(subcategoryKey) : '');
 
     // Format last opened time
@@ -3205,7 +3142,7 @@ const PostModule = (function() {
       : '<div class="recent-card-image recent-card-image--empty" aria-hidden="true"></div>';
 
     var iconHtml = iconUrl
-      ? '<span class="recent-card-icon-sub"><img src="' + iconUrl + '" alt="" /></span>'
+      ? '<span class="recent-card-icon-sub"><img class="recent-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
 
     var catLineText = subInfo.category && subInfo.subcategory
@@ -3220,15 +3157,15 @@ const PostModule = (function() {
       '<div class="recent-card-meta">',
         '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="recent-card-container-info">',
-          catLineText ? '<div class="recent-card-row-cat">' + iconHtml + ' ' + (subInfo.subcategory || subcategoryKey) + '</div>' : '',
+          catLineText ? '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>' : '',
           city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
           lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
         '</div>',
       '</div>',
       '<div class="recent-card-container-actions">',
-        '<button class="recent-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-          '<svg viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
-        '</button>',
+      '<button class="recent-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
+      '<svg class="recent-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+      '</button>',
       '</div>'
     ].join('');
 

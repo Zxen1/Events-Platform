@@ -197,7 +197,7 @@
   line-height: 1;
 }
 
-.marquee-badge img {
+.marquee-image-badge {
   width: 16px;
   height: 16px;
   object-fit: contain;
@@ -216,7 +216,8 @@
   padding-right: 5px;
 }
 
-.marquee-slide-icon-sub img {
+.marquee-image-sub {
   width: 18px;
   height: 18px;
+  display: block;
 }

@@ -231,21 +231,9 @@
   transition: background-color 0.2s ease;
 }
 
-.post-card *,
-.recent-card * {
-  transition: none;
-}
-
 .post-card:hover,
 .recent-card:hover {
   background: #2e3a72;
-}
-
-.post-card,
-.post-card *,
-.recent-card,
-.recent-card * {
-  cursor: pointer;
 }
 
 /* Card in post-panel */
@@ -276,7 +264,8 @@
   border-radius: 8px;
 }
 
-.post-panel-content button {
+/* Buttons with dark background inside panels */
+.post-card-button-dark {
   background: var(--btn);
   border-color: var(--btn);
   color: var(--ink);
@@ -354,18 +343,13 @@
   margin-bottom: 10px; /* 10-12-6 Rule: Elements inside containers use margin-bottom 10px */
 }
 
-/* Subcategory icon */
-.post-card-icon-sub svg,
-.recent-card-icon-sub svg {
+/* Subcategory icon image/svg */
+.post-card-image-sub,
+.recent-card-image-sub {
   width: 18px;
   height: 18px;
   vertical-align: middle;
-}
-
-.post-card-icon-sub img,
-.recent-card-icon-sub img {
-  width: 18px;
-  height: 18px;
+  display: block;
 }
 
 /* Category row */
@@ -454,9 +438,9 @@
 }
 
 /* Badge image sizing (No Hardcode Rule) */
-.post-card-badge img,
-.recent-card-badge img,
-.open-post-badge-image {
+.post-card-image-badge,
+.recent-card-image-badge,
+.open-post-image-badge {
   width: 16px;
   height: 16px;
   object-fit: contain;
@@ -498,8 +482,8 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.post-card-button-fav svg,
-.recent-card-button-fav svg {
+.post-card-icon-fav,
+.recent-card-icon-fav {
   width: 18px;
   height: 18px;
   fill: none;
@@ -508,8 +492,8 @@
   pointer-events: none;
 }
 
-.post-card-button-fav[aria-pressed="true"] svg,
-.recent-card-button-fav[aria-pressed="true"] svg {
+.post-card-button-fav[aria-pressed="true"] .post-card-icon-fav,
+.recent-card-button-fav[aria-pressed="true"] .recent-card-icon-fav {
   fill: var(--gold);
   stroke: var(--gold);
 }
@@ -678,7 +662,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.open-post-button-share svg {
+.open-post-icon-share {
   width: 18px;
   height: 18px;
   fill: var(--button-text);
@@ -771,14 +755,11 @@
   margin-top: 10px;
 }
 
-.open-post-row-member img {
+.open-post-image-avatar {
   width: 50px;
   height: 50px;
   border-radius: 50%;
   object-fit: cover;
-}
-
-.open-post-image-avatar {
   flex: 0 0 auto;
 }
 
@@ -1037,7 +1018,7 @@
   gap: 5px;
 }
 
-.open-post-container-venueopts button {
+.open-post-button-venueopt {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1051,7 +1032,7 @@
   color: inherit;
 }
 
-.open-post-container-venueopts button:hover {
+.open-post-button-venueopt:hover {
   background: var(--btn-hover);
 }
 
