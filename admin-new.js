@@ -2032,6 +2032,22 @@ const AdminModule = (function() {
             registerField('map.map_style', initialStyle);
         }
         
+        // Cluster Zoom Level slider
+        var clusterZoomLevelSlider = document.getElementById('adminClusterZoomLevel');
+        var clusterZoomLevelDisplay = document.getElementById('adminClusterZoomLevelDisplay');
+        if (clusterZoomLevelSlider && clusterZoomLevelDisplay) {
+            var initialClusterZoom = mapTabData.cluster_zoom_level !== undefined ? parseFloat(mapTabData.cluster_zoom_level) : 8;
+            clusterZoomLevelSlider.value = initialClusterZoom;
+            clusterZoomLevelDisplay.textContent = Math.round(initialClusterZoom).toString();
+            
+            registerField('map.cluster_zoom_level', initialClusterZoom);
+            
+            clusterZoomLevelSlider.addEventListener('input', function() {
+                clusterZoomLevelDisplay.textContent = Math.round(parseFloat(clusterZoomLevelSlider.value)).toString();
+                updateField('map.cluster_zoom_level', parseFloat(clusterZoomLevelSlider.value));
+            });
+        }
+        
         // Starting Zoom slider
         var startingZoomSlider = document.getElementById('adminStartingZoom');
         var startingZoomDisplay = document.getElementById('adminStartingZoomDisplay');
@@ -2348,6 +2364,7 @@ const AdminModule = (function() {
         
         // Reset sliders
         var sliders = [
+            { id: 'adminClusterZoomLevel', displayId: 'adminClusterZoomLevelDisplay', fieldId: 'map.cluster_zoom_level', format: 'int' },
             { id: 'adminStartingZoom', displayId: 'adminStartingZoomDisplay', fieldId: 'map.starting_zoom', format: 'int' },
             { id: 'adminStartingPitch', displayId: 'adminStartingPitchDisplay', fieldId: 'map.starting_pitch', format: 'degree' },
             { id: 'adminSpinZoomMax', displayId: 'adminSpinZoomMaxDisplay', fieldId: 'map.spin_zoom_max', format: 'int' },
