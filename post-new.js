@@ -1516,7 +1516,7 @@ const PostModule = (function() {
     });
 
     // --- High-Density Logic ---
-    var MAX_MAP_CARDS = 50;
+    var MAX_MAP_CARDS = (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
     var totalResultCount = allMarkerData.length;
     var isHighDensity = totalResultCount > MAX_MAP_CARDS;
     
@@ -1548,6 +1548,17 @@ const PostModule = (function() {
         type = hasCardSlot ? 'card' : 'icon';
       }
 
+      // High-Density Rule: NO FALLBACKS.
+      // If color or subcategory key is missing, we must identify it immediately.
+      var subColor = item._originalPost.subcategory_color;
+      if (!subColor) {
+        throw new Error('[Map] Subcategory color missing for post ID ' + item.id + ' (required for high-density dots).');
+      }
+      var subKey = item.sub;
+      if (!subKey) {
+        throw new Error('[Map] Subcategory key missing for post ID ' + item.id + ' (required for featured icons).');
+      }
+
       geojsonFeatures.push({
         type: 'Feature',
         id: item.id, // Using post ID as numeric ID for Mapbox feature-state
@@ -1559,8 +1570,8 @@ const PostModule = (function() {
           postId: item.id,
           venueKey: item.venueKey,
           type: type,
-          color: item._originalPost.subcategory_color || '#000000',
-          iconId: item.sub || 'default',
+          color: subColor,
+          iconId: subKey,
           iconUrl: item.iconUrl
         }
       });

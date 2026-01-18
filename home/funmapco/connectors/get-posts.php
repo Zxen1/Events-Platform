@@ -394,7 +394,7 @@ try {
                 'subcategory_key' => $postSubKey,
                 'subcategory_name' => (string)($row['subcategory_name'] ?? ''),
                 'subcategory_icon_url' => $subcategoryIconUrl,
-                'subcategory_color' => (string)($row['subcategory_color'] ?? '#000000'),
+                'subcategory_color' => (string)($row['subcategory_color'] ?? ''),
                 'loc_qty' => (int)$row['loc_qty'],
                 'visibility' => $row['visibility'],
                 'checkout_key' => $row['checkout_key'],

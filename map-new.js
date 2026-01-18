@@ -89,10 +89,18 @@ const MapModule = (function() {
   const MARKER_LABEL_MAX_WIDTH_BIG = 145;
 
   // High-Density Settings
-  const MAX_MAP_CARDS = 50;
-  const DOT_SIZE = 8;
-  const DOT_STROKE_WIDTH = 2;
-  const ICON_DOT_SIZE = 30;
+  function getMaxMapCards() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('maxMapCards') : 50;
+  }
+  function getDotSize() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerDotSize') : 8;
+  }
+  function getDotStrokeWidth() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerDotStroke') : 2;
+  }
+  function getIconDotSize() {
+    return (window.App && typeof App.getConfig === 'function') ? App.getConfig('markerIconSize') : 30;
+  }
   const DOT_SOURCE_ID = 'high-density-source';
   const DOT_LAYER_ID = 'standard-dots';
   const ICON_LAYER_ID = 'featured-icons';
@@ -1673,10 +1681,10 @@ const MapModule = (function() {
         source: DOT_SOURCE_ID,
         filter: ['==', ['get', 'type'], 'dot'],
         paint: {
-          'circle-radius': DOT_SIZE / 2,
+          'circle-radius': getDotSize() / 2,
           'circle-color': ['get', 'color'],
           'circle-stroke-color': 'rgba(0,0,0,0.7)',
-          'circle-stroke-width': DOT_STROKE_WIDTH
+          'circle-stroke-width': getDotStrokeWidth()
         }
       });
     }
@@ -1690,10 +1698,10 @@ const MapModule = (function() {
         source: DOT_SOURCE_ID,
         filter: ['==', ['get', 'type'], 'icon'],
         paint: {
-          'circle-radius': ICON_DOT_SIZE / 2,
+          'circle-radius': getIconDotSize() / 2,
           'circle-color': 'rgba(255,255,255,0.1)',
           'circle-stroke-color': 'rgba(0,0,0,0.7)',
-          'circle-stroke-width': DOT_STROKE_WIDTH
+          'circle-stroke-width': getDotStrokeWidth()
         }
       });
 

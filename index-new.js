@@ -198,7 +198,11 @@ const App = (function() {
      -------------------------------------------------------------------------- */
   const config = {
     postsLoadZoom: 8,      // Posts and marquee only load when map zoom > this value
-    marqueeWidthThreshold: 1920 // Minimum screen width required to display the marquee
+    marqueeWidthThreshold: 1920, // Minimum screen width required to display the marquee
+    maxMapCards: 50,       // Threshold for switching to high-density mode
+    markerDotSize: 8,      // Diameter of standard listing dots
+    markerDotStroke: 2,    // Stroke width for dots and icons
+    markerIconSize: 30     // Diameter of featured icon landmarks
   };
 
   function getConfig(key) {
