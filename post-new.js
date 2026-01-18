@@ -1131,6 +1131,7 @@ const PostModule = (function() {
     var isFeatured = !!post.featured;
     if (isFeatured) {
       el.classList.add('post-card--featured');
+      el.dataset.isFeatured = 'true';
     }
 
     var thumbUrl = isFeatured ? getHeroUrl(post) : getCardThumbSrc(rawThumbUrl);
@@ -2180,8 +2181,17 @@ const PostModule = (function() {
     // This prevents Recents from accumulating post-cards and avoids "duplicate-looking" entries.
     try {
       var cardEl = openPost.querySelector('.post-card, .recent-card');
-      if (cardEl && openPost.parentElement) {
-        openPost.parentElement.replaceChild(cardEl, openPost);
+      if (cardEl) {
+        // Restore featured class if needed
+        if (cardEl.dataset.isFeatured === 'true') {
+          cardEl.classList.add(cardEl.classList.contains('recent-card') ? 'recent-card--featured' : 'post-card--featured');
+        }
+        
+        if (openPost.parentElement) {
+          openPost.parentElement.replaceChild(cardEl, openPost);
+        } else {
+          openPost.remove();
+        }
       } else {
         openPost.remove();
       }
@@ -2270,6 +2280,9 @@ const PostModule = (function() {
     // Remove hover highlight - CSS handles the open post background
     if (cardEl) {
       cardEl.classList.remove('post-card--map-highlight');
+      // If featured, we temporarily remove the featured class so it renders normally inside the detail view
+      cardEl.classList.remove('post-card--featured');
+      cardEl.classList.remove('recent-card--featured');
     }
 
     // Add share button if not present
@@ -3139,6 +3152,7 @@ const PostModule = (function() {
     var isFeatured = !!entry.featured;
     if (isFeatured) {
       el.classList.add('recent-card--featured');
+      el.dataset.isFeatured = 'true';
     }
 
     var thumbUrl = isFeatured ? addImageClass(rawThumbUrl, 'imagebox') : getCardThumbSrc(rawThumbUrl);
