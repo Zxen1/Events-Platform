@@ -311,6 +311,7 @@ const MarqueeModule = (function() {
     const datesText = formatDates(mapCard ? mapCard.session_summary : post.session_summary);
 
     // Format price summary
+    const postModule = App.getModule('post');
     const priceParts = postModule.parsePriceSummary(mapCard ? mapCard.price_summary : post.price_summary);
 
     // 1. Title line
