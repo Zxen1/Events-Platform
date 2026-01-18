@@ -1133,10 +1133,6 @@ const PostModule = (function() {
       ? '<span class="post-card-icon-sub"><img class="post-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
 
-    var catLineText = subInfo.category && subInfo.subcategory
-      ? subInfo.category + ' &gt; ' + subInfo.subcategory
-      : subInfo.subcategory || subcategoryKey;
-
     var isFav = isFavorite(post.id);
 
     el.innerHTML = [
@@ -1347,8 +1343,10 @@ const PostModule = (function() {
     var subcategoryKey = mapCard.subcategory_key || post.subcategory_key || '';
 
     // Get icon URL from API response (subcategory_icon_url) - primary source
-    // Falls back to global subcategoryIconPaths lookup if not in response
-    var iconUrl = post.subcategory_icon_url || getSubcategoryIconUrl(subcategoryKey);
+    var iconUrl = post.subcategory_icon_url || '';
+    if (!iconUrl) {
+      throw new Error('[Map] Missing subcategory iconUrl for map card marker (single post). Post ID: ' + post.id);
+    }
 
     // Get thumbnail URL - use 'minithumb' class (50x50) for map card markers
     var rawUrl = (mapCard.media_urls && mapCard.media_urls.length) ? mapCard.media_urls[0] : '';
@@ -3103,8 +3101,6 @@ const PostModule = (function() {
       ? '<span class="recent-card-icon-sub"><img class="recent-card-image-sub" src="' + iconUrl + '" alt="" /></span>'
       : '';
 
-    var catLineText = displayName;
-
     // Check favorite status
     var isFav = isFavorite(entry.id);
 
@@ -3113,7 +3109,7 @@ const PostModule = (function() {
       '<div class="recent-card-meta">',
         '<div class="recent-card-text-title">' + escapeHtml(title) + '</div>',
         '<div class="recent-card-container-info">',
-          catLineText ? '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>' : '',
+          '<div class="recent-card-row-cat">' + iconHtml + ' ' + (displayName) + '</div>',
           city ? '<div class="recent-card-row-loc"><span class="recent-card-badge" title="Venue">📍</span><span>' + escapeHtml(city) + '</span></div>' : '',
           lastOpenedText ? '<div class="recent-card-row-date"><span class="recent-card-badge" title="Last opened">🕒</span><span>' + escapeHtml(lastOpenedText) + '</span></div>' : '',
         '</div>',
