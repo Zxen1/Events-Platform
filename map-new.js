@@ -907,11 +907,14 @@ const MapModule = (function() {
       // Initialize controls (deferred)
       initControls();
       
-      // Initialize clusters (deferred)
-      initClusters();
-      
-      // Initialize high-density layers (dots/icons)
-      initHighDensityLayers();
+      // Initialize systems that depend on admin settings/breakpoint
+      App.whenStartupSettingsReady().then(function() {
+        // Initialize clusters
+        initClusters();
+        
+        // Initialize high-density layers (dots/icons)
+        initHighDensityLayers();
+      });
       
       // Bind map events (deferred)
       bindMapEvents();
@@ -1726,6 +1729,9 @@ const MapModule = (function() {
     // Interaction handlers
     [DOT_LAYER_ID, ICON_LAYER_ID].forEach(layerId => {
       map.on('mouseenter', layerId, function(e) {
+        // Performance/Interaction Rule: Never trigger if below threshold
+        if (map.getZoom() < getMarkerZoomThreshold()) return;
+        
         if (!e.features.length) return;
         map.getCanvas().style.cursor = 'pointer';
         
@@ -1812,10 +1818,11 @@ const MapModule = (function() {
   function initClusters() {
     if (!map) return;
     
-    App.whenStartupSettingsReady().then(function() {
-      adminSettings = App.getState('settings');
-      return loadClusterIcon();
-    }).then(function() {
+    // adminSettings should be available via App.getState('settings')
+    // because this is called inside whenStartupSettingsReady.
+    adminSettings = App.getState('settings') || {};
+
+    loadClusterIcon().then(function() {
       setupClusterLayers();
     });
 
@@ -1885,6 +1892,8 @@ const MapModule = (function() {
     // Bind click handler
     map.on('click', CLUSTER_LAYER_ID, handleClusterClick);
     map.on('mouseenter', CLUSTER_LAYER_ID, function() {
+      // Performance/Interaction Rule: Never trigger if past threshold (clusters hidden)
+      if (map.getZoom() >= getClusterZoomMax()) return;
       map.getCanvas().style.cursor = 'pointer';
     });
     map.on('mouseleave', CLUSTER_LAYER_ID, function() {
@@ -2032,6 +2041,9 @@ const MapModule = (function() {
    * Handle cluster click - fly directly to zoom 12
    */
   function handleClusterClick(e) {
+    // Performance/Interaction Rule: Never trigger if past threshold (clusters hidden)
+    if (map.getZoom() >= getClusterZoomMax()) return;
+    
     if (!e || !e.features || !e.features[0]) return;
     
     var coords = e.features[0].geometry.coordinates;
@@ -2073,9 +2085,13 @@ const MapModule = (function() {
    */
   function refreshClusters() {
     if (!map) return;
+    
+    // Performance Rule: Never fetch clusters if we are in the Map Card zone.
+    var zoom = map.getZoom() || 0;
+    if (zoom >= getClusterZoomMax()) return;
+
     lastClusterBucketKey = null; // Force refresh
     lastClusterRequestKey = null; // Force refresh (filters may have changed)
-    var zoom = map.getZoom() || 0;
     updateClusterData(zoom);
   }
 

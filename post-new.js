@@ -408,11 +408,24 @@ const PostModule = (function() {
             applyFilters(currentFilters || loadSavedFiltersFromLocalStorage() || {});
           }
         } else {
-          // Below threshold: clusters handle the map; clear high-zoom markers.
-          if (window.MapModule && MapModule.clearAllMapCardMarkers) {
-            MapModule.clearAllMapCardMarkers();
+          // BELOW BREAKPOINT: Clusters only.
+          // Performance/Interaction Rule: PURGE all high-zoom data immediately.
+          // No loading, no ghosting, no interaction handlers.
+          if (window.MapModule) {
+            if (typeof MapModule.updateHighDensityData === 'function') {
+              MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+            }
+            if (typeof MapModule.clearAllMapCardMarkers === 'function') {
+              MapModule.clearAllMapCardMarkers();
+            }
           }
           lastRenderedVenueMarkerSigByKey = {};
+          
+          // Clear side panel list (UI requirement: low zoom = clusters only)
+          renderPostList([]);
+          
+          // Reset bounds key so that when we zoom back in, it triggers a fresh load.
+          lastLoadedBoundsKey = '';
         }
       }
     });
@@ -845,6 +858,12 @@ const PostModule = (function() {
    * @returns {Promise}
    */
   function loadPosts(options) {
+    // Agent Essentials: Never load if not required.
+    var threshold = getPostsMinZoom();
+    if (typeof lastZoom !== 'number' || lastZoom < threshold) {
+      return Promise.resolve([]);
+    }
+
     postsError = null;
 
     var params = new URLSearchParams();
@@ -1401,6 +1420,22 @@ const PostModule = (function() {
    * @param {Array} posts - Array of post data from API
    */
   function renderMapMarkers(posts) {
+    // Agent Essentials: Never load or process if not required.
+    var threshold = getPostsMinZoom();
+    if (typeof lastZoom !== 'number' || lastZoom < threshold) {
+      // We are below the breakpoint. Wipe everything and exit.
+      if (window.MapModule) {
+        if (typeof MapModule.updateHighDensityData === 'function') {
+          MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+        }
+        if (typeof MapModule.clearAllMapCardMarkers === 'function') {
+          MapModule.clearAllMapCardMarkers();
+        }
+      }
+      lastRenderedVenueMarkerSigByKey = {};
+      return;
+    }
+
     // Check if MapModule is available
     if (!window.MapModule) {
       console.warn('[Post] MapModule not available for marker rendering');
@@ -1764,7 +1799,17 @@ const PostModule = (function() {
       return;
     }
 
-    // Below threshold: no posts list should be shown; keep counts/clusters updated elsewhere.
+    // Below threshold: no posts list should be shown; purge everything.
+    if (window.MapModule) {
+      if (typeof MapModule.updateHighDensityData === 'function') {
+        MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+      }
+      if (typeof MapModule.clearAllMapCardMarkers === 'function') {
+        MapModule.clearAllMapCardMarkers();
+      }
+    }
+    lastRenderedVenueMarkerSigByKey = {};
+    renderPostList([]); // Clear UI panel
     App.emit('filter:countsUpdated', { total: 0, filtered: 0 });
   }
 
