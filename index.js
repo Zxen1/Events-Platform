@@ -17447,7 +17447,8 @@ function makePosts(){
       { name: 'Member Messages', key: 'member', icon: '', description: 'Messages for authenticated members' },
       { name: 'Admin Messages', key: 'admin', icon: '', description: 'Messages for admin panel' },
       { name: 'Email Messages', key: 'email', icon: '', description: 'Email communications' },
-      { name: 'Fieldset Tooltips', key: 'fieldset-tooltips', icon: '', description: 'Tooltip help text for form fieldsets' }
+      { name: 'Fieldset Tooltips', key: 'fieldset-tooltips', icon: '', description: 'Tooltip help text for form fieldsets' },
+      { name: 'Field Tooltips', key: 'field-tooltips', icon: '', description: 'Tooltip help text for individual form fields' }
     ];
     
     // Load message category icons from admin_settings

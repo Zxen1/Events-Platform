@@ -798,7 +798,7 @@ function fetchFieldsets(PDO $pdo, array $columns, string $tableName = 'fieldsets
 function fetchAllFields(PDO $pdo, array $columns): array
 {
     $selectColumns = [];
-    foreach (['id', 'field_key', 'input_type', 'min_length', 'max_length'] as $col) {
+    foreach (['id', 'field_key', 'input_type', 'field_placeholder', 'field_tooltip', 'min_length', 'max_length'] as $col) {
         if (in_array($col, $columns, true)) {
             $selectColumns[] = "`$col`";
         }
@@ -819,6 +819,8 @@ function fetchAllFields(PDO $pdo, array $columns): array
             'id' => (int) $row['id'],
             'field_key' => isset($row['field_key']) ? trim((string) $row['field_key']) : '',
             'input_type' => isset($row['input_type']) ? trim((string) $row['input_type']) : 'text',
+            'field_placeholder' => isset($row['field_placeholder']) ? trim((string) $row['field_placeholder']) : null,
+            'field_tooltip' => isset($row['field_tooltip']) ? trim((string) $row['field_tooltip']) : null,
             'min_length' => isset($row['min_length']) && $row['min_length'] !== null ? (int) $row['min_length'] : null,
             'max_length' => isset($row['max_length']) && $row['max_length'] !== null ? (int) $row['max_length'] : null,
         ];

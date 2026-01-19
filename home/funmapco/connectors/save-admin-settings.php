@@ -110,9 +110,10 @@ try {
         return;
     }
 
-    // Separate messages, fieldset_tooltips, checkout_options, and system_images from settings
+    // Separate messages, fieldset_tooltips, field_tooltips, checkout_options, and system_images from settings
     $messages = null;
     $fieldsetTooltips = null;
+    $fieldTooltips = null;
     $checkoutOptions = null;
     $systemImages = null;
     $settings = $data;
@@ -123,6 +124,10 @@ try {
     if (isset($data['fieldset_tooltips']) && is_array($data['fieldset_tooltips'])) {
         $fieldsetTooltips = $data['fieldset_tooltips'];
         unset($settings['fieldset_tooltips']);
+    }
+    if (isset($data['field_tooltips']) && is_array($data['field_tooltips'])) {
+        $fieldTooltips = $data['field_tooltips'];
+        unset($settings['field_tooltips']);
     }
     if (isset($data['checkout_options']) && is_array($data['checkout_options'])) {
         $checkoutOptions = $data['checkout_options'];
@@ -260,6 +265,34 @@ try {
                 ]);
                 if ($stmt->rowCount() > 0) {
                     $fieldsetTooltipsUpdated++;
+                }
+            }
+        }
+    }
+
+    // Save field tooltips if provided
+    $fieldTooltipsUpdated = 0;
+    if ($fieldTooltips !== null && is_array($fieldTooltips) && !empty($fieldTooltips)) {
+        // Check if fields table exists
+        $stmt = $pdo->query("SHOW TABLES LIKE 'fields'");
+        if ($stmt->rowCount() > 0) {
+            $stmt = $pdo->prepare('
+                UPDATE `fields`
+                SET `field_tooltip` = :field_tooltip,
+                    `updated_at` = CURRENT_TIMESTAMP
+                WHERE `id` = :id
+            ');
+
+            foreach ($fieldTooltips as $tooltip) {
+                if (!isset($tooltip['id']) || !isset($tooltip['field_tooltip'])) {
+                    continue;
+                }
+                $stmt->execute([
+                    ':id' => (int)$tooltip['id'],
+                    ':field_tooltip' => (string)$tooltip['field_tooltip'],
+                ]);
+                if ($stmt->rowCount() > 0) {
+                    $fieldTooltipsUpdated++;
                 }
             }
         }
@@ -466,6 +499,9 @@ try {
     
     if ($fieldsetTooltipsUpdated > 0) {
         $response['fieldset_tooltips_updated'] = $fieldsetTooltipsUpdated;
+    }
+    if ($fieldTooltipsUpdated > 0) {
+        $response['field_tooltips_updated'] = $fieldTooltipsUpdated;
     }
     if ($checkoutUpdated > 0 || $checkoutInserted > 0 || $checkoutDeleted > 0) {
         $response['checkout_options'] = [

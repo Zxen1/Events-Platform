@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 19, 2026 at 03:53 PM
+-- Generation Time: Jan 19, 2026 at 04:05 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -307,6 +307,7 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (239, 'icon_checkbox', 'icon-checkbox.svg', 'string', 'Icon: Checkbox (SVG filename)', '2026-01-07 22:50:43', '2026-01-08 01:23:49'),
 (240, 'icon_radio', 'icon-radio.svg', 'string', 'Icon: Radio (SVG filename)', '2026-01-11 04:45:19', '2026-01-11 04:45:19'),
 (241, 'icon_radio_selected', 'icon-radio-selected.svg', 'string', 'Icon: Radio Selected (SVG filename)', '2026-01-11 04:45:19', '2026-01-11 04:45:19'),
+(242, 'msg_category_field-tooltips_icon', 'fieldset-tooltips.svg', 'string', 'Path to field tooltips messages category icon', '2026-01-19 05:05:18', '2026-01-19 05:05:18'),
 (300, 'map_lighting', 'dusk', 'string', 'Mapbox lighting preset: dawn, day, dusk, or night', '2025-12-23 02:44:08', '2025-12-30 06:36:36'),
 (301, 'map_style', 'standard', 'string', 'Mapbox style: standard or standard-satellite', '2025-12-23 02:44:08', '2025-12-30 07:08:27'),
 (302, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-30 07:07:27'),

@@ -747,21 +747,26 @@ const AdminModule = (function() {
             );
         }
         
-        // Save modified fieldset tooltips (uses save-admin-settings endpoint)
+        // Save modified tooltips (uses save-admin-settings endpoint)
         var modifiedTooltips = getModifiedFieldsetTooltips();
-        if (modifiedTooltips.length > 0) {
+        var modifiedFieldTooltips = getModifiedFieldTooltips();
+        
+        if (modifiedTooltips.length > 0 || modifiedFieldTooltips.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ fieldset_tooltips: modifiedTooltips })
+                    body: JSON.stringify({ 
+                        fieldset_tooltips: modifiedTooltips,
+                        field_tooltips: modifiedFieldTooltips
+                    })
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) {
-                        throw new Error(data.message || 'Failed to save fieldset tooltips');
+                        throw new Error(data.message || 'Failed to save tooltips');
                     }
-                    // Fieldset tooltips saved
+                    // Tooltips saved
                     // Update composite baseline (like Formbuilder does)
                     updateCompositeBaseline('messages');
                 })
@@ -972,7 +977,8 @@ const AdminModule = (function() {
         { key: 'member', name: 'Member Messages', icon: '', description: 'Messages for authenticated members' },
         { key: 'admin', name: 'Admin Messages', icon: '', description: 'Messages for admin panel' },
         { key: 'email', name: 'Email Messages', icon: '', description: 'Email communications' },
-        { key: 'fieldset-tooltips', name: 'Fieldset Tooltips', icon: '', description: 'Tooltip help text for form fieldsets' }
+        { key: 'fieldset-tooltips', name: 'Fieldset Tooltips', icon: '', description: 'Tooltip help text for form fieldsets' },
+        { key: 'field-tooltips', name: 'Field Tooltips', icon: '', description: 'Tooltip help text for individual form fields' }
     ];
     
     // Map database container_key to our category key
@@ -985,7 +991,7 @@ const AdminModule = (function() {
     
     // Capture current state of all messages from DOM (like Formbuilder's captureFormbuilderState)
     function captureMessagesState() {
-        var state = { messages: {}, tooltips: {}, categoryNames: {}, categoryOrder: [] };
+        var state = { messages: {}, tooltips: {}, fieldTooltips: {}, categoryNames: {}, categoryOrder: [] };
 
         if (!messagesContainer) return state;
 
@@ -1014,6 +1020,14 @@ const AdminModule = (function() {
             var id = textarea.dataset.fieldsetId;
             if (id) {
                 state.tooltips[id] = textarea.value;
+            }
+        });
+
+        // Capture field tooltip textareas
+        messagesContainer.querySelectorAll('.admin-message-text-input[data-field-id]').forEach(function(textarea) {
+            var id = textarea.dataset.fieldId;
+            if (id) {
+                state.fieldTooltips[id] = textarea.value;
             }
         });
 
@@ -1448,6 +1462,30 @@ const AdminModule = (function() {
         }
     }
     
+    // Collect modified field tooltips for saving (compares DOM to composite baseline)
+    function getModifiedFieldTooltips() {
+        var modified = [];
+        var entry = fieldRegistry['messages'];
+        if (!entry || entry.type !== 'composite') return modified;
+        
+        var originalState = JSON.parse(entry.original);
+        var currentState = captureMessagesState();
+        
+        // Compare each tooltip
+        for (var id in currentState.fieldTooltips) {
+            var currentValue = currentState.fieldTooltips[id];
+            var originalValue = originalState.fieldTooltips[id];
+            if (currentValue !== originalValue) {
+                modified.push({
+                    id: id,
+                    field_tooltip: currentValue
+                });
+            }
+        }
+        
+        return modified;
+    }
+
     function registerTooltipsCompositeIfReady() {
         tooltipsDataLoaded = true;
         if (messagesDataLoaded && tooltipsDataLoaded) {
@@ -1595,14 +1633,117 @@ const AdminModule = (function() {
         fetch('/gateway.php?action=get-form')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (data.success && data.formData && data.formData.fieldsets) {
-                    populateFieldsetTooltips(data.formData.fieldsets);
+                if (data.success && data.formData) {
+                    if (data.formData.fieldsets) {
+                        populateFieldsetTooltips(data.formData.fieldsets);
+                    }
+                    if (data.formData.fields) {
+                        populateFieldTooltips(data.formData.fields);
+                    }
                     registerTooltipsCompositeIfReady();
                 }
             })
             .catch(function(err) {
-                console.error('[Admin] Failed to load fieldset tooltips:', err);
+                console.error('[Admin] Failed to load tooltips:', err);
             });
+    }
+
+    function populateFieldTooltips(fields) {
+        var accordion = messagesContainer.querySelector('[data-message-category="field-tooltips"]');
+        if (!accordion) return;
+        
+        var content = accordion.querySelector('.admin-messages-accordion-content');
+        if (!content) return;
+        
+        content.innerHTML = '';
+        
+        if (fields && fields.length > 0) {
+            var tooltipsList = document.createElement('div');
+            tooltipsList.className = 'admin-messages-list';
+            
+            // Sort fields by ID or key
+            var sorted = fields.slice().sort(function(a, b) {
+                return (a.field_key || '').localeCompare((b.field_key || ''));
+            });
+            
+            sorted.forEach(function(field) {
+                var item = createFieldTooltipItem(field);
+                tooltipsList.appendChild(item);
+            });
+            
+            content.appendChild(tooltipsList);
+        } else {
+            var emptyMsg = document.createElement('div');
+            emptyMsg.className = 'admin-messages-empty';
+            emptyMsg.textContent = 'No fields found';
+            content.appendChild(emptyMsg);
+        }
+    }
+
+    function createFieldTooltipItem(field) {
+        var item = document.createElement('div');
+        item.className = 'admin-message-item';
+        item.setAttribute('role', 'button');
+        item.dataset.fieldId = field.id;
+        
+        var originalValue = field.field_tooltip || '';
+        
+        // Label
+        var label = document.createElement('div');
+        label.className = 'admin-message-label';
+        label.textContent = field.field_key || 'Unknown Field';
+        
+        // Text display
+        var textDisplay = document.createElement('div');
+        textDisplay.className = 'admin-message-text-display';
+        textDisplay.textContent = originalValue || '(empty)';
+        textDisplay.title = 'Click to edit';
+        
+        if (!originalValue) {
+            textDisplay.style.color = 'var(--text-muted, #888)';
+            textDisplay.style.fontStyle = 'italic';
+        }
+        
+        // Text input
+        var textInput = document.createElement('textarea');
+        textInput.className = 'admin-message-text-input admin-message-text-input--hidden';
+        textInput.value = originalValue;
+        textInput.rows = 3;
+        textInput.placeholder = 'Enter field tooltip help text';
+        textInput.dataset.fieldId = field.id;
+        
+        // Click to edit
+        textDisplay.addEventListener('click', function() {
+            textDisplay.classList.add('admin-message-text-display--hidden');
+            textInput.classList.remove('admin-message-text-input--hidden');
+            textInput.focus();
+        });
+        
+        // Track changes - notify AdminModule to recheck (like Formbuilder)
+        textInput.addEventListener('input', function() {
+            var currentValue = textInput.value;
+            
+            textDisplay.textContent = currentValue || '(empty)';
+            textDisplay.style.color = currentValue ? '' : 'var(--text-muted, #888)';
+            textDisplay.style.fontStyle = currentValue ? '' : 'italic';
+            
+            notifyMessagesChange();
+        });
+        
+        // Blur to close
+        textInput.addEventListener('blur', function() {
+            textDisplay.textContent = textInput.value || '(empty)';
+            textDisplay.style.color = textInput.value ? '' : 'var(--text-muted, #888)';
+            textDisplay.style.fontStyle = textInput.value ? '' : 'italic';
+            textDisplay.classList.remove('admin-message-text-display--hidden');
+            textInput.classList.add('admin-message-text-input--hidden');
+        });
+        
+        item.appendChild(label);
+        item.appendChild(textDisplay);
+        item.appendChild(textInput);
+        
+        return item;
     }
     
     function populateFieldsetTooltips(fieldsets) {
