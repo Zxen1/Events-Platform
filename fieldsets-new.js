@@ -2590,7 +2590,15 @@ const FieldsetBuilder = (function(){
                     // Find all session pricing price inputs directly by class
                     var priceInputs = fieldset.querySelectorAll('.fieldset-sessionpricing-input-price');
                     priceInputs.forEach(function(inp) {
-                        updatePricePlaceholder(inp, spTicketCurrencyState.code);
+                        var groupEl = inp.closest('.fieldset-sessionpricing-ticketgroup-item');
+                        var currencyCode = spGetTicketCurrencyCode();
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
+                        updatePricePlaceholder(inp, currencyCode);
                     });
                 }
                 
@@ -2599,6 +2607,15 @@ const FieldsetBuilder = (function(){
                     if (!newCurrencyCode) return;
                     var priceInputs = fieldset.querySelectorAll('.fieldset-sessionpricing-input-price');
                     priceInputs.forEach(function(inp) {
+                        var groupEl = inp.closest('.fieldset-sessionpricing-ticketgroup-item');
+                        var activeNewCode = newCurrencyCode;
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) activeNewCode = val;
+                        }
+
                         var val = String(inp.value || '').trim();
                         if (val === '') return;
                         
@@ -2615,7 +2632,7 @@ const FieldsetBuilder = (function(){
                         
                         // Reformat with new currency
                         if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
-                            inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), newCurrencyCode);
+                            inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), activeNewCode);
                         }
                     });
                 }
@@ -2625,7 +2642,7 @@ const FieldsetBuilder = (function(){
                         console.error('[FieldsetBuilder] CurrencyComponent not available');
                         return document.createElement('div');
                     }
-                    var result = CurrencyComponent.buildCompactMenu({
+                    var result = CurrencyComponent.buildFullMenu({
                         initialValue: spTicketCurrencyState.code,
                         placeholder: 'Select Currency',
                         onSelect: function(value, label, countryCode) {
@@ -2645,6 +2662,13 @@ const FieldsetBuilder = (function(){
                     
                     inputEl.addEventListener('input', function() {
                         var currencyCode = spGetTicketCurrencyCode();
+                        var groupEl = this.closest('.fieldset-sessionpricing-ticketgroup-item');
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
                         
                         // If currency is selected, use currency-aware sanitization
                         if (currencyCode) {
@@ -2667,6 +2691,13 @@ const FieldsetBuilder = (function(){
                         if (v === '') return;
                         
                         var currencyCode = spGetTicketCurrencyCode();
+                        var groupEl = this.closest('.fieldset-sessionpricing-ticketgroup-item');
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
                         
                         // Strip symbol on focus so user can edit just the number
                         if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.stripSymbol) {
@@ -2679,6 +2710,13 @@ const FieldsetBuilder = (function(){
                         if (v === '') return;
                         
                         var currencyCode = spGetTicketCurrencyCode();
+                        var groupEl = this.closest('.fieldset-sessionpricing-ticketgroup-item');
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
                         
                         // If currency is selected, format WITH symbol
                         if (currencyCode) {
@@ -2704,23 +2742,56 @@ const FieldsetBuilder = (function(){
                     var block = document.createElement('div');
                     block.className = 'fieldset-sessionpricing-pricing-tier-block';
                     block.style.marginBottom = '10px';
-                    block.style.marginLeft = '20px';
 
-                    var tierRow = document.createElement('div');
-                    tierRow.className = 'fieldset-row';
-                    tierRow.style.marginBottom = '10px';
+                    // Row 1: Sublabels (Pricing Tier and Price)
+                    var labelRow = document.createElement('div');
+                    labelRow.className = 'fieldset-row';
+                    labelRow.style.marginBottom = '6px';
+                    labelRow.style.display = 'flex';
+                    labelRow.style.gap = '10px';
 
-                    var tierCol = document.createElement('div');
-                    tierCol.style.flex = '1';
-                    var tierSub = document.createElement('div');
-                    tierSub.className = 'fieldset-sublabel';
-                    tierSub.textContent = 'Pricing Tier';
+                    var tierLabel = document.createElement('div');
+                    tierLabel.className = 'fieldset-sublabel';
+                    tierLabel.textContent = 'Pricing Tier';
+                    tierLabel.style.flex = '3';
+                    tierLabel.style.marginBottom = '0';
+                    labelRow.appendChild(tierLabel);
+
+                    var priceLabel = document.createElement('div');
+                    priceLabel.className = 'fieldset-sublabel';
+                    priceLabel.textContent = 'Price';
+                    priceLabel.style.flex = '1';
+                    priceLabel.style.marginBottom = '0';
+                    labelRow.appendChild(priceLabel);
+
+                    // Spacer for buttons in row below (36px + 10px + 36px = 82px)
+                    var btnSpacer = document.createElement('div');
+                    btnSpacer.style.width = '82px';
+                    btnSpacer.style.flex = '0 0 82px';
+                    labelRow.appendChild(btnSpacer);
+
+                    block.appendChild(labelRow);
+
+                    // Row 2: Inputs and Buttons
+                    var inputRow = document.createElement('div');
+                    inputRow.className = 'fieldset-row';
+                    inputRow.style.display = 'flex';
+                    inputRow.style.gap = '10px';
+                    inputRow.style.marginBottom = '10px';
+
                     var tierInput = document.createElement('input');
                     tierInput.className = 'fieldset-input input-class-1';
                     tierInput.placeholder = 'eg. Adult, Concession, Child';
-                    tierCol.appendChild(tierSub);
-                    tierCol.appendChild(tierInput);
-                    tierRow.appendChild(tierCol);
+                    tierInput.style.flex = '3';
+                    inputRow.appendChild(tierInput);
+
+                    var priceInput = document.createElement('input');
+                    priceInput.className = 'fieldset-sessionpricing-input-price fieldset-input input-class-1';
+                    priceInput.style.flex = '1';
+                    // Set placeholder based on current currency (if selected)
+                    updatePricePlaceholder(priceInput, spTicketCurrencyState.code);
+                    spAttachMoneyInputBehavior(priceInput);
+                    inputRow.appendChild(priceInput);
 
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
@@ -2738,7 +2809,7 @@ const FieldsetBuilder = (function(){
                         spUpdateTierButtons(tiersContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    tierRow.appendChild(addBtn);
+                    inputRow.appendChild(addBtn);
 
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
@@ -2756,40 +2827,9 @@ const FieldsetBuilder = (function(){
                         spUpdateTierButtons(tiersContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    tierRow.appendChild(removeBtn);
+                    inputRow.appendChild(removeBtn);
 
-                    applyFieldsetRowItemClasses(tierRow);
-                    block.appendChild(tierRow);
-
-                    var priceRow = document.createElement('div');
-                    priceRow.className = 'fieldset-row';
-                    priceRow.style.marginRight = '92px';
-
-                    var currencyCol = document.createElement('div');
-                    currencyCol.style.flex = '0 0 100px';
-                    var currencySub = document.createElement('div');
-                    currencySub.className = 'fieldset-sublabel';
-                    currencySub.textContent = 'Currency';
-                    currencyCol.appendChild(currencySub);
-                    currencyCol.appendChild(spBuildTicketCurrencyMenu());
-                    priceRow.appendChild(currencyCol);
-
-                    var priceCol = document.createElement('div');
-                    priceCol.style.flex = '1';
-                    var priceSub = document.createElement('div');
-                    priceSub.className = 'fieldset-sublabel';
-                    priceSub.textContent = 'Price';
-                    var priceInput = document.createElement('input');
-                    priceInput.className = 'fieldset-sessionpricing-input-price fieldset-input input-class-1';
-                    // Set placeholder based on current currency (if selected)
-                    updatePricePlaceholder(priceInput, spTicketCurrencyState.code);
-                    spAttachMoneyInputBehavior(priceInput);
-                    priceCol.appendChild(priceSub);
-                    priceCol.appendChild(priceInput);
-                    priceRow.appendChild(priceCol);
-
-                    applyFieldsetRowItemClasses(priceRow);
-                    block.appendChild(priceRow);
+                    block.appendChild(inputRow);
                     return block;
                 }
                 function spUpdateTierButtons(tiersContainer) {
@@ -2811,23 +2851,84 @@ const FieldsetBuilder = (function(){
                     block.style.paddingBottom = '10px';
                     block.style.borderBottom = '1px solid #333';
 
-                    var seatRow = document.createElement('div');
-                    seatRow.className = 'fieldset-row';
-                    seatRow.style.marginBottom = '10px';
+                    // Allocated Ticket Areas Row (Row 1)
+                    var allocatedRow = document.createElement('div');
+                    allocatedRow.className = 'fieldset-row';
+                    allocatedRow.style.marginBottom = '10px';
+                    
+                    var allocatedCol = document.createElement('div');
+                    allocatedCol.style.flex = '1';
+                    var allocatedSub = document.createElement('div');
+                    allocatedSub.className = 'fieldset-sublabel';
+                    allocatedSub.textContent = 'Allocated Ticket Areas';
+                    allocatedSub.style.marginBottom = '0';
+                    allocatedCol.appendChild(allocatedSub);
+                    
+                    // Yes/No Radio Buttons (default yes)
+                    var radioWrapper = document.createElement('div');
+                    radioWrapper.className = 'fieldset-radio-wrapper';
+                    radioWrapper.style.display = 'flex';
+                    radioWrapper.style.gap = '20px';
+                    
+                    var yesLabel = document.createElement('label');
+                    yesLabel.style.display = 'flex';
+                    yesLabel.style.alignItems = 'center';
+                    yesLabel.style.gap = '5px';
+                    yesLabel.style.cursor = 'pointer';
+                    var yesRadio = document.createElement('input');
+                    yesRadio.type = 'radio';
+                    yesRadio.name = 'allocated_' + Math.random().toString(36).substr(2, 9);
+                    yesRadio.value = '1';
+                    yesRadio.checked = true;
+                    yesLabel.appendChild(yesRadio);
+                    yesLabel.appendChild(document.createTextNode('Yes'));
+                    
+                    var noLabel = document.createElement('label');
+                    noLabel.style.display = 'flex';
+                    noLabel.style.alignItems = 'center';
+                    noLabel.style.gap = '5px';
+                    noLabel.style.cursor = 'pointer';
+                    var noRadio = document.createElement('input');
+                    noRadio.type = 'radio';
+                    noRadio.name = yesRadio.name;
+                    noRadio.value = '0';
+                    noLabel.appendChild(noRadio);
+                    noLabel.appendChild(document.createTextNode('No'));
+                    
+                    radioWrapper.appendChild(yesLabel);
+                    radioWrapper.appendChild(noLabel);
+                    allocatedCol.appendChild(radioWrapper);
+                    allocatedRow.appendChild(allocatedCol);
+                    
+                    applyFieldsetRowItemClasses(allocatedRow);
+                    block.appendChild(allocatedRow);
 
-                    var seatCol = document.createElement('div');
-                    seatCol.style.flex = '1';
+                    // Ticket Area Label Row (Row 2 - Conditional)
+                    var seatLabelRow = document.createElement('div');
+                    seatLabelRow.className = 'fieldset-row';
+                    seatLabelRow.style.marginBottom = '6px';
                     var seatSub = document.createElement('div');
                     seatSub.className = 'fieldset-sublabel';
-                    seatSub.textContent = 'Seating Area';
+                    seatSub.textContent = 'Ticket Area';
+                    seatSub.style.marginBottom = '0';
+                    seatLabelRow.appendChild(seatSub);
+                    block.appendChild(seatLabelRow);
+
+                    // Ticket Area Input Row (Row 3)
+                    var seatInputRow = document.createElement('div');
+                    seatInputRow.className = 'fieldset-row';
+                    seatInputRow.style.display = 'flex';
+                    seatInputRow.style.gap = '10px';
+                    seatInputRow.style.marginBottom = '10px';
+
                     var seatInput = document.createElement('input');
                     seatInput.type = 'text';
                     seatInput.className = 'fieldset-input input-class-1';
                     seatInput.placeholder = 'eg. Stalls, Balcony, VIP Area';
-                    seatCol.appendChild(seatSub);
-                    seatCol.appendChild(seatInput);
-                    seatRow.appendChild(seatCol);
+                    seatInput.style.flex = '1';
+                    seatInputRow.appendChild(seatInput);
 
+                    // Add/Remove seating block buttons (Always visible in Row 3)
                     var addBtn = document.createElement('button');
                     addBtn.type = 'button';
                     addBtn.className = 'fieldset-sessionpricing-pricing-button-add fieldset-row-item--no-flex';
@@ -2844,7 +2945,7 @@ const FieldsetBuilder = (function(){
                         spUpdateSeatingAreaButtons(seatingAreasContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    seatRow.appendChild(addBtn);
+                    seatInputRow.appendChild(addBtn);
 
                     var removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
@@ -2862,10 +2963,20 @@ const FieldsetBuilder = (function(){
                         spUpdateSeatingAreaButtons(seatingAreasContainer);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
-                    seatRow.appendChild(removeBtn);
+                    seatInputRow.appendChild(removeBtn);
 
-                    applyFieldsetRowItemClasses(seatRow);
-                    block.appendChild(seatRow);
+                    block.appendChild(seatInputRow);
+
+                    // Radio change logic
+                    function updateVisibility() {
+                        var isVisible = yesRadio.checked;
+                        seatLabelRow.style.display = isVisible ? '' : 'none';
+                        // Hide input but keep buttons visible in the same row
+                        seatInput.style.display = isVisible ? '' : 'none';
+                    }
+                    yesRadio.addEventListener('change', updateVisibility);
+                    noRadio.addEventListener('change', updateVisibility);
+                    updateVisibility();
 
                     var tiersContainer = document.createElement('div');
                     tiersContainer.className = 'fieldset-sessionpricing-pricing-tiers-container';
@@ -2878,12 +2989,17 @@ const FieldsetBuilder = (function(){
                     var blocks = seatingAreasContainer.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                     var atMax = blocks.length >= 10;
                     blocks.forEach(function(block) {
+                        // Find buttons in the Ticket Area row
                         var addBtn = block.querySelector('.fieldset-sessionpricing-pricing-button-add');
                         var removeBtn = block.querySelector('.fieldset-sessionpricing-pricing-button-remove');
-                        if (atMax) { addBtn.style.opacity = '0.3'; addBtn.style.cursor = 'not-allowed'; addBtn.disabled = true; }
-                        else { addBtn.style.opacity = '1'; addBtn.style.cursor = 'pointer'; addBtn.disabled = false; }
-                        if (blocks.length === 1) { removeBtn.style.opacity = '0.3'; removeBtn.style.cursor = 'not-allowed'; removeBtn.disabled = true; }
-                        else { removeBtn.style.opacity = '1'; removeBtn.style.cursor = 'pointer'; removeBtn.disabled = false; }
+                        if (addBtn) {
+                            if (atMax) { addBtn.style.opacity = '0.3'; addBtn.style.cursor = 'not-allowed'; addBtn.disabled = true; }
+                            else { addBtn.style.opacity = '1'; addBtn.style.cursor = 'pointer'; addBtn.disabled = false; }
+                        }
+                        if (removeBtn) {
+                            if (blocks.length === 1) { removeBtn.style.opacity = '0.3'; removeBtn.style.cursor = 'not-allowed'; removeBtn.disabled = true; }
+                            else { removeBtn.style.opacity = '1'; removeBtn.style.cursor = 'pointer'; removeBtn.disabled = false; }
+                        }
                     });
                 }
 
@@ -3299,23 +3415,41 @@ const FieldsetBuilder = (function(){
                         var seatingBlocks = editorEl.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                         var seatOut = [];
                         seatingBlocks.forEach(function(block) {
-                            var seatName = '';
+                            var allocatedVal = 1;
+                            var yesRadio = block.querySelector('input[type="radio"][value="1"]');
+                            if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+
+                            var ticketArea = '';
                             var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
-                            if (seatInput) seatName = String(seatInput.value || '').trim();
+                            if (seatInput) ticketArea = String(seatInput.value || '').trim();
+                            
                             var tiers = [];
                             block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
                                 var tierName = '';
                                 var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
                                 if (tierInput) tierName = String(tierInput.value || '').trim();
-                                var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
+                                
+                                // Currency is now shared for the group
+                                var currencyInput = editorEl.querySelector('.component-currencyfull-menu-button-input');
                                 var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
+                                
                                 var priceInput = null;
                                 var inputs = tier.querySelectorAll('input.fieldset-input');
                                 if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
                                 var price = priceInput ? String(priceInput.value || '').trim() : '';
                                 tiers.push({ pricing_tier: tierName, currency: curr, price: price });
                             });
-                            seatOut.push({ seating_area: seatName, tiers: tiers });
+                            
+                            // Add/Remove buttons for ticket area (moved to Ticket Area row)
+                            var addBtnArea = block.querySelector('.fieldset-sessionpricing-pricing-button-add');
+                            var removeBtnArea = block.querySelector('.fieldset-sessionpricing-pricing-button-remove');
+                            
+                            seatOut.push({ 
+                                allocated_areas: allocatedVal,
+                                ticket_area: ticketArea, 
+                                tiers: tiers 
+                            });
                         });
                         return seatOut;
                     } catch (e) {
@@ -3336,17 +3470,39 @@ const FieldsetBuilder = (function(){
                     ageRatingRow.appendChild(ageRatingLabel);
                     ageRatingRow.appendChild(buildAgeRatingMenu(fieldset));
                     editorEl.appendChild(ageRatingRow);
+
+                    // Currency row underneath age rating
+                    var currencyRow = document.createElement('div');
+                    currencyRow.className = 'fieldset-sessionpricing-pricing-currency-row';
+                    currencyRow.style.marginTop = '10px';
+                    var currencyLabel = document.createElement('div');
+                    currencyLabel.className = 'fieldset-sessionpricing-pricing-currency-label';
+                    currencyLabel.textContent = 'Currency';
+                    currencyRow.appendChild(currencyLabel);
+                    currencyRow.appendChild(spBuildTicketCurrencyMenu());
+                    editorEl.appendChild(currencyRow);
                     
                     var seatingAreasContainer = document.createElement('div');
                     seatingAreasContainer.className = 'fieldset-sessionpricing-pricing-seatingareas-container';
+                    seatingAreasContainer.style.marginTop = '10px';
                     editorEl.appendChild(seatingAreasContainer);
                     var seats = Array.isArray(pricingArr) ? pricingArr : [];
                     if (seats.length === 0) seats = [{}];
                     seats.forEach(function(seat) {
                         var block = spCreateSeatingAreaBlock(seatingAreasContainer);
                         seatingAreasContainer.appendChild(block);
+                        
+                        // Set radio button state
+                        var isAllocated = seat && seat.allocated_areas !== undefined ? (parseInt(seat.allocated_areas) === 1) : true;
+                        var radios = block.querySelectorAll('input[type="radio"]');
+                        radios.forEach(function(r) {
+                            if (r.value === '1') r.checked = isAllocated;
+                            else if (r.value === '0') r.checked = !isAllocated;
+                            r.dispatchEvent(new Event('change'));
+                        });
+
                         var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
-                        if (seatInput) seatInput.value = String((seat && seat.seating_area) || '');
+                        if (seatInput) seatInput.value = String((seat && (seat.ticket_area || seat.seating_area)) || '');
                         var tiersContainer = block.querySelector('.fieldset-sessionpricing-pricing-tiers-container');
                         if (tiersContainer) tiersContainer.innerHTML = '';
                         var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
@@ -3356,23 +3512,7 @@ const FieldsetBuilder = (function(){
                             tiersContainer.appendChild(tierBlock);
                             var tierNameInput = tierBlock.querySelector('.fieldset-row input.fieldset-input');
                             if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
-                            // IMPORTANT: do not clear the currency input directly (that causes "flag + Search").
-                            // Only set currency when we actually have a saved value, and do it via the component API.
-                            var curr = String((tierObj && tierObj.currency) || '').trim();
-                            if (curr) {
-                                try {
-                                    var menuEl = tierBlock.querySelector('.component-currencycompact-menu');
-                                    if (menuEl) {
-                                        for (var mi = 0; mi < spTicketCurrencyMenus.length; mi++) {
-                                            var mo = spTicketCurrencyMenus[mi];
-                                            if (mo && mo.element === menuEl && typeof mo.setValue === 'function') {
-                                                mo.setValue(curr);
-                                                break;
-                                            }
-                                        }
-                                    }
-                                } catch (eCur) {}
-                            }
+                            
                             var inputs = tierBlock.querySelectorAll('input.fieldset-input');
                             var priceInput = inputs && inputs.length ? inputs[inputs.length - 1] : null;
                             if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
@@ -3641,23 +3781,37 @@ const FieldsetBuilder = (function(){
                                     var seatingBlocks = otherEditor.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                                     var seatOut = [];
                                     seatingBlocks.forEach(function(block) {
-                                        var seatName = '';
+                                        var allocatedVal = 1;
+                                        var yesRadio = block.querySelector('input[type="radio"][value="1"]');
+                                        if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+
+                                        var ticketArea = '';
                                         var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
-                                        if (seatInput) seatName = String(seatInput.value || '').trim();
+                                        if (seatInput) ticketArea = String(seatInput.value || '').trim();
+                                        
                                         var tiers = [];
                                         block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
                                             var tierName = '';
                                             var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
                                             if (tierInput) tierName = String(tierInput.value || '').trim();
-                                            var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
-                                            var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                            
                                             var priceInput = null;
                                             var inputs = tier.querySelectorAll('input.fieldset-input');
                                             if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
                                             var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                            
+                                            // Currency is shared per group
+                                            var currencyInput = otherEditor.querySelector('.component-currencyfull-menu-button-input');
+                                            var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                            if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
+                                            
                                             tiers.push({ pricing_tier: tierName, currency: curr, price: price });
                                         });
-                                        seatOut.push({ seating_area: seatName, tiers: tiers });
+                                        seatOut.push({ 
+                                            allocated_areas: allocatedVal,
+                                            ticket_area: ticketArea, 
+                                            tiers: tiers 
+                                        });
                                     });
                                     if (seatOut.length > 0) existingPricing = seatOut;
                                     var ageMenu = otherEditor.querySelector('.component-ageratingpicker-menu');

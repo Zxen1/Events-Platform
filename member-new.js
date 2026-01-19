@@ -4135,16 +4135,27 @@ const MemberModule = (function() {
                             var seatingBlocks2 = editorEl.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                             var seatOut2 = [];
                             seatingBlocks2.forEach(function(block) {
-                                var seatName = '';
+                                var allocatedVal = 1;
+                                var yesRadio = block.querySelector('input[type="radio"][value="1"]');
+                                if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+
+                                var ticketArea = '';
                                 var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
-                                if (seatInput) seatName = String(seatInput.value || '').trim();
+                                if (seatInput) ticketArea = String(seatInput.value || '').trim();
+
                                 var tiers = [];
                                 block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
                                     var tierName = '';
                                     var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
                                     if (tierInput) tierName = String(tierInput.value || '').trim();
-                                    var currencyInput = tier.querySelector('input.component-currencycompact-menu-button-input');
-                                    var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                    
+                                    // Currency is now shared for the group, look in the editorEl (header area)
+                                    var currInput = editorEl.querySelector('.component-currencyfull-menu-button-input');
+                                    var curr = currInput ? String(currInput.value || '').trim() : '';
+                                    
+                                    // Handle "VALUE - LABEL" format from full menu
+                                    if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
+                                    
                                     if (curr && !sharedCurrency) sharedCurrency = curr;
 
                                     var priceInput = null;
@@ -4178,7 +4189,11 @@ const MemberModule = (function() {
                                     
                                     tiers.push({ pricing_tier: tierName, currency: curr, price: price });
                                 });
-                                seatOut2.push({ seating_area: seatName, tiers: tiers });
+                                seatOut2.push({ 
+                                    allocated_areas: allocatedVal,
+                                    ticket_area: ticketArea, 
+                                    tiers: tiers 
+                                });
                             });
                             pricingGroups[gk] = seatOut2;
                         });

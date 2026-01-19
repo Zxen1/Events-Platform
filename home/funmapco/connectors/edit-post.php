@@ -700,21 +700,22 @@ foreach ($byLoc as $locNum => $entries) {
       }
 
       if (is_array($pricingGroupsToWrite)) {
-        $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, seating_area, pricing_tier, price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+        $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
         foreach ($pricingGroupsToWrite as $gkRaw => $seats) {
           $gk = trim((string)$gkRaw);
           if ($gk === '' || !is_array($seats)) continue;
           $ageRating = $ageRatingsToWrite[$gk] ?? '';
           foreach ($seats as $seat) {
             if (!is_array($seat)) continue;
-            $seatName = (string)($seat['seating_area'] ?? '');
+            $allocated = (int)($seat['allocated_areas'] ?? 1);
+            $ticketArea = (string)($seat['ticket_area'] ?? '');
             foreach (($seat['tiers'] ?? []) as $tier) {
               if (!is_array($tier)) continue;
               $tierName = (string)($tier['pricing_tier'] ?? '');
               $amt = normalize_price_amount($tier['price'] ?? null);
               $curr = normalize_currency($tier['currency'] ?? '');
-              if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
-              $stmtPrice->bind_param('issssss', $mapCardId, $gk, $ageRating, $seatName, $tierName, $amt, $curr);
+              if ($tierName === '' || $curr === '' || $amt === null) continue;
+              $stmtPrice->bind_param('ississss', $mapCardId, $gk, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr);
               $stmtPrice->execute();
             }
           }

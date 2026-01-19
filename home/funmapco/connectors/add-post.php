@@ -850,8 +850,8 @@ foreach ($byLoc as $locNum => $entries) {
 
     // Write pricing rows for each pricing group
     if (is_array($pricingGroupsToWrite)) {
-      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, seating_area, pricing_tier, price, currency, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+      $stmtPrice = $mysqli->prepare("INSERT INTO post_ticket_pricing (map_card_id, ticket_group_key, age_rating, allocated_areas, ticket_area, pricing_tier, price, currency, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
       if (!$stmtPrice) {
         abort_with_error($mysqli, 500, 'Prepare post_ticket_pricing', $transactionActive);
       }
@@ -863,15 +863,16 @@ foreach ($byLoc as $locNum => $entries) {
         $ageRating = isset($ageRatingsToWrite[$ticketGroupKey]) ? trim((string)$ageRatingsToWrite[$ticketGroupKey]) : '';
         foreach ($seats as $seat) {
           if (!is_array($seat)) continue;
-          $seatName = isset($seat['seating_area']) ? (string)$seat['seating_area'] : '';
+          $allocated = (int)($seat['allocated_areas'] ?? 1);
+          $ticketArea = isset($seat['ticket_area']) ? (string)$seat['ticket_area'] : '';
           $tiers = isset($seat['tiers']) && is_array($seat['tiers']) ? $seat['tiers'] : [];
           foreach ($tiers as $tier) {
             if (!is_array($tier)) continue;
             $tierName = isset($tier['pricing_tier']) ? (string)$tier['pricing_tier'] : '';
             $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
             $amt = normalize_price_amount($tier['price'] ?? null);
-            if ($seatName === '' || $tierName === '' || $curr === '' || $amt === null) continue;
-            $stmtPrice->bind_param('issssss', $mapCardId, $ticketGroupKey, $ageRating, $seatName, $tierName, $amt, $curr);
+            if ($tierName === '' || $curr === '' || $amt === null) continue;
+            $stmtPrice->bind_param('ississss', $mapCardId, $ticketGroupKey, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr);
             if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
           }
         }
