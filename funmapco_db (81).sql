@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 19, 2026 at 03:47 PM
+-- Generation Time: Jan 19, 2026 at 03:53 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -471,6 +471,8 @@ CREATE TABLE `fields` (
   `id` int(11) NOT NULL,
   `field_key` varchar(255) DEFAULT NULL,
   `input_type` varchar(255) DEFAULT NULL,
+  `field_placeholder` mediumtext DEFAULT NULL,
+  `field_tooltip` mediumtext DEFAULT NULL,
   `min_length` int(11) DEFAULT NULL,
   `max_length` int(11) DEFAULT NULL,
   `show_limit` tinyint(1) DEFAULT 1,
@@ -482,37 +484,37 @@ CREATE TABLE `fields` (
 -- Dumping data for table `fields`
 --
 
-INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
-(1, 'title', 'text', 3, 150, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(2, 'description', 'textarea', 10, 5000, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(4, 'venue-name', 'text', 3, 200, 1, '2025-10-29 23:32:47', '2025-12-08 16:59:48'),
-(5, 'address-line', 'text', 5, 500, 1, '2025-10-29 23:32:47', '2025-12-07 03:13:38'),
-(6, 'latitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:04'),
-(7, 'longitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:11'),
-(8, 'session-date', 'date', NULL, NULL, 0, '2025-10-29 23:32:47', '2025-12-31 22:52:09'),
-(9, 'session-time', 'time', NULL, NULL, 0, '2025-10-29 23:32:47', '2025-12-31 22:52:30'),
-(10, 'ticket-area', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2026-01-19 15:47:05'),
-(11, 'pricing-tier', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:48'),
-(12, 'ticket-price', 'decimal(10,2)', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:01:05'),
-(13, 'currency', 'dropdown', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
-(14, 'text-box', 'text', 3, 500, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:12'),
-(15, 'text-area', 'textarea', 10, 2000, 1, '2025-10-30 17:11:57', '2025-12-08 17:01:18'),
-(16, 'dropdown', 'dropdown', NULL, NULL, 0, '2025-10-30 17:14:25', '2026-01-08 08:47:02'),
-(17, 'radio', 'radio', NULL, NULL, 0, '2025-10-30 17:14:25', '2026-01-08 08:47:13'),
-(18, 'email', 'email', 5, 50, 1, '2025-10-30 17:25:10', '2026-01-08 08:48:35'),
-(19, 'phone', 'tel', 6, 30, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(20, 'website', 'url', 5, 500, 1, '2025-10-30 17:25:10', '2025-12-07 03:34:36'),
-(21, 'item-name', 'text', 2, 200, 1, '2025-10-30 18:33:09', '2025-12-07 03:13:38'),
-(23, 'item-price', 'decimal(10,2)', 1, 50, 0, '2025-10-30 18:39:14', '2025-12-08 01:15:56'),
-(28, 'phone-prefix', 'dropdown', NULL, NULL, 0, '2025-12-08 03:17:25', '2026-01-10 02:23:14'),
-(37, 'item-variant', 'text', 2, 200, 1, '2025-12-15 09:26:00', '2025-12-15 09:26:00'),
-(35, 'city', 'text', 2, 200, 0, '2025-12-15 02:49:27', '2025-12-15 02:49:27'),
-(36, 'amenities', 'checklist', NULL, NULL, 0, '2025-12-15 06:13:31', '2026-01-08 08:47:49'),
-(38, 'country-code', 'text', 2, 2, 0, '2025-12-21 05:38:23', '2025-12-21 05:38:23'),
-(39, 'username', 'text', 3, 50, 1, '2025-12-31 03:30:08', '2025-12-31 03:30:08'),
-(40, 'password', 'password', 4, 50, 0, '2025-12-31 03:30:08', '2025-12-31 03:32:44'),
-(41, 'confirm-password', 'password', 4, 50, 0, '2025-12-31 03:30:08', '2025-12-31 03:32:51'),
-(42, 'checklist', 'checklist', NULL, NULL, 0, '2026-01-08 09:50:42', '2026-01-08 12:42:03');
+INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_placeholder`, `field_tooltip`, `min_length`, `max_length`, `show_limit`, `created_at`, `updated_at`) VALUES
+(1, 'title', 'text', 'eg. Summer Rain', 'Enter a clear, descriptive title for your listing.', 3, 150, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(2, 'description', 'textarea', 'eg. Come and Express Yourself!', 'Provide a detailed description of your event or listing.', 10, 5000, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(4, 'venue-name', 'text', 'eg. The Grand Theatre', 'The name of the venue where the event is held.', 3, 200, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(5, 'address-line', 'text', 'eg. 123 Main Street, Suburb', 'The physical street address of the venue.', 5, 500, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(6, 'latitude', 'decimal', '0.000000', 'The geographic latitude coordinate.', 3, 50, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(7, 'longitude', 'decimal', '0.000000', 'The geographic longitude coordinate.', 3, 50, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(8, 'session-date', 'date', 'Select Date', 'The calendar date for this session.', NULL, NULL, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(9, 'session-time', 'time', 'HH:MM', 'The starting time for this session (24-hour format).', NULL, NULL, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(10, 'ticket-area', 'text', 'eg. Stalls, Balcony, VIP Area', 'Specify the seating area or zone (e.g., Stalls, VIP, Camping).', 3, 100, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(11, 'pricing-tier', 'text', 'eg. Adult, Concession, Child', 'The demographic or ticket type (e.g., Adult, Student).', 3, 100, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(12, 'ticket-price', 'decimal(10,2)', '0.00', 'The cost of a single ticket in this tier.', 1, 50, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(13, 'currency', 'dropdown', 'Select Currency', 'The currency used for pricing.', 1, 50, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(14, 'text-box', 'text', 'Enter text...', 'Enter the required information.', 3, 500, 1, '2025-10-30 17:11:57', '2026-01-19 15:53:03'),
+(15, 'text-area', 'textarea', 'Enter detailed description...', 'Enter a detailed explanation.', 10, 2000, 1, '2025-10-30 17:11:57', '2026-01-19 15:53:03'),
+(16, 'dropdown', 'dropdown', 'Please Select', 'Select the most appropriate option from the list.', NULL, NULL, 0, '2025-10-30 17:14:25', '2026-01-19 15:53:03'),
+(17, 'radio', 'radio', 'Choose one', 'Select one of the available options.', NULL, NULL, 0, '2025-10-30 17:14:25', '2026-01-19 15:53:03'),
+(18, 'email', 'email', 'eg. you@example.com', 'A valid email address for contact purposes.', 5, 50, 1, '2025-10-30 17:25:10', '2026-01-19 15:53:03'),
+(19, 'phone', 'tel', 'eg. 0455 555 555', 'A contact phone number including area code.', 6, 30, 1, '2025-10-30 17:25:10', '2026-01-19 15:53:03'),
+(20, 'website', 'url', 'eg. https://www.website.com', 'The full URL of the official website.', 5, 500, 1, '2025-10-30 17:25:10', '2026-01-19 15:53:03'),
+(21, 'item-name', 'text', 'eg. T-Shirt', 'The name of the item or product being offered.', 2, 200, 1, '2025-10-30 18:33:09', '2026-01-19 15:53:03'),
+(23, 'item-price', 'decimal(10,2)', '0.00', 'The unit price of the item.', 1, 50, 0, '2025-10-30 18:39:14', '2026-01-19 15:53:03'),
+(28, 'phone-prefix', 'dropdown', '+61', 'The international calling code for your country.', NULL, NULL, 0, '2025-12-08 03:17:25', '2026-01-19 15:53:03'),
+(37, 'item-variant', 'text', 'eg. Large, Red', 'Specific options like size, color, or material.', 2, 200, 1, '2025-12-15 09:26:00', '2026-01-19 15:53:03'),
+(35, 'city', 'text', 'eg. Brisbane, Sydney, Melbourne', 'The city or town where this listing is located.', 2, 200, 0, '2025-12-15 02:49:27', '2026-01-19 15:53:03'),
+(36, 'amenities', 'checklist', 'Select all that apply', 'Check all features and facilities that are available.', NULL, NULL, 0, '2025-12-15 06:13:31', '2026-01-19 15:53:03'),
+(38, 'country-code', 'text', 'eg. AU', 'The two-letter ISO country code.', 2, 2, 0, '2025-12-21 05:38:23', '2026-01-19 15:53:03'),
+(39, 'username', 'text', 'eg. UrbanExplorer', 'Choose a unique name to represent you on the platform.', 3, 50, 1, '2025-12-31 03:30:08', '2026-01-19 15:53:03'),
+(40, 'password', 'password', '••••••••', 'Choose a secure password for your account.', 4, 50, 0, '2025-12-31 03:30:08', '2026-01-19 15:53:03'),
+(41, 'confirm-password', 'password', '••••••••', 'Type your password again to ensure it is correct.', 4, 50, 0, '2025-12-31 03:30:08', '2026-01-19 15:53:03'),
+(42, 'checklist', 'checklist', 'Select options', 'Select multiple options from the list.', NULL, NULL, 0, '2026-01-08 09:50:42', '2026-01-19 15:53:03');
 
 -- --------------------------------------------------------
 
