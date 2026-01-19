@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 19, 2026 at 03:25 PM
+-- Generation Time: Jan 19, 2026 at 03:47 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -491,7 +491,7 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `min_length`, `max_length
 (7, 'longitude', 'decimal', 3, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:00:11'),
 (8, 'session-date', 'date', NULL, NULL, 0, '2025-10-29 23:32:47', '2025-12-31 22:52:09'),
 (9, 'session-time', 'time', NULL, NULL, 0, '2025-10-29 23:32:47', '2025-12-31 22:52:30'),
-(10, 'seating-area', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:44'),
+(10, 'ticket-area', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2026-01-19 15:47:05'),
 (11, 'pricing-tier', 'text', 3, 100, 1, '2025-10-29 23:32:47', '2025-12-08 17:00:48'),
 (12, 'ticket-price', 'decimal(10,2)', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 17:01:05'),
 (13, 'currency', 'dropdown', 1, 50, 0, '2025-10-29 23:32:47', '2025-12-08 01:15:56'),
@@ -556,7 +556,7 @@ INSERT INTO `fieldsets` (`id`, `fieldset_name`, `fieldset_key`, `fieldset_type`,
 (17, 'Venue', 'venue', 'subcategory', 7, '[\"venue-name\", \"address-line\", \"latitude\", \"longitude\", \"country-code\"]', NULL, 'Search or type venue name...', 'Search for your venue or type the name manually. If searching by address, the venue name will auto-fill if Google knows the business at that location.', '2025-12-14 18:30:38', '2026-01-01 08:41:37'),
 (18, 'Amenities', 'amenities', 'subcategory', 14, '[\"amenities\"]', NULL, NULL, 'Select Yes or No for each amenity that applies to this listing.', '2025-12-14 19:13:31', '2026-01-01 08:41:37'),
 (19, 'Age Rating', 'age_rating', 'subcategory', 16, '[]', NULL, NULL, 'Select the appropriate age rating for this listing.', '2026-01-05 21:42:49', '2026-01-05 21:42:49'),
-(21, 'Session Pricing', 'session_pricing', 'subcategory', 17, '[\"session-date\",\"session-time\",\"seating-area\",\"pricing-tier\",\"currency\",\"ticket-price\"]', NULL, 'eg. Sessions with pricing', '1. Click the first date box to show the calendar.\n2. Choose all your event dates to create the table.\n3. Fill out your 24hr starting times for each date.\n4. Click the Ticket Pricing button to set prices.\n5. Add extra pricing groups if you need them.', '2026-01-01 12:54:10', '2026-01-03 15:11:05'),
+(21, 'Session Pricing', 'session_pricing', 'subcategory', 17, '[\"session-date\",\"session-time\",\"ticket-area\",\"pricing-tier\",\"currency\",\"ticket-price\"]', NULL, 'eg. Sessions with pricing', '1. Click the first date box to show the calendar.\n2. Choose all your event dates to create the table.\n3. Fill out your 24hr starting times for each date.\n4. Click the Ticket Pricing button to set prices.\n5. Add extra pricing groups if you need them.', '2026-01-01 12:54:10', '2026-01-19 04:47:05'),
 (27, 'Public Email', 'public_email', 'subcategory', 3, '[\"email\"]', NULL, 'you@there.com', 'Enter a valid email address where visitors can contact you. This will be displayed publicly.', '2026-01-01 07:54:19', '2026-01-01 08:41:37'),
 (100, 'Account Email', 'account_email', 'auth', NULL, '[\"email\"]', NULL, 'you@there.com', 'Your login email for this website. This is how admins will contact you. ', '2025-10-29 19:03:05', '2026-01-03 06:34:01'),
 (101, 'Username', 'username', 'auth', NULL, '[\"username\"]', NULL, 'eg. Rolls Royce', 'Create a Username to use on this website.', '2025-12-30 16:30:08', '2026-01-01 08:41:37'),
@@ -2314,7 +2314,7 @@ CREATE TABLE `post_ticket_pricing` (
   `ticket_group_key` varchar(50) NOT NULL,
   `age_rating` varchar(50) DEFAULT NULL,
   `allocated_areas` tinyint(1) NOT NULL DEFAULT 0,
-  `area_name` varchar(100) DEFAULT NULL,
+  `ticket_area` varchar(100) DEFAULT NULL,
   `pricing_tier` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
   `currency` varchar(10) DEFAULT NULL,
@@ -2695,7 +2695,7 @@ ALTER TABLE `post_sessions`
 --
 ALTER TABLE `post_ticket_pricing`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uniq_group_line` (`map_card_id`,`ticket_group_key`,`area_name`,`pricing_tier`,`price`,`currency`),
+  ADD UNIQUE KEY `uniq_group_line` (`map_card_id`,`ticket_group_key`,`ticket_area`,`pricing_tier`,`price`,`currency`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
   ADD KEY `idx_price_currency` (`price`,`currency`),
   ADD KEY `idx_ticket_group_key` (`ticket_group_key`),
