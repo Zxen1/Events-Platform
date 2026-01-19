@@ -747,26 +747,42 @@ const AdminModule = (function() {
             );
         }
         
-        // Save modified tooltips (uses save-admin-settings endpoint)
+        // Save modified fieldset tooltips (uses save-admin-settings endpoint)
         var modifiedTooltips = getModifiedFieldsetTooltips();
-        var modifiedFieldTooltips = getModifiedFieldTooltips();
-        
-        if (modifiedTooltips.length > 0 || modifiedFieldTooltips.length > 0) {
+        if (modifiedTooltips.length > 0) {
             savePromises.push(
                 fetch('/gateway.php?action=save-admin-settings', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        fieldset_tooltips: modifiedTooltips,
-                        field_tooltips: modifiedFieldTooltips
-                    })
+                    body: JSON.stringify({ fieldset_tooltips: modifiedTooltips })
                 })
                 .then(function(response) { return response.json(); })
                 .then(function(data) {
                     if (!data.success) {
-                        throw new Error(data.message || 'Failed to save tooltips');
+                        throw new Error(data.message || 'Failed to save fieldset tooltips');
                     }
-                    // Tooltips saved
+                    // Fieldset tooltips saved
+                    // Update composite baseline (like Formbuilder does)
+                    updateCompositeBaseline('messages');
+                })
+            );
+        }
+        
+        // Save modified field tooltips (uses save-admin-settings endpoint)
+        var modifiedFieldTooltips = getModifiedFieldTooltips();
+        if (modifiedFieldTooltips.length > 0) {
+            savePromises.push(
+                fetch('/gateway.php?action=save-admin-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ field_tooltips: modifiedFieldTooltips })
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (!data.success) {
+                        throw new Error(data.message || 'Failed to save field tooltips');
+                    }
+                    // Field tooltips saved
                     // Update composite baseline (like Formbuilder does)
                     updateCompositeBaseline('messages');
                 })
@@ -1083,6 +1099,7 @@ const AdminModule = (function() {
             renderMessagesAccordions(accordionsWrap);
             loadMessagesFromDatabase();
             loadFieldsetTooltips();
+            loadFieldTooltips();
         });
         
         messagesInitialized = true;
@@ -1449,13 +1466,32 @@ const AdminModule = (function() {
             });
     }
     
-    // Track loading state for both messages and tooltips
+    // Track loading state for messages, fieldset tooltips, and field tooltips
     var messagesDataLoaded = false;
-    var tooltipsDataLoaded = false;
+    var fieldsetTooltipsLoaded = false;
+    var fieldTooltipsLoaded = false;
     
     function registerMessagesCompositeIfReady() {
         messagesDataLoaded = true;
-        if (messagesDataLoaded && tooltipsDataLoaded) {
+        if (messagesDataLoaded && fieldsetTooltipsLoaded && fieldTooltipsLoaded) {
+            // Register messages as composite field (like Formbuilder)
+            registerComposite('messages', captureMessagesState);
+            messagesLoaded = true;
+        }
+    }
+
+    function registerFieldsetTooltipsCompositeIfReady() {
+        fieldsetTooltipsLoaded = true;
+        if (messagesDataLoaded && fieldsetTooltipsLoaded && fieldTooltipsLoaded) {
+            // Register messages as composite field (like Formbuilder)
+            registerComposite('messages', captureMessagesState);
+            messagesLoaded = true;
+        }
+    }
+
+    function registerFieldTooltipsCompositeIfReady() {
+        fieldTooltipsLoaded = true;
+        if (messagesDataLoaded && fieldsetTooltipsLoaded && fieldTooltipsLoaded) {
             // Register messages as composite field (like Formbuilder)
             registerComposite('messages', captureMessagesState);
             messagesLoaded = true;
@@ -1474,10 +1510,10 @@ const AdminModule = (function() {
         // Compare each tooltip
         for (var id in currentState.fieldTooltips) {
             var currentValue = currentState.fieldTooltips[id];
-            var originalValue = originalState.fieldTooltips[id];
+            var originalValue = originalState.fieldTooltips ? originalState.fieldTooltips[id] : undefined;
             if (currentValue !== originalValue) {
                 modified.push({
-                    id: id,
+                    id: parseInt(id, 10),
                     field_tooltip: currentValue
                 });
             }
@@ -1486,14 +1522,6 @@ const AdminModule = (function() {
         return modified;
     }
 
-    function registerTooltipsCompositeIfReady() {
-        tooltipsDataLoaded = true;
-        if (messagesDataLoaded && tooltipsDataLoaded) {
-            // Register messages as composite field (like Formbuilder)
-            registerComposite('messages', captureMessagesState);
-            messagesLoaded = true;
-        }
-    }
     
     function populateMessagesIntoAccordions(messageContainers) {
         messageContainers.forEach(function(container) {
@@ -1633,18 +1661,28 @@ const AdminModule = (function() {
         fetch('/gateway.php?action=get-form')
             .then(function(response) { return response.json(); })
             .then(function(data) {
-                if (data.success && data.formData) {
-                    if (data.formData.fieldsets) {
-                        populateFieldsetTooltips(data.formData.fieldsets);
-                    }
-                    if (data.formData.fields) {
-                        populateFieldTooltips(data.formData.fields);
-                    }
-                    registerTooltipsCompositeIfReady();
+                if (data.success && data.formData && data.formData.fieldsets) {
+                    populateFieldsetTooltips(data.formData.fieldsets);
+                    registerFieldsetTooltipsCompositeIfReady();
                 }
             })
             .catch(function(err) {
-                console.error('[Admin] Failed to load tooltips:', err);
+                console.error('[Admin] Failed to load fieldset tooltips:', err);
+            });
+    }
+
+    function loadFieldTooltips() {
+        // Fetch fields from get-form endpoint (returns form data with fields)
+        fetch('/gateway.php?action=get-form')
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                if (data.success && data.formData && data.formData.fields) {
+                    populateFieldTooltips(data.formData.fields);
+                    registerFieldTooltipsCompositeIfReady();
+                }
+            })
+            .catch(function(err) {
+                console.error('[Admin] Failed to load field tooltips:', err);
             });
     }
 

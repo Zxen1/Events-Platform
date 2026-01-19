@@ -235,6 +235,7 @@ try {
     unset($fieldset); // Break reference
 
     $formData = buildFormData($pdo, $categories, $subcategories, $currencyOptions, $allFields, $fieldsets, $iconFolder);
+    $formData['fields'] = $allFields;
     $formData['fieldsets'] = $fieldsets;
     $formData['checkout_options'] = $checkoutOptions;
     $formData['banned_words'] = $bannedWords;
