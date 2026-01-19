@@ -1041,18 +1041,57 @@
     color: #fff;
 }
 
-/* Ticket Group Button - appearance from button-class-5 */
-.fieldset-sessionpricing-ticketgroup-button-toggle {
-    flex: 0 0 70px;
-    width: 70px;
+/* Ticket Group unassigned state */
+.fieldset-sessionpricing-ticketgroup-button-label:empty::before {
+    content: '?';
+}
+
+/* Allocated Areas Toggle */
+.fieldset-sessionpricing-toggle-wrap {
+    display: flex;
+    gap: 15px;
     height: 36px;
+    align-items: center;
+}
+
+.fieldset-sessionpricing-toggle-option {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    position: relative;
-    box-sizing: border-box;
-    padding: 0 10px;
-    gap: 10px;
+    gap: 6px;
+    cursor: pointer;
+    user-select: none;
+    color: #fff;
+    font-size: 13px;
+}
+
+.fieldset-sessionpricing-toggle-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* Pricing Table Layout */
+.fieldset-sessionpricing-pricing-ticketarea-block {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 5px;
+    padding: 10px 10px 0; /* 10-12-6 rule: padding 10px 10px 0 for visible containers */
+    margin-bottom: 12px; /* 10-12-6 rule: 12px between sibling containers */
+}
+
+.fieldset-sessionpricing-pricing-tier-block {
+    padding-left: 0; /* Remove indentation for table-like look */
+    margin-bottom: 10px; /* 10-12-6 rule: 10px between elements inside containers */
+}
+
+/* Ensure horizontal alignment in rows */
+.fieldset-sessionpricing-pricing-tier-block .fieldset-row {
+    align-items: flex-end;
+}
+
+.fieldset-sessionpricing-pricing-ticketarea-block .fieldset-row:first-child {
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 10px; /* 10-12-6 rule: 10px between elements inside containers */
 }
 
 .fieldset-sessionpricing-ticketgroup-button-icon {
