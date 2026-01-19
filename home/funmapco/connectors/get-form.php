@@ -1129,17 +1129,11 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 if (!isset($fieldsByKey[$fieldKey])) {
                     throw new RuntimeException("Field key '{$fieldKey}' not found in fields table (referenced by fieldset id: " . $fieldsetId . ")");
                 }
-                $childField = $fieldsByKey[$fieldKey];
-                $childInputType = isset($childField['input_type']) ? trim((string) $childField['input_type']) : 'text';
-                $builtFieldItem = [
-                    'id' => $childField['id'],
-                    'key' => $childField['field_key'],
-                    'type' => $childInputType,
-                    'name' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
-                    'field_placeholder' => $childField['field_placeholder'] ?? null,
-                    'field_tooltip' => $childField['field_tooltip'] ?? null,
-                ];
-                $itemIds[] = ['type' => 'field', 'id' => (int)$childField['id'], 'data' => $builtFieldItem];
+                $field = $fieldsByKey[$fieldKey];
+                if (!isset($field['id'])) {
+                    throw new RuntimeException("Field '{$fieldKey}' missing id (referenced by fieldset id: " . $fieldsetId . ")");
+                }
+                $itemIds[] = ['type' => 'field', 'id' => (int)$field['id']];
             }
             
             // If fieldset has only ONE item and it's a field → use fieldset properties
@@ -1284,8 +1278,15 @@ function buildFormData(PDO $pdo, array $categories, array $subcategories, array 
                 
                 // Add all fields as children
                 foreach ($itemIds as $item) {
-                    if ($item['type'] === 'field' && isset($item['data'])) {
-                        $builtField['fields'][] = $item['data'];
+                    if ($item['type'] === 'field' && isset($fieldsById[$item['id']])) {
+                        $childField = $fieldsById[$item['id']];
+                        $childInputType = isset($childField['input_type']) ? trim((string) $childField['input_type']) : 'text';
+                        $builtField['fields'][] = [
+                            'id' => $childField['id'],
+                            'key' => $childField['field_key'],
+                            'type' => $childInputType,
+                            'name' => ucwords(str_replace(['_', '-'], ' ', $childField['field_key'])),
+                        ];
                     }
                 }
                 
