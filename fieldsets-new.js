@@ -2262,20 +2262,23 @@ const FieldsetBuilder = (function(){
 
                 // Item Name sublabel
                 var itemNameSub = document.createElement('div');
-                itemNameSub.className = 'fieldset-itempricing-sublabel-itemname';
+                itemNameSub.className = 'fieldset-sublabel fieldset-itempricing-sublabel-itemname';
                 itemNameSub.textContent = 'Item Name';
+                itemNameSub.style.marginBottom = '6px'; // 10-12-6 rule: 6px label-element
                 fieldset.appendChild(itemNameSub);
                 
                 // Item Name input
                 var itemNameInput = document.createElement('input');
                 itemNameInput.type = 'text';
-                itemNameInput.className = 'fieldset-itempricing-input-itemname input-class-1';
+                itemNameInput.className = 'fieldset-input fieldset-itempricing-input-itemname input-class-1';
                 itemNameInput.placeholder = 'eg. T-Shirt';
+                itemNameInput.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                 fieldset.appendChild(itemNameInput);
                 
                 // Currency + Item Price row
                 var itemPriceRow = document.createElement('div');
-                itemPriceRow.className = 'fieldset-itempricing-row-itemprice';
+                itemPriceRow.className = 'fieldset-row fieldset-itempricing-row-itemprice';
+                itemPriceRow.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                 
                 // Currency column (fixed width 100px)
                 var itemCurrencyCol = document.createElement('div');
@@ -2283,8 +2286,9 @@ const FieldsetBuilder = (function(){
                 
                 // Currency sublabel
                 var itemCurrencySub = document.createElement('div');
-                itemCurrencySub.className = 'fieldset-itempricing-sublabel-currency';
+                itemCurrencySub.className = 'fieldset-sublabel fieldset-itempricing-sublabel-currency';
                 itemCurrencySub.textContent = 'Currency';
+                itemCurrencySub.style.marginBottom = '6px'; // 10-12-6 rule: 6px label-element
                 itemCurrencyCol.appendChild(itemCurrencySub);
                 
                 // Build currency menu for item (no default - user must select if required)
@@ -2341,14 +2345,15 @@ const FieldsetBuilder = (function(){
                 
                 // Item Price sublabel
                 var itemPriceSub = document.createElement('div');
-                itemPriceSub.className = 'fieldset-itempricing-sublabel-itemprice';
+                itemPriceSub.className = 'fieldset-sublabel fieldset-itempricing-sublabel-itemprice';
                 itemPriceSub.textContent = 'Item Price';
+                itemPriceSub.style.marginBottom = '6px'; // 10-12-6 rule: 6px label-element
                 itemPriceCol.appendChild(itemPriceSub);
                 
                 // Item Price input - linked to currency selection
                 var itemPriceInput = document.createElement('input');
                 itemPriceInput.type = 'text';
-                itemPriceInput.className = 'fieldset-itempricing-input-itemprice input-class-1';
+                itemPriceInput.className = 'fieldset-input fieldset-itempricing-input-itemprice input-class-1';
                 itemPriceInput.placeholder = '0.00';
                 attachMoneyInputBehavior(itemPriceInput, ipGetSelectedCurrencyCode);
                 itemPriceCol.appendChild(itemPriceInput);
@@ -2390,24 +2395,27 @@ const FieldsetBuilder = (function(){
                 
                 // Variants section sublabel
                 var variantsSectionLabel = document.createElement('div');
-                variantsSectionLabel.className = 'fieldset-itempricing-sublabel-itemvariants';
+                variantsSectionLabel.className = 'fieldset-sublabel fieldset-itempricing-sublabel-itemvariants';
                 variantsSectionLabel.textContent = 'Item Variants';
+                variantsSectionLabel.style.marginBottom = '6px'; // 10-12-6 rule: 6px label-element
                 fieldset.appendChild(variantsSectionLabel);
                 
                 // Variants container
                 var itemVariantsContainer = document.createElement('div');
                 itemVariantsContainer.className = 'fieldset-itempricing-container-itemvariants';
+                // Spacing is handled by last child rule in invisible container
                 fieldset.appendChild(itemVariantsContainer);
                 
                 function createItemVariantRow() {
                     // Single row element (no separate block wrapper)
                     var variantRow = document.createElement('div');
-                    variantRow.className = 'fieldset-itempricing-row-itemvariant';
+                    variantRow.className = 'fieldset-row fieldset-itempricing-row-itemvariant';
+                    variantRow.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                     
                     // Variant name input
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
-                    variantInput.className = 'fieldset-itempricing-input-itemvariantname input-class-1';
+                    variantInput.className = 'fieldset-input fieldset-itempricing-input-itemvariantname input-class-1';
                     variantInput.placeholder = 'eg. Large, Red';
                     variantRow.appendChild(variantInput);
                     
@@ -2458,7 +2466,10 @@ const FieldsetBuilder = (function(){
                 function updateItemVariantButtons() {
                     var rows = itemVariantsContainer.querySelectorAll('.fieldset-itempricing-row-itemvariant');
                     var atMax = rows.length >= 10;
-                    rows.forEach(function(row) {
+                    rows.forEach(function(row, idx) {
+                        // 10-12-6 rule: last child of invisible container gets margin-bottom 0
+                        row.style.marginBottom = (idx === rows.length - 1) ? '0' : '10px';
+
                         var addBtn = row.querySelector('.fieldset-itempricing-button-itemvariantadd');
                         var removeBtn = row.querySelector('.fieldset-itempricing-button-itemvariantremove');
                         if (atMax) {
@@ -2490,6 +2501,7 @@ const FieldsetBuilder = (function(){
             case 'session_pricing':
                 // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
                 var spLabelEl = buildLabel(name, tooltip, minLength, maxLength);
+                spLabelEl.style.marginBottom = '6px'; // 10-12-6 rule: 6px label-element
                 fieldset.appendChild(spLabelEl);
 
                 // Track selected dates:
@@ -2748,7 +2760,8 @@ const FieldsetBuilder = (function(){
                     inputRow.className = 'fieldset-row fieldset-sessionpricing-tier-input-row';
                     inputRow.style.display = 'flex';
                     inputRow.style.gap = '8px';
-                    inputRow.style.marginBottom = '0'; // Using block margin instead
+                    // The 8px margin of the block provides the spacing; no inner row margin needed.
+                    inputRow.style.marginBottom = '0'; 
 
                     var tierInput = document.createElement('input');
                     tierInput.className = 'fieldset-input input-class-1';
@@ -2802,20 +2815,23 @@ const FieldsetBuilder = (function(){
                         // Auto-copy logic
                         if (!this.dataset.manuallyEdited) {
                             var val = this.value;
-                            var groupKey = tiersContainer.closest('.fieldset-sessionpricing-ticketgroup-item').dataset.ticketGroupKey;
-                            var allEditors = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-editor');
-                            allEditors.forEach(function(editor) {
-                                var otherTiers = editor.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block');
-                                // Copy to same-index tier in other blocks if not edited
-                                var myIdx = Array.from(tiersContainer.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block')).indexOf(block);
-                                if (otherTiers[myIdx]) {
-                                    var otherInp = otherTiers[myIdx].querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
-                                    if (otherInp && otherInp !== tierInput && !otherInp.dataset.manuallyEdited) {
-                                        otherInp.value = val;
-                                        otherInp.dispatchEvent(new Event('input'));
+                            var groupItem = tiersContainer.closest('.fieldset-sessionpricing-ticketgroup-item');
+                            if (groupItem) {
+                                var groupKey = groupItem.dataset.ticketGroupKey;
+                                var allEditors = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-editor');
+                                allEditors.forEach(function(editor) {
+                                    var otherTiers = editor.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block');
+                                    // Copy to same-index tier in other blocks if not edited
+                                    var myIdx = Array.from(tiersContainer.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block')).indexOf(block);
+                                    if (otherTiers[myIdx]) {
+                                        var otherInp = otherTiers[myIdx].querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
+                                        if (otherInp && otherInp !== tierInput && !otherInp.dataset.manuallyEdited) {
+                                            otherInp.value = val;
+                                            otherInp.dispatchEvent(new Event('input'));
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
                     });
                     tierInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
@@ -2879,8 +2895,11 @@ const FieldsetBuilder = (function(){
                 function spCreateSeatingAreaBlock(seatingAreasContainer, yesRadio) {
                     var block = document.createElement('div');
                     block.className = 'fieldset-sessionpricing-pricing-seating-block';
-                    block.style.marginBottom = '12px'; // Complies with 10-12-6 rule for sibling containers
-                    block.style.paddingBottom = '10px';
+                    // 10-12-6 rule: sibling containers get 12px margin. 
+                    // Visibility update handles resetting the last-child to 0.
+                    block.style.marginBottom = '12px'; 
+                    // 10-12-6 rule: Visible containers use padding: 10px 10px 0
+                    block.style.padding = '0'; // Align to edges as per user instruction on wrapper padding
                     block.style.borderBottom = '1px solid #333';
 
                     // Ticket Area Label Row (Conditional)
@@ -2940,19 +2959,22 @@ const FieldsetBuilder = (function(){
                         // Auto-copy logic
                         if (!this.dataset.manuallyEdited) {
                             var val = this.value;
-                            var groupKey = seatingAreasContainer.closest('.fieldset-sessionpricing-ticketgroup-item').dataset.ticketGroupKey;
-                            var allEditors = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-editor');
-                            allEditors.forEach(function(editor) {
-                                var otherBlocks = editor.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
-                                var myIdx = Array.from(seatingAreasContainer.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block')).indexOf(block);
-                                if (otherBlocks[myIdx]) {
-                                    var otherInp = otherBlocks[myIdx].querySelector('.fieldset-sessionpricing-input-ticketarea');
-                                    if (otherInp && otherInp !== seatInput && !otherInp.dataset.manuallyEdited) {
-                                        otherInp.value = val;
-                                        otherInp.dispatchEvent(new Event('input'));
+                            var groupItem = seatingAreasContainer.closest('.fieldset-sessionpricing-ticketgroup-item');
+                            if (groupItem) {
+                                var groupKey = groupItem.dataset.ticketGroupKey;
+                                var allEditors = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-editor');
+                                allEditors.forEach(function(editor) {
+                                    var otherBlocks = editor.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
+                                    var myIdx = Array.from(seatingAreasContainer.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block')).indexOf(block);
+                                    if (otherBlocks[myIdx]) {
+                                        var otherInp = otherBlocks[myIdx].querySelector('.fieldset-sessionpricing-input-ticketarea');
+                                        if (otherInp && otherInp !== seatInput && !otherInp.dataset.manuallyEdited) {
+                                            otherInp.value = val;
+                                            otherInp.dispatchEvent(new Event('input'));
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
                     });
                     seatInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
@@ -3053,7 +3075,10 @@ const FieldsetBuilder = (function(){
                 function spUpdateSeatingAreaButtons(seatingAreasContainer, isVisible) {
                     var blocks = seatingAreasContainer.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                     var atMax = blocks.length >= 10;
-                    blocks.forEach(function(block) {
+                    blocks.forEach(function(block, idx) {
+                        // 10-12-6 rule: last child of invisible container (seatingAreasContainer) gets margin-bottom 0
+                        block.style.marginBottom = (idx === blocks.length - 1) ? '0' : '12px';
+
                         // Find buttons in the Ticket Area row
                         var addBtn = block.querySelector('.fieldset-sessionpricing-pricing-button-add');
                         var removeBtn = block.querySelector('.fieldset-sessionpricing-pricing-button-remove');
@@ -3155,7 +3180,8 @@ const FieldsetBuilder = (function(){
 
                 // Date selector row (shown even before any dates are selected)
                 var spDatePickerRow = document.createElement('div');
-                spDatePickerRow.className = 'fieldset-sessionpricing-session-row fieldset-sessionpricing-session-row--picker';
+                spDatePickerRow.className = 'fieldset-row fieldset-sessionpricing-session-row fieldset-sessionpricing-session-row--picker';
+                spDatePickerRow.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                 var spDatePickerBox = document.createElement('div');
                 spDatePickerBox.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--picker button-class-4';
                 spDatePickerBox.setAttribute('role', 'button');
@@ -4085,13 +4111,19 @@ const FieldsetBuilder = (function(){
                             spDatePickerBox.textContent = sortedDates[0];
                         }
                     }
-                    sortedDates.forEach(function(dateStr) {
+                    sortedDates.forEach(function(dateStr, dateIdx) {
                         var data = spSessionData[dateStr];
                         var group = document.createElement('div');
                         group.className = 'fieldset-sessionpricing-session-container-item';
                         data.times.forEach(function(timeVal, idx) {
                             var row = document.createElement('div');
-                            row.className = 'fieldset-sessionpricing-session-row';
+                            row.className = 'fieldset-row fieldset-sessionpricing-session-row';
+                            // 10-12-6 rule: last child of invisible container gets margin-bottom 0
+                            // Sessions are elements inside spSessionsContainer (invisible)
+                            var isLastDate = (dateIdx === sortedDates.length - 1);
+                            var isLastTime = (idx === data.times.length - 1);
+                            row.style.marginBottom = (isLastDate && isLastTime) ? '0' : '8px'; // Using 8px for session rows as per user
+
                             if (idx === 0) {
                                 var dateDisplay = document.createElement('div');
                                 dateDisplay.className = 'fieldset-sessionpricing-session-field-label fieldset-sessionpricing-session-field-label--selected button-class-4';
