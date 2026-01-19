@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 19, 2026 at 03:10 PM
+-- Generation Time: Jan 19, 2026 at 03:25 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -2313,8 +2313,8 @@ CREATE TABLE `post_ticket_pricing` (
   `map_card_id` int(11) NOT NULL,
   `ticket_group_key` varchar(50) NOT NULL,
   `age_rating` varchar(50) DEFAULT NULL,
-  `has_seating_area` tinyint(1) NOT NULL DEFAULT 0,
-  `seating_area` varchar(100) DEFAULT NULL,
+  `allocated_areas` tinyint(1) NOT NULL DEFAULT 0,
+  `area_name` varchar(100) DEFAULT NULL,
   `pricing_tier` varchar(100) DEFAULT NULL,
   `price` decimal(10,2) DEFAULT NULL,
   `currency` varchar(10) DEFAULT NULL,
@@ -2695,7 +2695,7 @@ ALTER TABLE `post_sessions`
 --
 ALTER TABLE `post_ticket_pricing`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `uniq_group_line` (`map_card_id`,`ticket_group_key`,`seating_area`,`pricing_tier`,`price`,`currency`),
+  ADD UNIQUE KEY `uniq_group_line` (`map_card_id`,`ticket_group_key`,`area_name`,`pricing_tier`,`price`,`currency`),
   ADD KEY `idx_map_card_id` (`map_card_id`),
   ADD KEY `idx_price_currency` (`price`,`currency`),
   ADD KEY `idx_ticket_group_key` (`ticket_group_key`),
