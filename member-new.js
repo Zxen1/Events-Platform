@@ -4132,21 +4132,23 @@ const MemberModule = (function() {
                                 ageRatings[gk] = String(ageRatingMenu.dataset.value || '').trim();
                             }
                             
+                            var allocatedVal = 1;
+                            var yesRadio = editorEl.querySelector('input[type="radio"][value="1"]');
+                            if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+
                             var seatingBlocks2 = editorEl.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                             var seatOut2 = [];
                             seatingBlocks2.forEach(function(block) {
-                                var allocatedVal = 1;
-                                var yesRadio = block.querySelector('input[type="radio"][value="1"]');
-                                if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+                                if (allocatedVal === 0 && seatOut2.length > 0) return;
 
                                 var ticketArea = '';
-                                var seatInput = block.querySelector('.fieldset-row input.fieldset-input');
+                                var seatInput = block.querySelector('.fieldset-sessionpricing-input-ticketarea');
                                 if (seatInput) ticketArea = String(seatInput.value || '').trim();
 
                                 var tiers = [];
                                 block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
                                     var tierName = '';
-                                    var tierInput = tier.querySelector('.fieldset-row input.fieldset-input');
+                                    var tierInput = tier.querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
                                     if (tierInput) tierName = String(tierInput.value || '').trim();
                                     
                                     // Currency is now shared for the group, look in the editorEl (header area)
@@ -4158,9 +4160,7 @@ const MemberModule = (function() {
                                     
                                     if (curr && !sharedCurrency) sharedCurrency = curr;
 
-                                    var priceInput = null;
-                                    var inputs = tier.querySelectorAll('input.fieldset-input');
-                                    if (inputs && inputs.length) priceInput = inputs[inputs.length - 1];
+                                    var priceInput = tier.querySelector('.fieldset-sessionpricing-input-price');
                                     var rawPrice = priceInput ? String(priceInput.value || '').trim() : '';
                                     
                                     // Convert displayed price to standard numeric format for database
