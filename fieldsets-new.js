@@ -2743,36 +2743,7 @@ const FieldsetBuilder = (function(){
                     block.className = 'fieldset-sessionpricing-pricing-tier-block';
                     block.style.marginBottom = '10px';
 
-                    // Row 1: Sublabels (Pricing Tier and Price)
-                    var labelRow = document.createElement('div');
-                    labelRow.className = 'fieldset-row fieldset-sessionpricing-tier-label-row';
-                    labelRow.style.marginBottom = '6px';
-                    labelRow.style.display = 'flex';
-                    labelRow.style.gap = '8px';
-
-                    var tierLabel = document.createElement('div');
-                    tierLabel.className = 'fieldset-sublabel';
-                    tierLabel.textContent = 'Pricing Tier';
-                    tierLabel.style.flex = '3';
-                    tierLabel.style.marginBottom = '0';
-                    labelRow.appendChild(tierLabel);
-
-                    var priceLabel = document.createElement('div');
-                    priceLabel.className = 'fieldset-sublabel';
-                    priceLabel.textContent = 'Price';
-                    priceLabel.style.flex = '1.5';
-                    priceLabel.style.marginBottom = '0';
-                    labelRow.appendChild(priceLabel);
-
-                    // Spacer for buttons in row below (36px + 8px + 36px = 80px)
-                    var btnSpacer = document.createElement('div');
-                    btnSpacer.style.width = '80px';
-                    btnSpacer.style.flex = '0 0 80px';
-                    labelRow.appendChild(btnSpacer);
-
-                    block.appendChild(labelRow);
-
-                    // Row 2: Inputs and Buttons
+                    // Row: Inputs and Buttons (Labels are now handled once in seating area block)
                     var inputRow = document.createElement('div');
                     inputRow.className = 'fieldset-row fieldset-sessionpricing-tier-input-row';
                     inputRow.style.display = 'flex';
@@ -2830,6 +2801,7 @@ const FieldsetBuilder = (function(){
                     });
                     inputRow.appendChild(removeBtn);
 
+                    applyFieldsetRowItemClasses(inputRow);
                     block.appendChild(inputRow);
                     return block;
                 }
@@ -2902,7 +2874,7 @@ const FieldsetBuilder = (function(){
                     }
                     addBtn.addEventListener('click', function() {
                         seatingAreasContainer.appendChild(spCreateSeatingAreaBlock(seatingAreasContainer, yesRadio));
-                        spUpdateSeatingAreaButtons(seatingAreasContainer);
+                        spUpdateSeatingAreaButtons(seatingAreasContainer, true);
                         // Trigger visibility update for the new block
                         if (yesRadio) yesRadio.dispatchEvent(new Event('change'));
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
@@ -2922,15 +2894,46 @@ const FieldsetBuilder = (function(){
                     }
                     removeBtn.addEventListener('click', function() {
                         block.remove();
-                        spUpdateSeatingAreaButtons(seatingAreasContainer);
+                        spUpdateSeatingAreaButtons(seatingAreasContainer, true);
                         try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                     });
                     seatInputRow.appendChild(removeBtn);
 
+                    applyFieldsetRowItemClasses(seatInputRow);
                     block.appendChild(seatInputRow);
 
                     var tiersContainer = document.createElement('div');
                     tiersContainer.className = 'fieldset-sessionpricing-pricing-tiers-container';
+                    
+                    // Add Pricing Tier labels ONCE per seating block
+                    var tierLabelRow = document.createElement('div');
+                    tierLabelRow.className = 'fieldset-row fieldset-sessionpricing-tier-label-row';
+                    tierLabelRow.style.marginBottom = '6px';
+                    tierLabelRow.style.display = 'flex';
+                    tierLabelRow.style.gap = '8px';
+
+                    var tLabel = document.createElement('div');
+                    tLabel.className = 'fieldset-sublabel';
+                    tLabel.textContent = 'Pricing Tier';
+                    tLabel.style.flex = '3';
+                    tLabel.style.marginBottom = '0';
+                    tierLabelRow.appendChild(tLabel);
+
+                    var pLabel = document.createElement('div');
+                    pLabel.className = 'fieldset-sublabel';
+                    pLabel.textContent = 'Price';
+                    pLabel.style.flex = '1.5';
+                    pLabel.style.marginBottom = '0';
+                    tierLabelRow.appendChild(pLabel);
+
+                    var tBtnSpacer = document.createElement('div');
+                    tBtnSpacer.style.width = '80px';
+                    tBtnSpacer.style.flex = '0 0 80px';
+                    tierLabelRow.appendChild(tBtnSpacer);
+                    
+                    tiersContainer.appendChild(tierLabelRow);
+                    
+                    // Add first tier block
                     tiersContainer.appendChild(spCreatePricingTierBlock(tiersContainer, yesRadio));
                     spUpdateTierButtons(tiersContainer);
                     block.appendChild(tiersContainer);
@@ -3420,7 +3423,6 @@ const FieldsetBuilder = (function(){
                 function spReplaceEditorFromPricing(editorEl, pricingArr) {
                     if (!editorEl) return;
                     editorEl.innerHTML = '';
-                    editorEl.style.padding = '10px 10px 0'; // Standard panel padding
                     
                     // Row 1 & 2: Age Rating (Header Level)
                     var ageLabel = buildLabel('Age Rating', '', null, null);
@@ -3449,6 +3451,7 @@ const FieldsetBuilder = (function(){
                     allocatedRow.style.alignItems = 'center';
                     allocatedRow.style.justifyContent = 'space-between';
                     allocatedRow.style.marginBottom = '10px'; // 10px element-element gap
+                    allocatedRow.style.height = '36px'; // Touch friendly
                     
                     var allocatedLabel = document.createElement('div');
                     allocatedLabel.className = 'fieldset-label';
@@ -3517,7 +3520,7 @@ const FieldsetBuilder = (function(){
                                 block.remove();
                             }
                         });
-                        spUpdateSeatingAreaButtons(seatingAreasContainer);
+                        spUpdateSeatingAreaButtons(seatingAreasContainer, isYes);
                     }
                     yesRadio.addEventListener('change', updateAllVisibility);
                     noRadio.addEventListener('change', updateAllVisibility);
@@ -3538,22 +3541,27 @@ const FieldsetBuilder = (function(){
                         if (seatInput) seatInput.value = String((seat && (seat.ticket_area || seat.seating_area)) || '');
                         
                         var tiersContainer = block.querySelector('.fieldset-sessionpricing-pricing-tiers-container');
-                        if (tiersContainer) tiersContainer.innerHTML = '';
-                        var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
-                        if (tiers.length === 0) tiers = [{}];
-                        tiers.forEach(function(tierObj) {
-                            var tierBlock = spCreatePricingTierBlock(tiersContainer, yesRadio);
-                            tiersContainer.appendChild(tierBlock);
-                            var tierNameInput = tierBlock.querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
-                            if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
+                        if (tiersContainer) {
+                            // Find all tier blocks (skip the labels row)
+                            var existingTierBlocks = tiersContainer.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block');
+                            existingTierBlocks.forEach(function(tb) { tb.remove(); });
                             
-                            var priceInput = tierBlock.querySelector('.fieldset-sessionpricing-input-price');
-                            if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
-                        });
-                        spUpdateTierButtons(tiersContainer);
+                            var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
+                            if (tiers.length === 0) tiers = [{}];
+                            tiers.forEach(function(tierObj) {
+                                var tierBlock = spCreatePricingTierBlock(tiersContainer, yesRadio);
+                                tiersContainer.appendChild(tierBlock);
+                                var tierNameInput = tierBlock.querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
+                                if (tierNameInput) tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
+                                
+                                var priceInput = tierBlock.querySelector('.fieldset-sessionpricing-input-price');
+                                if (priceInput) priceInput.value = String((tierObj && tierObj.price) || '');
+                            });
+                            spUpdateTierButtons(tiersContainer);
+                        }
                     });
                     
-                    spUpdateSeatingAreaButtons(seatingAreasContainer);
+                    spUpdateSeatingAreaButtons(seatingAreasContainer, isAllocated);
                     updateAllVisibility();
                 }
 
