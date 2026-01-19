@@ -2303,6 +2303,7 @@ const FieldsetBuilder = (function(){
                 } else {
                     var result = CurrencyComponent.buildCompactMenu({
                         initialValue: null,
+                        placeholder: 'Select Currency',
                         onSelect: function(value, label, countryCode) {
                             var oldCurrency = ipSelectedCurrency;
                             ipSelectedCurrency = value;
@@ -2407,7 +2408,7 @@ const FieldsetBuilder = (function(){
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
                     variantInput.className = 'fieldset-itempricing-input-itemvariantname input-class-1';
-                    variantInput.placeholder = 'eg. Large Red';
+                    variantInput.placeholder = 'eg. Large, Red';
                     variantRow.appendChild(variantInput);
                     
                     // + button
@@ -2626,6 +2627,7 @@ const FieldsetBuilder = (function(){
                     }
                     var result = CurrencyComponent.buildCompactMenu({
                         initialValue: spTicketCurrencyState.code,
+                        placeholder: 'Select Currency',
                         onSelect: function(value, label, countryCode) {
                             var oldCode = spTicketCurrencyState.code;
                             spTicketCurrencyState.flag = countryCode;
@@ -2715,7 +2717,7 @@ const FieldsetBuilder = (function(){
                     tierSub.textContent = 'Pricing Tier';
                     var tierInput = document.createElement('input');
                     tierInput.className = 'fieldset-input input-class-1';
-                    tierInput.placeholder = 'eg. Adult';
+                    tierInput.placeholder = 'eg. Adult, Concession, Child';
                     tierCol.appendChild(tierSub);
                     tierCol.appendChild(tierInput);
                     tierRow.appendChild(tierCol);
@@ -2821,7 +2823,7 @@ const FieldsetBuilder = (function(){
                     var seatInput = document.createElement('input');
                     seatInput.type = 'text';
                     seatInput.className = 'fieldset-input input-class-1';
-                    seatInput.placeholder = 'eg. Orchestra';
+                    seatInput.placeholder = 'eg. Stalls, Balcony, VIP Area';
                     seatCol.appendChild(seatSub);
                     seatCol.appendChild(seatInput);
                     seatRow.appendChild(seatCol);
@@ -2968,7 +2970,7 @@ const FieldsetBuilder = (function(){
                 spDatePickerBox.setAttribute('tabindex', '0');
                 spDatePickerBox.setAttribute('aria-haspopup', 'dialog');
                 spDatePickerBox.setAttribute('aria-expanded', 'false');
-                spDatePickerBox.textContent = 'Select Dates';
+                spDatePickerBox.textContent = 'Select Date';
                 spDatePickerRow.appendChild(spDatePickerBox);
                 
                 // Make the initial row match real session rows: include disabled controls until dates exist.

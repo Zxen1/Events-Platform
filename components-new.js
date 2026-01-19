@@ -989,13 +989,14 @@ const CurrencyComponent = (function(){
         var onSelect = options.onSelect || function() {};
         var initialValue = options.initialValue || null;
         var selectedCode = initialValue;
+        var placeholderText = options.placeholder || 'Select';
 
         var menu = document.createElement('div');
         // menu-class-1 supplies appearance; component CSS supplies layout only.
         menu.className = 'component-currencycompact-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-currencycompact-menu-button menu-button" role="button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input menu-input" placeholder="Select" autocomplete="off"><span class="component-currencycompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencycompact-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencycompact-menu-button menu-button" role="button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input menu-input" placeholder="' + placeholderText + '" autocomplete="off"><span class="component-currencycompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencycompact-menu-options menu-options"></div>';
 
         var btn = menu.querySelector('.component-currencycompact-menu-button');
         var opts = menu.querySelector('.component-currencycompact-menu-options');
@@ -1036,7 +1037,7 @@ const CurrencyComponent = (function(){
                 btnImg.src = '';
                 btnImg.style.display = 'none';
                 btnInput.value = '';
-                btnInput.placeholder = 'Select';
+                btnInput.placeholder = placeholderText;
                 selectedCode = null;
                 try { menu.dataset.value = ''; } catch (e0) {}
                 return;
