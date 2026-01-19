@@ -421,14 +421,15 @@ const FieldsetBuilder = (function(){
     }
     
     // Build age rating menu - uses AgeRatingComponent
-    function buildAgeRatingMenu(container) {
+    function buildAgeRatingMenu(container, options) {
         if (typeof AgeRatingComponent === 'undefined') {
             console.error('[FieldsetBuilder] AgeRatingComponent not available');
             return document.createElement('div');
         }
         var result = AgeRatingComponent.buildMenu({
-            initialValue: null,
-            container: container
+            initialValue: options && options.initialValue !== undefined ? options.initialValue : null,
+            container: container,
+            onSelect: options && options.onSelect ? options.onSelect : null
         });
         // Store setValue on the element for external access
         result.element._ageRatingSetValue = result.setValue;
@@ -2649,13 +2650,13 @@ const FieldsetBuilder = (function(){
                     });
                 }
                 
-                function spBuildTicketCurrencyMenu() {
+                function spBuildTicketCurrencyMenu(options) {
                     if (typeof CurrencyComponent === 'undefined') {
                         console.error('[FieldsetBuilder] CurrencyComponent not available');
-                        return document.createElement('div');
+                        return { element: document.createElement('div') };
                     }
                     var result = CurrencyComponent.buildFullMenu({
-                        initialValue: spTicketCurrencyState.code,
+                        initialValue: options && options.initialValue !== undefined ? options.initialValue : spTicketCurrencyState.code,
                         placeholder: 'Select Currency',
                         onSelect: function(value, label, countryCode) {
                             var oldCode = spTicketCurrencyState.code;
@@ -2664,10 +2665,13 @@ const FieldsetBuilder = (function(){
                             spSyncAllTicketCurrencies();
                             // Reformat existing values with new currency
                             spReformatAllPriceValues(oldCode, value);
+                            if (options && typeof options.onSelect === 'function') {
+                                options.onSelect(value, label, countryCode);
+                            }
                         }
                     });
                     spTicketCurrencyMenus.push(result);
-                    return result.element;
+                    return result;
                 }
                 function spAttachMoneyInputBehavior(inputEl) {
                     if (!inputEl) return;
@@ -3564,22 +3568,47 @@ const FieldsetBuilder = (function(){
                     // Row 1 & 2: Age Rating (Header Level)
                     var ageLabel = buildLabel('Age Rating', '', null, null);
                     ageLabel.style.marginBottom = '6px'; // 6px label-element gap
+                    var ageDot = ageLabel.querySelector('.fieldset-label-required');
                     editorEl.appendChild(ageLabel);
                     
-                    var ageMenu = buildAgeRatingMenu(fieldset);
+                    var ageMenu = buildAgeRatingMenu(fieldset, {
+                        initialValue: (pricingArr && pricingArr[0] && pricingArr[0].age_rating) || null,
+                        onSelect: function(val) {
+                            if (ageDot) ageDot.classList.toggle('fieldset-label-required--complete', !!String(val || '').trim());
+                        }
+                    });
                     ageMenu.style.width = '100%';
                     ageMenu.style.marginBottom = '10px'; // 10px element-element gap
                     editorEl.appendChild(ageMenu);
+                    
+                    // Initial dot state for age rating
+                    if (ageDot) {
+                        var initialAge = (pricingArr && pricingArr[0] && pricingArr[0].age_rating) || null;
+                        ageDot.classList.toggle('fieldset-label-required--complete', !!String(initialAge || '').trim());
+                    }
 
                     // Row 3 & 4: Currency (Header Level)
                     var currLabel = buildLabel('Currency', '', null, null);
                     currLabel.style.marginBottom = '6px'; // 6px label-element gap
+                    var currDot = currLabel.querySelector('.fieldset-label-required');
                     editorEl.appendChild(currLabel);
                     
-                    var currMenu = spBuildTicketCurrencyMenu();
+                    var currResult = spBuildTicketCurrencyMenu({
+                        initialValue: (pricingArr && pricingArr[0] && pricingArr[0].currency) || spTicketCurrencyState.code,
+                        onSelect: function(val) {
+                            if (currDot) currDot.classList.toggle('fieldset-label-required--complete', !!String(val || '').trim());
+                        }
+                    });
+                    var currMenu = currResult.element;
                     currMenu.style.width = '100%';
                     currMenu.style.marginBottom = '10px'; // 10px element-element gap
                     editorEl.appendChild(currMenu);
+                    
+                    // Initial dot state for currency
+                    if (currDot) {
+                        var initialCurr = (pricingArr && pricingArr[0] && pricingArr[0].currency) || spTicketCurrencyState.code;
+                        currDot.classList.toggle('fieldset-label-required--complete', !!String(initialCurr || '').trim());
+                    }
 
                     // Row 5: Allocated Ticket Areas (Header Level - Single row)
                     var allocatedRow = document.createElement('div');
@@ -3589,6 +3618,7 @@ const FieldsetBuilder = (function(){
                     allocatedRow.style.justifyContent = 'space-between';
                     allocatedRow.style.marginBottom = '10px'; // 10px element-element gap
                     allocatedRow.style.height = '36px'; // Touch friendly
+                    allocatedRow.style.padding = '0 10px'; // Ensure content is within the panel padding boundaries
                     allocatedRow.style.boxSizing = 'border-box';
                     
                     var allocatedLabel = document.createElement('div');
@@ -3601,6 +3631,7 @@ const FieldsetBuilder = (function(){
                     radioWrapper.className = 'fieldset-radio-wrapper';
                     radioWrapper.style.display = 'flex';
                     radioWrapper.style.gap = '20px';
+                    radioWrapper.style.height = '36px'; // Match row height for touch alignment
                     
                     var radioName = 'allocated_' + Math.random().toString(36).substr(2, 9);
                     
@@ -3611,6 +3642,8 @@ const FieldsetBuilder = (function(){
                     yesLabel.style.cursor = 'pointer';
                     yesLabel.style.color = '#fff';
                     yesLabel.style.fontSize = '13px';
+                    yesLabel.style.height = '36px'; // 36px touch friendly height
+                    yesLabel.style.paddingRight = '5px'; // Extra internal target space
                     var yesRadio = document.createElement('input');
                     yesRadio.type = 'radio';
                     yesRadio.name = radioName;
@@ -3626,6 +3659,8 @@ const FieldsetBuilder = (function(){
                     noLabel.style.cursor = 'pointer';
                     noLabel.style.color = '#fff';
                     noLabel.style.fontSize = '13px';
+                    noLabel.style.height = '36px'; // 36px touch friendly height
+                    noLabel.style.paddingRight = '5px'; // Extra internal target space
                     var noRadio = document.createElement('input');
                     noRadio.type = 'radio';
                     noRadio.name = radioName;
