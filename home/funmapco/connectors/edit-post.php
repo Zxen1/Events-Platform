@@ -410,22 +410,22 @@ if (!empty($_FILES['images']) && is_array($_FILES['images']['name'])) {
 $allMediaIds = array_merge($existingMediaIds, $newMediaIds);
 $mediaString = !empty($allMediaIds) ? implode(',', $allMediaIds) : null;
 
-$checkoutKey = null;
+$checkoutTitle = null;
 foreach ($fieldsArr as $fld) {
   if (isset($fld['key']) && strtolower(trim($fld['key'])) === 'checkout') {
     $val = $fld['value'] ?? $fld['option_id'] ?? '';
     if (is_array($val)) {
-      $checkoutKey = isset($val['checkout_key']) ? (string)$val['checkout_key'] : (isset($val['option_id']) ? (string)$val['option_id'] : 'free-listing');
+      $checkoutTitle = isset($val['option_id']) ? (string)$val['option_id'] : (isset($val['checkout_title']) ? (string)$val['checkout_title'] : 'Array');
     } else {
-      $checkoutKey = (string)$val;
+      $checkoutTitle = (string)$val;
     }
     break;
   }
 }
 
-$stmt = $mysqli->prepare("UPDATE posts SET loc_qty = ?, checkout_key = ?, updated_at = NOW() WHERE id = ?");
+$stmt = $mysqli->prepare("UPDATE posts SET loc_qty = ?, checkout_title = ?, updated_at = NOW() WHERE id = ?");
 if ($stmt) {
-  $stmt->bind_param('isi', $locQty, $checkoutKey, $postId);
+  $stmt->bind_param('isi', $locQty, $checkoutTitle, $postId);
   $stmt->execute();
   $stmt->close();
 }
