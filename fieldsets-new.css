@@ -103,7 +103,8 @@
     line-height: 1.4;
 }
 
-.fieldset-label:hover .fieldset-label-tooltipbox,
+.fieldset-label-text:hover ~ .fieldset-label-tooltipbox,
+.fieldset-label-tooltip:hover ~ .fieldset-label-tooltipbox,
 .fieldset-label-tooltipbox:hover {
     display: block;
 }

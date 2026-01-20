@@ -1699,12 +1699,11 @@
 }
 
 .admin-checkout-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 10px;
 }
 
 .admin-checkout-accordion-header-arrow::before {
@@ -2260,8 +2259,8 @@
 }
 
 .admin-settings-imagemanager-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2434,8 +2433,8 @@
 }
 
 .admin-messages-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2723,8 +2722,8 @@
 }
 
 .admin-moderation-accordion-arrow {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
