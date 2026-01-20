@@ -165,6 +165,7 @@ try {
         'icon_ticket',
         'icon_plus', 'icon_minus',
         'icon_checkmark', 'icon_checkbox', 'icon_radio', 'icon_radio_selected',
+        'icon_arrow_down', 'icon_edit', 'icon_info', 'icon_share',
         // Post/Recents panels (empty-state / reminder illustrations)
         'post_panel_empty_image', 'recent_panel_footer_image'
     ];
