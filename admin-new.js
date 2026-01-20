@@ -3181,6 +3181,10 @@ const AdminModule = (function() {
         initImagePicker('adminIconCheckboxPicker', 'icon_checkbox');
         initImagePicker('adminIconRadioPicker', 'icon_radio');
         initImagePicker('adminIconRadioSelectedPicker', 'icon_radio_selected');
+        initImagePicker('adminIconArrowDownPicker', 'icon_arrow_down');
+        initImagePicker('adminIconEditPicker', 'icon_edit');
+        initImagePicker('adminIconInfoPicker', 'icon_info');
+        initImagePicker('adminIconSharePicker', 'icon_share');
         initImagePicker('adminPostPanelEmptyImagePicker', 'post_panel_empty_image', 'folder_post_system_images');
         initImagePicker('adminRecentPanelEmptyImagePicker', 'recent_panel_footer_image', 'folder_recent_system_images');
         
