@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sitemap</title>
+    <style>
+      :root{
+        --sitemap-landscape-w: min(600px, 100%);
+        --sitemap-landscape-h: calc(var(--sitemap-landscape-w) * 0.5);
+        --sitemap-header-h: 20px;
+        --sitemap-header-font: 13px;
+        --sitemap-gap: 12px;
+        --sitemap-border: 1px solid rgba(0,0,0,0.7);
+        --sitemap-fill: rgba(0,0,0,0.06);
+        --sitemap-panel-fill: rgba(0,0,0,0.10);
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      }
+
+      .sitemap-root {
+        padding: 10px;
+        box-sizing: border-box;
+      }
+
+      .sitemap-viewport {
+        border: var(--sitemap-border);
+        background: var(--sitemap-fill);
+        box-sizing: border-box;
+      }
+
+      .sitemap-viewport-header {
+        height: var(--sitemap-header-h);
+        line-height: var(--sitemap-header-h);
+        font-size: var(--sitemap-header-font);
+        padding: 0 6px;
+        border-bottom: var(--sitemap-border);
+        box-sizing: border-box;
+      }
+
+      .sitemap-viewport-body {
+        height: calc(100% - var(--sitemap-header-h));
+        box-sizing: border-box;
+      }
+
+      .sitemap-viewport--landscape {
+        width: var(--sitemap-landscape-w);
+        height: var(--sitemap-landscape-h);
+      }
+
+      .sitemap-viewport--portrait {
+        width: var(--sitemap-landscape-h);
+        height: var(--sitemap-landscape-w);
+      }
+
+      .sitemap-landscape-panels {
+        height: 100%;
+        display: flex;
+      }
+
+      .sitemap-landscape-panel-left,
+      .sitemap-landscape-panel-right {
+        width: 25%;
+        background: var(--sitemap-panel-fill);
+        box-sizing: border-box;
+      }
+
+      .sitemap-landscape-panel-left {
+        border-right: var(--sitemap-border);
+      }
+
+      .sitemap-landscape-panel-right {
+        border-left: var(--sitemap-border);
+      }
+
+      .sitemap-landscape-map-gap {
+        width: 50%;
+        box-sizing: border-box;
+        outline: 1px dashed rgba(0,0,0,0.45);
+        outline-offset: -1px;
+      }
+
+      .sitemap-spacer {
+        height: var(--sitemap-gap);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sitemap-root">
+      <div class="sitemap-viewport sitemap-viewport--landscape" aria-label="Landscape viewport (2:1)">
+        <div class="sitemap-viewport-header">Header (20px)</div>
+        <div class="sitemap-viewport-body">
+          <div class="sitemap-landscape-panels">
+            <div class="sitemap-landscape-panel-left"></div>
+            <div class="sitemap-landscape-map-gap"></div>
+            <div class="sitemap-landscape-panel-right"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sitemap-spacer"></div>
+
+      <div class="sitemap-viewport sitemap-viewport--portrait" aria-label="Portrait viewport (1:2)">
+        <div class="sitemap-viewport-header">Header (20px)</div>
+        <div class="sitemap-viewport-body"></div>
+      </div>
+    </div>
+  </body>
+</html>

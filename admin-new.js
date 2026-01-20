@@ -597,7 +597,24 @@ const AdminModule = (function() {
             initCheckoutTab();
         } else if (tabName === 'moderation') {
             initModerationTab();
+        } else if (tabName === 'sitemap') {
+            initSitemapTab();
         }
+    }
+
+    /* --------------------------------------------------------------------------
+       SITEMAP TAB
+       -------------------------------------------------------------------------- */
+    
+    var sitemapTabInitialized = false;
+    
+    function initSitemapTab() {
+        if (sitemapTabInitialized) return;
+        var iframe = document.getElementById('admin-sitemap-iframe');
+        if (!iframe) return;
+        var src = iframe.getAttribute('data-src');
+        if (src) iframe.setAttribute('src', src);
+        sitemapTabInitialized = true;
     }
 
     /* --------------------------------------------------------------------------
