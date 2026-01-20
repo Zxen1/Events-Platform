@@ -76,10 +76,19 @@
 .fieldset-label-tooltip-icon {
     width: 16px;
     height: 16px;
-    background-image: var(--ui-icon-info);
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    background-color: #888;
+    -webkit-mask-image: var(--ui-icon-info);
+    mask-image: var(--ui-icon-info);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.fieldset-label-tooltip:hover .fieldset-label-tooltip-icon {
+    background-color: #fff;
 }
 
 .fieldset-label-tooltipbox {
