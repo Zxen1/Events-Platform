@@ -201,9 +201,9 @@
 
         // Center (map)
         var center = document.createElement('div');
-        center.className = 'admin-sitemap-landscape-center admin-sitemap-section--map';
+        center.className = 'admin-sitemap-landscape-center admin-sitemap-section--map admin-sitemap-landscape-section';
+        center.textContent = 'Map';
         center.dataset.section = 'map';
-        center.style.cursor = 'pointer';
         center.onclick = function() { scrollToSection('map'); };
 
         // Right side panels
@@ -243,10 +243,14 @@
         var device = document.createElement('div');
         device.className = 'admin-sitemap-device admin-sitemap-device--portrait';
 
+        // Wrapper for the phone representation (centered in the box)
+        var wrapper = document.createElement('div');
+        wrapper.className = 'admin-sitemap-portrait-wrapper';
+
         // Header
         var header = document.createElement('div');
         header.className = 'admin-sitemap-portrait-header admin-sitemap-section--header';
-        device.appendChild(header);
+        wrapper.appendChild(header);
 
         // Body
         var body = document.createElement('div');
@@ -254,7 +258,10 @@
 
         // Map background
         var map = document.createElement('div');
-        map.className = 'admin-sitemap-portrait-map admin-sitemap-section--map';
+        map.className = 'admin-sitemap-portrait-map admin-sitemap-section--map admin-sitemap-portrait-section';
+        map.textContent = 'Map';
+        map.dataset.section = 'map';
+        map.onclick = function() { scrollToSection('map'); };
         body.appendChild(map);
 
         // Panels overlay
@@ -272,35 +279,11 @@
         });
 
         body.appendChild(panels);
-        device.appendChild(body);
+        wrapper.appendChild(body);
+        device.appendChild(wrapper);
         layout.appendChild(device);
 
         return layout;
-    }
-
-    function buildLegend() {
-        var legend = document.createElement('div');
-        legend.className = 'admin-sitemap-legend';
-
-        sections.forEach(function(sec) {
-            var item = document.createElement('div');
-            item.className = 'admin-sitemap-legend-item';
-            item.dataset.section = sec.key;
-            item.onclick = function() { scrollToSection(sec.key); };
-
-            var color = document.createElement('div');
-            color.className = 'admin-sitemap-legend-color';
-            color.style.background = sec.color;
-
-            var name = document.createElement('span');
-            name.textContent = sec.name;
-
-            item.appendChild(color);
-            item.appendChild(name);
-            legend.appendChild(item);
-        });
-
-        return legend;
     }
 
     function buildTree() {
@@ -453,7 +436,6 @@
 
         // Build the UI
         container.appendChild(buildLayoutsSection());
-        container.appendChild(buildLegend());
         container.appendChild(buildNotes());
         container.appendChild(buildTree());
 
