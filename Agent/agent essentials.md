@@ -82,6 +82,9 @@ The standard vertical spacing for the new site:
 | **6px** | `margin-bottom: 6px` | Between a label and its element |
 | **6px** | `margin-bottom: 6px` | Between rows of info in postcards/marquee |
 
+### Table Exception
+Tables (e.g., sessions, pricing tiers) use **8px** horizontal and **8px** vertical spacing between their elements/rows.
+
 ### Container Padding
 Visible containers (with background/border) use: `padding: 10px 10px 0`
 - Elements inside keep their `margin-bottom` for bottom spacing
