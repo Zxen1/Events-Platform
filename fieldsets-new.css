@@ -70,25 +70,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #333;
-    border-radius: 50%;
-    font-style: normal;
     cursor: help;
     position: relative;
 }
 
 .fieldset-label-tooltip-icon {
-    width: 8px;
-    height: 8px;
-    background-color: #888;
-    -webkit-mask-image: var(--ui-icon-info);
-    mask-image: var(--ui-icon-info);
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
+    width: 16px;
+    height: 16px;
+    background-image: var(--ui-icon-info);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .fieldset-label-tooltipbox {

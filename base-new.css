@@ -620,8 +620,8 @@
 }
 
 .menu-class-1 .menu-arrow {
-  width: 8px;
-  height: 8px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
   background-color: var(--menu-muted);
   -webkit-mask-image: var(--ui-icon-arrow-down);
@@ -799,8 +799,8 @@
 }
 
 .menu-class-3 .menu-arrow {
-  width: 8px;
-  height: 8px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
   background-color: var(--menu-muted);
   -webkit-mask-image: var(--ui-icon-arrow-down);
