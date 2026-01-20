@@ -622,6 +622,7 @@
 .menu-class-1 .menu-arrow {
   width: 10px;
   height: 10px;
+  flex-shrink: 0;
   background-color: var(--menu-muted);
   -webkit-mask-image: var(--ui-icon-arrow-down);
   mask-image: var(--ui-icon-arrow-down);
@@ -632,6 +633,7 @@
   -webkit-mask-position: center;
   mask-position: center;
   transition: transform 0.2s;
+  transform-origin: center;
 }
 
 .menu-class-1 .menu-arrow--open {
@@ -799,6 +801,7 @@
 .menu-class-3 .menu-arrow {
   width: 10px;
   height: 10px;
+  flex-shrink: 0;
   background-color: var(--menu-muted);
   -webkit-mask-image: var(--ui-icon-arrow-down);
   mask-image: var(--ui-icon-arrow-down);
@@ -809,6 +812,7 @@
   -webkit-mask-position: center;
   mask-position: center;
   transition: transform 0.2s;
+  transform-origin: center;
 }
 
 .menu-class-3 .menu-arrow--open {

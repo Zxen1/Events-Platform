@@ -4092,9 +4092,6 @@ const AdminModule = (function() {
         closePanel: closePanel,
         switchTab: switchTab,
 
-        // SVG icons registry (shared with formbuilder and other modules)
-        icons: icons,
-
         // Field-level tracking
         registerField: registerField,
         updateField: updateField,
