@@ -8,9 +8,11 @@
     <style>
       :root{
         --sitemap-header-h: 20px;
+        --sitemap-header-h-portrait: 40px;
         --sitemap-header-font: 13px;
         --sitemap-gap: 12px;
         --sitemap-border: 1px solid rgba(255, 255, 255, 0.85);
+        --sitemap-panel-padding: 10px;
       }
 
       html, body {
@@ -52,6 +54,20 @@
         padding: 0 6px;
         border-bottom: var(--sitemap-border);
         box-sizing: border-box;
+        text-align: center;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sitemap-header-btn {
+        height: 36px;
+        line-height: 36px;
+        font-size: 13px;
+        padding: 0 20px;
+        border-radius: 5px;
+        cursor: pointer;
       }
 
       .sitemap-viewport-body {
@@ -69,6 +85,11 @@
         aspect-ratio: 1 / 2;
       }
 
+      .sitemap-viewport--portrait .sitemap-viewport-header {
+        height: var(--sitemap-header-h-portrait);
+        line-height: var(--sitemap-header-h-portrait);
+      }
+
       .sitemap-landscape-panels {
         height: 100%;
         display: flex;
@@ -78,6 +99,10 @@
       .sitemap-landscape-panel-right {
         flex: 0 0 25%;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        padding: var(--sitemap-panel-padding);
       }
 
       .sitemap-landscape-panel-left {
@@ -91,23 +116,73 @@
       .sitemap-landscape-map-gap {
         flex: 0 0 50%;
         box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--sitemap-panel-padding);
+      }
+
+      .sitemap-landscape-map-gap .sitemap-panel-item {
+        width: 100%;
+        max-width: 120px;
       }
 
       .sitemap-spacer {
         height: var(--sitemap-gap);
       }
+
+      .sitemap-panel-item,
+      .sitemap-portrait-item {
+        text-align: center;
+        height: 36px;
+        line-height: 36px;
+        font-size: 13px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      .sitemap-portrait-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        height: 100%;
+        padding: var(--sitemap-panel-padding);
+        box-sizing: border-box;
+      }
+
+      /* Section colors */
+      .sitemap-btn-header { background: #5B8DEE; }
+      .sitemap-btn-map { background: #4CAF50; }
+      .sitemap-btn-post { background: #FF9800; }
+      .sitemap-btn-recent { background: #9C27B0; }
+      .sitemap-btn-marquee { background: #E91E63; }
+      .sitemap-btn-filter { background: #00BCD4; }
+      .sitemap-btn-member { background: #8BC34A; }
+      .sitemap-btn-admin { background: #F44336; }
     </style>
   </head>
   <body>
     <div class="sitemap-root">
       <div class="sitemap-wrap">
         <div class="sitemap-viewport sitemap-viewport--landscape" aria-label="Landscape viewport (2:1)">
-          <div class="sitemap-viewport-header">Header</div>
+          <div class="sitemap-viewport-header">
+            <div class="sitemap-header-btn sitemap-btn-header">Header</div>
+          </div>
           <div class="sitemap-viewport-body">
             <div class="sitemap-landscape-panels">
-              <div class="sitemap-landscape-panel-left"></div>
-              <div class="sitemap-landscape-map-gap"></div>
-              <div class="sitemap-landscape-panel-right"></div>
+              <div class="sitemap-landscape-panel-left">
+                <div class="sitemap-panel-item sitemap-btn-filter">Filter</div>
+                <div class="sitemap-panel-item sitemap-btn-post">Post</div>
+                <div class="sitemap-panel-item sitemap-btn-recent">Recent</div>
+              </div>
+              <div class="sitemap-landscape-map-gap">
+                <div class="sitemap-panel-item sitemap-btn-map">Map</div>
+              </div>
+              <div class="sitemap-landscape-panel-right">
+                <div class="sitemap-panel-item sitemap-btn-marquee">Marquee</div>
+                <div class="sitemap-panel-item sitemap-btn-member">Member</div>
+                <div class="sitemap-panel-item sitemap-btn-admin">Admin</div>
+              </div>
             </div>
           </div>
         </div>
@@ -115,8 +190,18 @@
         <div class="sitemap-spacer"></div>
 
         <div class="sitemap-viewport sitemap-viewport--portrait" aria-label="Portrait viewport (1:2)">
-          <div class="sitemap-viewport-header">Header</div>
-          <div class="sitemap-viewport-body"></div>
+          <div class="sitemap-viewport-header">
+            <div class="sitemap-header-btn sitemap-btn-header">Header</div>
+          </div>
+          <div class="sitemap-portrait-body">
+            <div class="sitemap-portrait-item sitemap-btn-map">Map</div>
+            <div class="sitemap-portrait-item sitemap-btn-filter">Filter</div>
+            <div class="sitemap-portrait-item sitemap-btn-post">Post</div>
+            <div class="sitemap-portrait-item sitemap-btn-recent">Recent</div>
+            <div class="sitemap-portrait-item sitemap-btn-marquee">Marquee</div>
+            <div class="sitemap-portrait-item sitemap-btn-member">Member</div>
+            <div class="sitemap-portrait-item sitemap-btn-admin">Admin</div>
+          </div>
         </div>
       </div>
     </div>
