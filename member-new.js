@@ -2071,7 +2071,7 @@ const MemberModule = (function() {
         var subcategoryBtn = document.createElement('button');
         subcategoryBtn.type = 'button';
         subcategoryBtn.className = 'member-formpicker-menu-button menu-button';
-        subcategoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text menu-text">Select a subcategory</span><span class="member-formpicker-menu-button-arrow menu-arrow">▼</span>';
+        subcategoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text menu-text">Select a subcategory</span><span class="member-formpicker-menu-button-arrow menu-arrow"></span>';
         
         var subcategoryOpts = document.createElement('div');
         subcategoryOpts.className = 'member-formpicker-menu-options menu-options';
@@ -2094,7 +2094,7 @@ const MemberModule = (function() {
         var categoryBtn = document.createElement('button');
         categoryBtn.type = 'button';
         categoryBtn.className = 'member-formpicker-menu-button menu-button';
-        categoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text menu-text">Select a category</span><span class="member-formpicker-menu-button-arrow menu-arrow">▼</span>';
+        categoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text menu-text">Select a category</span><span class="member-formpicker-menu-button-arrow menu-arrow"></span>';
         
         var categoryOpts = document.createElement('div');
         categoryOpts.className = 'member-formpicker-menu-options menu-options';
@@ -2239,7 +2239,6 @@ const MemberModule = (function() {
                 categoryBtn.appendChild(btnText);
                 var btnArrow = document.createElement('span');
                 btnArrow.className = 'member-formpicker-menu-button-arrow menu-arrow';
-                btnArrow.textContent = '▼';
                 categoryBtn.appendChild(btnArrow);
                 
                 categoryMenu.__menuApplyOpenState(false);
@@ -2290,7 +2289,6 @@ const MemberModule = (function() {
                             subcategoryBtn.appendChild(subBtnText);
                             var subBtnArrow = document.createElement('span');
                             subBtnArrow.className = 'member-formpicker-menu-button-arrow menu-arrow';
-                            subBtnArrow.textContent = '▼';
                             subcategoryBtn.appendChild(subBtnArrow);
                             
                             subcategoryMenu.__menuApplyOpenState(false);
@@ -2301,7 +2299,7 @@ const MemberModule = (function() {
                         subcategoryOpts.appendChild(subBtn);
                     });
                     
-                    subcategoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text menu-text">Select a subcategory</span><span class="member-formpicker-menu-button-arrow menu-arrow">▼</span>';
+                    subcategoryBtn.innerHTML = '<span class="member-formpicker-menu-button-text menu-text">Select a subcategory</span><span class="member-formpicker-menu-button-arrow menu-arrow"></span>';
                     subcategoryWrapper.hidden = false;
 
                     // Auto-open subcategory menu as soon as a category is chosen.

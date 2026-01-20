@@ -620,7 +620,17 @@
 }
 
 .menu-class-1 .menu-arrow {
-  color: var(--menu-muted);
+  width: 10px;
+  height: 10px;
+  background-color: var(--menu-muted);
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
 
@@ -787,8 +797,17 @@
 }
 
 .menu-class-3 .menu-arrow {
-  font-size: 10px;
-  color: var(--menu-muted);
+  width: 10px;
+  height: 10px;
+  background-color: var(--menu-muted);
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
 

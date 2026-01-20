@@ -522,6 +522,19 @@ const App = (function() {
           setCssVarUrl('--ui-icon-add-image', sys.icon_add_image);
           setCssVarUrl('--ui-icon-plus', sys.icon_plus);
           setCssVarUrl('--ui-icon-minus', sys.icon_minus);
+          setCssVarUrl('--ui-icon-arrow-down', sys.icon_arrow_down);
+          setCssVarUrl('--ui-icon-edit', sys.icon_edit);
+          setCssVarUrl('--ui-icon-info', sys.icon_info);
+          setCssVarUrl('--ui-icon-share', sys.icon_share);
+          setCssVarUrl('--ui-icon-drag-handle', sys.icon_drag_handle);
+          setCssVarUrl('--ui-icon-more-dots', sys.icon_more_dots);
+          setCssVarUrl('--ui-icon-search', sys.icon_search);
+          setCssVarUrl('--ui-icon-reactivate', sys.icon_reactivate);
+          setCssVarUrl('--ui-icon-trash', sys.icon_trash);
+          setCssVarUrl('--ui-icon-flag', sys.icon_flag);
+          setCssVarUrl('--ui-icon-tick', sys.icon_tick);
+          setCssVarUrl('--ui-icon-hide', sys.icon_hide);
+          setCssVarUrl('--ui-icon-show', sys.icon_show);
         } catch (e) {
           // ignore
         }

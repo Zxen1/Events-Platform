@@ -996,7 +996,7 @@ const CurrencyComponent = (function(){
         menu.className = 'component-currencycompact-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-currencycompact-menu-button menu-button" role="button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input menu-input" placeholder="' + placeholderText + '" autocomplete="off"><span class="component-currencycompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencycompact-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencycompact-menu-button menu-button" role="button"><img class="component-currencycompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencycompact-menu-button-input menu-input" placeholder="' + placeholderText + '" autocomplete="off"><span class="component-currencycompact-menu-button-arrow menu-arrow"></span></div><div class="component-currencycompact-menu-options menu-options"></div>';
 
         var btn = menu.querySelector('.component-currencycompact-menu-button');
         var opts = menu.querySelector('.component-currencycompact-menu-options');
@@ -1222,7 +1222,7 @@ const CurrencyComponent = (function(){
         menu.className = 'component-currencyfull-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-currencyfull-menu-button menu-button" role="button"><img class="component-currencyfull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencyfull-menu-button-input menu-input" placeholder="Select currency" autocomplete="off"><span class="component-currencyfull-menu-button-arrow menu-arrow">▼</span></div><div class="component-currencyfull-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencyfull-menu-button menu-button" role="button"><img class="component-currencyfull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencyfull-menu-button-input menu-input" placeholder="Select currency" autocomplete="off"><span class="component-currencyfull-menu-button-arrow menu-arrow"></span></div><div class="component-currencyfull-menu-options menu-options"></div>';
         
         var btn = menu.querySelector('.component-currencyfull-menu-button');
         var opts = menu.querySelector('.component-currencyfull-menu-options');
@@ -1725,7 +1725,7 @@ const LanguageMenuComponent = (function(){
         menu.className = 'component-languagefull-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-languagefull-menu-button menu-button" role="button"><img class="component-languagefull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-languagefull-menu-button-input menu-input" placeholder="Select language" autocomplete="off"><span class="component-languagefull-menu-button-arrow menu-arrow">▼</span></div><div class="component-languagefull-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-languagefull-menu-button menu-button" role="button"><img class="component-languagefull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-languagefull-menu-button-input menu-input" placeholder="Select language" autocomplete="off"><span class="component-languagefull-menu-button-arrow menu-arrow"></span></div><div class="component-languagefull-menu-options menu-options"></div>';
         
         var btn = menu.querySelector('.component-languagefull-menu-button');
         var opts = menu.querySelector('.component-languagefull-menu-options');
@@ -1986,7 +1986,7 @@ const PhonePrefixComponent = (function(){
         menu.className = 'component-phoneprefixcompact-menu menu-class-1';
 
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-phoneprefixcompact-menu-button menu-button"><img class="component-phoneprefixcompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefixcompact-menu-button-input menu-input" placeholder="Select" autocomplete="off"><span class="component-phoneprefixcompact-menu-button-arrow menu-arrow">▼</span></div><div class="component-phoneprefixcompact-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-phoneprefixcompact-menu-button menu-button"><img class="component-phoneprefixcompact-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: none;"><input type="text" class="component-phoneprefixcompact-menu-button-input menu-input" placeholder="Select" autocomplete="off"><span class="component-phoneprefixcompact-menu-button-arrow menu-arrow"></span></div><div class="component-phoneprefixcompact-menu-options menu-options"></div>';
 
         var btn = menu.querySelector('.component-phoneprefixcompact-menu-button');
         var opts = menu.querySelector('.component-phoneprefixcompact-menu-options');
@@ -2234,7 +2234,7 @@ const CountryComponent = (function(){
         // menu-class-1 supplies appearance; component CSS supplies layout only.
         menu.className = 'component-country-menu menu-class-1';
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-country-menu-button menu-button" role="button"><img class="component-country-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-country-menu-button-input menu-input" placeholder="Select country" autocomplete="off"><span class="component-country-menu-button-arrow menu-arrow">▼</span></div><div class="component-country-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-country-menu-button menu-button" role="button"><img class="component-country-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-country-menu-button-input menu-input" placeholder="Select country" autocomplete="off"><span class="component-country-menu-button-arrow menu-arrow"></span></div><div class="component-country-menu-options menu-options"></div>';
         
         var btn = menu.querySelector('.component-country-menu-button');
         var opts = menu.querySelector('.component-country-menu-options');
@@ -2926,7 +2926,6 @@ const IconPickerComponent = (function(){
         
         var buttonArrow = document.createElement('span');
         buttonArrow.className = 'component-iconpicker-menu-button-arrow menu-arrow';
-        buttonArrow.textContent = '▼';
         
         btn.appendChild(buttonImage);
         btn.appendChild(btnInput);
@@ -4416,7 +4415,6 @@ const SystemImagePickerComponent = (function(){
         
         var buttonArrow = document.createElement('span');
         buttonArrow.className = 'component-systemimagepicker-menu-button-arrow menu-arrow';
-        buttonArrow.textContent = '▼';
         
         button.appendChild(buttonImage);
         button.appendChild(buttonText);
@@ -4660,7 +4658,6 @@ const AmenitiesMenuComponent = (function(){
         
         var buttonArrow = document.createElement('span');
         buttonArrow.className = 'component-amenitiespicker-menu-button-arrow menu-arrow';
-        buttonArrow.textContent = '▼';
         
         button.appendChild(buttonText);
         button.appendChild(buttonArrow);
@@ -7553,7 +7550,6 @@ const AgeRatingComponent = (function(){
         
         var buttonArrow = document.createElement('span');
         buttonArrow.className = 'component-ageratingpicker-menu-button-arrow menu-arrow';
-        buttonArrow.textContent = '▼';
         
         button.appendChild(buttonImage);
         button.appendChild(buttonText);

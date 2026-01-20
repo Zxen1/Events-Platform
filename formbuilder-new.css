@@ -78,12 +78,17 @@
 }
 
 .formbuilder-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
 
@@ -95,15 +100,27 @@
   width: 36px;
   height: 36px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  color: #888;
 }
 
-.formbuilder-accordion-header-drag:hover {
-  color: #fff;
+.formbuilder-accordion-header-drag-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-drag-handle);
+  mask-image: var(--ui-icon-drag-handle);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-accordion-header-drag:hover .formbuilder-accordion-header-drag-icon {
+  background-color: #fff;
 }
 
 
@@ -124,7 +141,15 @@
 .formbuilder-accordion-header-edit {
   width: 16px;
   height: 16px;
-  color: inherit;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-edit);
+  mask-image: var(--ui-icon-edit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .formbuilder-accordion-header-editarea:hover,
@@ -185,8 +210,21 @@
   border: 1px solid #222222;
   border-radius: 5px;
   cursor: pointer;
-  color: #fff;
   position: relative;
+}
+
+.formbuilder-accordion-editpanel-more-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  -webkit-mask-image: var(--ui-icon-more-dots);
+  mask-image: var(--ui-icon-more-dots);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .formbuilder-accordion-editpanel-more:hover {
@@ -318,12 +356,17 @@
 }
 
 .formbuilder-accordion-option-arrow {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
 
@@ -341,15 +384,27 @@
   width: 36px;
   height: 36px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  color: #888;
 }
 
-.formbuilder-accordion-option-drag:hover {
-  color: #fff;
+.formbuilder-accordion-option-drag-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-drag-handle);
+  mask-image: var(--ui-icon-drag-handle);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-accordion-option-drag:hover .formbuilder-accordion-option-drag-icon {
+  background-color: #fff;
 }
 
 
@@ -370,7 +425,15 @@
 .formbuilder-accordion-option-edit {
   width: 16px;
   height: 16px;
-  color: inherit;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-edit);
+  mask-image: var(--ui-icon-edit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .formbuilder-accordion-option-editarea:hover,
@@ -479,14 +542,19 @@
 }
 
 .formbuilder-menu-button-arrow {
-  width: 20px;
-  height: 20px;
+  width: 12px;
+  height: 12px;
   margin-left: 10px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
 }
 
 .formbuilder-menu-button-arrow--open {
@@ -747,11 +815,24 @@
   align-items: center;
   justify-content: center;
   cursor: grab;
-  color: #888;
 }
 
-.formbuilder-field-drag:hover {
-  color: #fff;
+.formbuilder-field-drag-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-drag-handle);
+  mask-image: var(--ui-icon-drag-handle);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-drag:hover .formbuilder-field-drag-icon {
+  background-color: #fff;
 }
 
 
@@ -762,10 +843,23 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #888;
 }
 
-.formbuilder-field-edit:hover {
+.formbuilder-field-edit-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-edit);
+  mask-image: var(--ui-icon-edit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-edit:hover .formbuilder-field-edit-icon {
   color: var(--blue-500);
 }
 
@@ -855,9 +949,22 @@
   border: 1px solid #222222;
   border-radius: 5px;
   cursor: pointer;
-  color: #fff;
   position: relative;
   margin-left: auto;
+}
+
+.formbuilder-field-more-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #fff;
+  -webkit-mask-image: var(--ui-icon-more-dots);
+  mask-image: var(--ui-icon-more-dots);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .formbuilder-field-more:hover {
@@ -1017,15 +1124,45 @@
   background: #222;
   border: 1px solid #222222;
   border-radius: 5px;
-  color: #888;
   cursor: pointer;
 }
 
+.formbuilder-field-option-add-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-plus);
+  mask-image: var(--ui-icon-plus);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-option-remove-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-minus);
+  mask-image: var(--ui-icon-minus);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.formbuilder-field-option-remove:hover .formbuilder-field-option-remove-icon,
+.formbuilder-field-option-add:hover .formbuilder-field-option-add-icon {
+  background-color: #fff;
+}
 
 .formbuilder-field-option-remove:hover,
 .formbuilder-field-option-add:hover {
   border-color: var(--blue-500);
-  color: #fff;
 }
 
 /* Field Switches */

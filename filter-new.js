@@ -1282,7 +1282,6 @@ const FilterModule = (function() {
                     
                     var headerArrow = document.createElement('span');
                     headerArrow.className = 'filter-categoryfilter-accordion-header-arrow';
-                    headerArrow.textContent = '▼';
                     
                     var headerToggleArea = document.createElement('div');
                     headerToggleArea.className = 'filter-categoryfilter-accordion-header-togglearea';

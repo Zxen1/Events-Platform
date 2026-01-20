@@ -1699,12 +1699,17 @@
 }
 
 .admin-checkout-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
   margin-left: 10px;
 }
@@ -1766,7 +1771,24 @@
   border: 1px solid #333;
   border-radius: 5px;
   cursor: pointer;
-  color: #888;
+}
+
+.admin-checkout-accordion-body-more-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-more-dots);
+  mask-image: var(--ui-icon-more-dots);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.admin-checkout-accordion-body-more:hover .admin-checkout-accordion-body-more-icon {
+  background-color: #fff;
 }
 
 .admin-checkout-accordion-body-more:hover {
@@ -1961,16 +1983,16 @@
   width: 20px;
   height: 20px;
   margin-left: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255, 255, 255, 0.5);
   flex-shrink: 0;
-}
-
-.admin-messages-search-icon svg {
-  width: 20px;
-  height: 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  -webkit-mask-image: var(--ui-icon-search);
+  mask-image: var(--ui-icon-search);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .admin-messages-search-input {
@@ -2227,12 +2249,17 @@
 }
 
 .admin-settings-imagemanager-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
 
@@ -2385,12 +2412,17 @@
 }
 
 .admin-messages-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
 
@@ -2402,15 +2434,27 @@
   width: 36px;
   height: 36px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: grab;
-  color: #888;
 }
 
-.admin-messages-accordion-header-drag:hover {
-  color: #fff;
+.admin-messages-accordion-header-drag-icon {
+  width: 16px;
+  height: 16px;
+  background-color: #888;
+  -webkit-mask-image: var(--ui-icon-drag-handle);
+  mask-image: var(--ui-icon-drag-handle);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.admin-messages-accordion-header-drag:hover .admin-messages-accordion-header-drag-icon {
+  background-color: #fff;
 }
 
 
@@ -2431,7 +2475,15 @@
 .admin-messages-accordion-header-edit {
   width: 16px;
   height: 16px;
-  color: inherit;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-edit);
+  mask-image: var(--ui-icon-edit);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .admin-messages-accordion-header-editarea:hover,
@@ -2638,12 +2690,17 @@
 }
 
 .admin-moderation-accordion-arrow {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  -webkit-mask-image: var(--ui-icon-arrow-down);
+  mask-image: var(--ui-icon-arrow-down);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
   transition: transform 0.2s;
 }
 
@@ -2771,6 +2828,53 @@
   background: rgba(59, 130, 245, 0.2);
   border-color: var(--blue-500);
   color: var(--blue-500);
+}
+
+/* Moderation button icons */
+.admin-moderation-item-btn-icon {
+  width: 14px;
+  height: 14px;
+  background-color: currentColor;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.admin-moderation-item-btn-icon--reactivate {
+  -webkit-mask-image: var(--ui-icon-reactivate);
+  mask-image: var(--ui-icon-reactivate);
+}
+
+.admin-moderation-item-btn-icon--trash {
+  -webkit-mask-image: var(--ui-icon-trash);
+  mask-image: var(--ui-icon-trash);
+}
+
+.admin-moderation-item-btn-icon--tick {
+  -webkit-mask-image: var(--ui-icon-tick);
+  mask-image: var(--ui-icon-tick);
+}
+
+.admin-moderation-item-btn-icon--hide {
+  -webkit-mask-image: var(--ui-icon-hide);
+  mask-image: var(--ui-icon-hide);
+}
+
+.admin-moderation-item-avatar-icon {
+  width: 20px;
+  height: 20px;
+  background-color: #ef4444;
+  -webkit-mask-image: var(--ui-icon-flag);
+  mask-image: var(--ui-icon-flag);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 /* ============================================================================

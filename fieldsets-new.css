@@ -72,11 +72,23 @@
     justify-content: center;
     background: #333;
     border-radius: 50%;
-    color: #888;
-    font-size: 10px;
     font-style: normal;
     cursor: help;
     position: relative;
+}
+
+.fieldset-label-tooltip-icon {
+    width: 10px;
+    height: 10px;
+    background-color: #888;
+    -webkit-mask-image: var(--ui-icon-info);
+    mask-image: var(--ui-icon-info);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 .fieldset-label-tooltipbox {
@@ -1248,6 +1260,20 @@
     cursor: pointer;
     margin-left: 10px;
     padding: 0;
+}
+
+.fieldset-sessionpricing-ticketgroup-button-edit-icon {
+    width: 16px;
+    height: 16px;
+    background-color: currentColor;
+    -webkit-mask-image: var(--ui-icon-edit);
+    mask-image: var(--ui-icon-edit);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
 }
 
 /* Ticket Group Editor - appearance from container-class-1 */

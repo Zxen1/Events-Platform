@@ -271,14 +271,6 @@
         });
     }
     
-    // Use central icon registry from AdminModule
-    function getIcon(name) {
-        if (window.AdminModule && AdminModule.icons && AdminModule.icons[name]) {
-            return AdminModule.icons[name];
-        }
-        throw new Error('[Formbuilder] AdminModule.icons not available for: ' + name);
-    }
-    
     /* --------------------------------------------------------------------------
        CHANGE NOTIFICATION
        -------------------------------------------------------------------------- */
@@ -1156,18 +1148,18 @@
         
         var headerArrow = document.createElement('span');
         headerArrow.className = 'formbuilder-accordion-header-arrow';
-        headerArrow.textContent = '▼';
         
         var headerEditArea = document.createElement('div');
         headerEditArea.className = 'formbuilder-accordion-header-editarea';
         var headerEdit = document.createElement('div');
         headerEdit.className = 'formbuilder-accordion-header-edit';
-        headerEdit.innerHTML = getIcon('editPen');
         headerEditArea.appendChild(headerEdit);
         
         var headerDrag = document.createElement('div');
         headerDrag.className = 'formbuilder-accordion-header-drag';
-        headerDrag.innerHTML = getIcon('dragHandle');
+        var headerDragIcon = document.createElement('div');
+        headerDragIcon.className = 'formbuilder-accordion-header-drag-icon';
+        headerDrag.appendChild(headerDragIcon);
         
         header.appendChild(headerImg);
         header.appendChild(headerText);
@@ -1238,7 +1230,7 @@
         
         var moreBtn = document.createElement('div');
         moreBtn.className = 'formbuilder-accordion-editpanel-more';
-        moreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch' + (cat.hidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
+        moreBtn.innerHTML = '<div class="formbuilder-accordion-editpanel-more-icon"></div><div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Category</span><div class="formbuilder-accordion-editpanel-more-switch' + (cat.hidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Category</div></div>';
         var moreMenuEl = moreBtn.querySelector('.formbuilder-accordion-editpanel-more-menu');
         
         moreBtn.addEventListener('click', function(e) {
@@ -1365,18 +1357,18 @@
         
         var optArrow = document.createElement('span');
         optArrow.className = 'formbuilder-accordion-option-arrow';
-        optArrow.textContent = '▼';
         
         var optEditArea = document.createElement('div');
         optEditArea.className = 'formbuilder-accordion-option-editarea';
         var optEdit = document.createElement('div');
         optEdit.className = 'formbuilder-accordion-option-edit';
-        optEdit.innerHTML = getIcon('editPen');
         optEditArea.appendChild(optEdit);
         
         var optDrag = document.createElement('div');
         optDrag.className = 'formbuilder-accordion-option-drag';
-        optDrag.innerHTML = getIcon('dragHandle');
+        var optDragIcon = document.createElement('div');
+        optDragIcon.className = 'formbuilder-accordion-option-drag-icon';
+        optDrag.appendChild(optDragIcon);
         
         optHeader.appendChild(optImg);
         optHeader.appendChild(optText);
@@ -1452,7 +1444,7 @@
         var subMoreBtn = document.createElement('div');
         subMoreBtn.className = 'formbuilder-accordion-editpanel-more';
         subMoreBtn.classList.add('formbuilder-accordion-editpanel-more--subcategory');
-        subMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
+        subMoreBtn.innerHTML = '<div class="formbuilder-accordion-editpanel-more-icon"></div><div class="formbuilder-accordion-editpanel-more-menu"><div class="formbuilder-accordion-editpanel-more-item"><span class="formbuilder-accordion-editpanel-more-item-text">Hide Subcategory</span><div class="formbuilder-accordion-editpanel-more-switch' + (subHidden ? ' on' : '') + '"></div></div><div class="formbuilder-accordion-editpanel-more-item formbuilder-accordion-editpanel-more-delete">Delete Subcategory</div></div>';
         var subMoreMenuEl = subMoreBtn.querySelector('.formbuilder-accordion-editpanel-more-menu');
         
         subMoreBtn.addEventListener('click', function(e) {
@@ -2329,11 +2321,15 @@
             
             var fieldDrag = document.createElement('div');
             fieldDrag.className = 'formbuilder-field-drag';
-            fieldDrag.innerHTML = getIcon('dragHandle');
+            var fieldDragIcon = document.createElement('div');
+            fieldDragIcon.className = 'formbuilder-field-drag-icon';
+            fieldDrag.appendChild(fieldDragIcon);
             
             var fieldEdit = document.createElement('div');
             fieldEdit.className = 'formbuilder-field-edit';
-            fieldEdit.innerHTML = getIcon('editPen');
+            var fieldEditIcon = document.createElement('div');
+            fieldEditIcon.className = 'formbuilder-field-edit-icon';
+            fieldEdit.appendChild(fieldEditIcon);
             
             // Create Modified label span (will be shown/hidden via CSS)
             var modifiedLabel = document.createElement('span');
@@ -2393,7 +2389,7 @@
             
             var fieldMoreBtn = document.createElement('div');
             fieldMoreBtn.className = 'formbuilder-field-more';
-            fieldMoreBtn.innerHTML = getIcon('moreDots') + '<div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
+            fieldMoreBtn.innerHTML = '<div class="formbuilder-field-more-icon"></div><div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
             var fieldMoreMenuEl = fieldMoreBtn.querySelector('.formbuilder-field-more-menu');
             
             // Lock more menu for location fieldsets - prevent deletion
@@ -2626,7 +2622,7 @@
                     
                     var addBtn = document.createElement('div');
                     addBtn.className = 'formbuilder-field-option-add';
-                    addBtn.innerHTML = getIcon('plus');
+                    addBtn.innerHTML = '<div class="formbuilder-field-option-add-icon"></div>';
                     addBtn.onclick = function() {
                         var newRow = createOptionRow('');
                         row.parentNode.insertBefore(newRow, row.nextSibling);
@@ -2636,7 +2632,7 @@
                     
                     var removeBtn = document.createElement('div');
                     removeBtn.className = 'formbuilder-field-option-remove';
-                    removeBtn.innerHTML = getIcon('minus');
+                    removeBtn.innerHTML = '<div class="formbuilder-field-option-remove-icon"></div>';
                     removeBtn.onclick = function() {
                         if (optionsContainer.querySelectorAll('.formbuilder-field-option-row').length > 1) {
                             row.remove();

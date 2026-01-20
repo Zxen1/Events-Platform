@@ -2401,7 +2401,7 @@ const PostModule = (function() {
         var shareBtn = document.createElement('button');
         shareBtn.className = 'open-post-button-share';
         shareBtn.setAttribute('aria-label', 'Share post');
-        shareBtn.innerHTML = '<svg class="open-post-icon-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.06-.23.09-.46.09-.7s-.03-.47-.09-.7l7.13-4.17A2.99 2.99 0 0 0 18 9a3 3 0 1 0-3-3c0 .24.03.47.09.7L7.96 10.87A3.003 3.003 0 0 0 6 10a3 3 0 1 0 3 3c0-.24-.03-.47-.09-.7l7.13 4.17c.53-.5 1.23-.81 1.96-.81a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>';
+        shareBtn.innerHTML = '<div class="open-post-icon-share"></div>';
         cardActions.appendChild(shareBtn);
       }
     }

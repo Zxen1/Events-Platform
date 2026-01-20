@@ -466,7 +466,9 @@ const FieldsetBuilder = (function(){
         if (tooltipText) {
             var tip = document.createElement('span');
             tip.className = 'fieldset-label-tooltip';
-            tip.textContent = 'i';
+            var tipIcon = document.createElement('span');
+            tipIcon.className = 'fieldset-label-tooltip-icon';
+            tip.appendChild(tipIcon);
             label.appendChild(tip);
 
             // Full-width tooltip box (panel-width), toggled via CSS
@@ -1053,7 +1055,6 @@ const FieldsetBuilder = (function(){
                 
                 var cdArrow = document.createElement('span');
                 cdArrow.className = 'fieldset-customdropdown-button-arrow menu-arrow';
-                cdArrow.textContent = '▼';
                 
                 cdButton.appendChild(cdButtonText);
                 cdButton.appendChild(cdArrow);
@@ -4072,7 +4073,9 @@ const FieldsetBuilder = (function(){
                     var editBtn = document.createElement('button');
                     editBtn.type = 'button';
                     editBtn.className = 'fieldset-sessionpricing-ticketgroup-button-edit';
-                    editBtn.textContent = '✎';
+                    var editBtnIcon = document.createElement('span');
+                    editBtnIcon.className = 'fieldset-sessionpricing-ticketgroup-button-edit-icon';
+                    editBtn.appendChild(editBtnIcon);
                     editBtn.title = 'Edit Ticket Group';
                     editBtn.setAttribute('aria-label', 'Edit Ticket Group');
                     editBtn.addEventListener('click', function(e) {

@@ -42,23 +42,10 @@ const AdminModule = (function() {
        SVG ICONS REGISTRY
        
        DEVELOPER NOTE:
-       Admin-specific icons are kept here as a central registry. This prevents
-       duplication across modules and ensures consistency.
-       
-       - Modules access icons via AdminModule.icons.editPen, AdminModule.icons.dragHandle, etc.
-       - Site-wide icons (save, close, etc.) are in https://cdn.funmap.com/system-images/
-       - Add new admin UI icons here, not in individual module files
+       Icons are now loaded via CSS mask-image from Bunny CDN.
+       Icon elements are empty divs/spans with appropriate classes.
+       CSS variables (--ui-icon-*) are set in index-new.js on app load.
        -------------------------------------------------------------------------- */
-    
-    // No hard-coded SVG icons allowed in new site.
-    // Use simple text glyphs for admin-only UI affordances.
-    var icons = {
-        editPen: '✎',
-        dragHandle: '↕',
-        moreDots: '⋮',
-        plus: '+',
-        minus: '−'
-    };
 
     /* --------------------------------------------------------------------------
        FIELD-LEVEL TRACKING REGISTRY
@@ -1071,7 +1058,6 @@ const AdminModule = (function() {
         
         var searchIcon = document.createElement('span');
         searchIcon.className = 'admin-messages-search-icon';
-        searchIcon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
         
         var searchInput = document.createElement('input');
         searchInput.type = 'text';
@@ -1249,19 +1235,19 @@ const AdminModule = (function() {
             // Header arrow
             var headerArrow = document.createElement('span');
             headerArrow.className = 'admin-messages-accordion-header-arrow';
-            headerArrow.textContent = '▼';
             
             // Drag handle
             var headerDrag = document.createElement('div');
             headerDrag.className = 'admin-messages-accordion-header-drag';
-            headerDrag.innerHTML = icons.dragHandle;
+            var headerDragIcon = document.createElement('div');
+            headerDragIcon.className = 'admin-messages-accordion-header-drag-icon';
+            headerDrag.appendChild(headerDragIcon);
             
             // Edit area (wrapper around pencil icon, like formbuilder)
             var headerEditArea = document.createElement('div');
             headerEditArea.className = 'admin-messages-accordion-header-editarea';
             var headerEdit = document.createElement('div');
             headerEdit.className = 'admin-messages-accordion-header-edit';
-            headerEdit.innerHTML = icons.editPen;
             headerEditArea.appendChild(headerEdit);
             
             header.appendChild(headerImg);
@@ -2871,14 +2857,14 @@ const AdminModule = (function() {
         var reactivateBtn = document.createElement('button');
         reactivateBtn.type = 'button';
         reactivateBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--reactivate';
-        reactivateBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
+        reactivateBtn.innerHTML = '<div class="admin-moderation-item-btn-icon admin-moderation-item-btn-icon--reactivate"></div>';
         reactivateBtn.title = 'Reactivate Account';
         reactivateBtn.onclick = function() { handleModerationAction('reactivate_member', member.id); };
         
         var anonymizeBtn = document.createElement('button');
         anonymizeBtn.type = 'button';
         anonymizeBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--anonymize';
-        anonymizeBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+        anonymizeBtn.innerHTML = '<div class="admin-moderation-item-btn-icon admin-moderation-item-btn-icon--trash"></div>';
         anonymizeBtn.title = 'Anonymize Account';
         anonymizeBtn.onclick = function() { confirmAnonymize(member); };
         
@@ -2901,7 +2887,7 @@ const AdminModule = (function() {
         // Flag icon instead of avatar
         var icon = document.createElement('div');
         icon.className = 'admin-moderation-item-avatar';
-        icon.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15" stroke="#ef4444" stroke-width="2"/></svg>';
+        icon.innerHTML = '<div class="admin-moderation-item-avatar-icon"></div>';
         icon.style.display = 'flex';
         icon.style.alignItems = 'center';
         icon.style.justifyContent = 'center';
@@ -2928,14 +2914,14 @@ const AdminModule = (function() {
         var clearBtn = document.createElement('button');
         clearBtn.type = 'button';
         clearBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--reactivate';
-        clearBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+        clearBtn.innerHTML = '<div class="admin-moderation-item-btn-icon admin-moderation-item-btn-icon--tick"></div>';
         clearBtn.title = 'Clear Flag';
         clearBtn.onclick = function() { handleModerationAction('clear_post_flag', null, post.id); };
         
         var hideBtn = document.createElement('button');
         hideBtn.type = 'button';
         hideBtn.className = 'admin-moderation-item-btn admin-moderation-item-btn--anonymize';
-        hideBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        hideBtn.innerHTML = '<div class="admin-moderation-item-btn-icon admin-moderation-item-btn-icon--hide"></div>';
         hideBtn.title = 'Hide Post';
         hideBtn.onclick = function() { handleModerationAction('hide_post', null, post.id); };
         
@@ -3465,7 +3451,6 @@ const AdminModule = (function() {
             // Arrow (same as messages/formbuilder)
             var headerArrow = document.createElement('span');
             headerArrow.className = 'admin-checkout-accordion-header-arrow';
-            headerArrow.textContent = '▼';
 
             header.appendChild(headerText);
             header.appendChild(headerBadge);
@@ -3489,7 +3474,7 @@ const AdminModule = (function() {
             // More button (3-dot menu) - inside edit panel like formbuilder
             var moreBtn = document.createElement('div');
             moreBtn.className = 'admin-checkout-accordion-body-more';
-            moreBtn.innerHTML = icons.moreDots + 
+            moreBtn.innerHTML = '<div class="admin-checkout-accordion-body-more-icon"></div>' + 
                 '<div class="admin-checkout-accordion-body-more-menu">' +
                     '<div class="admin-checkout-accordion-body-more-item">' +
                         '<span class="admin-checkout-accordion-body-more-item-text">Hide Tier</span>' +
