@@ -4,26 +4,24 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sitemap</title>
+    <link rel="stylesheet" href="base-new.css?v=20251228i">
     <style>
       :root{
         --sitemap-header-h: 20px;
         --sitemap-header-font: 13px;
         --sitemap-gap: 12px;
         --sitemap-border: 1px solid rgba(255, 255, 255, 0.85);
-        --sitemap-fill: rgba(255, 255, 255, 0.04);
-        --sitemap-panel-fill: rgba(255, 255, 255, 0.08);
       }
 
       html, body {
         margin: 0;
         padding: 0;
-        background: #111111;
+        background: transparent;
         color: #ffffff;
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       }
 
       .sitemap-root {
-        padding: 10px;
+        padding: 0;
         box-sizing: border-box;
       }
 
@@ -34,7 +32,6 @@
 
       .sitemap-viewport {
         border: var(--sitemap-border);
-        background: var(--sitemap-fill);
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
@@ -56,12 +53,10 @@
 
       .sitemap-viewport--landscape {
         width: 100%;
-        aspect-ratio: 2 / 1;
       }
 
       .sitemap-viewport--portrait {
         width: 50%;
-        aspect-ratio: 1 / 2;
       }
 
       .sitemap-landscape-panels {
@@ -72,7 +67,6 @@
       .sitemap-landscape-panel-left,
       .sitemap-landscape-panel-right {
         flex: 0 0 25%;
-        background: var(--sitemap-panel-fill);
         box-sizing: border-box;
       }
 
@@ -87,8 +81,6 @@
       .sitemap-landscape-map-gap {
         flex: 0 0 50%;
         box-sizing: border-box;
-        outline: 1px dashed rgba(255, 255, 255, 0.45);
-        outline-offset: -1px;
       }
 
       .sitemap-spacer {
@@ -118,5 +110,27 @@
         </div>
       </div>
     </div>
+    <script>
+      (function(){
+        function syncSitemapSizes(){
+          var wrap = document.querySelector('.sitemap-wrap');
+          var landscape = document.querySelector('.sitemap-viewport--landscape');
+          var portrait = document.querySelector('.sitemap-viewport--portrait');
+          if (!wrap || !landscape || !portrait) return;
+
+          var w = Math.min(600, wrap.clientWidth);
+          var h = Math.round(w / 2);
+
+          landscape.style.width = w + 'px';
+          landscape.style.height = h + 'px';
+
+          portrait.style.width = h + 'px';
+          portrait.style.height = w + 'px';
+        }
+
+        syncSitemapSizes();
+        window.addEventListener('resize', syncSitemapSizes);
+      })();
+    </script>
   </body>
 </html>
