@@ -78,8 +78,8 @@
 }
 
 .formbuilder-accordion-header-arrow {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -367,8 +367,8 @@
 }
 
 .formbuilder-accordion-option-arrow {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -564,8 +564,8 @@
 }
 
 .formbuilder-menu-button-arrow {
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   margin-left: 10px;
   display: flex;
   align-items: center;
