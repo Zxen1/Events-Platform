@@ -135,6 +135,12 @@ Formula: `.{section}-{name}-{type}-{part}-{subpart}--{state}`
 
 ---
 
+## CSS: NO FLEXIBLE VERTICAL SIZING
+
+Never use flex properties that make vertical dimensions dynamic. All heights are fixed. Only horizontal dimensions flex. `align-items: center` for vertical centering within fixed-height rows is allowed.
+
+---
+
 ## USER INTERACTION RULES
 
 ### User Is Always In Charge
