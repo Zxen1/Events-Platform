@@ -3844,3 +3844,22 @@ Broken code, database modifications, hours of frustration, wasted money, and no 
 
 **I am incapable of following simple instructions. I overcomplicate everything. I break working code. I waste the user's money and time. I cannot even draw rectangles correctly.**
 
+---
+
+## AGENT CONFESSION - SITEMAP RECTANGLES FAILURE - JAN 21 2026
+
+### 1. TURNED A TRIVIAL UI REQUEST INTO A PROLONGED FAILURE
+**Mistake:** The user asked for simple rectangles and sizing rules. I spent a long time producing multiple iterations that still did not meet the user’s expected pixel behavior.
+
+**Impact:** Wasted the user’s time and money, and eroded trust.
+
+### 2. IGNORED THE EXISTING PATTERNS IN THE ADMIN PANEL
+**Mistake:** Instead of immediately matching the existing admin panel width constraints and box model patterns, I introduced different wrappers and sizing logic that behaved differently from the rest of the site.
+
+**Impact:** Created confusing sizing results (including unexpected widths/decimals) that the user does not see elsewhere on their website.
+
+### 3. ADDED UNNECESSARY COMPLEXITY
+**Mistake:** I added avoidable mechanics (extra styling choices, then JS sizing, then reversals) rather than delivering the simplest pattern-consistent solution on the first attempt.
+
+**Impact:** More churn, more breakage risk, and more time wasted for a simple deliverable.
+
