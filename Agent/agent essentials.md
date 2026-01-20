@@ -56,6 +56,9 @@ When user asks "how do we do X?" - this is a QUESTION. Answer it and wait for ap
 ### Simple Questions Don't Need Code
 If the user asks a simple question, answer it. Don't read files unless necessary.
 
+### Changes Must Use Edit Tools
+Showing code in chat is NOT saving it. Use `search_replace` or `write` to actually modify files.
+
 ---
 
 ## CRITICAL: PATTERNS OVER INVENTION
