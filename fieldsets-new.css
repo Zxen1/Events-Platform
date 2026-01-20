@@ -81,6 +81,7 @@
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
+    opacity: 0.5;
 }
 
 .fieldset-label-tooltipbox {
@@ -102,7 +103,7 @@
     line-height: 1.4;
 }
 
-.fieldset-label-tooltip:hover + .fieldset-label-tooltipbox,
+.fieldset-label:hover .fieldset-label-tooltipbox,
 .fieldset-label-tooltipbox:hover {
     display: block;
 }
