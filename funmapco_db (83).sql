@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 19, 2026 at 04:05 PM
+-- Generation Time: Jan 20, 2026 at 11:28 PM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -308,6 +308,10 @@ INSERT INTO `admin_settings` (`id`, `setting_key`, `setting_value`, `setting_typ
 (240, 'icon_radio', 'icon-radio.svg', 'string', 'Icon: Radio (SVG filename)', '2026-01-11 04:45:19', '2026-01-11 04:45:19'),
 (241, 'icon_radio_selected', 'icon-radio-selected.svg', 'string', 'Icon: Radio Selected (SVG filename)', '2026-01-11 04:45:19', '2026-01-11 04:45:19'),
 (242, 'msg_category_field-tooltips_icon', 'fieldset-tooltips.svg', 'string', 'Path to field tooltips messages category icon', '2026-01-19 05:05:18', '2026-01-19 05:05:18'),
+(243, 'icon_arrow_down', 'icon_arrow_down.svg', 'string', 'Dropdown menu arrow icon', '2026-01-20 12:28:17', '2026-01-20 12:28:17'),
+(244, 'icon_edit', 'icon_edit.svg', 'string', 'Edit/pencil icon for editing', '2026-01-20 12:28:17', '2026-01-20 12:28:17'),
+(245, 'icon_info', 'icon_info.svg', 'string', 'Info icon for tooltips', '2026-01-20 12:28:17', '2026-01-20 12:28:17'),
+(246, 'icon_share', 'icon_share.svg', 'string', 'Share button icon', '2026-01-20 12:28:17', '2026-01-20 12:28:17'),
 (300, 'map_lighting', 'dusk', 'string', 'Mapbox lighting preset: dawn, day, dusk, or night', '2025-12-23 02:44:08', '2025-12-30 06:36:36'),
 (301, 'map_style', 'standard', 'string', 'Mapbox style: standard or standard-satellite', '2025-12-23 02:44:08', '2025-12-30 07:08:27'),
 (302, 'spin_on_load', 'true', 'boolean', 'Enable map spin on page load', '2025-11-13 16:17:10', '2025-12-30 07:07:27'),
@@ -495,7 +499,7 @@ INSERT INTO `fields` (`id`, `field_key`, `input_type`, `field_placeholder`, `fie
 (8, 'session-date', 'date', 'Select Date', 'The calendar date for this session.', NULL, NULL, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
 (9, 'session-time', 'time', 'HH:MM', 'The starting time for this session (24-hour format).', NULL, NULL, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
 (10, 'ticket-area', 'text', 'eg. Stalls, Balcony, VIP Area', 'Specify the seating area or zone (e.g., Stalls, VIP, Camping).', 3, 100, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
-(11, 'pricing-tier', 'text', 'eg. Adult, Concession, Child', 'The demographic or ticket type (e.g., Adult, Student).', 3, 100, 1, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
+(11, 'pricing-tier', 'text', 'eg. Adult, Child', 'The demographic or ticket type (e.g., Adult, Student).', 3, 100, 1, '2025-10-29 23:32:47', '2026-01-19 20:14:02'),
 (12, 'ticket-price', 'decimal(10,2)', '0.00', 'The cost of a single ticket in this tier.', 1, 50, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
 (13, 'currency', 'dropdown', 'Select Currency', 'The currency used for pricing.', 1, 50, 0, '2025-10-29 23:32:47', '2026-01-19 15:53:03'),
 (14, 'text-box', 'text', 'Enter text...', 'Enter the required information.', 3, 500, 1, '2025-10-30 17:11:57', '2026-01-19 15:53:03'),
