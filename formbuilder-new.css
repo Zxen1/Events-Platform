@@ -80,11 +80,21 @@
 .formbuilder-accordion-header-arrow {
   width: 36px;
   height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-accordion-header-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
   background-color: currentColor;
   -webkit-mask-image: var(--ui-icon-arrow-down);
   mask-image: var(--ui-icon-arrow-down);
-  -webkit-mask-size: 14px 14px;
-  mask-size: 14px 14px;
+  -webkit-mask-size: contain;
+  mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -93,7 +103,7 @@
   transform-origin: center;
 }
 
-.formbuilder-accordion-header-arrow--open {
+.formbuilder-accordion-header-arrow--open::before {
   transform: rotate(180deg);
 }
 
@@ -359,11 +369,21 @@
 .formbuilder-accordion-option-arrow {
   width: 36px;
   height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-accordion-option-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
   background-color: currentColor;
   -webkit-mask-image: var(--ui-icon-arrow-down);
   mask-image: var(--ui-icon-arrow-down);
-  -webkit-mask-size: 14px 14px;
-  mask-size: 14px 14px;
+  -webkit-mask-size: contain;
+  mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -372,7 +392,7 @@
   transform-origin: center;
 }
 
-.formbuilder-accordion-option-arrow--open {
+.formbuilder-accordion-option-arrow--open::before {
   transform: rotate(180deg);
 }
 
@@ -547,11 +567,21 @@
   width: 20px;
   height: 20px;
   margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.formbuilder-menu-button-arrow::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 14px;
   background-color: currentColor;
   -webkit-mask-image: var(--ui-icon-arrow-down);
   mask-image: var(--ui-icon-arrow-down);
-  -webkit-mask-size: 14px 14px;
-  mask-size: 14px 14px;
+  -webkit-mask-size: contain;
+  mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -560,7 +590,7 @@
   transform-origin: center;
 }
 
-.formbuilder-menu-button-arrow--open {
+.formbuilder-menu-button-arrow--open::before {
   transform: rotate(180deg);
 }
 
