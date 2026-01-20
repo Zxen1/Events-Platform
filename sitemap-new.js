@@ -243,14 +243,13 @@
         var device = document.createElement('div');
         device.className = 'admin-sitemap-device admin-sitemap-device--portrait';
 
-        // Wrapper for the phone representation (centered in the box)
-        var wrapper = document.createElement('div');
-        wrapper.className = 'admin-sitemap-portrait-wrapper';
-
         // Header
         var header = document.createElement('div');
         header.className = 'admin-sitemap-portrait-header admin-sitemap-section--header';
-        wrapper.appendChild(header);
+        header.textContent = 'Header';
+        header.dataset.section = 'header';
+        header.onclick = function() { scrollToSection('header'); };
+        device.appendChild(header);
 
         // Body
         var body = document.createElement('div');
@@ -258,7 +257,7 @@
 
         // Map background
         var map = document.createElement('div');
-        map.className = 'admin-sitemap-portrait-map admin-sitemap-section--map admin-sitemap-portrait-section';
+        map.className = 'admin-sitemap-portrait-map admin-sitemap-section--map';
         map.textContent = 'Map';
         map.dataset.section = 'map';
         map.onclick = function() { scrollToSection('map'); };
@@ -279,8 +278,7 @@
         });
 
         body.appendChild(panels);
-        wrapper.appendChild(body);
-        device.appendChild(wrapper);
+        device.appendChild(body);
         layout.appendChild(device);
 
         return layout;
