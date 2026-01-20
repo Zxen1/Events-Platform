@@ -17,7 +17,14 @@
         margin: 0;
         padding: 0;
         background: transparent;
-        color: #ffffff;
+        color: var(--text, #ffffff);
+      }
+
+      /* base-new.css sets body to flex + overflow hidden; undo for this standalone page */
+      body {
+        display: block;
+        overflow: auto;
+        min-height: 0;
       }
 
       .sitemap-root {
@@ -28,6 +35,7 @@
       .sitemap-wrap {
         width: 100%;
         max-width: 600px;
+        margin: 0 auto;
       }
 
       .sitemap-viewport {
@@ -53,10 +61,12 @@
 
       .sitemap-viewport--landscape {
         width: 100%;
+        aspect-ratio: 2 / 1;
       }
 
       .sitemap-viewport--portrait {
         width: 50%;
+        aspect-ratio: 1 / 2;
       }
 
       .sitemap-landscape-panels {
@@ -110,27 +120,5 @@
         </div>
       </div>
     </div>
-    <script>
-      (function(){
-        function syncSitemapSizes(){
-          var wrap = document.querySelector('.sitemap-wrap');
-          var landscape = document.querySelector('.sitemap-viewport--landscape');
-          var portrait = document.querySelector('.sitemap-viewport--portrait');
-          if (!wrap || !landscape || !portrait) return;
-
-          var w = Math.min(600, wrap.clientWidth);
-          var h = Math.round(w / 2);
-
-          landscape.style.width = w + 'px';
-          landscape.style.height = h + 'px';
-
-          portrait.style.width = h + 'px';
-          portrait.style.height = w + 'px';
-        }
-
-        syncSitemapSizes();
-        window.addEventListener('resize', syncSitemapSizes);
-      })();
-    </script>
   </body>
 </html>
