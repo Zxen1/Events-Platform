@@ -5157,16 +5157,29 @@ const FieldsetBuilder = (function(){
                     function allControlsFilledNoVisibility(containerEl) {
                         var els = containerEl.querySelectorAll('input:not([type="hidden"]):not([type="file"]):not(:disabled), select:not(:disabled), textarea:not(:disabled)');
                         if (!els || els.length === 0) return false;
+                        // Track radio groups by name - only one in each group needs to be checked
+                        var radioGroups = {};
                         for (var i = 0; i < els.length; i++) {
                             var el = els[i];
                             if (!el) return false;
                             if (typeof el.checkValidity === 'function' && !el.checkValidity()) return false;
-                            if (el.type === 'checkbox' || el.type === 'radio') {
+                            if (el.type === 'radio') {
+                                // Group radios by name - only one in group needs to be checked
+                                var groupName = el.name || '';
+                                if (!radioGroups[groupName]) radioGroups[groupName] = false;
+                                if (el.checked) radioGroups[groupName] = true;
+                                continue;
+                            }
+                            if (el.type === 'checkbox') {
                                 if (!el.checked) return false;
                                 continue;
                             }
                             var val = String(el.value || '').trim();
                             if (!val) return false;
+                        }
+                        // Verify each radio group has a selection
+                        for (var grp in radioGroups) {
+                            if (!radioGroups[grp]) return false;
                         }
                         return true;
                     }

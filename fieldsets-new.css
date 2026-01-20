@@ -56,7 +56,6 @@
     color: #f87171;
     font-size: 8px;
     margin-left: 4px;
-    vertical-align: middle;
 }
 
 .fieldset-label-required--complete {
@@ -108,6 +107,8 @@
 }
 
 .fieldset-sublabel {
+    display: flex;
+    align-items: center;
     font-size: 13px;
     color: #fff;
     margin-bottom: 6px;
@@ -228,12 +229,11 @@
 }
 
 .fieldset-menu-button-arrow {
-    width: 16px;
+    width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
     cursor: pointer;
 }
 
