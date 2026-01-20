@@ -159,6 +159,9 @@ Never edit SQL backup/export files. Paste SQL directly in chat for the user to r
 ### Never Create SQL Files
 Draft SQL must live only in chat, never as files in the workspace.
 
+### Verify Before Writing SQL
+ALWAYS search the database dump for exact table structure before writing any SQL. Never guess column names.
+
 ### Column Ordering
 `created_at` and `updated_at` must always be the last columns in a table.
 
