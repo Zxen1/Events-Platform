@@ -1,0 +1,388 @@
+/* ============================================================================
+   SITEMAP TAB - Admin Panel > Site Map
+   Visual representation of site structure for developers and administrators
+   ============================================================================ */
+
+/* ==========================================================================
+   DEVICE LAYOUTS CONTAINER
+   ========================================================================== */
+
+.admin-sitemap-layouts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.admin-sitemap-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-sitemap-layout-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ==========================================================================
+   DEVICE MOCKUPS
+   ========================================================================== */
+
+.admin-sitemap-device {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Landscape: 2:1 ratio (mimics 1920x1080) */
+.admin-sitemap-device--landscape {
+    aspect-ratio: 2 / 1;
+}
+
+/* Portrait: 1:2 ratio (mimics 1080x1920) */
+.admin-sitemap-device--portrait {
+    aspect-ratio: 1 / 2;
+    max-width: 200px;
+}
+
+/* ==========================================================================
+   SECTION COLORS
+   ========================================================================== */
+
+.admin-sitemap-section--header { background: #5B8DEF; }
+.admin-sitemap-section--map { background: #7EC87E; }
+.admin-sitemap-section--filter { background: #F5A623; }
+.admin-sitemap-section--post { background: #E85D75; }
+.admin-sitemap-section--recents { background: #9B6DD3; }
+.admin-sitemap-section--member { background: #4ECDC4; }
+.admin-sitemap-section--admin { background: #FF6B6B; }
+.admin-sitemap-section--marquee { background: #45B7D1; }
+
+/* ==========================================================================
+   LANDSCAPE LAYOUT STRUCTURE
+   ========================================================================== */
+
+.admin-sitemap-device--landscape {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr;
+}
+
+.admin-sitemap-landscape-header {
+    height: 5.2%;
+    /* 56px / 1080px = 5.18% */
+}
+
+.admin-sitemap-landscape-body {
+    display: grid;
+    grid-template-columns: 27.6% 1fr 22.9%;
+    /* Left: 530px / 1920px = 27.6% */
+    /* Right: 440px / 1920px = 22.9% */
+    position: relative;
+}
+
+.admin-sitemap-landscape-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px;
+    z-index: 1;
+}
+
+.admin-sitemap-landscape-center {
+    /* Map is behind panels - no styling needed, inherits map background */
+    position: relative;
+}
+
+.admin-sitemap-landscape-right {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px;
+    z-index: 1;
+}
+
+.admin-sitemap-landscape-section {
+    flex: 1;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.admin-sitemap-landscape-section:hover {
+    opacity: 0.85;
+}
+
+/* Filter is narrower: 380px / 530px = 71.7% of Post/Recents width */
+.admin-sitemap-landscape-section--filter {
+    max-width: 71.7%;
+}
+
+/* ==========================================================================
+   PORTRAIT LAYOUT STRUCTURE
+   ========================================================================== */
+
+.admin-sitemap-device--portrait {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-sitemap-portrait-header {
+    height: 2.9%;
+    /* 56px / 1920px = 2.9% */
+    flex-shrink: 0;
+}
+
+.admin-sitemap-portrait-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.admin-sitemap-portrait-map {
+    position: absolute;
+    inset: 0;
+}
+
+.admin-sitemap-portrait-panels {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px;
+}
+
+.admin-sitemap-portrait-section {
+    height: 36px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+}
+
+.admin-sitemap-portrait-section:hover {
+    opacity: 0.85;
+}
+
+/* ==========================================================================
+   SECTION LIST (Color-coded legend)
+   ========================================================================== */
+
+.admin-sitemap-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.admin-sitemap-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.admin-sitemap-legend-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.admin-sitemap-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   GENEALOGY TREE
+   ========================================================================== */
+
+.admin-sitemap-tree {
+    margin-top: 12px;
+}
+
+.admin-sitemap-tree-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.admin-sitemap-tree-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* Tree Node (Accordion style) */
+.admin-sitemap-node {
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.admin-sitemap-node-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.admin-sitemap-node-header:hover {
+    background: var(--bg-tertiary);
+}
+
+.admin-sitemap-node-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.admin-sitemap-node-title {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.admin-sitemap-node-arrow {
+    width: 16px;
+    height: 16px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.admin-sitemap-node-arrow::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid var(--text-tertiary);
+    border-bottom: 2px solid var(--text-tertiary);
+    transform: translate(-50%, -70%) rotate(45deg);
+    transition: transform 0.15s ease;
+}
+
+.admin-sitemap-node--open .admin-sitemap-node-arrow::before {
+    transform: translate(-50%, -30%) rotate(-135deg);
+}
+
+.admin-sitemap-node-body {
+    display: none;
+    padding: 10px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-primary);
+}
+
+.admin-sitemap-node--open .admin-sitemap-node-body {
+    display: block;
+}
+
+.admin-sitemap-node-description {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.admin-sitemap-node-description:last-child {
+    margin-bottom: 0;
+}
+
+/* Nested children */
+.admin-sitemap-node-children {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-left: 16px;
+    padding-left: 10px;
+    border-left: 2px solid var(--border-secondary);
+}
+
+.admin-sitemap-child {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+}
+
+.admin-sitemap-child-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 100px;
+}
+
+.admin-sitemap-child-desc {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    flex: 1;
+}
+
+/* ==========================================================================
+   NOTES SECTION
+   ========================================================================== */
+
+.admin-sitemap-notes {
+    margin-top: 12px;
+    padding: 10px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 5px;
+}
+
+.admin-sitemap-notes-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.admin-sitemap-notes-text {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.admin-sitemap-notes-text p {
+    margin: 0 0 6px 0;
+}
+
+.admin-sitemap-notes-text p:last-child {
+    margin-bottom: 0;
+}

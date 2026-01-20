@@ -597,6 +597,14 @@ const AdminModule = (function() {
             initCheckoutTab();
         } else if (tabName === 'moderation') {
             initModerationTab();
+        } else if (tabName === 'sitemap') {
+            initSitemapTab();
+        }
+    }
+    
+    function initSitemapTab() {
+        if (window.SitemapModule && typeof SitemapModule.init === 'function') {
+            SitemapModule.init();
         }
     }
 

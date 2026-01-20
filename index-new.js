@@ -596,7 +596,8 @@ const App = (function() {
        Rarely needed. Only if a tab has no expandable content below clicks.
      -------------------------------------------------------------------------- */
   var SLACK_CONFIG = {
-    'admin-tab-moderation':  { top: false }
+    'admin-tab-moderation':  { top: false },
+    'admin-tab-sitemap':     { top: false }
   };
 
   function applySlackConfig() {
