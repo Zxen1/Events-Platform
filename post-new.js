@@ -1194,7 +1194,7 @@ const PostModule = (function() {
       '</div>',
       '<div class="post-card-container-actions">',
       '<button class="post-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-      '<svg class="post-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+      '<span class="post-card-icon-fav" aria-hidden="true"></span>',
       '</button>',
       '</div>'
     ].join('');
@@ -3287,7 +3287,7 @@ const PostModule = (function() {
       '</div>',
       '<div class="recent-card-container-actions">',
       '<button class="recent-card-button-fav" aria-pressed="' + (isFav ? 'true' : 'false') + '" aria-label="Toggle favourite">',
-      '<svg class="recent-card-icon-fav" viewBox="0 0 24 24"><path d="M12 17.3 6.2 21l1.6-6.7L2 9.3l6.9-.6L12 2l3.1 6.7 6.9.6-5.8 4.9L17.8 21 12 17.3z"/></svg>',
+      '<span class="recent-card-icon-fav" aria-hidden="true"></span>',
       '</button>',
       '</div>'
     ].join('');
