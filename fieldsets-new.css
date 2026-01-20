@@ -965,13 +965,11 @@
 .fieldset-sessionpricing-sessions-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
 }
 
 .fieldset-sessionpricing-session-container-item {
     display: flex;
     flex-direction: column;
-    gap: 8px;
 }
 
 .fieldset-sessionpricing-session-row {
