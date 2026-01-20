@@ -215,4 +215,16 @@ UI sections are called **panels** (e.g., "Recent panel", "Post panel").
 3. If still unsure, ASK the user
 4. Never guess, never invent
 
+---
 
+## TO-DO: HARD-CODED ICONS TO REPLACE
+
+| Icon | Count | Files |
+|------|-------|-------|
+| `▼` arrow_down | 26 | index.html(5), admin-new.js(2), fieldsets-new.js(1), member-new.js(5), components-new.js(8), formbuilder-new.js(2), filter-new.js(1) |
+| `✎` edit | 2 | admin-new.js(1), fieldsets-new.js(1) |
+| `i` info | 1 | fieldsets-new.js(1) |
+| SVG share | 1 | post-new.js(1) |
+| `↕` drag_handle | 5 | admin-new.js(2), formbuilder-new.js(3) — needs DB entry |
+| `⋮` more_dots | 5 | admin-new.js(2), formbuilder-new.js(3) — needs DB entry |
+| SVGs in admin-new.js | 6 | search, reactivate, trash, flag, check, hide — need DB entries |
