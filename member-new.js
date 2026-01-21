@@ -882,18 +882,8 @@ const MemberModule = (function() {
     }
 
     function getDefaultCurrencyForForms() {
-        // Default currency for all forms comes from admin settings (website_currency), not profile pickers.
-        if (siteCurrency && typeof siteCurrency === 'string' && siteCurrency.trim()) return siteCurrency.trim();
-        try {
-            if (!window.App || typeof App.getState !== 'function') return null;
-            var settings = App.getState('settings') || {};
-            var code = settings.website_currency || settings.site_currency || settings.siteCurrency || null;
-            if (!code) return null;
-            code = String(code).trim();
-            return code ? code : null;
-        } catch (e) {
-            return null;
-        }
+        // No default - user must select their currency
+        return null;
     }
 
     function setAvatarForTarget(target, url) {
