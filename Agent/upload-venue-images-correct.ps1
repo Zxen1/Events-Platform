@@ -14,8 +14,8 @@ Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Bunny CDN credentials
-$storageZone = "funmapcom"
-$storageApiKey = "1df2f4d4-6f03-4763-be34-8cf60e5670d8451b1498-0d86-4018-bf61-fc77f9c1e53a"
+$storageZone = "funmap"
+$storageApiKey = "4e411191-8bc0-48a1-97ab6fea3ec9-404c-4810"
 $cdnPath = "post-images/2026-01"
 
 # Local backup folder

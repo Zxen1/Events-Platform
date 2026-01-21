@@ -1,0 +1,110 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260121164434
+Username: THE-COMPUTER\Paul 8700k
+RunAs User: THE-COMPUTER\Paul 8700k
+Configuration Name: 
+Machine: THE-COMPUTER (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -file  D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-venue-images-correct.ps1 
+Process ID: 48996
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-log-correct.txt
+============================================
+Venue Images Upload Script (Correct Names)
+============================================
+
+Created backup folder: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\venue-images-backup
+Found 10 images to process
+
+Processing: 1-British_Museum_2018.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/British_Museum_from_NE_2_(cropped).jpg
+  Downloading...
+  DOWNLOAD FAILED: Exception calling "DownloadFile" with "2" argument(s): "The remote server returned an error: (404) Not Found."
+
+Processing: 2-Natural_History_Museum_London_UK.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Natural_History_Museum_London_Jan_2006.jpg
+  Downloading...
+  Downloaded: 2.67 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+Processing: 3-Tower_of_London_48.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tower_of_London_viewed_from_the_River_Thames.jpg
+  Downloading...
+  Downloaded: 8.27 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+Processing: 4-Westminster-Abbey.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Westminster_Abbey_-_West_Door.jpg
+  Downloading...
+  Downloaded: 0.98 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+Processing: 5-Tate_Modern_exterior.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tate_Modern_-_Bankside_Power_Station.jpg
+  Downloading...
+  Downloaded: 6.37 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+Processing: 6-Buckingham_Palace_from_gardens.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg
+  Downloading...
+  Downloaded: 5.35 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+Processing: 7-St_Pauls_Cathedral_in_London.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/St_Paul%27s_Cathedral%2C_London%2C_England_-_Jan_2010.jpg
+  Downloading...
+  Downloaded: 7.26 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+Processing: 8-Victoria_and_Albert_Museum_London.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Victoria_and_Albert_Museum_Entrance%2C_London%2C_UK_-_Diliff.jpg
+  Downloading...
+  DOWNLOAD FAILED: Exception calling "DownloadFile" with "2" argument(s): "The remote server returned an error: (404) Not Found."
+
+Processing: 9-London_Eye_River_Thames.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/London_Eye_Twilight_April_2006.jpg
+  Downloading...
+  Downloaded: 1.25 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+Processing: 10-Science_Museum_London.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Science_Museum%2C_Exhibition_Road%2C_London_SW7_-_geograph.org.uk_-_1125595.jpg
+  Downloading...
+  Downloaded: 0.09 MB
+  Uploading to Bunny CDN...
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (401) Unauthorized."
+  UPLOAD FAILED: The remote server returned an error: (401) Unauthorized.
+
+============================================
+COMPLETE
+  Success: 0
+  Failed: 10
+  Backup folder: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\venue-images-backup
+============================================
+**********************
+Windows PowerShell transcript end
+End time: 20260121164543
+**********************
