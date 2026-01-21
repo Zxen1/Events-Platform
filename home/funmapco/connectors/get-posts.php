@@ -89,10 +89,6 @@ try {
         fail(500, 'Database connection unavailable.');
     }
 
-    // Check if user is logged in (for contact detail visibility)
-    // Simple cookie check - bots won't have the auth cookie
-    $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']);
-
     // Parse query parameters
     //
     // IMPORTANT (Developer Note):
@@ -432,9 +428,9 @@ try {
                 'custom_dropdown' => $row['custom_dropdown'],
                 'custom_checklist' => $row['custom_checklist'],
                 'custom_radio' => $row['custom_radio'],
-                'public_email' => $isLoggedIn ? $row['public_email'] : ($row['public_email'] ? 'members only' : null),
-                'phone_prefix' => $isLoggedIn ? $row['phone_prefix'] : null,
-                'public_phone' => $isLoggedIn ? $row['public_phone'] : ($row['public_phone'] ? 'members only' : null),
+                'public_email' => $row['public_email'],
+                'phone_prefix' => $row['phone_prefix'],
+                'public_phone' => $row['public_phone'],
                 'venue_name' => $row['venue_name'],
                 'address_line' => $row['address_line'],
                 'city' => $row['city'],
@@ -630,7 +626,6 @@ try {
         'total' => $total,
         'limit' => $limit,
         'offset' => $offset,
-        'logged_in' => $isLoggedIn,
     ], JSON_UNESCAPED_SLASHES);
 
 } catch (Throwable $e) {
