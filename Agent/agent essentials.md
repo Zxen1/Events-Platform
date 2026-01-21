@@ -232,3 +232,9 @@ Review `sitemap.html` to understand the platform structure. It shows the layout 
 4. Never guess, never invent
 
 ---
+
+## VENUE SEEDING (TO-DO)
+
+**Workflow:** Wikipedia API (category lists) → ZIM file (article content + image filenames) → Wikimedia Commons (full-res images ≥1000px) → Database. ZIM file downloaded to user's computer (111GB). User deciding subcategory structure with friend before populating. Email/phone protection re-enabled in get-posts.php.
+
+---
