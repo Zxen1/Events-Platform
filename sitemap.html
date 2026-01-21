@@ -10,7 +10,7 @@
         --sitemap-header-h: 40px;
         --sitemap-header-font: 13px;
         --sitemap-gap: 12px;
-        --sitemap-border: 1px solid rgba(255, 255, 255, 0.85);
+        --sitemap-border: 1px solid rgba(255, 255, 255, 0.3);
         --sitemap-panel-padding: 10px;
       }
 
@@ -19,6 +19,7 @@
         padding: 0;
         background: transparent;
         color: var(--text, #ffffff);
+        scroll-behavior: smooth;
       }
 
       /* base-new.css sets body to flex + overflow hidden; undo for this standalone page */
@@ -227,10 +228,21 @@
         padding: 0 10px;
         border-radius: 5px;
         cursor: pointer;
+        width: 200px;
+        box-sizing: border-box;
+      }
+
+      /* Hover states */
+      .sitemap-panel-item:hover,
+      .sitemap-portrait-item:hover,
+      .sitemap-header-btn:hover,
+      .sitemap-section-title:hover {
+        outline: 1px solid rgba(255, 255, 255, 0.8);
+        outline-offset: -1px;
       }
 
       /* Section colors */
-      .sitemap-btn-header { background: #334155; }
+      .sitemap-btn-header { background: #1e293b; }
       .sitemap-btn-map { background: #166534; }
       .sitemap-btn-posts { background: #1e40af; }
       .sitemap-btn-recent { background: #2563eb; }
@@ -250,22 +262,22 @@
           <div class="sitemap-label">Landscape</div>
           <div class="sitemap-viewport sitemap-viewport--landscape" aria-label="Landscape viewport (2:1)">
             <div class="sitemap-viewport-header">
-              <div class="sitemap-header-btn sitemap-btn-header">Header</div>
+              <div class="sitemap-header-btn sitemap-btn-header" onclick="document.getElementById('section-header').scrollIntoView({behavior:'smooth'})">Header</div>
             </div>
             <div class="sitemap-viewport-body">
               <div class="sitemap-landscape-panels">
                 <div class="sitemap-landscape-panel-left">
-                  <div class="sitemap-panel-item sitemap-btn-posts">Posts</div>
-                  <div class="sitemap-panel-item sitemap-btn-recent">Recent</div>
-                  <div class="sitemap-panel-item sitemap-btn-filter">Filter</div>
+                  <div class="sitemap-panel-item sitemap-btn-posts" onclick="document.getElementById('section-posts').scrollIntoView({behavior:'smooth'})">Posts</div>
+                  <div class="sitemap-panel-item sitemap-btn-recent" onclick="document.getElementById('section-recent').scrollIntoView({behavior:'smooth'})">Recent</div>
+                  <div class="sitemap-panel-item sitemap-btn-filter" onclick="document.getElementById('section-filter').scrollIntoView({behavior:'smooth'})">Filter</div>
                 </div>
                 <div class="sitemap-landscape-map-gap">
-                  <div class="sitemap-panel-item sitemap-btn-map">Map</div>
+                  <div class="sitemap-panel-item sitemap-btn-map" onclick="document.getElementById('section-map').scrollIntoView({behavior:'smooth'})">Map</div>
                 </div>
                 <div class="sitemap-landscape-panel-right">
-                  <div class="sitemap-panel-item sitemap-btn-marquee">Marquee</div>
-                  <div class="sitemap-panel-item sitemap-btn-member">Member</div>
-                  <div class="sitemap-panel-item sitemap-btn-admin">Admin</div>
+                  <div class="sitemap-panel-item sitemap-btn-marquee" onclick="document.getElementById('section-marquee').scrollIntoView({behavior:'smooth'})">Marquee</div>
+                  <div class="sitemap-panel-item sitemap-btn-member" onclick="document.getElementById('section-member').scrollIntoView({behavior:'smooth'})">Member</div>
+                  <div class="sitemap-panel-item sitemap-btn-admin" onclick="document.getElementById('section-admin').scrollIntoView({behavior:'smooth'})">Admin</div>
                 </div>
               </div>
             </div>
@@ -277,25 +289,25 @@
           <div class="sitemap-portrait-wrap">
             <div class="sitemap-viewport sitemap-viewport--portrait" aria-label="Portrait viewport (1:2)">
               <div class="sitemap-viewport-header">
-                <div class="sitemap-header-btn sitemap-btn-header">Header</div>
+                <div class="sitemap-header-btn sitemap-btn-header" onclick="document.getElementById('section-header').scrollIntoView({behavior:'smooth'})">Header</div>
               </div>
               <div class="sitemap-portrait-body">
-                <div class="sitemap-portrait-item sitemap-btn-map">Map</div>
-                <div class="sitemap-portrait-item sitemap-btn-posts">Posts Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-recent">Recent Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-filter">Filter Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-marquee">Marquee Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-member">Member Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-admin">Admin Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-map" onclick="document.getElementById('section-map').scrollIntoView({behavior:'smooth'})">Map</div>
+                <div class="sitemap-portrait-item sitemap-btn-posts" onclick="document.getElementById('section-posts').scrollIntoView({behavior:'smooth'})">Posts Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-recent" onclick="document.getElementById('section-recent').scrollIntoView({behavior:'smooth'})">Recent Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-filter" onclick="document.getElementById('section-filter').scrollIntoView({behavior:'smooth'})">Filter Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-marquee" onclick="document.getElementById('section-marquee').scrollIntoView({behavior:'smooth'})">Marquee Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-member" onclick="document.getElementById('section-member').scrollIntoView({behavior:'smooth'})">Member Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-admin" onclick="document.getElementById('section-admin').scrollIntoView({behavior:'smooth'})">Admin Panel</div>
               </div>
             </div>
             <div class="sitemap-dims">
               <div class="sitemap-dim sitemap-dim--header">56px height</div>
               <div class="sitemap-dims-body">
                 <div class="sitemap-dim">Full Screen</div>
+                <div class="sitemap-dim">530px / Fluid</div>
+                <div class="sitemap-dim">530px / Fluid</div>
                 <div class="sitemap-dim">380px / Fluid</div>
-                <div class="sitemap-dim">530px / Fluid</div>
-                <div class="sitemap-dim">530px / Fluid</div>
                 <div class="sitemap-dim">440px / Fluid</div>
                 <div class="sitemap-dim">440px / Fluid</div>
                 <div class="sitemap-dim">440px / Fluid</div>
@@ -306,29 +318,29 @@
 
         <div class="sitemap-sections-header">Section Details</div>
 
-        <div class="sitemap-section">
+        <div class="sitemap-section" id="section-header">
           <div class="sitemap-section-title sitemap-btn-header">Header</div>
         </div>
-        <div class="sitemap-section">
+        <div class="sitemap-section" id="section-map">
           <div class="sitemap-section-title sitemap-btn-map">Map</div>
         </div>
-        <div class="sitemap-section">
-          <div class="sitemap-section-title sitemap-btn-posts">Posts</div>
+        <div class="sitemap-section" id="section-posts">
+          <div class="sitemap-section-title sitemap-btn-posts">Posts Panel</div>
         </div>
-        <div class="sitemap-section">
-          <div class="sitemap-section-title sitemap-btn-recent">Recent</div>
+        <div class="sitemap-section" id="section-recent">
+          <div class="sitemap-section-title sitemap-btn-recent">Recent Panel</div>
         </div>
-        <div class="sitemap-section">
-          <div class="sitemap-section-title sitemap-btn-filter">Filter</div>
+        <div class="sitemap-section" id="section-filter">
+          <div class="sitemap-section-title sitemap-btn-filter">Filter Panel</div>
         </div>
-        <div class="sitemap-section">
-          <div class="sitemap-section-title sitemap-btn-marquee">Marquee</div>
+        <div class="sitemap-section" id="section-marquee">
+          <div class="sitemap-section-title sitemap-btn-marquee">Marquee Panel</div>
         </div>
-        <div class="sitemap-section">
-          <div class="sitemap-section-title sitemap-btn-member">Member</div>
+        <div class="sitemap-section" id="section-member">
+          <div class="sitemap-section-title sitemap-btn-member">Member Panel</div>
         </div>
-        <div class="sitemap-section">
-          <div class="sitemap-section-title sitemap-btn-admin">Admin</div>
+        <div class="sitemap-section" id="section-admin">
+          <div class="sitemap-section-title sitemap-btn-admin">Admin Panel</div>
         </div>
       </div>
     </div>
