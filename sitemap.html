@@ -116,6 +116,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: var(--sitemap-panel-padding);
+      }
+
+      .sitemap-landscape-map-gap .sitemap-panel-item {
+        width: 100%;
       }
 
       .sitemap-spacer {
@@ -151,13 +156,15 @@
       .sitemap-dims {
         display: flex;
         flex-direction: column;
-        font-size: 11px;
+        font-size: 13px;
         opacity: 0.7;
+        padding: var(--sitemap-panel-padding) 0;
       }
 
       .sitemap-dims .sitemap-dim:first-child {
         height: var(--sitemap-header-h);
         line-height: var(--sitemap-header-h);
+        padding: 0;
       }
 
       .sitemap-dims .sitemap-dim:not(:first-child) {
@@ -212,7 +219,7 @@
       }
 
       /* Section colors */
-      .sitemap-btn-header { background: #312e81; }
+      .sitemap-btn-header { background: #475569; }
       .sitemap-btn-map { background: #166534; }
       .sitemap-btn-posts { background: #1e40af; }
       .sitemap-btn-recent { background: #2563eb; }
@@ -272,14 +279,14 @@
               </div>
             </div>
             <div class="sitemap-dims">
-              <div class="sitemap-dim">56px height</div>
+              <div class="sitemap-dim">56px / Full Width</div>
               <div class="sitemap-dim">Full Screen</div>
-              <div class="sitemap-dim">380px</div>
-              <div class="sitemap-dim">530px</div>
-              <div class="sitemap-dim">530px</div>
-              <div class="sitemap-dim">440px</div>
-              <div class="sitemap-dim">440px</div>
-              <div class="sitemap-dim">440px</div>
+              <div class="sitemap-dim">380px / Full Width</div>
+              <div class="sitemap-dim">530px / Full Width</div>
+              <div class="sitemap-dim">530px / Full Width</div>
+              <div class="sitemap-dim">440px / Full Width</div>
+              <div class="sitemap-dim">440px / Full Width</div>
+              <div class="sitemap-dim">440px / Full Width</div>
             </div>
           </div>
         </div>
