@@ -10,6 +10,10 @@ $BUNNY_URL = "https://storage.bunnycdn.com/$BUNNY_STORAGE_ZONE/post-images/2026-
 # Paths
 $MANIFEST_PATH = "D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\venue-test-batch-manifest.csv"
 $LOCAL_BACKUP = "D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\venue-images"
+$LOG_FILE = "D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-log.txt"
+
+# Start logging to file
+Start-Transcript -Path $LOG_FILE -Force
 
 Write-Host "=== Bunny CDN Image Upload Script ===" -ForegroundColor Yellow
 Write-Host ""
@@ -89,4 +93,8 @@ Write-Host ""
 Write-Host "Local backups: $LOCAL_BACKUP" -ForegroundColor White
 Write-Host "CDN location:  https://cdn.funmap.com/post-images/2026-01/" -ForegroundColor White
 Write-Host ""
+Write-Host "Log saved to: $LOG_FILE" -ForegroundColor Cyan
+
+Stop-Transcript
+
 Read-Host "Press Enter to close"

@@ -1,0 +1,96 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20260121160606
+Username: THE-COMPUTER\Paul 8700k
+RunAs User: THE-COMPUTER\Paul 8700k
+Configuration Name: 
+Machine: THE-COMPUTER (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -file  D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-venue-images.ps1 
+Process ID: 32940
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-log.txt
+=== Bunny CDN Image Upload Script ===
+
+Found 10 images to process
+
+[1/10] 1-bm01a1.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/8/86/British_Museum_%2853518798652%29.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.86/8/86/British_Museum_%2853518798652%29.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[2/10] 2-nhm02b2.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/c/c1/Natural_History_Museum_London_UK.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.c1/c/c1/Natural_History_Museum_London_UK.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[3/10] 3-tol03c3.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/2/2c/Tower_of_London_48.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.2c/2/2c/Tower_of_London_48.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[4/10] 4-wab04d4.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/c/cc/Westminster_Abbey_%289331131086%29.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.cc/c/cc/Westminster_Abbey_%289331131086%29.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[5/10] 5-ttm05e5.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/4/42/Tate_Modern_-_London_%2835202077912%29.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.42/4/42/Tate_Modern_-_London_%2835202077912%29.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[6/10] 6-bkp06f6.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/b/b4/Buckingham_Palace_%2820799834309%29.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.b4/b/b4/Buckingham_Palace_%2820799834309%29.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[7/10] 7-spc07g7.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/2/2e/St._Paul%27s_Cathedral_Churchyard%2C_London_EC4M_8AD.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.2e/2/2e/St._Paul%27s_Cathedral_Churchyard%2C_London_EC4M_8AD.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[8/10] 8-vam08h8.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/1/10/Victoria_%26_Albert_Museum_Entrance%2C_London%2C_UK_-_Diliff.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.10/1/10/Victoria_%26_Albert_Museum_Entrance%2C_London%2C_UK_-_Diliff.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[9/10] 9-ley09i9.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/6/6d/London_-_London_Eye.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.6d/6/6d/London_-_London_Eye.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+[10/10] 10-scm10j0.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/a/a5/London_Science_Museum.jpg
+  Downloading...
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.a5/a/a5/London_Science_Museum.jpg"
+ FAILED
+  Error: The remote server returned an error: (404) Not Found.
+========================================
+Complete!
+  Success: 0
+  Failed:  10
+
+Local backups: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\venue-images
+CDN location:  https://cdn.funmap.com/post-images/2026-01/
+
+Log saved to: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-log.txt
+**********************
+Windows PowerShell transcript end
+End time: 20260121160609
+**********************
