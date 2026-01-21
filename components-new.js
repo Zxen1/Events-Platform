@@ -8669,6 +8669,7 @@ const LocationWallpaperComponent = (function() {
     };
 })();
 
+
 // Expose globally
 window.AvatarCropperComponent = AvatarCropperComponent;
 window.AvatarPickerComponent = AvatarPickerComponent;

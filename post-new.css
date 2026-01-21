@@ -1094,8 +1094,6 @@
 }
 
 .open-post-button-sessionopt {
-  display: flex;
-  align-items: center;
   padding: 10px;
   background: var(--btn);
   border: 1px solid var(--btn);
@@ -1108,90 +1106,6 @@
 
 .open-post-button-sessionopt:hover {
   background: var(--btn-hover);
-}
-
-.open-post-button-sessionopt.selected {
-  background: var(--session-selected);
-  border-color: var(--session-selected);
-}
-
-.open-post-button-sessionopt .open-post-text-optdate {
-  font-weight: 700;
-}
-
-.open-post-button-sessionopt .open-post-text-opttime {
-  margin-left: auto;
-  padding-left: 10px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* Session button text overlays */
-.open-post-text-sessiondate,
-.open-post-text-sessiontime {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  z-index: 1;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  pointer-events: none;
-}
-
-.open-post-text-sessiondate {
-  font-weight: 700;
-  bottom: 28px;
-}
-
-.open-post-text-sessiontime {
-  left: auto;
-  right: 10px;
-}
-
-/* Calendar available day highlighting */
-.open-post-calendar .calendar-day.available-day {
-  background: var(--session-selected);
-  color: #fff;
-  cursor: pointer;
-}
-
-.open-post-calendar .calendar-day.available-day:hover {
-  background: var(--blue-500);
-}
-
-.open-post-calendar .calendar-day.available-day.selected {
-  background: var(--blue-600);
-  border-color: var(--blue-500);
-}
-
-/* Time popup for multiple sessions on same date */
-.open-post-popup-time {
-  position: absolute;
-  z-index: var(--layer-menu);
-}
-
-.open-post-list-time {
-  background: var(--popup-bg);
-  padding: 8px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.open-post-button-time {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--btn);
-  color: #fff;
-  border-radius: 5px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.open-post-button-time:hover {
-  background: var(--blue-500);
 }
 
 /* ============================================================================
