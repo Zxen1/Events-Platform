@@ -1116,22 +1116,6 @@ const PostModule = (function() {
   }
 
   /**
-   * Format a time string for display
-   * @param {string} timeStr - Time string (HH:MM:SS or HH:MM)
-   * @returns {string} Formatted time like "2:00 PM"
-   */
-  function formatTimeShort(timeStr) {
-    if (!timeStr || typeof timeStr !== 'string') return '';
-    var parts = timeStr.split(':');
-    var hours = parseInt(parts[0], 10);
-    var minutes = parts[1] || '00';
-    if (isNaN(hours)) return timeStr;
-    var ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    return hours + ':' + minutes + ' ' + ampm;
-  }
-
-  /**
    * Get subcategory icon URL
    * @param {string} subcategoryKey - Subcategory key (e.g., 'live-gigs')
    * @returns {string} Icon URL or empty string
@@ -2718,14 +2702,15 @@ const PostModule = (function() {
     }
 
     /* ........................................................................
-       SESSION MENU
-       Uses SessionMenuComponent - only dates with sessions are clickable
+       SESSION MENU [COMPONENT PLACEHOLDER: SessionMenuComponent]
+       CalendarComponent + session selection list
+       Future: Will become SessionMenuComponent with date highlighting
        ........................................................................ */
 
     var sessionBtn = wrap.querySelector('.open-post-button-session');
     var sessionDropdown = wrap.querySelector('.open-post-dropdown-session .open-post-menu-session');
     var calendarContainer = wrap.querySelector('.open-post-calendar');
-    var sessionMenuInstance = null;
+    var calendarInitialized = false;
     
     if (sessionBtn && sessionDropdown) {
       sessionBtn.addEventListener('click', function() {
@@ -2733,49 +2718,30 @@ const PostModule = (function() {
         sessionBtn.setAttribute('aria-expanded', !isExpanded);
         sessionDropdown.hidden = isExpanded;
         
-        // Initialize SessionMenuComponent on first open
-        if (!isExpanded && !sessionMenuInstance && calendarContainer && window.SessionMenuComponent) {
-          // Get sessions from first map card and flatten the nested times structure
-          var currentMapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-          var rawSessions = (currentMapCard && Array.isArray(currentMapCard.sessions)) ? currentMapCard.sessions : [];
-          
-          // Flatten sessions: { date, times: [{time, ticket_group_key}] } -> { date, time, ticket_group_key }
-          var sessions = [];
-          rawSessions.forEach(function(entry) {
-            if (!entry) return;
-            var dateVal = entry.date || entry.session_date || '';
-            var times = Array.isArray(entry.times) ? entry.times : [];
-            if (times.length > 0) {
-              times.forEach(function(t) {
-                sessions.push({
-                  date: dateVal,
-                  time: t.time || t.session_time || '',
-                  ticket_group_key: t.ticket_group_key || ''
+        // Initialize CalendarComponent and session options on first open
+        if (!isExpanded && !calendarInitialized && calendarContainer && window.CalendarComponent) {
+          // Gather session dates from all map cards
+          var sessionDates = [];
+          if (post.map_cards) {
+            post.map_cards.forEach(function(mc) {
+              if (mc.sessions && Array.isArray(mc.sessions)) {
+                mc.sessions.forEach(function(s) {
+                  if (s.date) sessionDates.push(s.date);
                 });
-              });
-            } else if (entry.time || entry.session_time) {
-              // Already flat format
-              sessions.push({
-                date: dateVal,
-                time: entry.time || entry.session_time || '',
-                ticket_group_key: entry.ticket_group_key || ''
-              });
-            }
-          });
+              }
+            });
+          }
           
-          sessionMenuInstance = SessionMenuComponent.create(calendarContainer, {
-            sessions: sessions,
-            showExpired: false,
-            onSelect: function(session, index) {
-              // Update session info display
+          CalendarComponent.create(calendarContainer, {
+            monthsPast: 0,
+            monthsFuture: 12,
+            allowPast: false,
+            selectionMode: 'single',
+            onSelect: function(date) {
+              // Update session info display when date selected
               var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
-              if (sessionInfo && session) {
-                var sDate = session.date || session.session_date || '';
-                var sTime = session.time || session.session_time || '';
-                var dateStr = sDate ? formatDateShort(sDate) : '';
-                var timeStr = sTime ? formatTimeShort(sTime) : '';
-                var displayText = dateStr + (timeStr ? ' ' + timeStr : '');
-                sessionInfo.innerHTML = '<div>📅 ' + escapeHtml(displayText) + '</div>';
+              if (sessionInfo && date) {
+                sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(date) + '</div>';
               }
               // Close the session dropdown after selection
               sessionBtn.setAttribute('aria-expanded', 'false');
@@ -2783,28 +2749,27 @@ const PostModule = (function() {
             }
           });
           
-          // Build session options list (text list alternative to calendar)
+          // Build session options list
           var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
-          if (sessionOptsContainer && sessions.length > 0) {
-            sessionOptsContainer.innerHTML = '';
-            sessions.forEach(function(session, idx) {
+          if (sessionOptsContainer && sessionDates.length > 0) {
+            var uniqueDates = sessionDates.filter(function(d, i, arr) { return arr.indexOf(d) === i; }).sort();
+            uniqueDates.forEach(function(dateStr) {
               var btn = document.createElement('button');
               btn.className = 'open-post-button-sessionopt';
-              btn.dataset.index = idx;
-              var sDate = session.date || session.session_date || '';
-              var sTime = session.time || session.session_time || '';
-              var dateStr = sDate ? formatDateShort(sDate) : '';
-              var timeStr = sTime ? formatTimeShort(sTime) : '';
-              btn.innerHTML = '<span class="open-post-text-sessiondate">' + escapeHtml(dateStr) + '</span>' +
-                              '<span class="open-post-text-sessiontime">' + escapeHtml(timeStr) + '</span>';
+              btn.textContent = formatDateShort(dateStr);
               btn.addEventListener('click', function() {
-                if (sessionMenuInstance) {
-                  sessionMenuInstance.selectSession(idx);
+                var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
+                if (sessionInfo) {
+                  sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(dateStr) + '</div>';
                 }
+                sessionBtn.setAttribute('aria-expanded', 'false');
+                sessionDropdown.hidden = true;
               });
               sessionOptsContainer.appendChild(btn);
             });
           }
+          
+          calendarInitialized = true;
         }
       });
     }
@@ -3572,7 +3537,7 @@ const PostModule = (function() {
    * @returns {Promise<Object|null>} Post data or null
    */
   function loadPostById(postId) {
-    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_id=' + postId)
+    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
@@ -3591,7 +3556,7 @@ const PostModule = (function() {
   function loadPostByKey(postKey) {
     var key = (postKey === null || postKey === undefined) ? '' : String(postKey).trim();
     if (!key) return Promise.resolve(null);
-    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_key=' + encodeURIComponent(key))
+    return fetch('/gateway.php?action=get-posts&limit=1&post_key=' + encodeURIComponent(key))
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();

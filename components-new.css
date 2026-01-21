@@ -513,66 +513,6 @@
 }
 
 
-/* ============================================================================
-   SESSION MENU
-   
-   Calendar-based session picker for open posts.
-   Uses calendar sub-component styling with session-specific states.
-   ============================================================================ */
-
-/* Available day (has session) */
-.calendar-day--available {
-    cursor: pointer;
-    background: var(--btn);
-}
-
-.calendar-day--available:hover {
-    background: var(--blue-500);
-    border-color: var(--blue-500);
-    color: var(--text);
-}
-
-/* Disabled day (no session) */
-.calendar-day--disabled {
-    cursor: default;
-    background: var(--btn-active);
-    color: var(--muted);
-}
-
-/* Time popup for multiple sessions on same date */
-.component-sessionmenu-timepopup {
-    position: absolute;
-    z-index: var(--layer-menu);
-    background: var(--btn);
-    border: 1px solid var(--blue-500);
-    border-radius: 5px;
-    box-shadow: var(--menu-shadow);
-    padding: 10px;
-}
-
-.component-sessionmenu-timepopup-list {
-    display: flex;
-    flex-direction: column;
-}
-
-.component-sessionmenu-timepopup-button {
-    height: 36px;
-    padding: 0 10px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 5px;
-    color: var(--text);
-    font-size: 13px;
-    cursor: pointer;
-    text-align: left;
-}
-
-.component-sessionmenu-timepopup-button:hover {
-    background: var(--blue-500);
-    border-color: var(--blue-500);
-    color: var(--text);
-}
-
 
 /* ============================================================================
    CURRENCY

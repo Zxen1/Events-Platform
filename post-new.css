@@ -437,24 +437,11 @@
   display: block;
 }
 
-/* Inline badge image (e.g. in session info price display) */
-.open-post-image-badge--inline {
+/* Inline badge image (e.g. in expanded post detail) */
+.open-post-badge-image--inline {
   display: inline-block;
   vertical-align: middle;
-  margin-right: 4px;
-}
-
-/* Session/Venue Info Display (open post details) */
-.open-post-text-venueinfo {
-  margin-top: 4px;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.open-post-text-sessioninfo {
-  margin-top: 8px;
-  font-size: 14px;
-  line-height: 1.4;
+  margin-right: 5px;
 }
 
 /* Actions container */
@@ -1103,40 +1090,22 @@
 .open-post-container-sessionopts {
   display: flex;
   flex-direction: column;
-  padding: 10px;
+  gap: 5px;
 }
 
 .open-post-button-sessionopt {
-  height: 36px;
-  padding: 0 10px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 5px;
+  padding: 10px;
+  background: var(--btn);
+  border: 1px solid var(--btn);
+  border-radius: 8px;
   cursor: pointer;
   text-align: left;
-  color: var(--text);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  color: inherit;
+  font-size: 14px;
 }
 
 .open-post-button-sessionopt:hover {
   background: var(--btn-hover);
-  border-color: var(--border);
-}
-
-.open-post-button-sessionopt.selected {
-  background: var(--btn-selected);
-  border-color: var(--blue-500);
-}
-
-.open-post-text-sessiondate {
-  flex: 1;
-}
-
-.open-post-text-sessiontime {
-  color: var(--muted);
 }
 
 /* ============================================================================
