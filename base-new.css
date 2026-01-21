@@ -962,6 +962,8 @@ body {
 
 /* ============================================================================
    WELCOME MODAL
+   STARTUP EXCEPTION: This modal displays immediately on page load, so its CSS
+   must be in base-new.css (not lazy-loaded). Other modals go in components-new.css.
    ============================================================================ */
 
 .welcome-modal {

@@ -718,11 +718,18 @@ const App = (function() {
       if (e.defaultPrevented) return;
       
       // 1. Check for image modal (lightbox)
-      var imageModal = document.querySelector('.image-modal-container:not(.hidden)');
+      if (window.ImageModalComponent && ImageModalComponent.isVisible()) {
+        ImageModalComponent.close();
+        e.preventDefault();
+        return;
+      }
+      // Fallback: check DOM directly for backwards compatibility
+      var imageModal = document.querySelector('.image-modal.show');
       if (imageModal) {
-        imageModal.classList.add('hidden');
-        var modal = imageModal.querySelector('.image-modal');
-        if (modal) modal.innerHTML = '';
+        imageModal.classList.remove('show');
+        imageModal.setAttribute('aria-hidden', 'true');
+        var content = imageModal.querySelector('.image-modal-content');
+        if (content) content.innerHTML = '';
         e.preventDefault();
         return;
       }

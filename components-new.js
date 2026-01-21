@@ -5489,6 +5489,166 @@ const WelcomeModalComponent = (function() {
 
 
 /* ============================================================================
+   IMAGE MODAL
+   Full-screen lightbox for viewing images
+   Lazy-loaded: DOM created on first open
+   ============================================================================ */
+
+const ImageModalComponent = (function() {
+    
+    var modal = null;
+    var contentEl = null;
+    var imgEl = null;
+    var state = null; // { images: [], index: 0 }
+    var isOpen = false;
+    
+    /**
+     * Initialize the image modal
+     * Creates DOM elements on first use (lazy loading)
+     */
+    function init() {
+        if (modal) return;
+        
+        modal = document.createElement('div');
+        modal.className = 'image-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', 'Image lightbox');
+        modal.setAttribute('aria-hidden', 'true');
+        
+        contentEl = document.createElement('div');
+        contentEl.className = 'image-modal-content';
+        modal.appendChild(contentEl);
+        
+        document.body.appendChild(modal);
+        
+        // Close when clicking modal background (outside content)
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                close();
+            }
+        });
+        
+        // Close when clicking content area (but not image)
+        contentEl.addEventListener('click', function(e) {
+            if (!e.target.closest('img')) {
+                close();
+            }
+        });
+    }
+    
+    /**
+     * Open the image modal
+     * @param {string} src - Image URL to display
+     * @param {Object} options - Optional { images: [], startIndex: 0 }
+     */
+    function open(src, options) {
+        if (!modal) init();
+        
+        options = options || {};
+        var images = Array.isArray(options.images) && options.images.length ? options.images : [src];
+        var startIndex = typeof options.startIndex === 'number' ? options.startIndex : 0;
+        
+        // Find index if not provided but src exists in array
+        if (startIndex === 0 && src && images.indexOf(src) !== -1) {
+            startIndex = images.indexOf(src);
+        }
+        
+        startIndex = Math.max(0, Math.min(startIndex, images.length - 1));
+        
+        state = {
+            images: images,
+            index: startIndex
+        };
+        
+        renderImage();
+        modal.classList.add('show');
+        modal.removeAttribute('aria-hidden');
+        isOpen = true;
+    }
+    
+    /**
+     * Close the image modal
+     */
+    function close() {
+        if (!modal) return;
+        // Move focus out before hiding to avoid aria-hidden violation
+        if (document.activeElement && modal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        if (contentEl) contentEl.innerHTML = '';
+        imgEl = null;
+        state = null;
+        isOpen = false;
+    }
+    
+    /**
+     * Advance to next/previous image in gallery
+     * @param {number} step - 1 for next, -1 for previous
+     */
+    function advance(step) {
+        if (!state || !state.images || state.images.length <= 1) return;
+        var len = state.images.length;
+        state.index = ((state.index + step) % len + len) % len;
+        renderImage();
+    }
+    
+    /**
+     * Render the current image
+     */
+    function renderImage() {
+        if (!state || !contentEl) return;
+        
+        if (!imgEl) {
+            imgEl = document.createElement('img');
+            imgEl.className = 'image-modal-image';
+            imgEl.alt = '';
+            
+            // Click image to advance to next
+            imgEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                advance(1);
+            });
+            
+            contentEl.innerHTML = '';
+            contentEl.appendChild(imgEl);
+        }
+        
+        var src = state.images[state.index];
+        if (imgEl.src !== src) {
+            imgEl.src = src;
+        }
+    }
+    
+    /**
+     * Check if modal is currently open
+     * @returns {boolean}
+     */
+    function isVisible() {
+        return isOpen;
+    }
+    
+    /**
+     * Get the modal element
+     * @returns {HTMLElement|null}
+     */
+    function getElement() {
+        return modal;
+    }
+    
+    return {
+        open: open,
+        close: close,
+        advance: advance,
+        isVisible: isVisible,
+        getElement: getElement
+    };
+})();
+
+
+/* ============================================================================
    BOTTOM SLACK
    Prevents "clicked button flies away" when collapsible content above closes.
    Self-contained: injects required slack CSS and creates the slack element if missing.
@@ -8515,6 +8675,7 @@ window.ConfirmDialogComponent = ConfirmDialogComponent;
 window.ThreeButtonDialogComponent = ThreeButtonDialogComponent;
 window.ToastComponent = ToastComponent;
 window.WelcomeModalComponent = WelcomeModalComponent;
+window.ImageModalComponent = ImageModalComponent;
 window.ImageAddTileComponent = ImageAddTileComponent;
 window.BottomSlack = BottomSlack;
 window.TopSlack = TopSlack;

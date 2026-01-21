@@ -8,7 +8,6 @@
    - VenueMenuComponent - Map + venue selection dropdown
    - SessionMenuComponent - Calendar + session selection
    - ImageGalleryComponent - Hero image + thumbnails + swipe
-   - ImageModalComponent - Full-screen image lightbox
    
    DEPENDENCIES:
    - index.js (backbone)
@@ -2579,13 +2578,32 @@ const PostModule = (function() {
 
     /* ........................................................................
        IMAGE GALLERY [COMPONENT PLACEHOLDER: ImageGalleryComponent]
-       Hero image + thumbnail row with click-to-swap
-       Future: Will become ImageGalleryComponent with swipe, zoom, lightbox
+       Hero image + thumbnail row with click-to-swap + lightbox
+       Future: Will become ImageGalleryComponent with swipe, zoom
        ........................................................................ */
 
     var thumbnails = wrap.querySelectorAll('.open-post-container-thumbs img');
     var heroImg = wrap.querySelector('.open-post-image-hero');
+    var heroContainer = wrap.querySelector('.open-post-container-hero');
+    
+    // Gather all full-size image URLs for the gallery
+    var galleryImages = [];
     thumbnails.forEach(function(thumb) {
+      var fullUrl = thumb.dataset.fullUrl || '';
+      if (fullUrl) {
+        galleryImages.push(fullUrl);
+      }
+    });
+    
+    // If no thumbnails but hero has an image, use that
+    if (galleryImages.length === 0 && heroImg && heroImg.dataset.fullUrl) {
+      galleryImages.push(heroImg.dataset.fullUrl);
+    }
+    
+    // Track current gallery index
+    var currentGalleryIndex = 0;
+    
+    thumbnails.forEach(function(thumb, idx) {
       thumb.addEventListener('click', function() {
         // Use stored full URL from data attribute, apply imagebox class for hero display
         var fullUrl = thumb.dataset.fullUrl || '';
@@ -2594,9 +2612,25 @@ const PostModule = (function() {
           // Update active state
           thumbnails.forEach(function(t) { t.classList.remove('open-post-image-thumb--active'); });
           thumb.classList.add('open-post-image-thumb--active');
+          currentGalleryIndex = idx;
         }
       });
     });
+    
+    // Hero image click opens lightbox
+    if (heroContainer && galleryImages.length > 0) {
+      heroContainer.classList.add('open-post-container-hero--clickable');
+      heroContainer.addEventListener('click', function() {
+        if (window.ImageModalComponent) {
+          // Get current full-size URL (without imagebox class)
+          var currentSrc = galleryImages[currentGalleryIndex] || galleryImages[0];
+          ImageModalComponent.open(currentSrc, {
+            images: galleryImages,
+            startIndex: currentGalleryIndex
+          });
+        }
+      });
+    }
 
     /* ........................................................................
        VENUE MENU [COMPONENT PLACEHOLDER: VenueMenuComponent]

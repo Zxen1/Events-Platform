@@ -15,6 +15,7 @@
    - MAP CONTROL ROW     - Geocoder + Geolocate + Compass (has variants)
    - CHECKOUT OPTIONS    - Radio card selector for checkout tiers
    - CONFIRM DIALOG      - Confirmation dialog for destructive actions
+   - IMAGE MODAL         - Full-screen lightbox for images
    
    ============================================================================ */
 
@@ -3007,5 +3008,50 @@
     .component-locationwallpaper-image {
         transition: none;
     }
+}
+
+
+/* ============================================================================
+   IMAGE MODAL (LIGHTBOX)
+   Full-screen overlay for viewing images
+   ============================================================================ */
+
+.image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--image-panel-bg, rgba(0, 0, 0, 0.85));
+  z-index: var(--layer-image-modal, 88);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+.image-modal.show {
+  display: flex;
+  pointer-events: auto;
+}
+
+.image-modal-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 95vw;
+  max-height: 95vh;
+  cursor: default;
+}
+
+.image-modal-image {
+  max-width: 95vw;
+  max-height: 95vh;
+  object-fit: contain;
+  cursor: pointer;
+  user-select: none;
 }
 

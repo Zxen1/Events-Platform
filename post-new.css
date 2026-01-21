@@ -8,7 +8,6 @@
    - ImageGalleryComponent - Hero + thumbnails + swipe + zoom
    - VenueMenuComponent - Map + venue list dropdown
    - SessionMenuComponent - Calendar + session list dropdown
-   - ImageModalComponent - Full-screen lightbox
    
    ============================================================================ */
 
@@ -803,9 +802,12 @@
   border: none;
   border-radius: 0;
   flex-shrink: 0;
-  cursor: pointer;
   background: rgba(0, 0, 0, 0);
   position: relative;
+}
+
+.open-post-container-hero--clickable {
+  cursor: pointer;
 }
 
 .open-post-track-hero {
