@@ -882,7 +882,51 @@ const MemberModule = (function() {
     }
 
     function getDefaultCurrencyForForms() {
-        // No default - user must select their currency
+        // Use member's preferred currency from their last post (if logged in)
+        try {
+            var raw = localStorage.getItem('member-auth-current');
+            if (raw) {
+                var user = JSON.parse(raw);
+                if (user && user.preferred_currency && typeof user.preferred_currency === 'string') {
+                    return user.preferred_currency.trim() || null;
+                }
+            }
+        } catch (e) {}
+        return null;
+    }
+    
+    function extractCurrencyFromPayload(payload) {
+        // Extract first currency found in the payload (session_pricing or item-pricing)
+        if (!payload || !Array.isArray(payload.fields)) return null;
+        for (var i = 0; i < payload.fields.length; i++) {
+            var f = payload.fields[i];
+            if (!f || !f.value) continue;
+            var t = f.type || f.key || '';
+            if (t === 'session_pricing' && f.value.pricing_groups) {
+                var groups = f.value.pricing_groups;
+                for (var gk in groups) {
+                    if (!groups.hasOwnProperty(gk)) continue;
+                    var seats = groups[gk];
+                    if (!Array.isArray(seats)) continue;
+                    for (var s = 0; s < seats.length; s++) {
+                        var tiers = seats[s] && seats[s].tiers;
+                        if (!Array.isArray(tiers)) continue;
+                        for (var ti = 0; ti < tiers.length; ti++) {
+                            var curr = tiers[ti] && tiers[ti].currency;
+                            if (curr && typeof curr === 'string' && curr.trim()) {
+                                return curr.trim().toUpperCase();
+                            }
+                        }
+                    }
+                }
+            }
+            if (t === 'item-pricing' && f.value.currency) {
+                var c = f.value.currency;
+                if (c && typeof c === 'string' && c.trim()) {
+                    return c.trim().toUpperCase();
+                }
+            }
+        }
         return null;
     }
 
@@ -3150,6 +3194,21 @@ const MemberModule = (function() {
                     } else {
                         App.emit('post:created', { post_id: result.insert_id });
                     }
+                    
+                    // Update local storage with detected currency (so next post pre-fills)
+                    try {
+                        var detectedCurr = extractCurrencyFromPayload(validation.payload);
+                        if (detectedCurr) {
+                            var rawU = localStorage.getItem('member-auth-current');
+                            if (rawU) {
+                                var userObj = JSON.parse(rawU);
+                                if (userObj) {
+                                    userObj.preferred_currency = detectedCurr;
+                                    localStorage.setItem('member-auth-current', JSON.stringify(userObj));
+                                }
+                            }
+                        }
+                    } catch (_eCurr) {}
                 } else {
                     if (window.ToastComponent && typeof ToastComponent.showError === 'function') {
                         // Prefer message system keys from backend (no hardcoded server strings).

@@ -299,6 +299,7 @@ if (!$data || !is_array($data) || empty($data['post_id'])) {
 $postId = (int)$data['post_id'];
 $memberId = isset($data['member_id']) ? (int)$data['member_id'] : null;
 $memberName = isset($data['member_name']) ? trim((string)$data['member_name']) : '';
+$memberType = isset($data['member_type']) ? trim((string)$data['member_type']) : 'member';
 $subcategoryKey = isset($data['subcategory_key']) ? trim((string)$data['subcategory_key']) : '';
 $locQty = isset($data['loc_qty']) ? (int) $data['loc_qty'] : 1;
 if ($locQty <= 0) $locQty = 1;
@@ -503,6 +504,7 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
 }
 
 $primaryTitle = '';
+$detectedCurrency = null; // Track first currency used for member's preferred_currency
 foreach ($byLoc as $locNum => $entries) {
   $card = [
     'title' => '', 'description' => null, 'custom_text' => null, 'custom_textarea' => null,
@@ -715,6 +717,10 @@ foreach ($byLoc as $locNum => $entries) {
               $amt = normalize_price_amount($tier['price'] ?? null);
               $curr = normalize_currency($tier['currency'] ?? '');
               if ($tierName === '' || $curr === '' || $amt === null) continue;
+              // Track first currency for member's preferred_currency
+              if ($detectedCurrency === null && $curr !== '') {
+                $detectedCurrency = $curr;
+              }
               $stmtPrice->bind_param('ississss', $mapCardId, $gk, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr);
               $stmtPrice->execute();
             }
@@ -731,6 +737,10 @@ foreach ($byLoc as $locNum => $entries) {
         $variants = json_encode($itemPricing['item_variants'] ?? [], JSON_UNESCAPED_UNICODE);
         $price = normalize_price_amount($itemPricing['item_price'] ?? null);
         $curr = normalize_currency($itemPricing['currency'] ?? '');
+        // Track first currency for member's preferred_currency
+        if ($detectedCurrency === null && $curr !== '') {
+          $detectedCurrency = $curr;
+        }
         $stmtItem->bind_param('issss', $mapCardId, $itemPricing['item_name'], $variants, $price, $curr);
         $stmtItem->execute();
         $stmtItem->close();
@@ -746,6 +756,16 @@ if ($stmtRev) {
   $stmtRev->bind_param('isiss', $postId, $primaryTitle, $memberId, $memberName, $revJson);
   $stmtRev->execute();
   $stmtRev->close();
+}
+
+// Update member's preferred_currency if a currency was used in this post
+if ($detectedCurrency !== null && $memberType === 'member' && $memberId > 0) {
+  $stmtCurr = $mysqli->prepare("UPDATE members SET preferred_currency = ? WHERE id = ?");
+  if ($stmtCurr) {
+    $stmtCurr->bind_param('si', $detectedCurrency, $memberId);
+    $stmtCurr->execute();
+    $stmtCurr->close();
+  }
 }
 
 $mysqli->commit();

@@ -56,17 +56,17 @@ try {
     // IMPORTANT:
     // - Database schemas evolve; do not select columns that may not exist (mysqli->prepare will fail).
     // - Keep this SELECT limited to columns that exist in current funmapco_db views/tables (see latest dump).
-    $sqlWithAvatarFile = "SELECT id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
+    $sqlWithAvatarFile = "SELECT id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
     $stmt = $db->prepare($sqlWithAvatarFile);
     if ($stmt) {
       $avatarCol = 'avatar_file';
     } else {
-      $sqlWithAvatarUrl = "SELECT id, account_email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
+      $sqlWithAvatarUrl = "SELECT id, account_email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
       $stmt = $db->prepare($sqlWithAvatarUrl);
       if ($stmt) {
         $avatarCol = 'avatar_url';
       } else {
-        $sqlNoAvatar = "SELECT id, account_email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
+        $sqlNoAvatar = "SELECT id, account_email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
         $stmt = $db->prepare($sqlNoAvatar);
         if (!$stmt) return null;
       }
@@ -105,7 +105,7 @@ try {
         'avatar' => ($avatarCol && isset($row[$avatarCol])) ? (string)$row[$avatarCol] : '',
         // Keep response keys stable for frontend, even if some values are not stored on the user row.
         'language' => null,
-        'currency' => null,
+        'preferred_currency' => isset($row['preferred_currency']) ? (string)$row['preferred_currency'] : null,
         'country_code' => isset($row['country']) ? (string)$row['country'] : null,
         'map_lighting' => isset($row['map_lighting']) ? (string)$row['map_lighting'] : null,
         'map_style' => isset($row['map_style']) ? (string)$row['map_style'] : null,

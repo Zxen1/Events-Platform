@@ -573,6 +573,7 @@ if (count($byLoc) > 1 && isset($byLoc[1])) {
 // Insert map cards
 $mapCardIds = [];
 $primaryTitle = '';
+$detectedCurrency = null; // Track first currency used for member's preferred_currency
 foreach ($byLoc as $locNum => $entries) {
   $card = [
     'title' => '',
@@ -892,6 +893,10 @@ foreach ($byLoc as $locNum => $entries) {
             $curr = isset($tier['currency']) ? normalize_currency($tier['currency']) : '';
             $amt = normalize_price_amount($tier['price'] ?? null);
             if ($tierName === '' || $curr === '' || $amt === null) continue;
+            // Track first currency for member's preferred_currency
+            if ($detectedCurrency === null && $curr !== '') {
+              $detectedCurrency = $curr;
+            }
             $stmtPrice->bind_param('ississss', $mapCardId, $ticketGroupKey, $ageRating, $allocated, $ticketArea, $tierName, $amt, $curr);
             if (!$stmtPrice->execute()) { $stmtPrice->close(); abort_with_error($mysqli, 500, 'Insert post_ticket_pricing', $transactionActive); }
           }
@@ -916,6 +921,10 @@ foreach ($byLoc as $locNum => $entries) {
     $variantsJson = json_encode($variants, JSON_UNESCAPED_UNICODE);
     $price = normalize_price_amount($itemPricing['item_price'] ?? null);
     $curr = isset($itemPricing['currency']) ? normalize_currency($itemPricing['currency']) : '';
+    // Track first currency for member's preferred_currency
+    if ($detectedCurrency === null && $curr !== '') {
+      $detectedCurrency = $curr;
+    }
     
     $stmtItem->bind_param('issss', $mapCardId, $itemName, $variantsJson, $price, $curr);
     if (!$stmtItem->execute()) { 
@@ -1074,6 +1083,16 @@ if ($stmtRev) {
   $stmtRev->bind_param('isiss', $insertId, $title0, $memberId, $memberName, $revJson);
   $stmtRev->execute();
   $stmtRev->close();
+}
+
+// Update member's preferred_currency if a currency was used in this post
+if ($detectedCurrency !== null && $memberType === 'member' && $memberId > 0) {
+  $stmtCurr = $mysqli->prepare("UPDATE members SET preferred_currency = ? WHERE id = ?");
+  if ($stmtCurr) {
+    $stmtCurr->bind_param('si', $detectedCurrency, $memberId);
+    $stmtCurr->execute();
+    $stmtCurr->close();
+  }
 }
 
 if (!$mysqli->commit()) {
