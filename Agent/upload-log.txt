@@ -1,12 +1,12 @@
 ﻿**********************
 Windows PowerShell transcript start
-Start time: 20260121160818
+Start time: 20260121161030
 Username: THE-COMPUTER\Paul 8700k
 RunAs User: THE-COMPUTER\Paul 8700k
 Configuration Name: 
 Machine: THE-COMPUTER (Microsoft Windows NT 10.0.26200.0)
 Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -file  D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-venue-images.ps1 
-Process ID: 48536
+Process ID: 50604
 PSVersion: 5.1.26100.7462
 PSEdition: Desktop
 PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
@@ -40,209 +40,45 @@ PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-c
  FAILED
   Error: The remote server returned an error: (404) Not Found.
 [4/10] 4-wab04d4.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/a/a0/London_-_Westminster_Abbey.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/b/ba/Westminster-Abbey.JPG
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.a0/a/a0/London_-_Westminster_Abbey.jpg"
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.ba/b/ba/Westminster-Abbey.JPG"
  FAILED
   Error: The remote server returned an error: (404) Not Found.
 [5/10] 5-ttm05e5.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/a/a7/Tate_Modern_-_52667499848.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/9/90/Tate_Modern_exterior_%282009%29.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.a7/a/a7/Tate_Modern_-_52667499848.jpg"
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.90/9/90/Tate_Modern_exterior_%282009%29.jpg"
  FAILED
   Error: The remote server returned an error: (404) Not Found.
 [6/10] 6-bkp06f6.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/b/b9/Buckingham_Palace_-_01.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/b/b4/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "
-
-
-Wikimedia Error
-
-* { margin: 0; padding: 0; }
-body { background: #fff; font: 15px/1.6 sans-serif; color: #333; }
-.content { margin: 7% auto 0; padding: 2em 1em 1em; max-width: 640px; display: flex; flex-direction: row; flex-wrap: wrap; }
-.footer { clear: both; margin-top: 14%; border-top: 1px solid #e5e5e5; background: #f9f9f9; padding: 2em 0; font-size: 0.8em; text-align: center; }
-img { margin: 0 2em 2em 0; }
-a img { border: 0; }
-h1 { margin-top: 1em; font-size: 1.2em; }
-.content-text { flex: 1; }
-p { margin: 0.7em 0 1em 0; }
-a { color: #0645ad; text-decoration: none; }
-a:hover { text-decoration: underline; }
-code { font-family: sans-serif; }
-summary { font-weight: bold; cursor: pointer; }
-details[open] { background: #970302; color: #dfdedd; }
-.text-muted { color: #777; }
-@media (prefers-color-scheme: dark) {
-  a { color: #9e9eff; }
-  body { background: transparent; color: #ddd; }
-  .footer { border-top: 1px solid #444; background: #060606; }
-  #logo { filter: invert(1) hue-rotate(180deg); }
-  .text-muted { color: #888; }
-}
-
-
-
-
-
-
-Error
-
-Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1)
-
-
-If you report this error to the Wikimedia System Administrators, please include the details below.Request served via cp5029 cp5029, Varnish XID 853050550Upstream caches: cp5029 intError: 429, Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1) at Wed, 21 Jan 2026 05:08:22 GMTSensitive client informationIP address: 175.36.79.53
-
-
-"
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.b4/b/b4/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg"
  FAILED
-  Error: The remote server returned an error: (429) Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1).
+  Error: The remote server returned an error: (404) Not Found.
 [7/10] 7-spc07g7.jpg
   Source: https://upload.wikimedia.org/wikipedia/commons/e/e8/St_Pauls_Cathedral_in_London.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "
-
-
-Wikimedia Error
-
-* { margin: 0; padding: 0; }
-body { background: #fff; font: 15px/1.6 sans-serif; color: #333; }
-.content { margin: 7% auto 0; padding: 2em 1em 1em; max-width: 640px; display: flex; flex-direction: row; flex-wrap: wrap; }
-.footer { clear: both; margin-top: 14%; border-top: 1px solid #e5e5e5; background: #f9f9f9; padding: 2em 0; font-size: 0.8em; text-align: center; }
-img { margin: 0 2em 2em 0; }
-a img { border: 0; }
-h1 { margin-top: 1em; font-size: 1.2em; }
-.content-text { flex: 1; }
-p { margin: 0.7em 0 1em 0; }
-a { color: #0645ad; text-decoration: none; }
-a:hover { text-decoration: underline; }
-code { font-family: sans-serif; }
-summary { font-weight: bold; cursor: pointer; }
-details[open] { background: #970302; color: #dfdedd; }
-.text-muted { color: #777; }
-@media (prefers-color-scheme: dark) {
-  a { color: #9e9eff; }
-  body { background: transparent; color: #ddd; }
-  .footer { border-top: 1px solid #444; background: #060606; }
-  #logo { filter: invert(1) hue-rotate(180deg); }
-  .text-muted { color: #888; }
-}
-
-
-
-
-
-
-Error
-
-Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1)
-
-
-If you report this error to the Wikimedia System Administrators, please include the details below.Request served via cp5029 cp5029, Varnish XID 804072757Upstream caches: cp5029 intError: 429, Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1) at Wed, 21 Jan 2026 05:08:22 GMTSensitive client informationIP address: 175.36.79.53
-
-
-"
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.e8/e/e8/St_Pauls_Cathedral_in_London.jpg"
  FAILED
-  Error: The remote server returned an error: (429) Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1).
+  Error: The remote server returned an error: (404) Not Found.
 [8/10] 8-vam08h8.jpg
   Source: https://upload.wikimedia.org/wikipedia/commons/9/91/Victoria_and_Albert_Museum_London.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "
-
-
-Wikimedia Error
-
-* { margin: 0; padding: 0; }
-body { background: #fff; font: 15px/1.6 sans-serif; color: #333; }
-.content { margin: 7% auto 0; padding: 2em 1em 1em; max-width: 640px; display: flex; flex-direction: row; flex-wrap: wrap; }
-.footer { clear: both; margin-top: 14%; border-top: 1px solid #e5e5e5; background: #f9f9f9; padding: 2em 0; font-size: 0.8em; text-align: center; }
-img { margin: 0 2em 2em 0; }
-a img { border: 0; }
-h1 { margin-top: 1em; font-size: 1.2em; }
-.content-text { flex: 1; }
-p { margin: 0.7em 0 1em 0; }
-a { color: #0645ad; text-decoration: none; }
-a:hover { text-decoration: underline; }
-code { font-family: sans-serif; }
-summary { font-weight: bold; cursor: pointer; }
-details[open] { background: #970302; color: #dfdedd; }
-.text-muted { color: #777; }
-@media (prefers-color-scheme: dark) {
-  a { color: #9e9eff; }
-  body { background: transparent; color: #ddd; }
-  .footer { border-top: 1px solid #444; background: #060606; }
-  #logo { filter: invert(1) hue-rotate(180deg); }
-  .text-muted { color: #888; }
-}
-
-
-
-
-
-
-Error
-
-Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1)
-
-
-If you report this error to the Wikimedia System Administrators, please include the details below.Request served via cp5029 cp5029, Varnish XID 853705957Upstream caches: cp5029 intError: 429, Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1) at Wed, 21 Jan 2026 05:08:22 GMTSensitive client informationIP address: 175.36.79.53
-
-
-"
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.91/9/91/Victoria_and_Albert_Museum_London.jpg"
  FAILED
-  Error: The remote server returned an error: (429) Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1).
+  Error: The remote server returned an error: (404) Not Found.
 [9/10] 9-ley09i9.jpg
   Source: https://upload.wikimedia.org/wikipedia/commons/d/d6/London_Eye%2C_River_Thames.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "
-
-
-Wikimedia Error
-
-* { margin: 0; padding: 0; }
-body { background: #fff; font: 15px/1.6 sans-serif; color: #333; }
-.content { margin: 7% auto 0; padding: 2em 1em 1em; max-width: 640px; display: flex; flex-direction: row; flex-wrap: wrap; }
-.footer { clear: both; margin-top: 14%; border-top: 1px solid #e5e5e5; background: #f9f9f9; padding: 2em 0; font-size: 0.8em; text-align: center; }
-img { margin: 0 2em 2em 0; }
-a img { border: 0; }
-h1 { margin-top: 1em; font-size: 1.2em; }
-.content-text { flex: 1; }
-p { margin: 0.7em 0 1em 0; }
-a { color: #0645ad; text-decoration: none; }
-a:hover { text-decoration: underline; }
-code { font-family: sans-serif; }
-summary { font-weight: bold; cursor: pointer; }
-details[open] { background: #970302; color: #dfdedd; }
-.text-muted { color: #777; }
-@media (prefers-color-scheme: dark) {
-  a { color: #9e9eff; }
-  body { background: transparent; color: #ddd; }
-  .footer { border-top: 1px solid #444; background: #060606; }
-  #logo { filter: invert(1) hue-rotate(180deg); }
-  .text-muted { color: #888; }
-}
-
-
-
-
-
-
-Error
-
-Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1)
-
-
-If you report this error to the Wikimedia System Administrators, please include the details below.Request served via cp5029 cp5029, Varnish XID 857866263Upstream caches: cp5029 intError: 429, Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1) at Wed, 21 Jan 2026 05:08:22 GMTSensitive client informationIP address: 175.36.79.53
-
-
-"
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.d6/d/d6/London_Eye%2C_River_Thames.jpg"
  FAILED
-  Error: The remote server returned an error: (429) Too many requests - please contact noc@wikimedia.org to discuss a less disruptive approach (0c640b1).
+  Error: The remote server returned an error: (404) Not Found.
 [10/10] 10-scm10j0.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/a/a5/London_Science_Museum.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/1/15/Science_Museum_London_06.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.a5/a/a5/London_Science_Museum.jpg"
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.15/1/15/Science_Museum_London_06.jpg"
  FAILED
   Error: The remote server returned an error: (404) Not Found.
 ========================================
@@ -256,5 +92,5 @@ CDN location:  https://cdn.funmap.com/post-images/2026-01/
 Log saved to: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-log.txt
 **********************
 Windows PowerShell transcript end
-End time: 20260121160823
+End time: 20260121161035
 **********************
