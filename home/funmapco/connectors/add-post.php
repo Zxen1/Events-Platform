@@ -318,15 +318,15 @@ if (is_array($fieldsArr)) {
 
 if ($hasPaymentStatus && $hasModerationStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, moderation_status, payment_status, checkout_title) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, moderation_status, payment_status, checkout_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   );
 } elseif ($hasPaymentStatus) {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_title) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, payment_status, checkout_key) VALUES (?, ?, ?, ?, ?, ?, ?)"
   );
 } else {
   $stmt = $mysqli->prepare(
-    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_title) VALUES (?, ?, ?, ?, ?, ?)"
+    "INSERT INTO posts (member_id, member_name, subcategory_key, loc_qty, visibility, checkout_key) VALUES (?, ?, ?, ?, ?, ?)"
   );
 }
 
