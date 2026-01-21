@@ -141,6 +141,12 @@
         border-radius: 5px;
       }
 
+      .sitemap-portrait-wrap {
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+      }
+
       .sitemap-portrait-body {
         display: flex;
         flex-direction: column;
@@ -151,58 +157,167 @@
         box-sizing: border-box;
       }
 
+      .sitemap-dims {
+        display: flex;
+        flex-direction: column;
+        font-size: 11px;
+        opacity: 0.7;
+      }
+
+      .sitemap-dims .sitemap-dim:first-child {
+        height: var(--sitemap-header-h);
+        line-height: var(--sitemap-header-h);
+      }
+
+      .sitemap-dims .sitemap-dim:not(:first-child) {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+      }
+
+      .sitemap-title {
+        font-size: 16px;
+        margin-bottom: 6px;
+      }
+
+      .sitemap-intro {
+        font-size: 13px;
+        margin-bottom: 12px;
+        opacity: 0.8;
+      }
+
+      .sitemap-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+        opacity: 0.7;
+      }
+
+      .sitemap-layout-col {
+        margin-bottom: 12px;
+      }
+
+      .sitemap-label {
+        font-size: 13px;
+        margin-bottom: 6px;
+        opacity: 0.7;
+      }
+
+      .sitemap-sections-header {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+
+      .sitemap-section {
+        margin-bottom: 10px;
+      }
+
+      .sitemap-section-title {
+        height: 36px;
+        line-height: 36px;
+        font-size: 13px;
+        padding: 0 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
       /* Section colors */
-      .sitemap-btn-header { background: #64748b; }
-      .sitemap-btn-map { background: #047857; }
+      .sitemap-btn-header { background: #78716c; }
+      .sitemap-btn-map { background: #166534; }
       .sitemap-btn-posts { background: #1e40af; }
       .sitemap-btn-recent { background: #2563eb; }
       .sitemap-btn-filter { background: #0891b2; }
       .sitemap-btn-member { background: #7c3aed; }
       .sitemap-btn-admin { background: #5b21b6; }
-      .sitemap-btn-marquee { background: #e11d48; }
+      .sitemap-btn-marquee { background: #9f1239; }
     </style>
   </head>
   <body>
     <div class="sitemap-root">
       <div class="sitemap-wrap">
-        <div class="sitemap-viewport sitemap-viewport--landscape" aria-label="Landscape viewport (2:1)">
-          <div class="sitemap-viewport-header">
-            <div class="sitemap-header-btn sitemap-btn-header">Header</div>
-          </div>
-          <div class="sitemap-viewport-body">
-            <div class="sitemap-landscape-panels">
-              <div class="sitemap-landscape-panel-left">
-                <div class="sitemap-panel-item sitemap-btn-posts">Posts</div>
-                <div class="sitemap-panel-item sitemap-btn-recent">Recent</div>
-                <div class="sitemap-panel-item sitemap-btn-filter">Filter</div>
-              </div>
-              <div class="sitemap-landscape-map-gap">
-                <div class="sitemap-panel-item sitemap-btn-map">Map</div>
-              </div>
-              <div class="sitemap-landscape-panel-right">
-                <div class="sitemap-panel-item sitemap-btn-member">Member</div>
-                <div class="sitemap-panel-item sitemap-btn-admin">Admin</div>
-                <div class="sitemap-panel-item sitemap-btn-marquee">Marquee</div>
+        <div class="sitemap-title">Sitemap</div>
+        <div class="sitemap-intro">Panel layout reference for desktop and mobile. Click a section below for details.</div>
+
+        <div class="sitemap-layout-col">
+          <div class="sitemap-label">Landscape</div>
+          <div class="sitemap-viewport sitemap-viewport--landscape" aria-label="Landscape viewport (2:1)">
+            <div class="sitemap-viewport-header">
+              <div class="sitemap-header-btn sitemap-btn-header">Header</div>
+            </div>
+            <div class="sitemap-viewport-body">
+              <div class="sitemap-landscape-panels">
+                <div class="sitemap-landscape-panel-left">
+                  <div class="sitemap-panel-item sitemap-btn-posts">Posts</div>
+                  <div class="sitemap-panel-item sitemap-btn-recent">Recent</div>
+                  <div class="sitemap-panel-item sitemap-btn-filter">Filter</div>
+                </div>
+                <div class="sitemap-landscape-map-gap">
+                  <div class="sitemap-panel-item sitemap-btn-map">Map</div>
+                </div>
+                <div class="sitemap-landscape-panel-right">
+                  <div class="sitemap-panel-item sitemap-btn-marquee">Marquee</div>
+                  <div class="sitemap-panel-item sitemap-btn-member">Member</div>
+                  <div class="sitemap-panel-item sitemap-btn-admin">Admin</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="sitemap-spacer"></div>
+        <div class="sitemap-layout-col">
+          <div class="sitemap-label">Portrait</div>
+          <div class="sitemap-portrait-wrap">
+            <div class="sitemap-viewport sitemap-viewport--portrait" aria-label="Portrait viewport (1:2)">
+              <div class="sitemap-viewport-header">
+                <div class="sitemap-header-btn sitemap-btn-header">Header</div>
+              </div>
+              <div class="sitemap-portrait-body">
+                <div class="sitemap-portrait-item sitemap-btn-map">Map</div>
+                <div class="sitemap-portrait-item sitemap-btn-posts">Posts Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-recent">Recent Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-filter">Filter Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-marquee">Marquee Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-member">Member Panel</div>
+                <div class="sitemap-portrait-item sitemap-btn-admin">Admin Panel</div>
+              </div>
+            </div>
+            <div class="sitemap-dims">
+              <div class="sitemap-dim">56px height</div>
+              <div class="sitemap-dim">Full Screen</div>
+              <div class="sitemap-dim">380px</div>
+              <div class="sitemap-dim">530px</div>
+              <div class="sitemap-dim">530px</div>
+              <div class="sitemap-dim">440px</div>
+              <div class="sitemap-dim">440px</div>
+              <div class="sitemap-dim">440px</div>
+            </div>
+          </div>
+        </div>
 
-        <div class="sitemap-viewport sitemap-viewport--portrait" aria-label="Portrait viewport (1:2)">
-          <div class="sitemap-viewport-header">
-            <div class="sitemap-header-btn sitemap-btn-header">Header</div>
-          </div>
-          <div class="sitemap-portrait-body">
-            <div class="sitemap-portrait-item sitemap-btn-map">Map</div>
-            <div class="sitemap-portrait-item sitemap-btn-filter">Filter</div>
-            <div class="sitemap-portrait-item sitemap-btn-posts">Posts</div>
-            <div class="sitemap-portrait-item sitemap-btn-recent">Recent</div>
-            <div class="sitemap-portrait-item sitemap-btn-marquee">Marquee</div>
-            <div class="sitemap-portrait-item sitemap-btn-member">Member</div>
-            <div class="sitemap-portrait-item sitemap-btn-admin">Admin</div>
-          </div>
+        <div class="sitemap-sections-header">Section Details</div>
+
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-header">Header</div>
+        </div>
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-map">Map</div>
+        </div>
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-posts">Posts</div>
+        </div>
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-recent">Recent</div>
+        </div>
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-filter">Filter</div>
+        </div>
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-marquee">Marquee</div>
+        </div>
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-member">Member</div>
+        </div>
+        <div class="sitemap-section">
+          <div class="sitemap-section-title sitemap-btn-admin">Admin</div>
         </div>
       </div>
     </div>
