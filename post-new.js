@@ -918,10 +918,34 @@ const PostModule = (function() {
 
     return fetch('/gateway.php?action=get-posts&' + requestKey, postsAbort ? { signal: postsAbort.signal } : undefined)
       .then(function(response) {
+        // Check if request was aborted before processing
+        if (postsAbort && postsAbort.signal && postsAbort.signal.aborted) {
+          var abortErr = new Error('Aborted');
+          abortErr.name = 'AbortError';
+          throw abortErr;
+        }
         if (!response.ok) {
           throw new Error('Failed to load posts: ' + response.status);
         }
-        return response.json();
+        // Get text first to diagnose empty/invalid responses
+        return response.text().then(function(text) {
+          // Check abort again after text() completes
+          if (postsAbort && postsAbort.signal && postsAbort.signal.aborted) {
+            var abortErr2 = new Error('Aborted');
+            abortErr2.name = 'AbortError';
+            throw abortErr2;
+          }
+          if (!text || text.trim() === '') {
+            console.error('[Post] Server returned empty response for:', requestKey);
+            throw new Error('Server returned empty response');
+          }
+          try {
+            return JSON.parse(text);
+          } catch (parseErr) {
+            console.error('[Post] JSON parse failed. Response text (first 500 chars):', text.substring(0, 500));
+            throw parseErr;
+          }
+        });
       })
       .then(function(data) {
         // Ignore stale responses
