@@ -293,23 +293,43 @@ $postColumns = fetch_table_columns($mysqli, 'posts');
 $hasPaymentStatus = in_array('payment_status', $postColumns, true);
 $hasModerationStatus = in_array('moderation_status', $postColumns, true);
 
-// Extract checkout_title from fields (post-level, not location-specific)
-$checkoutTitle = null;
+// Extract checkout_key from fields (post-level, not location-specific)
+$checkoutKey = null;
 $fieldsArr = $data['fields'] ?? [];
 if (is_array($fieldsArr)) {
   foreach ($fieldsArr as $fld) {
     if (!is_array($fld)) continue;
     $fldKey = isset($fld['key']) ? strtolower(trim((string)$fld['key'])) : '';
     if ($fldKey === 'checkout') {
+      $optionId = null;
       if (!empty($fld['value'])) {
         $val = $fld['value'];
         if (is_array($val)) {
-          $checkoutTitle = isset($val['option_id']) ? (string)$val['option_id'] : (isset($val['checkout_title']) ? (string)$val['checkout_title'] : 'Array');
+          // Check for checkout_key first, then option_id
+          if (!empty($val['checkout_key'])) {
+            $checkoutKey = (string)$val['checkout_key'];
+          } elseif (!empty($val['option_id'])) {
+            $optionId = (int)$val['option_id'];
+          }
         } else {
-          $checkoutTitle = (string)$val;
+          // Could be checkout_key string directly
+          $checkoutKey = (string)$val;
         }
       } elseif (!empty($fld['option_id'])) {
-        $checkoutTitle = (string)$fld['option_id'];
+        $optionId = (int)$fld['option_id'];
+      }
+      // If we have option_id but not checkout_key, look it up
+      if ($checkoutKey === null && $optionId !== null) {
+        $coStmt = $mysqli->prepare("SELECT checkout_key FROM checkout_options WHERE id = ? LIMIT 1");
+        if ($coStmt) {
+          $coStmt->bind_param('i', $optionId);
+          $coStmt->execute();
+          $coResult = $coStmt->get_result();
+          if ($coRow = $coResult->fetch_assoc()) {
+            $checkoutKey = $coRow['checkout_key'];
+          }
+          $coStmt->close();
+        }
       }
       break;
     }
@@ -335,20 +355,20 @@ if (!$stmt) {
 }
 
 if ($hasPaymentStatus && $hasModerationStatus) {
-  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutTitle(s)
-  if (!bind_statement_params($stmt, 'ississss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutTitle)) {
+  // 8 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), moderationStatus(s), paymentStatus(s), checkoutKey(s)
+  if (!bind_statement_params($stmt, 'ississss', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $moderationStatus, $paymentStatus, $checkoutKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } elseif ($hasPaymentStatus) {
-  // 7 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), paymentStatus(s), checkoutTitle(s)
-  if (!bind_statement_params($stmt, 'ississs', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $paymentStatus, $checkoutTitle)) {
+  // 7 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), paymentStatus(s), checkoutKey(s)
+  if (!bind_statement_params($stmt, 'ississs', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $paymentStatus, $checkoutKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
 } else {
-  // 6 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), checkoutTitle(s)
-  if (!bind_statement_params($stmt, 'ississ', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $checkoutTitle)) {
+  // 6 params: memberId(i), memberName(s), subcategoryKey(s), locQty(i), visibility(s), checkoutKey(s)
+  if (!bind_statement_params($stmt, 'ississ', $memberId, $memberName, $subcategoryKey, $locQty, $visibility, $checkoutKey)) {
     $stmt->close();
     abort_with_error($mysqli, 500, 'Failed to bind post parameters.', $transactionActive);
   }
