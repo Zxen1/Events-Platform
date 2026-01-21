@@ -2735,9 +2735,33 @@ const PostModule = (function() {
         
         // Initialize SessionMenuComponent on first open
         if (!isExpanded && !sessionMenuInstance && calendarContainer && window.SessionMenuComponent) {
-          // Get sessions from first map card
+          // Get sessions from first map card and flatten the nested times structure
           var currentMapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
-          var sessions = (currentMapCard && Array.isArray(currentMapCard.sessions)) ? currentMapCard.sessions : [];
+          var rawSessions = (currentMapCard && Array.isArray(currentMapCard.sessions)) ? currentMapCard.sessions : [];
+          
+          // Flatten sessions: { date, times: [{time, ticket_group_key}] } -> { date, time, ticket_group_key }
+          var sessions = [];
+          rawSessions.forEach(function(entry) {
+            if (!entry) return;
+            var dateVal = entry.date || entry.session_date || '';
+            var times = Array.isArray(entry.times) ? entry.times : [];
+            if (times.length > 0) {
+              times.forEach(function(t) {
+                sessions.push({
+                  date: dateVal,
+                  time: t.time || t.session_time || '',
+                  ticket_group_key: t.ticket_group_key || ''
+                });
+              });
+            } else if (entry.time || entry.session_time) {
+              // Already flat format
+              sessions.push({
+                date: dateVal,
+                time: entry.time || entry.session_time || '',
+                ticket_group_key: entry.ticket_group_key || ''
+              });
+            }
+          });
           
           sessionMenuInstance = SessionMenuComponent.create(calendarContainer, {
             sessions: sessions,
