@@ -2596,8 +2596,8 @@ const PostModule = (function() {
     });
     
     // If no thumbnails but hero has an image, use that
-    if (galleryImages.length === 0 && heroImg && heroImg.dataset.fullUrl) {
-      galleryImages.push(heroImg.dataset.fullUrl);
+    if (galleryImages.length === 0 && heroImg && heroImg.dataset.full) {
+      galleryImages.push(heroImg.dataset.full);
     }
     
     // Track current gallery index
