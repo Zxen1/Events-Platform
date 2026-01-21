@@ -408,23 +408,48 @@ const PostModule = (function() {
           }
         } else {
           // BELOW BREAKPOINT: Clusters only.
-          // Performance/Interaction Rule: PURGE all high-zoom data immediately.
-          // No loading, no ghosting, no interaction handlers.
-          if (window.MapModule) {
-            if (typeof MapModule.updateHighDensityData === 'function') {
-              MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+          // Only clear if map is NOT animating (avoid clearing mid-flyTo)
+          var mapInstance = window.MapModule && MapModule.getMap ? MapModule.getMap() : null;
+          var isAnimating = mapInstance && (
+            (typeof mapInstance.isMoving === 'function' && mapInstance.isMoving()) ||
+            (typeof mapInstance.isEasing === 'function' && mapInstance.isEasing())
+          );
+          
+          if (!isAnimating) {
+            // 1. Close any open post
+            var allOpenPosts = document.querySelectorAll('.open-post[data-id]');
+            allOpenPosts.forEach(function(openEl) {
+              var pid = openEl.getAttribute('data-id');
+              if (pid) closePost(pid);
+            });
+            
+            // 2. Force map mode (closes posts panel with animation)
+            if (currentMode === 'posts') {
+              forceMapMode();
             }
-            if (typeof MapModule.clearAllMapCardMarkers === 'function') {
-              MapModule.clearAllMapCardMarkers();
+            
+            // 3. Close recent panel if open
+            if (recentPanelEl && recentPanelContentEl) {
+              togglePanel(recentPanelEl, recentPanelContentEl, 'recent', false);
             }
+            
+            // 4. Clear map data
+            if (window.MapModule) {
+              if (typeof MapModule.updateHighDensityData === 'function') {
+                MapModule.updateHighDensityData({ type: 'FeatureCollection', features: [] });
+              }
+              if (typeof MapModule.clearAllMapCardMarkers === 'function') {
+                MapModule.clearAllMapCardMarkers();
+              }
+            }
+            lastRenderedVenueMarkerSigByKey = {};
+            
+            // 5. Clear side panel list
+            renderPostList([]);
+            
+            // 6. Reset bounds key
+            lastLoadedBoundsKey = '';
           }
-          lastRenderedVenueMarkerSigByKey = {};
-          
-          // Clear side panel list (UI requirement: low zoom = clusters only)
-          renderPostList([]);
-          
-          // Reset bounds key so that when we zoom back in, it triggers a fresh load.
-          lastLoadedBoundsKey = '';
         }
       }
     });

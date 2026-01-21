@@ -3363,7 +3363,14 @@ const MapControlRowComponent = (function(){
             geolocateBtnBaseClass: prefix + '-geolocate',
             geolocateIconBaseClass: prefix + '-geolocate-icon',
             compassBtn: compassBtn,
-            map: map
+            map: map,
+            geocoder: {
+                clear: function() {
+                    input.value = '';
+                    clearBtn.style.display = 'none';
+                    closeDropdown();
+                }
+            }
         };
         
         // Dropdown keyboard navigation
@@ -3469,6 +3476,11 @@ const MapControlRowComponent = (function(){
                                     var sw = place.viewport.getSouthWest();
                                     result.bbox = [sw.lng(), sw.lat(), ne.lng(), ne.lat()];
                                 }
+                                
+                                // Clear input after arriving at destination
+                                input.value = '';
+                                clearBtn.style.display = 'none';
+                                closeDropdown();
                                 
                                 onResult(result);
                             }
@@ -3590,6 +3602,11 @@ const MapControlRowComponent = (function(){
         // Geolocate button
         geolocateBtn.addEventListener('click', function() {
             var currentMap = getMapInstance();
+            
+            // Clear search input when geolocating
+            input.value = '';
+            clearBtn.style.display = 'none';
+            closeDropdown();
             
             // If we already have cached location, use it instantly
             if (cachedLocation) {
