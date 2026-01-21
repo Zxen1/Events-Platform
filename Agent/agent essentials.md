@@ -218,6 +218,10 @@ Files ending in `-new` or `*-new.*` are the new site files. Work targets these f
 
 UI sections are called **panels** (e.g., "Recent panel", "Post panel").
 
+### Platform Overview
+
+Review `sitemap.html` to understand the platform structure. It shows the layout for desktop (landscape) and mobile (portrait), lists all 8 panels, and documents the elements within each panel.
+
 ---
 
 ## IF UNSURE
