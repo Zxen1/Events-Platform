@@ -967,6 +967,18 @@ const SessionMenuComponent = (function() {
                dateObj.getDate() === today.getDate();
     }
     
+    // Helper to get date from session (supports both {date} and {session_date} formats)
+    function getSessionDate(session) {
+        if (!session) return '';
+        return session.date || session.session_date || '';
+    }
+    
+    // Helper to get time from session (supports both {time} and {session_time} formats)
+    function getSessionTime(session) {
+        if (!session) return '';
+        return session.time || session.session_time || '';
+    }
+    
     /**
      * Create a session menu inside a container
      * @param {HTMLElement} containerEl - Container element
@@ -1003,9 +1015,10 @@ const SessionMenuComponent = (function() {
             return sessions
                 .map(function(s, i) { return { session: s, index: i }; })
                 .filter(function(entry) {
-                    if (!entry.session || !entry.session.date) return false;
+                    var sessionDate = getSessionDate(entry.session);
+                    if (!entry.session || !sessionDate) return false;
                     if (showExpired) return true;
-                    var parsed = parseSessionDate(entry.session.date);
+                    var parsed = parseSessionDate(sessionDate);
                     return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
                 });
         }
@@ -1016,8 +1029,9 @@ const SessionMenuComponent = (function() {
         function buildAllowedSet() {
             var allowed = new Set();
             visibleSessions.forEach(function(entry) {
-                if (entry.session && entry.session.date) {
-                    allowed.add(entry.session.date);
+                var sessionDate = getSessionDate(entry.session);
+                if (entry.session && sessionDate) {
+                    allowed.add(sessionDate);
                 }
             });
             return allowed;
@@ -1030,7 +1044,7 @@ const SessionMenuComponent = (function() {
             if (!visibleSessions.length) return { minDate: null, maxDate: null, months: [] };
             
             var dates = visibleSessions
-                .map(function(entry) { return parseSessionDate(entry.session.date); })
+                .map(function(entry) { return parseSessionDate(getSessionDate(entry.session)); })
                 .filter(function(d) { return d instanceof Date && !Number.isNaN(d.getTime()); });
             
             if (!dates.length) return { minDate: null, maxDate: null, months: [] };
@@ -1067,7 +1081,7 @@ const SessionMenuComponent = (function() {
                 var btn = document.createElement('button');
                 btn.className = 'component-sessionmenu-timepopup-button';
                 btn.dataset.index = m.index;
-                btn.textContent = m.session.time || '';
+                btn.textContent = getSessionTime(m.session) || '';
                 btn.addEventListener('click', function() {
                     selectSession(m.index);
                     popup.remove();
@@ -1143,7 +1157,7 @@ const SessionMenuComponent = (function() {
                 d.classList.remove('selected');
             });
             if (selectedIndex !== null && sessions[selectedIndex]) {
-                var iso = sessions[selectedIndex].date;
+                var iso = getSessionDate(sessions[selectedIndex]);
                 var cell = calendarEl.querySelector('.calendar-day[data-iso="' + iso + '"]');
                 if (cell) cell.classList.add('selected');
             }
@@ -1192,7 +1206,7 @@ const SessionMenuComponent = (function() {
                         cell.addEventListener('click', function() {
                             var cellIso = this.dataset.iso;
                             var matches = visibleSessions.filter(function(entry) {
-                                return entry.session.date === cellIso;
+                                return getSessionDate(entry.session) === cellIso;
                             });
                             // Always show time popup, even for single session
                             if (matches.length >= 1) {

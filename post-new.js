@@ -2735,8 +2735,9 @@ const PostModule = (function() {
         
         // Initialize SessionMenuComponent on first open
         if (!isExpanded && !sessionMenuInstance && calendarContainer && window.SessionMenuComponent) {
-          // Get sessions from current location (loc0)
-          var sessions = (loc0 && loc0.sessions) ? loc0.sessions : [];
+          // Get sessions from first map card
+          var currentMapCard = (post.map_cards && post.map_cards.length) ? post.map_cards[0] : null;
+          var sessions = (currentMapCard && Array.isArray(currentMapCard.sessions)) ? currentMapCard.sessions : [];
           
           sessionMenuInstance = SessionMenuComponent.create(calendarContainer, {
             sessions: sessions,
@@ -2745,8 +2746,10 @@ const PostModule = (function() {
               // Update session info display
               var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
               if (sessionInfo && session) {
-                var dateStr = session.date ? formatDateShort(session.date) : '';
-                var timeStr = session.time ? formatTimeShort(session.time) : '';
+                var sDate = session.date || session.session_date || '';
+                var sTime = session.time || session.session_time || '';
+                var dateStr = sDate ? formatDateShort(sDate) : '';
+                var timeStr = sTime ? formatTimeShort(sTime) : '';
                 var displayText = dateStr + (timeStr ? ' ' + timeStr : '');
                 sessionInfo.innerHTML = '<div>📅 ' + escapeHtml(displayText) + '</div>';
               }
@@ -2764,8 +2767,10 @@ const PostModule = (function() {
               var btn = document.createElement('button');
               btn.className = 'open-post-button-sessionopt';
               btn.dataset.index = idx;
-              var dateStr = session.date ? formatDateShort(session.date) : '';
-              var timeStr = session.time ? formatTimeShort(session.time) : '';
+              var sDate = session.date || session.session_date || '';
+              var sTime = session.time || session.session_time || '';
+              var dateStr = sDate ? formatDateShort(sDate) : '';
+              var timeStr = sTime ? formatTimeShort(sTime) : '';
               btn.innerHTML = '<span class="open-post-text-sessiondate">' + escapeHtml(dateStr) + '</span>' +
                               '<span class="open-post-text-sessiontime">' + escapeHtml(timeStr) + '</span>';
               btn.addEventListener('click', function() {
