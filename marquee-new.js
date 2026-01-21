@@ -522,45 +522,36 @@ const MarqueeModule = (function() {
 // Register with App
 App.registerModule('marquee', MarqueeModule);
 
-// Lazy initialization - only init when width is 1920+, posts are loaded, and zoom meets threshold
+// Lazy initialization - only init when width is 1900+, posts mode active, and posts loaded
 (function() {
     var bootloaded = false;
-    var lastPosts = null; // Memory for posts even when narrow
+    var lastPosts = null;
+    var currentMode = 'map';
     
     function isWideEnough() {
         return window.innerWidth >= 1900;
-    }
-
-    function getMinZoom() {
-        return (window.App && typeof App.getConfig === 'function') ? App.getConfig('postsLoadZoom') : 8;
     }
     
     function lazyInit() {
         if (bootloaded || !isWideEnough()) return;
         MarqueeModule.init();
         bootloaded = true;
-        // If we have pending posts, apply them immediately
         if (lastPosts && lastPosts.length > 0) {
             MarqueeModule.updatePosts(lastPosts);
         }
-    }
-    
-    function isPostsMode() {
-        return document.body.classList.contains('mode-posts');
     }
     
     function checkAndShow() {
         if (!bootloaded) return;
         
         // Must be: wide enough + posts mode + has posts
-        if (isWideEnough() && isPostsMode() && lastPosts && lastPosts.length > 0) {
+        if (isWideEnough() && currentMode === 'posts' && lastPosts && lastPosts.length > 0) {
             MarqueeModule.show();
         } else {
             MarqueeModule.hide();
         }
     }
     
-    // Listen for posts being loaded/filtered
     if (window.App && App.on) {
         App.on('filter:applied', function(data) {
             if (data && Array.isArray(data.marqueePosts)) {
@@ -573,12 +564,13 @@ App.registerModule('marquee', MarqueeModule);
             checkAndShow();
         });
         
-        // Listen for mode changes (map/posts toggle)
-        App.on('mode:changed', function() {
+        App.on('mode:changed', function(data) {
+            if (data && data.mode) {
+                currentMode = data.mode;
+            }
             checkAndShow();
         });
 
-        // Watch window resize
         window.addEventListener('resize', function() {
             if (!bootloaded && lastPosts && lastPosts.length > 0 && isWideEnough()) {
                 lazyInit();
