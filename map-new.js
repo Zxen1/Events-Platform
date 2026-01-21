@@ -677,6 +677,9 @@ const MapModule = (function() {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
       }
       
       /* Venue Text (big cards only) */
@@ -688,6 +691,9 @@ const MapModule = (function() {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
       }
     `;
     
@@ -899,9 +905,6 @@ const MapModule = (function() {
     // Emit ready event immediately (other modules may depend on this)
     App.emit('map:ready', { map });
     
-    // Inject map card CSS (uses admin settings for pill images)
-    injectMapCardStyles();
-    
     // Defer non-critical operations to next frame to avoid blocking render loop
     requestAnimationFrame(function() {
       // Initialize controls (deferred)
@@ -909,6 +912,9 @@ const MapModule = (function() {
       
       // Initialize systems that depend on admin settings/breakpoint
       App.whenStartupSettingsReady().then(function() {
+        // Inject map card CSS AFTER settings are ready (needs pill image URLs)
+        injectMapCardStyles();
+        
         // Initialize clusters
         initClusters();
         

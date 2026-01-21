@@ -88,46 +88,121 @@ const MarqueeModule = (function() {
   }
 
   /* --------------------------------------------------------------------------
-     VISIBILITY
+     VISIBILITY (matches post/recent panel togglePanel pattern)
      -------------------------------------------------------------------------- */
   
+  // Animation state tracking (same pattern as post-new.js panelMotion)
+  let motionToken = 0;
+  let hideHandler = null;
+  let hideTimeoutId = 0;
+  
+  function clearPendingHide() {
+    if (hideHandler) {
+      contentEl.removeEventListener('transitionend', hideHandler);
+      hideHandler = null;
+    }
+    if (hideTimeoutId) {
+      clearTimeout(hideTimeoutId);
+      hideTimeoutId = 0;
+    }
+  }
+  
+  function getTransitionDurationMs() {
+    var durationMs = 300;
+    try {
+      var cs = window.getComputedStyle(contentEl);
+      var dur = (cs && cs.transitionDuration) ? String(cs.transitionDuration).split(',')[0].trim() : '';
+      if (dur.endsWith('ms')) durationMs = Math.max(0, parseFloat(dur) || 0);
+      else if (dur.endsWith('s')) durationMs = Math.max(0, (parseFloat(dur) || 0) * 1000);
+    } catch (e) {
+      // ignore
+    }
+    return Math.max(0, Math.ceil(durationMs));
+  }
+  
   /**
-   * Show the marquee panel
+   * Show the marquee panel (same pattern as togglePanel in post-new.js)
    */
   function show() {
     if (!marqueeEl || !contentEl) return;
     if (isVisible) return;
     
+    clearPendingHide();
+    motionToken += 1;
+    var token = motionToken;
+    
+    // Show outer container
     marqueeEl.classList.add('marquee--show');
-    contentEl.classList.add('marquee-content--visible');
-    isVisible = true;
+    marqueeEl.setAttribute('aria-hidden', 'false');
     
-    // Start rotation if we have posts
-    if (posts.length > 0 && !rotationTimer) {
-      startRotation();
-    }
+    // Ensure we start from hidden/off-screen state
+    contentEl.classList.remove('marquee-content--visible');
+    contentEl.classList.add('marquee-content--hidden');
     
-    App.emit('marquee:shown');
+    // Force reflow so transition works
+    try { void contentEl.offsetWidth; } catch (e) {}
+    
+    requestAnimationFrame(function() {
+      if (motionToken !== token) return;
+      contentEl.classList.remove('marquee-content--hidden');
+      contentEl.classList.add('marquee-content--visible');
+      isVisible = true;
+      
+      // Start rotation if we have posts
+      if (posts.length > 0 && !rotationTimer) {
+        startRotation();
+      }
+      
+      App.emit('marquee:shown');
+    });
   }
   
   /**
-   * Hide the marquee panel
+   * Hide the marquee panel (same pattern as togglePanel in post-new.js)
    */
   function hide() {
     if (!marqueeEl || !contentEl) return;
     if (!isVisible) return;
     
-    contentEl.classList.remove('marquee-content--visible');
+    motionToken += 1; // invalidates any pending open RAF
+    clearPendingHide();
+    
+    var wasShown = marqueeEl.classList.contains('marquee--show');
+    var wasVisible = contentEl.classList.contains('marquee-content--visible');
+    
+    marqueeEl.setAttribute('aria-hidden', 'true');
     stopRotation();
     isVisible = false;
     
-    setTimeout(function() {
+    // If not shown/visible, nothing to animate
+    if (!wasShown || !wasVisible) {
+      contentEl.classList.remove('marquee-content--visible');
+      contentEl.classList.add('marquee-content--hidden');
+      marqueeEl.classList.remove('marquee--show');
+      App.emit('marquee:hidden');
+      return;
+    }
+    
+    // Start slide-out
+    contentEl.classList.remove('marquee-content--visible');
+    contentEl.classList.add('marquee-content--hidden');
+    
+    // After transition, remove outer show class
+    var duration = getTransitionDurationMs();
+    hideHandler = function(e) {
+      if (e && e.target !== contentEl) return;
+      clearPendingHide();
       if (!isVisible) {
         marqueeEl.classList.remove('marquee--show');
       }
-    }, 300);
+      App.emit('marquee:hidden');
+    };
+    contentEl.addEventListener('transitionend', hideHandler, { once: true });
     
-    App.emit('marquee:hidden');
+    // Fallback timeout
+    hideTimeoutId = setTimeout(function() {
+      hideHandler({ target: contentEl });
+    }, duration + 100);
   }
   
   /**
