@@ -1,11 +1,11 @@
-post_id,source_url,target_filename,author,license
-1,https://commons.wikimedia.org/wiki/Special:FilePath/British_Museum_2018.jpg,1-bm01a1.jpg,Tiia Monto,CC BY-SA 3.0
-2,https://commons.wikimedia.org/wiki/Special:FilePath/Natural_History_Museum_London_UK.jpg,2-nhm02b2.jpg,Chiuchihmin,CC BY-SA 3.0
-3,https://commons.wikimedia.org/wiki/Special:FilePath/Tower_of_London_48.jpg,3-tol03c3.jpg,Interfase,CC BY-SA 4.0
-4,https://commons.wikimedia.org/wiki/Special:FilePath/Westminster-Abbey.JPG,4-wab04d4.jpg,Σπάρτακος,CC BY-SA 3.0
-5,https://commons.wikimedia.org/wiki/Special:FilePath/Tate_Modern_exterior_%282009%29.jpg,5-ttm05e5.jpg,Wikimedia Commons,CC BY-SA 3.0
-6,https://commons.wikimedia.org/wiki/Special:FilePath/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg,6-bkp06f6.jpg,Diliff,CC BY-SA 3.0
-7,https://commons.wikimedia.org/wiki/Special:FilePath/St_Pauls_Cathedral_in_London.jpg,7-spc07g7.jpg,Peter Rimar,CC BY-SA 4.0
-8,https://commons.wikimedia.org/wiki/Special:FilePath/Victoria_and_Albert_Museum_London.jpg,8-vam08h8.jpg,Wikimedia Commons,CC BY-SA 4.0
-9,https://commons.wikimedia.org/wiki/Special:FilePath/London_Eye%2C_River_Thames.jpg,9-ley09i9.jpg,Wikimedia Commons,CC BY-SA 4.0
-10,https://commons.wikimedia.org/wiki/Special:FilePath/Science_Museum_London_06.jpg,10-scm10j0.jpg,Wikimedia Commons,CC BY-SA 4.0
+source_url,target_filename,author,license
+https://upload.wikimedia.org/wikipedia/commons/3/3a/British_Museum_from_NE_2.JPG,1-British_Museum_2018.jpg,Ham,CC BY-SA 3.0
+https://commons.wikimedia.org/wiki/Special:FilePath/Natural_History_Museum_London_Jan_2006.jpg,2-Natural_History_Museum_London_UK.jpg,Diliff,CC BY-SA 3.0
+https://commons.wikimedia.org/wiki/Special:FilePath/Tower_of_London_viewed_from_the_River_Thames.jpg,3-Tower_of_London_48.jpg,Bob Collowân,CC BY-SA 3.0
+https://commons.wikimedia.org/wiki/Special:FilePath/Westminster_Abbey_-_West_Door.jpg,4-Westminster-Abbey.jpg,Σπάρτακος,CC BY-SA 3.0
+https://commons.wikimedia.org/wiki/Special:FilePath/Tate_Modern_-_Bankside_Power_Station.jpg,5-Tate_Modern_exterior.jpg,Fred Romero,CC BY 2.0
+https://commons.wikimedia.org/wiki/Special:FilePath/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg,6-Buckingham_Palace_from_gardens.jpg,Diliff,CC BY-SA 3.0
+https://commons.wikimedia.org/wiki/Special:FilePath/St_Paul%27s_Cathedral%2C_London%2C_England_-_Jan_2010.jpg,7-St_Pauls_Cathedral_in_London.jpg,David Iliff,CC BY-SA 3.0
+https://upload.wikimedia.org/wikipedia/commons/b/bb/Victoria_%26_Albert_Museum_Entrance%2C_London%2C_UK_-_Diliff.jpg,8-Victoria_and_Albert_Museum_London.jpg,Diliff,CC BY-SA 3.0
+https://commons.wikimedia.org/wiki/Special:FilePath/London_Eye_Twilight_April_2006.jpg,9-London_Eye_River_Thames.jpg,Diliff,CC BY-SA 2.5
+https://commons.wikimedia.org/wiki/Special:FilePath/Science_Museum%2C_Exhibition_Road%2C_London_SW7_-_geograph.org.uk_-_1125595.jpg,10-Science_Museum_London.jpg,Stacey Harris,CC BY-SA 2.0
