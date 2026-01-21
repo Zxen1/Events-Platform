@@ -1,11 +1,11 @@
 post_id,source_url,target_filename,author,license
-1,https://upload.wikimedia.org/wikipedia/commons/d/dd/British_Museum_2018.jpg,1-bm01a1.jpg,Tiia Monto,CC BY-SA 3.0
-2,https://upload.wikimedia.org/wikipedia/commons/c/c1/Natural_History_Museum_London_UK.jpg,2-nhm02b2.jpg,Chiuchihmin,CC BY-SA 3.0
-3,https://upload.wikimedia.org/wikipedia/commons/7/72/Tower_of_London_48.jpg,3-tol03c3.jpg,Interfase,CC BY-SA 4.0
-4,https://upload.wikimedia.org/wikipedia/commons/b/ba/Westminster-Abbey.JPG,4-wab04d4.jpg,Σπάρτακος,CC BY-SA 3.0
-5,https://upload.wikimedia.org/wikipedia/commons/9/90/Tate_Modern_exterior_%282009%29.jpg,5-ttm05e5.jpg,Wikimedia Commons,CC BY-SA 3.0
-6,https://upload.wikimedia.org/wikipedia/commons/b/b4/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg,6-bkp06f6.jpg,Diliff,CC BY-SA 3.0
-7,https://upload.wikimedia.org/wikipedia/commons/e/e8/St_Pauls_Cathedral_in_London.jpg,7-spc07g7.jpg,Peter Rimar,CC BY-SA 4.0
-8,https://upload.wikimedia.org/wikipedia/commons/9/91/Victoria_and_Albert_Museum_London.jpg,8-vam08h8.jpg,Wikimedia Commons,CC BY-SA 4.0
-9,https://upload.wikimedia.org/wikipedia/commons/d/d6/London_Eye%2C_River_Thames.jpg,9-ley09i9.jpg,Wikimedia Commons,CC BY-SA 4.0
-10,https://upload.wikimedia.org/wikipedia/commons/1/15/Science_Museum_London_06.jpg,10-scm10j0.jpg,Wikimedia Commons,CC BY-SA 4.0
+1,https://commons.wikimedia.org/wiki/Special:FilePath/British_Museum_2018.jpg,1-bm01a1.jpg,Tiia Monto,CC BY-SA 3.0
+2,https://commons.wikimedia.org/wiki/Special:FilePath/Natural_History_Museum_London_UK.jpg,2-nhm02b2.jpg,Chiuchihmin,CC BY-SA 3.0
+3,https://commons.wikimedia.org/wiki/Special:FilePath/Tower_of_London_48.jpg,3-tol03c3.jpg,Interfase,CC BY-SA 4.0
+4,https://commons.wikimedia.org/wiki/Special:FilePath/Westminster-Abbey.JPG,4-wab04d4.jpg,Σπάρτακος,CC BY-SA 3.0
+5,https://commons.wikimedia.org/wiki/Special:FilePath/Tate_Modern_exterior_%282009%29.jpg,5-ttm05e5.jpg,Wikimedia Commons,CC BY-SA 3.0
+6,https://commons.wikimedia.org/wiki/Special:FilePath/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg,6-bkp06f6.jpg,Diliff,CC BY-SA 3.0
+7,https://commons.wikimedia.org/wiki/Special:FilePath/St_Pauls_Cathedral_in_London.jpg,7-spc07g7.jpg,Peter Rimar,CC BY-SA 4.0
+8,https://commons.wikimedia.org/wiki/Special:FilePath/Victoria_and_Albert_Museum_London.jpg,8-vam08h8.jpg,Wikimedia Commons,CC BY-SA 4.0
+9,https://commons.wikimedia.org/wiki/Special:FilePath/London_Eye%2C_River_Thames.jpg,9-ley09i9.jpg,Wikimedia Commons,CC BY-SA 4.0
+10,https://commons.wikimedia.org/wiki/Special:FilePath/Science_Museum_London_06.jpg,10-scm10j0.jpg,Wikimedia Commons,CC BY-SA 4.0
