@@ -513,6 +513,217 @@
 }
 
 
+/* ============================================================================
+   SESSION MENU COMPONENT
+   Calendar + session selection for open posts.
+   Class naming: .session-{type}-{part}--{state}
+   ============================================================================ */
+
+/* Session Calendar */
+.session-calendar-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.4) rgba(0, 0, 0, 0);
+}
+
+.session-calendar-scroll::-webkit-scrollbar {
+    height: 8px;
+    background: transparent;
+}
+
+.session-calendar-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 5px;
+}
+
+.session-calendar {
+    display: flex;
+    width: max-content;
+}
+
+.session-calendar-month {
+    flex: 0 0 auto;
+    width: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+.session-calendar-month:not(:first-child) {
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.session-calendar-header {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    background: var(--session-selected);
+    color: #fff;
+}
+
+.session-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.session-calendar-weekday,
+.session-calendar-day {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+}
+
+.session-calendar-weekday {
+    font-weight: 700;
+    color: #fff;
+}
+
+.session-calendar-day {
+    cursor: pointer;
+    background: var(--popup-bg);
+    color: #fff;
+    transition: background 0.2s, color 0.2s;
+}
+
+.session-calendar-day--empty {
+    cursor: default;
+    background: var(--popup-bg);
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.session-calendar-day--available {
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+}
+
+.session-calendar-day--available:hover {
+    background: var(--blue-500);
+    color: #fff;
+}
+
+.session-calendar-day--selected {
+    background: var(--session-selected);
+    color: #fff;
+}
+
+.session-calendar-day--today {
+    color: var(--blue-500);
+    font-weight: 700;
+}
+
+.session-calendar-day--available.session-calendar-day--today,
+.session-calendar-day--selected.session-calendar-day--today {
+    color: #fff;
+}
+
+/* Session Options List */
+.session-menu-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 50px;
+    padding: 0 10px;
+    background: var(--btn);
+    border: 1px solid var(--btn);
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.session-menu-option:last-child {
+    margin-bottom: 0;
+}
+
+.session-menu-option:hover {
+    background: var(--btn-hover);
+}
+
+.session-menu-option--selected {
+    background: var(--session-selected);
+    border-color: var(--session-selected);
+}
+
+.session-menu-option-date {
+    font-weight: 700;
+}
+
+.session-menu-option-time {
+    margin-left: auto;
+    padding-right: 10px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Session Menu Button Text */
+.session-menu-text-date,
+.session-menu-text-time {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 1;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 5px 8px;
+    border-radius: 4px;
+    line-height: 1.2;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.session-menu-text-date {
+    font-weight: 700;
+    bottom: 30px;
+    font-size: 13px;
+}
+
+.session-menu-text-time {
+    right: auto;
+    left: auto;
+    right: 10px;
+    bottom: 10px;
+}
+
+/* Time Popup (for multiple sessions on same date) */
+.session-menu-timepopup {
+    position: absolute;
+    z-index: var(--layer-menu);
+}
+
+.session-menu-timepopup-list {
+    background: var(--popup-bg);
+    color: #fff;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.session-menu-timepopup-button {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--btn);
+    color: #fff;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.session-menu-timepopup-button:hover {
+    background: var(--blue-500);
+}
+
 
 /* ============================================================================
    CURRENCY
