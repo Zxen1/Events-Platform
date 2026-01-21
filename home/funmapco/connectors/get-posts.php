@@ -90,24 +90,8 @@ try {
     }
 
     // Check if user is logged in (for contact detail visibility)
-    $isLoggedIn = false;
-    $authConfigCandidates = [
-        __DIR__ . '/../config/config-auth.php',
-        dirname(__DIR__) . '/config/config-auth.php',
-        dirname(__DIR__, 2) . '/config/config-auth.php',
-    ];
-    foreach ($authConfigCandidates as $authCandidate) {
-        if (is_file($authCandidate)) {
-            require $authCandidate;
-            break;
-        }
-    }
-    if (isset($API_KEY) && is_string($API_KEY) && $API_KEY !== '') {
-        $token = $_COOKIE['FUNMAP_TOKEN'] ?? ($_SERVER['HTTP_X_API_KEY'] ?? '');
-        if ($token === $API_KEY) {
-            $isLoggedIn = true;
-        }
-    }
+    // Simple cookie check - bots won't have the auth cookie
+    $isLoggedIn = !empty($_COOKIE['FUNMAP_TOKEN']) || !empty($_SERVER['HTTP_X_API_KEY']);
 
     // Parse query parameters
     //
