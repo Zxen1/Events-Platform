@@ -2702,77 +2702,79 @@ const PostModule = (function() {
     }
 
     /* ........................................................................
-       SESSION MENU - SessionMenuComponent
-       Calendar + session selection with date highlighting
+       SESSION MENU [COMPONENT PLACEHOLDER: SessionMenuComponent]
+       CalendarComponent + session selection list
+       Future: Will become SessionMenuComponent with date highlighting
        ........................................................................ */
 
     var sessionBtn = wrap.querySelector('.open-post-button-session');
     var sessionDropdown = wrap.querySelector('.open-post-dropdown-session .open-post-menu-session');
-    var calendarContainer = wrap.querySelector('.open-post-container-calendar');
-    var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
-    var sessionInfoEl = wrap.querySelector('.open-post-text-sessioninfo');
-    var sessionMenuInstance = null;
+    var calendarContainer = wrap.querySelector('.open-post-calendar');
+    var calendarInitialized = false;
     
-    if (sessionBtn && sessionDropdown && window.SessionMenuComponent) {
-      // Gather all sessions from all map cards and normalize data format
-      var allSessions = [];
-      if (post.map_cards) {
-        post.map_cards.forEach(function(mc, mcIndex) {
-          if (mc.sessions && Array.isArray(mc.sessions)) {
-            mc.sessions.forEach(function(s) {
-              if (!s) return;
-              // Support both {date,time} and {session_date,session_time}
-              var dateStr = s.date || s.session_date || '';
-              var timeStr = s.time || s.session_time || '';
-              if (!dateStr) return;
-              // Create normalized session object with full ISO date
-              allSessions.push({
-                date: formatDateShort(dateStr),
-                full: dateStr,
-                time: timeStr || '',
-                mapCardIndex: mcIndex
-              });
+    if (sessionBtn && sessionDropdown) {
+      sessionBtn.addEventListener('click', function() {
+        var isExpanded = sessionBtn.getAttribute('aria-expanded') === 'true';
+        sessionBtn.setAttribute('aria-expanded', !isExpanded);
+        sessionDropdown.hidden = isExpanded;
+        
+        // Initialize CalendarComponent and session options on first open
+        if (!isExpanded && !calendarInitialized && calendarContainer && window.CalendarComponent) {
+          // Gather session dates from all map cards
+          // PHP API returns sessions grouped by date: { date: "2026-01-15", times: [{time: "7:00 PM", ...}] }
+          var sessionDates = [];
+          if (post.map_cards) {
+            post.map_cards.forEach(function(mc) {
+              if (mc.sessions && Array.isArray(mc.sessions)) {
+                mc.sessions.forEach(function(sessionGroup) {
+                  if (sessionGroup && sessionGroup.date) {
+                    sessionDates.push(sessionGroup.date);
+                  }
+                });
+              }
             });
           }
-        });
-      }
-      
-      // Get price text from first map card
-      var priceText = '';
-      if (post.map_cards && post.map_cards[0]) {
-        var priceParts = parsePriceSummary(post.map_cards[0].price_summary || '');
-        if (priceParts.text) {
-          var badgeHtml = priceParts.flagUrl 
-            ? '<img class="open-post-image-badge open-post-image-badge--inline" src="' + priceParts.flagUrl + '" alt="">'
-            : '💰 ';
-          priceText = badgeHtml + escapeHtml(priceParts.text);
-        }
-      }
-      
-      // Create the SessionMenuComponent
-      sessionMenuInstance = SessionMenuComponent.create(calendarContainer, {
-        buttonEl: sessionBtn,
-        menuEl: sessionDropdown,
-        infoEl: sessionInfoEl,
-        calendarContainerEl: calendarContainer,
-        sessionOptsEl: sessionOptsContainer,
-        sessions: allSessions,
-        priceText: priceText,
-        shouldShowExpired: function() {
-          // Check global expired toggle if available
-          var expiredToggle = document.getElementById('expiredToggle');
-          return !!(expiredToggle && expiredToggle.checked);
-        },
-        onSelect: function(session, index) {
-          // Emit event for other components to listen to
-          if (window.App && typeof App.emit === 'function') {
-            App.emit('session:selected', { postId: post.id, session: session, index: index });
+          
+          CalendarComponent.create(calendarContainer, {
+            monthsPast: 0,
+            monthsFuture: 12,
+            allowPast: false,
+            selectionMode: 'single',
+            onSelect: function(date) {
+              // Update session info display when date selected
+              var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
+              if (sessionInfo && date) {
+                sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(date) + '</div>';
+              }
+              // Close the session dropdown after selection
+              sessionBtn.setAttribute('aria-expanded', 'false');
+              sessionDropdown.hidden = true;
+            }
+          });
+          
+          // Build session options list
+          var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
+          if (sessionOptsContainer && sessionDates.length > 0) {
+            var uniqueDates = sessionDates.filter(function(d, i, arr) { return arr.indexOf(d) === i; }).sort();
+            uniqueDates.forEach(function(dateStr) {
+              var btn = document.createElement('button');
+              btn.className = 'open-post-button-sessionopt';
+              btn.textContent = formatDateShort(dateStr);
+              btn.addEventListener('click', function() {
+                var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
+                if (sessionInfo) {
+                  sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(dateStr) + '</div>';
+                }
+                sessionBtn.setAttribute('aria-expanded', 'false');
+                sessionDropdown.hidden = true;
+              });
+              sessionOptsContainer.appendChild(btn);
+            });
           }
+          
+          calendarInitialized = true;
         }
       });
-      
-      // Initialize the session menu
-      sessionMenuInstance.init();
     }
 
     // Venue option clicks
@@ -3538,7 +3540,7 @@ const PostModule = (function() {
    * @returns {Promise<Object|null>} Post data or null
    */
   function loadPostById(postId) {
-    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId)
+    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_id=' + postId)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
@@ -3557,7 +3559,7 @@ const PostModule = (function() {
   function loadPostByKey(postKey) {
     var key = (postKey === null || postKey === undefined) ? '' : String(postKey).trim();
     if (!key) return Promise.resolve(null);
-    return fetch('/gateway.php?action=get-posts&limit=1&post_key=' + encodeURIComponent(key))
+    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_key=' + encodeURIComponent(key))
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
