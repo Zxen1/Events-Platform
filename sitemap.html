@@ -7,8 +7,7 @@
     <link rel="stylesheet" href="base-new.css?v=20251228i">
     <style>
       :root{
-        --sitemap-header-h: 20px;
-        --sitemap-header-h-portrait: 40px;
+        --sitemap-header-h: 40px;
         --sitemap-header-font: 13px;
         --sitemap-gap: 12px;
         --sitemap-border: 1px solid rgba(255, 255, 255, 0.85);
@@ -30,7 +29,7 @@
       }
 
       .sitemap-root {
-        padding: 0;
+        padding: 10px 0 0 0;
         box-sizing: border-box;
       }
 
@@ -45,6 +44,7 @@
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
       }
 
       .sitemap-viewport-header {
@@ -73,6 +73,8 @@
       .sitemap-viewport-body {
         box-sizing: border-box;
         flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
       }
 
       .sitemap-viewport--landscape {
@@ -85,10 +87,6 @@
         aspect-ratio: 1 / 2;
       }
 
-      .sitemap-viewport--portrait .sitemap-viewport-header {
-        height: var(--sitemap-header-h-portrait);
-        line-height: var(--sitemap-header-h-portrait);
-      }
 
       .sitemap-landscape-panels {
         height: 100%;
@@ -145,7 +143,8 @@
         display: flex;
         flex-direction: column;
         justify-content: space-evenly;
-        height: 100%;
+        flex: 1 1 auto;
+        min-height: 0;
         padding: var(--sitemap-panel-padding);
         box-sizing: border-box;
       }
@@ -156,8 +155,8 @@
       .sitemap-btn-post { background: #FF9800; }
       .sitemap-btn-recent { background: #9C27B0; }
       .sitemap-btn-marquee { background: #E91E63; }
-      .sitemap-btn-filter { background: #00BCD4; }
-      .sitemap-btn-member { background: #8BC34A; }
+      .sitemap-btn-filter { background: #009688; }
+      .sitemap-btn-member { background: #FFC107; }
       .sitemap-btn-admin { background: #F44336; }
     </style>
   </head>
