@@ -536,18 +536,18 @@
 .calendar-day--disabled {
     cursor: default;
     background: var(--btn-active);
-    color: var(--text-muted, #888);
+    color: var(--muted);
 }
 
 /* Time popup for multiple sessions on same date */
 .component-sessionmenu-timepopup {
     position: absolute;
-    z-index: var(--layer-menu, 85);
-    background: #222;
+    z-index: var(--layer-menu);
+    background: var(--btn);
     border: 1px solid var(--blue-500);
     border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    padding: 4px;
+    box-shadow: var(--menu-shadow);
+    padding: 10px;
 }
 
 .component-sessionmenu-timepopup-list {
@@ -557,7 +557,7 @@
 
 .component-sessionmenu-timepopup-button {
     height: 36px;
-    padding: 0 12px;
+    padding: 0 10px;
     background: transparent;
     border: 1px solid transparent;
     border-radius: 5px;
@@ -568,8 +568,9 @@
 }
 
 .component-sessionmenu-timepopup-button:hover {
-    background: rgba(59, 130, 246, 0.2);
+    background: var(--blue-500);
     border-color: var(--blue-500);
+    color: var(--text);
 }
 
 

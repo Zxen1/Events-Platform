@@ -3572,7 +3572,7 @@ const PostModule = (function() {
    * @returns {Promise<Object|null>} Post data or null
    */
   function loadPostById(postId) {
-    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId)
+    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_id=' + postId)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
@@ -3591,7 +3591,7 @@ const PostModule = (function() {
   function loadPostByKey(postKey) {
     var key = (postKey === null || postKey === undefined) ? '' : String(postKey).trim();
     if (!key) return Promise.resolve(null);
-    return fetch('/gateway.php?action=get-posts&limit=1&post_key=' + encodeURIComponent(key))
+    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_key=' + encodeURIComponent(key))
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();

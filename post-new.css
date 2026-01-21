@@ -1123,7 +1123,7 @@
 
 .open-post-button-sessionopt:hover {
   background: var(--btn-hover);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--border);
 }
 
 .open-post-button-sessionopt.selected {
@@ -1136,7 +1136,7 @@
 }
 
 .open-post-text-sessiontime {
-  color: var(--text-muted, #888);
+  color: var(--muted);
 }
 
 /* ============================================================================
