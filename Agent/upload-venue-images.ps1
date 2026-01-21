@@ -53,11 +53,14 @@ foreach ($img in $images) {
     Write-Host "[$current/$total] $targetFile" -ForegroundColor Cyan
     Write-Host "  Source: $sourceUrl"
     
-    # Download from Wikimedia
+    # Download from Wikimedia (with User-Agent and delay to avoid rate limiting)
     Write-Host "  Downloading..." -NoNewline
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri $sourceUrl -OutFile $localPath -UseBasicParsing -TimeoutSec 60
+        $headers = @{
+            "User-Agent" = "FunmapBot/1.0 (https://funmap.com; contact@funmap.com) PowerShell"
+        }
+        Invoke-WebRequest -Uri $sourceUrl -OutFile $localPath -UseBasicParsing -TimeoutSec 120 -Headers $headers
         $fileSize = [math]::Round((Get-Item $localPath).Length / 1MB, 2)
         Write-Host " OK ($fileSize MB)" -ForegroundColor Green
     } catch {
@@ -66,6 +69,9 @@ foreach ($img in $images) {
         $failCount++
         continue
     }
+    
+    # Wait 2 seconds between downloads to avoid Wikimedia rate limiting
+    Start-Sleep -Seconds 2
     
     # Upload to Bunny CDN
     Write-Host "  Uploading to Bunny..." -NoNewline
