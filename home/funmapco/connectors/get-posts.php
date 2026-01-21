@@ -31,7 +31,27 @@
 
 declare(strict_types=1);
 
+// Start output buffering to ensure complete responses
+ob_start();
+
+// Register shutdown function to catch fatal errors
+register_shutdown_function(function() {
+    $error = error_get_last();
+    if ($error !== null && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        ob_end_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        http_response_code(500);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Fatal error: ' . $error['message'],
+            'file' => basename($error['file']),
+            'line' => $error['line']
+        ]);
+    }
+});
+
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
+    ob_end_clean();
     header('Content-Type: application/json; charset=utf-8');
     http_response_code(403);
     echo json_encode(['success' => false, 'message' => 'Forbidden']);
@@ -42,6 +62,7 @@ header('Content-Type: application/json');
 
 // Helper function for error responses
 function fail(int $code, string $message): void {
+    ob_end_clean();
     http_response_code($code);
     echo json_encode(['success' => false, 'message' => $message]);
     exit;
@@ -620,13 +641,45 @@ try {
     // Convert to array
     $posts = array_values($postsById);
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'posts' => $posts,
         'total' => $total,
         'limit' => $limit,
         'offset' => $offset,
-    ], JSON_UNESCAPED_SLASHES);
+    ];
+    
+    $json = json_encode($response, JSON_UNESCAPED_SLASHES);
+    
+    // Check for json_encode failure
+    if ($json === false) {
+        $jsonError = json_last_error_msg();
+        error_log("[get-posts.php] json_encode failed: " . $jsonError);
+        
+        // Try to identify which post has the problem
+        foreach ($posts as $idx => $post) {
+            $testJson = json_encode($post, JSON_UNESCAPED_SLASHES);
+            if ($testJson === false) {
+                error_log("[get-posts.php] Problem post at index $idx, id=" . ($post['id'] ?? 'unknown') . ": " . json_last_error_msg());
+                // Try to fix by converting strings to UTF-8
+                array_walk_recursive($post, function(&$item) {
+                    if (is_string($item)) {
+                        $item = mb_convert_encoding($item, 'UTF-8', 'UTF-8');
+                    }
+                });
+            }
+        }
+        
+        // Try again after potential fixes
+        $json = json_encode($response, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+        if ($json === false) {
+            fail(500, 'JSON encoding failed: ' . $jsonError);
+        }
+    }
+    
+    // Clear any buffered output and send clean JSON
+    ob_end_clean();
+    echo $json;
 
 } catch (Throwable $e) {
     error_log("[get-posts.php] Error: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());

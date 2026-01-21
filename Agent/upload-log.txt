@@ -1,12 +1,12 @@
 ﻿**********************
 Windows PowerShell transcript start
-Start time: 20260121161030
+Start time: 20260121161207
 Username: THE-COMPUTER\Paul 8700k
 RunAs User: THE-COMPUTER\Paul 8700k
 Configuration Name: 
 Machine: THE-COMPUTER (Microsoft Windows NT 10.0.26200.0)
 Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -file  D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-venue-images.ps1 
-Process ID: 50604
+Process ID: 46664
 PSVersion: 5.1.26100.7462
 PSEdition: Desktop
 PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
@@ -22,69 +22,88 @@ Transcript started, output file is D:\Websites\Events Platform Cursor 2025\Event
 Found 10 images to process
 
 [1/10] 1-bm01a1.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/d/dd/British_Museum_2018.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/British_Museum_2018.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.dd/d/dd/British_Museum_2018.jpg"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (2.92 MB)
+  Uploading to Bunny...
+
+ OK
+
 [2/10] 2-nhm02b2.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/c/c1/Natural_History_Museum_London_UK.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Natural_History_Museum_London_UK.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.c1/c/c1/Natural_History_Museum_London_UK.jpg"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (6.14 MB)
+  Uploading to Bunny...
+HttpCode Message
+-------- -------
+     201 File uploaded.
+     201 File uploaded.
+ OK
+
 [3/10] 3-tol03c3.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/7/72/Tower_of_London_48.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tower_of_London_48.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.72/7/72/Tower_of_London_48.jpg"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (7.31 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
 [4/10] 4-wab04d4.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/b/ba/Westminster-Abbey.JPG
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Westminster-Abbey.JPG
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.ba/b/ba/Westminster-Abbey.JPG"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (4.29 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
 [5/10] 5-ttm05e5.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/9/90/Tate_Modern_exterior_%282009%29.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tate_Modern_exterior_%282009%29.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.90/9/90/Tate_Modern_exterior_%282009%29.jpg"
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (404) Not Found."
  FAILED
   Error: The remote server returned an error: (404) Not Found.
 [6/10] 6-bkp06f6.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/b/b4/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.b4/b/b4/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (5.35 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
 [7/10] 7-spc07g7.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/e/e8/St_Pauls_Cathedral_in_London.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/St_Pauls_Cathedral_in_London.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.e8/e/e8/St_Pauls_Cathedral_in_London.jpg"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (1.24 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
 [8/10] 8-vam08h8.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/9/91/Victoria_and_Albert_Museum_London.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Victoria_and_Albert_Museum_London.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.91/9/91/Victoria_and_Albert_Museum_London.jpg"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (3.17 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
 [9/10] 9-ley09i9.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/d/d6/London_Eye%2C_River_Thames.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/London_Eye%2C_River_Thames.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.d6/d/d6/London_Eye%2C_River_Thames.jpg"
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
+ OK (14.37 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
 [10/10] 10-scm10j0.jpg
-  Source: https://upload.wikimedia.org/wikipedia/commons/1/15/Science_Museum_London_06.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Science_Museum_London_06.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.15/1/15/Science_Museum_London_06.jpg"
+PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (404) Not Found."
  FAILED
   Error: The remote server returned an error: (404) Not Found.
 ========================================
 Complete!
-  Success: 0
-  Failed:  10
+  Success: 8
+  Failed:  2
 
 Local backups: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\venue-images
 CDN location:  https://cdn.funmap.com/post-images/2026-01/
@@ -92,5 +111,5 @@ CDN location:  https://cdn.funmap.com/post-images/2026-01/
 Log saved to: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-log.txt
 **********************
 Windows PowerShell transcript end
-End time: 20260121161035
+End time: 20260121161426
 **********************
