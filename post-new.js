@@ -1787,8 +1787,13 @@ const PostModule = (function() {
     });
 
     // Notify marquee and other subscribers
+    // Filter for posts with sidebar_ad flag (premium listings with marquee access)
+    var marqueePosts = list.filter(function(p) {
+      return p.sidebar_ad === 1;
+    }).slice(0, 10);
+    
     App.emit('filter:applied', {
-      marqueePosts: list.slice(0, 10) // Show top 10 in marquee
+      marqueePosts: marqueePosts
     });
   }
 

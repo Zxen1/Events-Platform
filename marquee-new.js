@@ -530,7 +530,7 @@ App.registerModule('marquee', MarqueeModule);
     var lastPosts = null; // Memory for posts even when narrow
     
     function isWideEnough() {
-        return window.innerWidth >= 1920;
+        return window.innerWidth >= 1900;
     }
 
     function getMinZoom() {
