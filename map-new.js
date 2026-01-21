@@ -2398,6 +2398,14 @@ const MapModule = (function() {
     const entry = findMarkerByVenueKey(venueKey);
     if (!entry) return;
     
+    // If map card is already active, close the post (toggle behavior)
+    if (entry.state === 'big') {
+      if (window.PostModule && typeof PostModule.closePost === 'function') {
+        PostModule.closePost(entry.post && entry.post.id ? entry.post.id : '');
+      }
+      return;
+    }
+    
     // Set this specific marker to active (do not guess by postId)
     setActiveMapCard(entry.post && entry.post.id ? String(entry.post.id) : '', { venueKey: entry.venueKey });
     
