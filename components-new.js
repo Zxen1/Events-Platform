@@ -930,6 +930,348 @@ const CalendarComponent = (function(){
 
 
 /* ============================================================================
+   SESSION MENU
+   Source: Live site index.js session handling (~lines 23130-23770)
+   
+   A calendar-based session picker that:
+   - Only allows clicking dates WITH sessions (others are disabled)
+   - Shows time popup when multiple sessions exist on the same date
+   - Updates session info display when a session is selected
+   
+   Uses the calendar sub-component styling from components-new.css
+   ============================================================================ */
+
+const SessionMenuComponent = (function() {
+    
+    function toISODate(d) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    
+    function parseSessionDate(value) {
+        if (typeof value !== 'string') return new Date(Number.NaN);
+        var parts = value.split('-').map(Number);
+        return new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+    }
+    
+    function formatDate(dateObj, sessionDate) {
+        var currentYear = new Date().getFullYear();
+        var year = dateObj.getFullYear();
+        var formatted = dateObj.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+        return year !== currentYear ? formatted + ', ' + year : formatted;
+    }
+    
+    function isToday(dateObj) {
+        var today = new Date();
+        return dateObj.getFullYear() === today.getFullYear() &&
+               dateObj.getMonth() === today.getMonth() &&
+               dateObj.getDate() === today.getDate();
+    }
+    
+    /**
+     * Create a session menu inside a container
+     * @param {HTMLElement} containerEl - Container element
+     * @param {Object} options - Configuration options
+     * @param {Array} options.sessions - Array of session objects { date: 'YYYY-MM-DD', time: 'HH:MM:SS', ... }
+     * @param {Function} options.onSelect - Callback when session selected: function(session, index)
+     * @param {boolean} options.showExpired - Whether to show expired sessions
+     * @returns {Object} API object
+     */
+    function create(containerEl, options) {
+        if (!containerEl) return null;
+        options = options || {};
+        
+        var sessions = options.sessions || [];
+        var onSelect = options.onSelect || null;
+        var showExpired = options.showExpired || false;
+        
+        var calendarEl = null;
+        var selectedIndex = null;
+        var lastClickedCell = null;
+        
+        // Compute session threshold (yesterday at midnight)
+        function sessionThresholdDate() {
+            var base = new Date();
+            base.setHours(0, 0, 0, 0);
+            base.setDate(base.getDate() - 1);
+            return base;
+        }
+        
+        // Filter visible sessions based on expiry
+        function computeVisibleSessions() {
+            if (!sessions || !sessions.length) return [];
+            var threshold = sessionThresholdDate();
+            return sessions
+                .map(function(s, i) { return { session: s, index: i }; })
+                .filter(function(entry) {
+                    if (!entry.session || !entry.session.date) return false;
+                    if (showExpired) return true;
+                    var parsed = parseSessionDate(entry.session.date);
+                    return parsed instanceof Date && !Number.isNaN(parsed.getTime()) && parsed >= threshold;
+                });
+        }
+        
+        var visibleSessions = computeVisibleSessions();
+        
+        // Build allowed dates set
+        function buildAllowedSet() {
+            var allowed = new Set();
+            visibleSessions.forEach(function(entry) {
+                if (entry.session && entry.session.date) {
+                    allowed.add(entry.session.date);
+                }
+            });
+            return allowed;
+        }
+        
+        var allowedSet = buildAllowedSet();
+        
+        // Compute month range from sessions
+        function computeMonthRange() {
+            if (!visibleSessions.length) return { minDate: null, maxDate: null, months: [] };
+            
+            var dates = visibleSessions
+                .map(function(entry) { return parseSessionDate(entry.session.date); })
+                .filter(function(d) { return d instanceof Date && !Number.isNaN(d.getTime()); });
+            
+            if (!dates.length) return { minDate: null, maxDate: null, months: [] };
+            
+            dates.sort(function(a, b) { return a.getTime() - b.getTime(); });
+            var minDate = dates[0];
+            var maxDate = dates[dates.length - 1];
+            
+            var months = [];
+            var cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            var limit = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+            while (cursor <= limit) {
+                months.push(new Date(cursor.getTime()));
+                cursor.setMonth(cursor.getMonth() + 1);
+            }
+            
+            return { minDate: minDate, maxDate: maxDate, months: months };
+        }
+        
+        var monthRange = computeMonthRange();
+        
+        // Show time popup for multiple sessions on same date
+        function showTimePopup(matches) {
+            var existing = containerEl.querySelector('.component-sessionmenu-timepopup');
+            if (existing) existing.remove();
+            
+            var popup = document.createElement('div');
+            popup.className = 'component-sessionmenu-timepopup';
+            
+            var list = document.createElement('div');
+            list.className = 'component-sessionmenu-timepopup-list';
+            
+            matches.forEach(function(m) {
+                var btn = document.createElement('button');
+                btn.className = 'component-sessionmenu-timepopup-button';
+                btn.dataset.index = m.index;
+                btn.textContent = m.session.time || '';
+                btn.addEventListener('click', function() {
+                    selectSession(m.index);
+                    popup.remove();
+                });
+                list.appendChild(btn);
+            });
+            
+            popup.appendChild(list);
+            containerEl.appendChild(popup);
+            
+            // Position popup near clicked cell
+            if (lastClickedCell) {
+                var rect = lastClickedCell.getBoundingClientRect();
+                var containerRect = containerEl.getBoundingClientRect();
+                var dateCenterX = rect.left + rect.width / 2 - containerRect.left;
+                var containerCenterX = containerEl.clientWidth / 2;
+                
+                popup.style.position = 'absolute';
+                popup.style.top = (rect.top - containerRect.top) + 'px';
+                
+                if (dateCenterX < containerCenterX) {
+                    popup.style.left = (rect.right - containerRect.left + 4) + 'px';
+                } else {
+                    popup.style.left = (rect.left - containerRect.left) + 'px';
+                }
+                
+                requestAnimationFrame(function() {
+                    var popupRect = popup.getBoundingClientRect();
+                    var minMargin = 10;
+                    var left = parseFloat(popup.style.left);
+                    var top = parseFloat(popup.style.top);
+                    
+                    if (dateCenterX >= containerCenterX) {
+                        left = left - popupRect.width - 4;
+                    }
+                    if (left < minMargin) left = minMargin;
+                    if (top < minMargin) top = minMargin;
+                    if (left + popupRect.width + minMargin > containerEl.clientWidth) {
+                        left = containerEl.clientWidth - popupRect.width - minMargin;
+                    }
+                    if (top + popupRect.height + minMargin > containerEl.clientHeight) {
+                        top = containerEl.clientHeight - popupRect.height - minMargin;
+                    }
+                    popup.style.left = left + 'px';
+                    popup.style.top = top + 'px';
+                });
+            }
+            
+            // Close on outside click
+            setTimeout(function() {
+                document.addEventListener('click', function handler(e) {
+                    if (!popup.contains(e.target)) {
+                        popup.remove();
+                        document.removeEventListener('click', handler);
+                    }
+                });
+            }, 0);
+        }
+        
+        // Select a session by index
+        function selectSession(index) {
+            selectedIndex = index;
+            markSelected();
+            if (onSelect && sessions[index]) {
+                onSelect(sessions[index], index);
+            }
+        }
+        
+        // Update selection visual state
+        function markSelected() {
+            if (!calendarEl) return;
+            calendarEl.querySelectorAll('.calendar-day').forEach(function(d) {
+                d.classList.remove('selected');
+            });
+            if (selectedIndex !== null && sessions[selectedIndex]) {
+                var iso = sessions[selectedIndex].date;
+                var cell = calendarEl.querySelector('.calendar-day[data-iso="' + iso + '"]');
+                if (cell) cell.classList.add('selected');
+            }
+        }
+        
+        // Render a single month
+        function renderMonth(monthDate) {
+            var monthEl = document.createElement('div');
+            monthEl.className = 'calendar-month';
+            
+            var header = document.createElement('div');
+            header.className = 'calendar-header';
+            header.textContent = monthDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+            monthEl.appendChild(header);
+            
+            var grid = document.createElement('div');
+            grid.className = 'calendar-grid';
+            
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(function(wd) {
+                var w = document.createElement('div');
+                w.className = 'calendar-weekday';
+                w.textContent = wd;
+                grid.appendChild(w);
+            });
+            
+            var firstDay = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+            var startDow = firstDay.getDay();
+            var daysInMonth = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0).getDate();
+            
+            for (var i = 0; i < 42; i++) {
+                var cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                var dayNum = i - startDow + 1;
+                
+                if (i < startDow || dayNum > daysInMonth) {
+                    cell.classList.add('empty');
+                } else {
+                    cell.textContent = dayNum;
+                    var dateObj = new Date(monthDate.getFullYear(), monthDate.getMonth(), dayNum);
+                    var iso = toISODate(dateObj);
+                    cell.dataset.iso = iso;
+                    
+                    if (allowedSet.has(iso)) {
+                        cell.classList.add('calendar-day--available');
+                        cell.addEventListener('mousedown', function() { lastClickedCell = this; });
+                        cell.addEventListener('click', function() {
+                            var cellIso = this.dataset.iso;
+                            var matches = visibleSessions.filter(function(entry) {
+                                return entry.session.date === cellIso;
+                            });
+                            // Always show time popup, even for single session
+                            if (matches.length >= 1) {
+                                showTimePopup(matches);
+                            }
+                        });
+                    } else {
+                        cell.classList.add('calendar-day--disabled');
+                    }
+                    
+                    if (isToday(dateObj)) cell.classList.add('today');
+                }
+                grid.appendChild(cell);
+            }
+            
+            monthEl.appendChild(grid);
+            return monthEl;
+        }
+        
+        // Build the calendar
+        function buildCalendar() {
+            containerEl.innerHTML = '';
+            containerEl.style.position = 'relative';
+            
+            var scrollWrapper = document.createElement('div');
+            scrollWrapper.className = 'calendar-scroll-wrapper';
+            
+            var scroll = document.createElement('div');
+            scroll.className = 'calendar-scroll';
+            
+            calendarEl = document.createElement('div');
+            calendarEl.className = 'calendar-body';
+            
+            monthRange.months.forEach(function(monthDate) {
+                calendarEl.appendChild(renderMonth(monthDate));
+            });
+            
+            scroll.appendChild(calendarEl);
+            scrollWrapper.appendChild(scroll);
+            containerEl.appendChild(scrollWrapper);
+            
+            // Prevent click propagation
+            containerEl.addEventListener('click', function(e) { e.stopPropagation(); });
+        }
+        
+        // Initialize
+        if (monthRange.months.length > 0) {
+            buildCalendar();
+        }
+        
+        return {
+            selectSession: selectSession,
+            getSelectedIndex: function() { return selectedIndex; },
+            getSelectedSession: function() { return selectedIndex !== null ? sessions[selectedIndex] : null; },
+            refresh: function(newSessions, newShowExpired) {
+                if (newSessions !== undefined) sessions = newSessions;
+                if (newShowExpired !== undefined) showExpired = newShowExpired;
+                visibleSessions = computeVisibleSessions();
+                allowedSet = buildAllowedSet();
+                monthRange = computeMonthRange();
+                selectedIndex = null;
+                if (monthRange.months.length > 0) {
+                    buildCalendar();
+                } else {
+                    containerEl.innerHTML = '';
+                }
+            }
+        };
+    }
+    
+    return {
+        create: create,
+        toISODate: toISODate,
+        parseSessionDate: parseSessionDate
+    };
+})();
+
+
+/* ============================================================================
    CURRENCY
    Source: test-currency-menu.html
    ============================================================================ */
@@ -8677,6 +9019,7 @@ window.PostCropperComponent = PostCropperComponent;
 window.ClearButtonComponent = ClearButtonComponent;
 window.SwitchComponent = SwitchComponent;
 window.CalendarComponent = CalendarComponent;
+window.SessionMenuComponent = SessionMenuComponent;
 window.CurrencyComponent = CurrencyComponent;
 window.LanguageMenuComponent = LanguageMenuComponent;
 window.PhonePrefixComponent = PhonePrefixComponent;

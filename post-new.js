@@ -1116,6 +1116,22 @@ const PostModule = (function() {
   }
 
   /**
+   * Format a time string for display
+   * @param {string} timeStr - Time string (HH:MM:SS or HH:MM)
+   * @returns {string} Formatted time like "2:00 PM"
+   */
+  function formatTimeShort(timeStr) {
+    if (!timeStr || typeof timeStr !== 'string') return '';
+    var parts = timeStr.split(':');
+    var hours = parseInt(parts[0], 10);
+    var minutes = parts[1] || '00';
+    if (isNaN(hours)) return timeStr;
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12;
+    return hours + ':' + minutes + ' ' + ampm;
+  }
+
+  /**
    * Get subcategory icon URL
    * @param {string} subcategoryKey - Subcategory key (e.g., 'live-gigs')
    * @returns {string} Icon URL or empty string
@@ -2702,15 +2718,14 @@ const PostModule = (function() {
     }
 
     /* ........................................................................
-       SESSION MENU [COMPONENT PLACEHOLDER: SessionMenuComponent]
-       CalendarComponent + session selection list
-       Future: Will become SessionMenuComponent with date highlighting
+       SESSION MENU
+       Uses SessionMenuComponent - only dates with sessions are clickable
        ........................................................................ */
 
     var sessionBtn = wrap.querySelector('.open-post-button-session');
     var sessionDropdown = wrap.querySelector('.open-post-dropdown-session .open-post-menu-session');
     var calendarContainer = wrap.querySelector('.open-post-calendar');
-    var calendarInitialized = false;
+    var sessionMenuInstance = null;
     
     if (sessionBtn && sessionDropdown) {
       sessionBtn.addEventListener('click', function() {
@@ -2718,30 +2733,22 @@ const PostModule = (function() {
         sessionBtn.setAttribute('aria-expanded', !isExpanded);
         sessionDropdown.hidden = isExpanded;
         
-        // Initialize CalendarComponent and session options on first open
-        if (!isExpanded && !calendarInitialized && calendarContainer && window.CalendarComponent) {
-          // Gather session dates from all map cards
-          var sessionDates = [];
-          if (post.map_cards) {
-            post.map_cards.forEach(function(mc) {
-              if (mc.sessions && Array.isArray(mc.sessions)) {
-                mc.sessions.forEach(function(s) {
-                  if (s.date) sessionDates.push(s.date);
-                });
-              }
-            });
-          }
+        // Initialize SessionMenuComponent on first open
+        if (!isExpanded && !sessionMenuInstance && calendarContainer && window.SessionMenuComponent) {
+          // Get sessions from current location (loc0)
+          var sessions = (loc0 && loc0.sessions) ? loc0.sessions : [];
           
-          CalendarComponent.create(calendarContainer, {
-            monthsPast: 0,
-            monthsFuture: 12,
-            allowPast: false,
-            selectionMode: 'single',
-            onSelect: function(date) {
-              // Update session info display when date selected
+          sessionMenuInstance = SessionMenuComponent.create(calendarContainer, {
+            sessions: sessions,
+            showExpired: false,
+            onSelect: function(session, index) {
+              // Update session info display
               var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
-              if (sessionInfo && date) {
-                sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(date) + '</div>';
+              if (sessionInfo && session) {
+                var dateStr = session.date ? formatDateShort(session.date) : '';
+                var timeStr = session.time ? formatTimeShort(session.time) : '';
+                var displayText = dateStr + (timeStr ? ' ' + timeStr : '');
+                sessionInfo.innerHTML = '<div>📅 ' + escapeHtml(displayText) + '</div>';
               }
               // Close the session dropdown after selection
               sessionBtn.setAttribute('aria-expanded', 'false');
@@ -2749,27 +2756,26 @@ const PostModule = (function() {
             }
           });
           
-          // Build session options list
+          // Build session options list (text list alternative to calendar)
           var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
-          if (sessionOptsContainer && sessionDates.length > 0) {
-            var uniqueDates = sessionDates.filter(function(d, i, arr) { return arr.indexOf(d) === i; }).sort();
-            uniqueDates.forEach(function(dateStr) {
+          if (sessionOptsContainer && sessions.length > 0) {
+            sessionOptsContainer.innerHTML = '';
+            sessions.forEach(function(session, idx) {
               var btn = document.createElement('button');
               btn.className = 'open-post-button-sessionopt';
-              btn.textContent = formatDateShort(dateStr);
+              btn.dataset.index = idx;
+              var dateStr = session.date ? formatDateShort(session.date) : '';
+              var timeStr = session.time ? formatTimeShort(session.time) : '';
+              btn.innerHTML = '<span class="open-post-text-sessiondate">' + escapeHtml(dateStr) + '</span>' +
+                              '<span class="open-post-text-sessiontime">' + escapeHtml(timeStr) + '</span>';
               btn.addEventListener('click', function() {
-                var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
-                if (sessionInfo) {
-                  sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(dateStr) + '</div>';
+                if (sessionMenuInstance) {
+                  sessionMenuInstance.selectSession(idx);
                 }
-                sessionBtn.setAttribute('aria-expanded', 'false');
-                sessionDropdown.hidden = true;
               });
               sessionOptsContainer.appendChild(btn);
             });
           }
-          
-          calendarInitialized = true;
         }
       });
     }

@@ -437,11 +437,24 @@
   display: block;
 }
 
-/* Inline badge image (e.g. in expanded post detail) */
-.open-post-badge-image--inline {
+/* Inline badge image (e.g. in session info price display) */
+.open-post-image-badge--inline {
   display: inline-block;
   vertical-align: middle;
-  margin-right: 5px;
+  margin-right: 4px;
+}
+
+/* Session/Venue Info Display (open post details) */
+.open-post-text-venueinfo {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.open-post-text-sessioninfo {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 /* Actions container */
@@ -1090,22 +1103,40 @@
 .open-post-container-sessionopts {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  padding: 10px;
 }
 
 .open-post-button-sessionopt {
-  padding: 10px;
-  background: var(--btn);
-  border: 1px solid var(--btn);
-  border-radius: 8px;
+  height: 36px;
+  padding: 0 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
   cursor: pointer;
   text-align: left;
-  color: inherit;
-  font-size: 14px;
+  color: var(--text);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .open-post-button-sessionopt:hover {
   background: var(--btn-hover);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.open-post-button-sessionopt.selected {
+  background: var(--btn-selected);
+  border-color: var(--blue-500);
+}
+
+.open-post-text-sessiondate {
+  flex: 1;
+}
+
+.open-post-text-sessiontime {
+  color: var(--text-muted, #888);
 }
 
 /* ============================================================================
