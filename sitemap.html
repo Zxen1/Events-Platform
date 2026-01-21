@@ -114,13 +114,17 @@
         flex: 0 0 50%;
         box-sizing: border-box;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: var(--sitemap-panel-padding);
+        align-items: stretch;
+        justify-content: stretch;
       }
 
       .sitemap-landscape-map-gap .sitemap-panel-item {
         width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0;
       }
 
       .sitemap-spacer {
@@ -137,40 +141,42 @@
         border-radius: 5px;
       }
 
-      .sitemap-portrait-wrap {
-        display: flex;
-        align-items: stretch;
-        gap: 10px;
-      }
-
-      .sitemap-portrait-body {
+      .sitemap-portrait-table {
         display: flex;
         flex-direction: column;
-        justify-content: space-evenly;
-        flex: 1 1 auto;
-        min-height: 0;
-        padding: var(--sitemap-panel-padding);
-        box-sizing: border-box;
+        width: 70%;
+        border: var(--sitemap-border);
+        border-radius: 0;
+        overflow: hidden;
       }
 
-      .sitemap-dims {
-        display: flex;
-        flex-direction: column;
-        font-size: 13px;
-        opacity: 0.7;
-        padding: var(--sitemap-panel-padding) 0;
-      }
-
-      .sitemap-dims .sitemap-dim:first-child {
-        height: var(--sitemap-header-h);
-        line-height: var(--sitemap-header-h);
-        padding: 0;
-      }
-
-      .sitemap-dims .sitemap-dim:not(:first-child) {
-        flex: 1 1 auto;
+      .sitemap-portrait-row {
         display: flex;
         align-items: center;
+        gap: 12px;
+      }
+
+      .sitemap-portrait-row--header {
+        border-bottom: var(--sitemap-border);
+      }
+
+      .sitemap-portrait-row--header .sitemap-portrait-cell {
+        height: var(--sitemap-header-h);
+        line-height: var(--sitemap-header-h);
+        border-radius: 0;
+      }
+
+      .sitemap-portrait-cell {
+        flex: 0 0 50%;
+      }
+
+      .sitemap-portrait-row:not(.sitemap-portrait-row--header) {
+        padding: 5px 10px;
+      }
+
+      .sitemap-portrait-dim {
+        font-size: 13px;
+        opacity: 0.7;
       }
 
       .sitemap-title {
@@ -219,7 +225,7 @@
       }
 
       /* Section colors */
-      .sitemap-btn-header { background: #475569; }
+      .sitemap-btn-header { background: #334155; }
       .sitemap-btn-map { background: #166534; }
       .sitemap-btn-posts { background: #1e40af; }
       .sitemap-btn-recent { background: #2563eb; }
@@ -263,30 +269,38 @@
 
         <div class="sitemap-layout-col">
           <div class="sitemap-label">Portrait</div>
-          <div class="sitemap-portrait-wrap">
-            <div class="sitemap-viewport sitemap-viewport--portrait" aria-label="Portrait viewport (1:2)">
-              <div class="sitemap-viewport-header">
-                <div class="sitemap-header-btn sitemap-btn-header">Header</div>
-              </div>
-              <div class="sitemap-portrait-body">
-                <div class="sitemap-portrait-item sitemap-btn-map">Map</div>
-                <div class="sitemap-portrait-item sitemap-btn-posts">Posts Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-recent">Recent Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-filter">Filter Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-marquee">Marquee Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-member">Member Panel</div>
-                <div class="sitemap-portrait-item sitemap-btn-admin">Admin Panel</div>
-              </div>
+          <div class="sitemap-portrait-table">
+            <div class="sitemap-portrait-row sitemap-portrait-row--header">
+              <div class="sitemap-portrait-cell sitemap-header-btn sitemap-btn-header">Header</div>
+              <div class="sitemap-portrait-dim">56px height</div>
             </div>
-            <div class="sitemap-dims">
-              <div class="sitemap-dim">56px / Full Width</div>
-              <div class="sitemap-dim">Full Screen</div>
-              <div class="sitemap-dim">380px / Full Width</div>
-              <div class="sitemap-dim">530px / Full Width</div>
-              <div class="sitemap-dim">530px / Full Width</div>
-              <div class="sitemap-dim">440px / Full Width</div>
-              <div class="sitemap-dim">440px / Full Width</div>
-              <div class="sitemap-dim">440px / Full Width</div>
+            <div class="sitemap-portrait-row">
+              <div class="sitemap-portrait-cell sitemap-portrait-item sitemap-btn-map">Map</div>
+              <div class="sitemap-portrait-dim">Full Screen</div>
+            </div>
+            <div class="sitemap-portrait-row">
+              <div class="sitemap-portrait-cell sitemap-portrait-item sitemap-btn-posts">Posts Panel</div>
+              <div class="sitemap-portrait-dim">380px / Fluid</div>
+            </div>
+            <div class="sitemap-portrait-row">
+              <div class="sitemap-portrait-cell sitemap-portrait-item sitemap-btn-recent">Recent Panel</div>
+              <div class="sitemap-portrait-dim">530px / Fluid</div>
+            </div>
+            <div class="sitemap-portrait-row">
+              <div class="sitemap-portrait-cell sitemap-portrait-item sitemap-btn-filter">Filter Panel</div>
+              <div class="sitemap-portrait-dim">530px / Fluid</div>
+            </div>
+            <div class="sitemap-portrait-row">
+              <div class="sitemap-portrait-cell sitemap-portrait-item sitemap-btn-marquee">Marquee Panel</div>
+              <div class="sitemap-portrait-dim">440px / Fluid</div>
+            </div>
+            <div class="sitemap-portrait-row">
+              <div class="sitemap-portrait-cell sitemap-portrait-item sitemap-btn-member">Member Panel</div>
+              <div class="sitemap-portrait-dim">440px / Fluid</div>
+            </div>
+            <div class="sitemap-portrait-row">
+              <div class="sitemap-portrait-cell sitemap-portrait-item sitemap-btn-admin">Admin Panel</div>
+              <div class="sitemap-portrait-dim">440px / Fluid</div>
             </div>
           </div>
         </div>
