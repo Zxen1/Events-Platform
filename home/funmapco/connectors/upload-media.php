@@ -8,9 +8,13 @@
  * This matches the site-wide policy for event expiry: give users the maximum benefit
  * of the doubt. The month only changes when it's the new month EVERYWHERE on Earth.
  * 
- * NAMING CONVENTION (from agent confessions.md):
- *   Pattern: {postId}-{hash}.{extension}
- *   Example: 123-a7f3b2.jpg
+ * NAMING CONVENTION:
+ *   Pattern: {postId}-{original_filename}.{extension}
+ *   Example: 123-British_Museum_2018.jpg
+ *   Duplicates: 123-British_Museum_2018-2.jpg, 123-British_Museum_2018-3.jpg, etc.
+ * 
+ * This keeps original filenames readable while ensuring uniqueness via postId prefix.
+ * Duplicate detection checks existing files in the database for the same post.
  * 
  * WORKFLOW (single-handling, no renaming):
  *   1. Create post record first (as draft) → get post_id
@@ -18,7 +22,7 @@
  *   3. Complete form and submit → post becomes active
  * 
  * Monthly folders are created automatically by Bunny CDN when uploading.
- * Full path: folder_post_images/YYYY-MM/{postId}-{hash}.{extension}
+ * Full path: folder_post_images/YYYY-MM/{postId}-{original_filename}.{extension}
  * 
  * POST params:
  *   - file: The uploaded file
@@ -26,7 +30,7 @@
  *   - post_id: Post ID (REQUIRED - create draft post first)
  * 
  * Response:
- *   { success: true, url: "https://cdn.funmap.com/post-images/2025-01/123-a7f3b2.jpg", insert_id: 123 }
+ *   { success: true, url: "https://cdn.funmap.com/post-images/2025-01/123-British_Museum.jpg", insert_id: 123 }
  */
 
 if (!defined('FUNMAP_GATEWAY_ACTIVE')) {
@@ -143,16 +147,45 @@ if ($post_id <= 0) {
     fail(400, 'post_id is required. Create the post record first (as draft), then upload images.');
 }
 
-// Generate filename following naming convention (rules file):
-// Pattern: {postId}-{hash}.{extension}
-// 8-digit padding for scalability (00000001-a7f3b2.jpg)
+// Generate filename following naming convention:
+// Pattern: {postId}-{original_filename}.{extension}
+// Duplicates: {postId}-{original_filename}-2.{extension}, etc.
 $originalFilename = basename($_FILES['file']['name']);
 $extension = strtolower(pathinfo($originalFilename, PATHINFO_EXTENSION));
+$baseName = pathinfo($originalFilename, PATHINFO_FILENAME);
 
-// Generate short hash for uniqueness (6 chars from md5)
-$hash = substr(md5(uniqid('', true) . random_bytes(8)), 0, 6);
+// Sanitize filename: keep alphanumeric, underscores, hyphens, spaces (convert spaces to underscores)
+$baseName = preg_replace('/[^a-zA-Z0-9_\-\s]/', '', $baseName);
+$baseName = preg_replace('/\s+/', '_', trim($baseName));
+if (empty($baseName)) {
+    $baseName = 'image';
+}
 
-$finalFilename = str_pad($post_id, 8, '0', STR_PAD_LEFT) . '-' . $hash . '.' . $extension;
+// Build candidate filename
+$candidateBase = $post_id . '-' . $baseName;
+$finalFilename = $candidateBase . '.' . $extension;
+
+// Check for duplicates in database for this post
+$checkStmt = $mysqli->prepare("SELECT file_name FROM post_media WHERE post_id = ? AND file_name LIKE ? AND deleted_at IS NULL");
+$likePattern = $candidateBase . '%.' . $extension;
+$checkStmt->bind_param('is', $post_id, $likePattern);
+$checkStmt->execute();
+$checkResult = $checkStmt->get_result();
+
+$existingNames = [];
+while ($row = $checkResult->fetch_assoc()) {
+    $existingNames[] = $row['file_name'];
+}
+$checkStmt->close();
+
+// If filename exists, add numeric suffix
+if (in_array($finalFilename, $existingNames)) {
+    $suffix = 2;
+    while (in_array($candidateBase . '-' . $suffix . '.' . $extension, $existingNames)) {
+        $suffix++;
+    }
+    $finalFilename = $candidateBase . '-' . $suffix . '.' . $extension;
+}
 
 // Read file content
 $fileContent = file_get_contents($_FILES['file']['tmp_name']);
