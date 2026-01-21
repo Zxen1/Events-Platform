@@ -220,59 +220,40 @@ const MarqueeModule = (function() {
   function showNextSlide() {
     if (!contentEl || posts.length === 0) return;
     
-    // Advance index
     currentIndex = (currentIndex + 1) % posts.length;
     const post = posts[currentIndex];
     
-    // Create new slide
-    const slide = createSlide(post);
-    contentEl.appendChild(slide);
-    
-    // Trigger animation
-    requestAnimationFrame(() => {
-      slide.classList.add('marquee-slide--active');
-    });
-    
-    // Remove old slides after fade
-    const slides = contentEl.querySelectorAll('.marquee-slide');
-    if (slides.length > 1) {
-      const oldSlide = slides[0];
-      oldSlide.classList.remove('marquee-slide--active');
-      setTimeout(() => {
-        if (oldSlide.parentNode) {
-          oldSlide.remove();
-        }
-      }, FADE_DURATION);
-    }
-  }
-
-  /* --------------------------------------------------------------------------
-     SLIDE CREATION
-     -------------------------------------------------------------------------- */
-  
-  /**
-   * Create a slide element for a post
-   * @param {Object} post - Post object
-   * @returns {HTMLElement} The slide element
-   */
-  function createSlide(post) {
     const slide = document.createElement('a');
     slide.className = 'marquee-slide';
     slide.dataset.id = post.id;
     slide.href = getPostUrl(post);
     
-    // 1. Create image first
-    const img = document.createElement('img');
+    const img = new Image();
     img.className = 'marquee-slide-image';
     img.src = getHeroUrl(post);
     img.alt = '';
-    slide.appendChild(img);
-
-    // 2. Create info overlay second (so it sits on top of the image)
-    // We add it immediately instead of waiting for image load
-    slide.appendChild(createSlideInfo(post));
-
-    return slide;
+    
+    // Wait for image to decode before showing
+    img.decode().catch(function() {}).then(function() {
+      slide.appendChild(img);
+      slide.appendChild(createSlideInfo(post));
+      contentEl.appendChild(slide);
+      
+      requestAnimationFrame(function() {
+        slide.classList.add('marquee-slide--active');
+      });
+      
+      const slides = contentEl.querySelectorAll('.marquee-slide');
+      if (slides.length > 1) {
+        const oldSlide = slides[0];
+        oldSlide.classList.remove('marquee-slide--active');
+        setTimeout(function() {
+          if (oldSlide.parentNode) {
+            oldSlide.remove();
+          }
+        }, FADE_DURATION);
+      }
+    });
   }
   
   /**
