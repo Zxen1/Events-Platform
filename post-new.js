@@ -2702,15 +2702,147 @@ const PostModule = (function() {
     }
 
     /* ........................................................................
-       SESSION MENU [COMPONENT PLACEHOLDER: SessionMenuComponent]
-       CalendarComponent + session selection list
-       Future: Will become SessionMenuComponent with date highlighting
+       SESSION MENU
+       Uses CalendarComponent + session selection from old site pattern
        ........................................................................ */
 
     var sessionBtn = wrap.querySelector('.open-post-button-session');
     var sessionDropdown = wrap.querySelector('.open-post-dropdown-session .open-post-menu-session');
     var calendarContainer = wrap.querySelector('.open-post-calendar');
+    var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
+    var sessionInfoEl = wrap.querySelector('.open-post-text-sessioninfo');
     var calendarInitialized = false;
+    var calendarInstance = null;
+    var selectedSessionIndex = null;
+    var lastClickedCell = null;
+    
+    // Gather all sessions from map_cards
+    // PHP API returns: { date: "2026-01-15", times: [{time: "7:00 PM", ...}] }
+    var allSessions = [];
+    if (post.map_cards) {
+      post.map_cards.forEach(function(mc) {
+        if (mc.sessions && Array.isArray(mc.sessions)) {
+          mc.sessions.forEach(function(sessionGroup) {
+            if (!sessionGroup || !sessionGroup.date) return;
+            var times = sessionGroup.times || [];
+            if (times.length > 0) {
+              times.forEach(function(t) {
+                allSessions.push({
+                  date: formatDateShort(sessionGroup.date),
+                  full: sessionGroup.date,
+                  time: t.time || ''
+                });
+              });
+            } else {
+              // Flat structure
+              allSessions.push({
+                date: formatDateShort(sessionGroup.date),
+                full: sessionGroup.date,
+                time: sessionGroup.time || ''
+              });
+            }
+          });
+        }
+      });
+    }
+    
+    // Sort sessions by date then time
+    allSessions.sort(function(a, b) {
+      var cmp = (a.full || '').localeCompare(b.full || '');
+      if (cmp !== 0) return cmp;
+      return (a.time || '').localeCompare(b.time || '');
+    });
+    
+    // Build set of available ISO dates
+    var allowedDates = new Set();
+    allSessions.forEach(function(s) { if (s.full) allowedDates.add(s.full); });
+    
+    // Select a session by index
+    function selectSession(index) {
+      selectedSessionIndex = (typeof index === 'number') ? index : null;
+      var session = (selectedSessionIndex !== null) ? allSessions[selectedSessionIndex] : null;
+      
+      // Update option buttons
+      if (sessionOptsContainer) {
+        var btns = sessionOptsContainer.querySelectorAll('button');
+        btns.forEach(function(b) { b.classList.remove('selected'); });
+        if (selectedSessionIndex !== null) {
+          var activeBtn = sessionOptsContainer.querySelector('button[data-index="' + selectedSessionIndex + '"]');
+          if (activeBtn) activeBtn.classList.add('selected');
+        }
+      }
+      
+      // Update calendar selection
+      if (calendarInstance && calendarInstance.calendar) {
+        var days = calendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+        days.forEach(function(d) { d.classList.remove('selected'); });
+        if (session) {
+          var cell = calendarInstance.calendar.querySelector('.calendar-day[data-iso="' + session.full + '"]');
+          if (cell) cell.classList.add('selected');
+        }
+      }
+      
+      // Update info display
+      if (session && sessionInfoEl) {
+        sessionInfoEl.innerHTML = '<div><strong>📅 ' + session.date + (session.time ? ' ' + session.time : '') + '</strong></div>';
+      }
+      
+      // Update button display
+      if (session && sessionBtn) {
+        sessionBtn.innerHTML = '<div class="open-post-image-navpreview open-post-image-navpreview--calendar"></div>' +
+          '<span class="open-post-text-sessiondate">' + session.date + '</span>' +
+          (session.time ? '<span class="open-post-text-sessiontime">' + session.time + '</span>' : '') +
+          (allSessions.length > 1 ? '<span class="open-post-icon-arrow" aria-hidden="true"></span>' : '');
+      }
+      
+      // Close menu after selection
+      sessionBtn.setAttribute('aria-expanded', 'false');
+      sessionDropdown.hidden = true;
+    }
+    
+    // Show time popup for multiple sessions on same date
+    function showTimePopup(matches) {
+      if (!calendarContainer) return;
+      var existing = calendarContainer.querySelector('.open-post-popup-time');
+      if (existing) existing.remove();
+      
+      var popup = document.createElement('div');
+      popup.className = 'open-post-popup-time';
+      var list = document.createElement('div');
+      list.className = 'open-post-list-time';
+      matches.forEach(function(m) {
+        var btn = document.createElement('button');
+        btn.className = 'open-post-button-time';
+        btn.dataset.index = m.i;
+        btn.textContent = m.session.time || 'Select';
+        btn.addEventListener('click', function() {
+          selectSession(m.i);
+          popup.remove();
+        });
+        list.appendChild(btn);
+      });
+      popup.appendChild(list);
+      calendarContainer.appendChild(popup);
+      
+      // Position near clicked cell
+      if (lastClickedCell) {
+        var rect = lastClickedCell.getBoundingClientRect();
+        var containerRect = calendarContainer.getBoundingClientRect();
+        popup.style.position = 'absolute';
+        popup.style.top = (rect.top - containerRect.top) + 'px';
+        popup.style.left = (rect.right - containerRect.left + 4) + 'px';
+      }
+      
+      // Close on outside click
+      setTimeout(function() {
+        document.addEventListener('click', function handler(e) {
+          if (!popup.contains(e.target)) {
+            popup.remove();
+            document.removeEventListener('click', handler);
+          }
+        });
+      }, 0);
+    }
     
     if (sessionBtn && sessionDropdown) {
       sessionBtn.addEventListener('click', function() {
@@ -2718,55 +2850,52 @@ const PostModule = (function() {
         sessionBtn.setAttribute('aria-expanded', !isExpanded);
         sessionDropdown.hidden = isExpanded;
         
-        // Initialize CalendarComponent and session options on first open
+        // Initialize calendar on first open
         if (!isExpanded && !calendarInitialized && calendarContainer && window.CalendarComponent) {
-          // Gather session dates from all map cards
-          // PHP API returns sessions grouped by date: { date: "2026-01-15", times: [{time: "7:00 PM", ...}] }
-          var sessionDates = [];
-          if (post.map_cards) {
-            post.map_cards.forEach(function(mc) {
-              if (mc.sessions && Array.isArray(mc.sessions)) {
-                mc.sessions.forEach(function(sessionGroup) {
-                  if (sessionGroup && sessionGroup.date) {
-                    sessionDates.push(sessionGroup.date);
+          // Create calendar using CalendarComponent
+          calendarInstance = CalendarComponent.create(calendarContainer, {
+            monthsPast: 0,
+            monthsFuture: 12,
+            allowPast: false,
+            selectionMode: 'single'
+          });
+          
+          // Mark available dates and add click handlers
+          if (calendarInstance && calendarInstance.calendar) {
+            var days = calendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+            days.forEach(function(cell) {
+              var iso = cell.dataset.iso;
+              if (allowedDates.has(iso)) {
+                cell.classList.add('available-day');
+                cell.addEventListener('mousedown', function() { lastClickedCell = cell; });
+                cell.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  var clickedIso = cell.dataset.iso;
+                  var matches = [];
+                  allSessions.forEach(function(s, i) {
+                    if (s.full === clickedIso) matches.push({ i: i, session: s });
+                  });
+                  if (matches.length === 1) {
+                    selectSession(matches[0].i);
+                  } else if (matches.length > 1) {
+                    showTimePopup(matches);
                   }
                 });
               }
             });
           }
           
-          CalendarComponent.create(calendarContainer, {
-            monthsPast: 0,
-            monthsFuture: 12,
-            allowPast: false,
-            selectionMode: 'single',
-            onSelect: function(date) {
-              // Update session info display when date selected
-              var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
-              if (sessionInfo && date) {
-                sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(date) + '</div>';
-              }
-              // Close the session dropdown after selection
-              sessionBtn.setAttribute('aria-expanded', 'false');
-              sessionDropdown.hidden = true;
-            }
-          });
-          
           // Build session options list
-          var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
-          if (sessionOptsContainer && sessionDates.length > 0) {
-            var uniqueDates = sessionDates.filter(function(d, i, arr) { return arr.indexOf(d) === i; }).sort();
-            uniqueDates.forEach(function(dateStr) {
+          if (sessionOptsContainer) {
+            sessionOptsContainer.innerHTML = '';
+            allSessions.forEach(function(session, index) {
               var btn = document.createElement('button');
               btn.className = 'open-post-button-sessionopt';
-              btn.textContent = formatDateShort(dateStr);
+              btn.dataset.index = index;
+              btn.innerHTML = '<span class="open-post-text-optdate">' + session.date + '</span>' +
+                '<span class="open-post-text-opttime">' + (session.time || '') + '</span>';
               btn.addEventListener('click', function() {
-                var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
-                if (sessionInfo) {
-                  sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(dateStr) + '</div>';
-                }
-                sessionBtn.setAttribute('aria-expanded', 'false');
-                sessionDropdown.hidden = true;
+                selectSession(index);
               });
               sessionOptsContainer.appendChild(btn);
             });
@@ -2775,6 +2904,14 @@ const PostModule = (function() {
           calendarInitialized = true;
         }
       });
+      
+      // Auto-select if only one session
+      if (allSessions.length === 1) {
+        selectSession(0);
+      } else if (allSessions.length > 1 && sessionBtn) {
+        sessionBtn.innerHTML = '<div class="open-post-image-navpreview open-post-image-navpreview--calendar"></div>' +
+          'Select Session<span class="open-post-icon-arrow" aria-hidden="true"></span>';
+      }
     }
 
     // Venue option clicks
@@ -3540,7 +3677,7 @@ const PostModule = (function() {
    * @returns {Promise<Object|null>} Post data or null
    */
   function loadPostById(postId) {
-    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_id=' + postId)
+    return fetch('/gateway.php?action=get-posts&limit=1&post_id=' + postId)
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
@@ -3559,7 +3696,7 @@ const PostModule = (function() {
   function loadPostByKey(postKey) {
     var key = (postKey === null || postKey === undefined) ? '' : String(postKey).trim();
     if (!key) return Promise.resolve(null);
-    return fetch('/gateway.php?action=get-posts&limit=1&full=1&post_key=' + encodeURIComponent(key))
+    return fetch('/gateway.php?action=get-posts&limit=1&post_key=' + encodeURIComponent(key))
       .then(function(response) {
         if (!response.ok) return null;
         return response.json();
