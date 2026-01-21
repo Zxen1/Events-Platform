@@ -96,9 +96,9 @@ const MarqueeModule = (function() {
    */
   function show() {
     if (!marqueeEl || !contentEl) return;
+    if (isVisible) return;
     
     marqueeEl.classList.add('marquee--show');
-    contentEl.classList.remove('marquee-content--hidden');
     contentEl.classList.add('marquee-content--visible');
     isVisible = true;
     
@@ -115,20 +115,18 @@ const MarqueeModule = (function() {
    */
   function hide() {
     if (!marqueeEl || !contentEl) return;
+    if (!isVisible) return;
     
     contentEl.classList.remove('marquee-content--visible');
-    contentEl.classList.add('marquee-content--hidden');
-    
-    // Stop rotation when hidden
     stopRotation();
+    isVisible = false;
     
-    setTimeout(() => {
+    setTimeout(function() {
       if (!isVisible) {
         marqueeEl.classList.remove('marquee--show');
       }
-    }, 300); // Match CSS transition duration
+    }, 300);
     
-    isVisible = false;
     App.emit('marquee:hidden');
   }
   
@@ -547,68 +545,45 @@ App.registerModule('marquee', MarqueeModule);
         }
     }
     
-    function checkZoomAndShow() {
-        if (!isWideEnough() || !bootloaded) return;
-        var mapModule = (window.App && typeof App.getModule === 'function') ? App.getModule('map') : null;
-        if (mapModule && typeof mapModule.getZoom === 'function') {
-            var zoom = mapModule.getZoom();
-            if (zoom > getMinZoom()) {
-                MarqueeModule.show();
-            } else {
-                MarqueeModule.hide();
-            }
+    function isPostsMode() {
+        return document.body.classList.contains('mode-posts');
+    }
+    
+    function checkAndShow() {
+        if (!bootloaded) return;
+        
+        // Must be: wide enough + posts mode + has posts
+        if (isWideEnough() && isPostsMode() && lastPosts && lastPosts.length > 0) {
+            MarqueeModule.show();
+        } else {
+            MarqueeModule.hide();
         }
     }
     
     // Listen for posts being loaded/filtered
     if (window.App && App.on) {
         App.on('filter:applied', function(data) {
-            // Always remember the latest posts
             if (data && Array.isArray(data.marqueePosts)) {
                 lastPosts = data.marqueePosts;
             }
             
-            if (!isWideEnough()) return;
-            
-            if (lastPosts && lastPosts.length > 0) {
+            if (lastPosts && lastPosts.length > 0 && isWideEnough()) {
                 lazyInit();
-                checkZoomAndShow();
             }
+            checkAndShow();
         });
         
-        // Listen for zoom changes to show/hide based on zoom level
-        App.on('map:boundsChanged', function(data) {
-            if (!isWideEnough()) {
-                if (bootloaded) MarqueeModule.hide();
-                return;
-            }
-            
-            // If we just became wide enough, check if we can boot
-            if (!bootloaded && lastPosts && lastPosts.length > 0) {
-                lazyInit();
-            }
-            
-            if (bootloaded && data && data.zoom !== undefined) {
-                if (data.zoom > getMinZoom()) {
-                    MarqueeModule.show();
-                } else {
-                    MarqueeModule.hide();
-                }
-            }
+        // Listen for mode changes (map/posts toggle)
+        App.on('mode:changed', function() {
+            checkAndShow();
         });
 
-        // Watch window resize to handle immediate detection
+        // Watch window resize
         window.addEventListener('resize', function() {
-            if (!isWideEnough()) {
-                if (bootloaded) MarqueeModule.hide();
-            } else {
-                // BECAME WIDE ENOUGH - boot if we have data
-                if (!bootloaded && lastPosts && lastPosts.length > 0) {
-                    lazyInit();
-                }
-                // Check if zoom allows showing
-                checkZoomAndShow();
+            if (!bootloaded && lastPosts && lastPosts.length > 0 && isWideEnough()) {
+                lazyInit();
             }
+            checkAndShow();
         });
     }
 })();
