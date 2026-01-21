@@ -393,13 +393,11 @@ const MarqueeModule = (function() {
    * @returns {string} Post URL
    */
   function getPostUrl(post) {
-    // Use post module's URL builder if available
     const postModule = (window.App && typeof App.getModule === 'function') ? App.getModule('post') : null;
-    if (postModule && typeof postModule.getPostUrl === 'function') {
-      return postModule.getPostUrl(post);
+    if (!postModule || typeof postModule.getPostUrl !== 'function') {
+      throw new Error('[Marquee] Post module not available for getPostUrl()');
     }
-    console.warn('[Marquee] Post module not ready for getPostUrl()');
-    return '';
+    return postModule.getPostUrl(post);
   }
   
   /**
@@ -408,78 +406,24 @@ const MarqueeModule = (function() {
    * @returns {string} Hero image URL
    */
   function getHeroUrl(post) {
-    // Use post module's URL builder if available
     const postModule = (window.App && typeof App.getModule === 'function') ? App.getModule('post') : null;
-    if (postModule && typeof postModule.getHeroUrl === 'function') {
-      return postModule.getHeroUrl(post);
+    if (!postModule || typeof postModule.getHeroUrl !== 'function') {
+      throw new Error('[Marquee] Post module not available for getHeroUrl()');
     }
-    
-    // Use post's hero image if set
-    if (post.heroImage) {
-      return post.heroImage;
-    }
-    
-    console.warn('[Marquee] Missing hero image for post id ' + String(post && post.id));
-    return '';
+    return postModule.getHeroUrl(post);
   }
   
-  /**
-   * Simple hash to boolean for consistent portrait/landscape selection
-   * @param {string} str - String to hash
-   * @returns {boolean}
-   */
-  function hashToBoolean(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) {
-      h = ((h << 5) - h) + str.charCodeAt(i);
-      h |= 0;
-    }
-    return Math.abs(h) % 2 === 0;
-  }
-  
-  /**
-   * Format dates for display
-   * @param {Object|Array|string} dates - Date data
-   * @returns {string} Formatted date string
-   */
   /**
    * Format dates display for a marquee slide.
-   * Required for instant rendering. Throws error if summary is invalid format.
    * @param {string} dates - Pre-formatted date summary string
    * @returns {string} Formatted date string
    */
   function formatDates(dates) {
-    // Return empty if no dates provided (valid state)
     if (!dates) return '';
-    
-    // Primary source: pre-formatted string (non-JSON)
     if (typeof dates === 'string' && dates.indexOf('{') !== 0) {
       return dates;
     }
-
-    // Agent Essentials: NO FALLBACKS. Legacy JSON/array support is removed.
     return '';
-  }
-
-  /**
-   * Format a single date
-   * @param {string|Date} date - Date to format
-   * @returns {string} Formatted date
-   */
-  function formatDate(date) {
-    return App.formatDateShort(date);
-  }
-  
-  /**
-   * Escape HTML to prevent XSS
-   * @param {string} str - String to escape
-   * @returns {string} Escaped string
-   */
-  function escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
   }
 
   /* --------------------------------------------------------------------------
