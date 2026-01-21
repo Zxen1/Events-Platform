@@ -1,12 +1,12 @@
 ﻿**********************
 Windows PowerShell transcript start
-Start time: 20260121161207
+Start time: 20260121165031
 Username: THE-COMPUTER\Paul 8700k
 RunAs User: THE-COMPUTER\Paul 8700k
 Configuration Name: 
 Machine: THE-COMPUTER (Microsoft Windows NT 10.0.26200.0)
 Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -file  D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-venue-images.ps1 
-Process ID: 46664
+Process ID: 20128
 PSVersion: 5.1.26100.7462
 PSEdition: Desktop
 PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
@@ -21,18 +21,18 @@ Transcript started, output file is D:\Websites\Events Platform Cursor 2025\Event
 
 Found 10 images to process
 
-[1/10] 1-bm01a1.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/British_Museum_2018.jpg
+[1/10] 1-British_Museum_2018.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/3/3a/British_Museum_from_NE_2.JPG
   Downloading...
- OK (2.92 MB)
+ OK (1.22 MB)
   Uploading to Bunny...
 
  OK
 
-[2/10] 2-nhm02b2.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Natural_History_Museum_London_UK.jpg
+[2/10] 2-Natural_History_Museum_London_UK.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Natural_History_Museum_London_Jan_2006.jpg
   Downloading...
- OK (6.14 MB)
+ OK (2.67 MB)
   Uploading to Bunny...
 HttpCode Message
 -------- -------
@@ -40,29 +40,31 @@ HttpCode Message
      201 File uploaded.
  OK
 
-[3/10] 3-tol03c3.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tower_of_London_48.jpg
+[3/10] 3-Tower_of_London_48.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tower_of_London_viewed_from_the_River_Thames.jpg
   Downloading...
- OK (7.31 MB)
+ OK (8.27 MB)
   Uploading to Bunny...
      201 File uploaded.
  OK
 
-[4/10] 4-wab04d4.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Westminster-Abbey.JPG
+[4/10] 4-Westminster-Abbey.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Westminster_Abbey_-_West_Door.jpg
   Downloading...
- OK (4.29 MB)
+ OK (0.98 MB)
   Uploading to Bunny...
      201 File uploaded.
  OK
 
-[5/10] 5-ttm05e5.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tate_Modern_exterior_%282009%29.jpg
+[5/10] 5-Tate_Modern_exterior.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Tate_Modern_-_Bankside_Power_Station.jpg
   Downloading...
-PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (404) Not Found."
- FAILED
-  Error: The remote server returned an error: (404) Not Found.
-[6/10] 6-bkp06f6.jpg
+ OK (6.37 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
+[6/10] 6-Buckingham_Palace_from_gardens.jpg
   Source: https://commons.wikimedia.org/wiki/Special:FilePath/Buckingham_Palace_from_gardens%2C_London%2C_UK_-_Diliff.jpg
   Downloading...
  OK (5.35 MB)
@@ -70,40 +72,40 @@ PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (4
      201 File uploaded.
  OK
 
-[7/10] 7-spc07g7.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/St_Pauls_Cathedral_in_London.jpg
+[7/10] 7-St_Pauls_Cathedral_in_London.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/St_Paul%27s_Cathedral%2C_London%2C_England_-_Jan_2010.jpg
   Downloading...
- OK (1.24 MB)
+ OK (7.26 MB)
   Uploading to Bunny...
      201 File uploaded.
  OK
 
-[8/10] 8-vam08h8.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Victoria_and_Albert_Museum_London.jpg
+[8/10] 8-Victoria_and_Albert_Museum_London.jpg
+  Source: https://upload.wikimedia.org/wikipedia/commons/b/bb/Victoria_%26_Albert_Museum_Entrance%2C_London%2C_UK_-_Diliff.jpg
   Downloading...
- OK (3.17 MB)
-  Uploading to Bunny...
-     201 File uploaded.
- OK
-
-[9/10] 9-ley09i9.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/London_Eye%2C_River_Thames.jpg
-  Downloading...
- OK (14.37 MB)
-  Uploading to Bunny...
-     201 File uploaded.
- OK
-
-[10/10] 10-scm10j0.jpg
-  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Science_Museum_London_06.jpg
-  Downloading...
-PS>TerminatingError(Invoke-WebRequest): "The remote server returned an error: (404) Not Found."
+PS>TerminatingError(Invoke-WebRequest): "File not found: /v1/AUTH_mw/wikipedia-commons-local-public.bb/b/bb/Victoria_%26_Albert_Museum_Entrance%2C_London%2C_UK_-_Diliff.jpg"
  FAILED
   Error: The remote server returned an error: (404) Not Found.
+[9/10] 9-London_Eye_River_Thames.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/London_Eye_Twilight_April_2006.jpg
+  Downloading...
+ OK (1.25 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
+[10/10] 10-Science_Museum_London.jpg
+  Source: https://commons.wikimedia.org/wiki/Special:FilePath/Science_Museum%2C_Exhibition_Road%2C_London_SW7_-_geograph.org.uk_-_1125595.jpg
+  Downloading...
+ OK (0.09 MB)
+  Uploading to Bunny...
+     201 File uploaded.
+ OK
+
 ========================================
 Complete!
-  Success: 8
-  Failed:  2
+  Success: 9
+  Failed:  1
 
 Local backups: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\venue-images
 CDN location:  https://cdn.funmap.com/post-images/2026-01/
@@ -111,5 +113,5 @@ CDN location:  https://cdn.funmap.com/post-images/2026-01/
 Log saved to: D:\Websites\Events Platform Cursor 2025\Events-Platform\Agent\upload-log.txt
 **********************
 Windows PowerShell transcript end
-End time: 20260121161426
+End time: 20260121165216
 **********************
