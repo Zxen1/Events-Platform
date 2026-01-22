@@ -113,9 +113,6 @@ try {
     if (!isset($mysqli) || !($mysqli instanceof mysqli)) {
         fail(500, 'Database connection unavailable.');
     }
-    
-    // Ensure UTF-8 encoding for multi-lingual support
-    $mysqli->set_charset('utf8mb4');
 
     // Parse query parameters
     //
