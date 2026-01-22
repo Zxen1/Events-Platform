@@ -2513,7 +2513,6 @@ const FieldsetBuilder = (function(){
                 // Ticket group state
                 var spTicketGroups = {}; // { A: itemEl, B: itemEl, ... } (itemEl has .fieldset-sessionpricing-ticketgroup-item)
                 var spTicketGroupList = null; // container element for group list
-                var spOpenGroupKey = null;
 
                 function spGetSystemTicketIconUrl() {
                     try {
@@ -3371,7 +3370,6 @@ const FieldsetBuilder = (function(){
                     var g = spTicketGroups[lastKey];
                     if (g) try { g.remove(); } catch (e1) {}
                     delete spTicketGroups[lastKey];
-                    spOpenGroupKey = null;
                     Object.keys(spSessionData).forEach(function(ds) {
                         var data = spSessionData[ds];
                         if (!data || !Array.isArray(data.groups)) return;
@@ -3394,7 +3392,8 @@ const FieldsetBuilder = (function(){
                 }
 
                 // Insert ticket groups container above sessions (always visible)
-                fieldset.appendChild(spPricingGroupsWrap);
+                // Insert ticket groups BEFORE the sessions container
+                fieldset.insertBefore(spPricingGroupsWrap, spSessionsContainer);
                 
                 // Ensure default group A exists on load
                 spEnsureDefaultGroup();
@@ -3760,46 +3759,6 @@ const FieldsetBuilder = (function(){
                     updateAllVisibility();
                 }
 
-                function spSetGroupEditorOpen(groupKey, isOpen) {
-                    var g = spTicketGroups[String(groupKey || '')];
-                    if (!g) return;
-                    var wrap = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-editorwrap');
-                    if (!wrap) return;
-                    wrap.style.display = isOpen ? '' : 'none';
-                    g.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open', !!isOpen);
-
-                    // Toggle sticky class on header and swap button-class-2 / container-header
-                    try {
-                        Object.keys(spTicketGroups).forEach(function(k) {
-                            var gg = spTicketGroups[k];
-                            if (!gg) return;
-                            var hh = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
-                            if (hh) hh.classList.remove('fieldset-sessionpricing-ticketgroup-item-header--sticky');
-                            var hc = gg.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
-                            if (hc) {
-                                hc.classList.remove('container-header');
-                                hc.classList.add('button-class-2');
-                            }
-                        });
-                        if (isOpen) {
-                            var h0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header');
-                            if (h0) h0.classList.add('fieldset-sessionpricing-ticketgroup-item-header--sticky');
-                            var hc0 = g.querySelector('.fieldset-sessionpricing-ticketgroup-item-header-content');
-                            if (hc0) {
-                                hc0.classList.remove('button-class-2');
-                                hc0.classList.add('container-header');
-                            }
-                        }
-                    } catch (eSticky) {}
-                }
-
-                function spCloseAllGroupEditors() {
-                    Object.keys(spTicketGroups).forEach(function(k) {
-                        spSetGroupEditorOpen(k, false);
-                    });
-                    spOpenGroupKey = null;
-                }
-
                 function spUpdateAllTicketButtonsFromData() {
                     try {
                         var inputs = spSessionsContainer.querySelectorAll('.fieldset-sessionpricing-session-field-time-input');
@@ -3891,46 +3850,15 @@ const FieldsetBuilder = (function(){
                     group.dataset.ticketGroupKey = key;
 
                     // Header wrapper (46px when sticky - top 10px is shield, bottom 36px is content)
+                    // Header with group label
                     var header = document.createElement('div');
-                    header.className = 'fieldset-sessionpricing-ticketgroup-item-header';
-
-                    // Content row inside header (36px button area with all interactions)
-                    var headerContent = document.createElement('div');
-                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content button-class-2';
-
-                    var headerLabel = document.createElement('span');
-                    headerLabel.className = 'fieldset-sessionpricing-ticketgroup-header-label';
-                    headerLabel.textContent = 'Ticket Group ' + key;
-                    headerContent.appendChild(headerLabel);
-
-                    var editBtn = document.createElement('button');
-                    editBtn.type = 'button';
-                    editBtn.className = 'fieldset-sessionpricing-ticketgroup-button-edit';
-                    var editBtnIcon = document.createElement('span');
-                    editBtnIcon.className = 'fieldset-sessionpricing-ticketgroup-button-edit-icon';
-                    editBtn.appendChild(editBtnIcon);
-                    editBtn.title = 'Edit Ticket Group';
-                    editBtn.setAttribute('aria-label', 'Edit Ticket Group');
-                    editBtn.addEventListener('click', function(e) {
-                        if (spOpenGroupKey && spOpenGroupKey !== key) {
-                            spCloseAllGroupEditors();
-                        }
-                        var isOpen = group.classList.contains('fieldset-sessionpricing-ticketgroup-item--open');
-                        if (!isOpen) {
-                            spOpenGroupKey = key;
-                        } else {
-                            spOpenGroupKey = null;
-                        }
-                        spSetGroupEditorOpen(key, !isOpen);
-                    });
-                    headerContent.appendChild(editBtn);
-
-                    header.appendChild(headerContent);
+                    header.className = 'fieldset-sessionpricing-ticketgroup-item-header container-header';
+                    header.textContent = 'Ticket Group ' + key;
                     group.appendChild(header);
 
+                    // Editor content (always visible)
                     var editorWrap = document.createElement('div');
                     editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-content';
-                    editorWrap.style.display = 'none';
 
                     var editor = document.createElement('div');
                     editor.className = 'fieldset-sessionpricing-pricing-editor';
