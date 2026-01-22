@@ -2702,74 +2702,139 @@ const PostModule = (function() {
     }
 
     /* ........................................................................
-       SESSION MENU [COMPONENT PLACEHOLDER: SessionMenuComponent]
+       SESSION MENU
        CalendarComponent + session selection list
-       Future: Will become SessionMenuComponent with date highlighting
        ........................................................................ */
 
     var sessionBtn = wrap.querySelector('.open-post-button-session');
     var sessionDropdown = wrap.querySelector('.open-post-dropdown-session .open-post-menu-session');
     var calendarContainer = wrap.querySelector('.open-post-calendar');
+    var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
     var calendarInitialized = false;
     
-    if (sessionBtn && sessionDropdown) {
+    if (sessionBtn && sessionDropdown && calendarContainer && sessionOptsContainer) {
       sessionBtn.addEventListener('click', function() {
         var isExpanded = sessionBtn.getAttribute('aria-expanded') === 'true';
         sessionBtn.setAttribute('aria-expanded', !isExpanded);
         sessionDropdown.hidden = isExpanded;
         
-        // Initialize CalendarComponent and session options on first open
-        if (!isExpanded && !calendarInitialized && calendarContainer && window.CalendarComponent) {
-          // Gather session dates from all map cards
-          var sessionDates = [];
-          if (post.map_cards) {
-            post.map_cards.forEach(function(mc) {
-              if (mc.sessions && Array.isArray(mc.sessions)) {
-                mc.sessions.forEach(function(s) {
-                  if (s.date) sessionDates.push(s.date);
+        if (!isExpanded && !calendarInitialized && window.CalendarComponent) {
+          calendarInitialized = true;
+          
+          // Fetch full session data on demand
+          fetch('/gateway.php?action=get-posts&limit=1&post_id=' + post.id + '&full=1')
+            .then(function(response) {
+              if (!response.ok) throw new Error('Failed to load sessions');
+              return response.json();
+            })
+            .then(function(data) {
+              if (!data || !data.success || !data.posts || !data.posts.length) {
+                throw new Error('No session data');
+              }
+              
+              var fullPost = data.posts[0];
+              var sessionsByDate = {};
+              
+              if (fullPost.map_cards && Array.isArray(fullPost.map_cards)) {
+                fullPost.map_cards.forEach(function(mc) {
+                  if (mc.sessions && Array.isArray(mc.sessions)) {
+                    mc.sessions.forEach(function(sessionData) {
+                      var date = sessionData.date;
+                      if (!date) return;
+                      
+                      if (!sessionsByDate[date]) {
+                        sessionsByDate[date] = [];
+                      }
+                      
+                      if (sessionData.times && Array.isArray(sessionData.times)) {
+                        sessionData.times.forEach(function(timeData) {
+                          sessionsByDate[date].push({
+                            date: date,
+                            time: timeData.time,
+                            ticket_group_key: timeData.ticket_group_key
+                          });
+                        });
+                      }
+                    });
+                  }
                 });
               }
-            });
-          }
-          
-          CalendarComponent.create(calendarContainer, {
-            monthsPast: 0,
-            monthsFuture: 12,
-            allowPast: false,
-            selectionMode: 'single',
-            onSelect: function(date) {
-              // Update session info display when date selected
-              var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
-              if (sessionInfo && date) {
-                sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(date) + '</div>';
-              }
-              // Close the session dropdown after selection
-              sessionBtn.setAttribute('aria-expanded', 'false');
-              sessionDropdown.hidden = true;
-            }
-          });
-          
-          // Build session options list
-          var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
-          if (sessionOptsContainer && sessionDates.length > 0) {
-            var uniqueDates = sessionDates.filter(function(d, i, arr) { return arr.indexOf(d) === i; }).sort();
-            uniqueDates.forEach(function(dateStr) {
-              var btn = document.createElement('button');
-              btn.className = 'open-post-button-sessionopt';
-              btn.textContent = formatDateShort(dateStr);
-              btn.addEventListener('click', function() {
-                var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
-                if (sessionInfo) {
-                  sessionInfo.innerHTML = '<div>📅 ' + formatDateShort(dateStr) + '</div>';
-                }
-                sessionBtn.setAttribute('aria-expanded', 'false');
-                sessionDropdown.hidden = true;
+              
+              var availableDates = Object.keys(sessionsByDate).sort();
+              
+              // Create calendar
+              CalendarComponent.create(calendarContainer, {
+                monthsPast: 0,
+                monthsFuture: 12,
+                allowPast: false,
+                selectionMode: 'range',
+                showActions: false
               });
-              sessionOptsContainer.appendChild(btn);
+              
+              // Highlight available dates
+              availableDates.forEach(function(dateStr) {
+                var cell = calendarContainer.querySelector('.calendar-day[data-iso="' + dateStr + '"]');
+                if (cell) {
+                  cell.classList.add('available-day');
+                  
+                  cell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var sessions = sessionsByDate[dateStr];
+                    
+                    if (sessions.length === 1) {
+                      selectSession(sessions[0]);
+                      sessionBtn.setAttribute('aria-expanded', 'false');
+                      sessionDropdown.hidden = true;
+                    } else if (sessions.length > 1) {
+                      displaySessionTimes(dateStr, sessions);
+                    }
+                  });
+                }
+              });
+              
+              function displaySessionTimes(date, sessions) {
+                sessionOptsContainer.innerHTML = '';
+                
+                sessions.forEach(function(session) {
+                  var btn = document.createElement('button');
+                  btn.className = 'open-post-button-sessionopt';
+                  btn.textContent = formatTimeShort(session.time);
+                  btn.addEventListener('click', function() {
+                    selectSession(session);
+                    sessionBtn.setAttribute('aria-expanded', 'false');
+                    sessionDropdown.hidden = true;
+                  });
+                  sessionOptsContainer.appendChild(btn);
+                });
+              }
+              
+              function selectSession(session) {
+                var dateText = formatDateShort(session.date);
+                var timeText = formatTimeShort(session.time);
+                var displayText = dateText + ' at ' + timeText;
+                
+                var sessionInfoEl = wrap.querySelector('.open-post-text-sessioninfo');
+                if (sessionInfoEl) {
+                  sessionInfoEl.innerHTML = '<div>' + escapeHtml(displayText) + '</div>';
+                }
+                
+                sessionOptsContainer.innerHTML = '';
+              }
+              
+              function formatTimeShort(timeStr) {
+                if (!timeStr) return '';
+                var parts = String(timeStr).split(':');
+                if (parts.length < 2) return timeStr;
+                var h = parseInt(parts[0], 10);
+                var m = parts[1];
+                var ampm = h >= 12 ? 'PM' : 'AM';
+                h = h % 12 || 12;
+                return h + ':' + m + ' ' + ampm;
+              }
+            })
+            .catch(function(err) {
+              console.error('[Session Menu] Failed to load sessions:', err);
             });
-          }
-          
-          calendarInitialized = true;
         }
       });
     }
