@@ -970,6 +970,13 @@
     border-color: var(--blue-500);
 }
 
+/* Instruction Text */
+.fieldset-sessionpricing-instruction {
+    font-size: 13px;
+    color: var(--text-muted, #888);
+    line-height: 1.5;
+}
+
 /* Sessions Container */
 .fieldset-sessionpricing-sessions-container {
     display: flex;
@@ -1320,7 +1327,7 @@
     cursor: pointer;
 }
 
-.fieldset-sessionpricing-ticketgroup-button-edit {
+.fieldset-sessionpricing-ticketgroup-arrow {
     width: 36px;
     min-width: 36px;
     max-width: 36px;
@@ -1332,23 +1339,29 @@
     border: none;
     border-radius: 0;
     color: #fff;
-    cursor: pointer;
     margin-left: 10px;
     padding: 0;
 }
 
-.fieldset-sessionpricing-ticketgroup-button-edit-icon {
+.fieldset-sessionpricing-ticketgroup-arrow-icon {
     width: 16px;
     height: 16px;
     background-color: currentColor;
-    -webkit-mask-image: var(--ui-icon-edit);
-    mask-image: var(--ui-icon-edit);
+    -webkit-mask-image: var(--ui-icon-arrow-down);
+    mask-image: var(--ui-icon-arrow-down);
     -webkit-mask-size: contain;
     mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-position: center;
     mask-position: center;
+    transition: transform 0.2s;
+    transform-origin: center;
+}
+
+/* Arrow rotates up when ticket group is open */
+.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-arrow-icon {
+    transform: rotate(180deg);
 }
 
 /* Ticket Group Header +/- Buttons */
@@ -1391,7 +1404,6 @@
 /* Open state: show editor */
 /* When open, remove bottom border-radius so it connects to editor */
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
-    border-color: var(--blue-500);
     border-radius: 5px 5px 0 0;
 }
 
@@ -1399,7 +1411,6 @@
     display: block;
     margin-top: 0;
     padding: 10px;
-    border-color: var(--blue-500);
 }
 
 .fieldset-sessionpricing-ticketgroup-actions {

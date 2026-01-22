@@ -2273,7 +2273,7 @@ const FieldsetBuilder = (function(){
                 var itemNameInput = document.createElement('input');
                 itemNameInput.type = 'text';
                 itemNameInput.className = 'fieldset-input fieldset-itempricing-input-itemname input-class-1';
-                itemNameInput.placeholder = 'eg. T-Shirt';
+                applyPlaceholder(itemNameInput, fields && fields.item_name && fields.item_name.placeholder);
                 itemNameInput.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                 fieldset.appendChild(itemNameInput);
                 
@@ -2418,7 +2418,7 @@ const FieldsetBuilder = (function(){
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
                     variantInput.className = 'fieldset-input fieldset-itempricing-input-itemvariantname input-class-1';
-                    variantInput.placeholder = 'eg. Large, Red';
+                    applyPlaceholder(variantInput, fields && fields.variant && fields.variant.placeholder);
                     variantRow.appendChild(variantInput);
                     
                     // + button
@@ -2503,8 +2503,15 @@ const FieldsetBuilder = (function(){
             case 'session_pricing':
                 // Sessions + ticket-group popover (lettered groups, embedded pricing editor).
                 var spLabelEl = buildLabel(name, tooltip, minLength, maxLength);
-                spLabelEl.style.marginBottom = '6px'; // 10-12-6 rule: 6px label-element
+                spLabelEl.style.marginBottom = '10px';
                 fieldset.appendChild(spLabelEl);
+
+                // Instruction text for ticket groups
+                var spTicketGroupsInstruction = document.createElement('div');
+                spTicketGroupsInstruction.className = 'fieldset-sessionpricing-instruction';
+                spTicketGroupsInstruction.textContent = 'Ticket groups allow you to create age-specific and price-specific variations to your typical age rating and pricing structure. If you have the same age rating and price structure for all your sessions, then you only need one ticket group.';
+                spTicketGroupsInstruction.style.marginBottom = '10px';
+                fieldset.appendChild(spTicketGroupsInstruction);
 
                 // Track selected dates:
                 // { 'YYYY-MM-DD': { times: ['19:00', ...], edited: [true,false...], groups: ['','B',...] } }
@@ -2763,7 +2770,7 @@ const FieldsetBuilder = (function(){
 
                     var tierInput = document.createElement('input');
                     tierInput.className = 'fieldset-input input-class-1';
-                    tierInput.placeholder = 'eg. Adult, Concession, Child';
+                    applyPlaceholder(tierInput, fields && fields.tier_name && fields.tier_name.placeholder);
                     tierInput.style.flex = '3';
                     inputRow.appendChild(tierInput);
 
@@ -2938,7 +2945,7 @@ const FieldsetBuilder = (function(){
                     var seatInput = document.createElement('input');
                     seatInput.type = 'text';
                     seatInput.className = 'fieldset-input input-class-1 fieldset-sessionpricing-input-ticketarea';
-                    seatInput.placeholder = 'eg. Stalls, Balcony, VIP Area';
+                    applyPlaceholder(seatInput, fields && fields.ticket_area && fields.ticket_area.placeholder);
                     seatInput.style.flex = '1';
                     
                     function capitalize(val) {
@@ -3420,6 +3427,14 @@ const FieldsetBuilder = (function(){
                 // Ensure default group A exists on load
                 spEnsureDefaultGroup();
 
+                // Instruction text for date table
+                var spDateTableInstruction = document.createElement('div');
+                spDateTableInstruction.className = 'fieldset-sessionpricing-instruction';
+                spDateTableInstruction.textContent = 'Click a date box on the left to open the date picker. Select every session date for your event. Type the session time beside each date in 24 hour format. You can have up to ten session times per day. If you have a multi-day event, you may want to create a new session for each day. If you have more than one ticket group, select which one you want per session.';
+                spDateTableInstruction.style.marginTop = '10px';
+                spDateTableInstruction.style.marginBottom = '10px';
+                fieldset.insertBefore(spDateTableInstruction, spSessionsContainer);
+
                 function spApplyDraftToCalendar() {
                     try {
                         if (!spCalendarInstance) return;
@@ -3877,25 +3892,24 @@ const FieldsetBuilder = (function(){
 
                     var headerContent = document.createElement('div');
                     headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content container-header';
+                    headerContent.style.cursor = 'pointer';
+                    
+                    // Entire header is clickable to expand/collapse
+                    headerContent.addEventListener('click', function(e) {
+                        group.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open');
+                    });
 
                     var headerLabel = document.createElement('span');
                     headerLabel.className = 'fieldset-sessionpricing-ticketgroup-header-label';
                     headerLabel.textContent = 'Ticket Group ' + key;
                     headerContent.appendChild(headerLabel);
 
-                    var editBtn = document.createElement('button');
-                    editBtn.type = 'button';
-                    editBtn.className = 'fieldset-sessionpricing-ticketgroup-button-edit';
-                    var editBtnIcon = document.createElement('span');
-                    editBtnIcon.className = 'fieldset-sessionpricing-ticketgroup-button-edit-icon';
-                    editBtn.appendChild(editBtnIcon);
-                    editBtn.title = 'Toggle Ticket Group';
-                    editBtn.setAttribute('aria-label', 'Toggle Ticket Group');
-                    editBtn.addEventListener('click', function(e) {
-                        try { e.preventDefault(); } catch (e0) {}
-                        group.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open');
-                    });
-                    headerContent.appendChild(editBtn);
+                    var arrowWrap = document.createElement('div');
+                    arrowWrap.className = 'fieldset-sessionpricing-ticketgroup-arrow';
+                    var arrowIcon = document.createElement('span');
+                    arrowIcon.className = 'fieldset-sessionpricing-ticketgroup-arrow-icon';
+                    arrowWrap.appendChild(arrowIcon);
+                    headerContent.appendChild(arrowWrap);
 
                     // Add button (+)
                     var addBtn = document.createElement('button');
@@ -3912,7 +3926,7 @@ const FieldsetBuilder = (function(){
                     addBtn.title = 'Add Ticket Group';
                     addBtn.setAttribute('aria-label', 'Add Ticket Group');
                     addBtn.addEventListener('click', function(e) {
-                        try { e.preventDefault(); } catch (e0) {}
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
                         spAddTicketGroup();
                     });
                     headerContent.appendChild(addBtn);
@@ -3933,7 +3947,7 @@ const FieldsetBuilder = (function(){
                     removeBtn.setAttribute('aria-label', 'Remove Ticket Group');
                     (function(groupKey) {
                         removeBtn.addEventListener('click', function(e) {
-                            try { e.preventDefault(); } catch (e0) {}
+                            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
                             spRemoveTicketGroup(groupKey);
                         });
                     })(key);
