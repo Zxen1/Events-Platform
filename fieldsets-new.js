@@ -2940,8 +2940,8 @@ const FieldsetBuilder = (function(){
                         this.setSelectionRange(cursor, cursor);
                         updateTierCompleteness();
                         
-                        // Auto-copy logic
-                        if (!this.dataset.manuallyEdited) {
+                        // Auto-copy logic (skip during sync to prevent recursion)
+                        if (!this.dataset.manuallyEdited && !spIsSyncing) {
                             var val = this.value;
                             var groupItem = tiersContainer.closest('.fieldset-sessionpricing-ticketgroup-item');
                             if (groupItem) {
@@ -2955,7 +2955,7 @@ const FieldsetBuilder = (function(){
                                         var otherInp = otherTiers[myIdx].querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
                                         if (otherInp && otherInp !== tierInput && !otherInp.dataset.manuallyEdited) {
                                             otherInp.value = val;
-                                            otherInp.dispatchEvent(new Event('input'));
+                                            // Don't dispatch input to avoid recursion - value is set directly
                                         }
                                     }
                                 });
@@ -3084,8 +3084,8 @@ const FieldsetBuilder = (function(){
                         var hasVal = !!String(this.value || '').trim();
                         seatReq.classList.toggle('fieldset-label-required--complete', hasVal);
                         
-                        // Auto-copy logic
-                        if (!this.dataset.manuallyEdited) {
+                        // Auto-copy logic (skip during sync to prevent recursion)
+                        if (!this.dataset.manuallyEdited && !spIsSyncing) {
                             var val = this.value;
                             var groupItem = seatingAreasContainer.closest('.fieldset-sessionpricing-ticketgroup-item');
                             if (groupItem) {
@@ -3098,7 +3098,7 @@ const FieldsetBuilder = (function(){
                                         var otherInp = otherBlocks[myIdx].querySelector('.fieldset-sessionpricing-input-ticketarea');
                                         if (otherInp && otherInp !== seatInput && !otherInp.dataset.manuallyEdited) {
                                             otherInp.value = val;
-                                            otherInp.dispatchEvent(new Event('input'));
+                                            // Don't dispatch input to avoid recursion - value is set directly
                                         }
                                     }
                                 });
@@ -4070,13 +4070,21 @@ const FieldsetBuilder = (function(){
                     var editor = document.createElement('div');
                     editor.className = 'fieldset-sessionpricing-pricing-editor';
                     editorWrap.appendChild(editor);
-                    spReplaceEditorFromPricing(editor, existingPricing || []);
-                    // Set age rating if copied from another location
-                    if (existingAgeRating) {
-                        var ageMenu = editor.querySelector('.component-ageratingpicker-menu');
-                        if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
-                            ageMenu._ageRatingSetValue(existingAgeRating);
+                    
+                    // Set syncing flag during editor construction to prevent auto-copy recursion
+                    var wasSync = spIsSyncing;
+                    spIsSyncing = true;
+                    try {
+                        spReplaceEditorFromPricing(editor, existingPricing || []);
+                        // Set age rating if copied from another location
+                        if (existingAgeRating) {
+                            var ageMenu = editor.querySelector('.component-ageratingpicker-menu');
+                            if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
+                                ageMenu._ageRatingSetValue(existingAgeRating);
+                            }
                         }
+                    } finally {
+                        spIsSyncing = wasSync;
                     }
                     group.appendChild(editorWrap);
 
