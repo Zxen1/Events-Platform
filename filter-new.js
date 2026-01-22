@@ -1028,32 +1028,99 @@ const FilterModule = (function() {
         calendarInstance = CalendarComponent.create(calendarEl, {
             monthsPast: monthsPast,
             monthsFuture: 24,
-            allowPast: showExpired,
-            showActions: true,
-            // While user is selecting dates, show the draft range in the input
-            onChange: function(start, end) {
-                if (!calendarContainer || !calendarContainer.classList.contains('filter-calendar-container--open')) return;
-                dateRangeDraftOpen = true;
-                setDaterangeInputValue(start, end, true);
-            },
-            onSelect: function(start, end) {
-                // Cancel: revert to committed value (whether blank or already set)
-                if (!start && !end) {
-                    setDaterangeInputValue(dateStart, dateEnd, false);
-                    dateRangeDraftOpen = false;
-                    closeCalendar();
-                    updateClearButtons();
-                    return;
+            allowPast: showExpired
+        });
+        
+        // Add date range selection logic
+        var selectedStart = null;
+        var selectedEnd = null;
+        
+        function updateRangeSelection() {
+            var days = calendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+            days.forEach(function(d) {
+                d.classList.remove('selected', 'range-start', 'range-end', 'in-range');
+            });
+            days.forEach(function(d) {
+                var iso = d.dataset.iso;
+                if (selectedStart && iso === selectedStart) {
+                    d.classList.add('selected', 'range-start');
                 }
-                
-                // OK: commit
-                setDateRange(start, end);
+                if (selectedEnd && iso === selectedEnd) {
+                    d.classList.add('selected', 'range-end');
+                }
+                if (selectedStart && selectedEnd && iso > selectedStart && iso < selectedEnd) {
+                    d.classList.add('in-range');
+                }
+            });
+        }
+        
+        var days = calendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+        days.forEach(function(cell) {
+            var dateObj = new Date(cell.dataset.iso);
+            if (dateObj >= calendarInstance.today || showExpired) {
+                cell.addEventListener('click', function() {
+                    var clickedDate = String(this.dataset.iso || '');
+                    if (!clickedDate) return;
+                    
+                    if (!selectedStart || (selectedStart && selectedEnd)) {
+                        selectedStart = clickedDate;
+                        selectedEnd = null;
+                        updateRangeSelection();
+                        if (!calendarContainer || !calendarContainer.classList.contains('filter-calendar-container--open')) return;
+                        dateRangeDraftOpen = true;
+                        setDaterangeInputValue(selectedStart, selectedEnd, true);
+                    } else {
+                        if (clickedDate < selectedStart) {
+                            selectedEnd = selectedStart;
+                            selectedStart = clickedDate;
+                        } else {
+                            selectedEnd = clickedDate;
+                        }
+                        updateRangeSelection();
+                        if (!calendarContainer || !calendarContainer.classList.contains('filter-calendar-container--open')) return;
+                        dateRangeDraftOpen = true;
+                        setDaterangeInputValue(selectedStart, selectedEnd, true);
+                    }
+                });
+            }
+        });
+        
+        var actionsEl = document.createElement('div');
+        actionsEl.className = 'calendar-actions';
+        
+        var cancelBtn = document.createElement('button');
+        cancelBtn.className = 'calendar-cancel button-class-2';
+        cancelBtn.type = 'button';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectedStart = null;
+            selectedEnd = null;
+            updateRangeSelection();
+            setDaterangeInputValue(dateStart, dateEnd, false);
+            dateRangeDraftOpen = false;
+            closeCalendar();
+            updateClearButtons();
+        });
+        
+        var okBtn = document.createElement('button');
+        okBtn.className = 'calendar-ok button-class-2';
+        okBtn.type = 'button';
+        okBtn.textContent = 'OK';
+        okBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (selectedStart || selectedEnd) {
+                setDateRange(selectedStart, selectedEnd);
                 dateRangeDraftOpen = false;
                 closeCalendar();
                 applyFilters();
                 updateClearButtons();
             }
         });
+        
+        actionsEl.appendChild(cancelBtn);
+        actionsEl.appendChild(okBtn);
+        calendarEl.parentNode.appendChild(actionsEl);
     }
     
     function rebuildCalendar() {
@@ -1076,9 +1143,6 @@ const FilterModule = (function() {
             // Treat closing as cancel: revert display and clear draft selection
             setDaterangeInputValue(dateStart, dateEnd, false);
             dateRangeDraftOpen = false;
-            if (calendarInstance && calendarInstance.clearSelection) {
-                calendarInstance.clearSelection();
-            }
             closeCalendar();
         } else {
             openCalendar();

@@ -3145,19 +3145,65 @@ const FieldsetBuilder = (function(){
                 var spCalendarInstance = CalendarComponent.create(spCalContainer, {
                     monthsPast: 0,
                     monthsFuture: 24,
-                    allowPast: false,
-                    showActions: false,
-                    selectionMode: 'multi',
-                    onChange: function(_start, _end, dates) {
-                        // Only track changes while the picker is open.
-                        if (!spDatePickerOpen) return;
-                        try {
-                            spDateDraft = new Set(Array.isArray(dates) ? dates : []);
-                        } catch (e0) {
-                            spDateDraft = new Set();
-                        }
-                        // Apply changes immediately (no OK button needed)
-                        spApplyDraft();
+                    allowPast: false
+                });
+                
+                // Add multi-date selection logic
+                var selectedDates = new Set();
+                
+                function updateMultiSelection() {
+                    var months = spCalendarInstance.calendar.querySelectorAll('.calendar-month');
+                    months.forEach(function(monthEl) {
+                        var monthCells = Array.from(monthEl.querySelectorAll('.calendar-day[data-iso]'));
+                        monthCells.forEach(function(cell, idx) {
+                            cell.classList.remove('selected', 'range-start', 'range-end', 'in-range');
+                            var iso = String(cell.dataset.iso || '');
+                            if (!iso) return;
+                            if (!selectedDates.has(iso)) return;
+                            cell.classList.add('selected');
+                            
+                            var col = idx % 7;
+                            var leftSel = false;
+                            var rightSel = false;
+                            if (col > 0) {
+                                var left = monthCells[idx - 1];
+                                leftSel = !!(left && selectedDates.has(String(left.dataset.iso || '')));
+                            }
+                            if (col < 6) {
+                                var right = monthCells[idx + 1];
+                                rightSel = !!(right && selectedDates.has(String(right.dataset.iso || '')));
+                            }
+                            
+                            if (leftSel || rightSel) {
+                                if (!leftSel && rightSel) cell.classList.add('range-start');
+                                else if (leftSel && !rightSel) cell.classList.add('range-end');
+                                else if (leftSel && rightSel) cell.classList.add('in-range');
+                            }
+                        });
+                    });
+                }
+                
+                var days = spCalendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+                days.forEach(function(cell) {
+                    var dateObj = new Date(cell.dataset.iso);
+                    if (dateObj >= spCalendarInstance.today) {
+                        cell.addEventListener('click', function() {
+                            var clickedDate = String(this.dataset.iso || '');
+                            if (!clickedDate) return;
+                            
+                            if (selectedDates.has(clickedDate)) selectedDates.delete(clickedDate);
+                            else selectedDates.add(clickedDate);
+                            
+                            updateMultiSelection();
+                            
+                            if (!spDatePickerOpen) return;
+                            try {
+                                spDateDraft = new Set(Array.from(selectedDates));
+                            } catch (e0) {
+                                spDateDraft = new Set();
+                            }
+                            spApplyDraft();
+                        });
                     }
                 });
 
@@ -3388,8 +3434,9 @@ const FieldsetBuilder = (function(){
 
                 function spApplyDraftToCalendar() {
                     try {
-                        if (!spCalendarInstance || typeof spCalendarInstance.setSelectedDates !== 'function') return;
-                        spCalendarInstance.setSelectedDates(spDateDraft ? Array.from(spDateDraft) : []);
+                        if (!spCalendarInstance) return;
+                        selectedDates = new Set(spDateDraft ? Array.from(spDateDraft) : []);
+                        updateMultiSelection();
                     } catch (e0) {}
                 }
 

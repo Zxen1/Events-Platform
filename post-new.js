@@ -3013,9 +3013,7 @@ const PostModule = (function() {
                   CalendarComponent.create(calendarContainer, {
                     monthsPast: 0,
                     monthsFuture: 12,
-                    allowPast: false,
-                    selectionMode: 'single',
-                    showActions: false
+                    allowPast: false
                   });
                   
                   var availableDatesSet = {};

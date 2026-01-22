@@ -601,10 +601,6 @@ const CalendarComponent = (function(){
         var monthsPast = typeof options.monthsPast === 'number' ? options.monthsPast : 12;
         var monthsFuture = typeof options.monthsFuture === 'number' ? options.monthsFuture : 24;
         var allowPast = options.allowPast || false;
-        var onSelect = options.onSelect || null;
-        var onChange = options.onChange || null;
-        var showActions = options.showActions || false;
-        var selectionMode = String(options.selectionMode || 'range').trim();
         
         var today = new Date();
         today.setHours(0,0,0,0);
@@ -617,11 +613,6 @@ const CalendarComponent = (function(){
         var todayMonthIndex = 0;
         var totalMonths = 0;
         var weekdays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-        
-        // Date selection state
-        var selectedStart = null;
-        var selectedEnd = null;
-        var selectedDates = new Set(); // used in multi mode
         
         var scroll = document.createElement('div');
         scroll.className = 'calendar-scroll';
@@ -677,49 +668,6 @@ const CalendarComponent = (function(){
                         cell.classList.add('future');
                     }
                     
-                    // Add click handler if future OR if allowPast is true
-                    if (dateObj >= today || allowPast) {
-                        cell.addEventListener('click', function() {
-                            var clickedDate = String(this.dataset.iso || '');
-                            if (!clickedDate) return;
-
-                            if (selectionMode === 'multi') {
-                                if (selectedDates.has(clickedDate)) selectedDates.delete(clickedDate);
-                                else selectedDates.add(clickedDate);
-                                // Range values are not meaningful in multi mode.
-                                selectedStart = null;
-                                selectedEnd = null;
-                                updateSelection(calendar);
-                                if (onChange) onChange(null, null, Array.from(selectedDates));
-                                if (!showActions && onSelect) onSelect(null, null, Array.from(selectedDates));
-                                return;
-                            }
-
-                            // Default: range selection
-                            if (!selectedStart || (selectedStart && selectedEnd)) {
-                                // Start new selection
-                                selectedStart = clickedDate;
-                                selectedEnd = null;
-                                updateSelection(calendar);
-                                if (onChange) onChange(selectedStart, selectedEnd);
-                            } else {
-                                // Complete selection
-                                if (clickedDate < selectedStart) {
-                                    selectedEnd = selectedStart;
-                                    selectedStart = clickedDate;
-                                } else {
-                                    selectedEnd = clickedDate;
-                                }
-                                updateSelection(calendar);
-                                if (onChange) onChange(selectedStart, selectedEnd);
-
-                                if (!showActions && onSelect) {
-                                    onSelect(selectedStart, selectedEnd);
-                                }
-                            }
-                        });
-                    }
-                    
                     if(iso === todayIso) {
                         cell.classList.add('today');
                         todayMonthEl = monthEl;
@@ -749,39 +697,6 @@ const CalendarComponent = (function(){
         scrollWrapper.appendChild(markerContainer);
         
         containerEl.appendChild(scrollWrapper);
-
-        // Add action buttons if showActions is true
-        var actionsEl = null;
-        if (showActions) {
-            actionsEl = document.createElement('div');
-            actionsEl.className = 'calendar-actions';
-            
-            var cancelBtn = document.createElement('button');
-            cancelBtn.className = 'calendar-cancel button-class-2';
-            cancelBtn.type = 'button';
-            cancelBtn.textContent = 'Cancel';
-            cancelBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                selectedStart = null;
-                selectedEnd = null;
-                updateSelection(calendar);
-                if (onChange) onChange(selectedStart, selectedEnd);
-                if (onSelect) onSelect(null, null);
-            });
-            
-            var okBtn = document.createElement('button');
-            okBtn.className = 'calendar-ok button-class-2';
-            okBtn.type = 'button';
-            okBtn.textContent = 'OK';
-            okBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (onSelect) onSelect(selectedStart, selectedEnd);
-            });
-            
-            actionsEl.appendChild(cancelBtn);
-            actionsEl.appendChild(okBtn);
-            containerEl.appendChild(actionsEl);
-        }
         
         // Scroll to today's month initially (defer to allow layout)
         if (todayMonthEl) {
@@ -829,96 +744,18 @@ const CalendarComponent = (function(){
             }
         }, {passive: false});
         
-        // Update visual selection state
-        function updateSelection(calendarEl) {
-            var days = calendarEl.querySelectorAll('.calendar-day[data-iso]');
-            days.forEach(function(d) {
-                d.classList.remove('selected', 'range-start', 'range-end', 'in-range');
-                var iso = d.dataset.iso;
-            });
-
-            if (selectionMode === 'multi') {
-                // Mark all selected dates and compute per-row joins (no week-wrap joins).
-                var months = calendarEl.querySelectorAll('.calendar-month');
-                months.forEach(function(monthEl) {
-                    var monthCells = Array.from(monthEl.querySelectorAll('.calendar-day[data-iso]'));
-                    monthCells.forEach(function(cell, idx) {
-                        var iso = String(cell.dataset.iso || '');
-                        if (!iso) return;
-                        if (!selectedDates.has(iso)) return;
-                        cell.classList.add('selected');
-
-                        var col = idx % 7;
-                        var leftSel = false;
-                        var rightSel = false;
-                        if (col > 0) {
-                            var left = monthCells[idx - 1];
-                            leftSel = !!(left && selectedDates.has(String(left.dataset.iso || '')));
-                        }
-                        if (col < 6) {
-                            var right = monthCells[idx + 1];
-                            rightSel = !!(right && selectedDates.has(String(right.dataset.iso || '')));
-                        }
-
-                        if (leftSel || rightSel) {
-                            if (!leftSel && rightSel) cell.classList.add('range-start');
-                            else if (leftSel && !rightSel) cell.classList.add('range-end');
-                            else if (leftSel && rightSel) cell.classList.add('in-range');
-                        }
-                    });
-                });
-                return;
-            }
-
-            // Range mode
-            days.forEach(function(d) {
-                var iso = d.dataset.iso;
-                if (selectedStart && iso === selectedStart) {
-                    d.classList.add('selected', 'range-start');
-                }
-                if (selectedEnd && iso === selectedEnd) {
-                    d.classList.add('selected', 'range-end');
-                }
-                if (selectedStart && selectedEnd && iso > selectedStart && iso < selectedEnd) {
-                    d.classList.add('in-range');
-                }
-            });
-        }
-        
         return {
             scroll: scroll,
             calendar: calendar,
             marker: marker,
+            today: today,
+            todayIso: todayIso,
             scrollToToday: function() {
                 if (todayMonthEl) {
                     scroll.scrollTo({ left: todayMonthEl.offsetLeft, behavior: 'smooth' });
                 }
             },
-            positionMarker: positionMarker,
-            clearSelection: function() {
-                selectedStart = null;
-                selectedEnd = null;
-                selectedDates = new Set();
-                updateSelection(calendar);
-            },
-            getSelection: function() {
-                if (selectionMode === 'multi') {
-                    return { start: null, end: null, dates: Array.from(selectedDates).sort() };
-                }
-                return { start: selectedStart, end: selectedEnd, dates: null };
-            },
-            setSelectedDates: function(dates) {
-                if (selectionMode !== 'multi') return;
-                try {
-                    selectedDates = new Set(Array.isArray(dates) ? dates : []);
-                } catch (e0) {
-                    selectedDates = new Set();
-                }
-                // Keep range values empty in multi mode.
-                selectedStart = null;
-                selectedEnd = null;
-                updateSelection(calendar);
-            }
+            positionMarker: positionMarker
         };
     }
     
