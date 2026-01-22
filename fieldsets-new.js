@@ -918,19 +918,9 @@ const FieldsetBuilder = (function(){
         }
 
         // Helper to get sub-field placeholder from fields object
-        // Supports: fields.item_name.placeholder or fields['item-name'].placeholder
         function getSubfieldPlaceholder(fieldKey) {
-            if (!fields) return null;
-            // Try exact key
-            if (fields[fieldKey] && fields[fieldKey].placeholder) {
-                return fields[fieldKey].placeholder;
-            }
-            // Try with underscores instead of hyphens
-            var altKey = fieldKey.replace(/-/g, '_');
-            if (fields[altKey] && fields[altKey].placeholder) {
-                return fields[altKey].placeholder;
-            }
-            return null;
+            if (!fields || !fields[fieldKey]) return null;
+            return fields[fieldKey].placeholder || null;
         }
 
         function applyPlaceholder(el, value) {
@@ -2301,7 +2291,7 @@ const FieldsetBuilder = (function(){
                 var itemNameInput = document.createElement('input');
                 itemNameInput.type = 'text';
                 itemNameInput.className = 'fieldset-input fieldset-itempricing-input-itemname input-class-1';
-                applyPlaceholder(itemNameInput, getSubfieldPlaceholder('item_name'));
+                applyPlaceholder(itemNameInput, getSubfieldPlaceholder('item-name'));
                 itemNameInput.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                 fieldset.appendChild(itemNameInput);
                 
@@ -2446,7 +2436,7 @@ const FieldsetBuilder = (function(){
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
                     variantInput.className = 'fieldset-input fieldset-itempricing-input-itemvariantname input-class-1';
-                    applyPlaceholder(variantInput, getSubfieldPlaceholder('variant'));
+                    applyPlaceholder(variantInput, getSubfieldPlaceholder('item-variant'));
                     variantRow.appendChild(variantInput);
                     
                     // + button
@@ -2798,7 +2788,7 @@ const FieldsetBuilder = (function(){
 
                     var tierInput = document.createElement('input');
                     tierInput.className = 'fieldset-input input-class-1';
-                    applyPlaceholder(tierInput, getSubfieldPlaceholder('tier_name'));
+                    applyPlaceholder(tierInput, getSubfieldPlaceholder('pricing-tier'));
                     tierInput.style.flex = '3';
                     inputRow.appendChild(tierInput);
 
@@ -2973,7 +2963,7 @@ const FieldsetBuilder = (function(){
                     var seatInput = document.createElement('input');
                     seatInput.type = 'text';
                     seatInput.className = 'fieldset-input input-class-1 fieldset-sessionpricing-input-ticketarea';
-                    applyPlaceholder(seatInput, getSubfieldPlaceholder('ticket_area'));
+                    applyPlaceholder(seatInput, getSubfieldPlaceholder('ticket-area'));
                     seatInput.style.flex = '1';
                     
                     function capitalize(val) {
@@ -3677,8 +3667,6 @@ const FieldsetBuilder = (function(){
                     allocatedRow.style.justifyContent = 'space-between';
                     allocatedRow.style.marginBottom = '10px'; // 10px element-element gap
                     allocatedRow.style.height = '36px'; // Touch friendly
-                    allocatedRow.style.padding = '0 10px'; // Ensure content is within the panel padding boundaries
-                    allocatedRow.style.boxSizing = 'border-box';
                     
                     var allocatedLabel = document.createElement('div');
                     allocatedLabel.className = 'fieldset-label';
@@ -3982,11 +3970,30 @@ const FieldsetBuilder = (function(){
                     }
                     group.appendChild(editorWrap);
 
+                    // Track clicks inside to show blue border (active state)
+                    group.addEventListener('click', function(e) {
+                        // Remove active from all other groups
+                        fieldset.querySelectorAll('.fieldset-sessionpricing-ticketgroup-item--active').forEach(function(g) {
+                            if (g !== group) g.classList.remove('fieldset-sessionpricing-ticketgroup-item--active');
+                        });
+                        group.classList.add('fieldset-sessionpricing-ticketgroup-item--active');
+                    });
+
                     spTicketGroups[key] = group;
                     if (spTicketGroupList) spTicketGroupList.appendChild(group);
                     spUpdateAllGroupButtons();
                     return group;
                 }
+
+                // Remove active state when clicking outside ticket groups
+                document.addEventListener('click', function(e) {
+                    var clickedInGroup = e.target.closest('.fieldset-sessionpricing-ticketgroup-item');
+                    if (!clickedInGroup || !fieldset.contains(clickedInGroup)) {
+                        fieldset.querySelectorAll('.fieldset-sessionpricing-ticketgroup-item--active').forEach(function(g) {
+                            g.classList.remove('fieldset-sessionpricing-ticketgroup-item--active');
+                        });
+                    }
+                });
 
                 function spRenderSessions() {
                     // Close any open ticket dropdowns before rerendering

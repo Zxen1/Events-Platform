@@ -1432,12 +1432,12 @@
     border-radius: 0 0 5px 5px;
 }
 
-/* Blue border only when focused/interacted with */
-.fieldset-sessionpricing-ticketgroup-item:focus-within .fieldset-sessionpricing-ticketgroup-item-header-content {
+/* Blue border only when actively clicked/interacted with */
+.fieldset-sessionpricing-ticketgroup-item--active .fieldset-sessionpricing-ticketgroup-item-header-content {
     border-color: var(--blue-500);
 }
 
-.fieldset-sessionpricing-ticketgroup-item--open:focus-within .fieldset-sessionpricing-ticketgroup-item-editorwrap {
+.fieldset-sessionpricing-ticketgroup-item--active.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     border-color: var(--blue-500);
 }
 
