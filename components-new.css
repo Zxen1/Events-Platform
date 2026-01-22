@@ -856,6 +856,7 @@
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
+    margin-right: 10px;
 }
 
 .component-currencycompact-menu-button-input {
@@ -963,6 +964,7 @@
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
+    margin-right: 10px;
 }
 
 .component-phoneprefixcompact-menu-button-input {
