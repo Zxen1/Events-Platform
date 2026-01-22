@@ -1124,7 +1124,7 @@ const FilterModule = (function() {
         
         actionsEl.appendChild(cancelBtn);
         actionsEl.appendChild(okBtn);
-        calendarEl.parentNode.appendChild(actionsEl);
+        calendarContainer.appendChild(actionsEl);
     }
     
     function rebuildCalendar() {
