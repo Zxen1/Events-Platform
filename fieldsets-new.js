@@ -2940,27 +2940,7 @@ const FieldsetBuilder = (function(){
                         this.setSelectionRange(cursor, cursor);
                         updateTierCompleteness();
                         
-                        // Auto-copy logic (skip during sync to prevent recursion)
-                        if (!this.dataset.manuallyEdited && !spIsSyncing) {
-                            var val = this.value;
-                            var groupItem = tiersContainer.closest('.fieldset-sessionpricing-ticketgroup-item');
-                            if (groupItem) {
-                                var groupKey = groupItem.dataset.ticketGroupKey;
-                                var allEditors = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-editor');
-                                allEditors.forEach(function(editor) {
-                                    var otherTiers = editor.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block');
-                                    // Copy to same-index tier in other blocks if not edited
-                                    var myIdx = Array.from(tiersContainer.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block')).indexOf(block);
-                                    if (otherTiers[myIdx]) {
-                                        var otherInp = otherTiers[myIdx].querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
-                                        if (otherInp && otherInp !== tierInput && !otherInp.dataset.manuallyEdited) {
-                                            otherInp.value = val;
-                                            // Don't dispatch input to avoid recursion - value is set directly
-                                        }
-                                    }
-                                });
-                            }
-                        }
+                        // Note: Tier name auto-copy disabled for now to simplify troubleshooting
                     });
                     tierInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
 
@@ -3084,26 +3064,8 @@ const FieldsetBuilder = (function(){
                         var hasVal = !!String(this.value || '').trim();
                         seatReq.classList.toggle('fieldset-label-required--complete', hasVal);
                         
-                        // Auto-copy logic (skip during sync to prevent recursion)
-                        if (!this.dataset.manuallyEdited && !spIsSyncing) {
-                            var val = this.value;
-                            var groupItem = seatingAreasContainer.closest('.fieldset-sessionpricing-ticketgroup-item');
-                            if (groupItem) {
-                                var groupKey = groupItem.dataset.ticketGroupKey;
-                                var allEditors = fieldset.querySelectorAll('.fieldset-sessionpricing-pricing-editor');
-                                allEditors.forEach(function(editor) {
-                                    var otherBlocks = editor.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
-                                    var myIdx = Array.from(seatingAreasContainer.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block')).indexOf(block);
-                                    if (otherBlocks[myIdx]) {
-                                        var otherInp = otherBlocks[myIdx].querySelector('.fieldset-sessionpricing-input-ticketarea');
-                                        if (otherInp && otherInp !== seatInput && !otherInp.dataset.manuallyEdited) {
-                                            otherInp.value = val;
-                                            // Don't dispatch input to avoid recursion - value is set directly
-                                        }
-                                    }
-                                });
-                            }
-                        }
+                        // Note: Ticket area names should NOT auto-copy since each seating area has a unique name
+                        // Removed auto-copy logic for ticket area names
                     });
                     seatInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
 
@@ -3498,6 +3460,10 @@ const FieldsetBuilder = (function(){
                     spUpdateAllTicketButtonsFromData();
                     spUpdateAllGroupButtons();
                     spSyncTicketGroupCountToOthers();
+                    // After renaming, sync data for all remaining groups
+                    Object.keys(spTicketGroups).forEach(function(k) {
+                        spSyncTicketGroupToOthers(k);
+                    });
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                 }
 
@@ -4049,12 +4015,12 @@ const FieldsetBuilder = (function(){
                     }
                     removeBtn.title = 'Remove Ticket Group';
                     removeBtn.setAttribute('aria-label', 'Remove Ticket Group');
-                    (function(groupKey) {
-                        removeBtn.addEventListener('click', function(e) {
-                            try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
-                            spRemoveTicketGroup(groupKey);
-                        });
-                    })(key);
+                    // Read key from DOM at click time (not closure) since groups can be renamed
+                    removeBtn.addEventListener('click', function(e) {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        var currentKey = group.dataset.ticketGroupKey;
+                        spRemoveTicketGroup(currentKey);
+                    });
                     headerContent.appendChild(removeBtn);
 
                     header.appendChild(headerContent);
@@ -4098,16 +4064,19 @@ const FieldsetBuilder = (function(){
                     });
                     
                     // Sync changes to other fieldsets (debounced for typing, immediate for structural changes)
+                    // Read key from DOM at runtime since groups can be renamed
                     var syncTimeout = null;
                     function triggerSync() {
                         clearTimeout(syncTimeout);
                         syncTimeout = setTimeout(function() {
-                            spSyncTicketGroupToOthers(key);
+                            var currentKey = group.dataset.ticketGroupKey;
+                            spSyncTicketGroupToOthers(currentKey);
                         }, 100);
                     }
                     function triggerSyncImmediate() {
                         clearTimeout(syncTimeout);
-                        spSyncTicketGroupToOthers(key);
+                        var currentKey = group.dataset.ticketGroupKey;
+                        spSyncTicketGroupToOthers(currentKey);
                     }
                     
                     // Listen for input changes within the editor
