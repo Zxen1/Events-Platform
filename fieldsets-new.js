@@ -2538,6 +2538,7 @@ const FieldsetBuilder = (function(){
                 // Ticket group state
                 var spTicketGroups = {}; // { A: itemEl, B: itemEl, ... } (itemEl has .fieldset-sessionpricing-ticketgroup-item)
                 var spTicketGroupList = null; // container element for group list
+                var spIsSyncing = false; // Prevent re-entrant sync loops
                 
                 // Check if this is the first session_pricing fieldset (for expand/collapse default)
                 function spIsFirstFieldset() {
@@ -2550,6 +2551,7 @@ const FieldsetBuilder = (function(){
                 
                 // Sync ticket group data to all other session_pricing fieldsets
                 function spSyncTicketGroupToOthers(groupKey) {
+                    if (spIsSyncing) return; // Prevent re-entrant sync
                     try {
                         var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
                         var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
@@ -2618,6 +2620,7 @@ const FieldsetBuilder = (function(){
                 
                 // Sync add/remove ticket groups across all fieldsets
                 function spSyncTicketGroupCountToOthers() {
+                    if (spIsSyncing) return; // Prevent re-entrant sync
                     try {
                         var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
                         var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
@@ -4510,17 +4513,24 @@ const FieldsetBuilder = (function(){
                 fieldset._syncTicketGroup = function(groupKey, pricingArr, ageRating) {
                     var key = String(groupKey || '').trim();
                     if (!key) return;
-                    spEnsureTicketGroup(key);
-                    var grpEl = spTicketGroups[key];
-                    if (!grpEl) return;
-                    var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
-                    if (editorEl) {
-                        spReplaceEditorFromPricing(editorEl, pricingArr || []);
-                        // Set age rating using component API
-                        var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
-                        if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
-                            ageMenu._ageRatingSetValue(ageRating || null);
+                    
+                    // Set syncing flag to prevent re-entrant sync loops
+                    spIsSyncing = true;
+                    try {
+                        spEnsureTicketGroup(key);
+                        var grpEl = spTicketGroups[key];
+                        if (!grpEl) return;
+                        var editorEl = grpEl.querySelector('.fieldset-sessionpricing-pricing-editor');
+                        if (editorEl) {
+                            spReplaceEditorFromPricing(editorEl, pricingArr || []);
+                            // Set age rating using component API
+                            var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
+                            if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
+                                ageMenu._ageRatingSetValue(ageRating || null);
+                            }
                         }
+                    } finally {
+                        spIsSyncing = false;
                     }
                     // Trigger completeness re-check after sync
                     try {
@@ -4531,36 +4541,43 @@ const FieldsetBuilder = (function(){
                 // Expose function to ensure this fieldset has the same ticket group keys as another
                 fieldset._ensureTicketGroupKeys = function(keys) {
                     if (!Array.isArray(keys)) return;
-                    var myKeys = Object.keys(spTicketGroups).sort();
-                    var targetKeys = keys.slice().sort();
                     
-                    // Remove groups not in target
-                    myKeys.forEach(function(k) {
-                        if (targetKeys.indexOf(k) === -1) {
-                            var g = spTicketGroups[k];
-                            if (g) try { g.remove(); } catch (e) {}
-                            delete spTicketGroups[k];
-                        }
-                    });
-                    
-                    // Add groups that are missing
-                    targetKeys.forEach(function(k) {
-                        if (!spTicketGroups[k]) {
-                            spEnsureTicketGroup(k);
-                        }
-                    });
-                    
-                    // Renumber to match target order (in case of deletion/renaming)
-                    var newGroups = {};
-                    targetKeys.forEach(function(k) {
-                        if (spTicketGroups[k]) {
-                            newGroups[k] = spTicketGroups[k];
-                        }
-                    });
-                    spTicketGroups = newGroups;
-                    
-                    spUpdateAllGroupButtons();
-                    spRenderSessions();
+                    // Set syncing flag to prevent re-entrant sync loops
+                    spIsSyncing = true;
+                    try {
+                        var myKeys = Object.keys(spTicketGroups).sort();
+                        var targetKeys = keys.slice().sort();
+                        
+                        // Remove groups not in target
+                        myKeys.forEach(function(k) {
+                            if (targetKeys.indexOf(k) === -1) {
+                                var g = spTicketGroups[k];
+                                if (g) try { g.remove(); } catch (e) {}
+                                delete spTicketGroups[k];
+                            }
+                        });
+                        
+                        // Add groups that are missing
+                        targetKeys.forEach(function(k) {
+                            if (!spTicketGroups[k]) {
+                                spEnsureTicketGroup(k);
+                            }
+                        });
+                        
+                        // Renumber to match target order (in case of deletion/renaming)
+                        var newGroups = {};
+                        targetKeys.forEach(function(k) {
+                            if (spTicketGroups[k]) {
+                                newGroups[k] = spTicketGroups[k];
+                            }
+                        });
+                        spTicketGroups = newGroups;
+                        
+                        spUpdateAllGroupButtons();
+                        spRenderSessions();
+                    } finally {
+                        spIsSyncing = false;
+                    }
                     try {
                         fieldset.dispatchEvent(new Event('change', { bubbles: true }));
                     } catch (eDispatch) {}
