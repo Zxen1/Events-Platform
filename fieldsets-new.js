@@ -3381,8 +3381,6 @@ const FieldsetBuilder = (function(){
                 });
                 spTicketGroupFooter.appendChild(spFooterRemoveBtn);
 
-                spPricingGroupsWrap.appendChild(spTicketGroupFooter);
-
                 function spUpdateFooterButtons() {
                     var keys = Object.keys(spTicketGroups);
                     var count = keys.length;
@@ -3391,12 +3389,14 @@ const FieldsetBuilder = (function(){
                     spFooterRemoveBtn.style.cursor = count <= 1 ? 'not-allowed' : 'pointer';
                 }
 
-                // Insert ticket groups container above sessions (always visible)
-                // Insert ticket groups BEFORE the sessions container
+                // Insert ticket groups container BEFORE the sessions container
                 fieldset.insertBefore(spPricingGroupsWrap, spSessionsContainer);
                 
                 // Ensure default group A exists on load
                 spEnsureDefaultGroup();
+                
+                // Append footer AFTER groups so it appears below them
+                spPricingGroupsWrap.appendChild(spTicketGroupFooter);
 
                 function spApplyDraftToCalendar() {
                     try {
@@ -3850,13 +3850,31 @@ const FieldsetBuilder = (function(){
                     group.dataset.ticketGroupKey = key;
 
                     // Header wrapper (46px when sticky - top 10px is shield, bottom 36px is content)
-                    // Header with group label
                     var header = document.createElement('div');
-                    header.className = 'fieldset-sessionpricing-ticketgroup-item-header container-header';
-                    header.textContent = 'Ticket Group ' + key;
+                    header.className = 'fieldset-sessionpricing-ticketgroup-item-header';
+
+                    var headerContent = document.createElement('div');
+                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content container-header';
+
+                    var headerLabel = document.createElement('span');
+                    headerLabel.className = 'fieldset-sessionpricing-ticketgroup-header-label';
+                    headerLabel.textContent = 'Ticket Group ' + key;
+                    headerContent.appendChild(headerLabel);
+
+                    var editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'fieldset-sessionpricing-ticketgroup-button-edit';
+                    var editBtnIcon = document.createElement('span');
+                    editBtnIcon.className = 'fieldset-sessionpricing-ticketgroup-button-edit-icon';
+                    editBtn.appendChild(editBtnIcon);
+                    editBtn.title = 'Edit Ticket Group';
+                    editBtn.setAttribute('aria-label', 'Edit Ticket Group');
+                    headerContent.appendChild(editBtn);
+
+                    header.appendChild(headerContent);
                     group.appendChild(header);
 
-                    // Editor content (always visible)
+                    // Editor content (always visible - not collapsible)
                     var editorWrap = document.createElement('div');
                     editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-content';
 
