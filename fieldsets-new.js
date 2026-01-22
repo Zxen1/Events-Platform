@@ -2898,7 +2898,7 @@ const FieldsetBuilder = (function(){
                     block.style.marginBottom = '12px'; 
                     // 10-12-6 rule: Visible containers use padding: 10px 10px 0
                     block.style.padding = '0'; // Align to edges as per user instruction on wrapper padding
-                    block.style.borderBottom = '1px solid #333';
+                    // Border is set by spUpdateSeatingAreaButtons - only shown when multiple blocks exist
 
                     // Ticket Area Label Row (Conditional)
                     var seatLabelRow = document.createElement('div');
@@ -3076,6 +3076,8 @@ const FieldsetBuilder = (function(){
                     blocks.forEach(function(block, idx) {
                         // 10-12-6 rule: last child of invisible container (seatingAreasContainer) gets margin-bottom 0
                         block.style.marginBottom = (idx === blocks.length - 1) ? '0' : '12px';
+                        // Only show separator border if there are multiple blocks, and not on the last one
+                        block.style.borderBottom = (blocks.length > 1 && idx < blocks.length - 1) ? '1px solid #333' : 'none';
 
                         // Find buttons in the Ticket Area row
                         var addBtn = block.querySelector('.fieldset-sessionpricing-pricing-button-add');
