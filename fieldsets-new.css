@@ -1317,9 +1317,12 @@
     gap: 0;
     padding: 0 10px;
     box-sizing: border-box;
-    border-radius: 5px;
     border: 1px solid var(--container-header-border, rgba(255, 255, 255, 0.1));
-    border-bottom: 1px solid var(--container-header-border, rgba(255, 255, 255, 0.1));
+}
+
+/* Collapsed: full 5px radius on all corners */
+.fieldset-sessionpricing-ticketgroup-item:not(.fieldset-sessionpricing-ticketgroup-item--open) .fieldset-sessionpricing-ticketgroup-item-header-content {
+    border-radius: 5px;
 }
 
 
