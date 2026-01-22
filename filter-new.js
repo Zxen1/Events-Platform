@@ -1031,28 +1031,34 @@ const FilterModule = (function() {
             allowPast: showExpired
         });
         
-        // Add date range selection logic
-        var selectedStart = null;
-        var selectedEnd = null;
+        // Add date range selection logic - store in calendarInstance for external access
+        calendarInstance.selectedStart = null;
+        calendarInstance.selectedEnd = null;
         
-        function updateRangeSelection() {
+        calendarInstance.updateRangeSelection = function() {
             var days = calendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
             days.forEach(function(d) {
                 d.classList.remove('selected', 'range-start', 'range-end', 'in-range');
             });
             days.forEach(function(d) {
                 var iso = d.dataset.iso;
-                if (selectedStart && iso === selectedStart) {
+                if (calendarInstance.selectedStart && iso === calendarInstance.selectedStart) {
                     d.classList.add('selected', 'range-start');
                 }
-                if (selectedEnd && iso === selectedEnd) {
+                if (calendarInstance.selectedEnd && iso === calendarInstance.selectedEnd) {
                     d.classList.add('selected', 'range-end');
                 }
-                if (selectedStart && selectedEnd && iso > selectedStart && iso < selectedEnd) {
+                if (calendarInstance.selectedStart && calendarInstance.selectedEnd && iso > calendarInstance.selectedStart && iso < calendarInstance.selectedEnd) {
                     d.classList.add('in-range');
                 }
             });
-        }
+        };
+        
+        calendarInstance.clearSelection = function() {
+            calendarInstance.selectedStart = null;
+            calendarInstance.selectedEnd = null;
+            calendarInstance.updateRangeSelection();
+        };
         
         var days = calendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
         days.forEach(function(cell) {
@@ -1062,24 +1068,24 @@ const FilterModule = (function() {
                     var clickedDate = String(this.dataset.iso || '');
                     if (!clickedDate) return;
                     
-                    if (!selectedStart || (selectedStart && selectedEnd)) {
-                        selectedStart = clickedDate;
-                        selectedEnd = null;
-                        updateRangeSelection();
+                    if (!calendarInstance.selectedStart || (calendarInstance.selectedStart && calendarInstance.selectedEnd)) {
+                        calendarInstance.selectedStart = clickedDate;
+                        calendarInstance.selectedEnd = null;
+                        calendarInstance.updateRangeSelection();
                         if (!calendarContainer || !calendarContainer.classList.contains('filter-calendar-container--open')) return;
                         dateRangeDraftOpen = true;
-                        setDaterangeInputValue(selectedStart, selectedEnd, true);
+                        setDaterangeInputValue(calendarInstance.selectedStart, calendarInstance.selectedEnd, true);
                     } else {
-                        if (clickedDate < selectedStart) {
-                            selectedEnd = selectedStart;
-                            selectedStart = clickedDate;
+                        if (clickedDate < calendarInstance.selectedStart) {
+                            calendarInstance.selectedEnd = calendarInstance.selectedStart;
+                            calendarInstance.selectedStart = clickedDate;
                         } else {
-                            selectedEnd = clickedDate;
+                            calendarInstance.selectedEnd = clickedDate;
                         }
-                        updateRangeSelection();
+                        calendarInstance.updateRangeSelection();
                         if (!calendarContainer || !calendarContainer.classList.contains('filter-calendar-container--open')) return;
                         dateRangeDraftOpen = true;
-                        setDaterangeInputValue(selectedStart, selectedEnd, true);
+                        setDaterangeInputValue(calendarInstance.selectedStart, calendarInstance.selectedEnd, true);
                     }
                 });
             }
@@ -1094,9 +1100,7 @@ const FilterModule = (function() {
         cancelBtn.textContent = 'Cancel';
         cancelBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            selectedStart = null;
-            selectedEnd = null;
-            updateRangeSelection();
+            calendarInstance.clearSelection();
             setDaterangeInputValue(dateStart, dateEnd, false);
             dateRangeDraftOpen = false;
             closeCalendar();
@@ -1109,8 +1113,8 @@ const FilterModule = (function() {
         okBtn.textContent = 'OK';
         okBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            if (selectedStart || selectedEnd) {
-                setDateRange(selectedStart, selectedEnd);
+            if (calendarInstance.selectedStart || calendarInstance.selectedEnd) {
+                setDateRange(calendarInstance.selectedStart, calendarInstance.selectedEnd);
                 dateRangeDraftOpen = false;
                 closeCalendar();
                 applyFilters();
