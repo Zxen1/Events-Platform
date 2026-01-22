@@ -1101,20 +1101,14 @@
 .fieldset-sessionpricing-ticketgroups-container {
     width: 100%;
     margin-bottom: 12px;
-    background: #222;
-    border: 1px solid #333;
-    border-radius: 4px;
-    padding: 10px;
     box-sizing: border-box;
 }
 
-.fieldset-sessionpricing-ticketgroups-footer {
+.fieldset-sessionpricing-ticketgroups-buttons {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #333;
 }
 
 /* Ticket Group Dropdown Menu (on session rows) */

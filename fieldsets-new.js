@@ -3303,15 +3303,14 @@ const FieldsetBuilder = (function(){
 
                 // Ticket groups container (always visible above sessions)
                 var spPricingGroupsWrap = document.createElement('div');
-                spPricingGroupsWrap.className = 'fieldset-sessionpricing-ticketgroups-container';
+                spPricingGroupsWrap.className = 'fieldset-sessionpricing-ticketgroups-container container-class-2';
+                
+                // Groups are appended directly to spPricingGroupsWrap (no inner wrapper)
+                spTicketGroupList = spPricingGroupsWrap;
 
-                spTicketGroupList = document.createElement('div');
-                spTicketGroupList.className = 'fieldset-sessionpricing-ticketgroups-container-list';
-                spPricingGroupsWrap.appendChild(spTicketGroupList);
-
-                // Footer with Add/Remove buttons
+                // Add/Remove buttons row (inside the container, at the bottom)
                 var spTicketGroupFooter = document.createElement('div');
-                spTicketGroupFooter.className = 'fieldset-sessionpricing-ticketgroups-footer';
+                spTicketGroupFooter.className = 'fieldset-sessionpricing-ticketgroups-buttons';
 
                 var spFooterAddBtn = document.createElement('button');
                 spFooterAddBtn.type = 'button';
