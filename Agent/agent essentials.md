@@ -235,6 +235,36 @@ Review `sitemap.html` to understand the platform structure. It shows the layout 
 
 ## VENUE SEEDING (TO-DO)
 
-**Workflow:** Wikipedia API (category lists) → ZIM file (article content + image filenames) → Wikimedia Commons (full-res images ≥1000px) → Database. ZIM file downloaded to user's computer (111GB). User deciding subcategory structure with friend before populating. Email/phone protection re-enabled in get-posts.php.
+**Workflow:** Web search (find top attractions per city) → ZIM file (article content + image filenames) → Wikimedia Commons (full-res images ≥1000px) → Database. ZIM file downloaded to user's computer (111GB).
+
+---
+
+## FILE NAMING CONVENTIONS
+
+### Post Images
+
+**Format:** `{8-digit-padded-post-id}-{original-filename}.{original-extension}`
+
+**Examples:**
+- `00000001-British_Museum_from_NE.jpg`
+- `00000001-British_Museum_Great_Court.png`
+- `00000002-Eiffel_Tower_from_Champ_de_Mars.jpg`
+
+**Rules:**
+1. **8-digit zero-padded post ID** - Keeps files alphabetically sorted, enables recovery if database breaks
+2. **Keep original filename** - Human-readable, you can see what the image is without opening it
+3. **Keep original extension** - Never convert formats (don't force PNG/WebP to JPG)
+
+**Storage:** `post-images/{YYYY-MM}/` folders on Bunny CDN (e.g., `post-images/2026-01/`)
+
+### Avatars
+
+**Format:** `{8-digit-padded-member-id}-avatar.{extension}`
+
+**Examples:**
+- `00000001-avatar.jpg`
+- `00000002-avatar.png`
+
+**Storage:** `avatars/` folder on Bunny CDN
 
 ---
