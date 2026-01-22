@@ -903,7 +903,35 @@ const FieldsetBuilder = (function(){
         var minLength = fieldData.min_length;
         var maxLength = fieldData.max_length;
         var fieldOptions = fieldData.fieldset_options || fieldData.options;
+        
+        // Parse fieldset_fields - can be JSON string, array, or object
         var fields = fieldData.fieldset_fields;
+        if (typeof fields === 'string') {
+            try { fields = JSON.parse(fields); } catch (e) { fields = null; }
+        }
+        // If fields is an array (legacy format), convert to empty object (no sub-field placeholders)
+        if (Array.isArray(fields)) {
+            fields = {};
+        }
+        if (!fields || typeof fields !== 'object') {
+            fields = {};
+        }
+
+        // Helper to get sub-field placeholder from fields object
+        // Supports: fields.item_name.placeholder or fields['item-name'].placeholder
+        function getSubfieldPlaceholder(fieldKey) {
+            if (!fields) return null;
+            // Try exact key
+            if (fields[fieldKey] && fields[fieldKey].placeholder) {
+                return fields[fieldKey].placeholder;
+            }
+            // Try with underscores instead of hyphens
+            var altKey = fieldKey.replace(/-/g, '_');
+            if (fields[altKey] && fields[altKey].placeholder) {
+                return fields[altKey].placeholder;
+            }
+            return null;
+        }
 
         function applyPlaceholder(el, value) {
             if (!el) return;
@@ -2273,7 +2301,7 @@ const FieldsetBuilder = (function(){
                 var itemNameInput = document.createElement('input');
                 itemNameInput.type = 'text';
                 itemNameInput.className = 'fieldset-input fieldset-itempricing-input-itemname input-class-1';
-                applyPlaceholder(itemNameInput, fields && fields.item_name && fields.item_name.placeholder);
+                applyPlaceholder(itemNameInput, getSubfieldPlaceholder('item_name'));
                 itemNameInput.style.marginBottom = '10px'; // 10-12-6 rule: 10px element-element
                 fieldset.appendChild(itemNameInput);
                 
@@ -2418,7 +2446,7 @@ const FieldsetBuilder = (function(){
                     var variantInput = document.createElement('input');
                     variantInput.type = 'text';
                     variantInput.className = 'fieldset-input fieldset-itempricing-input-itemvariantname input-class-1';
-                    applyPlaceholder(variantInput, fields && fields.variant && fields.variant.placeholder);
+                    applyPlaceholder(variantInput, getSubfieldPlaceholder('variant'));
                     variantRow.appendChild(variantInput);
                     
                     // + button
@@ -2770,7 +2798,7 @@ const FieldsetBuilder = (function(){
 
                     var tierInput = document.createElement('input');
                     tierInput.className = 'fieldset-input input-class-1';
-                    applyPlaceholder(tierInput, fields && fields.tier_name && fields.tier_name.placeholder);
+                    applyPlaceholder(tierInput, getSubfieldPlaceholder('tier_name'));
                     tierInput.style.flex = '3';
                     inputRow.appendChild(tierInput);
 
@@ -2945,7 +2973,7 @@ const FieldsetBuilder = (function(){
                     var seatInput = document.createElement('input');
                     seatInput.type = 'text';
                     seatInput.className = 'fieldset-input input-class-1 fieldset-sessionpricing-input-ticketarea';
-                    applyPlaceholder(seatInput, fields && fields.ticket_area && fields.ticket_area.placeholder);
+                    applyPlaceholder(seatInput, getSubfieldPlaceholder('ticket_area'));
                     seatInput.style.flex = '1';
                     
                     function capitalize(val) {
@@ -3154,34 +3182,14 @@ const FieldsetBuilder = (function(){
                 var selectedDates = new Set();
                 
                 function updateMultiSelection() {
-                    var months = spCalendarInstance.calendar.querySelectorAll('.calendar-month');
-                    months.forEach(function(monthEl) {
-                        var monthCells = Array.from(monthEl.querySelectorAll('.calendar-day[data-iso]'));
-                        monthCells.forEach(function(cell, idx) {
-                            cell.classList.remove('selected', 'range-start', 'range-end', 'in-range');
-                            var iso = String(cell.dataset.iso || '');
-                            if (!iso) return;
-                            if (!selectedDates.has(iso)) return;
+                    var days = spCalendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+                    days.forEach(function(cell) {
+                        cell.classList.remove('selected', 'range-start', 'range-end', 'in-range');
+                        var iso = String(cell.dataset.iso || '');
+                        if (!iso) return;
+                        if (selectedDates.has(iso)) {
                             cell.classList.add('selected');
-                            
-                            var col = idx % 7;
-                            var leftSel = false;
-                            var rightSel = false;
-                            if (col > 0) {
-                                var left = monthCells[idx - 1];
-                                leftSel = !!(left && selectedDates.has(String(left.dataset.iso || '')));
-                            }
-                            if (col < 6) {
-                                var right = monthCells[idx + 1];
-                                rightSel = !!(right && selectedDates.has(String(right.dataset.iso || '')));
-                            }
-                            
-                            if (leftSel || rightSel) {
-                                if (!leftSel && rightSel) cell.classList.add('range-start');
-                                else if (leftSel && !rightSel) cell.classList.add('range-end');
-                                else if (leftSel && rightSel) cell.classList.add('in-range');
-                            }
-                        });
+                        }
                     });
                 }
                 
@@ -4071,11 +4079,27 @@ const FieldsetBuilder = (function(){
                                 var input = this;
                                 setTimeout(function() { input.select(); }, 0);
                             });
-                            timeInput.addEventListener('input', function() {
-                                var v = String(this.value || '').replace(/[^0-9]/g, '');
-                                if (v.length >= 2) v = v.substring(0, 2) + ':' + v.substring(2, 4);
-                                this.value = v;
-                            });
+                            (function(input) {
+                                var lastValue = input.value || '';
+                                input.addEventListener('input', function() {
+                                    var raw = String(this.value || '');
+                                    var digits = raw.replace(/[^0-9]/g, '');
+                                    var isDeleting = raw.length < lastValue.length;
+                                    
+                                    if (isDeleting) {
+                                        // When deleting, allow free deletion - just strip non-digits and don't auto-format
+                                        this.value = digits;
+                                    } else {
+                                        // When adding, auto-insert colon after 2 digits
+                                        if (digits.length >= 2) {
+                                            this.value = digits.substring(0, 2) + ':' + digits.substring(2, 4);
+                                        } else {
+                                            this.value = digits;
+                                        }
+                                    }
+                                    lastValue = this.value;
+                                });
+                            })(timeInput);
                             function spTimeToMinutes(timeStr) {
                                 var t = String(timeStr || '').trim();
                                 if (!t) return null;
@@ -4274,11 +4298,23 @@ const FieldsetBuilder = (function(){
                                 optsEl.innerHTML = '';
                                 var keys = Object.keys(spTicketGroups).sort();
                                 if (keys.length === 0) keys = ['A'];
+                                var optIconUrl = spGetSystemTicketIconUrl();
                                 keys.forEach(function(gk) {
                                     var opt = document.createElement('button');
                                     opt.type = 'button';
                                     opt.className = 'fieldset-sessionpricing-ticketgroup-menu-option menu-option';
-                                    opt.textContent = 'Ticket Group ' + gk;
+                                    // Icon + letter only (matching the button style)
+                                    if (optIconUrl) {
+                                        var optImg = document.createElement('img');
+                                        optImg.className = 'fieldset-sessionpricing-ticketgroup-menu-option-icon';
+                                        optImg.alt = '';
+                                        optImg.src = optIconUrl;
+                                        opt.appendChild(optImg);
+                                    }
+                                    var optLetter = document.createElement('span');
+                                    optLetter.className = 'fieldset-sessionpricing-ticketgroup-menu-option-label';
+                                    optLetter.textContent = gk;
+                                    opt.appendChild(optLetter);
                                     opt.dataset.value = gk;
                                     opt.addEventListener('click', function(e) {
                                         try { e.stopPropagation(); } catch (e0) {}

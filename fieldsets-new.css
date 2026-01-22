@@ -973,7 +973,7 @@
 /* Instruction Text */
 .fieldset-sessionpricing-instruction {
     font-size: 13px;
-    color: var(--text-muted, #888);
+    color: #fff;
     line-height: 1.5;
 }
 
@@ -1162,6 +1162,18 @@
 
 .fieldset-sessionpricing-ticketgroup-menu-option:hover {
     background: var(--blue-500);
+}
+
+.fieldset-sessionpricing-ticketgroup-menu-option-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    object-fit: contain;
+}
+
+.fieldset-sessionpricing-ticketgroup-menu-option-label {
+    font-size: 13px;
+    font-weight: 500;
 }
 
 /* Legacy popover styles (kept for backwards compatibility) */
@@ -1401,9 +1413,10 @@
     display: none;
 }
 
-/* Open state: show editor */
+/* Open state: show editor with blue border */
 /* When open, remove bottom border-radius so it connects to editor */
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
+    border-color: var(--blue-500);
     border-radius: 5px 5px 0 0;
 }
 
@@ -1411,6 +1424,7 @@
     display: block;
     margin-top: 0;
     padding: 10px;
+    border-color: var(--blue-500);
 }
 
 .fieldset-sessionpricing-ticketgroup-actions {
