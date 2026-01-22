@@ -4237,10 +4237,12 @@ const FieldsetBuilder = (function(){
                                         // When deleting, allow free deletion - just strip non-digits and don't auto-format
                                         this.value = digits;
                                     } else {
-                                        // When adding, auto-insert colon after 2 digits
-                                        if (digits.length >= 2) {
+                                        // When adding, auto-insert colon only when there are minutes digits
+                                        if (digits.length > 2) {
+                                            // Has minutes digits - show colon
                                             this.value = digits.substring(0, 2) + ':' + digits.substring(2, 4);
                                         } else {
+                                            // Only hours - no colon yet
                                             this.value = digits;
                                         }
                                     }
