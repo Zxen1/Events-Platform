@@ -1283,7 +1283,7 @@
     gap: 10px;
 }
 
-/* Ticket Group Item */
+/* Ticket Group Item - uses accordion-class-1 for appearance */
 .fieldset-sessionpricing-ticketgroup-item {
     margin-bottom: 10px;
 }
@@ -1292,73 +1292,26 @@
     margin-bottom: 0;
 }
 
-.fieldset-sessionpricing-ticketgroup-item-header {
-    width: 100%;
-}
-
-/* Sticky header: 46px wrapper with built-in shield */
-.fieldset-sessionpricing-ticketgroup-item-header--sticky {
-    position: sticky;
-    top: 0;
-    padding-top: 10px;
-    margin-top: -10px;
-    background: #222;
-    border-radius: 0 0 4px 4px;
-    z-index: var(--layer-sticky);
-}
-
-/* Content row inside header: appearance from button-class-2 */
-/* Collapsed state: full border radius, neutral border color */
+/* Header layout */
 .fieldset-sessionpricing-ticketgroup-item-header-content {
-    width: 100%;
     height: 36px;
     display: flex;
     align-items: center;
-    gap: 0;
     padding: 0 10px;
-    box-sizing: border-box;
-    border: 1px solid var(--container-header-border, rgba(255, 255, 255, 0.1));
 }
 
-/* Collapsed: full 5px radius on all corners */
-.fieldset-sessionpricing-ticketgroup-item:not(.fieldset-sessionpricing-ticketgroup-item--open) .fieldset-sessionpricing-ticketgroup-item-header-content {
-    border-radius: 5px;
-}
-
-
-
-.fieldset-sessionpricing-ticketgroup-button-select,
 .fieldset-sessionpricing-ticketgroup-header-label {
     flex: 1;
-    background: transparent;
-    border: none;
-    color: #fff;
     font-size: 13px;
-    text-align: left;
-    height: 36px;
-    padding: 0 10px 0 0;
-    display: flex;
-    align-items: center;
 }
 
-.fieldset-sessionpricing-ticketgroup-button-select {
-    cursor: pointer;
-}
-
+/* Arrow icon */
 .fieldset-sessionpricing-ticketgroup-arrow {
     width: 36px;
-    min-width: 36px;
-    max-width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    color: #fff;
-    margin-left: 10px;
-    padding: 0;
 }
 
 .fieldset-sessionpricing-ticketgroup-arrow-icon {
@@ -1377,28 +1330,23 @@
     transform-origin: center;
 }
 
-/* Arrow rotates up when ticket group is open */
-.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-arrow-icon {
+.fieldset-sessionpricing-ticketgroup-item.accordion-class-1--open .fieldset-sessionpricing-ticketgroup-arrow-icon {
     transform: rotate(180deg);
 }
 
-/* Ticket Group Header +/- Buttons */
+/* +/- Buttons */
 .fieldset-sessionpricing-ticketgroup-button-add,
 .fieldset-sessionpricing-ticketgroup-button-remove {
     width: 36px;
-    min-width: 36px;
-    max-width: 36px;
     height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
     border: none;
-    border-radius: 0;
     color: #fff;
     cursor: pointer;
     margin-left: 8px;
-    padding: 0;
 }
 
 .fieldset-sessionpricing-ticketgroup-button-add .fieldset-sessionpricing-ticketgroup-button-icon,
@@ -1408,39 +1356,22 @@
     object-fit: contain;
 }
 
-/* Ticket Group Editor - appearance from container-class-1 */
-.fieldset-sessionpricing-ticketgroup-item-editorwrap {
-    margin-top: 8px;
-    padding: 0;
-}
-
-/* Collapsed state: hide editor */
+/* Editor body - hidden by default, accordion-body handles appearance */
 .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     display: none;
-}
-
-/* Open state: show editor, neutral border by default */
-/* When open, remove bottom border-radius so it connects to editor */
-.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
-    border-bottom: none;
-    border-radius: 5px 5px 0 0;
-}
-
-.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
-    display: block;
-    margin-top: 0;
     padding: 10px;
-    border: 1px solid var(--container-header-border, rgba(255, 255, 255, 0.1));
-    border-top: none;
-    border-radius: 0 0 5px 5px;
 }
 
-/* Blue border only when actively clicked/interacted with */
-.fieldset-sessionpricing-ticketgroup-item--active .fieldset-sessionpricing-ticketgroup-item-header-content {
+.fieldset-sessionpricing-ticketgroup-item.accordion-class-1--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
+    display: block;
+}
+
+/* Blue border when actively interacted with */
+.fieldset-sessionpricing-ticketgroup-item--active .accordion-header {
     border-color: var(--blue-500);
 }
 
-.fieldset-sessionpricing-ticketgroup-item--active.fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
+.fieldset-sessionpricing-ticketgroup-item--active.accordion-class-1--open .accordion-body {
     border-color: var(--blue-500);
 }
 

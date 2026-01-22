@@ -3879,7 +3879,7 @@ const FieldsetBuilder = (function(){
                     } catch (eLookup) {}
 
                     var group = document.createElement('div');
-                    group.className = 'fieldset-sessionpricing-ticketgroup-item container-class-2';
+                    group.className = 'fieldset-sessionpricing-ticketgroup-item accordion-class-1';
                     group.dataset.ticketGroupKey = key;
 
                     // Header wrapper (46px when sticky - top 10px is shield, bottom 36px is content)
@@ -3887,12 +3887,12 @@ const FieldsetBuilder = (function(){
                     header.className = 'fieldset-sessionpricing-ticketgroup-item-header';
 
                     var headerContent = document.createElement('div');
-                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content container-header';
+                    headerContent.className = 'fieldset-sessionpricing-ticketgroup-item-header-content accordion-header';
                     headerContent.style.cursor = 'pointer';
                     
                     // Entire header is clickable to expand/collapse
                     headerContent.addEventListener('click', function(e) {
-                        group.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open');
+                        group.classList.toggle('accordion-class-1--open');
                     });
 
                     var headerLabel = document.createElement('span');
@@ -3953,9 +3953,9 @@ const FieldsetBuilder = (function(){
                     group.appendChild(header);
 
                     // Editor content (collapsible, open by default)
-                    group.classList.add('fieldset-sessionpricing-ticketgroup-item--open');
+                    group.classList.add('accordion-class-1--open');
                     var editorWrap = document.createElement('div');
-                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-content';
+                    editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap accordion-body';
 
                     var editor = document.createElement('div');
                     editor.className = 'fieldset-sessionpricing-pricing-editor';
