@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 23, 2026 at 12:56 AM
+-- Generation Time: Jan 23, 2026 at 01:00 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -2560,6 +2560,7 @@ INSERT INTO `subcategories` (`id`, `category_id`, `category_name`, `subcategory_
 (905, 9, 'Venues', 'Zoos, Aquariums & Wildlife', 'zoos-aquariums-wildlife', '1,2,12,8,27,10,17', 'Title, Description, Images, Public Phone, Public Email, Website (URL), Venue', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '5', 0, 'venues-green.svg', '#2ECC71', 'General', NULL, 'Venue', '2026-01-22 13:11:04', '2026-01-22 13:11:04'),
 (906, 9, 'Venues', 'Parks & Nature', 'parks-nature', '1,2,12,8,27,10,17', 'Title, Description, Images, Public Phone, Public Email, Website (URL), Venue', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '6', 0, 'venues-teal.svg', '#1ABC9C', 'General', NULL, 'Venue', '2026-01-22 13:11:04', '2026-01-22 13:11:04'),
 (907, 9, 'Venues', 'Landmarks', 'landmarks', '1,2,12,8,27,10,17', 'Title, Description, Images, Public Phone, Public Email, Website (URL), Venue', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '7', 0, 'venues-orange.svg', '#E67E22', 'General', NULL, 'Venue', '2026-01-22 13:11:04', '2026-01-22 13:11:04'),
+(908, 9, 'Venues', 'Other Venues', 'other-venues', '1,2,12,8,27,10,17', 'Title, Description, Images, Public Phone, Public Email, Website (URL), Venue', '1,1,1,0,0,0,1', NULL, '0,0,0,0,0,0,1', NULL, '8', 0, 'venues-gray.svg', '#34495E', 'General', NULL, 'Venue', '2026-01-22 13:59:49', '2026-01-22 13:59:49'),
 (4701, 47, 'Test', 'Test Subcategory', 'test-subcategory', '1,2,12,27,8,11,13,14,18,19,3,4,5,6,107,10,16', 'Title, Description, Images, Public Email, Public Phone, Tickets (URL), Coupon, Item Pricing, Amenities, Age Rating, Custom Text, Custom TextArea, Custom Dropdown, Custom Radio, Custom Checklist, Website (URL), City', '1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1', '{\"amenities\":{\"selectedAmenities\":[\"Parking\",\"Wheelchair Access\",\"Accessible Parking\",\"Food & Beverages\",\"BYO Allowed\",\"Licensed Venue\"]},\"custom_dropdown\":{\"options\":[\"1fewwfa\",\"rawfwrfarwf\",\"rawfrwrfwwfr\",\"wrffrawrfaw\",\"awrffrwrffwrfr\",\"awfwarrwf\",\"rfawraarwrfrfa\",\"awrfrrrwfra\"]},\"custom_radio\":{\"options\":[\"awrfarwf\",\"awrfwrfarwrfa\",\"awrfrwrw\",\"afarwf wfa r awr rwrar fr arwf\",\"rawfrw wrfwffrwfrwrf\"]},\"custom_checklist\":{\"name\":\"cxvvvx\",\"options\":[\"vxcvcxvxcvxcv\",\"vcvxcxcxvcxvxvvvv\",\"cvvv C cdDcecCEc  ecEA\",\"eda aDE  EDDE  DA\",\"edaEDea eA DEA EAEAEDD\",\"ead aeaeD   EAEDA\"]}}', '0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1', NULL, '1', 0, 'opportunities-pink.svg', NULL, 'General', NULL, 'City', '2025-11-16 17:46:29', '2026-01-13 17:15:19');
 
 -- --------------------------------------------------------
