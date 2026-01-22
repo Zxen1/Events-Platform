@@ -1,0 +1,287 @@
+[
+  {
+    "title": "Sydney Opera House",
+    "post_id": 16,
+    "map_card_id": 19,
+    "subcategory": "theatres-concert-halls",
+    "city": "Sydney",
+    "country": "Australia",
+    "country_code": "AU",
+    "success": true,
+    "error": null,
+    "images": [
+      {
+        "filename": "Sydney_Australia._(21339175489).jpg",
+        "width": 3201,
+        "height": 1965,
+        "size_bytes": 4588171,
+        "size_mb": 4.38,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Sydney_Australia._%2821339175489%29.jpg",
+        "license": "CC0",
+        "artist": "Bernard Spragg. NZ from Christchurch, New Zealand",
+        "local_filename": "00000016-Sydney_Australia._(21339175489).jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000016-Sydney_Australia._(21339175489).jpg"
+      },
+      {
+        "filename": "Interior_of_Sydney_Opera_House_Concert_Hall_during_performance.jpg",
+        "width": 4032,
+        "height": 3024,
+        "size_bytes": 2926435,
+        "size_mb": 2.79,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/de/Interior_of_Sydney_Opera_House_Concert_Hall_during_performance.jpg",
+        "license": "CC BY-SA 4.0",
+        "artist": "BennyG3255",
+        "local_filename": "00000016-Interior_of_Sydney_Opera_House_Concert_Hall_during_performance.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000016-Interior_of_Sydney_Opera_House_Concert_Hall_during_performance.jpg"
+      },
+      {
+        "filename": "Joan_Sutherland_Theatre_Interior.JPG",
+        "width": 1600,
+        "height": 1067,
+        "size_bytes": 1051991,
+        "size_mb": 1.0,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/7/73/Joan_Sutherland_Theatre_Interior.JPG",
+        "license": "CC BY-SA 4.0",
+        "artist": "MorePix",
+        "local_filename": "00000016-Joan_Sutherland_Theatre_Interior.JPG",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000016-Joan_Sutherland_Theatre_Interior.JPG"
+      }
+    ],
+    "description_raw": "The Sydney Opera House is a multi-venue performing arts centre in Sydney, New South Wales, Australia. Located on the foreshore of Sydney Harbour, it is widely regarded as one of the world's most famous and distinctive buildings, and a masterpiece of 20th-century architecture.\n\nDesigned by Danish architect Jørn Utzon and completed by an Australian architectural team headed by Peter Hall, the building was formally opened by Queen Elizabeth II on 20 October 1973, 16 years after Utzon's 1957 selection as winner of an international design competition. The Government of New South Wales, led by the premier, Joseph Cahill, authorised work to begin in 1958 with Utzon directing construction. The government's decision to build Utzon's design is often overshadowed by circumstances that followed, including cost and scheduling overruns as well as the architect's ultimate resignation.",
+    "coordinates": {
+      "lat": -33.85681,
+      "lon": 151.21514
+    },
+    "website_url": "https://www.sydneyoperahouse.com",
+    "description": "The Sydney Opera House is a multi-venue performing arts centre in Sydney, New South Wales, Australia. Located on the foreshore of Sydney Harbour, it is widely regarded as one of the world's most famous and distinctive buildings, and a masterpiece of 20th-century architecture.\n\nDesigned by Danish architect Jørn Utzon and completed by an Australian architectural team headed by Peter Hall, the building was formally opened by Queen Elizabeth II on 20 October 1973, 16 years after Utzon's 1957 selection as winner of an international design competition. The Government of New South Wales, led by the premier, Joseph Cahill, authorised work to begin in 1958 with Utzon directing construction. The government's decision to build Utzon's design is often overshadowed by circumstances that followed, including cost and scheduling overruns as well as the architect's ultimate resignation.\n\nPhoto: Bernard Spragg. NZ from Christchurch, New Zealand (CC0); BennyG3255 (CC BY-SA 4.0); MorePix (CC BY-SA 4.0)",
+    "member_id": 2
+  },
+  {
+    "title": "Sydney Harbour Bridge",
+    "post_id": 17,
+    "map_card_id": 20,
+    "subcategory": "landmarks",
+    "city": "Sydney",
+    "country": "Australia",
+    "country_code": "AU",
+    "success": true,
+    "error": null,
+    "images": [
+      {
+        "filename": "Sydney_Harbour_Bridge-2022.jpg",
+        "width": 3024,
+        "height": 2268,
+        "size_bytes": 1521976,
+        "size_mb": 1.45,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Sydney_Harbour_Bridge-2022.jpg",
+        "license": "CC BY-SA 4.0",
+        "artist": "Bookish Worm",
+        "local_filename": "00000017-Sydney_Harbour_Bridge-2022.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000017-Sydney_Harbour_Bridge-2022.jpg"
+      },
+      {
+        "filename": "Sydney_Harbour_Bridge_from_the_air.JPG",
+        "width": 1760,
+        "height": 1168,
+        "size_bytes": 734525,
+        "size_mb": 0.7,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/5/5e/Sydney_Harbour_Bridge_from_the_air.JPG",
+        "license": "Attribution",
+        "artist": "Rodney Haywood",
+        "local_filename": "00000017-Sydney_Harbour_Bridge_from_the_air.JPG",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000017-Sydney_Harbour_Bridge_from_the_air.JPG"
+      },
+      {
+        "filename": "Sydney_Harbour_Bridge_from_Circular_Quay.jpg",
+        "width": 4832,
+        "height": 2202,
+        "size_bytes": 8177508,
+        "size_mb": 7.8,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/d/d1/Sydney_Harbour_Bridge_from_Circular_Quay.jpg",
+        "license": "CC BY-SA 3.0",
+        "artist": "JJ Harrison (https://www.jjharrison.com.au/)",
+        "local_filename": "00000017-Sydney_Harbour_Bridge_from_Circular_Quay.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000017-Sydney_Harbour_Bridge_from_Circular_Quay.jpg"
+      }
+    ],
+    "description_raw": "The Sydney Harbour Bridge is a steel through arch bridge in Sydney, New South Wales, Australia, spanning Sydney Harbour from the central business district (CBD) to the North Shore. The view of the bridge, the Harbour, and the nearby Sydney Opera House is widely regarded as an iconic image of Sydney, and of Australia itself. Nicknamed \"the Coathanger\" because of its arch-based design, the bridge carries rail, vehicular, bicycle and pedestrian traffic.\n\nUnder the direction of John Bradfield of the New South Wales Department of Public Works, the bridge was designed and built by British firm Dorman Long of Middlesbrough, and opened in 1932. The bridge's general design, which Bradfield tasked the NSW Department of Public Works with producing, was a rough copy of the Hell Gate Bridge in New York City. The design chosen from the tender responses was original work created by Dorman Long, who leveraged some of the design from its own Tyne Bridge.",
+    "coordinates": {
+      "lat": -33.85222222,
+      "lon": 151.21055556
+    },
+    "website_url": null,
+    "description": "The Sydney Harbour Bridge is a steel through arch bridge in Sydney, New South Wales, Australia, spanning Sydney Harbour from the central business district (CBD) to the North Shore. The view of the bridge, the Harbour, and the nearby Sydney Opera House is widely regarded as an iconic image of Sydney, and of Australia itself. Nicknamed \"the Coathanger\" because of its arch-based design, the bridge carries rail, vehicular, bicycle and pedestrian traffic.\n\nUnder the direction of John Bradfield of the New South Wales Department of Public Works, the bridge was designed and built by British firm Dorman Long of Middlesbrough, and opened in 1932. The bridge's general design, which Bradfield tasked the NSW Department of Public Works with producing, was a rough copy of the Hell Gate Bridge in New York City. The design chosen from the tender responses was original work created by Dorman Long, who leveraged some of the design from its own Tyne Bridge.\n\nPhoto: Bookish Worm (CC BY-SA 4.0); Rodney Haywood (Attribution); JJ Harrison (https://www.jjharrison.com.au/) (CC BY-SA 3.0)",
+    "member_id": 3
+  },
+  {
+    "title": "Bondi Beach",
+    "post_id": 18,
+    "map_card_id": 21,
+    "subcategory": "parks-nature",
+    "city": "Sydney",
+    "country": "Australia",
+    "country_code": "AU",
+    "success": true,
+    "error": null,
+    "images": [
+      {
+        "filename": "Bondi_from_above.jpg",
+        "width": 3838,
+        "height": 2156,
+        "size_bytes": 7345306,
+        "size_mb": 7.01,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/7/79/Bondi_from_above.jpg",
+        "license": "CC BY-SA 4.0",
+        "artist": "Nick Ang",
+        "local_filename": "00000018-Bondi_from_above.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000018-Bondi_from_above.jpg"
+      },
+      {
+        "filename": "A_rip_current_pouring_over_the_people_standing_on_rock_shore_at_the_northern_end_of_Bondi_beach.jpg",
+        "width": 2302,
+        "height": 1536,
+        "size_bytes": 391684,
+        "size_mb": 0.37,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/0/08/A_rip_current_pouring_over_the_people_standing_on_rock_shore_at_the_northern_end_of_Bondi_beach.jpg",
+        "license": "CC BY-SA 4.0",
+        "artist": "Chen Hualin",
+        "local_filename": "00000018-A_rip_current_pouring_over_the_people_standing_on_rock_shore_at_the_northern_end_of_Bondi_beach.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000018-A_rip_current_pouring_over_the_people_standing_on_rock_shore_at_the_northern_end_of_Bondi_beach.jpg"
+      },
+      {
+        "filename": "Bondi_Beach,_Sydney_(15175458494).jpg",
+        "width": 2560,
+        "height": 1709,
+        "size_bytes": 780475,
+        "size_mb": 0.74,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Bondi_Beach%2C_Sydney_%2815175458494%29.jpg",
+        "license": "CC BY-SA 2.0",
+        "artist": "Nicolas Lannuzel from Singapore, Singapore",
+        "local_filename": "00000018-Bondi_Beach,_Sydney_(15175458494).jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000018-Bondi_Beach,_Sydney_(15175458494).jpg"
+      }
+    ],
+    "description_raw": "Bondi Beach is a popular beach and the name of the surrounding suburb in Sydney, New South Wales, Australia. Bondi Beach is located 7 kilometres (4 miles) east of the Sydney central business district, in the local government area of Waverley Council, in the Eastern Suburbs. In the 2021 Australian census it had a population of 11,513 residents. Its postcode is 2026. Bondi, North Bondi and Bondi Junction are neighbouring suburbs. Bondi Beach is one of the most visited tourist sites in Australia, and the location of two series Bondi Rescue and Bondi Vet.",
+    "coordinates": {
+      "lat": -33.891,
+      "lon": 151.278
+    },
+    "website_url": null,
+    "description": "Bondi Beach is a popular beach and the name of the surrounding suburb in Sydney, New South Wales, Australia. Bondi Beach is located 7 kilometres (4 miles) east of the Sydney central business district, in the local government area of Waverley Council, in the Eastern Suburbs. In the 2021 Australian census it had a population of 11,513 residents. Its postcode is 2026. Bondi, North Bondi and Bondi Junction are neighbouring suburbs. Bondi Beach is one of the most visited tourist sites in Australia, and the location of two series Bondi Rescue and Bondi Vet.\n\nPhoto: Nick Ang (CC BY-SA 4.0); Chen Hualin (CC BY-SA 4.0); Nicolas Lannuzel from Singapore, Singapore (CC BY-SA 2.0)",
+    "member_id": 4
+  },
+  {
+    "title": "Taronga Zoo",
+    "post_id": 19,
+    "map_card_id": 22,
+    "subcategory": "zoos-aquariums-wildlife",
+    "city": "Sydney",
+    "country": "Australia",
+    "country_code": "AU",
+    "success": true,
+    "error": null,
+    "images": [
+      {
+        "filename": "Taronga_Park_Zoo_-7Sept2008.jpg",
+        "width": 1200,
+        "height": 1200,
+        "size_bytes": 835461,
+        "size_mb": 0.8,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/7/79/Taronga_Park_Zoo_-7Sept2008.jpg",
+        "license": "CC BY-SA 2.0",
+        "artist": "Alex Dawson",
+        "local_filename": "00000019-Taronga_Park_Zoo_-7Sept2008.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000019-Taronga_Park_Zoo_-7Sept2008.jpg"
+      },
+      {
+        "filename": "Rusticbridge.jpg",
+        "width": 2592,
+        "height": 1944,
+        "size_bytes": 1033829,
+        "size_mb": 0.99,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/7/79/Rusticbridge.jpg",
+        "license": "Public domain",
+        "artist": ".....Todd#661",
+        "local_filename": "00000019-Rusticbridge.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000019-Rusticbridge.jpg"
+      },
+      {
+        "filename": "2022-06-25_Giraffes_in_Taronga_Zoo.jpg",
+        "width": 4032,
+        "height": 3024,
+        "size_bytes": 4677850,
+        "size_mb": 4.46,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/7/74/2022-06-25_Giraffes_in_Taronga_Zoo.jpg",
+        "license": "CC BY-SA 4.0",
+        "artist": "Maksym Kozlenko",
+        "local_filename": "00000019-2022-06-25_Giraffes_in_Taronga_Zoo.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000019-2022-06-25_Giraffes_in_Taronga_Zoo.jpg"
+      }
+    ],
+    "description_raw": "Taronga Zoo Sydney is a government-run public zoo located in Sydney, New South Wales, Australia, in the Lower North Shore suburb of Mosman, on the shores of Sydney Harbour. It offers great views of Sydney Harbour and the city. The opening hours are between 9:30 a.m. to 4:30 p.m. (May to August) and 9:30 am to 5:00 pm (September to April). Taronga is an Aboriginal word meaning \"beautiful view\".\n\nIt was officially opened on 7 October 1916. Taronga Zoo Sydney is managed by the Zoological Parks Board of New South Wales, under the trading name Taronga Conservation Society, along with its sister zoo, the Taronga Western Plains Zoo in Dubbo.",
+    "coordinates": {
+      "lat": -33.84333333,
+      "lon": 151.24111111
+    },
+    "website_url": "https://taronga.org.au/taronga-zoo",
+    "description": "Taronga Zoo Sydney is a government-run public zoo located in Sydney, New South Wales, Australia, in the Lower North Shore suburb of Mosman, on the shores of Sydney Harbour. It offers great views of Sydney Harbour and the city. The opening hours are between 9:30 a.m. to 4:30 p.m. (May to August) and 9:30 am to 5:00 pm (September to April). Taronga is an Aboriginal word meaning \"beautiful view\".\n\nIt was officially opened on 7 October 1916. Taronga Zoo Sydney is managed by the Zoological Parks Board of New South Wales, under the trading name Taronga Conservation Society, along with its sister zoo, the Taronga Western Plains Zoo in Dubbo.\n\nPhoto: Alex Dawson (CC BY-SA 2.0); .....Todd#661 (Public domain); Maksym Kozlenko (CC BY-SA 4.0)",
+    "member_id": 5
+  },
+  {
+    "title": "Royal Botanic Garden, Sydney",
+    "post_id": 20,
+    "map_card_id": 23,
+    "subcategory": "parks-nature",
+    "city": "Sydney",
+    "country": "Australia",
+    "country_code": "AU",
+    "success": true,
+    "error": null,
+    "images": [
+      {
+        "filename": "Gates_at_Royal_Botanic_Gardens_viewed_from_Art_Gallery_Road.jpg",
+        "width": 3008,
+        "height": 2008,
+        "size_bytes": 5603754,
+        "size_mb": 5.34,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/2/2a/Gates_at_Royal_Botanic_Gardens_viewed_from_Art_Gallery_Road.jpg",
+        "license": "CC BY-SA 3.0 au",
+        "artist": "Bidgee",
+        "local_filename": "00000020-Gates_at_Royal_Botanic_Gardens_viewed_from_Art_Gallery_Road.jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000020-Gates_at_Royal_Botanic_Gardens_viewed_from_Art_Gallery_Road.jpg"
+      },
+      {
+        "filename": "After_the_fire_-_The_Garden_Palace_(8005393749).jpg",
+        "width": 1500,
+        "height": 1242,
+        "size_bytes": 375021,
+        "size_mb": 0.36,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/f/f1/After_the_fire_-_The_Garden_Palace_%288005393749%29.jpg",
+        "license": "CC BY 2.0",
+        "artist": "Photographic Collection from Australia",
+        "local_filename": "00000020-After_the_fire_-_The_Garden_Palace_(8005393749).jpg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000020-After_the_fire_-_The_Garden_Palace_(8005393749).jpg"
+      },
+      {
+        "filename": "A_view_of_Royal_Botanic_Garden_taken_from_Sydney_Tower.jpeg",
+        "width": 3157,
+        "height": 2107,
+        "size_bytes": 6504334,
+        "size_mb": 6.2,
+        "url": "https://upload.wikimedia.org/wikipedia/commons/1/13/A_view_of_Royal_Botanic_Garden_taken_from_Sydney_Tower.jpeg",
+        "license": "CC BY-SA 4.0",
+        "artist": "Harveychl",
+        "local_filename": "00000020-A_view_of_Royal_Botanic_Garden_taken_from_Sydney_Tower.jpeg",
+        "local_path": "D:\\Websites\\Events Platform Cursor 2025\\Events-Platform\\Agent\\seeder-output\\images\\00000020-A_view_of_Royal_Botanic_Garden_taken_from_Sydney_Tower.jpeg"
+      }
+    ],
+    "description_raw": "The Royal Botanic Garden, Sydney is a heritage-listed major 30-hectare (74-acre) botanical garden, event venue and public recreation area located at Farm Cove on the eastern fringe of the Sydney central business district, in the City of Sydney local government area of New South Wales, Australia.\n\nOpened in 1816, the garden is the oldest scientific institution in Australia and one of the most important historic botanical institutions in the world. The overall structure and key elements were designed by Charles Moore and Joseph Maiden, and various other elements designed and built under the supervision of Allan Cunningham, Richard Cunningham, and Carrick Chambers. The garden is owned by the Government of New South Wales and administered by the Royal Botanic Gardens and Domain Trust. The Botanic Garden, together with the adjacent Domain were added to the New South Wales State Heritage Register on 2 April 1999.",
+    "coordinates": {
+      "lat": -33.86388889,
+      "lon": 151.21694444
+    },
+    "website_url": "https://www.botanicgardens.org.au/royal-botanic-garden-sydney",
+    "description": "The Royal Botanic Garden, Sydney is a heritage-listed major 30-hectare (74-acre) botanical garden, event venue and public recreation area located at Farm Cove on the eastern fringe of the Sydney central business district, in the City of Sydney local government area of New South Wales, Australia.\n\nOpened in 1816, the garden is the oldest scientific institution in Australia and one of the most important historic botanical institutions in the world. The overall structure and key elements were designed by Charles Moore and Joseph Maiden, and various other elements designed and built under the supervision of Allan Cunningham, Richard Cunningham, and Carrick Chambers. The garden is owned by the Government of New South Wales and administered by the Royal Botanic Gardens and Domain Trust. The Botanic Garden, together with the adjacent Domain were added to the New South Wales State Heritage Register on 2 April 1999.\n\nPhoto: Bidgee (CC BY-SA 3.0 au); Photographic Collection from Australia (CC BY 2.0); Harveychl (CC BY-SA 4.0)",
+    "member_id": 6
+  }
+]
