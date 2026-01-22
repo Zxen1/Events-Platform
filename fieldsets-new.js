@@ -2538,6 +2538,102 @@ const FieldsetBuilder = (function(){
                 // Ticket group state
                 var spTicketGroups = {}; // { A: itemEl, B: itemEl, ... } (itemEl has .fieldset-sessionpricing-ticketgroup-item)
                 var spTicketGroupList = null; // container element for group list
+                
+                // Check if this is the first session_pricing fieldset (for expand/collapse default)
+                function spIsFirstFieldset() {
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                        var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
+                        return allSP.length === 0 || allSP[0] === fieldset;
+                    } catch (e) { return true; }
+                }
+                
+                // Sync ticket group data to all other session_pricing fieldsets
+                function spSyncTicketGroupToOthers(groupKey) {
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                        var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
+                        if (allSP.length <= 1) return;
+                        
+                        // Get pricing data from this fieldset's group
+                        var srcGroup = spTicketGroups[groupKey];
+                        if (!srcGroup) return;
+                        var srcEditor = srcGroup.querySelector('.fieldset-sessionpricing-pricing-editor');
+                        if (!srcEditor) return;
+                        
+                        // Extract current pricing data
+                        var allocated = 1;
+                        var yesRadio = srcEditor.querySelector('input[type="radio"][value="1"]');
+                        if (yesRadio) allocated = yesRadio.checked ? 1 : 0;
+                        
+                        var seatingBlocks = srcEditor.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
+                        var pricingData = [];
+                        seatingBlocks.forEach(function(block) {
+                            if (allocated === 0 && pricingData.length > 0) return;
+                            
+                            var ticketArea = '';
+                            var seatInput = block.querySelector('.fieldset-sessionpricing-input-ticketarea');
+                            if (seatInput) ticketArea = String(seatInput.value || '').trim();
+                            
+                            var tiers = [];
+                            block.querySelectorAll('.fieldset-sessionpricing-pricing-tier-block').forEach(function(tier) {
+                                var tierName = '';
+                                var tierInput = tier.querySelector('.fieldset-sessionpricing-tier-input-row input.fieldset-input');
+                                if (tierInput) tierName = String(tierInput.value || '').trim();
+                                
+                                var priceInput = tier.querySelector('.fieldset-sessionpricing-input-price');
+                                var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                
+                                var currencyInput = srcEditor.querySelector('.component-currencyfull-menu-button-input');
+                                var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
+                                
+                                tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                            });
+                            pricingData.push({ 
+                                allocated_areas: allocated,
+                                ticket_area: ticketArea, 
+                                tiers: tiers 
+                            });
+                        });
+                        
+                        var ageRating = '';
+                        var ageMenu = srcEditor.querySelector('.component-ageratingpicker-menu');
+                        if (ageMenu) ageRating = String(ageMenu.dataset.value || '').trim();
+                        
+                        // Apply to all other fieldsets
+                        for (var i = 0; i < allSP.length; i++) {
+                            var otherFS = allSP[i];
+                            if (otherFS === fieldset) continue;
+                            if (typeof otherFS._syncTicketGroup === 'function') {
+                                otherFS._syncTicketGroup(groupKey, pricingData, ageRating);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('[session_pricing] Sync error:', e);
+                    }
+                }
+                
+                // Sync add/remove ticket groups across all fieldsets
+                function spSyncTicketGroupCountToOthers() {
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                        var allSP = form.querySelectorAll('.fieldset[data-fieldset-key="session_pricing"]');
+                        if (allSP.length <= 1) return;
+                        
+                        var myKeys = Object.keys(spTicketGroups).sort();
+                        
+                        for (var i = 0; i < allSP.length; i++) {
+                            var otherFS = allSP[i];
+                            if (otherFS === fieldset) continue;
+                            if (typeof otherFS._ensureTicketGroupKeys === 'function') {
+                                otherFS._ensureTicketGroupKeys(myKeys);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('[session_pricing] Sync count error:', e);
+                    }
+                }
 
                 function spGetSystemTicketIconUrl() {
                     try {
@@ -3323,6 +3419,8 @@ const FieldsetBuilder = (function(){
                     var newKey = spFirstUnusedLetter();
                     spEnsureTicketGroup(newKey);
                     spUpdateAllGroupButtons();
+                    spSyncTicketGroupCountToOthers();
+                    spSyncTicketGroupToOthers(newKey);
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
                 }
 
@@ -3390,6 +3488,7 @@ const FieldsetBuilder = (function(){
                     
                     spUpdateAllTicketButtonsFromData();
                     spUpdateAllGroupButtons();
+                    spSyncTicketGroupCountToOthers();
                     try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
                 }
 
@@ -3952,8 +4051,10 @@ const FieldsetBuilder = (function(){
                     header.appendChild(headerContent);
                     group.appendChild(header);
 
-                    // Editor content (collapsible, open by default)
-                    group.classList.add('accordion-class-1--open');
+                    // Editor content (collapsible, open by default only on first fieldset)
+                    if (spIsFirstFieldset()) {
+                        group.classList.add('accordion-class-1--open');
+                    }
                     var editorWrap = document.createElement('div');
                     editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap accordion-body';
 
@@ -3978,6 +4079,19 @@ const FieldsetBuilder = (function(){
                         });
                         group.classList.add('fieldset-sessionpricing-ticketgroup-item--active');
                     });
+                    
+                    // Sync changes to other fieldsets (debounced)
+                    var syncTimeout = null;
+                    function triggerSync() {
+                        clearTimeout(syncTimeout);
+                        syncTimeout = setTimeout(function() {
+                            spSyncTicketGroupToOthers(key);
+                        }, 100);
+                    }
+                    
+                    // Listen for input changes within the editor
+                    editor.addEventListener('input', triggerSync);
+                    editor.addEventListener('change', triggerSync);
 
                     spTicketGroups[key] = group;
                     if (spTicketGroupList) spTicketGroupList.appendChild(group);
@@ -4394,6 +4508,44 @@ const FieldsetBuilder = (function(){
                         }
                     }
                     // Trigger completeness re-check after sync
+                    try {
+                        fieldset.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (eDispatch) {}
+                };
+                
+                // Expose function to ensure this fieldset has the same ticket group keys as another
+                fieldset._ensureTicketGroupKeys = function(keys) {
+                    if (!Array.isArray(keys)) return;
+                    var myKeys = Object.keys(spTicketGroups).sort();
+                    var targetKeys = keys.slice().sort();
+                    
+                    // Remove groups not in target
+                    myKeys.forEach(function(k) {
+                        if (targetKeys.indexOf(k) === -1) {
+                            var g = spTicketGroups[k];
+                            if (g) try { g.remove(); } catch (e) {}
+                            delete spTicketGroups[k];
+                        }
+                    });
+                    
+                    // Add groups that are missing
+                    targetKeys.forEach(function(k) {
+                        if (!spTicketGroups[k]) {
+                            spEnsureTicketGroup(k);
+                        }
+                    });
+                    
+                    // Renumber to match target order (in case of deletion/renaming)
+                    var newGroups = {};
+                    targetKeys.forEach(function(k) {
+                        if (spTicketGroups[k]) {
+                            newGroups[k] = spTicketGroups[k];
+                        }
+                    });
+                    spTicketGroups = newGroups;
+                    
+                    spUpdateAllGroupButtons();
+                    spRenderSessions();
                     try {
                         fieldset.dispatchEvent(new Event('change', { bubbles: true }));
                     } catch (eDispatch) {}
