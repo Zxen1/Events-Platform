@@ -1341,6 +1341,32 @@
     mask-position: center;
 }
 
+/* Ticket Group Header +/- Buttons */
+.fieldset-sessionpricing-ticketgroup-button-add,
+.fieldset-sessionpricing-ticketgroup-button-remove {
+    width: 36px;
+    min-width: 36px;
+    max-width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: #fff;
+    cursor: pointer;
+    margin-left: 8px;
+    padding: 0;
+}
+
+.fieldset-sessionpricing-ticketgroup-button-add .fieldset-sessionpricing-ticketgroup-button-icon,
+.fieldset-sessionpricing-ticketgroup-button-remove .fieldset-sessionpricing-ticketgroup-button-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
 /* Ticket Group Editor - appearance from container-class-1 */
 .fieldset-sessionpricing-ticketgroup-item-editorwrap {
     margin-top: 8px;
