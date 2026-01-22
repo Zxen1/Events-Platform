@@ -541,55 +541,61 @@ try {
         // Sessions
         $sessRes = $mysqli->query("SELECT map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
         $sessionsByCard = [];
-        while ($sRow = $sessRes->fetch_assoc()) {
-            $cid = (int)$sRow['map_card_id'];
-            if (!isset($sessionsByCard[$cid])) $sessionsByCard[$cid] = [];
-            
-            $date = $sRow['session_date'];
-            if (!isset($sessionsByCard[$cid][$date])) {
-                $sessionsByCard[$cid][$date] = ['date' => $date, 'times' => []];
+        if ($sessRes) {
+            while ($sRow = $sessRes->fetch_assoc()) {
+                $cid = (int)$sRow['map_card_id'];
+                if (!isset($sessionsByCard[$cid])) $sessionsByCard[$cid] = [];
+                
+                $date = $sRow['session_date'];
+                if (!isset($sessionsByCard[$cid][$date])) {
+                    $sessionsByCard[$cid][$date] = ['date' => $date, 'times' => []];
+                }
+                $sessionsByCard[$cid][$date]['times'][] = [
+                    'time' => $sRow['session_time'],
+                    'ticket_group_key' => $sRow['ticket_group_key']
+                ];
             }
-            $sessionsByCard[$cid][$date]['times'][] = [
-                'time' => $sRow['session_time'],
-                'ticket_group_key' => $sRow['ticket_group_key']
-            ];
         }
 
         // Ticket Pricing
         $priceRes = $mysqli->query("SELECT map_card_id, ticket_group_key, age_rating, seating_area, pricing_tier, price, currency FROM post_ticket_pricing WHERE map_card_id IN ($cardIdsCsv)");
         $pricingByCard = [];
         $ageRatingsByCard = [];
-        while ($pRow = $priceRes->fetch_assoc()) {
-            $cid = (int)$pRow['map_card_id'];
-            $gk = $pRow['ticket_group_key'];
-            if (!isset($pricingByCard[$cid])) $pricingByCard[$cid] = [];
-            if (!isset($pricingByCard[$cid][$gk])) $pricingByCard[$cid][$gk] = [];
-            
-            $seat = $pRow['seating_area'];
-            if (!isset($pricingByCard[$cid][$gk][$seat])) {
-                $pricingByCard[$cid][$gk][$seat] = ['seating_area' => $seat, 'tiers' => []];
+        if ($priceRes) {
+            while ($pRow = $priceRes->fetch_assoc()) {
+                $cid = (int)$pRow['map_card_id'];
+                $gk = $pRow['ticket_group_key'];
+                if (!isset($pricingByCard[$cid])) $pricingByCard[$cid] = [];
+                if (!isset($pricingByCard[$cid][$gk])) $pricingByCard[$cid][$gk] = [];
+                
+                $seat = $pRow['seating_area'];
+                if (!isset($pricingByCard[$cid][$gk][$seat])) {
+                    $pricingByCard[$cid][$gk][$seat] = ['seating_area' => $seat, 'tiers' => []];
+                }
+                $pricingByCard[$cid][$gk][$seat]['tiers'][] = [
+                    'pricing_tier' => $pRow['pricing_tier'],
+                    'price' => $pRow['price'],
+                    'currency' => $pRow['currency']
+                ];
+                
+                if (!isset($ageRatingsByCard[$cid])) $ageRatingsByCard[$cid] = [];
+                $ageRatingsByCard[$cid][$gk] = $pRow['age_rating'];
             }
-            $pricingByCard[$cid][$gk][$seat]['tiers'][] = [
-                'pricing_tier' => $pRow['pricing_tier'],
-                'price' => $pRow['price'],
-                'currency' => $pRow['currency']
-            ];
-            
-            if (!isset($ageRatingsByCard[$cid])) $ageRatingsByCard[$cid] = [];
-            $ageRatingsByCard[$cid][$gk] = $pRow['age_rating'];
         }
 
         // Item Pricing
         $itemRes = $mysqli->query("SELECT map_card_id, item_name, item_variants, item_price, currency FROM post_item_pricing WHERE map_card_id IN ($cardIdsCsv)");
         $itemsByCard = [];
-        while ($iRow = $itemRes->fetch_assoc()) {
-            $cid = (int)$iRow['map_card_id'];
-            $itemsByCard[$cid] = [
-                'item_name' => $iRow['item_name'],
-                'item_variants' => json_decode($iRow['item_variants'], true) ?: [],
-                'item_price' => $iRow['item_price'],
-                'currency' => $iRow['currency']
-            ];
+        if ($itemRes) {
+            while ($iRow = $itemRes->fetch_assoc()) {
+                $cid = (int)$iRow['map_card_id'];
+                $itemsByCard[$cid] = [
+                    'item_name' => $iRow['item_name'],
+                    'item_variants' => json_decode($iRow['item_variants'], true) ?: [],
+                    'item_price' => $iRow['item_price'],
+                    'currency' => $iRow['currency']
+                ];
+            }
         }
 
     }

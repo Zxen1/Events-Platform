@@ -2703,126 +2703,379 @@ const PostModule = (function() {
 
     /* ........................................................................
        SESSION MENU
-       CalendarComponent + session selection list
        ........................................................................ */
 
     var sessionBtn = wrap.querySelector('.open-post-button-session');
-    var sessionDropdown = wrap.querySelector('.open-post-dropdown-session .open-post-menu-session');
-    var calendarContainer = wrap.querySelector('.open-post-calendar');
+    var sessionDropdown = wrap.querySelector('.open-post-dropdown-session');
+    var sessionMenu = sessionDropdown ? sessionDropdown.querySelector('.open-post-menu-session') : null;
     var sessionOptsContainer = wrap.querySelector('.open-post-container-sessionopts');
+    var calendarContainer = wrap.querySelector('.open-post-calendar');
+    var calendarScroll = wrap.querySelector('.open-post-scroll-calendar');
+    var sessionInfo = wrap.querySelector('.open-post-text-sessioninfo');
+    var sessionCloseTimer = null;
+    var selectedSessionIndex = null;
+    var sessionData = [];
+    var sessionsByDateIndex = {};
     var calendarInitialized = false;
+    var lastClickedCell = null;
     
-    if (sessionBtn && sessionDropdown && calendarContainer && sessionOptsContainer) {
-      sessionBtn.addEventListener('click', function() {
-        var isExpanded = sessionBtn.getAttribute('aria-expanded') === 'true';
-        sessionBtn.setAttribute('aria-expanded', !isExpanded);
-        sessionDropdown.hidden = isExpanded;
+    function showMenu(menu) {
+      if (menu) menu.removeAttribute('hidden');
+    }
+    
+    function hideMenu(menu) {
+      if (menu) menu.setAttribute('hidden', '');
+    }
+    
+    function isMenuOpen(menu) {
+      return !!(menu && !menu.hasAttribute('hidden'));
+    }
+    
+    function scheduleSessionMenuClose(options) {
+      options = options || {};
+      var waitForScroll = options.waitForScroll || false;
+      var targetLeft = options.targetLeft || null;
+      
+      if (!sessionMenu) return;
+      if (sessionCloseTimer) {
+        clearTimeout(sessionCloseTimer);
+        sessionCloseTimer = null;
+      }
+      
+      var begin = function() {
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            sessionCloseTimer = setTimeout(function() {
+              hideMenu(sessionMenu);
+              if (sessionBtn) sessionBtn.setAttribute('aria-expanded', 'false');
+              sessionCloseTimer = null;
+            }, 100);
+          });
+        });
+      };
+      
+      if (waitForScroll && calendarScroll && targetLeft !== null) {
+        var attempts = 0;
+        var maxAttempts = 60;
+        var check = function() {
+          var distance = Math.abs(calendarScroll.scrollLeft - targetLeft);
+          if (distance <= 0.5 || attempts >= maxAttempts) {
+            begin();
+          } else {
+            attempts += 1;
+            requestAnimationFrame(check);
+          }
+        };
+        requestAnimationFrame(check);
+      } else {
+        begin();
+      }
+    }
+    
+    function scrollCalendarToMonth(dateStr, smooth) {
+      if (!calendarContainer || !calendarScroll) return null;
+      var cell = calendarContainer.querySelector('.calendar-day[data-iso="' + dateStr + '"]');
+      if (!cell) return null;
+      var monthEl = cell.closest('.calendar-month');
+      if (!monthEl) return null;
+      
+      var currentLeft = calendarScroll.scrollLeft;
+      var targetLeft = monthEl.offsetLeft;
+      
+      if (typeof monthEl.getBoundingClientRect === 'function' && typeof calendarScroll.getBoundingClientRect === 'function') {
+        var monthRect = monthEl.getBoundingClientRect();
+        var scrollRect = calendarScroll.getBoundingClientRect();
+        var delta = monthRect.left - scrollRect.left;
+        var adjusted = currentLeft + delta;
+        if (Number.isFinite(adjusted)) {
+          targetLeft = adjusted;
+        }
+      }
+      
+      var maxLeft = Math.max(0, calendarScroll.scrollWidth - calendarScroll.clientWidth);
+      targetLeft = Math.min(Math.max(targetLeft, 0), maxLeft);
+      var distance = Math.abs(currentLeft - targetLeft);
+      
+      if (typeof calendarScroll.scrollTo === 'function') {
+        if (smooth && distance > 1) {
+          calendarScroll.scrollTo({ left: targetLeft, behavior: 'smooth' });
+          return { targetLeft: targetLeft, waitForScroll: true };
+        }
+        calendarScroll.scrollTo({ left: targetLeft });
+      } else {
+        calendarScroll.scrollLeft = targetLeft;
+      }
+      return { targetLeft: targetLeft, waitForScroll: false };
+    }
+    
+    function markSelectedSession() {
+      if (!calendarContainer) return;
+      var cells = calendarContainer.querySelectorAll('.calendar-day');
+      for (var i = 0; i < cells.length; i++) {
+        cells[i].classList.remove('selected');
+      }
+      if (selectedSessionIndex !== null && sessionData[selectedSessionIndex]) {
+        var session = sessionData[selectedSessionIndex];
+        var cell = calendarContainer.querySelector('.calendar-day[data-iso="' + session.date + '"]');
+        if (cell) cell.classList.add('selected');
+      }
+    }
+    
+    function selectSession(index) {
+      if (!sessionMenu || !sessionOptsContainer) return;
+      selectedSessionIndex = Number.isInteger(index) ? index : null;
+      
+      var buttons = sessionOptsContainer.querySelectorAll('button');
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('selected');
+      }
+      
+      var btn = selectedSessionIndex !== null ? sessionOptsContainer.querySelector('button[data-index="' + selectedSessionIndex + '"]') : null;
+      if (btn) btn.classList.add('selected');
+      
+      var session = selectedSessionIndex !== null ? sessionData[selectedSessionIndex] : null;
+      var waitForScroll = false;
+      var targetScrollLeft = null;
+      
+      if (session) {
+        var dateText = formatDateShort(session.date);
+        var timeText = formatTimeShort(session.time);
         
-        if (!isExpanded && !calendarInitialized && window.CalendarComponent) {
-          calendarInitialized = true;
-          
-          console.log('[Session Menu] Post data:', post);
-          
-          var sessionsByDate = {};
-          
-          if (post.map_cards && Array.isArray(post.map_cards)) {
-            post.map_cards.forEach(function(mc) {
-              console.log('[Session Menu] Map card sessions:', mc.sessions);
-              if (mc.sessions && Array.isArray(mc.sessions)) {
-                mc.sessions.forEach(function(sessionData) {
-                  var date = sessionData.date;
-                  if (!date) return;
-                  
-                  if (!sessionsByDate[date]) {
-                    sessionsByDate[date] = [];
-                  }
-                  
-                  if (sessionData.times && Array.isArray(sessionData.times)) {
-                    sessionData.times.forEach(function(timeData) {
-                      sessionsByDate[date].push({
-                        date: date,
-                        time: timeData.time,
-                        ticket_group_key: timeData.ticket_group_key
-                      });
-                    });
-                  }
-                });
-              }
-            });
+        if (sessionInfo) {
+          sessionInfo.innerHTML = '<div>' + escapeHtml(dateText + ' at ' + timeText) + '</div>';
+        }
+        
+        markSelectedSession();
+        var scrollResult = scrollCalendarToMonth(session.date, true);
+        if (scrollResult) {
+          targetScrollLeft = scrollResult.targetLeft;
+          waitForScroll = scrollResult.waitForScroll;
+        }
+      }
+      
+      if (isMenuOpen(sessionMenu)) {
+        scheduleSessionMenuClose({ waitForScroll: waitForScroll, targetLeft: targetScrollLeft });
+      } else if (sessionBtn) {
+        sessionBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+    
+    function formatTimeShort(timeStr) {
+      if (!timeStr) return '';
+      var parts = String(timeStr).split(':');
+      if (parts.length < 2) return timeStr;
+      var h = parseInt(parts[0], 10);
+      var m = parts[1];
+      var ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return h + ':' + m + ' ' + ampm;
+    }
+    
+    function showTimePopup(indices) {
+      if (!calendarContainer || !indices || !indices.length) return;
+      
+      var calWrapper = wrap.querySelector('.open-post-container-calendar');
+      if (!calWrapper) return;
+      
+      var existing = calWrapper.querySelector('.open-post-popup-time');
+      if (existing) existing.remove();
+      
+      var popup = document.createElement('div');
+      popup.className = 'open-post-popup-time';
+      
+      var timeList = document.createElement('div');
+      timeList.className = 'open-post-list-time';
+      
+      indices.forEach(function(index) {
+        var session = sessionData[index];
+        if (!session) return;
+        
+        var btn = document.createElement('button');
+        btn.textContent = formatTimeShort(session.time);
+        btn.setAttribute('data-index', String(index));
+        btn.addEventListener('click', function() {
+          selectSession(index);
+          popup.remove();
+        });
+        timeList.appendChild(btn);
+      });
+      
+      popup.appendChild(timeList);
+      calWrapper.appendChild(popup);
+      
+      if (lastClickedCell) {
+        var rect = lastClickedCell.getBoundingClientRect();
+        var containerRect = calWrapper.getBoundingClientRect();
+        var dateCenterX = rect.left + rect.width / 2 - containerRect.left;
+        var containerCenterX = calWrapper.clientWidth / 2;
+        popup.style.top = (rect.top - containerRect.top) + 'px';
+        if (dateCenterX < containerCenterX) {
+          popup.style.left = (rect.right - containerRect.left + 4) + 'px';
+        } else {
+          popup.style.left = (rect.left - containerRect.left) + 'px';
+        }
+        
+        requestAnimationFrame(function() {
+          var popupRect = popup.getBoundingClientRect();
+          var minMargin = 10;
+          var left = parseFloat(popup.style.left);
+          var top = parseFloat(popup.style.top);
+          if (dateCenterX >= containerCenterX) {
+            left = left - popupRect.width - 4;
           }
+          if (left < minMargin) left = minMargin;
+          if (top < minMargin) top = minMargin;
+          if (left + popupRect.width + minMargin > calWrapper.clientWidth) {
+            left = calWrapper.clientWidth - popupRect.width - minMargin;
+          }
+          if (top + popupRect.height + minMargin > calWrapper.clientHeight) {
+            top = calWrapper.clientHeight - popupRect.height - minMargin;
+          }
+          popup.style.left = left + 'px';
+          popup.style.top = top + 'px';
+        });
+      }
+      
+      setTimeout(function() {
+        document.addEventListener('click', function handler(e) {
+          if (!popup.contains(e.target)) {
+            popup.remove();
+            document.removeEventListener('click', handler);
+          }
+        });
+      }, 0);
+    }
+    
+    if (sessionBtn && sessionMenu) {
+      sessionBtn.addEventListener('click', function() {
+        var expanded = sessionBtn.getAttribute('aria-expanded') === 'true';
+        var opening = !expanded;
+        sessionBtn.setAttribute('aria-expanded', String(opening));
+        
+        if (opening) {
+          showMenu(sessionMenu);
           
-          console.log('[Session Menu] Sessions by date:', sessionsByDate);
-          var availableDates = Object.keys(sessionsByDate).sort();
+          var calWrapper = wrap.querySelector('.open-post-container-calendar');
+          if (calWrapper) {
+            var existingPopup = calWrapper.querySelector('.open-post-popup-time');
+            if (existingPopup) existingPopup.remove();
+          }
+          lastClickedCell = null;
           
-          // Create calendar
-          CalendarComponent.create(calendarContainer, {
-            monthsPast: 0,
-            monthsFuture: 12,
-            allowPast: false,
-            selectionMode: 'range',
-            showActions: false
-          });
-          
-          // Highlight available dates
-          availableDates.forEach(function(dateStr) {
-            var cell = calendarContainer.querySelector('.calendar-day[data-iso="' + dateStr + '"]');
-            if (cell) {
-              cell.classList.add('available-day');
-              
-              cell.addEventListener('click', function(e) {
-                e.stopPropagation();
-                var sessions = sessionsByDate[dateStr];
-                
-                if (sessions.length === 1) {
-                  selectSession(sessions[0]);
-                  sessionBtn.setAttribute('aria-expanded', 'false');
-                  sessionDropdown.hidden = true;
-                } else if (sessions.length > 1) {
-                  displaySessionTimes(dateStr, sessions);
+          if (!calendarInitialized && calendarContainer && sessionOptsContainer) {
+            calendarInitialized = true;
+            
+            fetch('/gateway.php?action=get-posts&limit=1&post_id=' + post.id + '&full=1')
+              .then(function(response) {
+                if (!response.ok) throw new Error('Failed to fetch sessions');
+                return response.json();
+              })
+              .then(function(data) {
+                if (!data || !data.success || !data.posts || !data.posts.length) {
+                  throw new Error('No session data');
                 }
+                
+                var fullPost = data.posts[0];
+                sessionData = [];
+                sessionsByDateIndex = {};
+                
+                if (fullPost.map_cards && Array.isArray(fullPost.map_cards)) {
+                  fullPost.map_cards.forEach(function(mc) {
+                    if (mc.sessions && Array.isArray(mc.sessions)) {
+                      mc.sessions.forEach(function(sessionGroup) {
+                        var date = sessionGroup.date;
+                        if (!date) return;
+                        
+                        if (sessionGroup.times && Array.isArray(sessionGroup.times)) {
+                          sessionGroup.times.forEach(function(timeData) {
+                            var sessionIndex = sessionData.length;
+                            var session = {
+                              date: date,
+                              time: timeData.time,
+                              ticket_group_key: timeData.ticket_group_key
+                            };
+                            sessionData.push(session);
+                            
+                            if (!sessionsByDateIndex[date]) {
+                              sessionsByDateIndex[date] = [];
+                            }
+                            sessionsByDateIndex[date].push(sessionIndex);
+                          });
+                        }
+                      });
+                    }
+                  });
+                }
+                
+                var availableDates = Object.keys(sessionsByDateIndex).sort();
+                
+                if (window.CalendarComponent) {
+                  CalendarComponent.create(calendarContainer, {
+                    monthsPast: 0,
+                    monthsFuture: 12,
+                    allowPast: false,
+                    selectionMode: 'single',
+                    showActions: false
+                  });
+                  
+                  availableDates.forEach(function(dateStr) {
+                    var cell = calendarContainer.querySelector('.calendar-day[data-iso="' + dateStr + '"]');
+                    if (cell) {
+                      cell.classList.add('available-day');
+                      
+                      cell.addEventListener('mousedown', function() {
+                        lastClickedCell = cell;
+                      });
+                      
+                      cell.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        var indices = sessionsByDateIndex[dateStr];
+                        if (indices && indices.length === 1) {
+                          selectSession(indices[0]);
+                        } else if (indices && indices.length > 1) {
+                          showTimePopup(indices);
+                        }
+                      });
+                    }
+                  });
+                }
+                
+                sessionOptsContainer.innerHTML = '';
+                sessionData.forEach(function(session, index) {
+                  var btn = document.createElement('button');
+                  btn.className = 'open-post-button-sessionopt';
+                  btn.setAttribute('data-index', String(index));
+                  
+                  var dateSpan = document.createElement('span');
+                  dateSpan.className = 'open-post-text-sessiondate';
+                  dateSpan.textContent = formatDateShort(session.date);
+                  
+                  var timeSpan = document.createElement('span');
+                  timeSpan.className = 'open-post-text-sessiontime';
+                  timeSpan.textContent = formatTimeShort(session.time);
+                  
+                  btn.appendChild(dateSpan);
+                  btn.appendChild(timeSpan);
+                  
+                  btn.addEventListener('click', function() {
+                    selectSession(index);
+                  });
+                  
+                  sessionOptsContainer.appendChild(btn);
+                });
+              })
+              .catch(function(err) {
+                console.error('[Session Menu] Error:', err);
               });
-            }
-          });
+          }
           
-          function displaySessionTimes(date, sessions) {
-            sessionOptsContainer.innerHTML = '';
-            
-            sessions.forEach(function(session) {
-              var btn = document.createElement('button');
-              btn.className = 'open-post-button-sessionopt';
-              btn.textContent = formatTimeShort(session.time);
-              btn.addEventListener('click', function() {
-                selectSession(session);
-                sessionBtn.setAttribute('aria-expanded', 'false');
-                sessionDropdown.hidden = true;
-              });
-              sessionOptsContainer.appendChild(btn);
+          if (selectedSessionIndex !== null && sessionData[selectedSessionIndex]) {
+            requestAnimationFrame(function() {
+              scrollCalendarToMonth(sessionData[selectedSessionIndex].date, false);
             });
           }
-          
-          function selectSession(session) {
-            var dateText = formatDateShort(session.date);
-            var timeText = formatTimeShort(session.time);
-            var displayText = dateText + ' at ' + timeText;
-            
-            var sessionInfoEl = wrap.querySelector('.open-post-text-sessioninfo');
-            if (sessionInfoEl) {
-              sessionInfoEl.innerHTML = '<div>' + escapeHtml(displayText) + '</div>';
-            }
-            
-            sessionOptsContainer.innerHTML = '';
-          }
-          
-          function formatTimeShort(timeStr) {
-            if (!timeStr) return '';
-            var parts = String(timeStr).split(':');
-            if (parts.length < 2) return timeStr;
-            var h = parseInt(parts[0], 10);
-            var m = parts[1];
-            var ampm = h >= 12 ? 'PM' : 'AM';
-            h = h % 12 || 12;
-            return h + ':' + m + ' ' + ampm;
-          }
+        } else {
+          hideMenu(sessionMenu);
         }
       });
     }
