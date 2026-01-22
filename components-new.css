@@ -687,6 +687,7 @@
     object-fit: cover;
     border-radius: 2px;
     flex-shrink: 0;
+    margin-right: 10px;
 }
 
 .component-languagefull-menu-button-image {
@@ -700,7 +701,6 @@
 .component-currencyfull-menu-button-input {
     flex: 1;
     text-align: left;
-    padding-left: 0;
     font-size: 14px;
     min-width: 0;
 }
@@ -839,6 +839,15 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
+}
+
+/* Compact menu: button and options are separated, so button keeps full border/radius */
+.component-currencycompact-menu .menu-button {
+    border-radius: 5px;
+}
+
+.component-currencycompact-menu .menu-button--open {
+    border-bottom: 1px solid var(--menu-border-focus);
     border-radius: 5px;
 }
 
@@ -879,6 +888,11 @@
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
+}
+
+/* Compact menu: options are separated, so they have full border/radius (lid on top) */
+.component-currencycompact-menu .menu-options {
+    border: 1px solid var(--menu-border-focus);
     border-radius: 5px;
 }
 
@@ -932,6 +946,15 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
+}
+
+/* Compact menu: button and options are separated, so button keeps full border/radius */
+.component-phoneprefixcompact-menu .menu-button {
+    border-radius: 5px;
+}
+
+.component-phoneprefixcompact-menu .menu-button--open {
+    border-bottom: 1px solid var(--menu-border-focus);
     border-radius: 5px;
 }
 
@@ -972,6 +995,11 @@
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
+}
+
+/* Compact menu: options are separated, so they have full border/radius (lid on top) */
+.component-phoneprefixcompact-menu .menu-options {
+    border: 1px solid var(--menu-border-focus);
     border-radius: 5px;
 }
 
