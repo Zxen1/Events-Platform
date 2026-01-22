@@ -527,6 +527,11 @@ try {
 
     // 2. Batch lookup sessions, pricing, and item pricing (ONLY if full data requested)
     $allMapCardIds = [];
+    $sessionsByCard = [];
+    $pricingByCard = [];
+    $ageRatingsByCard = [];
+    $itemsByCard = [];
+    
     if ($full) {
         foreach ($postsById as $p) {
             foreach ($p['map_cards'] as $mc) {
@@ -540,7 +545,6 @@ try {
         
         // Sessions
         $sessRes = $mysqli->query("SELECT map_card_id, session_date, session_time, ticket_group_key FROM post_sessions WHERE map_card_id IN ($cardIdsCsv) ORDER BY session_date ASC, session_time ASC");
-        $sessionsByCard = [];
         if ($sessRes) {
             while ($sRow = $sessRes->fetch_assoc()) {
                 $cid = (int)$sRow['map_card_id'];
@@ -559,8 +563,6 @@ try {
 
         // Ticket Pricing
         $priceRes = $mysqli->query("SELECT map_card_id, ticket_group_key, age_rating, seating_area, pricing_tier, price, currency FROM post_ticket_pricing WHERE map_card_id IN ($cardIdsCsv)");
-        $pricingByCard = [];
-        $ageRatingsByCard = [];
         if ($priceRes) {
             while ($pRow = $priceRes->fetch_assoc()) {
                 $cid = (int)$pRow['map_card_id'];
@@ -585,7 +587,6 @@ try {
 
         // Item Pricing
         $itemRes = $mysqli->query("SELECT map_card_id, item_name, item_variants, item_price, currency FROM post_item_pricing WHERE map_card_id IN ($cardIdsCsv)");
-        $itemsByCard = [];
         if ($itemRes) {
             while ($iRow = $itemRes->fetch_assoc()) {
                 $cid = (int)$iRow['map_card_id'];
