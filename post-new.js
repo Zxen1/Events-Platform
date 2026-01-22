@@ -3018,26 +3018,38 @@ const PostModule = (function() {
                     showActions: false
                   });
                   
-                  availableDates.forEach(function(dateStr) {
-                    var cell = calendarContainer.querySelector('.calendar-day[data-iso="' + dateStr + '"]');
-                    if (cell) {
+                  var availableDatesSet = {};
+                  availableDates.forEach(function(d) {
+                    availableDatesSet[d] = true;
+                  });
+                  
+                  var allCells = calendarContainer.querySelectorAll('.calendar-day[data-iso]');
+                  for (var i = 0; i < allCells.length; i++) {
+                    var cell = allCells[i];
+                    var dateStr = cell.getAttribute('data-iso');
+                    
+                    if (availableDatesSet[dateStr]) {
                       cell.classList.add('available-day');
                       
                       cell.addEventListener('mousedown', function() {
-                        lastClickedCell = cell;
+                        lastClickedCell = this;
                       });
                       
-                      cell.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        var indices = sessionsByDateIndex[dateStr];
-                        if (indices && indices.length === 1) {
-                          selectSession(indices[0]);
-                        } else if (indices && indices.length > 1) {
-                          showTimePopup(indices);
-                        }
-                      });
+                      (function(dateStr) {
+                        cell.addEventListener('click', function(e) {
+                          e.stopPropagation();
+                          var indices = sessionsByDateIndex[dateStr];
+                          if (indices && indices.length === 1) {
+                            selectSession(indices[0]);
+                          } else if (indices && indices.length > 1) {
+                            showTimePopup(indices);
+                          }
+                        });
+                      })(dateStr);
+                    } else {
+                      cell.classList.add('empty');
                     }
-                  });
+                  }
                 }
                 
                 sessionOptsContainer.innerHTML = '';
