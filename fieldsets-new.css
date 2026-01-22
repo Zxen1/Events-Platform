@@ -1267,7 +1267,6 @@
 /* Ticket Group Item */
 .fieldset-sessionpricing-ticketgroup-item {
     margin-bottom: 10px;
-    padding: 0 10px;
 }
 
 .fieldset-sessionpricing-ticketgroup-item:last-child {
@@ -1298,7 +1297,9 @@
     gap: 0;
     padding: 0 10px;
     box-sizing: border-box;
+    border-radius: 5px;
 }
+
 
 
 .fieldset-sessionpricing-ticketgroup-button-select,
@@ -1388,8 +1389,10 @@
 }
 
 /* Open state: show editor */
+/* When open, remove bottom border-radius so it connects to editor */
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
     border-color: var(--blue-500);
+    border-radius: 5px 5px 0 0;
 }
 
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
