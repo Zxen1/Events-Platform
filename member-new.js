@@ -2390,11 +2390,15 @@ const MemberModule = (function() {
 
         // Auto-open category menu when nothing is selected yet.
         // Subcategory auto-open is handled when a category is picked.
+        // Defer to next tick so the tab click event finishes before opening
+        // (otherwise MenuManager's document click handler closes it immediately).
         if (!selectedCategory) {
-            categoryMenu.__menuApplyOpenState(true);
-            // Focus the menu button so keyboard nav works immediately
-            // and focus-visible doesn't appear on the tab button
-            try { categoryBtn.focus(); } catch (e) {}
+            setTimeout(function() {
+                categoryMenu.__menuApplyOpenState(true);
+                // Focus the menu button so keyboard nav works immediately
+                // and focus-visible doesn't appear on the tab button
+                try { categoryBtn.focus(); } catch (e) {}
+            }, 0);
         }
     }
     
