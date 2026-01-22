@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Jan 23, 2026 at 01:00 AM
+-- Generation Time: Jan 23, 2026 at 04:55 AM
 -- Server version: 10.6.24-MariaDB
 -- PHP Version: 8.4.14
 
@@ -2130,7 +2130,12 @@ INSERT INTO `posts` (`id`, `post_key`, `member_id`, `member_name`, `subcategory_
 (12, '12-4tretghdhg', 1, 'Administrator', 'venues', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', NULL, NULL, '2026-01-21 15:56:18', '2026-01-21 15:56:18'),
 (13, '13-rsfgsgrs', 1, 'Administrator', 'live-gigs', 2, 'active', 'clean', NULL, 'premium-listing', 'paid', NULL, NULL, '2026-01-21 18:58:35', '2026-01-21 18:58:35'),
 (14, '14-little-bo-peep-has-lost-his-sheep', 1, 'Administrator', 'live-gigs', 3, 'active', 'clean', NULL, 'premium-listing', 'paid', NULL, NULL, '2026-01-21 22:04:52', '2026-01-21 22:04:52'),
-(15, '15-ujjtdrfyjtr', 1, 'Administrator', 'live-gigs', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', NULL, NULL, '2026-01-22 15:14:14', '2026-01-22 15:14:14');
+(15, '15-ujjtdrfyjtr', 1, 'Administrator', 'live-gigs', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', NULL, NULL, '2026-01-22 15:14:14', '2026-01-22 15:14:14'),
+(16, '16-sydney-opera-house', 2, NULL, 'theatres-concert-halls', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', '2046-01-01 00:00:00', NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(17, '17-sydney-harbour-bridge', 3, NULL, 'landmarks', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', '2046-01-01 00:00:00', NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(18, '18-bondi-beach', 4, NULL, 'parks-nature', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', '2046-01-01 00:00:00', NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(19, '19-taronga-zoo', 5, NULL, 'zoos-aquariums-wildlife', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', '2046-01-01 00:00:00', NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(20, '20-royal-botanic-garden-sydney', 6, NULL, 'parks-nature', 1, 'active', 'clean', NULL, 'premium-listing', 'paid', '2046-01-01 00:00:00', NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55');
 
 -- --------------------------------------------------------
 
@@ -2299,7 +2304,12 @@ INSERT INTO `post_map_cards` (`id`, `post_id`, `subcategory_key`, `title`, `desc
 (15, 14, 'live-gigs', 'Little Bo Peep has lost his sheep.', 'Her sheep. I don\'t know why I said his sheep. I don\'t think I did. I think the machine just misheard me.', '16,17,18,19,20', NULL, NULL, NULL, NULL, NULL, '', '+61', '5464564564', 'The Guild Theatre', '87 Railway St &, Walz St, Rockdale NSW 2216, Australia', NULL, -33.9515886, 151.1361615, 'AU', NULL, NULL, '', '', '', 'Wed 21 Jan - Thu 23 Apr', '[au] $25 - $456', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"1\"},{\"amenity\": \"kid_friendly\", \"value\": \"0\"}]', '2026-01-21 22:04:52', '2026-01-21 22:05:06'),
 (16, 14, 'live-gigs', 'Little Bo Peep has lost his sheep.', 'Her sheep. I don\'t know why I said his sheep. I don\'t think I did. I think the machine just misheard me.', '16,17,18,19,20', NULL, NULL, NULL, NULL, NULL, '', '+61', '5464564564', 'Melbourne Exhibition Centre, South Wharf VIC 3006, Australia', 'Melbourne Exhibition Centre, South Wharf VIC 3006, Australia', NULL, -37.8255785, 144.9541305, 'AU', NULL, NULL, '', '', '', 'Sun 22 Feb - Mon 27 Apr', '[us] $25 - $456', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-21 22:04:52', '2026-01-21 22:05:06'),
 (17, 14, 'live-gigs', 'Little Bo Peep has lost his sheep.', 'Her sheep. I don\'t know why I said his sheep. I don\'t think I did. I think the machine just misheard me.', '16,17,18,19,20', NULL, NULL, NULL, NULL, NULL, '', '+61', '5464564564', 'Adelaide Parklands', '5006, North Terrace, Adelaide SA 5000, Australia', NULL, -34.9195059, 138.5912962, 'AU', NULL, NULL, '', '', '', 'Thu 29 Jan - Tue 24 Feb', '[us] $25 - $456', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"0\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-21 22:04:52', '2026-01-21 22:05:06'),
-(18, 15, 'live-gigs', 'ujjtdrfyjtr', 'tjrrttjrtjtrrjrrtj', '21,22,23,24,25', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'FGHT T06 UTM skudai', 'Skudai, 80990 Johor Bahru, Johor, Malaysia', NULL, 1.5619170, 103.6556344, 'MY', NULL, NULL, '', '', '', 'Wed 28 Jan - Mon 23 Feb', '[dz] 34 Ø¯.Ø¬', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"1\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-22 15:14:14', '2026-01-22 15:14:28');
+(18, 15, 'live-gigs', 'ujjtdrfyjtr', 'tjrrttjrtjtrrjrrtj', '21,22,23,24,25', NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'FGHT T06 UTM skudai', 'Skudai, 80990 Johor Bahru, Johor, Malaysia', NULL, 1.5619170, 103.6556344, 'MY', NULL, NULL, '', '', '', 'Wed 28 Jan - Mon 23 Feb', '[dz] 34 Ø¯.Ø¬', '[{\"amenity\": \"parking\", \"value\": \"1\"},{\"amenity\": \"wheelchair_access\", \"value\": \"1\"},{\"amenity\": \"kid_friendly\", \"value\": \"1\"}]', '2026-01-22 15:14:14', '2026-01-22 15:14:28'),
+(19, 16, 'theatres-concert-halls', 'Sydney Opera House', 'The Sydney Opera House is a multi-venue performing arts centre in Sydney, New South Wales, Australia. Located on the foreshore of Sydney Harbour, it is widely regarded as one of the world\'s most famous and distinctive buildings, and a masterpiece of 20th-century architecture.\n\nDesigned by Danish architect Jørn Utzon and completed by an Australian architectural team headed by Peter Hall, the building was formally opened by Queen Elizabeth II on 20 October 1973.\n\nPhoto: Bernard Spragg (CC0); BennyG3255 (CC BY-SA 4.0); MorePix (CC BY-SA 4.0)', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Sydney', -33.8568100, 151.2151400, 'AU', NULL, NULL, 'https://www.sydneyoperahouse.com', NULL, NULL, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(20, 17, 'landmarks', 'Sydney Harbour Bridge', 'The Sydney Harbour Bridge is a steel through arch bridge in Sydney, New South Wales, Australia, spanning Sydney Harbour from the central business district to the North Shore. Nicknamed \"the Coathanger\" because of its arch-based design, the bridge carries rail, vehicular, bicycle and pedestrian traffic.\n\nDesigned and built by British firm Dorman Long of Middlesbrough, the bridge opened in 1932.\n\nPhoto: Bookish Worm (CC BY-SA 4.0); Rodney Haywood (Attribution); JJ Harrison (CC BY-SA 3.0)', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Sydney', -33.8522200, 151.2105600, 'AU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(21, 18, 'parks-nature', 'Bondi Beach', 'Bondi Beach is a popular beach and the name of the surrounding suburb in Sydney, New South Wales, Australia. Located 7 kilometres east of the Sydney central business district, it is one of the most visited tourist sites in Australia.\n\nPhoto: Nick Ang (CC BY-SA 4.0); Chen Hualin (CC BY-SA 4.0); Nicolas Lannuzel (CC BY-SA 2.0)', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Sydney', -33.8910000, 151.2780000, 'AU', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(22, 19, 'zoos-aquariums-wildlife', 'Taronga Zoo', 'Taronga Zoo Sydney is a government-run public zoo located in Sydney, New South Wales, Australia, on the shores of Sydney Harbour. It offers great views of the harbour and the city. Taronga is an Aboriginal word meaning \"beautiful view\".\n\nOfficially opened on 7 October 1916, it is managed by the Zoological Parks Board of New South Wales.\n\nPhoto: Alex Dawson (CC BY-SA 2.0); Todd (Public domain); Maksym Kozlenko (CC BY-SA 4.0)', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Sydney', -33.8433300, 151.2411100, 'AU', NULL, NULL, 'https://taronga.org.au/taronga-zoo', NULL, NULL, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(23, 20, 'parks-nature', 'Royal Botanic Garden, Sydney', 'The Royal Botanic Garden, Sydney is a heritage-listed 30-hectare botanical garden and public recreation area located at Farm Cove on the eastern fringe of the Sydney central business district.\n\nOpened in 1816, it is the oldest scientific institution in Australia and one of the most important historic botanical institutions in the world.\n\nPhoto: Bidgee (CC BY-SA 3.0); Photographic Collection from Australia (CC BY 2.0); Harveychl (CC BY-SA 4.0)', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'Sydney', -33.8638900, 151.2169400, 'AU', NULL, NULL, 'https://www.botanicgardens.org.au/royal-botanic-garden-sydney', NULL, NULL, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55');
 
 -- --------------------------------------------------------
 
@@ -2350,7 +2360,22 @@ INSERT INTO `post_media` (`id`, `member_id`, `post_id`, `file_name`, `file_url`,
 (22, 1, 15, '15-379498.jpg', 'https://cdn.funmap.com/post-images/2026-01/15-379498.jpg', 1151956, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313 (1).jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}', NULL, NULL, '2026-01-22 15:14:20', '2026-01-22 15:14:20'),
 (23, 1, 15, '15-a3b713.jpg', 'https://cdn.funmap.com/post-images/2026-01/15-a3b713.jpg', 1151956, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 623313.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":1151956,\"crop\":null}', NULL, NULL, '2026-01-22 15:14:22', '2026-01-22 15:14:22'),
 (24, 1, 15, '15-f9c6a1.jpg', 'https://cdn.funmap.com/post-images/2026-01/15-f9c6a1.jpg', 907759, '{\"file_name\":\"Firefly_cute little monkey in red cape pointing up 407711.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":907759,\"crop\":null}', NULL, NULL, '2026-01-22 15:14:25', '2026-01-22 15:14:25'),
-(25, 1, 15, '15-787e28.jpg', 'https://cdn.funmap.com/post-images/2026-01/15-787e28.jpg', 955719, '{\"file_name\":\"Firefly_cute little monkey in red cape scratching head 407711.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":955719,\"crop\":null}', NULL, NULL, '2026-01-22 15:14:28', '2026-01-22 15:14:28');
+(25, 1, 15, '15-787e28.jpg', 'https://cdn.funmap.com/post-images/2026-01/15-787e28.jpg', 955719, '{\"file_name\":\"Firefly_cute little monkey in red cape scratching head 407711.jpg\",\"file_type\":\"image\\/jpeg\",\"file_size\":955719,\"crop\":null}', NULL, NULL, '2026-01-22 15:14:28', '2026-01-22 15:14:28'),
+(41, 2, 16, '00000016-Sydney_Australia.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000016-Sydney_Australia._(21339175489).jpg', 4588171, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(42, 2, 16, '00000016-Interior_Opera_House.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000016-Interior_of_Sydney_Opera_House_Concert_Hall_during_performance.jpg', 2926435, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(43, 2, 16, '00000016-Joan_Sutherland_Theatre.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000016-Joan_Sutherland_Theatre_Interior.JPG', 1051991, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(44, 3, 17, '00000017-Sydney_Harbour_Bridge.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000017-Sydney_Harbour_Bridge-2022.jpg', 1521976, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(45, 3, 17, '00000017-Bridge_from_air.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000017-Sydney_Harbour_Bridge_from_the_air.JPG', 734525, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(46, 3, 17, '00000017-Bridge_from_Circular_Quay.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000017-Sydney_Harbour_Bridge_from_Circular_Quay.jpg', 8177508, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(47, 4, 18, '00000018-Bondi_from_above.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000018-Bondi_from_above.jpg', 7345306, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(48, 4, 18, '00000018-Bondi_rip_current.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000018-A_rip_current_pouring_over_the_people_standing_on_rock_shore_at_the_northern_end_of_Bondi_beach.jpg', 391684, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(49, 4, 18, '00000018-Bondi_Beach.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000018-Bondi_Beach,_Sydney_(15175458494).jpg', 780475, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(50, 5, 19, '00000019-Taronga_Zoo.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000019-Taronga_Park_Zoo_-7Sept2008.jpg', 835461, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(51, 5, 19, '00000019-Rusticbridge.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000019-Rusticbridge.jpg', 1033829, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(52, 5, 19, '00000019-Giraffes.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000019-2022-06-25_Giraffes_in_Taronga_Zoo.jpg', 4677850, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(53, 6, 20, '00000020-Botanic_Gardens_Gates.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000020-Gates_at_Royal_Botanic_Gardens_viewed_from_Art_Gallery_Road.jpg', 5603754, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(54, 6, 20, '00000020-Garden_Palace.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000020-After_the_fire_-_The_Garden_Palace_(8005393749).jpg', 375021, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55'),
+(55, 6, 20, '00000020-Botanic_Garden_view.jpg', 'https://cdn.funmap.com/post-images/2026-01/00000020-A_view_of_Royal_Botanic_Garden_taken_from_Sydney_Tower.jpeg', 6504334, NULL, NULL, NULL, '2026-01-23 04:52:55', '2026-01-23 04:52:55');
 
 -- --------------------------------------------------------
 
@@ -3023,7 +3048,7 @@ ALTER TABLE `moderation_log`
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `post_amenities`
@@ -3041,13 +3066,13 @@ ALTER TABLE `post_item_pricing`
 -- AUTO_INCREMENT for table `post_map_cards`
 --
 ALTER TABLE `post_map_cards`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `post_media`
 --
 ALTER TABLE `post_media`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=56;
 
 --
 -- AUTO_INCREMENT for table `post_revisions`
