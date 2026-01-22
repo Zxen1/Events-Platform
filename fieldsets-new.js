@@ -2327,7 +2327,7 @@ const FieldsetBuilder = (function(){
                 } else {
                     var result = CurrencyComponent.buildCompactMenu({
                         initialValue: null,
-                        placeholder: 'Select Currency',
+                        placeholder: 'Select',
                         onSelect: function(value, label, countryCode) {
                             var oldCurrency = ipSelectedCurrency;
                             ipSelectedCurrency = value;
@@ -2676,7 +2676,7 @@ const FieldsetBuilder = (function(){
                     }
                     var result = CurrencyComponent.buildFullMenu({
                         initialValue: options && options.initialValue !== undefined ? options.initialValue : spTicketCurrencyState.code,
-                        placeholder: 'Select Currency',
+                        placeholder: 'Select',
                         onSelect: function(value, label, countryCode) {
                             var oldCode = spTicketCurrencyState.code;
                             spTicketCurrencyState.flag = countryCode;

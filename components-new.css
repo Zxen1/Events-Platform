@@ -700,7 +700,7 @@
 .component-currencyfull-menu-button-input {
     flex: 1;
     text-align: left;
-    padding-left: 10px;
+    padding-left: 0;
     font-size: 14px;
     min-width: 0;
 }
@@ -839,6 +839,7 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
+    border-radius: 5px;
 }
 
 .component-currencycompact-menu-button-image {
@@ -872,12 +873,13 @@
 .component-currencycompact-menu-options {
     display: none;
     position: absolute;
-    top: 36px;
+    top: 46px;
     left: 0;
     width: 250px;
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
+    border-radius: 5px;
 }
 
 .component-currencycompact-menu-option {
@@ -930,6 +932,7 @@
     align-items: center;
     padding: 0 10px;
     cursor: pointer;
+    border-radius: 5px;
 }
 
 .component-phoneprefixcompact-menu-button-image {
@@ -963,12 +966,13 @@
 .component-phoneprefixcompact-menu-options {
     display: none;
     position: absolute;
-    top: 36px;
+    top: 46px;
     left: 0;
     width: 250px;
     max-height: 300px;
     overflow-y: auto;
     z-index: var(--layer-menu, 85);
+    border-radius: 5px;
 }
 
 .component-phoneprefixcompact-menu-option {

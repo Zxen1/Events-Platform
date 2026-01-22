@@ -1059,7 +1059,7 @@ const CurrencyComponent = (function(){
         menu.className = 'component-currencyfull-menu menu-class-1';
         // No default flag - leave empty until user selects
         var initialFlagUrl = '';
-        menu.innerHTML = '<div class="component-currencyfull-menu-button menu-button" role="button"><img class="component-currencyfull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencyfull-menu-button-input menu-input" placeholder="Select currency" autocomplete="off"><span class="component-currencyfull-menu-button-arrow menu-arrow"></span></div><div class="component-currencyfull-menu-options menu-options"></div>';
+        menu.innerHTML = '<div class="component-currencyfull-menu-button menu-button" role="button"><img class="component-currencyfull-menu-button-image" src="' + initialFlagUrl + '" alt="" style="display: ' + (initialFlagUrl ? 'block' : 'none') + ';"><input type="text" class="component-currencyfull-menu-button-input menu-input" placeholder="Select" autocomplete="off"><span class="component-currencyfull-menu-button-arrow menu-arrow"></span></div><div class="component-currencyfull-menu-options menu-options"></div>';
         
         var btn = menu.querySelector('.component-currencyfull-menu-button');
         var opts = menu.querySelector('.component-currencyfull-menu-options');
