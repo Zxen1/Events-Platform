@@ -7543,9 +7543,6 @@ const AgeRatingComponent = (function(){
         var menu = document.createElement('div');
         // menu-class-1 supplies appearance; component CSS supplies layout only.
         menu.className = 'component-ageratingpicker-menu menu-class-1';
-        // Default state is "no image" until a real selection with an icon is applied.
-        // This ensures placeholder text aligns with options (only 10px left padding from the button itself).
-        menu.classList.add('component-ageratingpicker-menu--noimage');
         
         // Button
         var button = document.createElement('button');
@@ -7601,8 +7598,6 @@ const AgeRatingComponent = (function(){
                 buttonText.textContent = 'Select rating';
                 selectedValue = null;
                 menu.dataset.value = '';
-                // Placeholder state: no icon, so remove extra left padding before text
-                menu.classList.add('component-ageratingpicker-menu--noimage');
                 return;
             }
             var found = ageRatingData.find(function(item) {
@@ -7616,10 +7611,8 @@ const AgeRatingComponent = (function(){
                 if (imgUrl) {
                     buttonImage.src = imgUrl;
                     buttonImage.style.display = '';
-                    menu.classList.remove('component-ageratingpicker-menu--noimage');
                 } else {
                     buttonImage.style.display = 'none';
-                    menu.classList.add('component-ageratingpicker-menu--noimage');
                 }
             }
         }

@@ -1450,21 +1450,16 @@
     height: 24px;
     object-fit: contain;
     flex-shrink: 0;
+    margin-right: 10px;
 }
 
 .component-ageratingpicker-menu-button-text {
     flex: 1;
     text-align: left;
-    padding-left: 10px;
     font-size: 14px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-/* Placeholder: no image => remove extra padding so total left padding stays 10px (button padding only) */
-.component-ageratingpicker-menu--noimage .component-ageratingpicker-menu-button-text {
-    padding-left: 0;
 }
 
 .component-ageratingpicker-menu-button-arrow {
