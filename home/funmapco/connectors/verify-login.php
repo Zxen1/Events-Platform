@@ -45,38 +45,22 @@ try {
     json_fail('Missing credentials');
   }
 
-  // Attempt login against a table; allow email OR username match
-  $attempt = function(mysqli $db, string $table, string $user, string $pass){
-    // avatar_file is preferred (filename-only). Some installs may still be on avatar_url.
-    // Try avatar_file first, then avatar_url, then no-avatar.
-    // Also select deleted_at to handle soft-deleted accounts (reactivation on login)
-    $stmt = null;
-    $avatarCol = null;
+  // Table-specific column lists (admins and members have different schemas)
+  $adminCols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
+  $memberCols = 'id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at';
 
-    // IMPORTANT:
-    // - Database schemas evolve; do not select columns that may not exist (mysqli->prepare will fail).
-    // - Keep this SELECT limited to columns that exist in current funmapco_db views/tables (see latest dump).
-    $sqlWithAvatarFile = "SELECT id, account_email, username, username_key, avatar_file, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
-    $stmt = $db->prepare($sqlWithAvatarFile);
-    if ($stmt) {
-      $avatarCol = 'avatar_file';
-    } else {
-      $sqlWithAvatarUrl = "SELECT id, account_email, username, username_key, avatar_url, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
-      $stmt = $db->prepare($sqlWithAvatarUrl);
-      if ($stmt) {
-        $avatarCol = 'avatar_url';
-      } else {
-        $sqlNoAvatar = "SELECT id, account_email, username, username_key, password_hash, map_lighting, map_style, favorites, recent, country, preferred_currency, filters_json, filters_hash, filters_version, filters_updated_at, deleted_at FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
-        $stmt = $db->prepare($sqlNoAvatar);
-        if (!$stmt) return null;
-      }
-    }
+  // Attempt login against a table; allow email OR username match
+  $attempt = function(mysqli $db, string $table, string $user, string $pass, string $cols){
+    $sql = "SELECT {$cols} FROM {$table} WHERE account_email = ? OR username = ? LIMIT 1";
+    $stmt = $db->prepare($sql);
+    if (!$stmt) return null;
+    
     $stmt->bind_param('ss', $user, $user);
-    if(!$stmt->execute()){ $stmt->close(); return null; }
+    if (!$stmt->execute()) { $stmt->close(); return null; }
     $res = $stmt->get_result();
     $row = $res ? $res->fetch_assoc() : null;
     $stmt->close();
-    if(!$row) return null;
+    if (!$row) return null;
     if (!isset($row['password_hash']) || !password_verify($pass, $row['password_hash'])) return null;
     
     // Check if account was soft-deleted (scheduled for deletion)
@@ -102,8 +86,7 @@ try {
         'account_email' => isset($row['account_email']) ? (string)$row['account_email'] : '',
         'username'  => (string)$row['username'],
         'username_key' => isset($row['username_key']) ? (string)$row['username_key'] : '',
-        'avatar' => ($avatarCol && isset($row[$avatarCol])) ? (string)$row[$avatarCol] : '',
-        // Keep response keys stable for frontend, even if some values are not stored on the user row.
+        'avatar' => isset($row['avatar_file']) ? (string)$row['avatar_file'] : '',
         'language' => null,
         'preferred_currency' => isset($row['preferred_currency']) ? (string)$row['preferred_currency'] : null,
         'country_code' => isset($row['country']) ? (string)$row['country'] : null,
@@ -120,9 +103,9 @@ try {
     ];
   };
 
-  // Try admins first, then members
-  $login = $attempt($mysqli, 'admins', $username, $password);
-  if(!$login) $login = $attempt($mysqli, 'members', $username, $password);
+  // Try admins first, then members (each with their own column list)
+  $login = $attempt($mysqli, 'admins', $username, $password, $adminCols);
+  if (!$login) $login = $attempt($mysqli, 'members', $username, $password, $memberCols);
 
   if($login){
     echo json_encode($login, JSON_UNESCAPED_SLASHES);
