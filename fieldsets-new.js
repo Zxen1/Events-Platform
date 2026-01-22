@@ -3887,8 +3887,12 @@ const FieldsetBuilder = (function(){
                     var editBtnIcon = document.createElement('span');
                     editBtnIcon.className = 'fieldset-sessionpricing-ticketgroup-button-edit-icon';
                     editBtn.appendChild(editBtnIcon);
-                    editBtn.title = 'Edit Ticket Group';
-                    editBtn.setAttribute('aria-label', 'Edit Ticket Group');
+                    editBtn.title = 'Toggle Ticket Group';
+                    editBtn.setAttribute('aria-label', 'Toggle Ticket Group');
+                    editBtn.addEventListener('click', function(e) {
+                        try { e.preventDefault(); } catch (e0) {}
+                        group.classList.toggle('fieldset-sessionpricing-ticketgroup-item--open');
+                    });
                     headerContent.appendChild(editBtn);
 
                     // Add button (+)
@@ -3936,7 +3940,8 @@ const FieldsetBuilder = (function(){
                     header.appendChild(headerContent);
                     group.appendChild(header);
 
-                    // Editor content (always visible - not collapsible)
+                    // Editor content (collapsible, open by default)
+                    group.classList.add('fieldset-sessionpricing-ticketgroup-item--open');
                     var editorWrap = document.createElement('div');
                     editorWrap.className = 'fieldset-sessionpricing-ticketgroup-item-editorwrap container-content';
 

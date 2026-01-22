@@ -1265,6 +1265,15 @@
 }
 
 /* Ticket Group Item */
+.fieldset-sessionpricing-ticketgroup-item {
+    margin-bottom: 10px;
+    padding: 0 10px;
+}
+
+.fieldset-sessionpricing-ticketgroup-item:last-child {
+    margin-bottom: 0;
+}
+
 .fieldset-sessionpricing-ticketgroup-item-header {
     width: 100%;
 }
@@ -1373,11 +1382,18 @@
     padding: 0;
 }
 
+/* Collapsed state: hide editor */
+.fieldset-sessionpricing-ticketgroup-item-editorwrap {
+    display: none;
+}
+
+/* Open state: show editor */
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-header-content {
     border-color: var(--blue-500);
 }
 
 .fieldset-sessionpricing-ticketgroup-item--open .fieldset-sessionpricing-ticketgroup-item-editorwrap {
+    display: block;
     margin-top: 0;
     padding: 10px;
     border-color: var(--blue-500);
