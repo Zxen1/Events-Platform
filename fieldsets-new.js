@@ -2566,6 +2566,11 @@ const FieldsetBuilder = (function(){
                         var yesRadio = srcEditor.querySelector('input[type="radio"][value="1"]');
                         if (yesRadio) allocated = yesRadio.checked ? 1 : 0;
                         
+                        // Get currency at editor level (shared across all tiers)
+                        var currencyInput = srcEditor.querySelector('.component-currencyfull-menu-button-input');
+                        var currencyCode = currencyInput ? String(currencyInput.value || '').trim() : '';
+                        if (currencyCode.indexOf(' - ') !== -1) currencyCode = currencyCode.split(' - ')[0].trim();
+                        
                         var seatingBlocks = srcEditor.querySelectorAll('.fieldset-sessionpricing-pricing-seating-block');
                         var pricingData = [];
                         seatingBlocks.forEach(function(block) {
@@ -2584,15 +2589,12 @@ const FieldsetBuilder = (function(){
                                 var priceInput = tier.querySelector('.fieldset-sessionpricing-input-price');
                                 var price = priceInput ? String(priceInput.value || '').trim() : '';
                                 
-                                var currencyInput = srcEditor.querySelector('.component-currencyfull-menu-button-input');
-                                var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
-                                if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
-                                
-                                tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                                tiers.push({ pricing_tier: tierName, price: price });
                             });
                             pricingData.push({ 
                                 allocated_areas: allocated,
-                                ticket_area: ticketArea, 
+                                ticket_area: ticketArea,
+                                currency: currencyCode,
                                 tiers: tiers 
                             });
                         });
@@ -2783,6 +2785,10 @@ const FieldsetBuilder = (function(){
                             if (options && typeof options.onSelect === 'function') {
                                 options.onSelect(value, label, countryCode);
                             }
+                            // Dispatch change event for sync listeners
+                            try {
+                                result.element.dispatchEvent(new Event('change', { bubbles: true }));
+                            } catch (e) {}
                         }
                     });
                     spTicketCurrencyMenus.push(result);
@@ -4080,7 +4086,7 @@ const FieldsetBuilder = (function(){
                         group.classList.add('fieldset-sessionpricing-ticketgroup-item--active');
                     });
                     
-                    // Sync changes to other fieldsets (debounced)
+                    // Sync changes to other fieldsets (debounced for typing, immediate for structural changes)
                     var syncTimeout = null;
                     function triggerSync() {
                         clearTimeout(syncTimeout);
@@ -4088,10 +4094,19 @@ const FieldsetBuilder = (function(){
                             spSyncTicketGroupToOthers(key);
                         }, 100);
                     }
+                    function triggerSyncImmediate() {
+                        clearTimeout(syncTimeout);
+                        spSyncTicketGroupToOthers(key);
+                    }
                     
                     // Listen for input changes within the editor
                     editor.addEventListener('input', triggerSync);
                     editor.addEventListener('change', triggerSync);
+                    // Listen for clicks (add/remove buttons, menu selections)
+                    editor.addEventListener('click', function(e) {
+                        // Delay slightly to let DOM update after button click
+                        setTimeout(triggerSyncImmediate, 50);
+                    });
 
                     spTicketGroups[key] = group;
                     if (spTicketGroupList) spTicketGroupList.appendChild(group);
