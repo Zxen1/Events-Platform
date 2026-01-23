@@ -64,6 +64,19 @@ Migrate/seed the new FunMap.com website with approximately 4000 venue posts (20 
 
 ---
 
+## PRE-FLIGHT CHECKLIST
+
+Before running ANY seeding operation:
+
+- [ ] **Database charset is utf8mb4** - Run: `SHOW CREATE DATABASE funmapco_db;`
+- [ ] **Tables are utf8mb4** - Run: `SHOW CREATE TABLE post_map_cards;`
+- [ ] **config-db.php has charset line** - Must contain: `$mysqli->set_charset('utf8mb4');`
+- [ ] **No duplicates in venue list** - Run duplicate check script
+- [ ] **Starting IDs verified** - Check posts, post_media, post_map_cards for MAX(id)+1
+- [ ] **ZIM file accessible** - Verify 111GB file exists at expected path
+- [ ] **Disk space available** - Need ~15-20GB for images
+- [ ] **Google API key valid** - Test with one Places API call
+
 ## BEFORE RUNNING: Generate Run 1 List
 
 ```
@@ -219,6 +232,65 @@ Note: Actual venue count depends on random selection in generate-run1-venues.py
 2. Note which phase and which venue number
 3. Resume script from that checkpoint
 4. All previously downloaded images remain in the images folder
+
+---
+
+## LESSONS LEARNED (Run 1 - January 2026)
+
+### Problem 1: Unicode Corruption (Question Marks)
+**Symptom:** Chinese, Japanese, Korean, Arabic, Hebrew characters became `????????`  
+**Cause:** Database/tables were not set to utf8mb4 charset  
+**Fix:** BEFORE any import, run:
+```sql
+ALTER DATABASE funmapco_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE posts CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE post_media CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE post_map_cards CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### Problem 2: Duplicate Venues
+**Symptom:** Same venue appeared twice with different post IDs  
+**Cause:** Curated venue list had duplicates (same venue in multiple cities or listed twice)  
+**Fix:** Before running, check for duplicates:
+```python
+seen = set()
+for city in data['cities']:
+    for venue in city['venues']:
+        if venue['title'] in seen:
+            print(f"DUPLICATE: {venue['title']}")
+        seen.add(venue['title'])
+```
+
+### Problem 3: Python Encoding on Windows
+**Symptom:** Console showed errors, files had wrong characters  
+**Cause:** Windows console uses cp1252, not UTF-8  
+**Fix:** In Python scripts:
+```python
+# For file writes
+with open(file, 'w', encoding='utf-8') as f:
+# For stdout
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+```
+
+### Problem 4: Images Downloaded But Descriptions Failed
+**Symptom:** Wasted disk space on images for venues that later failed  
+**Cause:** Original order was: Images → Google API → Description check  
+**Fix:** New order: Images → Description check (FREE) → Google API (PAID)
+
+### Problem 5: Member Names Showed "Anonymous"
+**Symptom:** Posts showed "Posted by anonymous" instead of member names  
+**Cause:** `member_name` column in posts table was NULL  
+**Fix:** After INSERT, run:
+```sql
+UPDATE posts p JOIN members m ON p.member_id = m.id 
+SET p.member_name = m.username WHERE p.id >= 21;
+```
+
+### Problem 6: Map Labels Missing
+**Symptom:** Clustered pins showed "X posts here" but no venue label underneath  
+**Cause:** `venue_name` and `address_line` were NULL in post_map_cards  
+**Fix:** These fields MUST come from Google Places API - no fallbacks
 
 ---
 

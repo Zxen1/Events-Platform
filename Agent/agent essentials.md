@@ -165,11 +165,16 @@ Never edit SQL backup/export files. Paste SQL directly in chat for the user to r
 ### Never Create SQL Files
 Draft SQL must live only in chat, never as files in the workspace.
 
+**Exception:** Bulk operations (100+ statements) require SQL files. Delete the file after import.
+
 ### Verify Before Writing SQL
 ALWAYS search the database dump for exact table structure before writing any SQL. Never guess column names.
 
 ### Column Ordering
 `created_at` and `updated_at` must always be the last columns in a table.
+
+### Database Charset
+Database and tables MUST be utf8mb4 before bulk inserts with international characters. See venue-seeding-plan.md for details.
 
 ---
 
@@ -233,9 +238,9 @@ Review `sitemap.html` to understand the platform structure. It shows the layout 
 
 ---
 
-## VENUE SEEDING (TO-DO)
+## VENUE SEEDING
 
-**Workflow:** Web search (find top attractions per city) → ZIM file (article content + image filenames) → Wikimedia Commons (full-res images ≥1000px) → Database. ZIM file downloaded to user's computer (111GB).
+See `Agent/venue-seeding-plan.md` for full instructions, pre-flight checklist, and lessons learned from Run 1.
 
 ---
 
