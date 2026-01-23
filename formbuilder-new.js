@@ -1660,15 +1660,16 @@
             });
         }
         
-        // Function to enable/disable session_pricing based on subcategory type (Events vs General)
-        function updateSessionPricingFieldset(subcategoryType) {
+        // Function to enable/disable event fieldsets based on subcategory type (Events vs General)
+        function updateEventOnlyFieldsets(subcategoryType) {
             if (!fieldsetOpts) return;
             var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
             allOptions.forEach(function(opt) {
                 var fsId = opt.getAttribute('data-fieldset-id');
                 if (!fsId) return;
                 var fsIdLower = String(fsId).toLowerCase();
-                if (fsIdLower === 'session_pricing') {
+                // Handle session_pricing (legacy), ticket_pricing, and sessions
+                if (fsIdLower === 'session_pricing' || fsIdLower === 'ticket_pricing' || fsIdLower === 'sessions') {
                     if (subcategoryType === 'Events') {
                         opt.classList.remove('formbuilder-fieldset-menu-option--disabled-general');
                     } else {
@@ -2094,8 +2095,8 @@
                 if (!cat.subFees) cat.subFees = {};
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'Events';
-                // Enable session_pricing for Events type
-                updateSessionPricingFieldset('Events');
+                // Enable event-only fieldsets for Events type
+                updateEventOnlyFieldsets('Events');
                 notifyChange();
             }
         });
@@ -2139,8 +2140,8 @@
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'General';
                 // Keep existing location_type - don't set to null
-                // Disable session_pricing for General type
-                updateSessionPricingFieldset('General');
+                // Disable event-only fieldsets for General type
+                updateEventOnlyFieldsets('General');
                 notifyChange();
             }
         });
@@ -2749,6 +2750,39 @@
             modifyContainer.appendChild(tooltipLabel);
             modifyContainer.appendChild(tooltipInput);
             
+            // Instruction text (only for ticket_pricing and sessions fieldsets)
+            var instructionInput = null;
+            var defaultInstruction = fieldsetDef ? (fieldsetDef.fieldset_instruction || '') : '';
+            if (fieldsetKey === 'ticket_pricing' || fieldsetKey === 'sessions') {
+                var instructionLabel = document.createElement('label');
+                instructionLabel.className = 'formbuilder-field-label';
+                instructionLabel.textContent = 'Instruction';
+                instructionInput = document.createElement('textarea');
+                instructionInput.className = 'formbuilder-field-textarea';
+                instructionInput.placeholder = defaultInstruction || 'Instruction text shown to users';
+                instructionInput.rows = 3;
+                var customInstruction = fieldData.instruction || fieldData.fieldset_instruction || '';
+                if (customInstruction && customInstruction !== defaultInstruction) {
+                    instructionInput.value = customInstruction;
+                    instructionInput.style.color = '#fff';
+                } else {
+                    instructionInput.value = '';
+                    instructionInput.style.color = '#888';
+                }
+                instructionInput.addEventListener('input', function() {
+                    if (instructionInput.value && instructionInput.value !== defaultInstruction) {
+                        instructionInput.style.color = '#fff';
+                    } else {
+                        instructionInput.value = '';
+                        instructionInput.style.color = '#888';
+                    }
+                    checkModifiedState();
+                    notifyChange();
+                });
+                modifyContainer.appendChild(instructionLabel);
+                modifyContainer.appendChild(instructionInput);
+            }
+            
             fieldEditPanel.appendChild(modifyContainer);
             
             // Register with Field Tracker
@@ -2758,6 +2792,7 @@
                     name: fieldData.name || defaultName || '',
                     placeholder: fieldData.placeholder || defaultPlaceholder || '',
                     tooltip: fieldData.tooltip || fieldData.fieldset_tooltip || defaultTooltip || '',
+                    instruction: fieldData.instruction || fieldData.fieldset_instruction || defaultInstruction || '',
                     options: fieldData.options || [],
                     selectedAmenities: fieldData.selectedAmenities || []
                 };

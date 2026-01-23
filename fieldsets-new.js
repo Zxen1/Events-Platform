@@ -4606,6 +4606,1799 @@ const FieldsetBuilder = (function(){
 
                 break;
                 
+            case 'ticket_pricing':
+                // TICKET PRICING FIELDSET
+                // Ticket groups (A, B, C...) with age rating, currency, ticket areas, and pricing tiers.
+                // This fieldset exists ONCE in the primary container (above the line).
+                // Sessions fieldset reads ticket group keys from this fieldset.
+                
+                var tpLabelEl = buildLabel(name, tooltip, minLength, maxLength);
+                tpLabelEl.style.marginBottom = '10px';
+                fieldset.appendChild(tpLabelEl);
+
+                // Instruction text from database (not hardcoded)
+                var tpInstructionText = '';
+                if (instruction) {
+                    tpInstructionText = instruction;
+                } else if (fieldData && fieldData.fieldset_instruction) {
+                    tpInstructionText = fieldData.fieldset_instruction;
+                }
+                if (tpInstructionText) {
+                    var tpInstructionEl = document.createElement('div');
+                    tpInstructionEl.className = 'fieldset-ticketpricing-instruction';
+                    tpInstructionEl.textContent = tpInstructionText;
+                    tpInstructionEl.style.marginBottom = '10px';
+                    fieldset.appendChild(tpInstructionEl);
+                }
+
+                // Ticket group state
+                var tpTicketGroups = {}; // { A: itemEl, B: itemEl, ... }
+                var tpTicketGroupList = null; // container element for group list
+                
+                function tpGetSystemTicketIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_ticket ? String(sys.icon_ticket || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function tpGetSystemPlusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_plus ? String(sys.icon_plus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function tpGetSystemMinusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_minus ? String(sys.icon_minus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function tpFirstUnusedLetter() {
+                    for (var i = 0; i < 26; i++) {
+                        var key = String.fromCharCode(65 + i);
+                        if (!tpTicketGroups[key]) return key;
+                    }
+                    return 'G' + (Object.keys(tpTicketGroups).length + 1);
+                }
+
+                function tpEnsureDefaultGroup() {
+                    if (!tpTicketGroups['A']) tpEnsureTicketGroup('A');
+                }
+
+                // Shared currency state across all pricing editors in this fieldset
+                var tpInitialCurrencyCode = defaultCurrency || null;
+                var tpInitialCurrency = null;
+                if (tpInitialCurrencyCode && CurrencyComponent.isLoaded()) {
+                    var tpFound = CurrencyComponent.getData().find(function(item) { return item.value === tpInitialCurrencyCode; });
+                    if (tpFound) {
+                        var tpCountryCode = tpFound.filename ? tpFound.filename.replace('.svg', '') : null;
+                        tpInitialCurrency = { flag: tpCountryCode, code: tpInitialCurrencyCode };
+                    }
+                }
+                var tpTicketCurrencyState = tpInitialCurrency || { flag: null, code: null };
+                var tpTicketCurrencyMenus = [];
+
+                function tpGetTicketCurrencyCode() {
+                    return tpTicketCurrencyState.code || null;
+                }
+                
+                function tpSyncAllTicketCurrencies() {
+                    tpTicketCurrencyMenus.forEach(function(menuObj) {
+                        try {
+                            if (!menuObj || typeof menuObj.setValue !== 'function') return;
+                            menuObj.setValue(tpTicketCurrencyState.code || null);
+                        } catch (e0) {}
+                    });
+                    tpUpdateAllPricePlaceholders();
+                }
+                
+                function tpUpdateAllPricePlaceholders() {
+                    var priceInputs = fieldset.querySelectorAll('.fieldset-ticketpricing-input-price');
+                    priceInputs.forEach(function(inp) {
+                        var groupEl = inp.closest('.fieldset-ticketpricing-ticketgroup-item');
+                        var currencyCode = tpGetTicketCurrencyCode();
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
+                        updatePricePlaceholder(inp, currencyCode);
+                    });
+                }
+                
+                function tpReformatAllPriceValues(oldCurrencyCode, newCurrencyCode) {
+                    if (!newCurrencyCode) return;
+                    var priceInputs = fieldset.querySelectorAll('.fieldset-ticketpricing-input-price');
+                    priceInputs.forEach(function(inp) {
+                        var groupEl = inp.closest('.fieldset-ticketpricing-ticketgroup-item');
+                        var activeNewCode = newCurrencyCode;
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) activeNewCode = val;
+                        }
+
+                        var val = String(inp.value || '').trim();
+                        if (val === '') return;
+                        
+                        var numericValue;
+                        if (oldCurrencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.parseInput) {
+                            numericValue = CurrencyComponent.parseInput(val, oldCurrencyCode);
+                        } else {
+                            numericValue = parseFloat(val.replace(/[^0-9.-]/g, ''));
+                        }
+                        
+                        if (!Number.isFinite(numericValue)) return;
+                        
+                        if (typeof CurrencyComponent !== 'undefined' && CurrencyComponent.formatWithSymbol) {
+                            inp.value = CurrencyComponent.formatWithSymbol(numericValue.toString(), activeNewCode);
+                        }
+                    });
+                }
+                
+                function tpBuildTicketCurrencyMenu(options) {
+                    if (typeof CurrencyComponent === 'undefined') {
+                        console.error('[FieldsetBuilder] CurrencyComponent not available');
+                        return { element: document.createElement('div') };
+                    }
+                    var result = CurrencyComponent.buildFullMenu({
+                        initialValue: options && options.initialValue !== undefined ? options.initialValue : tpTicketCurrencyState.code,
+                        placeholder: 'Select',
+                        onSelect: function(value, label, countryCode) {
+                            var oldCode = tpTicketCurrencyState.code;
+                            tpTicketCurrencyState.flag = countryCode;
+                            tpTicketCurrencyState.code = value;
+                            tpSyncAllTicketCurrencies();
+                            tpReformatAllPriceValues(oldCode, value);
+                            if (options && typeof options.onSelect === 'function') {
+                                options.onSelect(value, label, countryCode);
+                            }
+                            try {
+                                result.element.dispatchEvent(new Event('change', { bubbles: true }));
+                            } catch (e) {}
+                        }
+                    });
+                    tpTicketCurrencyMenus.push(result);
+                    return result;
+                }
+
+                function tpAttachMoneyInputBehavior(inputEl) {
+                    if (!inputEl) return;
+                    
+                    inputEl.addEventListener('input', function() {
+                        var currencyCode = tpGetTicketCurrencyCode();
+                        var groupEl = this.closest('.fieldset-ticketpricing-ticketgroup-item');
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
+                        
+                        if (currencyCode) {
+                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.sanitizeInput) {
+                                throw new Error('[FieldsetBuilder] CurrencyComponent.sanitizeInput is required');
+                            }
+                            this.value = CurrencyComponent.sanitizeInput(this.value, currencyCode);
+                            return;
+                        }
+                        
+                        var raw = String(this.value || '').replace(/[^0-9.]/g, '');
+                        var parts = raw.split('.');
+                        if (parts.length > 2) raw = parts[0] + '.' + parts.slice(1).join('');
+                        this.value = raw;
+                    });
+                    
+                    inputEl.addEventListener('focus', function() {
+                        var v = String(this.value || '').trim();
+                        if (v === '') return;
+                        
+                        var currencyCode = tpGetTicketCurrencyCode();
+                        var groupEl = this.closest('.fieldset-ticketpricing-ticketgroup-item');
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
+                        
+                        if (currencyCode && typeof CurrencyComponent !== 'undefined' && CurrencyComponent.stripSymbol) {
+                            this.value = CurrencyComponent.stripSymbol(v, currencyCode);
+                        }
+                    });
+                    
+                    inputEl.addEventListener('blur', function() {
+                        var v = String(this.value || '').trim();
+                        if (v === '') return;
+                        
+                        var currencyCode = tpGetTicketCurrencyCode();
+                        var groupEl = this.closest('.fieldset-ticketpricing-ticketgroup-item');
+                        if (groupEl) {
+                            var currencyInput = groupEl.querySelector('.component-currencyfull-menu-button-input');
+                            var val = currencyInput ? String(currencyInput.value || '').trim() : '';
+                            if (val.indexOf(' - ') !== -1) val = val.split(' - ')[0].trim();
+                            if (val) currencyCode = val;
+                        }
+                        
+                        if (currencyCode) {
+                            if (typeof CurrencyComponent === 'undefined' || !CurrencyComponent.formatWithSymbol) {
+                                throw new Error('[FieldsetBuilder] CurrencyComponent.formatWithSymbol is required');
+                            }
+                            var formatted = CurrencyComponent.formatWithSymbol(v, currencyCode);
+                            if (formatted !== '') {
+                                this.value = formatted;
+                                return;
+                            }
+                        }
+                        
+                        var num = parseFloat(v);
+                        if (isNaN(num)) { this.value = ''; return; }
+                        this.value = num.toFixed(2);
+                    });
+                }
+
+                // --- Pricing editor builders ---
+                function tpCreatePricingTierBlock(tiersContainer, yesRadio) {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-ticketpricing-pricing-tier-block';
+                    block.style.marginBottom = '8px';
+
+                    var inputRow = document.createElement('div');
+                    inputRow.className = 'fieldset-row fieldset-ticketpricing-tier-input-row';
+                    inputRow.style.display = 'flex';
+                    inputRow.style.gap = '8px';
+                    inputRow.style.marginBottom = '0'; 
+
+                    var tierInput = document.createElement('input');
+                    tierInput.className = 'fieldset-input input-class-1';
+                    applyPlaceholder(tierInput, getSubfieldPlaceholder('pricing-tier'));
+                    tierInput.style.flex = '3';
+                    inputRow.appendChild(tierInput);
+
+                    var priceInput = document.createElement('input');
+                    priceInput.className = 'fieldset-ticketpricing-input-price fieldset-input input-class-1';
+                    priceInput.style.flex = '1.5';
+                    priceInput.style.padding = '0 12px';
+                    updatePricePlaceholder(priceInput, tpTicketCurrencyState.code);
+                    tpAttachMoneyInputBehavior(priceInput);
+                    inputRow.appendChild(priceInput);
+
+                    function updateTierCompleteness() {
+                        var areaBlock = tiersContainer.closest('.fieldset-ticketpricing-pricing-ticketarea-block');
+                        if (!areaBlock) return;
+                        var labelsRow = areaBlock.querySelector('.fieldset-ticketpricing-tier-label-row');
+                        if (!labelsRow) return;
+                        var tReq = labelsRow.querySelector('.fieldset-label-required-tier');
+                        var pReq = labelsRow.querySelector('.fieldset-label-required-price');
+                        
+                        var allTiers = tiersContainer.querySelectorAll('.fieldset-ticketpricing-pricing-tier-block');
+                        var tComplete = true;
+                        var pComplete = true;
+                        allTiers.forEach(function(tb) {
+                            var ti = tb.querySelector('.fieldset-ticketpricing-tier-input-row input.fieldset-input');
+                            var pi = tb.querySelector('.fieldset-ticketpricing-input-price');
+                            if (!ti || !String(ti.value || '').trim()) tComplete = false;
+                            if (!pi || !String(pi.value || '').trim()) pComplete = false;
+                        });
+                        
+                        if (tReq) tReq.classList.toggle('fieldset-label-required--complete', tComplete);
+                        if (pReq) pReq.classList.toggle('fieldset-label-required--complete', pComplete);
+                    }
+
+                    function capitalize(val) {
+                        if (!val) return '';
+                        return val.charAt(0).toUpperCase() + val.slice(1);
+                    }
+
+                    tierInput.addEventListener('input', function() {
+                        var cursor = this.selectionStart;
+                        this.value = capitalize(this.value);
+                        this.setSelectionRange(cursor, cursor);
+                        updateTierCompleteness();
+                    });
+                    tierInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
+
+                    priceInput.addEventListener('input', updateTierCompleteness);
+
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-ticketpricing-pricing-button-add fieldset-row-item--no-flex';
+                    var plusIconUrl = tpGetSystemPlusIconUrl();
+                    if (plusIconUrl) {
+                        var plusImg = document.createElement('img');
+                        plusImg.className = 'fieldset-ticketpricing-pricing-button-icon fieldset-ticketpricing-pricing-button-icon--plus';
+                        plusImg.alt = '';
+                        plusImg.src = plusIconUrl;
+                        addBtn.appendChild(plusImg);
+                    }
+                    addBtn.addEventListener('click', function() {
+                        tiersContainer.appendChild(tpCreatePricingTierBlock(tiersContainer, yesRadio));
+                        tpUpdateTierButtons(tiersContainer);
+                        updateTierCompleteness();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    inputRow.appendChild(addBtn);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-ticketpricing-pricing-button-remove fieldset-row-item--no-flex';
+                    var minusIconUrl = tpGetSystemMinusIconUrl();
+                    if (minusIconUrl) {
+                        var minusImg = document.createElement('img');
+                        minusImg.className = 'fieldset-ticketpricing-pricing-button-icon fieldset-ticketpricing-pricing-button-icon--minus';
+                        minusImg.alt = '';
+                        minusImg.src = minusIconUrl;
+                        removeBtn.appendChild(minusImg);
+                    }
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        tpUpdateTierButtons(tiersContainer);
+                        updateTierCompleteness();
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    inputRow.appendChild(removeBtn);
+
+                    applyFieldsetRowItemClasses(inputRow);
+                    block.appendChild(inputRow);
+                    return block;
+                }
+
+                function tpUpdateTierButtons(tiersContainer) {
+                    var blocks = tiersContainer.querySelectorAll('.fieldset-ticketpricing-pricing-tier-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block) {
+                        var addBtn = block.querySelector('.fieldset-ticketpricing-pricing-button-add');
+                        var removeBtn = block.querySelector('.fieldset-ticketpricing-pricing-button-remove');
+                        if (atMax) { addBtn.style.opacity = '0.3'; addBtn.style.cursor = 'not-allowed'; addBtn.disabled = true; }
+                        else { addBtn.style.opacity = '1'; addBtn.style.cursor = 'pointer'; addBtn.disabled = false; }
+                        if (blocks.length === 1) { removeBtn.style.opacity = '0.3'; removeBtn.style.cursor = 'not-allowed'; removeBtn.disabled = true; }
+                        else { removeBtn.style.opacity = '1'; removeBtn.style.cursor = 'pointer'; removeBtn.disabled = false; }
+                    });
+                }
+
+                function tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio) {
+                    var block = document.createElement('div');
+                    block.className = 'fieldset-ticketpricing-pricing-ticketarea-block';
+                    block.style.marginBottom = '12px'; 
+                    block.style.padding = '0';
+
+                    // Ticket Area Label Row
+                    var seatLabelRow = document.createElement('div');
+                    seatLabelRow.className = 'fieldset-row fieldset-ticketpricing-ticketarea-label-row';
+                    seatLabelRow.style.marginBottom = '6px';
+                    seatLabelRow.style.display = 'flex';
+                    seatLabelRow.style.gap = '8px';
+
+                    var seatSub = document.createElement('div');
+                    seatSub.className = 'fieldset-sublabel';
+                    seatSub.textContent = 'Ticket Area';
+                    seatSub.style.marginBottom = '0';
+                    seatSub.style.flex = '1';
+                    
+                    var seatReq = document.createElement('span');
+                    seatReq.className = 'fieldset-label-required fieldset-label-required-area';
+                    seatReq.textContent = '●';
+                    seatSub.appendChild(seatReq);
+                    seatLabelRow.appendChild(seatSub);
+
+                    var areaBtnSpacer = document.createElement('div');
+                    areaBtnSpacer.style.width = '80px';
+                    areaBtnSpacer.style.flex = '0 0 80px';
+                    seatLabelRow.appendChild(areaBtnSpacer);
+                    block.appendChild(seatLabelRow);
+
+                    // Ticket Area Input Row
+                    var seatInputRow = document.createElement('div');
+                    seatInputRow.className = 'fieldset-row fieldset-ticketpricing-ticketarea-input-row';
+                    seatInputRow.style.display = 'flex';
+                    seatInputRow.style.gap = '8px';
+                    seatInputRow.style.marginBottom = '10px';
+
+                    var seatInput = document.createElement('input');
+                    seatInput.type = 'text';
+                    seatInput.className = 'fieldset-input input-class-1 fieldset-ticketpricing-input-ticketarea';
+                    applyPlaceholder(seatInput, getSubfieldPlaceholder('ticket-area'));
+                    seatInput.style.flex = '1';
+
+                    function capitalize(val) {
+                        if (!val) return '';
+                        return val.charAt(0).toUpperCase() + val.slice(1);
+                    }
+
+                    seatInput.addEventListener('input', function() {
+                        var cursor = this.selectionStart;
+                        this.value = capitalize(this.value);
+                        this.setSelectionRange(cursor, cursor);
+                        var hasVal = !!String(this.value || '').trim();
+                        seatReq.classList.toggle('fieldset-label-required--complete', hasVal);
+                    });
+
+                    seatInput.addEventListener('change', function() { this.dataset.manuallyEdited = 'true'; });
+                    seatInputRow.appendChild(seatInput);
+
+                    // Add/Remove ticket area block buttons
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-ticketpricing-pricing-button-add fieldset-row-item--no-flex';
+                    var plusIconUrl2 = tpGetSystemPlusIconUrl();
+                    if (plusIconUrl2) {
+                        var plusImg2 = document.createElement('img');
+                        plusImg2.className = 'fieldset-ticketpricing-pricing-button-icon fieldset-ticketpricing-pricing-button-icon--plus';
+                        plusImg2.alt = '';
+                        plusImg2.src = plusIconUrl2;
+                        addBtn.appendChild(plusImg2);
+                    }
+                    addBtn.addEventListener('click', function() {
+                        ticketAreasContainer.appendChild(tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio));
+                        tpUpdateTicketAreaButtons(ticketAreasContainer, true);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    seatInputRow.appendChild(addBtn);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-ticketpricing-pricing-button-remove fieldset-row-item--no-flex';
+                    var minusIconUrl2 = tpGetSystemMinusIconUrl();
+                    if (minusIconUrl2) {
+                        var minusImg2 = document.createElement('img');
+                        minusImg2.className = 'fieldset-ticketpricing-pricing-button-icon fieldset-ticketpricing-pricing-button-icon--minus';
+                        minusImg2.alt = '';
+                        minusImg2.src = minusIconUrl2;
+                        removeBtn.appendChild(minusImg2);
+                    }
+                    removeBtn.addEventListener('click', function() {
+                        block.remove();
+                        tpUpdateTicketAreaButtons(ticketAreasContainer, true);
+                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                    });
+                    seatInputRow.appendChild(removeBtn);
+
+                    applyFieldsetRowItemClasses(seatInputRow);
+                    block.appendChild(seatInputRow);
+
+                    // Pricing Tiers container
+                    var tiersContainer = document.createElement('div');
+                    tiersContainer.className = 'fieldset-ticketpricing-pricing-tiers-container';
+
+                    // Add Pricing Tier labels ONCE per ticket area block
+                    var tierLabelRow = document.createElement('div');
+                    tierLabelRow.className = 'fieldset-row fieldset-ticketpricing-tier-label-row';
+                    tierLabelRow.style.marginBottom = '6px';
+                    tierLabelRow.style.display = 'flex';
+                    tierLabelRow.style.gap = '8px';
+
+                    var tLabel = document.createElement('div');
+                    tLabel.className = 'fieldset-sublabel';
+                    tLabel.style.flex = '3';
+                    tLabel.style.marginBottom = '0';
+                    tLabel.innerHTML = 'Pricing Tier';
+                    var tReq = document.createElement('span');
+                    tReq.className = 'fieldset-label-required fieldset-label-required-tier';
+                    tReq.textContent = '●';
+                    tLabel.appendChild(tReq);
+                    tierLabelRow.appendChild(tLabel);
+
+                    var pLabel = document.createElement('div');
+                    pLabel.className = 'fieldset-sublabel';
+                    pLabel.style.flex = '1.5';
+                    pLabel.style.marginBottom = '0';
+                    pLabel.innerHTML = 'Price';
+                    var pReq = document.createElement('span');
+                    pReq.className = 'fieldset-label-required fieldset-label-required-price';
+                    pReq.textContent = '●';
+                    pLabel.appendChild(pReq);
+                    tierLabelRow.appendChild(pLabel);
+
+                    var btnSpacer = document.createElement('div');
+                    btnSpacer.style.width = '80px';
+                    btnSpacer.style.flex = '0 0 80px';
+                    tierLabelRow.appendChild(btnSpacer);
+                    tiersContainer.appendChild(tierLabelRow);
+
+                    tiersContainer.appendChild(tpCreatePricingTierBlock(tiersContainer, yesRadio));
+                    block.appendChild(tiersContainer);
+
+                    return block;
+                }
+
+                function tpUpdateTicketAreaButtons(ticketAreasContainer, isVisible) {
+                    var blocks = ticketAreasContainer.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                    var atMax = blocks.length >= 10;
+                    blocks.forEach(function(block, idx) {
+                        // 10-12-6 rule: last child of invisible container gets margin-bottom 0
+                        block.style.marginBottom = (idx === blocks.length - 1) ? '0' : '12px';
+                        if (blocks.length > 1 && isVisible) {
+                            block.style.borderBottom = (idx < blocks.length - 1) ? '1px solid #333' : 'none';
+                            block.style.paddingBottom = (idx < blocks.length - 1) ? '12px' : '0';
+                        } else {
+                            block.style.borderBottom = 'none';
+                            block.style.paddingBottom = '0';
+                        }
+                        var addBtn = block.querySelector('.fieldset-ticketpricing-pricing-button-add');
+                        var removeBtn = block.querySelector('.fieldset-ticketpricing-pricing-button-remove');
+                        if (!addBtn) addBtn = block.querySelectorAll('.fieldset-ticketpricing-pricing-button-add')[0];
+                        if (!removeBtn) removeBtn = block.querySelectorAll('.fieldset-ticketpricing-pricing-button-remove')[0];
+                        if (addBtn) {
+                            addBtn.disabled = atMax || !isVisible;
+                            addBtn.style.opacity = (atMax || !isVisible) ? '0.3' : '1';
+                        }
+                        if (removeBtn) {
+                            removeBtn.disabled = blocks.length <= 1 || !isVisible;
+                            removeBtn.style.opacity = (blocks.length <= 1 || !isVisible) ? '0.3' : '1';
+                        }
+                    });
+                }
+
+                function tpExtractPricingFromEditor(editorEl) {
+                    if (!editorEl) return [];
+                    try {
+                        var allocatedVal = 1;
+                        var yesRadio = editorEl.querySelector('input[type="radio"][value="1"]');
+                        if (yesRadio) allocatedVal = yesRadio.checked ? 1 : 0;
+
+                        var ticketAreaBlocks = editorEl.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                        var seatOut = [];
+                        ticketAreaBlocks.forEach(function(block) {
+                            if (allocatedVal === 0 && seatOut.length > 0) return;
+
+                            var ticketArea = '';
+                            var seatInput = block.querySelector('.fieldset-ticketpricing-input-ticketarea');
+                            if (seatInput) ticketArea = String(seatInput.value || '').trim();
+                            
+                            var tiers = [];
+                            block.querySelectorAll('.fieldset-ticketpricing-pricing-tier-block').forEach(function(tier) {
+                                var tierName = '';
+                                var tierInput = tier.querySelector('.fieldset-ticketpricing-tier-input-row input.fieldset-input');
+                                if (tierInput) tierName = String(tierInput.value || '').trim();
+                                
+                                var currencyInput = editorEl.querySelector('.component-currencyfull-menu-button-input');
+                                var curr = currencyInput ? String(currencyInput.value || '').trim() : '';
+                                if (curr.indexOf(' - ') !== -1) curr = curr.split(' - ')[0].trim();
+                                
+                                var priceInput = tier.querySelector('.fieldset-ticketpricing-input-price');
+                                var price = priceInput ? String(priceInput.value || '').trim() : '';
+                                
+                                tiers.push({ pricing_tier: tierName, currency: curr, price: price });
+                            });
+                            
+                            seatOut.push({ 
+                                allocated_areas: allocatedVal,
+                                ticket_area: ticketArea, 
+                                tiers: tiers 
+                            });
+                        });
+                        return seatOut;
+                    } catch (e) {
+                        return [];
+                    }
+                }
+
+                function tpReplaceEditorFromPricing(editorEl, pricingArr) {
+                    if (!editorEl) return;
+                    editorEl.innerHTML = '';
+                    
+                    // Row 1 & 2: Age Rating
+                    var ageLabel = buildLabel('Age Rating', '', null, null);
+                    ageLabel.style.marginBottom = '6px';
+                    var ageDot = ageLabel.querySelector('.fieldset-label-required');
+                    editorEl.appendChild(ageLabel);
+                    
+                    var ageMenu = buildAgeRatingMenu(fieldset, {
+                        initialValue: (pricingArr && pricingArr[0] && pricingArr[0].age_rating) || null,
+                        onSelect: function(val) {
+                            if (ageDot) ageDot.classList.toggle('fieldset-label-required--complete', !!String(val || '').trim());
+                        }
+                    });
+                    ageMenu.style.width = '100%';
+                    ageMenu.style.marginBottom = '10px';
+                    editorEl.appendChild(ageMenu);
+                    
+                    if (ageDot) {
+                        var initialAge = (pricingArr && pricingArr[0] && pricingArr[0].age_rating) || null;
+                        ageDot.classList.toggle('fieldset-label-required--complete', !!String(initialAge || '').trim());
+                    }
+
+                    // Row 3 & 4: Currency
+                    var currLabel = buildLabel('Currency', '', null, null);
+                    currLabel.style.marginBottom = '6px';
+                    var currDot = currLabel.querySelector('.fieldset-label-required');
+                    editorEl.appendChild(currLabel);
+                    
+                    var currResult = tpBuildTicketCurrencyMenu({
+                        initialValue: (pricingArr && pricingArr[0] && pricingArr[0].currency) || tpTicketCurrencyState.code,
+                        onSelect: function(val) {
+                            if (currDot) currDot.classList.toggle('fieldset-label-required--complete', !!String(val || '').trim());
+                        }
+                    });
+                    var currMenu = currResult.element;
+                    currMenu.style.width = '100%';
+                    currMenu.style.marginBottom = '10px';
+                    editorEl.appendChild(currMenu);
+                    
+                    if (currDot) {
+                        var initialCurr = (pricingArr && pricingArr[0] && pricingArr[0].currency) || tpTicketCurrencyState.code;
+                        currDot.classList.toggle('fieldset-label-required--complete', !!String(initialCurr || '').trim());
+                    }
+
+                    // Row 5: Allocated Ticket Areas
+                    var allocatedRow = document.createElement('div');
+                    allocatedRow.className = 'fieldset-row';
+                    allocatedRow.style.display = 'flex';
+                    allocatedRow.style.alignItems = 'center';
+                    allocatedRow.style.justifyContent = 'space-between';
+                    allocatedRow.style.marginBottom = '10px';
+                    allocatedRow.style.height = '36px';
+                    
+                    var allocatedLabel = document.createElement('div');
+                    allocatedLabel.className = 'fieldset-label';
+                    allocatedLabel.style.marginBottom = '0'; 
+                    allocatedLabel.innerHTML = '<span class="fieldset-label-text">Allocated Ticket Areas</span>';
+                    allocatedRow.appendChild(allocatedLabel);
+                    
+                    var radioWrapper = document.createElement('div');
+                    radioWrapper.className = 'fieldset-radio-wrapper';
+                    radioWrapper.style.display = 'flex';
+                    radioWrapper.style.gap = '20px';
+                    radioWrapper.style.height = '36px';
+                    
+                    var radioName = 'allocated_' + Math.random().toString(36).substr(2, 9);
+                    
+                    var yesLabel = document.createElement('label');
+                    yesLabel.style.display = 'flex';
+                    yesLabel.style.alignItems = 'center';
+                    yesLabel.style.gap = '5px';
+                    yesLabel.style.cursor = 'pointer';
+                    yesLabel.style.color = '#fff';
+                    yesLabel.style.fontSize = '13px';
+                    yesLabel.style.height = '36px';
+                    yesLabel.style.paddingRight = '5px';
+                    var yesRadio = document.createElement('input');
+                    yesRadio.type = 'radio';
+                    yesRadio.name = radioName;
+                    yesRadio.value = '1';
+                    yesRadio.checked = true;
+                    yesLabel.appendChild(yesRadio);
+                    yesLabel.appendChild(document.createTextNode('Yes'));
+                    
+                    var noLabel = document.createElement('label');
+                    noLabel.style.display = 'flex';
+                    noLabel.style.alignItems = 'center';
+                    noLabel.style.gap = '5px';
+                    noLabel.style.cursor = 'pointer';
+                    noLabel.style.color = '#fff';
+                    noLabel.style.fontSize = '13px';
+                    noLabel.style.height = '36px';
+                    noLabel.style.paddingRight = '5px';
+                    var noRadio = document.createElement('input');
+                    noRadio.type = 'radio';
+                    noRadio.name = radioName;
+                    noRadio.value = '0';
+                    noLabel.appendChild(noRadio);
+                    noLabel.appendChild(document.createTextNode('No'));
+                    
+                    radioWrapper.appendChild(yesLabel);
+                    radioWrapper.appendChild(noLabel);
+                    allocatedRow.appendChild(radioWrapper);
+                    editorEl.appendChild(allocatedRow);
+                    
+                    var ticketAreasContainer = document.createElement('div');
+                    ticketAreasContainer.className = 'fieldset-ticketpricing-pricing-ticketareas-container';
+                    editorEl.appendChild(ticketAreasContainer);
+
+                    function updateAllVisibility() {
+                        var isYes = yesRadio.checked;
+                        var blocks = ticketAreasContainer.querySelectorAll('.fieldset-ticketpricing-pricing-ticketarea-block');
+                        blocks.forEach(function(block, idx) {
+                            var labelRow = block.querySelector('.fieldset-ticketpricing-ticketarea-label-row');
+                            var inputRow = block.querySelector('.fieldset-ticketpricing-ticketarea-input-row');
+                            
+                            if (labelRow) labelRow.style.display = isYes ? 'flex' : 'none';
+                            if (inputRow) inputRow.style.display = isYes ? 'flex' : 'none';
+                            
+                            if (!isYes && idx > 0) {
+                                block.remove();
+                            }
+                        });
+                        tpUpdateTicketAreaButtons(ticketAreasContainer, isYes);
+                    }
+                    yesRadio.addEventListener('change', updateAllVisibility);
+                    noRadio.addEventListener('change', updateAllVisibility);
+
+                    var seats = Array.isArray(pricingArr) ? pricingArr : [];
+                    if (seats.length === 0) seats = [{}];
+                    
+                    var isAllocated = seats[0] && seats[0].allocated_areas !== undefined ? (parseInt(seats[0].allocated_areas) === 1) : true;
+                    if (isAllocated) yesRadio.checked = true;
+                    else noRadio.checked = true;
+
+                    seats.forEach(function(seat) {
+                        var block = tpCreateTicketAreaBlock(ticketAreasContainer, yesRadio);
+                        ticketAreasContainer.appendChild(block);
+                        
+                        var seatInput = block.querySelector('.fieldset-ticketpricing-input-ticketarea');
+                        if (seatInput) seatInput.value = String((seat && (seat.ticket_area || seat.seating_area)) || '');
+                        if (seatInput) seatInput.dispatchEvent(new Event('input'));
+                        
+                        var tiersContainer = block.querySelector('.fieldset-ticketpricing-pricing-tiers-container');
+                        if (tiersContainer) {
+                            var existingTierBlocks = tiersContainer.querySelectorAll('.fieldset-ticketpricing-pricing-tier-block');
+                            existingTierBlocks.forEach(function(tb) { tb.remove(); });
+                            
+                            var tiers = (seat && Array.isArray(seat.tiers)) ? seat.tiers : [];
+                            if (tiers.length === 0) tiers = [{}];
+                            tiers.forEach(function(tierObj) {
+                                var tierBlock = tpCreatePricingTierBlock(tiersContainer, yesRadio);
+                                tiersContainer.appendChild(tierBlock);
+                                var tierNameInput = tierBlock.querySelector('.fieldset-ticketpricing-tier-input-row input.fieldset-input');
+                                if (tierNameInput) {
+                                    tierNameInput.value = String((tierObj && tierObj.pricing_tier) || '');
+                                    tierNameInput.dispatchEvent(new Event('input'));
+                                }
+                                
+                                var priceInput = tierBlock.querySelector('.fieldset-ticketpricing-input-price');
+                                if (priceInput) {
+                                    priceInput.value = String((tierObj && tierObj.price) || '');
+                                    priceInput.dispatchEvent(new Event('input'));
+                                }
+                            });
+                            tpUpdateTierButtons(tiersContainer);
+                        }
+                    });
+                    
+                    tpUpdateTicketAreaButtons(ticketAreasContainer, isAllocated);
+                    updateAllVisibility();
+                }
+
+                var tpMaxTicketGroups = 10;
+
+                function tpAddTicketGroup() {
+                    var keys = Object.keys(tpTicketGroups).sort();
+                    if (keys.length >= tpMaxTicketGroups) return;
+                    var newKey = tpFirstUnusedLetter();
+                    tpEnsureTicketGroup(newKey);
+                    tpUpdateAllGroupButtons();
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                }
+
+                async function tpRemoveTicketGroup(keyToRemove) {
+                    var keys = Object.keys(tpTicketGroups).sort();
+                    if (keys.length <= 1) return;
+                    
+                    try {
+                        if (typeof ConfirmDialogComponent === 'undefined' || !ConfirmDialogComponent || typeof ConfirmDialogComponent.show !== 'function') {
+                            console.error('[ticket_pricing] ConfirmDialogComponent not available');
+                            return;
+                        }
+                    } catch (eCheck) { return; }
+                    
+                    var confirmed = false;
+                    try {
+                        confirmed = await ConfirmDialogComponent.show({
+                            titleText: 'Delete Ticket Group ' + keyToRemove,
+                            messageText: 'Are you sure?',
+                            confirmLabel: 'Delete',
+                            confirmClass: 'danger',
+                            focusCancel: true
+                        });
+                    } catch (eDlg) { confirmed = false; }
+                    if (!confirmed) return;
+                    
+                    var oldKeys = Object.keys(tpTicketGroups).sort();
+                    var keyMap = {};
+                    var newIdx = 0;
+                    for (var i = 0; i < oldKeys.length; i++) {
+                        if (oldKeys[i] === keyToRemove) continue;
+                        var newKey = String.fromCharCode(65 + newIdx);
+                        keyMap[oldKeys[i]] = newKey;
+                        newIdx++;
+                    }
+                    
+                    var g = tpTicketGroups[keyToRemove];
+                    if (g) try { g.remove(); } catch (e1) {}
+                    delete tpTicketGroups[keyToRemove];
+                    
+                    var newGroups = {};
+                    Object.keys(tpTicketGroups).sort().forEach(function(oldKey) {
+                        var newKey = keyMap[oldKey];
+                        var groupEl = tpTicketGroups[oldKey];
+                        groupEl.dataset.ticketGroupKey = newKey;
+                        var headerLabel = groupEl.querySelector('.fieldset-ticketpricing-ticketgroup-header-label');
+                        if (headerLabel) headerLabel.textContent = 'Ticket Group ' + newKey;
+                        newGroups[newKey] = groupEl;
+                    });
+                    tpTicketGroups = newGroups;
+                    
+                    tpUpdateAllGroupButtons();
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                }
+
+                function tpUpdateAllGroupButtons() {
+                    var keys = Object.keys(tpTicketGroups).sort();
+                    var count = keys.length;
+                    var atMax = count >= tpMaxTicketGroups;
+                    var atMin = count <= 1;
+                    
+                    keys.forEach(function(k) {
+                        var g = tpTicketGroups[k];
+                        if (!g) return;
+                        var addBtn = g.querySelector('.fieldset-ticketpricing-ticketgroup-button-add');
+                        var removeBtn = g.querySelector('.fieldset-ticketpricing-ticketgroup-button-remove');
+                        
+                        if (addBtn) {
+                            addBtn.disabled = atMax;
+                            addBtn.style.opacity = atMax ? '0.3' : '1';
+                            addBtn.style.cursor = atMax ? 'not-allowed' : 'pointer';
+                        }
+                        if (removeBtn) {
+                            removeBtn.disabled = atMin;
+                            removeBtn.style.opacity = atMin ? '0.3' : '1';
+                            removeBtn.style.cursor = atMin ? 'not-allowed' : 'pointer';
+                        }
+                    });
+                }
+
+                function tpEnsureTicketGroup(groupKey) {
+                    var key = String(groupKey || '').trim();
+                    if (!key) return null;
+                    if (tpTicketGroups[key]) return tpTicketGroups[key];
+
+                    var group = document.createElement('div');
+                    group.className = 'fieldset-ticketpricing-ticketgroup-item accordion-class-1 accordion-class-1--open';
+                    group.dataset.ticketGroupKey = key;
+
+                    var header = document.createElement('div');
+                    header.className = 'fieldset-ticketpricing-ticketgroup-item-header';
+
+                    var headerContent = document.createElement('div');
+                    headerContent.className = 'fieldset-ticketpricing-ticketgroup-item-header-content accordion-header';
+                    headerContent.style.cursor = 'pointer';
+                    
+                    headerContent.addEventListener('click', function(e) {
+                        group.classList.toggle('accordion-class-1--open');
+                    });
+
+                    var headerLabel = document.createElement('span');
+                    headerLabel.className = 'fieldset-ticketpricing-ticketgroup-header-label';
+                    headerLabel.textContent = 'Ticket Group ' + key;
+                    headerContent.appendChild(headerLabel);
+
+                    var arrowWrap = document.createElement('div');
+                    arrowWrap.className = 'fieldset-ticketpricing-ticketgroup-arrow';
+                    var arrowIcon = document.createElement('span');
+                    arrowIcon.className = 'fieldset-ticketpricing-ticketgroup-arrow-icon';
+                    arrowWrap.appendChild(arrowIcon);
+                    headerContent.appendChild(arrowWrap);
+
+                    var addBtn = document.createElement('button');
+                    addBtn.type = 'button';
+                    addBtn.className = 'fieldset-ticketpricing-ticketgroup-button-add';
+                    var addIconUrl = tpGetSystemPlusIconUrl();
+                    if (addIconUrl) {
+                        var addImg = document.createElement('img');
+                        addImg.className = 'fieldset-ticketpricing-ticketgroup-button-icon';
+                        addImg.alt = '';
+                        addImg.src = addIconUrl;
+                        addBtn.appendChild(addImg);
+                    }
+                    addBtn.title = 'Add Ticket Group';
+                    addBtn.setAttribute('aria-label', 'Add Ticket Group');
+                    addBtn.addEventListener('click', function(e) {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        tpAddTicketGroup();
+                    });
+                    headerContent.appendChild(addBtn);
+
+                    var removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'fieldset-ticketpricing-ticketgroup-button-remove';
+                    var removeIconUrl = tpGetSystemMinusIconUrl();
+                    if (removeIconUrl) {
+                        var removeImg = document.createElement('img');
+                        removeImg.className = 'fieldset-ticketpricing-ticketgroup-button-icon';
+                        removeImg.alt = '';
+                        removeImg.src = removeIconUrl;
+                        removeBtn.appendChild(removeImg);
+                    }
+                    removeBtn.title = 'Remove Ticket Group';
+                    removeBtn.setAttribute('aria-label', 'Remove Ticket Group');
+                    removeBtn.addEventListener('click', function(e) {
+                        try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                        var currentKey = group.dataset.ticketGroupKey;
+                        tpRemoveTicketGroup(currentKey);
+                    });
+                    headerContent.appendChild(removeBtn);
+
+                    header.appendChild(headerContent);
+                    group.appendChild(header);
+
+                    var editorWrap = document.createElement('div');
+                    editorWrap.className = 'fieldset-ticketpricing-ticketgroup-item-editorwrap accordion-body';
+
+                    var editor = document.createElement('div');
+                    editor.className = 'fieldset-ticketpricing-pricing-editor';
+                    editorWrap.appendChild(editor);
+                    
+                    tpReplaceEditorFromPricing(editor, []);
+                    group.appendChild(editorWrap);
+
+                    group.addEventListener('click', function(e) {
+                        fieldset.querySelectorAll('.fieldset-ticketpricing-ticketgroup-item--active').forEach(function(g) {
+                            if (g !== group) g.classList.remove('fieldset-ticketpricing-ticketgroup-item--active');
+                        });
+                        group.classList.add('fieldset-ticketpricing-ticketgroup-item--active');
+                    });
+
+                    tpTicketGroups[key] = group;
+                    if (tpTicketGroupList) tpTicketGroupList.appendChild(group);
+                    tpUpdateAllGroupButtons();
+                    return group;
+                }
+
+                document.addEventListener('click', function(e) {
+                    var clickedInGroup = e.target.closest('.fieldset-ticketpricing-ticketgroup-item');
+                    if (!clickedInGroup || !fieldset.contains(clickedInGroup)) {
+                        fieldset.querySelectorAll('.fieldset-ticketpricing-ticketgroup-item--active').forEach(function(g) {
+                            g.classList.remove('fieldset-ticketpricing-ticketgroup-item--active');
+                        });
+                    }
+                });
+
+                // Ticket groups container
+                var tpPricingGroupsWrap = document.createElement('div');
+                tpPricingGroupsWrap.className = 'fieldset-ticketpricing-ticketgroups-container container-class-2';
+                tpTicketGroupList = tpPricingGroupsWrap;
+                fieldset.appendChild(tpPricingGroupsWrap);
+                
+                tpEnsureDefaultGroup();
+
+                // Expose function to get ticket group keys for sessions fieldset
+                fieldset._getTicketGroupKeys = function() {
+                    return Object.keys(tpTicketGroups).sort();
+                };
+
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    
+                    tpTicketGroups = {};
+                    tpTicketGroupList.innerHTML = '';
+                    
+                    if (val.pricing_groups && typeof val.pricing_groups === 'object') {
+                        Object.keys(val.pricing_groups).forEach(function(gk) {
+                            var pricing = val.pricing_groups[gk];
+                            var ageRating = (val.age_ratings && val.age_ratings[gk]) || '';
+                            tpEnsureTicketGroup(gk);
+                            var grpEl = tpTicketGroups[gk];
+                            if (grpEl) {
+                                var editorEl = grpEl.querySelector('.fieldset-ticketpricing-pricing-editor');
+                                if (editorEl) {
+                                    tpReplaceEditorFromPricing(editorEl, pricing || []);
+                                    var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
+                                    if (ageMenu && typeof ageMenu._ageRatingSetValue === 'function') {
+                                        ageMenu._ageRatingSetValue(ageRating || null);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
+                    tpEnsureDefaultGroup();
+                    updateCompleteFromDom();
+                };
+
+                fieldset._getValue = function() {
+                    var result = {
+                        pricing_groups: {},
+                        age_ratings: {}
+                    };
+                    
+                    Object.keys(tpTicketGroups).sort().forEach(function(gk) {
+                        var grpEl = tpTicketGroups[gk];
+                        if (!grpEl) return;
+                        var editorEl = grpEl.querySelector('.fieldset-ticketpricing-pricing-editor');
+                        if (editorEl) {
+                            result.pricing_groups[gk] = tpExtractPricingFromEditor(editorEl);
+                            var ageMenu = editorEl.querySelector('.component-ageratingpicker-menu');
+                            if (ageMenu) {
+                                result.age_ratings[gk] = String(ageMenu.dataset.value || '').trim();
+                            }
+                        }
+                    });
+                    
+                    return result;
+                };
+
+                break;
+                
+            case 'sessions':
+                // SESSIONS FIELDSET
+                // Calendar date picker with session times.
+                // This fieldset exists in location containers (below the line).
+                // Reads ticket group keys from ticket_pricing fieldset.
+                
+                var sessLabelEl = buildLabel(name, tooltip, minLength, maxLength);
+                sessLabelEl.style.marginBottom = '10px';
+                fieldset.appendChild(sessLabelEl);
+
+                // Instruction text from database (not hardcoded)
+                var sessInstructionText = '';
+                if (instruction) {
+                    sessInstructionText = instruction;
+                } else if (fieldData && fieldData.fieldset_instruction) {
+                    sessInstructionText = fieldData.fieldset_instruction;
+                }
+                if (sessInstructionText) {
+                    var sessInstructionEl = document.createElement('div');
+                    sessInstructionEl.className = 'fieldset-sessions-instruction';
+                    sessInstructionEl.textContent = sessInstructionText;
+                    sessInstructionEl.style.marginBottom = '10px';
+                    fieldset.appendChild(sessInstructionEl);
+                }
+
+                // Track selected dates
+                var sessSessionData = {};
+
+                function sessGetSystemTicketIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_ticket ? String(sys.icon_ticket || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function sessGetSystemPlusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_plus ? String(sys.icon_plus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                function sessGetSystemMinusIconUrl() {
+                    try {
+                        if (!window.App || typeof App.getState !== 'function' || typeof App.getImageUrl !== 'function') return '';
+                        var sys = App.getState('system_images') || {};
+                        var filename = sys && sys.icon_minus ? String(sys.icon_minus || '').trim() : '';
+                        if (!filename) return '';
+                        return App.getImageUrl('systemImages', filename);
+                    } catch (e) {
+                        return '';
+                    }
+                }
+
+                // Get ticket group keys from ticket_pricing fieldset
+                function sessGetTicketGroupKeys() {
+                    try {
+                        var form = fieldset.closest('form') || fieldset.closest('.member-post-form') || document.body;
+                        var tpFieldset = form.querySelector('.fieldset[data-fieldset-key="ticket_pricing"]');
+                        if (tpFieldset && typeof tpFieldset._getTicketGroupKeys === 'function') {
+                            return tpFieldset._getTicketGroupKeys();
+                        }
+                    } catch (e) {}
+                    return ['A'];
+                }
+
+                function sessGetDayOfWeek(dateStr) { return new Date(dateStr + 'T00:00:00').getDay(); }
+
+                function sessApplyDraft() {
+                    if (!sessDateDraft) return;
+                    var draftKeys = Array.from(sessDateDraft).sort();
+                    var currentKeys = Object.keys(sessSessionData).sort();
+                    
+                    currentKeys.forEach(function(k) {
+                        if (!sessDateDraft.has(k)) delete sessSessionData[k];
+                    });
+                    
+                    draftKeys.forEach(function(k) {
+                        if (!sessSessionData[k]) {
+                            var autofillVal = sessGetAutofillForSlot(k, 0);
+                            sessSessionData[k] = { times: [autofillVal], edited: [false], groups: ['A'] };
+                        }
+                    });
+                    
+                    sessRenderSessions();
+                    try { 
+                        fieldset.dispatchEvent(new CustomEvent('fieldset:sessions-change', { bubbles: true })); 
+                        fieldset.dispatchEvent(new Event('change', { bubbles: true }));
+                    } catch (e1) {}
+                }
+
+                var sessCalContainer = document.createElement('div');
+                sessCalContainer.className = 'calendar-container fieldset-sessions-calendar-container';
+                var sessCalendarInstance = CalendarComponent.create(sessCalContainer, {
+                    monthsPast: 0,
+                    monthsFuture: 24,
+                    allowPast: false
+                });
+                
+                var sessSelectedDates = new Set();
+                
+                function sessUpdateMultiSelection() {
+                    var days = sessCalendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+                    days.forEach(function(cell) {
+                        cell.classList.remove('selected', 'range-start', 'range-end', 'in-range');
+                        var iso = String(cell.dataset.iso || '');
+                        if (!iso) return;
+                        if (sessSelectedDates.has(iso)) {
+                            cell.classList.add('selected');
+                        }
+                    });
+                }
+                
+                var sessDays = sessCalendarInstance.calendar.querySelectorAll('.calendar-day[data-iso]');
+                sessDays.forEach(function(cell) {
+                    var dateObj = new Date(cell.dataset.iso);
+                    if (dateObj >= sessCalendarInstance.today) {
+                        cell.addEventListener('click', function() {
+                            var clickedDate = String(this.dataset.iso || '');
+                            if (!clickedDate) return;
+                            
+                            if (sessSelectedDates.has(clickedDate)) sessSelectedDates.delete(clickedDate);
+                            else sessSelectedDates.add(clickedDate);
+                            
+                            sessUpdateMultiSelection();
+                            
+                            if (!sessDatePickerOpen) return;
+                            try {
+                                sessDateDraft = new Set(Array.from(sessSelectedDates));
+                            } catch (e0) {
+                                sessDateDraft = new Set();
+                            }
+                            sessApplyDraft();
+                        });
+                    }
+                });
+
+                var sessDatePickerOpen = false;
+                var sessDateDraft = null;
+                var sessDatePickerDocHandler = null;
+                var sessDatePickerAnchorEl = null;
+
+                var sessDatePickerPopover = document.createElement('div');
+                sessDatePickerPopover.className = 'fieldset-sessions-calendar-popover';
+
+                var sessDatePickerBody = document.createElement('div');
+                sessDatePickerBody.className = 'fieldset-sessions-calendar-popover-body';
+                sessDatePickerBody.appendChild(sessCalContainer);
+
+                sessDatePickerPopover.appendChild(sessDatePickerBody);
+                fieldset.appendChild(sessDatePickerPopover);
+
+                var sessSessionsContainer = document.createElement('div');
+                sessSessionsContainer.className = 'fieldset-sessions-sessions-container';
+                fieldset.appendChild(sessSessionsContainer);
+
+                var sessDatePickerRow = document.createElement('div');
+                sessDatePickerRow.className = 'fieldset-row fieldset-sessions-session-row fieldset-sessions-session-row--picker';
+                sessDatePickerRow.style.marginBottom = '10px';
+                var sessDatePickerBox = document.createElement('div');
+                sessDatePickerBox.className = 'fieldset-sessions-session-field-label fieldset-sessions-session-field-label--picker button-class-4';
+                sessDatePickerBox.setAttribute('role', 'button');
+                sessDatePickerBox.setAttribute('tabindex', '0');
+                sessDatePickerBox.setAttribute('aria-haspopup', 'dialog');
+                sessDatePickerBox.setAttribute('aria-expanded', 'false');
+                sessDatePickerBox.textContent = 'Select Date';
+                sessDatePickerRow.appendChild(sessDatePickerBox);
+                
+                var sessPickerTimeWrap = document.createElement('div');
+                sessPickerTimeWrap.className = 'fieldset-sessions-session-field-time';
+                var sessPickerTimeInput = document.createElement('input');
+                sessPickerTimeInput.type = 'text';
+                sessPickerTimeInput.className = 'fieldset-sessions-session-field-time-input input-class-1';
+                sessPickerTimeInput.placeholder = 'HH:MM';
+                sessPickerTimeInput.maxLength = 5;
+                sessPickerTimeInput.disabled = true;
+                sessPickerTimeWrap.appendChild(sessPickerTimeInput);
+                sessDatePickerRow.appendChild(sessPickerTimeWrap);
+                
+                var sessPickerAddBtn = document.createElement('button');
+                sessPickerAddBtn.type = 'button';
+                sessPickerAddBtn.className = 'fieldset-sessions-session-button-add';
+                var sessPickerPlusIconUrl = sessGetSystemPlusIconUrl();
+                if (sessPickerPlusIconUrl) {
+                    var sessPickerPlusImg = document.createElement('img');
+                    sessPickerPlusImg.className = 'fieldset-sessions-session-button-icon fieldset-sessions-session-button-icon--plus';
+                    sessPickerPlusImg.alt = '';
+                    sessPickerPlusImg.src = sessPickerPlusIconUrl;
+                    sessPickerAddBtn.appendChild(sessPickerPlusImg);
+                }
+                sessPickerAddBtn.disabled = true;
+                sessPickerAddBtn.style.opacity = '0.3';
+                sessPickerAddBtn.style.cursor = 'not-allowed';
+                sessDatePickerRow.appendChild(sessPickerAddBtn);
+                
+                var sessPickerRemoveBtn = document.createElement('button');
+                sessPickerRemoveBtn.type = 'button';
+                sessPickerRemoveBtn.className = 'fieldset-sessions-session-button-remove';
+                var sessPickerMinusIconUrl = sessGetSystemMinusIconUrl();
+                if (sessPickerMinusIconUrl) {
+                    var sessPickerMinusImg = document.createElement('img');
+                    sessPickerMinusImg.className = 'fieldset-sessions-session-button-icon fieldset-sessions-session-button-icon--minus';
+                    sessPickerMinusImg.alt = '';
+                    sessPickerMinusImg.src = sessPickerMinusIconUrl;
+                    sessPickerRemoveBtn.appendChild(sessPickerMinusImg);
+                }
+                sessPickerRemoveBtn.disabled = true;
+                sessPickerRemoveBtn.style.opacity = '0.3';
+                sessPickerRemoveBtn.style.cursor = 'not-allowed';
+                sessDatePickerRow.appendChild(sessPickerRemoveBtn);
+
+                var sessPickerTicketBtn = document.createElement('button');
+                sessPickerTicketBtn.type = 'button';
+                sessPickerTicketBtn.className = 'fieldset-sessions-ticketgroup-button-toggle button-class-2';
+                sessPickerTicketBtn.title = 'Ticket Group';
+                sessPickerTicketBtn.disabled = true;
+                sessPickerTicketBtn.style.opacity = '0.3';
+                sessPickerTicketBtn.style.cursor = 'not-allowed';
+                var sessPickerIconUrl = sessGetSystemTicketIconUrl();
+                if (sessPickerIconUrl) {
+                    var sessPImg = document.createElement('img');
+                    sessPImg.className = 'fieldset-sessions-ticketgroup-button-icon';
+                    sessPImg.alt = '';
+                    sessPImg.src = sessPickerIconUrl;
+                    sessPickerTicketBtn.appendChild(sessPImg);
+                }
+                var sessPLetter = document.createElement('div');
+                sessPLetter.className = 'fieldset-sessions-ticketgroup-button-label';
+                sessPLetter.textContent = 'A';
+                sessPickerTicketBtn.appendChild(sessPLetter);
+                sessDatePickerRow.appendChild(sessPickerTicketBtn);
+
+                var sessGodSetForSlot = {};
+                function sessAutofillTimes(changedDateStr, changedSlotIdx, newTime) {
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    var changedDow = sessGetDayOfWeek(changedDateStr);
+                    if (!sessGodSetForSlot[changedSlotIdx]) {
+                        sessGodSetForSlot[changedSlotIdx] = true;
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            var data = sessSessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) data.times[changedSlotIdx] = newTime;
+                        }
+                    } else {
+                        for (var i = 0; i < sortedDates.length; i++) {
+                            var dateStr = sortedDates[i];
+                            if (dateStr === changedDateStr) continue;
+                            if (sessGetDayOfWeek(dateStr) !== changedDow) continue;
+                            var data = sessSessionData[dateStr];
+                            if (data.times.length > changedSlotIdx && !data.edited[changedSlotIdx]) data.times[changedSlotIdx] = newTime;
+                        }
+                    }
+                }
+                function sessGetAutofillForSlot(dateStr, slotIdx) {
+                    var dow = sessGetDayOfWeek(dateStr);
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (sessGetDayOfWeek(d) === dow && sessSessionData[d].times.length > slotIdx && sessSessionData[d].times[slotIdx]) return sessSessionData[d].times[slotIdx];
+                    }
+                    for (var i = 0; i < sortedDates.length; i++) {
+                        var d = sortedDates[i];
+                        if (d === dateStr) continue;
+                        if (sessSessionData[d].times.length > slotIdx && sessSessionData[d].times[slotIdx]) return sessSessionData[d].times[slotIdx];
+                    }
+                    return '';
+                }
+
+                function sessApplyDraftToCalendar() {
+                    try {
+                        if (!sessCalendarInstance) return;
+                        sessSelectedDates = new Set(sessDateDraft ? Array.from(sessDateDraft) : []);
+                        sessUpdateMultiSelection();
+                    } catch (e0) {}
+                }
+
+                function sessCloseDatePicker() {
+                    if (!sessDatePickerOpen) return;
+                    sessDatePickerOpen = false;
+                    sessDatePickerPopover.classList.remove('fieldset-sessions-calendar-popover--open');
+                    sessDatePickerBox.setAttribute('aria-expanded', 'false');
+                    try {
+                        if (sessDatePickerAnchorEl) {
+                            sessDatePickerAnchorEl.classList.remove('fieldset-sessions-session-field-label--open');
+                        }
+                    } catch (e0) {}
+                    sessDatePickerAnchorEl = null;
+                    sessDateDraft = null;
+                    if (sessDatePickerDocHandler) {
+                        try { document.removeEventListener('click', sessDatePickerDocHandler, true); } catch (e1) {}
+                        sessDatePickerDocHandler = null;
+                    }
+                }
+
+                function sessOpenDatePicker(anchorEl) {
+                    if (!anchorEl) return;
+                    if (sessDatePickerOpen) {
+                        sessCloseDatePicker();
+                        return;
+                    }
+                    sessDatePickerOpen = true;
+                    sessDateDraft = new Set(Object.keys(sessSessionData || {}));
+                    sessApplyDraftToCalendar();
+                    sessDatePickerAnchorEl = anchorEl;
+                    try { anchorEl.classList.add('fieldset-sessions-session-field-label--open'); } catch (eOpen2) {}
+
+                    try {
+                        if (fieldset && fieldset.style) fieldset.style.position = 'relative';
+                        var fsRect = fieldset.getBoundingClientRect();
+                        var sessionsRect = sessSessionsContainer.getBoundingClientRect();
+                        
+                        sessDatePickerPopover.style.visibility = 'hidden';
+                        sessDatePickerPopover.style.display = 'block';
+                        sessDatePickerPopover.classList.add('fieldset-sessions-calendar-popover--open');
+                        var popHeight = sessDatePickerPopover.offsetHeight;
+                        sessDatePickerPopover.classList.remove('fieldset-sessions-calendar-popover--open');
+                        sessDatePickerPopover.style.display = '';
+                        sessDatePickerPopover.style.visibility = '';
+                        
+                        var top = (sessionsRect.top - fsRect.top) - popHeight - 10;
+                        sessDatePickerPopover.style.top = top + 'px';
+                    } catch (eTop) {}
+
+                    sessDatePickerPopover.classList.add('fieldset-sessions-calendar-popover--open');
+                    sessDatePickerBox.setAttribute('aria-expanded', 'true');
+
+                    sessDatePickerDocHandler = function(ev) {
+                        try {
+                            if (ev.target && ev.target.closest && ev.target.closest('.fieldset-sessions-session-field-label')) return;
+                            if (!sessDatePickerPopover.contains(ev.target) && !(sessDatePickerAnchorEl && sessDatePickerAnchorEl.contains(ev.target))) {
+                                sessCloseDatePicker();
+                            }
+                        } catch (e2) {}
+                    };
+                    try { document.addEventListener('click', sessDatePickerDocHandler, true); } catch (e3) {}
+                }
+
+                sessDatePickerBox.addEventListener('click', function(e) {
+                    try { e.preventDefault(); } catch (e0) {}
+                    sessOpenDatePicker(sessDatePickerBox);
+                });
+                sessDatePickerBox.addEventListener('keydown', function(e) {
+                    if (!e) return;
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        sessOpenDatePicker(sessDatePickerBox);
+                    }
+                });
+
+                function sessRenderSessions() {
+                    fieldset.querySelectorAll('.fieldset-sessions-ticketgroup-menu--open').forEach(function(m) {
+                        m.classList.remove('fieldset-sessions-ticketgroup-menu--open');
+                        var b = m.querySelector('.menu-button');
+                        var o = m.querySelector('.menu-options');
+                        if (b) b.classList.remove('menu-button--open');
+                        if (o) o.classList.remove('menu-options--open');
+                    });
+                    sessSessionsContainer.innerHTML = '';
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    
+                    fieldset.dataset.selectedIsos = sortedDates.join(',');
+
+                    if (sortedDates.length === 0) {
+                        sessSessionsContainer.appendChild(sessDatePickerRow);
+                        sessDatePickerBox.textContent = 'Select Dates';
+                        try {
+                            sessPickerTimeInput.disabled = true;
+                            sessPickerAddBtn.disabled = true;
+                            sessPickerRemoveBtn.disabled = true;
+                            sessPickerTicketBtn.disabled = true;
+                            sessPickerTimeInput.style.opacity = '0.3';
+                            sessPickerTicketBtn.style.opacity = '0.3';
+                        } catch (e0) {}
+                    } else {
+                        try {
+                            sessDatePickerBox.textContent = App.formatDateShort(sortedDates[0]);
+                        } catch (eFmt0) {
+                            sessDatePickerBox.textContent = sortedDates[0];
+                        }
+                    }
+                    sortedDates.forEach(function(dateStr, dateIdx) {
+                        var data = sessSessionData[dateStr];
+                        var group = document.createElement('div');
+                        group.className = 'fieldset-sessions-session-container-item';
+                        data.times.forEach(function(timeVal, idx) {
+                            var row = document.createElement('div');
+                            row.className = 'fieldset-row fieldset-sessions-session-row';
+                            var isLastDate = (dateIdx === sortedDates.length - 1);
+                            var isLastTime = (idx === data.times.length - 1);
+                            row.style.marginBottom = (isLastDate && isLastTime) ? '0' : '8px';
+
+                            if (idx === 0) {
+                                var dateDisplay = document.createElement('div');
+                                dateDisplay.className = 'fieldset-sessions-session-field-label fieldset-sessions-session-field-label--selected button-class-4';
+                                dateDisplay.dataset.iso = dateStr;
+                                try {
+                                    dateDisplay.textContent = App.formatDateShort(dateStr);
+                                } catch (eFmt) {
+                                    dateDisplay.textContent = dateStr;
+                                }
+                                try {
+                                    dateDisplay.setAttribute('role', 'button');
+                                    dateDisplay.setAttribute('tabindex', '0');
+                                    dateDisplay.addEventListener('click', function(ev) {
+                                        try { ev.preventDefault(); } catch (e0) {}
+                                        sessOpenDatePicker(dateDisplay);
+                                    });
+                                } catch (ePick) {}
+                                row.appendChild(dateDisplay);
+                            } else {
+                                var spacer = document.createElement('div');
+                                spacer.className = 'fieldset-sessions-session-field-label-spacer';
+                                row.appendChild(spacer);
+                            }
+                            var timeWrapper = document.createElement('div');
+                            timeWrapper.className = 'fieldset-sessions-session-field-time';
+                            var timeInput = document.createElement('input');
+                            timeInput.type = 'text';
+                            timeInput.className = 'fieldset-sessions-session-field-time-input input-class-1';
+                            timeInput.placeholder = 'HH:MM';
+                            timeInput.maxLength = 5;
+                            timeInput.value = timeVal;
+                            timeInput.dataset.date = dateStr;
+                            timeInput.dataset.idx = idx;
+                            if (!Array.isArray(data.groups)) data.groups = [];
+                            if (typeof data.groups[idx] !== 'string') data.groups[idx] = 'A';
+                            timeInput.dataset.ticketGroupKey = String(data.groups[idx] || '').trim();
+                            timeInput.addEventListener('focus', function() {
+                                var input = this;
+                                setTimeout(function() { input.select(); }, 0);
+                            });
+                            (function(input) {
+                                var lastValue = input.value || '';
+                                input.addEventListener('input', function() {
+                                    var raw = String(this.value || '');
+                                    var digits = raw.replace(/[^0-9]/g, '');
+                                    var isDeleting = raw.length < lastValue.length;
+                                    
+                                    if (isDeleting) {
+                                        this.value = digits;
+                                    } else {
+                                        if (digits.length > 2) {
+                                            this.value = digits.substring(0, 2) + ':' + digits.substring(2, 4);
+                                        } else {
+                                            this.value = digits;
+                                        }
+                                    }
+                                    lastValue = this.value;
+                                });
+                            })(timeInput);
+                            function sessTimeToMinutes(timeStr) {
+                                var t = String(timeStr || '').trim();
+                                if (!t) return null;
+                                var m = t.match(/^(\d{1,2}):(\d{2})$/);
+                                if (!m) return null;
+                                var hh = parseInt(m[1], 10);
+                                var mm = parseInt(m[2], 10);
+                                if (isNaN(hh) || isNaN(mm)) return null;
+                                if (hh < 0 || hh > 23) return null;
+                                if (mm < 0 || mm > 59) return null;
+                                return (hh * 60) + mm;
+                            }
+                            function sessSortTimesForDate(dateKey) {
+                                try {
+                                    var ds = String(dateKey || '');
+                                    var d = sessSessionData[ds];
+                                    if (!d || !Array.isArray(d.times)) return false;
+                                    if (!Array.isArray(d.edited)) d.edited = [];
+                                    if (!Array.isArray(d.groups)) d.groups = [];
+
+                                    var items = d.times.map(function(tv, i) {
+                                        return {
+                                            i: i,
+                                            time: String(tv || ''),
+                                            edited: !!d.edited[i],
+                                            group: String(d.groups[i] || 'A')
+                                        };
+                                    });
+
+                                    items.sort(function(a, b) {
+                                        var am = sessTimeToMinutes(a.time);
+                                        var bm = sessTimeToMinutes(b.time);
+                                        var aValid = (am !== null);
+                                        var bValid = (bm !== null);
+                                        if (aValid && bValid) {
+                                            if (am < bm) return -1;
+                                            if (am > bm) return 1;
+                                            return a.i - b.i;
+                                        }
+                                        if (aValid && !bValid) return -1;
+                                        if (!aValid && bValid) return 1;
+                                        return a.i - b.i;
+                                    });
+
+                                    var changed = false;
+                                    for (var k = 0; k < items.length; k++) {
+                                        if (items[k].i !== k) { changed = true; break; }
+                                    }
+                                    if (!changed) return false;
+
+                                    d.times = items.map(function(it) { return it.time; });
+                                    d.edited = items.map(function(it) { return it.edited; });
+                                    d.groups = items.map(function(it) { return it.group; });
+                                    return true;
+                                } catch (eSort) {
+                                    return false;
+                                }
+                            }
+                            (function(dateStr, idx) {
+                                timeInput.addEventListener('blur', function() {
+                                    var raw = String(this.value || '').replace(/[^0-9]/g, '');
+                                    if (raw === '') {
+                                        sessSessionData[dateStr].times[idx] = '';
+                                        if (sessSortTimesForDate(dateStr)) sessRenderSessions();
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                                        return;
+                                    }
+                                    var hh, mm;
+                                    if (raw.length === 1) { hh = '0' + raw; mm = '00'; }
+                                    else if (raw.length === 2) { hh = raw; mm = '00'; }
+                                    else if (raw.length === 3) { hh = raw.substring(0, 2); mm = raw.substring(2) + '0'; }
+                                    else { hh = raw.substring(0, 2); mm = raw.substring(2, 4); }
+                                    var newTime = hh + ':' + mm;
+                                    var hours = parseInt(hh, 10);
+                                    var mins = parseInt(mm, 10);
+                                    if (hours <= 23 && mins <= 59) {
+                                        this.value = newTime;
+                                        sessSessionData[dateStr].times[idx] = newTime;
+                                        sessSessionData[dateStr].edited[idx] = true;
+                                        sessAutofillTimes(dateStr, idx, newTime);
+                                        if (sessSortTimesForDate(dateStr)) {
+                                            sessRenderSessions();
+                                        } else {
+                                            sessSessionsContainer.querySelectorAll('.fieldset-sessions-session-field-time-input').forEach(function(input) {
+                                                var d0 = input.dataset.date;
+                                                var i0 = parseInt(input.dataset.idx, 10);
+                                                if (d0 && sessSessionData[d0] && sessSessionData[d0].times[i0] !== undefined) input.value = sessSessionData[d0].times[i0];
+                                            });
+                                        }
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                    } else {
+                                        this.value = '';
+                                        sessSessionData[dateStr].times[idx] = '';
+                                        if (sessSortTimesForDate(dateStr)) sessRenderSessions();
+                                        try { this.dispatchEvent(new Event('change', { bubbles: true })); } catch (e2) {}
+                                    }
+                                });
+                            })(dateStr, idx);
+                            timeWrapper.appendChild(timeInput);
+                            row.appendChild(timeWrapper);
+
+                            var sessMaxTimesPerDate = 10;
+                            var addBtn = document.createElement('button');
+                            addBtn.type = 'button';
+                            addBtn.className = 'fieldset-sessions-session-button-add';
+                            var rowPlusIconUrl = sessGetSystemPlusIconUrl();
+                            if (rowPlusIconUrl) {
+                                var rowPlusImg = document.createElement('img');
+                                rowPlusImg.className = 'fieldset-sessions-session-button-icon fieldset-sessions-session-button-icon--plus';
+                                rowPlusImg.alt = '';
+                                rowPlusImg.src = rowPlusIconUrl;
+                                addBtn.appendChild(rowPlusImg);
+                            }
+                            if (data.times.length >= sessMaxTimesPerDate) {
+                                addBtn.disabled = true;
+                                addBtn.style.opacity = '0.3';
+                                addBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    addBtn.addEventListener('click', function() {
+                                        var newSlotIdx = idx + 1;
+                                        var autofillVal = sessGetAutofillForSlot(dateStr, newSlotIdx);
+                                        sessSessionData[dateStr].times.splice(newSlotIdx, 0, autofillVal);
+                                        sessSessionData[dateStr].edited.splice(newSlotIdx, 0, false);
+                                        if (!Array.isArray(sessSessionData[dateStr].groups)) sessSessionData[dateStr].groups = [];
+                                        var inheritKey = String(sessSessionData[dateStr].groups[idx] || '').trim();
+                                        if (!inheritKey) inheritKey = 'A';
+                                        sessSessionData[dateStr].groups.splice(newSlotIdx, 0, inheritKey);
+                                        sessRenderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(addBtn);
+
+                            var removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'fieldset-sessions-session-button-remove';
+                            var rowMinusIconUrl = sessGetSystemMinusIconUrl();
+                            if (rowMinusIconUrl) {
+                                var rowMinusImg = document.createElement('img');
+                                rowMinusImg.className = 'fieldset-sessions-session-button-icon fieldset-sessions-session-button-icon--minus';
+                                rowMinusImg.alt = '';
+                                rowMinusImg.src = rowMinusIconUrl;
+                                removeBtn.appendChild(rowMinusImg);
+                            }
+                            if (data.times.length === 1) {
+                                removeBtn.disabled = true;
+                                removeBtn.style.opacity = '0.3';
+                                removeBtn.style.cursor = 'not-allowed';
+                            } else {
+                                (function(dateStr, idx) {
+                                    removeBtn.addEventListener('click', function() {
+                                        sessSessionData[dateStr].times.splice(idx, 1);
+                                        sessSessionData[dateStr].edited.splice(idx, 1);
+                                        if (Array.isArray(sessSessionData[dateStr].groups)) sessSessionData[dateStr].groups.splice(idx, 1);
+                                        sessRenderSessions();
+                                    });
+                                })(dateStr, idx);
+                            }
+                            row.appendChild(removeBtn);
+
+                            // Ticket group dropdown menu
+                            var ticketMenu = document.createElement('div');
+                            ticketMenu.className = 'fieldset-sessions-ticketgroup-menu menu-class-3';
+                            
+                            var ticketBtn = document.createElement('button');
+                            ticketBtn.type = 'button';
+                            ticketBtn.className = 'fieldset-sessions-ticketgroup-button-toggle menu-button';
+                            ticketBtn.title = 'Ticket Group';
+
+                            var iconUrl = sessGetSystemTicketIconUrl();
+                            if (iconUrl) {
+                                var img = document.createElement('img');
+                                img.className = 'fieldset-sessions-ticketgroup-button-icon menu-image';
+                                img.alt = '';
+                                img.src = iconUrl;
+                                ticketBtn.appendChild(img);
+                            }
+                            var letter = document.createElement('div');
+                            letter.className = 'fieldset-sessions-ticketgroup-button-label menu-text';
+                            letter.textContent = String(data.groups[idx] || '').trim() ? String(data.groups[idx] || '').trim() : 'A';
+                            ticketBtn.appendChild(letter);
+                            ticketMenu.appendChild(ticketBtn);
+                            
+                            var ticketOpts = document.createElement('div');
+                            ticketOpts.className = 'fieldset-sessions-ticketgroup-menu-options menu-options';
+                            ticketMenu.appendChild(ticketOpts);
+                            
+                            function sessRebuildTicketDropdown(optsEl, dateStr, idx, timeInput, letterEl) {
+                                optsEl.innerHTML = '';
+                                var keys = sessGetTicketGroupKeys();
+                                if (keys.length === 0) keys = ['A'];
+                                var optIconUrl = sessGetSystemTicketIconUrl();
+                                keys.forEach(function(gk) {
+                                    var opt = document.createElement('button');
+                                    opt.type = 'button';
+                                    opt.className = 'fieldset-sessions-ticketgroup-menu-option menu-option';
+                                    if (optIconUrl) {
+                                        var optImg = document.createElement('img');
+                                        optImg.className = 'fieldset-sessions-ticketgroup-menu-option-icon';
+                                        optImg.alt = '';
+                                        optImg.src = optIconUrl;
+                                        opt.appendChild(optImg);
+                                    }
+                                    var optLetter = document.createElement('span');
+                                    optLetter.className = 'fieldset-sessions-ticketgroup-menu-option-label';
+                                    optLetter.textContent = gk;
+                                    opt.appendChild(optLetter);
+                                    opt.dataset.value = gk;
+                                    opt.addEventListener('click', function(e) {
+                                        try { e.stopPropagation(); } catch (e0) {}
+                                        var d = sessSessionData[dateStr];
+                                        if (d) {
+                                            if (!Array.isArray(d.groups)) d.groups = [];
+                                            d.groups[idx] = gk;
+                                        }
+                                        timeInput.dataset.ticketGroupKey = gk;
+                                        letterEl.textContent = gk;
+                                        ticketMenu.classList.remove('fieldset-sessions-ticketgroup-menu--open');
+                                        ticketBtn.classList.remove('menu-button--open');
+                                        ticketOpts.classList.remove('menu-options--open');
+                                        try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e1) {}
+                                    });
+                                    optsEl.appendChild(opt);
+                                });
+                            }
+                            
+                            (function(dateStr, idx, timeInput, ticketBtn, ticketMenu, ticketOpts, letter) {
+                                ticketBtn.addEventListener('click', function(e) {
+                                    try { e.preventDefault(); e.stopPropagation(); } catch (e0) {}
+                                    var isOpen = ticketMenu.classList.contains('fieldset-sessions-ticketgroup-menu--open');
+                                    fieldset.querySelectorAll('.fieldset-sessions-ticketgroup-menu--open').forEach(function(m) {
+                                        m.classList.remove('fieldset-sessions-ticketgroup-menu--open');
+                                        var b = m.querySelector('.menu-button');
+                                        var o = m.querySelector('.menu-options');
+                                        if (b) b.classList.remove('menu-button--open');
+                                        if (o) o.classList.remove('menu-options--open');
+                                    });
+                                    if (!isOpen) {
+                                        sessRebuildTicketDropdown(ticketOpts, dateStr, idx, timeInput, letter);
+                                        ticketMenu.classList.add('fieldset-sessions-ticketgroup-menu--open');
+                                        ticketBtn.classList.add('menu-button--open');
+                                        ticketOpts.classList.add('menu-options--open');
+                                    }
+                                });
+                            })(dateStr, idx, timeInput, ticketBtn, ticketMenu, ticketOpts, letter);
+                            row.appendChild(ticketMenu);
+
+                            group.appendChild(row);
+                        });
+                        sessSessionsContainer.appendChild(group);
+                    });
+                    try { fieldset.dispatchEvent(new Event('change', { bubbles: true })); } catch (e0) {}
+                }
+
+                sessRenderSessions();
+
+                fieldset._setValue = function(val) {
+                    if (!val || typeof val !== 'object') return;
+                    
+                    sessSessionData = {};
+                    
+                    if (Array.isArray(val.sessions)) {
+                        val.sessions.forEach(function(s) {
+                            var date = s.date;
+                            if (!date) return;
+                            var times = [];
+                            var groups = [];
+                            if (Array.isArray(s.times)) {
+                                s.times.forEach(function(t) {
+                                    times.push(t.time || '');
+                                    groups.push(t.ticket_group_key || 'A');
+                                });
+                            }
+                            sessSessionData[date] = { times: times, groups: groups, edited: times.map(function(){return false;}) };
+                        });
+                    }
+                    
+                    sessRenderSessions();
+                    updateCompleteFromDom();
+                };
+
+                fieldset._getValue = function() {
+                    var result = {
+                        sessions: []
+                    };
+                    
+                    var sortedDates = Object.keys(sessSessionData).sort();
+                    sortedDates.forEach(function(dateStr) {
+                        var data = sessSessionData[dateStr];
+                        var sessionEntry = {
+                            date: dateStr,
+                            times: []
+                        };
+                        data.times.forEach(function(timeVal, idx) {
+                            sessionEntry.times.push({
+                                time: timeVal,
+                                ticket_group_key: data.groups[idx] || 'A'
+                            });
+                        });
+                        result.sessions.push(sessionEntry);
+                    });
+                    
+                    return result;
+                };
+
+                break;
+                
             case 'venue':
                 // SMART VENUE FIELDSET
                 // - Both inputs have Google Places (unrestricted)
