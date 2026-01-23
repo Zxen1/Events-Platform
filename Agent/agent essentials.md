@@ -176,6 +176,24 @@ ALWAYS search the database dump for exact table structure before writing any SQL
 ### Database Charset
 Database and tables MUST be utf8mb4 before bulk inserts with international characters. See venue-seeding-plan.md for details.
 
+### Foreign Key Cascades
+Posts use CASCADE DELETE. When a post is deleted, all child records are automatically removed.
+
+```
+posts
+├── post_map_cards (post_id) → CASCADE
+│   ├── post_amenities (map_card_id) → CASCADE
+│   ├── post_item_pricing (map_card_id) → CASCADE
+│   ├── post_sessions (map_card_id) → CASCADE
+│   └── post_ticket_pricing (map_card_id) → CASCADE
+├── post_media (post_id) → CASCADE
+├── post_revisions (post_id) → CASCADE
+├── commissions (post_id) → CASCADE
+└── moderation_log (post_id) → CASCADE
+```
+
+**Rule:** Any new table referencing `posts.id` or `post_map_cards.id` MUST include `ON DELETE CASCADE`.
+
 ---
 
 ## TERMINAL RULES
