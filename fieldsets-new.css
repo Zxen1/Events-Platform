@@ -971,7 +971,6 @@
 }
 
 /* Instruction Text */
-.fieldset-instruction,
 .fieldset-sessionpricing-instruction {
     font-size: 13px;
     color: #aaa;
@@ -979,28 +978,24 @@
 }
 
 /* Sessions Container */
-.fieldset-sessionpricing-sessions-container,
-.fieldset-sessions-sessions-container {
+.fieldset-sessionpricing-sessions-container {
     display: flex;
     flex-direction: column;
 }
 
-.fieldset-sessionpricing-session-container-item,
-.fieldset-sessions-session-container-item {
+.fieldset-sessionpricing-session-container-item {
     display: flex;
     flex-direction: column;
 }
 
-.fieldset-sessionpricing-session-row,
-.fieldset-sessions-session-row {
+.fieldset-sessionpricing-session-row {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
 /* Date input box - appearance from button-class-4 */
-.fieldset-sessionpricing-session-field-label,
-.fieldset-sessions-session-field-label {
+.fieldset-sessionpricing-session-field-label {
     flex: 1;
     height: 36px;
     padding: 0 10px;
@@ -1009,21 +1004,18 @@
     align-items: center;
 }
 
-.fieldset-sessionpricing-session-field-label--open,
-.fieldset-sessions-session-field-label--open {
+.fieldset-sessionpricing-session-field-label--open {
     background: var(--blue-600);
     border-color: var(--blue-500);
     color: #fff;
 }
 
-.fieldset-sessionpricing-session-field-label-spacer,
-.fieldset-sessions-session-field-label--spacer {
+.fieldset-sessionpricing-session-field-label-spacer {
     flex: 1;
     height: 36px;
 }
 
-.fieldset-sessionpricing-session-field-time,
-.fieldset-sessions-session-field-time {
+.fieldset-sessionpricing-session-field-time {
     flex: 0 0 70px;
 }
 
@@ -1031,11 +1023,7 @@
 .fieldset-sessionpricing-session-button-add,
 .fieldset-sessionpricing-session-button-remove,
 .fieldset-sessionpricing-pricing-button-add,
-.fieldset-sessionpricing-pricing-button-remove,
-.fieldset-sessions-session-button-add,
-.fieldset-sessions-session-button-remove,
-.fieldset-ticketpricing-pricing-button-add,
-.fieldset-ticketpricing-pricing-button-remove {
+.fieldset-sessionpricing-pricing-button-remove {
     width: 36px;
     min-width: 36px;
     max-width: 36px;
@@ -1072,8 +1060,7 @@
 }
 
 /* Ticket Group Button - appearance from button-class-5 */
-.fieldset-sessionpricing-ticketgroup-button-toggle,
-.fieldset-sessions-ticketgroup-button-toggle {
+.fieldset-sessionpricing-ticketgroup-button-toggle {
     flex: 0 0 70px;
     width: 70px;
     height: 36px;
@@ -1086,8 +1073,7 @@
     gap: 10px;
 }
 
-.fieldset-sessionpricing-ticketgroup-button-icon,
-.fieldset-sessions-ticketgroup-button-icon {
+.fieldset-sessionpricing-ticketgroup-button-icon {
     width: 18px;
     height: 18px;
     object-fit: contain;
@@ -1096,17 +1082,14 @@
 
 .fieldset-sessionpricing-pricing-button-icon,
 .fieldset-sessionpricing-session-button-icon,
-.fieldset-sessionpricing-ticketgroups-button-icon,
-.fieldset-ticketpricing-pricing-button-icon,
-.fieldset-sessions-session-button-icon {
+.fieldset-sessionpricing-ticketgroups-button-icon {
     width: 18px;
     height: 18px;
     object-fit: contain;
     flex-shrink: 0;
 }
 
-.fieldset-sessionpricing-ticketgroup-button-label,
-.fieldset-sessions-ticketgroup-button-label {
+.fieldset-sessionpricing-ticketgroup-button-label {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1136,15 +1119,13 @@
 }
 
 /* Ticket Group Dropdown Menu (on session rows) */
-.fieldset-sessionpricing-ticketgroup-menu,
-.fieldset-sessions-ticketgroup-menu {
+.fieldset-sessionpricing-ticketgroup-menu {
     position: relative;
     flex: 0 0 70px;
     width: 70px;
 }
 
-.fieldset-sessionpricing-ticketgroup-menu-options,
-.fieldset-sessions-ticketgroup-menu {
+.fieldset-sessionpricing-ticketgroup-menu-options {
     position: absolute;
     top: 100%;
     left: 0;
@@ -1160,13 +1141,11 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-menu--open .fieldset-sessionpricing-ticketgroup-menu-options,
-.fieldset-sessionpricing-ticketgroup-menu-options.menu-options--open,
-.fieldset-sessions-ticketgroup-menu--open {
+.fieldset-sessionpricing-ticketgroup-menu-options.menu-options--open {
     display: flex;
 }
 
-.fieldset-sessionpricing-ticketgroup-menu-option,
-.fieldset-sessions-ticketgroup-menu-item {
+.fieldset-sessionpricing-ticketgroup-menu-option {
     width: 100%;
     height: 36px;
     display: flex;
@@ -1181,8 +1160,7 @@
     white-space: nowrap;
 }
 
-.fieldset-sessionpricing-ticketgroup-menu-option:hover,
-.fieldset-sessions-ticketgroup-menu-item:hover {
+.fieldset-sessionpricing-ticketgroup-menu-option:hover {
     background: var(--blue-500);
 }
 
@@ -1306,34 +1284,29 @@
 }
 
 /* Ticket Group Item - uses accordion-class-1 for appearance */
-.fieldset-sessionpricing-ticketgroup-item,
-.fieldset-ticketpricing-ticketgroup-item {
+.fieldset-sessionpricing-ticketgroup-item {
     margin-bottom: 10px;
 }
 
-.fieldset-sessionpricing-ticketgroup-item:last-child,
-.fieldset-ticketpricing-ticketgroup-item:last-child {
+.fieldset-sessionpricing-ticketgroup-item:last-child {
     margin-bottom: 0;
 }
 
 /* Header layout */
-.fieldset-sessionpricing-ticketgroup-item-header-content,
-.fieldset-ticketpricing-ticketgroup-item-header-content {
+.fieldset-sessionpricing-ticketgroup-item-header-content {
     height: 36px;
     display: flex;
     align-items: center;
     padding: 0 10px;
 }
 
-.fieldset-sessionpricing-ticketgroup-header-label,
-.fieldset-ticketpricing-ticketgroup-header-label {
+.fieldset-sessionpricing-ticketgroup-header-label {
     flex: 1;
     font-size: 13px;
 }
 
 /* Arrow icon */
-.fieldset-sessionpricing-ticketgroup-arrow,
-.fieldset-ticketpricing-ticketgroup-arrow {
+.fieldset-sessionpricing-ticketgroup-arrow {
     width: 36px;
     height: 36px;
     display: flex;
@@ -1341,8 +1314,7 @@
     justify-content: center;
 }
 
-.fieldset-sessionpricing-ticketgroup-arrow-icon,
-.fieldset-ticketpricing-ticketgroup-arrow-icon {
+.fieldset-sessionpricing-ticketgroup-arrow-icon {
     width: 16px;
     height: 16px;
     background-color: currentColor;
@@ -1358,16 +1330,13 @@
     transform-origin: center;
 }
 
-.fieldset-sessionpricing-ticketgroup-item.accordion-class-1--open .fieldset-sessionpricing-ticketgroup-arrow-icon,
-.fieldset-ticketpricing-ticketgroup-item.accordion-class-1--open .fieldset-ticketpricing-ticketgroup-arrow-icon {
+.fieldset-sessionpricing-ticketgroup-item.accordion-class-1--open .fieldset-sessionpricing-ticketgroup-arrow-icon {
     transform: rotate(180deg);
 }
 
 /* +/- Buttons */
 .fieldset-sessionpricing-ticketgroup-button-add,
-.fieldset-sessionpricing-ticketgroup-button-remove,
-.fieldset-ticketpricing-ticketgroup-button-add,
-.fieldset-ticketpricing-ticketgroup-button-remove {
+.fieldset-sessionpricing-ticketgroup-button-remove {
     width: 36px;
     height: 36px;
     display: flex;
@@ -1381,9 +1350,7 @@
 }
 
 .fieldset-sessionpricing-ticketgroup-button-add .fieldset-sessionpricing-ticketgroup-button-icon,
-.fieldset-sessionpricing-ticketgroup-button-remove .fieldset-sessionpricing-ticketgroup-button-icon,
-.fieldset-ticketpricing-ticketgroup-button-add .fieldset-ticketpricing-ticketgroup-button-icon,
-.fieldset-ticketpricing-ticketgroup-button-remove .fieldset-ticketpricing-ticketgroup-button-icon {
+.fieldset-sessionpricing-ticketgroup-button-remove .fieldset-sessionpricing-ticketgroup-button-icon {
     width: 18px;
     height: 18px;
     object-fit: contain;
@@ -1454,8 +1421,7 @@
     margin-bottom: 10px;
 }
 
-.fieldset-sessionpricing-calendar-popover,
-.fieldset-sessions-calendar-popover {
+.fieldset-sessionpricing-calendar-popover {
     position: absolute;
     left: 0;
     right: 0;
@@ -1468,13 +1434,11 @@
     z-index: var(--layer-menu, 85);
 }
 
-.fieldset-sessionpricing-calendar-popover--open,
-.fieldset-sessions-calendar-popover--open {
+.fieldset-sessionpricing-calendar-popover--open {
     display: block;
 }
 
-.fieldset-sessionpricing-calendar-popover-body,
-.fieldset-sessions-calendar-popover-body {
+.fieldset-sessionpricing-calendar-popover-body {
     padding: 10px;
 }
 

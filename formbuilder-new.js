@@ -1660,16 +1660,15 @@
             });
         }
         
-        // Function to enable/disable event-only fieldsets based on subcategory type (Events vs General)
-        function updateEventOnlyFieldsets(subcategoryType) {
+        // Function to enable/disable session_pricing based on subcategory type (Events vs General)
+        function updateSessionPricingFieldset(subcategoryType) {
             if (!fieldsetOpts) return;
-            var eventOnlyKeys = ['session_pricing', 'ticket_pricing', 'sessions'];
             var allOptions = fieldsetOpts.querySelectorAll('.formbuilder-fieldset-menu-option');
             allOptions.forEach(function(opt) {
                 var fsId = opt.getAttribute('data-fieldset-id');
                 if (!fsId) return;
                 var fsIdLower = String(fsId).toLowerCase();
-                if (eventOnlyKeys.indexOf(fsIdLower) !== -1) {
+                if (fsIdLower === 'session_pricing') {
                     if (subcategoryType === 'Events') {
                         opt.classList.remove('formbuilder-fieldset-menu-option--disabled-general');
                     } else {
@@ -2096,7 +2095,7 @@
                 if (!cat.subFees[subName]) cat.subFees[subName] = {};
                 cat.subFees[subName].subcategory_type = 'Events';
                 // Enable session_pricing for Events type
-                updateEventOnlyFieldsets('Events');
+                updateSessionPricingFieldset('Events');
                 notifyChange();
             }
         });
@@ -2141,7 +2140,7 @@
                 cat.subFees[subName].subcategory_type = 'General';
                 // Keep existing location_type - don't set to null
                 // Disable session_pricing for General type
-                updateEventOnlyFieldsets('General');
+                updateSessionPricingFieldset('General');
                 notifyChange();
             }
         });
@@ -2293,21 +2292,8 @@
                 isLockedLocationFieldset = (fieldsetKeyLower === 'venue' || fieldsetKeyLower === 'city' || fieldsetKeyLower === 'address');
             }
             
-            // Event fieldsets (ticket_pricing, sessions) are mandatory for Events subcategories
-            // Lock repeat settings and required checkbox for: Ticket Pricing, Sessions
-            var isLockedEventFieldset = false;
-            if (fieldsetDef && fieldsetDef.fieldset_key && currentSubcategoryType === 'Events') {
-                var fieldsetKeyLower = String(fieldsetDef.fieldset_key).toLowerCase();
-                isLockedEventFieldset = (fieldsetKeyLower === 'ticket_pricing' || fieldsetKeyLower === 'sessions');
-            }
-            
             // Location fieldsets must always be required
             if (isLockedLocationFieldset) {
-                isRequired = true;
-            }
-            
-            // Event fieldsets must always be required
-            if (isLockedEventFieldset) {
                 isRequired = true;
             }
             
@@ -2375,8 +2361,8 @@
                 fieldWrapper.classList.add('formbuilder-field-wrapper--required');
             }
             
-            // Lock required checkbox for location fieldsets and event fieldsets
-            if (isLockedLocationFieldset || isLockedEventFieldset) {
+            // Lock required checkbox for location fieldsets
+            if (isLockedLocationFieldset) {
                 requiredCheckbox.checked = true;
                 requiredCheckbox.disabled = true;
                 requiredLabel.classList.add('disabled');
@@ -2384,8 +2370,8 @@
             
             syncFieldWrapperUi(fieldWrapper);
             requiredCheckbox.onchange = function() {
-                if (isLockedLocationFieldset || isLockedEventFieldset) {
-                    // Prevent unchecking location/event fieldsets - force it back to checked
+                if (isLockedLocationFieldset) {
+                    // Prevent unchecking location fieldsets - force it back to checked
                     requiredCheckbox.checked = true;
                     return;
                 }
@@ -2406,8 +2392,8 @@
             fieldMoreBtn.innerHTML = '<div class="formbuilder-field-more-icon"></div><div class="formbuilder-field-more-menu"><div class="formbuilder-field-more-item formbuilder-field-more-delete">Delete Field</div></div>';
             var fieldMoreMenuEl = fieldMoreBtn.querySelector('.formbuilder-field-more-menu');
             
-            // Lock more menu for location fieldsets and event fieldsets - prevent deletion
-            if (isLockedLocationFieldset || isLockedEventFieldset) {
+            // Lock more menu for location fieldsets - prevent deletion
+            if (isLockedLocationFieldset) {
                 fieldMoreBtn.classList.add('disabled');
                 fieldMoreBtn.style.pointerEvents = 'none';
                 fieldMoreBtn.style.opacity = '0.5';
@@ -2446,17 +2432,8 @@
                 fieldWrapper.classList.add('formbuilder-field-wrapper--location-specific');
             }
             
-            // Force location-specific for Sessions fieldset (below the line), but NOT for Ticket Pricing (above the line)
-            if (isLockedEventFieldset && fieldsetDef && fieldsetDef.fieldset_key) {
-                var eventFieldsetKey = String(fieldsetDef.fieldset_key).toLowerCase();
-                if (eventFieldsetKey === 'sessions') {
-                    fieldWrapper.classList.add('formbuilder-field-wrapper--location-specific');
-                }
-                // ticket_pricing stays above the line (not location-specific)
-            }
-            
             // Initialize location-specific state from fieldData (loaded from database)
-            if (!isLockedLocationFieldset && !isLockedEventFieldset && fieldData) {
+            if (!isLockedLocationFieldset && fieldData) {
                 var initialLocationSpecific = false;
                 if (fieldData.location_specific !== undefined) {
                     initialLocationSpecific = !!fieldData.location_specific;
@@ -2499,13 +2476,12 @@
             // Declare variables that will be used in checkModifiedState
             var selectedAmenities = fieldData.selectedAmenities;
             var optionsContainer = null;
-            var nameInput, placeholderInput, tooltipInput, instructionInput, modifyButton;
+            var nameInput, placeholderInput, tooltipInput, modifyButton;
             
             // Get default values from fieldset definition
             var defaultName = fieldsetDef ? (fieldsetDef.fieldset_name || fieldsetDef.name) : '';
             var defaultPlaceholder = fieldsetDef ? (fieldsetDef.fieldset_placeholder || '') : '';
             var defaultTooltip = fieldsetDef ? (fieldsetDef.fieldset_tooltip || '') : '';
-            var defaultInstruction = fieldsetDef ? (fieldsetDef.fieldset_instruction || '') : '';
             var defaultOptions = fieldsetDef && fieldsetDef.fieldset_fields ? [] : []; // Options are typically empty by default
             
             // Track modification state (must be defined before it's called)
@@ -2513,12 +2489,10 @@
                 var nameValue = nameInput ? nameInput.value.trim() : '';
                 var placeholderValue = placeholderInput ? placeholderInput.value.trim() : '';
                 var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
-                var instructionValue = instructionInput ? instructionInput.value.trim() : '';
                 
                 var hasNameOverride = nameValue !== '' && nameValue !== defaultName;
                 var hasPlaceholderOverride = placeholderValue !== '' && placeholderValue !== defaultPlaceholder;
                 var hasTooltipOverride = tooltipValue !== '' && tooltipValue !== defaultTooltip;
-                var hasInstructionOverride = instructionValue !== '' && instructionValue !== defaultInstruction;
                 
                 // Check if options differ from defaults (default is empty array)
                 var hasOptions = false;
@@ -2532,7 +2506,7 @@
                 // Check if amenities differ from defaults (default is empty array)
                 var hasAmenities = needsAmenities && selectedAmenities && selectedAmenities.length > 0;
                 
-                var isModified = hasNameOverride || hasPlaceholderOverride || hasTooltipOverride || hasInstructionOverride || hasOptions || hasAmenities;
+                var isModified = hasNameOverride || hasPlaceholderOverride || hasTooltipOverride || hasOptions || hasAmenities;
                 
                 if (modifyButton) {
                     if (isModified) {
@@ -2551,12 +2525,10 @@
                     var nameValue = nameInput ? nameInput.value.trim() : '';
                     var placeholderValue = placeholderInput ? placeholderInput.value.trim() : '';
                     var tooltipValue = tooltipInput ? tooltipInput.value.trim() : '';
-                    var instructionValue = instructionInput ? instructionInput.value.trim() : '';
                     var currentState = {
                         name: hasNameOverride ? nameValue : '',
                         placeholder: hasPlaceholderOverride ? placeholderValue : '',
                         tooltip: hasTooltipOverride ? tooltipValue : '',
-                        instruction: hasInstructionOverride ? instructionValue : '',
                         options: hasOptions && optionsContainer ? Array.from(optionsContainer.querySelectorAll('.formbuilder-field-option-input')).map(function(inp) { return inp.value.trim(); }).filter(function(v) { return v !== ''; }) : [],
                         selectedAmenities: hasAmenities ? selectedAmenities : []
                     };
@@ -2777,35 +2749,6 @@
             modifyContainer.appendChild(tooltipLabel);
             modifyContainer.appendChild(tooltipInput);
             
-            var instructionLabel = document.createElement('label');
-            instructionLabel.className = 'formbuilder-field-label';
-            instructionLabel.textContent = 'Instruction';
-            instructionInput = document.createElement('textarea');
-            instructionInput.className = 'formbuilder-field-textarea';
-            instructionInput.placeholder = defaultInstruction || 'Instruction text (displayed in fieldset body)';
-            instructionInput.rows = 3;
-            // Only set value if it's different from default (meaning it was modified)
-            var customInstruction = fieldData.instruction || fieldData.fieldset_instruction || '';
-            if (customInstruction && customInstruction !== defaultInstruction) {
-                instructionInput.value = customInstruction;
-                instructionInput.style.color = '#fff';
-            } else {
-                instructionInput.value = '';
-                instructionInput.style.color = '#888';
-            }
-            instructionInput.addEventListener('input', function() {
-                if (instructionInput.value && instructionInput.value !== defaultInstruction) {
-                    instructionInput.style.color = '#fff';
-                } else {
-                    instructionInput.value = '';
-                    instructionInput.style.color = '#888';
-                }
-                checkModifiedState();
-                notifyChange();
-            });
-            modifyContainer.appendChild(instructionLabel);
-            modifyContainer.appendChild(instructionInput);
-            
             fieldEditPanel.appendChild(modifyContainer);
             
             // Register with Field Tracker
@@ -2815,7 +2758,6 @@
                     name: fieldData.name || defaultName || '',
                     placeholder: fieldData.placeholder || defaultPlaceholder || '',
                     tooltip: fieldData.tooltip || fieldData.fieldset_tooltip || defaultTooltip || '',
-                    instruction: fieldData.instruction || fieldData.fieldset_instruction || defaultInstruction || '',
                     options: fieldData.options || [],
                     selectedAmenities: fieldData.selectedAmenities || []
                 };
@@ -2944,17 +2886,14 @@
                 return;
             }
             
-            // Check if this is an event-only fieldset (only available for Events, not General)
+            // Check if this is session_pricing (only available for Events, not General)
             var isSessionPricing = fieldsetKeyLower === 'session_pricing';
-            var isTicketPricing = fieldsetKeyLower === 'ticket_pricing';
-            var isSessions = fieldsetKeyLower === 'sessions';
-            var isEventOnlyFieldset = isSessionPricing || isTicketPricing || isSessions;
             
             var opt = document.createElement('div');
             opt.className = 'formbuilder-fieldset-menu-option';
             
-            // Grey out event-only fieldsets for General subcategory type
-            if (isEventOnlyFieldset && currentSubcategoryType !== 'Events') {
+            // Grey out session_pricing for General subcategory type
+            if (isSessionPricing && currentSubcategoryType !== 'Events') {
                 opt.classList.add('formbuilder-fieldset-menu-option--disabled-general');
             }
             var displayName = '';
