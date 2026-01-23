@@ -1,15 +1,20 @@
 -- =============================================
--- COMPLETE FIX FOR ENTIRE DATABASE
--- This file fixes:
--- 1. Database and all table character sets
--- 2. ALL descriptions (1,526 posts)
+-- FINAL COMPLETE FIX
+-- Generated from full analysis
+-- =============================================
+-- This file:
+-- 1. Converts database charset to utf8mb4
+-- 2. Deletes duplicate posts
+-- 3. Updates ALL descriptions with correct Unicode
+-- 4. Updates ALL venue_name/address_line with correct Unicode
 -- =============================================
 
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- =============================================
--- PART 1: FIX DATABASE AND TABLE CHARSETS
+-- PART 1: DATABASE CHARSET
 -- =============================================
 
 ALTER DATABASE funmapco_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -51,7 +56,18 @@ ALTER TABLE subcategories CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unico
 ALTER TABLE transactions CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- =============================================
--- PART 2: FIX ALL DESCRIPTIONS
+-- PART 2: DELETE DUPLICATE POSTS
+-- =============================================
+
+
+-- Delete duplicate posts (keeping first occurrence of each)
+DELETE FROM post_media WHERE post_id IN (1073, 1288, 1289, 1290, 1291, 1292, 1293, 1295, 1621, 1622, 1623, 1624, 1625, 1628, 1630, 1631, 1632, 1633, 1652, 1653, 1654, 1781, 1782, 1783, 1792);
+DELETE FROM post_map_cards WHERE post_id IN (1073, 1288, 1289, 1290, 1291, 1292, 1293, 1295, 1621, 1622, 1623, 1624, 1625, 1628, 1630, 1631, 1632, 1633, 1652, 1653, 1654, 1781, 1782, 1783, 1792);
+DELETE FROM posts WHERE id IN (1073, 1288, 1289, 1290, 1291, 1292, 1293, 1295, 1621, 1622, 1623, 1624, 1625, 1628, 1630, 1631, 1632, 1633, 1652, 1653, 1654, 1781, 1782, 1783, 1792);
+
+
+-- =============================================
+-- PART 3: UPDATE ALL DESCRIPTIONS
 -- =============================================
 
 UPDATE post_map_cards SET description = 'The Sydney Opera House is a multi-venue performing arts centre in Sydney, New South Wales, Australia. Located on the foreshore of Sydney Harbour, it is widely regarded as one of the world\'s most famous and distinctive buildings, and a masterpiece of 20th-century architecture.
@@ -4255,11 +4271,6 @@ Photo: Tilman2007 (CC BY-SA 4.0); Chris Olszewski (CC BY-SA 4.0); Chris Olszewsk
 UPDATE post_map_cards SET description = 'St John\'s Archcathedral is a Catholic church within the Old Town precinct in Warsaw, Poland. The Brick Gothic structure stands on Świętojańska Street, adjacent to the Jesuit Church. St John\'s is one of three major cathedrals in the city, but it is the only temple that also possesses the title of an archcathedral. It is the mother church of the Archdiocese of Warsaw and one of Poland\'s national pantheons. Along with the old city, the church has been listed by UNESCO as a World Heritage Site.
 
 Photo: Solidphotouploader (CC BY-SA 3.0 pl); unknown Polish (Public domain); Adrian Grycuk (CC BY-SA 3.0 pl)' WHERE post_id = 1072;
-UPDATE post_map_cards SET description = 'The Neon Museum in Las Vegas, Nevada, United States, features signs from old casinos and other businesses displayed outdoors on 2.27 acres (0.92 ha). Efforts to establish a neon sign museum were underway in the late 1980s, but stalled due to a lack of resources. On September 18, 1996, the Las Vegas City Council voted to fund such a project, to be known as The Neon Museum. The organization started out by re-installing old signage in downtown Las Vegas, to attract more visitors to the area.
-
-Young Electric Sign Company (YESCO) had manufactured many neon signs in the city, and the company had a storage site for old signs, which would eventually become part of the Neon Museum collection. In 2000, as YESCO prepared to close its storage lot, the city provided the museum with land to start its own. Tours of the new site, known as the Neon Boneyard, began in 2001, by appointment only.
-
-Photo: The Neon Museum (CC BY-SA 2.5); Jeremy Thompson from Los Angeles, California (CC BY 2.0); Desert Supply/Curt Teich (Public domain)' WHERE post_id = 1073;
 UPDATE post_map_cards SET description = 'The Wawel Royal Castle and the Wawel Hill on which it sits constitute the most historically and culturally significant site in Poland. A fortified residency on the Vistula River in Kraków, it was established on the orders of King Casimir III the Great and enlarged over the centuries into a number of structures around a Polish Renaissance courtyard. It represents nearly all European architectural styles of the Medieval, Renaissance and Baroque periods.
 
 The castle is part of a fortified architectural complex erected atop a limestone outcrop on the left bank of the Vistula River, at an altitude of 228 metres (748 ft) above sea level. The complex consists of numerous buildings of great historical and national importance, including the Wawel Cathedral where Polish monarchs were crowned and buried. Some of Wawel\'s oldest stone buildings can be traced back to 970 CE, in addition to the earliest examples of Romanesque and Gothic architecture in Poland. The current castle was built in the 14th century, and expanded over the next hundreds of years. In 1978, Wawel was declared the first World Heritage Site as part of the Historic Centre of Kraków.
@@ -5003,42 +5014,11 @@ UPDATE post_map_cards SET description = 'Laugardalslaug is a public thermal bath
 The baths are owned by the City of Reykjavík, and are operated by its Department of Sport and Leisure
 
 Photo: (WT-en) Meltwaterfalls at English Wikivoyage (CC BY-SA 1.0); Ohlen (Public domain); (WT-en) Meltwaterfalls at English Wikivoyage (CC BY-SA 1.0)' WHERE post_id = 1286;
-UPDATE post_map_cards SET description = 'Edinburgh Castle is a historic castle in Edinburgh, Scotland. It stands on Castle Rock, which has been occupied by humans since at least the Iron Age. There has been a royal castle on the rock since the reign of Malcolm III in the 11th century, and the castle continued to be a royal residence until 1633. From the 15th century, the castle\'s residential role declined, and by the 17th century it was principally used as a military garrison. Its importance as a part of Scotland\'s national heritage was recognised increasingly from the early 19th century onwards, and various restoration programmes have been carried out over the past century and a half.
-
-Edinburgh Castle has played a prominent role in Scottish history, and has served variously as a royal residence, an arsenal, a treasury, a national archive, a mint, a prison, a military fortress, and the home of the Honours of Scotland  the Scottish regalia. As one of the most important strongholds in the Kingdom of Scotland, the castle was involved in many historical conflicts from the Wars of Scottish Independence in the 14th century to the Jacobite rising of 1745. Research undertaken in 2014 identified 26 sieges in its 1,100-year history, giving it a claim to having been "the most besieged place in Great Britain and one of the most attacked in the world". Few of the present buildings pre-date the Lang Siege of 1573, when the medieval defences were largely destroyed by artillery bombardment. The most notable exceptions are St Margaret\'s Chapel from the early 12th century, which is regarded as the oldest building in Edinburgh, the Royal Palace, and the early 16th-century Great Hall. The castle is the site of the Scottish National War Memorial and the National War Museum. The British Army is still responsible for some parts of the castle, although its presence is now largely ceremonial and administrative. The castle is the regimental headquarters of the Royal Regiment of Scotland and the Royal Scots Dragoon Guards and houses their regimental museums, along with that of the Royal Scots.
-
-Photo: 瑞丽江的河水 (CC BY-SA 4.0); George Washington Wilson / Adam Cuerden (Public domain); Kim Traynor (CC BY-SA 3.0)' WHERE post_id = 1288;
-UPDATE post_map_cards SET description = 'The Palace of Holyroodhouse, commonly known as Holyrood Palace, is the official residence of the British monarch in Scotland. Located at the bottom of the Royal Mile in Edinburgh, at the opposite end to Edinburgh Castle, Holyrood has served as the principal royal residence in Scotland since the 16th century, and is a setting for state occasions and official entertaining.
-
-The palace adjoins Holyrood Abbey, and the gardens are set within Holyrood Park. The King\'s Gallery was converted from existing buildings at the western entrance to the palace and was opened in 2002 to exhibit works of art from the Royal Collection.
-
-Photo: 瑞丽江的河水 (CC BY-SA 4.0); XtoF (CC BY-SA 4.0); Thomas Sandby (Public domain)' WHERE post_id = 1289;
-UPDATE post_map_cards SET description = 'Calton Hill is a hill in central Edinburgh, Scotland, situated beyond the east end of Princes Street and included in the city\'s UNESCO World Heritage Site. Views of, and from, the hill are often used in photographs and paintings of the city.
-
-Calton Hill is the headquarters of the Scottish Government, which is based at St Andrew\'s House, on the steep southern slope of the hill. The Scottish Parliament Building and other prominent buildings such as Holyrood Palace lie near the foot of the hill. Calton Hill is also the location of several monuments and buildings: the National Monument, the Nelson Monument, the Dugald Stewart Monument, the old Royal High School, the Robert Burns Monument, the Political Martyrs\' Monument and the City Observatory.
-
-Photo: Saffron Blaze (CC BY 3.0); 瑞丽江的河水 (CC BY-SA 4.0); Ajay Suresh from New York, NY, USA (CC BY 2.0)' WHERE post_id = 1290;
-UPDATE post_map_cards SET description = 'St Giles\' Cathedral, or the High Kirk of Edinburgh, is a parish church of the Church of Scotland in the Old Town of Edinburgh. The current building was begun in the 14th century and extended until the early 16th century; significant alterations were undertaken in the 19th and 20th centuries, including the addition of the Thistle Chapel. St Giles\' is closely associated with many events and figures in Scottish history, including John Knox, who served as the church\'s minister after the Scottish Reformation.
-
-Likely founded in the 12th century and dedicated to Saint Giles, the church was elevated to collegiate status by Pope Paul II in 1467. In 1559, the church became Protestant with John Knox, the foremost figure of the Scottish Reformation, as its minister. After the Reformation, St Giles\' was internally partitioned to serve multiple congregations as well as secular purposes, such as a prison and as a meeting place for the Parliament of Scotland. In 1633, Charles I made St Giles\' the cathedral of the newly created Diocese of Edinburgh. Charles\' attempt to impose doctrinal changes on the presbyterian Scottish Kirk, including a Prayer Book causing a riot in St Giles\' on 23 July 1637, which precipitated the formation of the Covenanters and the beginnings of the Wars of the Three Kingdoms. St Giles\' role in the Scottish Reformation and the Covenanters\' Rebellion has led to its being called "the Mother Church of World Presbyterianism".
-
-Photo: Carlos Delgado (CC BY-SA 3.0); 瑞丽江的河水 (CC BY-SA 4.0); CPClegg (CC BY-SA 4.0)' WHERE post_id = 1291;
-UPDATE post_map_cards SET description = 'Princes Street is one of the major thoroughfares in central Edinburgh, Scotland and the main shopping street in the capital. It is the southernmost street of Edinburgh\'s New Town, stretching around 1.2 km (three quarters of a mile) from Lothian Road in the west, to Leith Street in the east. The street has few buildings on the south side and looks over Princes Street Gardens allowing panoramic views of the Old Town, Edinburgh Castle, as well as the valley between. Most of the street is limited to trams, buses and taxis with only the east end open to all traffic.
-
-Photo: 瑞丽江的河水 (CC BY-SA 4.0); Tharnton345 (talk) (Public domain); Alexander Nasmyth (Public domain)' WHERE post_id = 1292;
-UPDATE post_map_cards SET description = 'The Royal Botanic Garden Edinburgh is a scientific centre for the study of plants, their diversity and conservation, as well as a popular tourist attraction. Founded in 1670 as a physic garden to grow medicinal plants, today it occupies four sites across ScotlandEdinburgh, Dawyck, Logan and Benmoreeach with its own specialist collection. The RBGE\'s living collection consists of more than 13,302 plant species (34,422 accessions), whilst the herbarium contains in excess of 3 million preserved specimens.
-
-The Royal Botanic Garden Edinburgh is an executive non-departmental public body of the Scottish Government. The Edinburgh site is the main garden and the headquarters of the public body, which is led by Regius Keeper Simon Milne.
-
-Photo: Ham (CC BY-SA 3.0); Kim Traynor (CC BY-SA 4.0); dun_deagh (CC BY-SA 2.0)' WHERE post_id = 1293;
 UPDATE post_map_cards SET description = 'Murrayfield Stadium is a rugby union stadium located in the Murrayfield area of Edinburgh, Scotland. The stadium is owned by the Scottish Rugby Union (SRU) who has its headquarters based at the stadium, and is the national stadium of the Scotland national rugby union team. With a seating capacity of 67,144, it is the largest stadium in Scotland, the fifth largest in the United Kingdom, and the twenty-second largest in Europe.
 
 It officially opened on 21 March 1925 with a game between Scotland and England. The game was won by Scotland who came out victorious following a Grand Slam. The stadium hosts most of Scotland\'s home test matches and the Scottish Hydro Electric Cup final, as well as URC and European Rugby Champions Cup matches.
 
 Photo: Calum404 (CC BY-SA 4.0); Daniel from Galashiels, United Kingdom (CC BY 2.0); StaraBlazkova at Czech Wikipedia (CC BY-SA 3.0)' WHERE post_id = 1294;
-UPDATE post_map_cards SET description = 'The Edinburgh Festival Theatre is a performing arts venue located on Nicolson Street in Edinburgh, Scotland. It is used primarily for performances of opera and ballet, large-scale musical events, and touring groups. After its most recent renovation in 1994, it seats 1,915. It is one of the major venues of the annual summer Edinburgh International Festival and is the Edinburgh venue for the Scottish Opera and the Scottish Ballet.
-
-Photo: No machine-readable author provided. Globaltraveller assumed (based on copyright claims). (CC BY-SA 3.0); Kleinzach (CC BY-SA 4.0); Stormy clouds (CC BY-SA 4.0)' WHERE post_id = 1295;
 UPDATE post_map_cards SET description = 'Glasgow Cathedral is a parish church of the Church of Scotland in Glasgow, Scotland. It was the cathedral church of the Archbishop of Glasgow, and the mother church of the Archdiocese of Glasgow and the province of Glasgow, from the 12th century until the Scottish Reformation in the 16th century. It is the oldest cathedral in mainland Scotland and the oldest building in Glasgow. With St Magnus Cathedral in Orkney, they are the only medieval cathedrals in Scotland to have survived the Reformation virtually intact. The medieval Bishop\'s Castle stood to the west of the cathedral until 1789. Although notionally it lies within the Townhead area of the city, the Cathedral grounds and the neighboring Necropolis are considered to be their own district within the city.
 
 The cathedral is dedicated to Saint Mungo (also known as Kentigern), the patron saint of Glasgow, whose tomb lies at the centre of the building\'s Lower Church. The first stone cathedral was dedicated in 1136, in the presence of David I. Fragments of this building have been found beneath the structure of the present cathedral, which was dedicated in 1197, although much of the present cathedral dates from a major rebuilding in the 13th century. Following its foundation in 1451, the University of Glasgow held its first classes within the cathedral\'s chapter house. After the Reformation, Glasgow Cathedral was internally partitioned to serve three separate congregations. The early 19th century saw a growing appreciation of the cathedral\'s medieval architecture, and by 1835 both the Outer High and Barony congregations had moved elsewhere in the city, allowing the restoration of the cathedral to something approaching its former glory.
@@ -6237,60 +6217,14 @@ UPDATE post_map_cards SET description = 'Universal Studios Japan is a theme park
 Over 11 million guests visited the park in its opening year, making it the fastest theme park to reach the 10 million guest milestone at the time. In 2023, USJ hosted 16 million visitors, making it the third-most visited theme park in the world behind Magic Kingdom and Disneyland, and the most visited theme park in Asia.
 
 Photo: Momopy~commonswiki (CC BY-SA 3.0); Christophe95 (CC BY-SA 4.0); Terence Ong (CC BY 2.5)' WHERE post_id = 1620;
-UPDATE post_map_cards SET description = 'Dōtonbori or Dōtombori is a district in Osaka, Japan. Known as one of Osaka\'s principal tourist and nightlife areas, the area runs along the Dōtonbori canal from Dōtonboribashi Bridge to Nipponbashi Bridge in the Namba district of the city\'s Chūō ward. Historically a theater district, it is now a popular nightlife and entertainment area characterized by its eccentric atmosphere and large illuminated signboards.
-
-One of the area\'s most prominent features is an illuminated billboard for confectionery company Glico displaying the image of a runner crossing a finishing line, which is often seen as an icon of Osaka within Japan.
-
-Photo: Naniwa Meisho (Public domain); Nkon21 (CC0); MASA (CC BY-SA 3.0)' WHERE post_id = 1621;
-UPDATE post_map_cards SET description = 'Shinsaibashi is a district in the Chūō-ku ward of Osaka, Japan and the city\'s main shopping area. At its center is Shinsaibashi-suji, a covered shopping street, that is north of Dōtonbori and Sōemonchō, and parallel and east of Mido-suji street. Associated with Shinsaibashi, and west of Mido-suji street, is Amerika-mura, an American-themed shopping area and center of Osaka\'s youth culture. Major stores and boutiques concentrates are found around the area. Shinsaibashi is easily accessed via the subway.
-
-Photo: Oilstreet (CC BY 2.5); Wing1990hk (CC BY 3.0); 撮影者不詳 オランダ国立ライデン大学提供 (Public domain)' WHERE post_id = 1622;
-UPDATE post_map_cards SET description = 'The Osaka Aquarium Kaiyukan is an aquarium located in the ward of Minato in Osaka, Osaka Prefecture, Japan, near Osaka Bay. When it first opened, it was the largest public aquarium in the world.
-
-It is a member of the Japanese Association of Zoos and Aquariums, and the aquarium is accredited as a Museum-equivalent facilities by the Museum Act from Ministry of Education, Culture, Sports, Science and Technology.
-
-Photo: Teddy Yoshida (Harajuku at English Wikipedia) (Public domain); 663highland (CC BY 2.5); Geoff Stearns (CC BY 2.0)' WHERE post_id = 1623;
-UPDATE post_map_cards SET description = 'Shinsekai is an old neighbourhood located next to south Osaka City\'s downtown "Minami" area. The neighbourhood was created in 1912 with New York as a model for its southern half and Paris for its northern half. At this location, a Luna Park amusement park operated from 1912 until it closed in 1923. The centrepiece of the neighbourhood was Tsutenkaku Tower (the "tower reaching to heaven").
-
-As a result of minimal redevelopment after World War II, the area has become one of Japan\'s poorest.
-
-Photo: titanium22 from Osaka (CC BY-SA 2.0)' WHERE post_id = 1624;
-UPDATE post_map_cards SET description = '344219N 1352923E  34.70528N 135.48972E  34.70528; 135.48972
-
-The Umeda Sky Building is a two-tower mixed-use skyscraper in Osaka, Japan. Located on the outskirts of the Umeda business district in Kita-ku, Osaka, the Umeda Sky Building consists of two 40-story towers interconnected at their two uppermost stories via glass bridges with escalators and elevators that cross an open atrium space. It is currently the fifteenth-tallest building in the prefecture.
-
-Photo: Kakidai (CC BY-SA 4.0); Grueslayer (CC BY-SA 4.0); KimonBerlin (CC BY-SA 2.0)' WHERE post_id = 1625;
 UPDATE post_map_cards SET description = 'Sumiyoshi-taisha, also known as Sumiyoshi Grand Shrine, is a Shinto shrine in Sumiyoshi-ku, Osaka, Osaka Prefecture, Japan. It is the main shrine of all the Sumiyoshi shrines. It gives its name to a style of shrine architecture known as Sumiyoshi-zukuri.
 
 The shrine is called Sumiyoshi-san or Sumiyossan by the locals, and is famous for the large crowds that come to the shrine on New Year\'s Day for hatsumōde. Sumiyoshi taisha enshrines the Sumiyoshi sanjin (Sokotsutsu no Ono-mikoto, Nakatsutsu no Ono-mikoto, and Uwatsutsu no Ono-mikoto) (collectively known as the "Sumiyoshi Ōkami") and Okinagatarashi-hime no Mikoto.
 
 Photo: Saigen Jiro (CC0); KENPEI (CC BY-SA 3.0); Mc681 (CC BY-SA 4.0)' WHERE post_id = 1627;
-UPDATE post_map_cards SET description = 'Abeno Harukas is a multi-purpose commercial facility in Abenosuji Itchome, Abeno-ku, Osaka, Japan. It consists of the New Annex, Eastern Annex and a supertall skyscraper, Abeno Harukas. The building is 300 m (984 ft) tall and has 62 floors; it was the tallest building in Japan from 2014 to 2023, until Azabudai Hills Mori JP Tower seized the title.
-
-The facility is the planned alternative station building of Ōsaka Abenobashi Station, the terminal of Kintetsu Minami Osaka Line. It contains Kintetsu Department Store Main Store Abeno Harukas, Marriott International hotel, university campuses and Sharp Corporation sales office. Its floor space is around 100,000 m2 (1,100,000 sq ft), making it one of the biggest department stores in Japan. Construction was completed on March 7, 2014.
-
-Photo: J o (CC BY-SA 4.0); Mc681 (CC BY-SA 4.0); J o (CC BY-SA 4.0)' WHERE post_id = 1628;
 UPDATE post_map_cards SET description = 'Shitennō-ji is a Buddhist temple in Ōsaka, Japan. It is also known as Arahaka-ji, Nanba-ji, or Mitsu-ji. The temple is sometimes regarded as the first Buddhist and oldest officially administered temple in Japan, although the temple complex and buildings have been rebuilt over the centuries, with the last reconstruction taking place in 1963. Shortly after World War II, Shitennō-ji became independent of the parent Tendai sect and formed the Wa sect of Buddhism.
 
 Photo: 663highland (CC BY 2.5); Nesnad (CC BY-SA 4.0); Yanajin33 (CC BY-SA 3.0)' WHERE post_id = 1629;
-UPDATE post_map_cards SET description = 'Osaka Museum of History opened in Chūō-ku, Ōsaka, Japan in 2001. The project architects were César Pelli  Associates and Nihon Sekkei. It is adjoined by an atrium to the NHK Osaka Broadcasting Center, which was designed by the same architects and built at the same time. The former Osaka City Museum closed earlier the same year. Over four floors, the displays tell the history of the city from the time of the Former Naniwa Palace, located in the area now occupied by the museum. Remains of a warehouse, walls, and water supply facilities for the palace are also on view in the basement. In 2005, the collection numbered some 100,000 objects. By 2016, it had grown to 138,595 objects, while a further 17,632 items were on deposit at the museum.
-
-Photo: そらみみ (Soramimi) (CC BY-SA 4.0)' WHERE post_id = 1630;
-UPDATE post_map_cards SET description = 'The National Museum of Art, Osaka is a subterranean Japanese art museum located on the island of Nakanoshima, located between the Dōjima River and the Tosabori River, about 10 minutes west of Higobashi Station in central Osaka.
-
-The official Japanese title of the museum translates as the "National Museum of International Art". The museum is also known by the English acronym NMAO (National Museum of Art, Osaka).
-
-Photo: 663highland (CC BY 2.5)' WHERE post_id = 1631;
-UPDATE post_map_cards SET description = 'Festival Hall is a concert hall located in Kita-ku, Osaka, Japan. It is run by the Asahi Building Co., Ltd., a Japanese real estate company controlling properties of the Asahi Shimbun Company, and is housed in the Festival Tower, a skyscraper. The opening ceremony for the new hall was held on April 3, 2013. The new hall has 2,700 seats, the same number of seats as the original hall.
-
-The hall is home to the Osaka Philharmonic Orchestra. The orchestra moved its home to Symphony Hall in Oyodo-minami, Kita-ku after the original Festival Hall was closed in 2008, then moved again to the new Festival Hall one year after its opening.
-
-Photo: Oilstreet (CC BY 2.5)' WHERE post_id = 1632;
-UPDATE post_map_cards SET description = 'Suita City Football Stadium, currently known as Panasonic Stadium Suita for sponsorship reasons. is a stadium located in the city of Suita, Osaka Prefecture, Japan. It has a capacity of 39,694.
-
-The stadium is home of the J1 League football club Gamba Osaka since 2016 and replaced Expo \'70 Commemorative Stadium, which had been their main stadium between 1991 and 2015.
-
-Photo: Waka77 (CC0); Kanko3131 (CC BY-SA 4.0)' WHERE post_id = 1633;
 UPDATE post_map_cards SET description = 'The Nagoya Dome (ナゴヤドーム), known as Vantelin Dome Nagoya (バンテリンドーム ナゴヤ) for sponsorship reasons, is a domed baseball stadium, constructed in 1997, located in the city of Nagoya, Japan. The dome has the capacity of 36,418 for sports and 49,000 for concerts. It is an example of a geodesic dome.
 
 It has served as the home stadium for the Chunichi Dragons professional baseball team since its opening. It has also served the Orix BlueWave and Kintetsu Buffaloes, and hosted a single group stage game of the 2024 WBSC Premier12.
@@ -6336,19 +6270,6 @@ Photo: Pontafon (CC BY-SA 3.0); Chester Siu (CC BY-SA 3.0)' WHERE post_id = 1650
 UPDATE post_map_cards SET description = 'Mizuho PayPay Dome Fukuoka, officially the Fukuoka Dome is a domed baseball field located in Chūō-ku, Fukuoka, Japan. Home to the Fukuoka SoftBank Hawks, the 40,000 seat stadium was built in 1993 and was originally named Fukuoka Dome. It is Japan\'s first stadium built with a retractable roof, and was the only baseball stadium in Japan with one until the opening of Es Con Field Hokkaido in 2023. It is the largest primary home stadium in the Pacific League.
 
 Photo: Nesnad (CC BY 4.0); Tece Onir (CC BY 3.0); Nesnad (CC BY 4.0)' WHERE post_id = 1651;
-UPDATE post_map_cards SET description = 'Nara Park is a public park located in the city of Nara, Japan, at the foot of Mount Wakakusa. Established in 1880, it is one of the oldest parks in Japan. Administratively, the park is under the control of Nara Prefecture. The park is one of the "Places of Scenic Beauty" designated by the Ministry of Education, Culture, Sports, Science and Technology (MEXT). Over 1,200 wild sika deer freely roaming around in the park are also under designation of MEXT, classified as natural treasure. While the official size of the park is about 502 hectares (1,240 acres), the area including the grounds of Tōdai-ji, Kōfuku-ji, Kasuga Grand Shrine and Nara National Museum, which are either on the edge or surrounded by Nara Park, is as large as 660 hectares (1,600 acres).
-
-Nara Park began in 1880, when a 14-hectare area within the grounds of Kōfuku-ji, which was government-owned land, was designated as a park. In 1889, Todai-ji, Kasugano and mountainous areas such as Mount Wakakusa were added, expanding the park to 535 hectares. From 1949 to 1951, the park designation within the temple grounds was revoked, reducing the area to 500 hectares. In 1960, it was officially designated as Nara Park under the Urban Park Act, with an area of 502 hectares.
-
-Photo: Feri88 (CC BY 3.0); Bob Tan (CC BY-SA 4.0); Oren Rozen (CC BY-SA 4.0)' WHERE post_id = 1652;
-UPDATE post_map_cards SET description = 'Gangō-ji was one of the first Buddhist temples in Japan, and was ranked as one of the powerful Seven Great Temples, in Nara, Japan. It was mostly destroyed in the Muromachi period and the old town of Naramachi occupies most of what was once the temple\'s precincts. Three small portions of the temple have survived to the present day, and each is now a separate temple.
-
-Photo: Bernard Gagnon (CC BY-SA 3.0); 663highland (CC BY 2.5); Bernard Gagnon (CC BY-SA 3.0)' WHERE post_id = 1653;
-UPDATE post_map_cards SET description = 'Yakushi-ji is one of the most famous imperial and ancient Buddhist temples in Japan, and was once one of the Seven Great Temples of Nanto, located in Nara. The temple is the headquarters of the Hossō school of Japanese Buddhism. Yakushi-ji is one of the sites that are collectively inscribed as a UNESCO World Heritage Site under the name of "Historic Monuments of Ancient Nara."
-
-The temple\'s main object of veneration, Yakushi Nyorai, also known as "The Medicine Buddha", was one of the first Buddhist Deities to arrive in Japan from China in 680, and gives the temple its name.
-
-Photo: 663highland (CC BY 2.5); 663highland (CC BY 2.5); 663highland (CC BY 2.5)' WHERE post_id = 1654;
 UPDATE post_map_cards SET description = 'Nara Dreamland, or just simply Dreamland, was a theme park near Nara, Japan, heavily inspired by Disneyland in California. It opened in 1961 and was in continuous operation until its permanent closure in 2006 as a result of falling attendance due to the overwhelming popularity of newer amusement parks in Japan. The park was left abandoned until it was demolished between October 2016 and December 2017.
 
 Photo: Ivan Lucas (CC BY-SA 2.5); 国土交通省国土地理院 (Attribution)' WHERE post_id = 1655;
@@ -6814,19 +6735,6 @@ Photo: Nick Bramhall from Tillicoultry, Scotland (CC BY-SA 2.0); Donovan Govan. 
 UPDATE post_map_cards SET description = 'Coronet Peak is a commercial skifield in Queenstown, New Zealand located seven kilometres west of Arrowtown, on the southern slopes of the 1,649-metre peak which shares its name. A popular ski resort in the Southern Hemisphere, Coronet Peak offers a long snow season, well received skiing and snowboarding terrain and lift systems.
 
 Photo: André Richard Chalmers (CC BY-SA 3.0); Ted Percival from Orem, Utah, United States of America (CC BY 2.0)' WHERE post_id = 1780;
-UPDATE post_map_cards SET description = 'Milford Sound is a fiord in the south west of New Zealand\'s South Island within Fiordland National Park, Piopiotahi (Milford Sound) Marine Reserve, and the Te Wahipounamu World Heritage site. It has been judged the world\'s top travel destination in an international survey and is acclaimed as New Zealand\'s most famous tourist destination. Rudyard Kipling called it the eighth Wonder of the World. The fiord is most commonly accessed via road (State Highway 94) by tour coach, with the road terminating at a small village also called Milford Sound.
-
-Photo: Maros M r a z (Maros) (CC BY-SA 3.0); Delusion23 (CC BY-SA 3.0); Pseudopanax at English Wikipedia (CC BY 3.0)' WHERE post_id = 1781;
-UPDATE post_map_cards SET description = 'The Queenstown Gardens, located next to the town of Queenstown, New Zealand, is a botanical garden which contains a variety of exotic and native trees and plants as well as a large pond and a range of facilities. The facilities in the garden include a children\'s playground, tennis, lawn bowls, skate boarding, BMX biking, skating, Parkrun, disc golf and ice skatingice hockey. In winter for about four days it becomes the site of the LUMA Southern Lights Festival.
-
-There is a variety of trails in the garden with views of the surrounding mountains and of Lake Wakatipu and the Frankton Arm as well as Queenstown itself.
-
-Photo: André Richard Chalmers (CC BY-SA 4.0); André Richard Chalmers (CC BY-SA 4.0); Steve Collis from Melbourne, Australia (CC BY 2.0)' WHERE post_id = 1782;
-UPDATE post_map_cards SET description = 'Lake Hayes is a small lake in the Wakatipu Basin in Central Otago, in New Zealand\'s South Island. It is located close to the towns of Arrowtown and Queenstown.
-
-The southern end of the lake is close to State Highway 6, while the western side is bordered by Slope Hill. The main area for access to the lake is the northern end which has a large grassed area for recreation activities.
-
-Photo: Seanallen (CC BY-SA 3.0)' WHERE post_id = 1783;
 UPDATE post_map_cards SET description = 'The Alice Springs Desert Park is an environmental education facility and wildlife park in Alice Springs in the Northern Territory of Australia.
 
 It is sited on 1,300 hectares (3,212 acres), with a core area of 52 hectares (128 acres). It is an institutional member of the Zoo and Aquarium Association and Botanic Gardens Conservation International.
@@ -6860,9 +6768,6 @@ UPDATE post_map_cards SET description = 'Fremantle Oval, also known by naming ri
 South Fremantle Football Club train and play their home WAFL matches at the ground and are one of the few sporting organisations in Western Australia to own their club rooms freehold, rather than on a long-term lease. Additionally, the oval is the primary home ground of the Fremantle Dockers women\'s team. The ground was also the training and administrative home of the Fremantle Football Club until February 2017. the ground has also hosted pre-season matches featuring Fremantle. Since 2021, the ground has been A-League team Perth Glory\'s headquarters and training base.
 
 Photo: User:Gnangarra (CC BY 2.5 au); Tamsin Slater (CC BY-SA 2.0); Docker dave (talk) (Public domain)' WHERE post_id = 1791;
-UPDATE post_map_cards SET description = 'Cable Beach is a 22 km (14 mi) stretch of white sand beach on the eastern Indian Ocean and the name of the surrounding suburb in Broome, Western Australia. Cable Beach was named after the telegraph cable laid between Broome and Java in 1889. Low cliffs of red ochre rise behind the very flat and wide beach, with waves that are mostly gentle in the dry season from May to October. In 2016, the population was 5,436.
-
-Photo: Zoharby (CC BY-SA 3.0)' WHERE post_id = 1792;
 UPDATE post_map_cards SET description = 'Gantheaume Point is a promontory about 6 kilometres (3.7 mi) from Broome, Western Australia.
 
 It was named on 24 July 1801 for Honoré Joseph Antoine Ganteaume, by Nicolas Baudin during the Baudin expedition to Australia: this was a French expedition to map the coast of Australia, then known as New Holland.
@@ -6906,6 +6811,1518 @@ There are two tourist resorts on the island: the original resort at the southern
 Photo: S. Newrick (CC BY-SA 4.0)' WHERE post_id = 1801;
 
 -- =============================================
--- COMPLETE
--- Total description updates: 1526
+-- PART 4: UPDATE VENUE NAMES AND ADDRESSES
 -- =============================================
+
+UPDATE post_map_cards SET venue_name = 'Sydney Opera House', address_line = 'Bennelong Point, Sydney NSW 2000, Australia' WHERE post_id = 21;
+UPDATE post_map_cards SET venue_name = 'Sydney Hbr Brg', address_line = 'Sydney Hbr Brg, Sydney NSW, Australia' WHERE post_id = 22;
+UPDATE post_map_cards SET venue_name = 'Bondi Beach', address_line = 'Bondi Beach, NSW 2026, Australia' WHERE post_id = 23;
+UPDATE post_map_cards SET venue_name = 'Taronga Zoo Sydney', address_line = 'Bradleys Head Rd, Mosman NSW 2088, Australia' WHERE post_id = 24;
+UPDATE post_map_cards SET venue_name = 'Luna Park Sydney', address_line = '1 Olympic Dr, Milsons Point NSW 2061, Australia' WHERE post_id = 25;
+UPDATE post_map_cards SET venue_name = 'Art Gallery of New South Wales', address_line = 'Art Gallery Rd, Sydney NSW 2000, Australia' WHERE post_id = 26;
+UPDATE post_map_cards SET venue_name = 'Australian Museum', address_line = 'Level 4/1 William St, Darlinghurst NSW 2010, Australia' WHERE post_id = 27;
+UPDATE post_map_cards SET venue_name = 'Sydney Cricket Ground', address_line = '4 Driver Ave, Moore Park NSW 2021, Australia' WHERE post_id = 28;
+UPDATE post_map_cards SET venue_name = 'Darling Harbour', address_line = 'Sydney NSW 2000, Australia' WHERE post_id = 30;
+UPDATE post_map_cards SET venue_name = 'Sydney Tower Eye', address_line = 'Westfield Sydney, Level 5/108 Market St, Sydney NSW 2000, Australia' WHERE post_id = 31;
+UPDATE post_map_cards SET venue_name = 'Queen Victoria Building', address_line = '455 George St, Sydney NSW 2000, Australia' WHERE post_id = 32;
+UPDATE post_map_cards SET venue_name = 'Powerhouse Ultimo', address_line = 'Level 3/500 Harris St, Ultimo NSW 2007, Australia' WHERE post_id = 34;
+UPDATE post_map_cards SET venue_name = 'Centennial Park', address_line = 'Centennial Park NSW 2021, Australia' WHERE post_id = 36;
+UPDATE post_map_cards SET venue_name = 'Blue Mountains National Park', address_line = 'New South Wales, Australia' WHERE post_id = 37;
+UPDATE post_map_cards SET venue_name = 'Melbourne Cricket Ground', address_line = 'Brunton Ave, Richmond VIC 3002, Australia' WHERE post_id = 38;
+UPDATE post_map_cards SET venue_name = 'Fed Square', address_line = 'Swanston St & Flinders St, Melbourne VIC 3000, Australia' WHERE post_id = 39;
+UPDATE post_map_cards SET venue_name = 'National Gallery of Victoria', address_line = '180 St Kilda Rd, Melbourne VIC 3006, Australia' WHERE post_id = 40;
+UPDATE post_map_cards SET venue_name = 'Melbourne Museum', address_line = '11 Nicholson St, Carlton VIC 3053, Australia' WHERE post_id = 41;
+UPDATE post_map_cards SET venue_name = 'Queen Victoria Market', address_line = 'Queen St, Melbourne VIC 3000, Australia' WHERE post_id = 42;
+UPDATE post_map_cards SET venue_name = 'Royal Botanic Gardens Victoria - Melbourne Gardens', address_line = 'Melbourne VIC 3004, Australia' WHERE post_id = 43;
+UPDATE post_map_cards SET venue_name = 'St Paul\'s Cathedral, Melbourne', address_line = '200 Flinders St, Melbourne VIC 3000, Australia' WHERE post_id = 44;
+UPDATE post_map_cards SET venue_name = 'Flinders Street', address_line = 'Flinders St, Melbourne VIC 3000, Australia' WHERE post_id = 45;
+UPDATE post_map_cards SET venue_name = 'Melbourne Zoo', address_line = 'Elliott Ave, Parkville VIC 3052, Australia' WHERE post_id = 46;
+UPDATE post_map_cards SET venue_name = 'Shrine of Remembrance', address_line = 'Birdwood Ave, Melbourne VIC 3001, Australia' WHERE post_id = 48;
+UPDATE post_map_cards SET venue_name = 'State Library Victoria', address_line = '328 Swanston St, Melbourne VIC 3000, Australia' WHERE post_id = 49;
+UPDATE post_map_cards SET venue_name = 'Great Ocean Rd', address_line = 'Great Ocean Rd, Victoria, Australia' WHERE post_id = 51;
+UPDATE post_map_cards SET venue_name = 'Twelve Apostles', address_line = 'Great Ocean Rd & Booringa Rd, Princetown VIC 3269, Australia' WHERE post_id = 52;
+UPDATE post_map_cards SET venue_name = 'Phillip Island', address_line = 'Phillip Island, Victoria, Australia' WHERE post_id = 53;
+UPDATE post_map_cards SET venue_name = 'Healesville Sanctuary (Zoos Victoria)', address_line = 'Glen Eadie Ave, Healesville VIC 3777, Australia' WHERE post_id = 54;
+UPDATE post_map_cards SET venue_name = 'Docklands', address_line = 'Docklands VIC 3008, Australia' WHERE post_id = 55;
+UPDATE post_map_cards SET venue_name = 'South Bank Parklands', address_line = 'Clem Jones Promenade, South Brisbane QLD 4101, Australia' WHERE post_id = 56;
+UPDATE post_map_cards SET venue_name = 'Queensland Art Gallery', address_line = 'Stanley Pl, South Brisbane QLD 4101, Australia' WHERE post_id = 58;
+UPDATE post_map_cards SET venue_name = 'Brisbane City Hall', address_line = '64 Adelaide St, Brisbane City QLD 4000, Australia' WHERE post_id = 59;
+UPDATE post_map_cards SET venue_name = 'Story Bridge', address_line = 'State Route 15, New Farm QLD 4169, Australia' WHERE post_id = 60;
+UPDATE post_map_cards SET venue_name = 'The Wheel of Brisbane', address_line = 'Russell St, South Brisbane QLD 4101, Australia' WHERE post_id = 61;
+UPDATE post_map_cards SET venue_name = 'The Gabba', address_line = 'Vulture St, Woolloongabba QLD 4102, Australia' WHERE post_id = 62;
+UPDATE post_map_cards SET venue_name = 'Kangaroo Point Cliffs Park (River Terrace Park)', address_line = '29 River Terrace, Kangaroo Point QLD 4169, Australia' WHERE post_id = 63;
+UPDATE post_map_cards SET venue_name = 'Mount Coot-tha', address_line = 'Mount Coot-tha QLD, Australia' WHERE post_id = 64;
+UPDATE post_map_cards SET venue_name = 'Suncorp Stadium', address_line = '40 Castlemaine St, Milton QLD 4064, Australia' WHERE post_id = 65;
+UPDATE post_map_cards SET venue_name = 'Streets Beach', address_line = 'Stanley St Plaza, South Brisbane QLD 4101, Australia' WHERE post_id = 66;
+UPDATE post_map_cards SET venue_name = 'Treasury Hotel Brisbane', address_line = '130 William St, Brisbane City QLD 4000, Australia' WHERE post_id = 68;
+UPDATE post_map_cards SET venue_name = 'Wet\'n\'Wild Gold Coast', address_line = 'Pacific Mwy, Oxenford QLD 4210, Australia' WHERE post_id = 69;
+UPDATE post_map_cards SET venue_name = 'WhiteWater World', address_line = '1 Dreamworld Pkwy, Coomera QLD 4209, Australia' WHERE post_id = 70;
+UPDATE post_map_cards SET venue_name = 'Currumbin Wildlife Sanctuary', address_line = '28 Tomewin St, Currumbin QLD 4223, Australia' WHERE post_id = 71;
+UPDATE post_map_cards SET venue_name = 'Springbrook National Park', address_line = 'Springbrook QLD 4213, Australia' WHERE post_id = 74;
+UPDATE post_map_cards SET venue_name = 'Paradise Country', address_line = 'Production Dr, Oxenford QLD 4210, Australia' WHERE post_id = 76;
+UPDATE post_map_cards SET venue_name = 'Infinity Attraction', address_line = 'G31 Chevron Renaissance Centre, 3240 Surfers Paradise Blvd, Surfers Paradise QLD 4217, Australia' WHERE post_id = 77;
+UPDATE post_map_cards SET venue_name = 'Rottnest Island', address_line = 'Rottnest Island, WA, Australia' WHERE post_id = 80;
+UPDATE post_map_cards SET venue_name = 'Fremantle Prison', address_line = '1 The Terrace, Fremantle WA 6160, Australia' WHERE post_id = 81;
+UPDATE post_map_cards SET venue_name = 'The Perth Mint', address_line = '310 Hay St, East Perth WA 6004, Australia' WHERE post_id = 82;
+UPDATE post_map_cards SET venue_name = 'The Bell Tower', address_line = 'Barrack Square, Riverside Dr, Perth WA 6000, Australia' WHERE post_id = 83;
+UPDATE post_map_cards SET venue_name = 'Optus Stadium', address_line = '333 Victoria Park Dr, Burswood WA 6100, Australia' WHERE post_id = 84;
+UPDATE post_map_cards SET venue_name = 'Perth Zoo', address_line = '20 Labouchere Rd, South Perth WA 6151, Australia' WHERE post_id = 85;
+UPDATE post_map_cards SET venue_name = 'The Art Gallery of Western Australia | AGWA', address_line = 'Perth Cultural Centre, Perth WA 6000, Australia' WHERE post_id = 86;
+UPDATE post_map_cards SET venue_name = 'WA Museum Boola Bardip', address_line = 'Perth Cultural Centre, Perth WA 6000, Australia' WHERE post_id = 87;
+UPDATE post_map_cards SET venue_name = 'Penguin Island', address_line = 'Penguin Island, Western Australia, Australia' WHERE post_id = 88;
+UPDATE post_map_cards SET venue_name = 'Yanchep National Park', address_line = 'Yanchep Beach Rd &, Indian Ocean Dr, Yanchep WA 6035, Australia' WHERE post_id = 90;
+UPDATE post_map_cards SET venue_name = 'Adelaide Oval', address_line = 'War Memorial Dr, North Adelaide SA 5006, Australia' WHERE post_id = 91;
+UPDATE post_map_cards SET venue_name = 'South Australian Museum', address_line = 'North Terrace, Adelaide SA 5000, Australia' WHERE post_id = 92;
+UPDATE post_map_cards SET venue_name = 'Art Gallery of South Australia', address_line = '490 North Terrace, Adelaide SA 5000, Australia' WHERE post_id = 93;
+UPDATE post_map_cards SET venue_name = 'Adelaide Botanic Garden', address_line = 'North Terrace, Adelaide SA 5000, Australia' WHERE post_id = 94;
+UPDATE post_map_cards SET venue_name = 'Adelaide Zoo', address_line = 'Plane Tree Dr, Adelaide SA 5000, Australia' WHERE post_id = 95;
+UPDATE post_map_cards SET venue_name = 'North Terrace', address_line = 'North Terrace, Adelaide SA, Australia' WHERE post_id = 96;
+UPDATE post_map_cards SET venue_name = 'Adelaide Festival Centre', address_line = 'King William Rd, Adelaide SA 5000, Australia' WHERE post_id = 97;
+UPDATE post_map_cards SET venue_name = 'Mount Lofty', address_line = 'Mount Lofty, Cleland SA 5152, Australia' WHERE post_id = 98;
+UPDATE post_map_cards SET venue_name = 'Barossa Valley', address_line = 'Barossa Valley, SA, Australia' WHERE post_id = 99;
+UPDATE post_map_cards SET venue_name = 'Adelaide Gaol', address_line = '18 Gaol Rd, Adelaide SA 5000, Australia' WHERE post_id = 100;
+UPDATE post_map_cards SET venue_name = 'Monarto Safari Park', address_line = '63 Monarto Rd, Monarto SA 5254, Australia' WHERE post_id = 101;
+UPDATE post_map_cards SET venue_name = 'Cairns', address_line = 'Cairns QLD, Australia' WHERE post_id = 102;
+UPDATE post_map_cards SET venue_name = 'Kuranda Scenic Railway', address_line = 'Kuranda Scenic Railway, Queensland, Australia' WHERE post_id = 103;
+UPDATE post_map_cards SET venue_name = 'Daintree National Park', address_line = 'Queensland, Australia' WHERE post_id = 104;
+UPDATE post_map_cards SET venue_name = 'Port Douglas', address_line = 'Port Douglas QLD 4877, Australia' WHERE post_id = 106;
+UPDATE post_map_cards SET venue_name = 'Hartley\'s Crocodile Adventures', address_line = '4019 Captain Cook Hwy, Wangetti QLD 4877, Australia' WHERE post_id = 107;
+UPDATE post_map_cards SET venue_name = 'Port Arthur Historic Site', address_line = 'Historic Site, Visitor Centre, Port Arthur TAS 7182, Australia' WHERE post_id = 109;
+UPDATE post_map_cards SET venue_name = 'Bruny Island', address_line = 'Bruny Island, Tasmania, Australia' WHERE post_id = 110;
+UPDATE post_map_cards SET venue_name = 'Battery Point', address_line = 'Battery Point TAS 7004, Australia' WHERE post_id = 111;
+UPDATE post_map_cards SET venue_name = 'Cascade Brewery Bar', address_line = '140 Cascade Rd, South Hobart TAS 7004, Australia' WHERE post_id = 112;
+UPDATE post_map_cards SET venue_name = 'Bonorong Wildlife Sanctuary', address_line = '593 Briggs Rd, Brighton TAS 7030, Australia' WHERE post_id = 113;
+UPDATE post_map_cards SET venue_name = 'Freycinet National Park', address_line = 'Gray TAS 7215, Australia' WHERE post_id = 114;
+UPDATE post_map_cards SET venue_name = 'Cradle Mountain', address_line = 'Cradle Mountain, TAS 7306, Australia' WHERE post_id = 115;
+UPDATE post_map_cards SET venue_name = 'Salamanca Pl', address_line = 'Salamanca Pl, Hobart TAS, Australia' WHERE post_id = 116;
+UPDATE post_map_cards SET venue_name = 'Auckland Zoo', address_line = 'Motions Rd, Western Springs, Auckland 1022, New Zealand' WHERE post_id = 118;
+UPDATE post_map_cards SET venue_name = 'One Tree Hill', address_line = 'One Tree Hill, Auckland, New Zealand' WHERE post_id = 119;
+UPDATE post_map_cards SET venue_name = 'Waiheke Island', address_line = 'Waiheke Island, Auckland, New Zealand' WHERE post_id = 120;
+UPDATE post_map_cards SET venue_name = 'Rangitoto Island', address_line = 'Rangitoto Island, Auckland 1010, New Zealand' WHERE post_id = 121;
+UPDATE post_map_cards SET venue_name = 'Auckland Art Gallery', address_line = 'Wellesley Street East, Auckland Central, Auckland 1010, New Zealand' WHERE post_id = 122;
+UPDATE post_map_cards SET venue_name = 'Viaduct Harbour', address_line = 'Viaduct Harbour, Auckland Central, Auckland 1010, New Zealand' WHERE post_id = 123;
+UPDATE post_map_cards SET venue_name = 'Mount Eden', address_line = 'Mount Eden, Auckland, New Zealand' WHERE post_id = 124;
+UPDATE post_map_cards SET venue_name = 'New Zealand Maritime Museum', address_line = 'Corner of Quay and Hobson Street, Auckland 1140, New Zealand' WHERE post_id = 125;
+UPDATE post_map_cards SET venue_name = 'Mission Bay', address_line = 'Mission Bay, Auckland 1071, New Zealand' WHERE post_id = 126;
+UPDATE post_map_cards SET venue_name = 'Piha', address_line = 'Piha 0772, New Zealand' WHERE post_id = 127;
+UPDATE post_map_cards SET venue_name = 'Eden Park', address_line = '42 Reimers Avenue, Kingsland, Auckland 1024, New Zealand' WHERE post_id = 128;
+UPDATE post_map_cards SET venue_name = 'Te Whatu Stardome | Observatory & Planetarium', address_line = '670 Manukau Road, Epsom, Auckland 1023, New Zealand' WHERE post_id = 129;
+UPDATE post_map_cards SET venue_name = 'MOTAT Museum of Transport and Technology', address_line = '805 Great North Road, Western Springs, Auckland 1022, New Zealand' WHERE post_id = 130;
+UPDATE post_map_cards SET venue_name = 'Museum of New Zealand Te Papa Tongarewa', address_line = '55 Cable Street, Te Aro, Wellington 6011, New Zealand' WHERE post_id = 131;
+UPDATE post_map_cards SET venue_name = 'Wellington Cable Car', address_line = '280 Lambton Quay, Wellington Central, Wellington 6011, New Zealand' WHERE post_id = 132;
+UPDATE post_map_cards SET venue_name = 'Wellington Waterfront Walk', address_line = 'Te Aro, Wellington 6011, New Zealand' WHERE post_id = 133;
+UPDATE post_map_cards SET venue_name = 'Oriental Bay', address_line = 'Oriental Bay, Wellington 6011, New Zealand' WHERE post_id = 135;
+UPDATE post_map_cards SET venue_name = 'Weta Workshop', address_line = '21 Camperdown Road, Miramar, Wellington 6022, New Zealand' WHERE post_id = 136;
+UPDATE post_map_cards SET venue_name = 'St James Theatre', address_line = '87/77 Courtenay Place, Te Aro, Wellington 6011, New Zealand' WHERE post_id = 137;
+UPDATE post_map_cards SET venue_name = 'Skyline Queenstown', address_line = '53 Brecon Street, Queenstown 9300, New Zealand' WHERE post_id = 138;
+UPDATE post_map_cards SET venue_name = 'Kawarau Gorge Suspension Bridge', address_line = 'Queenstown Trail, Arrow Junction, New Zealand' WHERE post_id = 139;
+UPDATE post_map_cards SET venue_name = 'Milford Sound / Piopiotahi', address_line = 'Milford Sound / Piopiotahi, Southland Region, New Zealand' WHERE post_id = 141;
+UPDATE post_map_cards SET venue_name = 'Shotover River', address_line = 'Shotover River, Otago Region, New Zealand' WHERE post_id = 142;
+UPDATE post_map_cards SET venue_name = 'Queenstown Gardens', address_line = 'Unnamed Road, 9300, New Zealand' WHERE post_id = 143;
+UPDATE post_map_cards SET venue_name = 'Lake Hayes', address_line = 'Lake Hayes, Lake Hayes Estate 9371, New Zealand' WHERE post_id = 144;
+UPDATE post_map_cards SET venue_name = 'Christchurch Botanic Gardens', address_line = 'Rolleston Avenue, Christchurch Central City, Christchurch 8013, New Zealand' WHERE post_id = 146;
+UPDATE post_map_cards SET venue_name = 'International Antarctic Centre', address_line = 'Corner Roy Place and, Orchard Road, Christchurch Airport, Christchurch 8052, New Zealand' WHERE post_id = 147;
+UPDATE post_map_cards SET venue_name = 'Willowbank Wildlife Reserve', address_line = '60 Hussey Road, Northwood, Christchurch 8051, New Zealand' WHERE post_id = 148;
+UPDATE post_map_cards SET venue_name = 'Orana Wildlife Park', address_line = '793 McLeans Island Road, Harewood, Christchurch 8051, New Zealand' WHERE post_id = 149;
+UPDATE post_map_cards SET venue_name = 'Christchurch Art Gallery Te Puna o Waiwhetū', address_line = '312 Montreal Street, Christchurch Central City, Christchurch 8013, New Zealand' WHERE post_id = 150;
+UPDATE post_map_cards SET venue_name = 'Cardboard Cathedral', address_line = '234 Hereford Street, Christchurch Central City, Christchurch 8011, New Zealand' WHERE post_id = 151;
+UPDATE post_map_cards SET venue_name = 'New Regent Street', address_line = 'New Regent Street, Christchurch Central City, Christchurch 8011, New Zealand' WHERE post_id = 152;
+UPDATE post_map_cards SET venue_name = 'Akaroa Street', address_line = 'Akaroa Street, Christchurch, New Zealand' WHERE post_id = 153;
+UPDATE post_map_cards SET venue_name = 'Port Hills', address_line = 'Port Hills, Cashmere, Christchurch 8022, New Zealand' WHERE post_id = 154;
+UPDATE post_map_cards SET venue_name = 'Lyttelton', address_line = 'Lyttelton, New Zealand' WHERE post_id = 155;
+UPDATE post_map_cards SET venue_name = 'Air Force Museum of New Zealand', address_line = '45 Harvard Avenue, Wigram, Christchurch 8042, New Zealand' WHERE post_id = 156;
+UPDATE post_map_cards SET venue_name = 'The British Museum', address_line = 'Great Russell St, London WC1B 3DG, United Kingdom' WHERE post_id = 157;
+UPDATE post_map_cards SET venue_name = 'Tower of London', address_line = 'London EC3N 4AB, United Kingdom' WHERE post_id = 158;
+UPDATE post_map_cards SET venue_name = 'Buckingham Palace', address_line = 'London SW1A 1AA, United Kingdom' WHERE post_id = 159;
+UPDATE post_map_cards SET venue_name = 'Westminster Abbey', address_line = 'Dean\'s Yard, London SW1P 3PA, United Kingdom' WHERE post_id = 160;
+UPDATE post_map_cards SET venue_name = 'Big Ben', address_line = 'London SW1A 0AA, United Kingdom' WHERE post_id = 161;
+UPDATE post_map_cards SET venue_name = 'London Eye', address_line = 'Riverside Building, County Hall, Westminster Bridge Rd, London SE1 7PB, United Kingdom' WHERE post_id = 162;
+UPDATE post_map_cards SET venue_name = 'Natural History Museum', address_line = 'Cromwell Rd, South Kensington, London SW7 5BD, United Kingdom' WHERE post_id = 163;
+UPDATE post_map_cards SET venue_name = 'Tate Modern', address_line = 'Bankside, London SE1 9TG, United Kingdom' WHERE post_id = 164;
+UPDATE post_map_cards SET venue_name = 'St. Paul\'s Cathedral', address_line = 'St. Paul\'s Churchyard, London EC4M 8AD, United Kingdom' WHERE post_id = 165;
+UPDATE post_map_cards SET venue_name = 'Tower Bridge', address_line = 'Tower Bridge Rd, London SE1 2UP, United Kingdom' WHERE post_id = 166;
+UPDATE post_map_cards SET venue_name = 'Hyde Park', address_line = 'London, United Kingdom' WHERE post_id = 167;
+UPDATE post_map_cards SET venue_name = 'Kensington Palace', address_line = 'Kensington Gardens, London W8 4PX, United Kingdom' WHERE post_id = 168;
+UPDATE post_map_cards SET venue_name = 'Victoria and Albert Museum', address_line = 'Cromwell Rd, London SW7 2RL, United Kingdom' WHERE post_id = 169;
+UPDATE post_map_cards SET venue_name = 'The National Gallery', address_line = 'Trafalgar Square, London WC2N 5DN, United Kingdom' WHERE post_id = 170;
+UPDATE post_map_cards SET venue_name = 'Wembley Stadium', address_line = 'Wembley HA9 0WS, United Kingdom' WHERE post_id = 171;
+UPDATE post_map_cards SET venue_name = 'London Zoo', address_line = 'Outer Cir, London NW1 4RY, United Kingdom' WHERE post_id = 172;
+UPDATE post_map_cards SET venue_name = 'Royal Albert Hall', address_line = 'Kensington Gore, South Kensington, London SW7 2AP, United Kingdom' WHERE post_id = 173;
+UPDATE post_map_cards SET venue_name = 'Shakespeare\'s Globe', address_line = '21 New Globe Walk, London SE1 9DT, United Kingdom' WHERE post_id = 174;
+UPDATE post_map_cards SET venue_name = 'Madame Tussauds London', address_line = 'Marylebone Rd, London NW1 5LR, United Kingdom' WHERE post_id = 175;
+UPDATE post_map_cards SET venue_name = 'The Shard', address_line = '32 London Bridge St, London SE1 9SG, United Kingdom' WHERE post_id = 176;
+UPDATE post_map_cards SET venue_name = 'Eiffel Tower', address_line = 'Av. Gustave Eiffel, 75007 Paris, France' WHERE post_id = 177;
+UPDATE post_map_cards SET venue_name = 'Notre-Dame Cathedral of Paris', address_line = '6 Parvis Notre-Dame - Pl. Jean-Paul II, 75004 Paris, France' WHERE post_id = 178;
+UPDATE post_map_cards SET venue_name = 'Arc de Triomphe', address_line = 'Pl. Charles de Gaulle, 75008 Paris, France' WHERE post_id = 179;
+UPDATE post_map_cards SET venue_name = 'Palace of Versailles', address_line = 'Place d\'Armes, 78000 Versailles, France' WHERE post_id = 180;
+UPDATE post_map_cards SET venue_name = 'Musée d\'Orsay', address_line = 'Esplanade Valéry Giscard d\'Estaing, 75007 Paris, France' WHERE post_id = 181;
+UPDATE post_map_cards SET venue_name = 'Basilique du Sacré-Cœur de Montmartre', address_line = '35 Rue du Chevalier de la Barre, 75018 Paris, France' WHERE post_id = 182;
+UPDATE post_map_cards SET venue_name = 'Av. des Champs-Élysées', address_line = 'Av. des Champs-Élysées, 75008 Paris, France' WHERE post_id = 183;
+UPDATE post_map_cards SET venue_name = 'Montmartre', address_line = 'Montmartre, 75018 Paris, France' WHERE post_id = 184;
+UPDATE post_map_cards SET venue_name = 'The Centre Pompidou', address_line = 'Place Georges-Pompidou, 75004 Paris, France' WHERE post_id = 185;
+UPDATE post_map_cards SET venue_name = 'Jardin du Luxembourg', address_line = '75006 Paris, France' WHERE post_id = 186;
+UPDATE post_map_cards SET venue_name = 'Musée Rodin', address_line = '77 Rue de Varenne, 75007 Paris, France' WHERE post_id = 187;
+UPDATE post_map_cards SET venue_name = 'Palais Garnier', address_line = 'Pl. de l\'Opéra, 75009 Paris, France' WHERE post_id = 188;
+UPDATE post_map_cards SET venue_name = 'Moulin Rouge', address_line = '82 Bd de Clichy, 75018 Paris, France' WHERE post_id = 189;
+UPDATE post_map_cards SET venue_name = 'Disneyland Paris', address_line = 'Bd de Parc, 77700 Coupvray, France' WHERE post_id = 190;
+UPDATE post_map_cards SET venue_name = 'Tuileries Garden', address_line = '75001 Paris, France' WHERE post_id = 191;
+UPDATE post_map_cards SET venue_name = 'Panthéon', address_line = 'Pl. du Panthéon, 75005 Paris, France' WHERE post_id = 192;
+UPDATE post_map_cards SET venue_name = 'Stade de France', address_line = '93200 Saint-Denis, France' WHERE post_id = 193;
+UPDATE post_map_cards SET venue_name = 'Parc des Princes', address_line = '24 Rue du Commandant Guilbaud, 75016 Paris, France' WHERE post_id = 194;
+UPDATE post_map_cards SET venue_name = 'Catacombs of Paris', address_line = '1 Av. du Colonel Henri Rol-Tanguy, 75014 Paris, France' WHERE post_id = 195;
+UPDATE post_map_cards SET venue_name = 'Colosseum', address_line = 'Piazza del Colosseo, 1, 00184 Roma RM, Italy' WHERE post_id = 196;
+UPDATE post_map_cards SET venue_name = 'Pantheon', address_line = 'Piazza della Rotonda, 00186 Roma RM, Italy' WHERE post_id = 197;
+UPDATE post_map_cards SET venue_name = 'Trevi Fountain', address_line = 'Piazza di Trevi, 00187 Roma RM, Italy' WHERE post_id = 198;
+UPDATE post_map_cards SET venue_name = 'Vatican Museums', address_line = '00120 Vatican City' WHERE post_id = 199;
+UPDATE post_map_cards SET venue_name = 'Saint Peter’s Basilica', address_line = 'Piazza San Pietro, 00120 Città del Vaticano, Vatican City' WHERE post_id = 200;
+UPDATE post_map_cards SET venue_name = 'Roman Forum', address_line = '00186 Rome, Metropolitan City of Rome Capital, Italy' WHERE post_id = 201;
+UPDATE post_map_cards SET venue_name = 'Castel Sant\'Angelo', address_line = 'Lungotevere Castello, 50, 00193 Roma RM, Italy' WHERE post_id = 202;
+UPDATE post_map_cards SET venue_name = 'Spanish Steps', address_line = 'Piazza di Spagna, 00187 Roma RM, Italy' WHERE post_id = 203;
+UPDATE post_map_cards SET venue_name = 'Piazza Navona', address_line = 'Piazza Navona, 00186 Roma RM, Italy' WHERE post_id = 204;
+UPDATE post_map_cards SET venue_name = 'Villa Borghese', address_line = '00197 Rome, Metropolitan City of Rome Capital, Italy' WHERE post_id = 205;
+UPDATE post_map_cards SET venue_name = 'Galleria Borghese', address_line = 'Piazzale Scipione Borghese, 5, 00197 Roma RM, Italy' WHERE post_id = 206;
+UPDATE post_map_cards SET venue_name = 'Palatine Hill', address_line = 'Via di S. Gregorio, 30, 00186 Roma RM, Italy' WHERE post_id = 207;
+UPDATE post_map_cards SET venue_name = 'P.za Campo de\' Fiori', address_line = 'P.za Campo de\' Fiori, 00186 Roma RM, Italy' WHERE post_id = 208;
+UPDATE post_map_cards SET venue_name = 'Capitoline Museums', address_line = 'Piazza del Campidoglio, 1, 00186 Roma RM, Italy' WHERE post_id = 209;
+UPDATE post_map_cards SET venue_name = 'Olympic Stadium', address_line = 'Viale dei Gladiatori, 2, 00135 Roma RM, Italy' WHERE post_id = 210;
+UPDATE post_map_cards SET venue_name = 'Via Appia Antica - Appian Way', address_line = 'Via Appia Antica, 200, 00178 Roma RM, Italy' WHERE post_id = 211;
+UPDATE post_map_cards SET venue_name = 'Catacombe di San Callisto', address_line = 'Via Appia Antica, 110/126, 00179 Roma RM, Italy' WHERE post_id = 212;
+UPDATE post_map_cards SET venue_name = 'Saint Mark\'s Basilica', address_line = 'P.za San Marco, 328, 30100 Venezia VE, Italy' WHERE post_id = 214;
+UPDATE post_map_cards SET venue_name = 'Ponte di Rialto', address_line = '30125 Venice, Metropolitan City of Venice, Italy' WHERE post_id = 215;
+UPDATE post_map_cards SET venue_name = 'Murano', address_line = 'Murano, 30141 Venice, Metropolitan City of Venice, Italy' WHERE post_id = 216;
+UPDATE post_map_cards SET venue_name = 'St Mark\'s Campanile', address_line = 'P.za San Marco, 30124 Venezia VE, Italy' WHERE post_id = 218;
+UPDATE post_map_cards SET venue_name = 'Basilica Santa Maria della Salute', address_line = 'Dorsoduro, 1, 30123 Venezia VE, Italy' WHERE post_id = 219;
+UPDATE post_map_cards SET venue_name = 'Peggy Guggenheim Collection', address_line = 'Dorsoduro, 701, 30123 Venezia VE, Italy' WHERE post_id = 220;
+UPDATE post_map_cards SET venue_name = 'Teatro La Fenice', address_line = 'Campo S. Fantin, 1965, 30124 Venezia VE, Italy' WHERE post_id = 221;
+UPDATE post_map_cards SET venue_name = 'Galleria Giorgio Franchetti alla Ca\' d\'Oro', address_line = 'Calle Ca\' d\'Oro, 3934, 30121 Venezia VE, Italy' WHERE post_id = 222;
+UPDATE post_map_cards SET venue_name = 'Piazza San Marco', address_line = 'P.za San Marco, 30100 Venezia VE, Italy' WHERE post_id = 223;
+UPDATE post_map_cards SET venue_name = 'Basilica S.Maria Gloriosa dei Frari', address_line = 'San Polo, 3072, 30125 Venezia VE, Italy' WHERE post_id = 226;
+UPDATE post_map_cards SET venue_name = 'Arsenale di Venezia', address_line = 'Campo de la Tana, 2169, 30122 Venezia VE, Italy' WHERE post_id = 227;
+UPDATE post_map_cards SET venue_name = 'Basílica de la Sagrada Família', address_line = 'Carrer de Mallorca, 401, Eixample, 08013 Barcelona, Spain' WHERE post_id = 228;
+UPDATE post_map_cards SET venue_name = 'Park Güell', address_line = 'Gràcia, 08024 Barcelona, Spain' WHERE post_id = 229;
+UPDATE post_map_cards SET venue_name = 'Casa Batlló', address_line = 'Pg. de Gràcia, 43, Eixample, 08007 Barcelona, Spain' WHERE post_id = 230;
+UPDATE post_map_cards SET venue_name = 'La Pedrera - Casa Milà', address_line = 'Pg. de Gràcia, 92, Eixample, 08008 Barcelona, Spain' WHERE post_id = 231;
+UPDATE post_map_cards SET venue_name = 'La Rambla', address_line = 'La Rambla, Barcelona, Spain' WHERE post_id = 232;
+UPDATE post_map_cards SET venue_name = 'Spotify Camp Nou', address_line = 'Les Corts, 08028 Barcelona, Spain' WHERE post_id = 233;
+UPDATE post_map_cards SET venue_name = 'Gothic Quarter', address_line = 'Gothic Quarter, Ciutat Vella, Barcelona, Spain' WHERE post_id = 234;
+UPDATE post_map_cards SET venue_name = 'Cathedral of Barcelona', address_line = 'Pcta. de la Seu, s/n, Ciutat Vella, 08002 Barcelona, Spain' WHERE post_id = 235;
+UPDATE post_map_cards SET venue_name = 'Montjuïc', address_line = 'Montjuïc, Sants-Montjuïc, Barcelona, Spain' WHERE post_id = 236;
+UPDATE post_map_cards SET venue_name = 'Museu Nacional d\'Art de Catalunya', address_line = 'Palau Nacional, Parc de Montjuïc, s/n, Sants-Montjuïc, 08038 Barcelona, Spain' WHERE post_id = 237;
+UPDATE post_map_cards SET venue_name = 'Magic Fountain of Montjuïc', address_line = 'Pl. de Carles Buïgas, Sants-Montjuïc, 08038 Barcelona, Spain' WHERE post_id = 238;
+UPDATE post_map_cards SET venue_name = 'Hospital de la Santa Creu i Sant Pau', address_line = 'Carrer de Sant Quintí, 89, Horta-Guinardó, 08041 Barcelona, Spain' WHERE post_id = 239;
+UPDATE post_map_cards SET venue_name = 'Palau de la Música Catalana', address_line = 'C/ Palau de la Música, 4-6, Ciutat Vella, 08003 Barcelona, Spain' WHERE post_id = 241;
+UPDATE post_map_cards SET venue_name = 'Tibidabo Amusement Park', address_line = 'Pl. del Tibidabo, 3, 4, Sarrià-Sant Gervasi, 08035 Barcelona, Spain' WHERE post_id = 242;
+UPDATE post_map_cards SET venue_name = 'PortAventura World', address_line = 'Av. Pere Molas, s/n, 43480 Vila-seca, Tarragona, Spain' WHERE post_id = 243;
+UPDATE post_map_cards SET venue_name = 'Royal Palace of Madrid', address_line = 'Centro, 28071 Madrid, Spain' WHERE post_id = 244;
+UPDATE post_map_cards SET venue_name = 'El Retiro Park', address_line = 'Retiro, 28009 Madrid, Spain' WHERE post_id = 245;
+UPDATE post_map_cards SET venue_name = 'Puerta del Sol', address_line = 'Puerta del Sol, Centro, Madrid, Spain' WHERE post_id = 247;
+UPDATE post_map_cards SET venue_name = 'Thyssen-Bornemisza National Museum', address_line = 'P.º del Prado, 8, Centro, 28014 Madrid, Spain' WHERE post_id = 248;
+UPDATE post_map_cards SET venue_name = 'Temple of Debod', address_line = 'C. de Ferraz, 1, Moncloa - Aravaca, 28008 Madrid, Spain' WHERE post_id = 249;
+UPDATE post_map_cards SET venue_name = 'Catedral de Santa María la Real de la Almudena', address_line = 'C. de Bailén, 10, Centro, 28013 Madrid, Spain' WHERE post_id = 250;
+UPDATE post_map_cards SET venue_name = 'Zoo Aquarium de Madrid', address_line = 'Casa de Campo, S/N, Moncloa - Aravaca, 28011 Madrid, Spain' WHERE post_id = 251;
+UPDATE post_map_cards SET venue_name = 'El Rastro (Outdoor market)', address_line = 'Pl. de Cascorro, 4, Centro, 28005 Madrid, Spain' WHERE post_id = 252;
+UPDATE post_map_cards SET venue_name = 'CaixaForum Madrid', address_line = 'P.º del Prado, 36, Centro, 28014 Madrid, Spain' WHERE post_id = 253;
+UPDATE post_map_cards SET venue_name = 'Casa de Campo', address_line = 'P.º de la Prta del Ángel, 1, 28011 Madrid, Spain' WHERE post_id = 254;
+UPDATE post_map_cards SET venue_name = 'Riyadh Air Metropolitano', address_line = 'Av. de Luis Aragonés, 4, San Blas-Canillejas, 28022 Madrid, Spain' WHERE post_id = 255;
+UPDATE post_map_cards SET venue_name = 'Brandenburg Gate', address_line = 'Pariser Platz, 10117 Berlin, Germany' WHERE post_id = 256;
+UPDATE post_map_cards SET venue_name = 'Reichstag Building', address_line = 'Platz der Republik 1, 11011 Berlin, Germany' WHERE post_id = 257;
+UPDATE post_map_cards SET venue_name = 'Berlin Wall Memorial', address_line = 'Bernauer Str. 111, 13355 Berlin, Germany' WHERE post_id = 258;
+UPDATE post_map_cards SET venue_name = 'Checkpoint Charlie', address_line = 'Friedrichstraße 43-45, 10117 Berlin, Germany' WHERE post_id = 259;
+UPDATE post_map_cards SET venue_name = 'Museum Island', address_line = 'Museum Island, Berlin, Germany' WHERE post_id = 260;
+UPDATE post_map_cards SET venue_name = 'Pergamonmuseum', address_line = 'Bodestraße 1-3, 10178 Berlin, Germany' WHERE post_id = 261;
+UPDATE post_map_cards SET venue_name = 'Berlin Cathedral', address_line = 'Am Lustgarten, 10178 Berlin, Germany' WHERE post_id = 262;
+UPDATE post_map_cards SET venue_name = 'Berlin TV Tower', address_line = 'Panoramastraße 1A, 10178 Berlin, Germany' WHERE post_id = 263;
+UPDATE post_map_cards SET venue_name = 'Charlottenburg Palace', address_line = 'Spandauer Damm 10-22, 14059 Berlin, Germany' WHERE post_id = 264;
+UPDATE post_map_cards SET venue_name = 'East Side Gallery', address_line = 'Mühlenstraße, 10243 Berlin, Germany' WHERE post_id = 265;
+UPDATE post_map_cards SET venue_name = 'Memorial to the Murdered Jews of Europe', address_line = 'Cora-Berliner-Straße 1, 10117 Berlin, Germany' WHERE post_id = 266;
+UPDATE post_map_cards SET venue_name = 'Potsdamer Platz', address_line = 'Potsdamer Platz, 10785 Berlin, Germany' WHERE post_id = 267;
+UPDATE post_map_cards SET venue_name = 'Berlin Zoological Garden', address_line = 'Hardenbergpl. 8, 10787 Berlin, Germany' WHERE post_id = 268;
+UPDATE post_map_cards SET venue_name = 'Olympiastadion Berlin', address_line = 'Olympischer Platz 3, 14053 Berlin, Germany' WHERE post_id = 269;
+UPDATE post_map_cards SET venue_name = 'DDR Museum', address_line = 'Vera Britain Ufer, Karl-Liebknecht-Str. 1, 10178 Berlin, Germany' WHERE post_id = 270;
+UPDATE post_map_cards SET venue_name = 'Neues Museum', address_line = 'Bodestraße 1-3, 10178 Berlin, Germany' WHERE post_id = 271;
+UPDATE post_map_cards SET venue_name = 'Berliner Philharmonie', address_line = 'Herbert-von-Karajan-Straße 1, 10785 Berlin, Germany' WHERE post_id = 272;
+UPDATE post_map_cards SET venue_name = 'Topography of Terror', address_line = 'Niederkirchnerstraße 8, 10963 Berlin, Germany' WHERE post_id = 273;
+UPDATE post_map_cards SET venue_name = 'Victory Column', address_line = 'Großer Stern 1, 10557 Berlin, Germany' WHERE post_id = 274;
+UPDATE post_map_cards SET venue_name = 'Van Gogh Museum', address_line = 'Museumplein 6, 1071 DJ Amsterdam, Netherlands' WHERE post_id = 275;
+UPDATE post_map_cards SET venue_name = 'Rijksmuseum', address_line = 'Museumstraat 1, 1071 XX Amsterdam, Netherlands' WHERE post_id = 276;
+UPDATE post_map_cards SET venue_name = 'Jordaan', address_line = 'Jordaan, Amsterdam, Netherlands' WHERE post_id = 278;
+UPDATE post_map_cards SET venue_name = 'Stedelijk Museum Amsterdam', address_line = 'Museumplein 10, 1071 DJ Amsterdam, Netherlands' WHERE post_id = 281;
+UPDATE post_map_cards SET venue_name = 'Rembrandt House Museum', address_line = 'Jodenbreestraat 4, 1011 NK Amsterdam, Netherlands' WHERE post_id = 282;
+UPDATE post_map_cards SET venue_name = 'Flower Market', address_line = 'Singel 630, 600 Amsterdam, Netherlands' WHERE post_id = 283;
+UPDATE post_map_cards SET venue_name = 'Keukenhof', address_line = 'Stationsweg 166A, 2161 AM Lisse, Netherlands' WHERE post_id = 284;
+UPDATE post_map_cards SET venue_name = 'Johan Cruyff Arena', address_line = 'Johan Cruijff Boulevard 1, 1101 AX Amsterdam, Netherlands' WHERE post_id = 285;
+UPDATE post_map_cards SET venue_name = 'Zaanse Schans', address_line = 'Zaanse Schans, Zaandam, Netherlands' WHERE post_id = 286;
+UPDATE post_map_cards SET venue_name = 'Schönbrunn Palace', address_line = 'Schönbrunner Schloßstraße 47, 1130 Wien, Austria' WHERE post_id = 287;
+UPDATE post_map_cards SET venue_name = 'Hofburg', address_line = '1010 Vienna, Austria' WHERE post_id = 288;
+UPDATE post_map_cards SET venue_name = 'Vienna State Opera', address_line = 'Opernring 2, 1010 Wien, Austria' WHERE post_id = 289;
+UPDATE post_map_cards SET venue_name = 'Kunsthistorisches Museum Wien', address_line = 'Maria-Theresien-Platz, 1010 Wien, Austria' WHERE post_id = 290;
+UPDATE post_map_cards SET venue_name = 'Albertina', address_line = 'Albertinapl. 1, 1010 Wien, Austria' WHERE post_id = 291;
+UPDATE post_map_cards SET venue_name = 'Musikverein Wien', address_line = 'Musikvereinspl. 1, 1010 Wien, Austria' WHERE post_id = 292;
+UPDATE post_map_cards SET venue_name = 'Spanish Riding School', address_line = 'Michaelerplatz 1, 1010 Wien, Austria' WHERE post_id = 293;
+UPDATE post_map_cards SET venue_name = 'Ringstraße', address_line = 'Ringstraße, 3500 Krems an der Donau, Austria' WHERE post_id = 294;
+UPDATE post_map_cards SET venue_name = 'Naschmarkt', address_line = 'Naschmarkt, Wien, Austria' WHERE post_id = 295;
+UPDATE post_map_cards SET venue_name = 'Museum of Natural History Vienna', address_line = 'Burgring 7, 1010 Wien, Austria' WHERE post_id = 297;
+UPDATE post_map_cards SET venue_name = 'Stadtpark', address_line = 'Parkring 1, 1010 Wien, Austria' WHERE post_id = 299;
+UPDATE post_map_cards SET venue_name = 'Austrian Parliament', address_line = 'Dr. Karl Renner-Ring 3, 1017 Wien, Austria' WHERE post_id = 300;
+UPDATE post_map_cards SET venue_name = 'Burgtheater', address_line = 'Universitätsring 2, 1010 Wien, Austria' WHERE post_id = 301;
+UPDATE post_map_cards SET venue_name = 'Prague Castle', address_line = 'Hradčany, 119 08 Prague 1, Czechia' WHERE post_id = 302;
+UPDATE post_map_cards SET venue_name = 'St. Vitus Cathedral', address_line = 'III. nádvoří 48/2, 119 01 Praha 1-Hradčany, Czechia' WHERE post_id = 303;
+UPDATE post_map_cards SET venue_name = 'Václavské nám.', address_line = 'Václavské nám., 110 00 Nové Město, Czechia' WHERE post_id = 304;
+UPDATE post_map_cards SET venue_name = 'Petřín', address_line = 'Petřín, Strahov, 169 00 Prague 6, Czechia' WHERE post_id = 305;
+UPDATE post_map_cards SET venue_name = 'Lennon Wall', address_line = 'Velkopřevorské nám., 118 00 Malá Strana, Czechia' WHERE post_id = 306;
+UPDATE post_map_cards SET venue_name = 'Dancing House', address_line = 'Jiráskovo nám. 1981/6, 120 00 Nové Město, Czechia' WHERE post_id = 307;
+UPDATE post_map_cards SET venue_name = 'National Museum', address_line = 'Václavské nám. 68, 110 00 Nové Město, Czechia' WHERE post_id = 308;
+UPDATE post_map_cards SET venue_name = 'Vyšehrad', address_line = 'Vyšehrad, 128 00 Prague 2, Czechia' WHERE post_id = 309;
+UPDATE post_map_cards SET venue_name = 'Prague Zoo', address_line = 'U Trojského zámku 120/3, 171 00 Praha 7, Czechia' WHERE post_id = 310;
+UPDATE post_map_cards SET venue_name = 'National Theatre', address_line = 'Národní 2/110 00, 110 00 Nové Město, Czechia' WHERE post_id = 311;
+UPDATE post_map_cards SET venue_name = 'Old Jewish Cemetery', address_line = 'Široká 3, 110 00 Josefov, Czechia' WHERE post_id = 313;
+UPDATE post_map_cards SET venue_name = 'Národní galerie Praha - Palác Kinských', address_line = 'Staroměstské nám. 12, 110 00 Josefov, Czechia' WHERE post_id = 314;
+UPDATE post_map_cards SET venue_name = 'Statue of Liberty', address_line = 'New York, NY 10004, United States' WHERE post_id = 316;
+UPDATE post_map_cards SET venue_name = 'Empire State Building', address_line = '20 W 34th St., New York, NY 10001, United States' WHERE post_id = 317;
+UPDATE post_map_cards SET venue_name = 'Central Park', address_line = 'New York, NY, United States' WHERE post_id = 318;
+UPDATE post_map_cards SET venue_name = 'Times Square', address_line = 'Manhattan, NY 10036, United States' WHERE post_id = 319;
+UPDATE post_map_cards SET venue_name = 'Brooklyn Bridge', address_line = 'New York, NY 10038, United States' WHERE post_id = 320;
+UPDATE post_map_cards SET venue_name = 'One World Trade Center', address_line = '285 Fulton St, New York, NY 10007, United States' WHERE post_id = 321;
+UPDATE post_map_cards SET venue_name = 'Rockefeller Center', address_line = '45 Rockefeller Plaza, New York, NY 10111, United States' WHERE post_id = 322;
+UPDATE post_map_cards SET venue_name = 'Broadway Theatre', address_line = '1681 Broadway, New York, NY 10019, United States' WHERE post_id = 323;
+UPDATE post_map_cards SET venue_name = 'Madison Square Garden', address_line = 'New York, NY 10001, United States' WHERE post_id = 324;
+UPDATE post_map_cards SET venue_name = 'Bronx Zoo', address_line = '2300 Southern Blvd, Bronx, NY 10460, United States' WHERE post_id = 325;
+UPDATE post_map_cards SET venue_name = 'American Museum of Natural History', address_line = '200 Central Prk W, New York, NY 10024, United States' WHERE post_id = 326;
+UPDATE post_map_cards SET venue_name = 'Grand Central Terminal', address_line = '89 E 42nd St, New York, NY 10017, United States' WHERE post_id = 327;
+UPDATE post_map_cards SET venue_name = 'The High Line', address_line = 'New York, NY 10011, United States' WHERE post_id = 328;
+UPDATE post_map_cards SET venue_name = 'Yankee Stadium', address_line = '1 E 161st St, Bronx, NY 10451, United States' WHERE post_id = 329;
+UPDATE post_map_cards SET venue_name = 'The Museum of Modern Art', address_line = '11 W 53rd St, New York, NY 10019, United States' WHERE post_id = 330;
+UPDATE post_map_cards SET venue_name = '9/11 Memorial & Museum', address_line = '180 Greenwich St, New York, NY 10007, United States' WHERE post_id = 331;
+UPDATE post_map_cards SET venue_name = 'New York Botanical Garden', address_line = '2900 Southern Blvd, Bronx, NY 10458, United States' WHERE post_id = 332;
+UPDATE post_map_cards SET venue_name = 'Coney Island', address_line = 'Coney Island, Brooklyn, NY, USA' WHERE post_id = 333;
+UPDATE post_map_cards SET venue_name = 'Solomon R. Guggenheim Museum', address_line = '1071 5th Ave, New York, NY 10128, United States' WHERE post_id = 334;
+UPDATE post_map_cards SET venue_name = 'Universal Studios Hollywood', address_line = '100 Universal City Plaza, Universal City, CA 91608, United States' WHERE post_id = 335;
+UPDATE post_map_cards SET venue_name = 'Hollywood Sign', address_line = 'Los Angeles, CA 90068, United States' WHERE post_id = 336;
+UPDATE post_map_cards SET venue_name = 'Griffith Observatory', address_line = '2800 E Observatory Rd, Los Angeles, CA 90027, United States' WHERE post_id = 337;
+UPDATE post_map_cards SET venue_name = 'Hollywood Walk of Fame', address_line = 'Hollywood Boulevard, Vine St, Los Angeles, CA 90028, United States' WHERE post_id = 339;
+UPDATE post_map_cards SET venue_name = 'The Getty', address_line = '1200 Getty Center Dr, Los Angeles, CA 90049, United States' WHERE post_id = 340;
+UPDATE post_map_cards SET venue_name = 'Disneyland Park', address_line = 'Anaheim, CA 92802, United States' WHERE post_id = 341;
+UPDATE post_map_cards SET venue_name = 'Los Angeles County Museum of Art', address_line = '5905 Wilshire Blvd, Los Angeles, CA 90036, United States' WHERE post_id = 342;
+UPDATE post_map_cards SET venue_name = 'TCL Chinese Theatre', address_line = '6925 Hollywood Blvd, Hollywood, CA 90028, United States' WHERE post_id = 343;
+UPDATE post_map_cards SET venue_name = 'Dodger Stadium', address_line = '1000 Vin Scully Ave, Los Angeles, CA 90012, United States' WHERE post_id = 345;
+UPDATE post_map_cards SET venue_name = 'Hollywood Bowl', address_line = '2301 Highland Ave, Los Angeles, CA 90068, United States' WHERE post_id = 346;
+UPDATE post_map_cards SET venue_name = 'The Broad', address_line = '221 S Grand Ave, Los Angeles, CA 90012, United States' WHERE post_id = 347;
+UPDATE post_map_cards SET venue_name = 'Crypto.com Arena', address_line = '1111 S Figueroa St, Los Angeles, CA 90015, United States' WHERE post_id = 348;
+UPDATE post_map_cards SET venue_name = 'La Brea Tar Pits and Museum', address_line = '5801 Wilshire Blvd, Los Angeles, CA 90036, United States' WHERE post_id = 349;
+UPDATE post_map_cards SET venue_name = 'Knott\'s Berry Farm', address_line = '8039 Beach Blvd, Buena Park, CA 90620, United States' WHERE post_id = 350;
+UPDATE post_map_cards SET venue_name = 'Beverly Hills', address_line = 'Beverly Hills, CA, USA' WHERE post_id = 351;
+UPDATE post_map_cards SET venue_name = 'Golden Gate Bridge', address_line = 'Golden Gate Brg, San Francisco, CA, United States' WHERE post_id = 352;
+UPDATE post_map_cards SET venue_name = 'Alcatraz Island', address_line = 'San Francisco, CA 94133, United States' WHERE post_id = 353;
+UPDATE post_map_cards SET venue_name = 'Fisherman\'s Wharf', address_line = 'Fisherman\'s Wharf, San Francisco, CA, USA' WHERE post_id = 354;
+UPDATE post_map_cards SET venue_name = 'Pier 39', address_line = 'Pier 39, San Francisco, CA 94133, USA' WHERE post_id = 355;
+UPDATE post_map_cards SET venue_name = 'Golden Gate Park', address_line = 'Golden Gate Park, San Francisco, CA, USA' WHERE post_id = 356;
+UPDATE post_map_cards SET venue_name = 'Chinatown', address_line = 'Chinatown, San Francisco, CA, USA' WHERE post_id = 357;
+UPDATE post_map_cards SET venue_name = 'Coit Tower', address_line = '1 Telegraph Hill Blvd, San Francisco, CA 94133, United States' WHERE post_id = 358;
+UPDATE post_map_cards SET venue_name = 'Palace of Fine Arts', address_line = '3301 Lyon St, San Francisco, CA 94123, United States' WHERE post_id = 359;
+UPDATE post_map_cards SET venue_name = 'San Francisco Museum of Modern Art', address_line = '151 3rd St, San Francisco, CA 94103, United States' WHERE post_id = 360;
+UPDATE post_map_cards SET venue_name = 'Exploratorium', address_line = 'Pier 15 Embarcadero at, Green St, San Francisco, CA 94111, United States' WHERE post_id = 361;
+UPDATE post_map_cards SET venue_name = 'California Academy of Sciences', address_line = '55 Music Concourse Dr, San Francisco, CA 94118, United States' WHERE post_id = 362;
+UPDATE post_map_cards SET venue_name = 'San Francisco Zoo', address_line = 'Sloat Blvd &, Upper Great Hwy, San Francisco, CA 94132, United States' WHERE post_id = 363;
+UPDATE post_map_cards SET venue_name = 'Oracle Park', address_line = '24 Willie Mays Plaza, San Francisco, CA 94107, United States' WHERE post_id = 364;
+UPDATE post_map_cards SET venue_name = 'Ghirardelli Chocolate Experience', address_line = '900 North Point St F301, San Francisco, CA 94109, United States' WHERE post_id = 366;
+UPDATE post_map_cards SET venue_name = 'Union Square', address_line = 'San Francisco, CA 94108, United States' WHERE post_id = 367;
+UPDATE post_map_cards SET venue_name = 'Transamerica Pyramid', address_line = '600 Montgomery St, San Francisco, CA 94111, United States' WHERE post_id = 368;
+UPDATE post_map_cards SET venue_name = 'Millennium Park', address_line = 'Millennium Park, Chicago, IL, USA' WHERE post_id = 369;
+UPDATE post_map_cards SET venue_name = 'Cloud Gate', address_line = '201 E Randolph St, Chicago, IL 60602, United States' WHERE post_id = 370;
+UPDATE post_map_cards SET venue_name = 'The Art Institute of Chicago', address_line = '111 S Michigan Ave, Chicago, IL 60603, United States' WHERE post_id = 371;
+UPDATE post_map_cards SET venue_name = 'Willis Tower', address_line = '233 S Wacker Dr, Chicago, IL 60606, United States' WHERE post_id = 372;
+UPDATE post_map_cards SET venue_name = 'Navy Pier', address_line = '600 E Grand Ave, Chicago, IL 60611, United States' WHERE post_id = 373;
+UPDATE post_map_cards SET venue_name = 'Shedd Aquarium', address_line = '1200 S DuSable Lake Shore Dr, Chicago, IL 60605, United States' WHERE post_id = 374;
+UPDATE post_map_cards SET venue_name = 'Field Museum', address_line = '1400 S Lake Shore Dr, Chicago, IL 60605, United States' WHERE post_id = 375;
+UPDATE post_map_cards SET venue_name = 'Adler Planetarium', address_line = '1300 S DuSable Lake Shore Dr, Chicago, IL 60605, United States' WHERE post_id = 376;
+UPDATE post_map_cards SET venue_name = 'Lincoln Park Zoo', address_line = 'Chicago, IL 60614, United States' WHERE post_id = 377;
+UPDATE post_map_cards SET venue_name = 'Clarence F. Buckingham Memorial Fountain', address_line = '301 S Columbus Dr, Chicago, IL 60605, United States' WHERE post_id = 378;
+UPDATE post_map_cards SET venue_name = 'Wrigley Field', address_line = '1060 W Addison St, Chicago, IL 60613, United States' WHERE post_id = 379;
+UPDATE post_map_cards SET venue_name = 'Chicago Riverwalk', address_line = 'Chicago Riverwalk, Chicago, IL, USA' WHERE post_id = 380;
+UPDATE post_map_cards SET venue_name = 'Soldier Field', address_line = '1410 Special Olympics Dr, Chicago, IL 60605, United States' WHERE post_id = 381;
+UPDATE post_map_cards SET venue_name = 'Magnificent Mile', address_line = 'Magnificent Mile, Chicago, IL 60611, USA' WHERE post_id = 382;
+UPDATE post_map_cards SET venue_name = 'The Chicago Theatre', address_line = '175 N State St, Chicago, IL 60601, United States' WHERE post_id = 383;
+UPDATE post_map_cards SET venue_name = 'United Center', address_line = '1901 W Madison St, Chicago, IL 60612, United States' WHERE post_id = 384;
+UPDATE post_map_cards SET venue_name = 'Lincoln Park', address_line = 'Lincoln Park, Chicago, IL, USA' WHERE post_id = 385;
+UPDATE post_map_cards SET venue_name = 'Las Vegas Strip', address_line = 'Las Vegas Strip, NV, USA' WHERE post_id = 386;
+UPDATE post_map_cards SET venue_name = 'Fremont Street Experience', address_line = 'Fremont St, Las Vegas, NV 89101, United States' WHERE post_id = 387;
+UPDATE post_map_cards SET venue_name = 'Bellagio Hotel & Casino', address_line = '3600 S Las Vegas Blvd, Las Vegas, NV 89109, United States' WHERE post_id = 388;
+UPDATE post_map_cards SET venue_name = 'Caesars Palace', address_line = '3570 S Las Vegas Blvd, Paradise, NV 89109, United States' WHERE post_id = 389;
+UPDATE post_map_cards SET venue_name = 'The Venetian Las Vegas', address_line = '3355 S Las Vegas Blvd, Las Vegas, NV 89109, United States' WHERE post_id = 390;
+UPDATE post_map_cards SET venue_name = 'Hoover Dam', address_line = 'United States' WHERE post_id = 391;
+UPDATE post_map_cards SET venue_name = 'Shark Reef Aquarium at Mandalay Bay', address_line = '3950 S Las Vegas Blvd, Las Vegas, NV 89119, United States' WHERE post_id = 392;
+UPDATE post_map_cards SET venue_name = 'The Neon Museum Las Vegas', address_line = '770 Las Vegas Blvd N, Las Vegas, NV 89101, United States' WHERE post_id = 393;
+UPDATE post_map_cards SET venue_name = 'T-Mobile Arena', address_line = 'The Park Vegas, 3780 S Las Vegas Blvd, Las Vegas, NV 89109, United States' WHERE post_id = 394;
+UPDATE post_map_cards SET venue_name = 'Allegiant Stadium', address_line = '3333 Al Davis Way, Las Vegas, NV 89118, United States' WHERE post_id = 395;
+UPDATE post_map_cards SET venue_name = 'Madame Tussauds Las Vegas', address_line = '3377 S Las Vegas Blvd Ste. 2001, Las Vegas, NV 89109, United States' WHERE post_id = 396;
+UPDATE post_map_cards SET venue_name = 'The Mob Museum', address_line = '300 Stewart Ave, Las Vegas, NV 89101, United States' WHERE post_id = 397;
+UPDATE post_map_cards SET venue_name = 'KÀ by Cirque du Soleil', address_line = 'MGM Grand, 3799 S Las Vegas Blvd, Las Vegas, NV 89119, United States' WHERE post_id = 398;
+UPDATE post_map_cards SET venue_name = 'The Adventuredome Indoor Theme Park', address_line = '2880 S Las Vegas Blvd, Las Vegas, NV 89109, United States' WHERE post_id = 399;
+UPDATE post_map_cards SET venue_name = 'Walt Disney World® Resort', address_line = 'Florida, United States' WHERE post_id = 400;
+UPDATE post_map_cards SET venue_name = 'Epcot', address_line = 'Bay Lake, FL, United States' WHERE post_id = 401;
+UPDATE post_map_cards SET venue_name = 'Universal Orlando Resort', address_line = '6000 Universal Blvd, Orlando, FL 32819, United States' WHERE post_id = 402;
+UPDATE post_map_cards SET venue_name = 'Universal Islands of Adventure', address_line = '6000 Universal Blvd, Orlando, FL 32819, United States' WHERE post_id = 403;
+UPDATE post_map_cards SET venue_name = 'SeaWorld Orlando', address_line = '7007 Sea World Dr, Orlando, FL 32821, United States' WHERE post_id = 404;
+UPDATE post_map_cards SET venue_name = 'Gatorland', address_line = '14501 S Orange Blossom Trl, Orlando, FL 32837, United States' WHERE post_id = 405;
+UPDATE post_map_cards SET venue_name = 'Disney\'s Blizzard Beach Water Park', address_line = 'Bay Lake, FL 32836, United States' WHERE post_id = 407;
+UPDATE post_map_cards SET venue_name = 'Camping World Stadium', address_line = '1 Citrus Bowl Place, Orlando, FL 32805, United States' WHERE post_id = 408;
+UPDATE post_map_cards SET venue_name = 'Dr. Phillips Center for the Performing Arts', address_line = '445 S Magnolia Ave, Orlando, FL 32801, United States' WHERE post_id = 409;
+UPDATE post_map_cards SET venue_name = 'Sensō-ji', address_line = '2 Chome-3-1 Asakusa, Taito City, Tokyo 111-0032, Japan' WHERE post_id = 410;
+UPDATE post_map_cards SET venue_name = 'Tokyo Skytree', address_line = '1 Chome-1-2 Oshiage, Sumida City, Tokyo 131-0045, Japan' WHERE post_id = 411;
+UPDATE post_map_cards SET venue_name = 'Tokyo Tower', address_line = '4 Chome-2-8 Shibakoen, Minato City, Tokyo 105-0011, Japan' WHERE post_id = 412;
+UPDATE post_map_cards SET venue_name = 'Gyoen St', address_line = 'Gyoen St, Tokyo, Japan' WHERE post_id = 414;
+UPDATE post_map_cards SET venue_name = 'Imperial Palace', address_line = '1-1 Chiyoda, Chiyoda City, Tokyo 100-8111, Japan' WHERE post_id = 415;
+UPDATE post_map_cards SET venue_name = 'Tokyo Disneyland', address_line = '1-1 Maihama, Urayasu, Chiba 279-0031, Japan' WHERE post_id = 416;
+UPDATE post_map_cards SET venue_name = 'Tokyo DisneySea', address_line = '1-13 Maihama, Urayasu, Chiba 279-8511, Japan' WHERE post_id = 417;
+UPDATE post_map_cards SET venue_name = 'Shibuya Crossing', address_line = 'Shibuya, Tokyo, Japan' WHERE post_id = 418;
+UPDATE post_map_cards SET venue_name = 'Harajuku', address_line = 'Harajuku, Jingumae, Shibuya, Tokyo 150-0001, Japan' WHERE post_id = 419;
+UPDATE post_map_cards SET venue_name = 'Tokyo National Museum', address_line = '13-9 Uenokoen, Taito City, Tokyo 110-8712, Japan' WHERE post_id = 420;
+UPDATE post_map_cards SET venue_name = 'Ueno Zoo', address_line = '9-83 Uenokoen, Taito City, Tokyo 110-8711, Japan' WHERE post_id = 421;
+UPDATE post_map_cards SET venue_name = 'Akihabara Electric Town', address_line = 'Akihabara Electric Town, Tokyo, Japan' WHERE post_id = 422;
+UPDATE post_map_cards SET venue_name = 'Ginza', address_line = 'Ginza, Chuo City, Tokyo 104-0061, Japan' WHERE post_id = 423;
+UPDATE post_map_cards SET venue_name = 'Roppongi Hills', address_line = '6 Chome-10-1 Roppongi, Minato City, Tokyo 106-6108, Japan' WHERE post_id = 425;
+UPDATE post_map_cards SET venue_name = 'Odaiba', address_line = 'Odaiba, Tokyo, Japan' WHERE post_id = 426;
+UPDATE post_map_cards SET venue_name = 'Fish Market Tsukiji Outer Market', address_line = 'Japan, 〒104-0045 Tokyo, Chuo City, Tsukiji, 4 Chome および６丁目一部' WHERE post_id = 427;
+UPDATE post_map_cards SET venue_name = 'Fushimi Inari Taisha', address_line = '68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto, 612-0882, Japan' WHERE post_id = 428;
+UPDATE post_map_cards SET venue_name = 'Nijō Castle', address_line = '541 Nijojocho, Nakagyo Ward, Kyoto, 604-8301, Japan' WHERE post_id = 430;
+UPDATE post_map_cards SET venue_name = 'Gion', address_line = 'Gion, Higashiyama Ward, Kyoto, Japan' WHERE post_id = 431;
+UPDATE post_map_cards SET venue_name = 'Kyoto Imperial Palace', address_line = '内 Kyotogyoen, Kamigyo Ward, Kyoto, 602-0811, Japan' WHERE post_id = 432;
+UPDATE post_map_cards SET venue_name = 'Ryōan-ji', address_line = '13 Ryoanji Goryonoshitacho, Ukyo Ward, Kyoto, 616-8001, Japan' WHERE post_id = 433;
+UPDATE post_map_cards SET venue_name = 'Nanzen-ji', address_line = '86 Nanzenji Fukuchicho, Sakyo Ward, Kyoto, 606-8435, Japan' WHERE post_id = 434;
+UPDATE post_map_cards SET venue_name = 'Kyoto Railway Museum', address_line = 'Kankijicho, Shimogyo Ward, Kyoto, 600-8835, Japan' WHERE post_id = 436;
+UPDATE post_map_cards SET venue_name = 'Sanjūsangendō Temple', address_line = '657 Sanjusangendomawari, Higashiyama Ward, Kyoto, 605-0941, Japan' WHERE post_id = 438;
+UPDATE post_map_cards SET venue_name = 'Kyoto Botanical Gardens', address_line = 'Shimogamo Hangicho, Sakyo Ward, Kyoto, 606-0823, Japan' WHERE post_id = 439;
+UPDATE post_map_cards SET venue_name = 'Gardens by the Bay', address_line = '18 Marina Gardens Dr, Singapore 018953' WHERE post_id = 441;
+UPDATE post_map_cards SET venue_name = 'Marina Bay Sands Singapore', address_line = '10 Bayfront Ave, Singapore 018956' WHERE post_id = 442;
+UPDATE post_map_cards SET venue_name = 'Merlion Park', address_line = '1 Fullerton Rd, Singapore 049213' WHERE post_id = 443;
+UPDATE post_map_cards SET venue_name = 'Sentosa', address_line = 'Sentosa, Singapore' WHERE post_id = 444;
+UPDATE post_map_cards SET venue_name = 'Singapore Zoo', address_line = '80 Mandai Lake Rd, Singapore 729826' WHERE post_id = 445;
+UPDATE post_map_cards SET venue_name = 'Universal Studios Singapore', address_line = '8 Sentosa Gateway, Singapore 098269' WHERE post_id = 446;
+UPDATE post_map_cards SET venue_name = 'Orchard Rd', address_line = 'Orchard Rd, Singapore' WHERE post_id = 447;
+UPDATE post_map_cards SET venue_name = 'Chinatown', address_line = 'Chinatown, Singapore' WHERE post_id = 448;
+UPDATE post_map_cards SET venue_name = 'Singapore Botanic Gardens', address_line = '1 Cluny Rd, Singapore 259569' WHERE post_id = 451;
+UPDATE post_map_cards SET venue_name = 'Singapore Flyer', address_line = '30 Raffles Ave., Singapore 039803' WHERE post_id = 453;
+UPDATE post_map_cards SET venue_name = 'ArtScience Museum', address_line = '6 Bayfront Ave, Singapore 018974' WHERE post_id = 454;
+UPDATE post_map_cards SET venue_name = 'Jewel Changi Airport', address_line = 'Singapore' WHERE post_id = 455;
+UPDATE post_map_cards SET venue_name = 'The Kallang (Formerly Known As Singapore Sports Hub)', address_line = '1 Stadium Dr, #02-01 National Stadium, Singapore 397629' WHERE post_id = 456;
+UPDATE post_map_cards SET venue_name = 'Esplanade - Theatres on the Bay, Singapore', address_line = '1 Esplanade Dr, Singapore 038981' WHERE post_id = 457;
+UPDATE post_map_cards SET venue_name = 'Victoria Peak', address_line = 'Victoria Peak, The Peak, Hong Kong' WHERE post_id = 459;
+UPDATE post_map_cards SET venue_name = 'Hong Kong Disneyland', address_line = 'Lantau Island, Hong Kong' WHERE post_id = 460;
+UPDATE post_map_cards SET venue_name = 'Ocean Park', address_line = 'Ocean Park, Hong Kong' WHERE post_id = 461;
+UPDATE post_map_cards SET venue_name = 'Victoria Harbour', address_line = 'Victoria Harbour, Hong Kong' WHERE post_id = 462;
+UPDATE post_map_cards SET venue_name = 'Tsim Sha Tsui Star Ferry Pier', address_line = 'Tsim Sha Tsui, Hong Kong' WHERE post_id = 463;
+UPDATE post_map_cards SET venue_name = 'Ngong Ping 360', address_line = 'Lantau Island, Hong Kong' WHERE post_id = 465;
+UPDATE post_map_cards SET venue_name = 'Hong Kong Museum of History', address_line = '100 Chatham Rd S, Tsim Sha Tsui, Hong Kong' WHERE post_id = 466;
+UPDATE post_map_cards SET venue_name = 'Ladies\' Market', address_line = 'Tung Choi St, Mong Kok, Hong Kong' WHERE post_id = 467;
+UPDATE post_map_cards SET venue_name = 'Lantau Island', address_line = 'Lantau Island, Hong Kong' WHERE post_id = 468;
+UPDATE post_map_cards SET venue_name = 'Man Mo Temple', address_line = 'Man Mo Temple, 124-130 Hollywood Rd, Sheung Wan, Hong Kong' WHERE post_id = 469;
+UPDATE post_map_cards SET venue_name = 'Hong Kong Stadium', address_line = '55 Eastern Hospital Rd, So Kon Po, Hong Kong' WHERE post_id = 470;
+UPDATE post_map_cards SET venue_name = 'Hong Kong Space Museum', address_line = 'Hong Kong Space Museum, 10 Salisbury Rd, Tsim Sha Tsui, Hong Kong' WHERE post_id = 471;
+UPDATE post_map_cards SET venue_name = 'Hong Kong Cultural Centre', address_line = 'Hong Kong Cultural Centre, L5, Auditoria Building, 10 Salisbury Rd, Tsim Sha Tsui, Hong Kong' WHERE post_id = 473;
+UPDATE post_map_cards SET venue_name = 'Tai Kwun', address_line = 'Tai Kwun, 10 Hollywood Rd, Central, Hong Kong' WHERE post_id = 474;
+UPDATE post_map_cards SET venue_name = 'The Grand Palace', address_line = 'Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand' WHERE post_id = 475;
+UPDATE post_map_cards SET venue_name = 'Wat Phra Chetuphon Wimon Mangkhalaram Rajwaramahawihan', address_line = '2 Sanam Chai Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand' WHERE post_id = 476;
+UPDATE post_map_cards SET venue_name = 'Wat Arun Ratchawararam Ratchawaramahawihan', address_line = '158 Thanon Wang Doem, Wat Arun, Bangkok Yai, Bangkok 10600, Thailand' WHERE post_id = 477;
+UPDATE post_map_cards SET venue_name = 'The Temple of the Emerald Buddha', address_line = 'Na Phra Lan Rd, Phra Borom Maha Ratchawang, Phra Nakhon, Bangkok 10200, Thailand' WHERE post_id = 478;
+UPDATE post_map_cards SET venue_name = 'Chatuchak Weekend Market', address_line = '587, 10 Kamphaeng Phet 2 Rd, Khwaeng Chatuchak, Chatuchak, Bangkok 10900, Thailand' WHERE post_id = 479;
+UPDATE post_map_cards SET venue_name = 'Jim Thompson House Museum', address_line = '6 Kasem San 2 Alley, Wang Mai, Pathum Wan, Bangkok 10330, Thailand' WHERE post_id = 480;
+UPDATE post_map_cards SET venue_name = 'Lumphini Park', address_line = 'Lumphini, Pathum Wan, Bangkok 10330, Thailand' WHERE post_id = 481;
+UPDATE post_map_cards SET venue_name = 'Siam Paragon', address_line = '991 Rama I Rd, Pathum Wan, Bangkok 10330, Thailand' WHERE post_id = 482;
+UPDATE post_map_cards SET venue_name = 'Wat Trai Mit Witthayaram Worawihan', address_line = '661 ถ. เจริญกรุง Talat Noi, Samphanthawong, Bangkok 10100, Thailand' WHERE post_id = 483;
+UPDATE post_map_cards SET venue_name = 'Thao Maha Brahma', address_line = '494 Ratchadamri Rd, Lumphini, Pathum Wan, Bangkok 10330, Thailand' WHERE post_id = 484;
+UPDATE post_map_cards SET venue_name = 'Ayutthaya Historical Park, Government Office.', address_line = '196 หมู่ที่ 4 Khlong Tho Rd, Pratu Chai Sub-district, Phra Nakhon Si Ayutthaya District, Phra Nakhon Si Ayutthaya 13000, Thailand' WHERE post_id = 485;
+UPDATE post_map_cards SET venue_name = 'Safari World', address_line = '99 Panya Indra Rd, Sam Wa Tawan Tok, Khlong Sam Wa, Bangkok 10510, Thailand' WHERE post_id = 486;
+UPDATE post_map_cards SET venue_name = 'Rajamangala National Stadium', address_line = '286 Soi Ramkhamhaeng 24 Yaek 18, Hua Mak, Bang Kapi, Bangkok 10240, Thailand' WHERE post_id = 488;
+UPDATE post_map_cards SET venue_name = 'Bangkok Art & Culture Centre', address_line = '939 Rama I Rd, Wang Mai, Pathum Wan, Bangkok 10330, Thailand' WHERE post_id = 489;
+UPDATE post_map_cards SET venue_name = 'Burj Khalifa', address_line = '1 Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates' WHERE post_id = 490;
+UPDATE post_map_cards SET venue_name = 'Palm Jumeirah', address_line = 'Palm Jumeirah - The Palm Jumeirah - Dubai - United Arab Emirates' WHERE post_id = 491;
+UPDATE post_map_cards SET venue_name = 'Jumeirah Burj Al Arab', address_line = 'Umm Suqeim Third - Umm Suqeim 3 - Dubai - United Arab Emirates' WHERE post_id = 492;
+UPDATE post_map_cards SET venue_name = 'The Dubai Fountain', address_line = 'Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates' WHERE post_id = 494;
+UPDATE post_map_cards SET venue_name = 'Dubai Frame', address_line = 'Zabeel Park Jogging Track - Al Kifaf - Dubai - United Arab Emirates' WHERE post_id = 495;
+UPDATE post_map_cards SET venue_name = 'Dubai Creek', address_line = 'Dubai Creek - Dubai - United Arab Emirates' WHERE post_id = 496;
+UPDATE post_map_cards SET venue_name = 'Atlantis - The Palm', address_line = 'Crescent Rd - The Palm Jumeirah - Dubai - United Arab Emirates' WHERE post_id = 497;
+UPDATE post_map_cards SET venue_name = 'Museum of The Future', address_line = '67CP+H4Q - Sheikh Zayed Rd - Trade Center Second - Dubai - United Arab Emirates' WHERE post_id = 500;
+UPDATE post_map_cards SET venue_name = 'Jumeirah Beach', address_line = 'Jumeirah Beach - Jumeirah - Jumeira Third - Dubai - United Arab Emirates' WHERE post_id = 501;
+UPDATE post_map_cards SET venue_name = 'Dubai Opera', address_line = 'Sheikh Mohammed bin Rashid Blvd - Burj Khalifa - Downtown Dubai - Dubai - United Arab Emirates' WHERE post_id = 502;
+UPDATE post_map_cards SET venue_name = 'Dubai Safari Park', address_line = '5CCW+H5 - Al Warqa - Al Warqa\'a Fifth - Dubai - United Arab Emirates' WHERE post_id = 503;
+UPDATE post_map_cards SET venue_name = 'Hagia Sophia Grand Mosque', address_line = 'Sultan Ahmet, Ayasofya Meydanı No:1, 34122 Fatih/İstanbul, Türkiye' WHERE post_id = 504;
+UPDATE post_map_cards SET venue_name = 'Topkapi Palace Museum', address_line = 'Cankurtaran, Babı Hümayun Cad No: 1, 34122 Fatih/İstanbul, Türkiye' WHERE post_id = 505;
+UPDATE post_map_cards SET venue_name = 'Grand Bazaar', address_line = 'Beyazıt, 34126 Fatih/İstanbul, Türkiye' WHERE post_id = 506;
+UPDATE post_map_cards SET venue_name = 'Galata Tower', address_line = 'Bereketzade, 34421 Beyoğlu/İstanbul, Türkiye' WHERE post_id = 507;
+UPDATE post_map_cards SET venue_name = 'Suleymaniye Mosque', address_line = 'Süleymaniye, Prof. Dr. Sıddık Sami Onar Cd. No:1, 34116 Fatih/İstanbul, Türkiye' WHERE post_id = 509;
+UPDATE post_map_cards SET venue_name = 'Bosphorus', address_line = 'Bosphorus, Türkiye' WHERE post_id = 510;
+UPDATE post_map_cards SET venue_name = 'Taksim Square', address_line = 'Taksim Square, Kocatepe, 34435 Beyoğlu/İstanbul, Türkiye' WHERE post_id = 512;
+UPDATE post_map_cards SET venue_name = 'Maiden\'s Tower', address_line = 'Salacak, 34668 Üsküdar/İstanbul, Türkiye' WHERE post_id = 513;
+UPDATE post_map_cards SET venue_name = 'Adalar', address_line = 'Adalar/İstanbul, Türkiye' WHERE post_id = 514;
+UPDATE post_map_cards SET venue_name = 'Istanbul Museum of Modern Art', address_line = 'Kılıçali Paşa, Tophane İskele Cd. No:1/1, 34433 Beyoğlu/İstanbul, Türkiye' WHERE post_id = 515;
+UPDATE post_map_cards SET venue_name = 'Miniaturk', address_line = 'Örnektepe, İmrahor Cd. No:7, 34445 Beyoğlu/İstanbul, Türkiye' WHERE post_id = 516;
+UPDATE post_map_cards SET venue_name = 'RAMS Park', address_line = 'Huzur, Metin Oktay Caddesi, 34386 Sarıyer/İstanbul, Türkiye' WHERE post_id = 517;
+UPDATE post_map_cards SET venue_name = 'Ataturk Cultural Center', address_line = 'Gümüşsuyu, Tak-ı Zafer Cd., 34437 Beyoğlu/İstanbul, Türkiye' WHERE post_id = 518;
+UPDATE post_map_cards SET venue_name = 'The Great Pyramid of Giza', address_line = 'Al Haram, Nazlet El-Semman, Al Haram, Giza Governorate 3512201, Egypt' WHERE post_id = 519;
+UPDATE post_map_cards SET venue_name = 'Great Sphinx of Giza', address_line = 'Al Haram, Giza Governorate 3512201, Egypt' WHERE post_id = 520;
+UPDATE post_map_cards SET venue_name = 'The Egyptian Museum in Cairo', address_line = 'El-Tahrir Square, Ismailia, Qasr El Nil, Cairo Governorate 4272083, Egypt' WHERE post_id = 521;
+UPDATE post_map_cards SET venue_name = 'Khan el-Khalili', address_line = 'El-Gamaleya, El Gamaliya, Cairo Governorate 4331302, Egypt' WHERE post_id = 522;
+UPDATE post_map_cards SET venue_name = 'Al-Azhar Mosque', address_line = 'El-Darb El-Ahmar, El Gamaliya, Cairo Governorate 4293024, Egypt' WHERE post_id = 523;
+UPDATE post_map_cards SET venue_name = 'Saladin Citadel', address_line = 'Al Abageyah, El Khalifa, Cairo Governorate 4252360, Egypt' WHERE post_id = 524;
+UPDATE post_map_cards SET venue_name = 'Mosque of Muhammad Ali', address_line = 'Salah al-Din, al-Ayyubi, Saladin, Cairo Governorate 4252360, Egypt' WHERE post_id = 525;
+UPDATE post_map_cards SET venue_name = 'Coptic Cairo', address_line = 'Coptic Cairo, Kom Ghorab, Old Cairo, Cairo Governorate, Egypt' WHERE post_id = 526;
+UPDATE post_map_cards SET venue_name = 'Cairo Tower', address_line = 'Kasr Al Nile, Zamalek, Cairo Governorate 4270024, Egypt' WHERE post_id = 527;
+UPDATE post_map_cards SET venue_name = 'Al-Azhar Park', address_line = '10 Salah Salem St, El-Darb El-Ahmar, Al-Darb Al-Ahmar, Cairo Governorate 4294010, Egypt' WHERE post_id = 528;
+UPDATE post_map_cards SET venue_name = 'Saqqara Pyramid', address_line = 'Badrshein, Giza Governorate 3352001, Egypt' WHERE post_id = 529;
+UPDATE post_map_cards SET venue_name = 'Step Pyramid of Djoser', address_line = 'Badrshein, Giza Governorate 3352001, Egypt' WHERE post_id = 530;
+UPDATE post_map_cards SET venue_name = 'Cairo International Stadium', address_line = 'Al Estad, Qesm Than Madinet Nasr, Cairo Governorate 4436020, Egypt' WHERE post_id = 533;
+UPDATE post_map_cards SET venue_name = 'Maclear\'s Beacon', address_line = 'Maclear\'s Beacon, Table Mountain (Nature Reserve), Cape Town, South Africa' WHERE post_id = 534;
+UPDATE post_map_cards SET venue_name = 'Victoria & Alfred Waterfront', address_line = 'Victoria & Alfred Waterfront, Cape Town, South Africa' WHERE post_id = 535;
+UPDATE post_map_cards SET venue_name = 'Robben Island', address_line = 'Robben Island, South Africa' WHERE post_id = 536;
+UPDATE post_map_cards SET venue_name = 'Cape of Good Hope', address_line = 'Cape Point Rd, Cape Town, 8001, South Africa' WHERE post_id = 537;
+UPDATE post_map_cards SET venue_name = 'Kirstenbosch National Botanical Garden', address_line = 'Rhodes Dr, Newlands, Cape Town, 7735, South Africa' WHERE post_id = 538;
+UPDATE post_map_cards SET venue_name = 'Two Oceans Aquarium', address_line = 'Dock Rd, Victoria & Alfred Waterfront, Cape Town, 8002, South Africa' WHERE post_id = 539;
+UPDATE post_map_cards SET venue_name = 'Bo-Kaap', address_line = 'Bo-Kaap, Schotsche Kloof, Cape Town, South Africa' WHERE post_id = 540;
+UPDATE post_map_cards SET venue_name = 'Castle of Good Hope', address_line = 'Castle St, Foreshore, Cape Town, 8001, South Africa' WHERE post_id = 542;
+UPDATE post_map_cards SET venue_name = 'District Six Museum', address_line = '25A Buitenkant St, District Six, Cape Town, 8000, South Africa' WHERE post_id = 543;
+UPDATE post_map_cards SET venue_name = 'DHL Stadium', address_line = 'Fritz Sonnenberg Rd, Green Point, Cape Town, 8051, South Africa' WHERE post_id = 545;
+UPDATE post_map_cards SET venue_name = 'Zeitz Museum of Contemporary Art Africa', address_line = 'S Arm Rd, Victoria & Alfred Waterfront, Cape Town, 8001, South Africa' WHERE post_id = 546;
+UPDATE post_map_cards SET venue_name = 'Sugarloaf Mountain', address_line = 'Sugarloaf Mountain - Urca, Rio de Janeiro - State of Rio de Janeiro, Brazil' WHERE post_id = 547;
+UPDATE post_map_cards SET venue_name = 'Maracanã', address_line = 'R. Prof. Eurico Rabelo - Maracanã, Rio de Janeiro - RJ, 20271-150, Brazil' WHERE post_id = 548;
+UPDATE post_map_cards SET venue_name = 'Tijuca National Park', address_line = '| Santa Teresa - Estr. da Cascatinha, 850, Estrada das Paineiras, S/N - Alto da Boa Vista, Rio de Janeiro - RJ, 20531-590, Brazil' WHERE post_id = 550;
+UPDATE post_map_cards SET venue_name = 'Lapa', address_line = 'Lapa, Rio de Janeiro - State of Rio de Janeiro, Brazil' WHERE post_id = 551;
+UPDATE post_map_cards SET venue_name = 'Museu do Amanhã', address_line = 'Praça Mauá, 1 - Centro, Rio de Janeiro - RJ, 20081-240, Brazil' WHERE post_id = 552;
+UPDATE post_map_cards SET venue_name = 'Corcovado', address_line = 'Corcovado - Alto da Boa Vista, Rio de Janeiro - State of Rio de Janeiro, Brazil' WHERE post_id = 553;
+UPDATE post_map_cards SET venue_name = 'Pedra da Gávea', address_line = 'Pedra da Gávea - Barra da Tijuca, Rio de Janeiro - State of Rio de Janeiro, Brazil' WHERE post_id = 554;
+UPDATE post_map_cards SET venue_name = 'Arcos da Lapa', address_line = 'Lapa, Rio de Janeiro - State of Rio de Janeiro, 20031-040, Brazil' WHERE post_id = 555;
+UPDATE post_map_cards SET venue_name = 'Municipal Theater of Rio de Janeiro', address_line = 'Praça Floriano, S/N - Centro, Rio de Janeiro - RJ, 20031-050, Brazil' WHERE post_id = 556;
+UPDATE post_map_cards SET venue_name = 'National Museum of Brazil', address_line = 'Quinta da Boa Vista - Imperial de São Cristóvão, Rio de Janeiro - RJ, 20940-040, Brazil' WHERE post_id = 557;
+UPDATE post_map_cards SET venue_name = 'Sambadrome Marquês de Sapucaí', address_line = 'R. Marquês de Sapucaí - Santo Cristo, Rio de Janeiro - RJ, 20220-007, Brazil' WHERE post_id = 558;
+UPDATE post_map_cards SET venue_name = 'Casa Rosada', address_line = 'Balcarce 78, C1064AAC Cdad. Autónoma de Buenos Aires, Argentina' WHERE post_id = 560;
+UPDATE post_map_cards SET venue_name = 'La Boca', address_line = 'La Boca, Buenos Aires, Argentina' WHERE post_id = 561;
+UPDATE post_map_cards SET venue_name = 'Recoleta Cemetery', address_line = 'Junín 1760, C1113 Cdad. Autónoma de Buenos Aires, Argentina' WHERE post_id = 562;
+UPDATE post_map_cards SET venue_name = 'Plaza de Mayo', address_line = 'Av. Hipólito Yrigoyen s/n, C1087 Cdad. Autónoma de Buenos Aires, Argentina' WHERE post_id = 563;
+UPDATE post_map_cards SET venue_name = 'Teatro Colón', address_line = 'Cerrito 628, C1010 Cdad. Autónoma de Buenos Aires, Argentina' WHERE post_id = 565;
+UPDATE post_map_cards SET venue_name = 'San Telmo', address_line = 'San Telmo, Buenos Aires, Argentina' WHERE post_id = 566;
+UPDATE post_map_cards SET venue_name = 'Puerto Madero', address_line = 'Puerto Madero, Buenos Aires, Argentina' WHERE post_id = 567;
+UPDATE post_map_cards SET venue_name = 'Palermo', address_line = 'Palermo, Buenos Aires, Argentina' WHERE post_id = 568;
+UPDATE post_map_cards SET venue_name = 'Tres de Febrero Park', address_line = 'Av. Infanta Isabel 110, C1425 Cdad. Autónoma de Buenos Aires, Argentina' WHERE post_id = 571;
+UPDATE post_map_cards SET venue_name = 'Estadio Alberto J Armando', address_line = 'Brandsen 805, C1161AAQ Cdad. Autónoma de Buenos Aires, Argentina' WHERE post_id = 572;
+UPDATE post_map_cards SET venue_name = 'Estadio Monumental', address_line = 'Av. Pres. Figueroa Alcorta 7597, C1424BCL Cdad. Autónoma de Buenos Aires, Argentina' WHERE post_id = 573;
+UPDATE post_map_cards SET venue_name = 'San Juan Teotihuacán', address_line = 'San Juan Teotihuacán, State of Mexico, Mexico' WHERE post_id = 574;
+UPDATE post_map_cards SET venue_name = 'Chapultepec Castle', address_line = 'Av. Heroico Colegio Militar 172, Bosque de Chapultepec I Secc, Miguel Hidalgo, 11580 Ciudad de México, CDMX, Mexico' WHERE post_id = 575;
+UPDATE post_map_cards SET venue_name = 'Coyoacán', address_line = 'Coyoacán, Mexico City, CDMX, Mexico' WHERE post_id = 576;
+UPDATE post_map_cards SET venue_name = 'Frida Kahlo Museum', address_line = 'Londres 247, Del Carmen, Coyoacán, 04100 Ciudad de México, CDMX, Mexico' WHERE post_id = 577;
+UPDATE post_map_cards SET venue_name = 'Xochimilco', address_line = 'Xochimilco, CDMX, Mexico' WHERE post_id = 578;
+UPDATE post_map_cards SET venue_name = 'Bosque de Chapultepec', address_line = 'Miguel Hidalgo, Mexico City, Mexico' WHERE post_id = 579;
+UPDATE post_map_cards SET venue_name = 'Templo Mayor Museum', address_line = 'Seminario 8, Centro Histórico de la Cdad. de México, Centro, Cuauhtémoc, 06060 Ciudad de México, CDMX, Mexico' WHERE post_id = 580;
+UPDATE post_map_cards SET venue_name = 'Torre Latinoamericana', address_line = 'Torre Latinoamericana, Eje Central Lázaro Cárdenas 2, Centro Histórico de la Cdad. de México, Centro, Cuauhtémoc, 06000 Ciudad de México, CDMX, Mexico' WHERE post_id = 581;
+UPDATE post_map_cards SET venue_name = 'Chapultepec Zoo', address_line = 'Calz. Chivatito s/n, Bosque de Chapultepec I Secc, Miguel Hidalgo, 11580 Ciudad de México, CDMX, Mexico' WHERE post_id = 582;
+UPDATE post_map_cards SET venue_name = 'Six Flags México', address_line = 'Carr. Picacho-Ajusco Km 1.5, Jardines del Ajusco, Tlalpan, 14219 Ciudad de México, CDMX, Mexico' WHERE post_id = 583;
+UPDATE post_map_cards SET venue_name = 'The Angel of Independence', address_line = 'Av. P.º de la Reforma 342-Piso 27, Juárez, Cuauhtémoc, 06600 Ciudad de México, CDMX, Mexico' WHERE post_id = 584;
+UPDATE post_map_cards SET venue_name = 'Banorte Stadium', address_line = 'Calz. de Tlalpan 3465, Sta. Úrsula Coapa, Coyoacán, 04650 Ciudad de México, CDMX, Mexico' WHERE post_id = 585;
+UPDATE post_map_cards SET venue_name = 'Plaza Garibaldi', address_line = 'Plaza Garibaldi, Centro, 06010 Ciudad de México, CDMX, Mexico' WHERE post_id = 586;
+UPDATE post_map_cards SET venue_name = 'National Art Museum', address_line = 'C. de Tacuba 8, Centro Histórico de la Cdad. de México, Centro, Cuauhtémoc, 06000 Ciudad de México, CDMX, Mexico' WHERE post_id = 587;
+UPDATE post_map_cards SET venue_name = 'CN Tower', address_line = '290 Bremner Blvd, Toronto, ON M5V 3L9, Canada' WHERE post_id = 588;
+UPDATE post_map_cards SET venue_name = 'Royal Ontario Museum', address_line = '100 Queens Park, Toronto, ON M5S 2C6, Canada' WHERE post_id = 589;
+UPDATE post_map_cards SET venue_name = 'Ripley\'s Aquarium of Canada', address_line = '288 Bremner Blvd, Toronto, ON M5V 3L9, Canada' WHERE post_id = 590;
+UPDATE post_map_cards SET venue_name = 'Art Gallery of Ontario', address_line = '317 Dundas St W, Toronto, ON M5T 1G4, Canada' WHERE post_id = 591;
+UPDATE post_map_cards SET venue_name = 'Toronto Islands', address_line = 'Toronto Islands, St Lawrence-East Bayfront-The Islands, ON, Canada' WHERE post_id = 592;
+UPDATE post_map_cards SET venue_name = 'St. Lawrence Market', address_line = 'Toronto, ON M5E 1C3, Canada' WHERE post_id = 593;
+UPDATE post_map_cards SET venue_name = 'Distillery District', address_line = 'Distillery District, Toronto, ON, Canada' WHERE post_id = 594;
+UPDATE post_map_cards SET venue_name = 'Rogers Centre', address_line = '1 Blue Jays Way, Toronto, ON M5V 1J4, Canada' WHERE post_id = 595;
+UPDATE post_map_cards SET venue_name = 'Scotiabank Arena', address_line = '40 Bay St., Toronto, ON M5J 3A5, Canada' WHERE post_id = 596;
+UPDATE post_map_cards SET venue_name = 'High Park', address_line = '1873 Bloor St W, Toronto, ON M6R 2Z3, Canada' WHERE post_id = 597;
+UPDATE post_map_cards SET venue_name = 'Ontario Science Centre', address_line = '770 Don Mills Rd., North York, ON M3C 1T3, Canada' WHERE post_id = 598;
+UPDATE post_map_cards SET venue_name = 'CF Toronto Eaton Centre', address_line = '220 Yonge St, Toronto, ON M5B 2H1, Canada' WHERE post_id = 599;
+UPDATE post_map_cards SET venue_name = 'Four Seasons Centre for the Performing Arts', address_line = '145 Queen St W, Toronto, ON M5H 4G1, Canada' WHERE post_id = 600;
+UPDATE post_map_cards SET venue_name = 'Bata Shoe Museum', address_line = '327 Bloor St W, Toronto, ON M5S 1W7, Canada' WHERE post_id = 601;
+UPDATE post_map_cards SET venue_name = 'Canada\'s Wonderland', address_line = 'Vaughan, ON L6A 1S6, Canada' WHERE post_id = 602;
+UPDATE post_map_cards SET venue_name = 'Gyeongbokgung Palace', address_line = '161 Sajik-ro, Jongno District, Seoul, South Korea' WHERE post_id = 603;
+UPDATE post_map_cards SET venue_name = 'N Seoul Tower', address_line = '105 Namsangongwon-gil, Yongsan District, Seoul, South Korea' WHERE post_id = 604;
+UPDATE post_map_cards SET venue_name = 'Bukchon Hanok Village', address_line = 'Gyedong-gil, Jongno District, Seoul, South Korea' WHERE post_id = 605;
+UPDATE post_map_cards SET venue_name = 'Changdeokgung', address_line = '99 Yulgok-ro, Jongno District, Seoul, South Korea' WHERE post_id = 606;
+UPDATE post_map_cards SET venue_name = 'Dongdaemun Design Plaza (DDP)', address_line = '281 Eulji-ro, Jung District, Seoul, South Korea' WHERE post_id = 607;
+UPDATE post_map_cards SET venue_name = 'Insa-dong', address_line = 'Insa-dong, Jongno District, Seoul, South Korea' WHERE post_id = 608;
+UPDATE post_map_cards SET venue_name = 'Lotte World', address_line = '240 Olympic-ro, Songpa District, Seoul, South Korea' WHERE post_id = 609;
+UPDATE post_map_cards SET venue_name = 'Cheonggyecheon', address_line = 'Jongno District, Seoul, South Korea' WHERE post_id = 610;
+UPDATE post_map_cards SET venue_name = 'Namdaemun Market', address_line = '21 Namdaemunsijang 4-gil, Jung District, Seoul, South Korea' WHERE post_id = 611;
+UPDATE post_map_cards SET venue_name = 'Seoul Grand Park', address_line = '102 Daegongwongwangjang-ro, Gwacheon-si, Gyeonggi-do, South Korea' WHERE post_id = 612;
+UPDATE post_map_cards SET venue_name = 'Starfield Coex Mall', address_line = '513 Yeongdong-daero, Gangnam District, Seoul, South Korea' WHERE post_id = 613;
+UPDATE post_map_cards SET venue_name = 'Jongmyo Shrine', address_line = 'South Korea, Seoul, Jongno District, Jong-ro, 157 종묘관리소' WHERE post_id = 614;
+UPDATE post_map_cards SET venue_name = 'Olympic Stadium', address_line = '25 Olympic-ro, Songpa District, Seoul, South Korea' WHERE post_id = 615;
+UPDATE post_map_cards SET venue_name = 'Gangnam District', address_line = 'Gangnam District, Seoul, South Korea' WHERE post_id = 616;
+UPDATE post_map_cards SET venue_name = 'Forbidden City', address_line = '4 Jingshan Front St, Dongcheng, Beijing, China, 100009' WHERE post_id = 617;
+UPDATE post_map_cards SET venue_name = 'Great Wall of China', address_line = 'Huairou District, China, 101406' WHERE post_id = 618;
+UPDATE post_map_cards SET venue_name = 'Temple of Heaven', address_line = 'Dongcheng, China, 100061' WHERE post_id = 619;
+UPDATE post_map_cards SET venue_name = 'Summer Palace', address_line = 'Haidian District, China, 100091' WHERE post_id = 620;
+UPDATE post_map_cards SET venue_name = 'Ming Dynasty Tombs', address_line = '764F+3C3, Changchi Rd, Changping District, China, 102200' WHERE post_id = 621;
+UPDATE post_map_cards SET venue_name = 'Beihai Park', address_line = '1 Wenjin St, 西安门 Xicheng District, China, 100034' WHERE post_id = 622;
+UPDATE post_map_cards SET venue_name = 'Jingshan Park', address_line = '44 Jingshan W St, 景山 Xicheng District, Beijing, China, 100009' WHERE post_id = 623;
+UPDATE post_map_cards SET venue_name = 'National Stadium', address_line = '1 Guojiatiyuchang S Rd, Chaoyang, China, 100107' WHERE post_id = 624;
+UPDATE post_map_cards SET venue_name = 'Lama Temple', address_line = '12 Yonghegong Ave, 国子监 Dongcheng, China, 100007' WHERE post_id = 625;
+UPDATE post_map_cards SET venue_name = 'Nan Luo Gu Xiang', address_line = 'Nan Luo Gu Xiang, Dong Cheng Qu, Bei Jing Shi, China, 100009' WHERE post_id = 626;
+UPDATE post_map_cards SET venue_name = 'National Museum of China', address_line = '16 E Chang\'an St, 前门 Dongcheng, China, 100051' WHERE post_id = 627;
+UPDATE post_map_cards SET venue_name = 'Beijing Zoo', address_line = '137 Xizhimen Outer Ave, Xicheng District, Beijing, China, 100044' WHERE post_id = 628;
+UPDATE post_map_cards SET venue_name = 'Happy Valley Beijing', address_line = 'China, 北京市朝阳区东四环小武基北路' WHERE post_id = 629;
+UPDATE post_map_cards SET venue_name = 'Beijing Aquarium', address_line = 'Haidian District, China, 100082' WHERE post_id = 630;
+UPDATE post_map_cards SET venue_name = 'Oriental Pearl TV Tower', address_line = '1 Shiji Blvd, Lujiazui, Pudong, Shanghai, China, 200120' WHERE post_id = 631;
+UPDATE post_map_cards SET venue_name = 'Shanghai Disneyland Park', address_line = '4MV5+945, Pudong, Shanghai, China, 201205' WHERE post_id = 632;
+UPDATE post_map_cards SET venue_name = 'Shanghai Museum', address_line = '201 Renmin Ave, People\'s Square, Huangpu, China, 200003' WHERE post_id = 633;
+UPDATE post_map_cards SET venue_name = 'Pudong', address_line = 'Pudong, Shanghai, China' WHERE post_id = 634;
+UPDATE post_map_cards SET venue_name = 'Jade Buddha Temple', address_line = '170 Anyuan Rd, Jing\'An, China, 200061' WHERE post_id = 635;
+UPDATE post_map_cards SET venue_name = 'Zhujiajiao', address_line = 'Zhujiajiao, Qingpu District, Shanghai, China, 201713' WHERE post_id = 636;
+UPDATE post_map_cards SET venue_name = 'Shanghai World Financial Center', address_line = 'Shanghai World Financial Center, 数浦港 Pu Dong Xin Qu, Shang Hai Shi, China, 200120' WHERE post_id = 637;
+UPDATE post_map_cards SET venue_name = 'People\'s Square', address_line = 'People\'s Square, Huangpu, Shanghai, China' WHERE post_id = 638;
+UPDATE post_map_cards SET venue_name = 'Shanghai Ocean Aquarium', address_line = '1388 Lujiazui Ring Rd, Lujiazui, Pudong, Shanghai, China, 200031' WHERE post_id = 640;
+UPDATE post_map_cards SET venue_name = 'Shanghai Grand Theatre', address_line = '300 Renmin Ave, People\'s Square, Huangpu, China, 200003' WHERE post_id = 641;
+UPDATE post_map_cards SET venue_name = 'Krasnaya ploshad', address_line = 'Krasnaya ploshad, Moskva, Russia, 109012' WHERE post_id = 644;
+UPDATE post_map_cards SET venue_name = 'St. Basil\'s Cathedral', address_line = 'Red Square, 7, Moscow, Russia, 109012' WHERE post_id = 645;
+UPDATE post_map_cards SET venue_name = 'Мавзолей В.И. Ленина на Красной площади', address_line = 'Red Square, 1, Moscow, Russia, 109012' WHERE post_id = 646;
+UPDATE post_map_cards SET venue_name = 'Bolshoi Theatre', address_line = 'Theatre Square, 1, Moscow, Russia, 125009' WHERE post_id = 647;
+UPDATE post_map_cards SET venue_name = 'The State Tretyakov Gallery', address_line = 'Lavrushinsky Ln, 10, Moscow, Russia, 119017' WHERE post_id = 648;
+UPDATE post_map_cards SET venue_name = 'Komsomolskaya', address_line = 'Moscow, Russia, 107140' WHERE post_id = 649;
+UPDATE post_map_cards SET venue_name = 'Cathedral of Christ the Saviour', address_line = 'Ulitsa Volkhonka, 15, Moscow, Russia, 119019' WHERE post_id = 650;
+UPDATE post_map_cards SET venue_name = 'Arbat St', address_line = 'Arbat St, Moskva, Russia' WHERE post_id = 651;
+UPDATE post_map_cards SET venue_name = 'Vorob\'yevy gory', address_line = 'Ulitsa Kosygina, 28, Moscow, Russia, 119270' WHERE post_id = 652;
+UPDATE post_map_cards SET venue_name = 'Novodevichy Convent', address_line = 'Novodevichy Passage, 1, Moscow, Russia, 119435' WHERE post_id = 654;
+UPDATE post_map_cards SET venue_name = 'Gateway Of India Mumbai', address_line = 'Apollo Bandar, Colaba, Mumbai, Maharashtra, India' WHERE post_id = 656;
+UPDATE post_map_cards SET venue_name = 'Chhatrapati Shivaji Maharaj Terminus', address_line = 'Chhatrapati Shivaji Terminus Area, Fort, Mumbai, Maharashtra 400001, India' WHERE post_id = 657;
+UPDATE post_map_cards SET venue_name = 'Elephanta Caves', address_line = 'Gharapuri, Maharashtra 400021, India' WHERE post_id = 658;
+UPDATE post_map_cards SET venue_name = 'Marine Dr', address_line = 'Marine Dr, India' WHERE post_id = 659;
+UPDATE post_map_cards SET venue_name = 'Haji Ali Dargah', address_line = 'Lala Lajpatrai Marg, above Kinara Masjid, Haji Ali, Mumbai, Maharashtra 400026, India' WHERE post_id = 660;
+UPDATE post_map_cards SET venue_name = 'Chhatrapati Shivaji Maharaj Vastu Sangrahalaya', address_line = '159-161, Mahatma Gandhi Road, Kala Ghoda, Fort, Mumbai, Maharashtra 400001, India' WHERE post_id = 661;
+UPDATE post_map_cards SET venue_name = 'Sanjay Gandhi National Park', address_line = 'Mumbai, Maharashtra, India' WHERE post_id = 662;
+UPDATE post_map_cards SET venue_name = 'Colaba Causeway', address_line = 'Colaba Causeway, Mumbai, Maharashtra, India' WHERE post_id = 663;
+UPDATE post_map_cards SET venue_name = 'Bandra Worli Sea Link Bridge', address_line = 'Mount Mary, Bandra West, Mumbai, Maharashtra 400050, India' WHERE post_id = 665;
+UPDATE post_map_cards SET venue_name = 'Nehru Science Centre', address_line = 'Jijamata Nagar, Worli, Mumbai, Maharashtra 400018, India' WHERE post_id = 666;
+UPDATE post_map_cards SET venue_name = 'Wankhede Stadium', address_line = 'Netaji Subhash Chandra Bose Rd, Churchgate, Mumbai, Maharashtra 400020, India' WHERE post_id = 667;
+UPDATE post_map_cards SET venue_name = 'Bahia Palace', address_line = 'Marrakesh 40000, Morocco' WHERE post_id = 668;
+UPDATE post_map_cards SET venue_name = 'Madrasa Ben Youssef', address_line = 'Rue Assouel, Marrakech 40000, Morocco' WHERE post_id = 669;
+UPDATE post_map_cards SET venue_name = 'Saadian Tombs', address_line = '400 Rue de La Kasbah, Marrakesh 40000, Morocco' WHERE post_id = 670;
+UPDATE post_map_cards SET venue_name = 'El Badi Palace', address_line = 'Ksibat Nhass, Marrakech 40000, Morocco' WHERE post_id = 671;
+UPDATE post_map_cards SET venue_name = 'Medina', address_line = 'Medina, Marrakesh 40000, Morocco' WHERE post_id = 672;
+UPDATE post_map_cards SET venue_name = 'Menara Gardens', address_line = 'JX6H+XG9، Les Jardin De La, Marrakesh 40000, Morocco' WHERE post_id = 673;
+UPDATE post_map_cards SET venue_name = 'Agdal Gardens', address_line = 'J23G+GVG, Routes des remparts, Marrakesh, Morocco' WHERE post_id = 674;
+UPDATE post_map_cards SET venue_name = 'Almoravid Koubba', address_line = '75 Derb Souk Cheria, Marrakech 40000, Morocco' WHERE post_id = 675;
+UPDATE post_map_cards SET venue_name = 'Marrakech Stadium', address_line = 'Marrakesh, Morocco' WHERE post_id = 676;
+UPDATE post_map_cards SET venue_name = 'Cathedral of Santa Maria del Fiore', address_line = 'Piazza del Duomo, 50122 Firenze FI, Italy' WHERE post_id = 677;
+UPDATE post_map_cards SET venue_name = 'Uffizi Galleries', address_line = 'Piazzale degli Uffizi, 6, 50122 Firenze FI, Italy' WHERE post_id = 678;
+UPDATE post_map_cards SET venue_name = 'Ponte Vecchio', address_line = 'Ponte Vecchio, 50125 Firenze FI, Italy' WHERE post_id = 679;
+UPDATE post_map_cards SET venue_name = 'Palazzo Pitti', address_line = 'Piazza de\' Pitti, 1, 50125 Firenze FI, Italy' WHERE post_id = 680;
+UPDATE post_map_cards SET venue_name = 'Palazzo Vecchio', address_line = 'P.za della Signoria, 50122 Firenze FI, Italy' WHERE post_id = 682;
+UPDATE post_map_cards SET venue_name = 'P.za della Signoria', address_line = 'P.za della Signoria, 50122 Firenze FI, Italy' WHERE post_id = 683;
+UPDATE post_map_cards SET venue_name = 'Boboli Gardens', address_line = '50125 Florence, Metropolitan City of Florence, Italy' WHERE post_id = 684;
+UPDATE post_map_cards SET venue_name = 'Basilica di San Lorenzo', address_line = 'Piazza di San Lorenzo, 9, 50123 Firenze FI, Italy' WHERE post_id = 685;
+UPDATE post_map_cards SET venue_name = 'Basilica di San Miniato', address_line = 'Via delle Porte Sante, 34, 50125 Firenze FI, Italy' WHERE post_id = 686;
+UPDATE post_map_cards SET venue_name = 'il Mercato Centrale Firenze', address_line = 'Piazza del Mercato Centrale, 50123 Firenze FI, Italy' WHERE post_id = 687;
+UPDATE post_map_cards SET venue_name = 'Museo Galileo', address_line = 'Piazza dei Giudici, 1, 50122 Firenze FI, Italy' WHERE post_id = 688;
+UPDATE post_map_cards SET venue_name = 'Duomo di Milano', address_line = 'P.za del Duomo, 20122 Milano MI, Italy' WHERE post_id = 689;
+UPDATE post_map_cards SET venue_name = 'Sforzesco Castle', address_line = 'Piazza Castello, 20121 Milano MI, Italy' WHERE post_id = 690;
+UPDATE post_map_cards SET venue_name = 'Teatro alla Scala', address_line = 'V. Filodrammatici, 2, 20121 Milano MI, Italy' WHERE post_id = 691;
+UPDATE post_map_cards SET venue_name = 'Pinacoteca di Brera', address_line = 'Via Brera, 28, 20121 Milano MI, Italy' WHERE post_id = 692;
+UPDATE post_map_cards SET venue_name = 'Navigli', address_line = 'Navigli, Milan, Metropolitan City of Milan, Italy' WHERE post_id = 693;
+UPDATE post_map_cards SET venue_name = 'San Siro', address_line = 'San Siro, Milan, Metropolitan City of Milan, Italy' WHERE post_id = 694;
+UPDATE post_map_cards SET venue_name = 'P.za del Duomo', address_line = 'P.za del Duomo, Milano MI, Italy' WHERE post_id = 695;
+UPDATE post_map_cards SET venue_name = 'Museo del Novecento', address_line = 'Palazzo dell\'Arengario, P.za del Duomo, 8, 20123 Milano MI, Italy' WHERE post_id = 696;
+UPDATE post_map_cards SET venue_name = 'Monumental Cemetery of Milan', address_line = 'Piazzale Cimitero Monumentale, 20154 Milano MI, Italy' WHERE post_id = 698;
+UPDATE post_map_cards SET venue_name = 'Gardaland Resort', address_line = 'Via Derna, 4, 37014 Castelnuovo del Garda VR, Italy' WHERE post_id = 699;
+UPDATE post_map_cards SET venue_name = 'Bosco Verticale', address_line = 'Via Gaetano de Castillia, 11, 20124 Milano MI, Italy' WHERE post_id = 700;
+UPDATE post_map_cards SET venue_name = 'Acropolis of Athens', address_line = 'Athens 105 58, Greece' WHERE post_id = 701;
+UPDATE post_map_cards SET venue_name = 'Parthenon', address_line = 'Athens 105 58, Greece' WHERE post_id = 702;
+UPDATE post_map_cards SET venue_name = 'Plaka', address_line = 'Plaka, Athens, Greece' WHERE post_id = 703;
+UPDATE post_map_cards SET venue_name = 'Ancient Agora of Athens', address_line = 'Athens 105 55, Greece' WHERE post_id = 704;
+UPDATE post_map_cards SET venue_name = 'National Archaeological Museum', address_line = '28is Oktovriou 44, Athina 106 82, Greece' WHERE post_id = 705;
+UPDATE post_map_cards SET venue_name = 'Monastiraki', address_line = 'Monastiraki, Athens, Greece' WHERE post_id = 706;
+UPDATE post_map_cards SET venue_name = 'Syntagma Square', address_line = 'Pl. Sintagmatos, Athina 105 63, Greece' WHERE post_id = 707;
+UPDATE post_map_cards SET venue_name = 'Mount Lycabettus', address_line = 'Mount Lycabettus, Athens 114 71, Greece' WHERE post_id = 708;
+UPDATE post_map_cards SET venue_name = 'Panathenaic Stadium', address_line = 'Leof. Vasileos Konstantinou, Athina 116 35, Greece' WHERE post_id = 709;
+UPDATE post_map_cards SET venue_name = 'Erechtheion', address_line = 'Athens 105 58, Greece' WHERE post_id = 710;
+UPDATE post_map_cards SET venue_name = 'Benaki Museum', address_line = 'Koumpari 1, Athina 106 74, Greece' WHERE post_id = 711;
+UPDATE post_map_cards SET venue_name = 'Athens National Garden', address_line = 'Athens 105 57, Greece' WHERE post_id = 712;
+UPDATE post_map_cards SET venue_name = 'Theatre of Dionysus Eleuthereus', address_line = 'Mitseon 25, Athina 117 42, Greece' WHERE post_id = 713;
+UPDATE post_map_cards SET venue_name = 'Belém Tower', address_line = 'Av. Brasília, 1400-038 Lisboa, Portugal' WHERE post_id = 715;
+UPDATE post_map_cards SET venue_name = 'Jerónimos Monastery', address_line = 'Praça do Império 1400-206 Lisboa, Portugal' WHERE post_id = 716;
+UPDATE post_map_cards SET venue_name = 'Alfama', address_line = 'Alfama, Lisbon, Portugal' WHERE post_id = 718;
+UPDATE post_map_cards SET venue_name = 'Praça do Comércio', address_line = '1100-148 Lisbon, Portugal' WHERE post_id = 719;
+UPDATE post_map_cards SET venue_name = 'Castelo de São Jorge', address_line = 'R. de Santa Cruz do Castelo, 1100-129 Lisboa, Portugal' WHERE post_id = 720;
+UPDATE post_map_cards SET venue_name = 'Sintra', address_line = 'Sintra, Portugal' WHERE post_id = 721;
+UPDATE post_map_cards SET venue_name = 'National Palace of Pena', address_line = 'Estrada da Pena, 2710-609 Sintra, Portugal' WHERE post_id = 722;
+UPDATE post_map_cards SET venue_name = 'Bairro Alto', address_line = 'Bairro Alto, Margueira, Lisbon, Portugal' WHERE post_id = 723;
+UPDATE post_map_cards SET venue_name = 'Santa Justa Lift', address_line = 'R. de Santa Justa, 1150-060 Lisboa, Portugal' WHERE post_id = 724;
+UPDATE post_map_cards SET venue_name = 'Lisbon Cathedral', address_line = 'Largo da Sé 1, 1100-585 Lisboa, Portugal' WHERE post_id = 725;
+UPDATE post_map_cards SET venue_name = 'Jardim Zoológico', address_line = 'Praça Marechal Humberto Delgado, 1549-004 Lisboa, Portugal' WHERE post_id = 726;
+UPDATE post_map_cards SET venue_name = 'Estádio da Luz', address_line = 'Av. Eusébio da Silva Ferreira, 1500-313 Lisboa, Portugal' WHERE post_id = 727;
+UPDATE post_map_cards SET venue_name = 'Edinburgh Castle', address_line = 'Castlehill, Edinburgh EH1 2NG, United Kingdom' WHERE post_id = 730;
+UPDATE post_map_cards SET venue_name = 'Royal Mile', address_line = 'Edinburgh EH1 1QS, United Kingdom' WHERE post_id = 731;
+UPDATE post_map_cards SET venue_name = 'Arthur\'s Seat', address_line = 'Arthur\'s Seat, Edinburgh EH15 3PY, United Kingdom' WHERE post_id = 732;
+UPDATE post_map_cards SET venue_name = 'Palace of Holyroodhouse', address_line = 'Canongate, Edinburgh EH8 8DX, United Kingdom' WHERE post_id = 733;
+UPDATE post_map_cards SET venue_name = 'National Museum of Scotland', address_line = 'Chambers St, Edinburgh EH1 1JF, United Kingdom' WHERE post_id = 734;
+UPDATE post_map_cards SET venue_name = 'Scott Monument', address_line = 'E. Princes St Gardens, Edinburgh EH2 2EJ, United Kingdom' WHERE post_id = 735;
+UPDATE post_map_cards SET venue_name = 'Calton Hill', address_line = 'Calton Hill, Edinburgh EH7 5AA, United Kingdom' WHERE post_id = 736;
+UPDATE post_map_cards SET venue_name = 'St Giles\' Cathedral', address_line = 'High St, Edinburgh EH1 1RE, United Kingdom' WHERE post_id = 738;
+UPDATE post_map_cards SET venue_name = 'Princes St.', address_line = 'Princes St., Edinburgh, UK' WHERE post_id = 739;
+UPDATE post_map_cards SET venue_name = 'Royal Botanic Garden Edinburgh', address_line = 'Edinburgh EH3 5NZ, United Kingdom' WHERE post_id = 740;
+UPDATE post_map_cards SET venue_name = 'Greyfriars Kirkyard Cemetery Edinburgh', address_line = 'Greyfriars Place, Edinburgh EH1 2QQ, United Kingdom' WHERE post_id = 741;
+UPDATE post_map_cards SET venue_name = 'Festival Theatre', address_line = '13-29 Nicolson St, Edinburgh EH8 9FT, United Kingdom' WHERE post_id = 743;
+UPDATE post_map_cards SET venue_name = 'Trinity College Dublin', address_line = 'College Green, Dublin 2, Ireland' WHERE post_id = 744;
+UPDATE post_map_cards SET venue_name = 'Dublin Castle', address_line = 'Dame St, Dublin 2, Ireland' WHERE post_id = 745;
+UPDATE post_map_cards SET venue_name = 'Phoenix Park', address_line = 'Dublin 8, Ireland' WHERE post_id = 747;
+UPDATE post_map_cards SET venue_name = 'National Museum of Ireland, Merrion Street', address_line = 'Merrion St Upper, Dublin 2, D02 F627, Ireland' WHERE post_id = 748;
+UPDATE post_map_cards SET venue_name = 'Kilmainham Gaol', address_line = 'Inchicore Rd, Kilmainham, Dublin 8, D08 RK28, Ireland' WHERE post_id = 749;
+UPDATE post_map_cards SET venue_name = 'Christ Church Cathedral', address_line = 'Christchurch Pl, Wood Quay, Dublin, D08 TF98, Ireland' WHERE post_id = 750;
+UPDATE post_map_cards SET venue_name = 'O\'Connell Street Upper', address_line = 'O\'Connell Street Upper, Dublin, Ireland' WHERE post_id = 751;
+UPDATE post_map_cards SET venue_name = 'St Stephen\'s Green', address_line = 'St Stephen\'s Green, Dublin, Ireland' WHERE post_id = 752;
+UPDATE post_map_cards SET venue_name = 'Dublin Zoo', address_line = 'Phoenix park, Saint James, Dublin, D08 AC98, Ireland' WHERE post_id = 753;
+UPDATE post_map_cards SET venue_name = 'National Gallery of Ireland', address_line = 'Merrion Square W, Dublin 2, D02 K303, Ireland' WHERE post_id = 754;
+UPDATE post_map_cards SET venue_name = 'Croke Park', address_line = 'Jones\' Rd, Drumcondra, Dublin 3, Ireland' WHERE post_id = 756;
+UPDATE post_map_cards SET venue_name = 'Aviva Stadium', address_line = '4 Lansdowne Rd, Dublin 4, Ireland' WHERE post_id = 757;
+UPDATE post_map_cards SET venue_name = 'Jameson Distillery Bow St.', address_line = 'Bow St, Smithfield, Dublin 7, D07 V57C, Ireland' WHERE post_id = 758;
+UPDATE post_map_cards SET venue_name = 'Tivoli Gardens', address_line = 'Vesterbrogade 3, 1630 København V, Denmark' WHERE post_id = 759;
+UPDATE post_map_cards SET venue_name = 'Nyhavn', address_line = 'Nyhavn, København, Denmark' WHERE post_id = 760;
+UPDATE post_map_cards SET venue_name = 'Christiansborg Palace', address_line = 'Prins Jørgens Gård 5, 1218 København, Denmark' WHERE post_id = 761;
+UPDATE post_map_cards SET venue_name = 'Rosenborg Castle', address_line = 'Øster Voldgade 4A, 1350 København, Denmark' WHERE post_id = 762;
+UPDATE post_map_cards SET venue_name = 'Amalienborg Palace', address_line = 'Amalienborg Slotsplads, 1257 København K, Denmark' WHERE post_id = 763;
+UPDATE post_map_cards SET venue_name = 'Strøget', address_line = 'Strøget, København, Denmark' WHERE post_id = 764;
+UPDATE post_map_cards SET venue_name = 'Ny Carlsberg Glyptotek', address_line = 'Dantes Plads 7, 1556 København, Denmark' WHERE post_id = 765;
+UPDATE post_map_cards SET venue_name = 'Copenhagen Zoo', address_line = 'Roskildevej 32, 2000 Frederiksberg, Denmark' WHERE post_id = 766;
+UPDATE post_map_cards SET venue_name = 'Freetown Christiania', address_line = 'Freetown Christiania, Copenhagen Municipality, Denmark' WHERE post_id = 767;
+UPDATE post_map_cards SET venue_name = 'Parken', address_line = 'Per Henrik Lings Allé 2, 2100 København, Denmark' WHERE post_id = 771;
+UPDATE post_map_cards SET venue_name = 'Kastellet', address_line = 'Gl. Hovedvagt, Kastellet 1, 2100 København, Denmark' WHERE post_id = 772;
+UPDATE post_map_cards SET venue_name = 'Vasa Museum', address_line = 'Galärvarvsvägen 14, 115 21 Stockholm, Sweden' WHERE post_id = 773;
+UPDATE post_map_cards SET venue_name = 'The Royal Palace', address_line = 'Kungliga slottet, 107 70 Stockholm, Sweden' WHERE post_id = 774;
+UPDATE post_map_cards SET venue_name = 'Gamla stan', address_line = 'Gamla stan, Södermalm, Stockholm, Sweden' WHERE post_id = 775;
+UPDATE post_map_cards SET venue_name = 'Djurgården', address_line = 'Djurgården, Östermalm, Stockholm, Sweden' WHERE post_id = 776;
+UPDATE post_map_cards SET venue_name = 'Nobel Prize Museum', address_line = 'Stortorget 2, 103 16 Stockholm, Sweden' WHERE post_id = 777;
+UPDATE post_map_cards SET venue_name = 'Gröna Lund', address_line = 'Lilla Allmänna Gränd 9, 115 21 Stockholm, Sweden' WHERE post_id = 778;
+UPDATE post_map_cards SET venue_name = 'Drottningholm Palace', address_line = 'Drottningholm Palace, 178 93 Drottningholm, Sweden' WHERE post_id = 780;
+UPDATE post_map_cards SET venue_name = 'Storkyrkan', address_line = 'Trångsund 1, 111 29 Stockholm, Sweden' WHERE post_id = 781;
+UPDATE post_map_cards SET venue_name = 'National Museum', address_line = 'Södra Blasieholmshamnen 2, 111 48 Stockholm, Sweden' WHERE post_id = 782;
+UPDATE post_map_cards SET venue_name = 'Junibacken', address_line = 'Galärvarvsvägen 8, 115 21 Stockholm, Sweden' WHERE post_id = 783;
+UPDATE post_map_cards SET venue_name = 'Strawberry Arena', address_line = 'Råsta Strandväg 1, 169 79 Solna, Sweden' WHERE post_id = 784;
+UPDATE post_map_cards SET venue_name = 'Avicii Arena', address_line = '121 77 Johanneshov, Sweden' WHERE post_id = 785;
+UPDATE post_map_cards SET venue_name = 'Konserthuset Stockholm', address_line = 'Hötorget 8, 103 87 Stockholm, Sweden' WHERE post_id = 786;
+UPDATE post_map_cards SET venue_name = 'Kolmården Zoo', address_line = 'Kolmårdens Djurpark, 618 92 Kolmården, Sweden' WHERE post_id = 788;
+UPDATE post_map_cards SET venue_name = 'Oslo Opera House', address_line = 'Kirsten Flagstads plass 1, 0150 Oslo, Norway' WHERE post_id = 789;
+UPDATE post_map_cards SET venue_name = 'Munch', address_line = 'Edvard Munchs Plass 1, 0194 Oslo, Norway' WHERE post_id = 791;
+UPDATE post_map_cards SET venue_name = 'Karl Johans gt.', address_line = 'Karl Johans gt., Oslo, Norway' WHERE post_id = 792;
+UPDATE post_map_cards SET venue_name = 'Tusenfryd', address_line = 'Fryds Vei 25, 1407 Vinterbro, Norway' WHERE post_id = 794;
+UPDATE post_map_cards SET venue_name = 'Oslofjord', address_line = 'Oslofjord, Norway' WHERE post_id = 795;
+UPDATE post_map_cards SET venue_name = 'Oslo Cathedral', address_line = 'Karl Johans gt. 11, 0154 Oslo, Norway' WHERE post_id = 796;
+UPDATE post_map_cards SET venue_name = 'Ullevaal Stadion', address_line = 'Sognsveien 75K, 0855 Oslo, Norway' WHERE post_id = 797;
+UPDATE post_map_cards SET venue_name = 'Helsinki Cathedral', address_line = 'Unioninkatu 29, 00170 Helsinki, Finland' WHERE post_id = 798;
+UPDATE post_map_cards SET venue_name = 'Kauppatori', address_line = 'Eteläranta, 00170 Helsinki, Finland' WHERE post_id = 799;
+UPDATE post_map_cards SET venue_name = 'Uspenski Cathedral', address_line = 'Pormestarinrinne 1, 00160 Helsinki, Finland' WHERE post_id = 800;
+UPDATE post_map_cards SET venue_name = 'Esplanadi', address_line = 'Pohjoisesplanadi, 00130 Helsinki, Finland' WHERE post_id = 801;
+UPDATE post_map_cards SET venue_name = 'Suomen Kansallismuseo', address_line = 'Mannerheimintie 34, 00100 Helsinki, Finland' WHERE post_id = 802;
+UPDATE post_map_cards SET venue_name = 'Korkeasaari Zoo', address_line = 'Mischan ja Maschan aukio 1, 00570 Helsinki, Finland' WHERE post_id = 803;
+UPDATE post_map_cards SET venue_name = 'Finnish National Theatre', address_line = 'Läntinen Teatterikuja 1, 00100 Helsinki, Finland' WHERE post_id = 804;
+UPDATE post_map_cards SET venue_name = 'Heureka', address_line = 'Tiedepuisto 1, 01300 Vantaa, Finland' WHERE post_id = 806;
+UPDATE post_map_cards SET venue_name = 'Grand Place', address_line = 'Grote Markt, 1000 Brussel, Belgium' WHERE post_id = 807;
+UPDATE post_map_cards SET venue_name = 'Atomium', address_line = 'Pl. de l\'Atomium 1, 1020 Bruxelles, Belgium' WHERE post_id = 808;
+UPDATE post_map_cards SET venue_name = 'Manneken Pis', address_line = '1000 Brussels, Belgium' WHERE post_id = 809;
+UPDATE post_map_cards SET venue_name = 'Royal Palace of Brussels', address_line = 'Rue Brederode 16, 1000 Bruxelles, Belgium' WHERE post_id = 810;
+UPDATE post_map_cards SET venue_name = 'Parc du Cinquantenaire', address_line = '1000 Brussels, Belgium' WHERE post_id = 811;
+UPDATE post_map_cards SET venue_name = 'Mont des Arts', address_line = 'Mont des Arts 1, 1000 Bruxelles, Belgium' WHERE post_id = 812;
+UPDATE post_map_cards SET venue_name = 'Magritte Museum', address_line = 'Pl. Royale 1, 1000 Bruxelles, Belgium' WHERE post_id = 813;
+UPDATE post_map_cards SET venue_name = 'Royal Belgian institute of Natural Sciences', address_line = 'Rue Vautier 29, 1000 Bruxelles, Belgium' WHERE post_id = 814;
+UPDATE post_map_cards SET venue_name = 'La Monnaie - De Munt', address_line = 'Pl. de la Monnaie, 1000 Bruxelles, Belgium' WHERE post_id = 815;
+UPDATE post_map_cards SET venue_name = 'Pairi Daiza', address_line = 'Domaine de Cambron, 7940 Brugelette, Belgium' WHERE post_id = 816;
+UPDATE post_map_cards SET venue_name = 'Grossmünster', address_line = 'Zwinglipl. 7, 8001 Zürich, Switzerland' WHERE post_id = 817;
+UPDATE post_map_cards SET venue_name = 'Bahnhofstrasse', address_line = 'Bahnhofstrasse, 8001 Zürich, Switzerland' WHERE post_id = 818;
+UPDATE post_map_cards SET venue_name = 'Uetliberg', address_line = 'Uetliberg, Switzerland' WHERE post_id = 820;
+UPDATE post_map_cards SET venue_name = 'Zoo Zürich', address_line = 'Zürichbergstrasse 221, 8044 Zürich, Switzerland' WHERE post_id = 821;
+UPDATE post_map_cards SET venue_name = 'Museum Rietberg', address_line = 'Gablerstrasse 15, 8002 Zürich, Switzerland' WHERE post_id = 822;
+UPDATE post_map_cards SET venue_name = 'Zürich Opera House', address_line = 'Falkenstrasse 1, 8001 Zürich, Switzerland' WHERE post_id = 823;
+UPDATE post_map_cards SET venue_name = 'Limmat', address_line = 'Limmat, Switzerland' WHERE post_id = 824;
+UPDATE post_map_cards SET venue_name = 'Botanical Garden', address_line = 'Zollikerstrasse 107, 8008 Zürich, Switzerland' WHERE post_id = 826;
+UPDATE post_map_cards SET venue_name = 'Neuschwanstein Castle', address_line = 'Neuschwansteinstraße 20, 87645 Schwangau, Germany' WHERE post_id = 828;
+UPDATE post_map_cards SET venue_name = 'Munich Residence', address_line = 'Residenzstraße 1, 80333 München, Germany' WHERE post_id = 829;
+UPDATE post_map_cards SET venue_name = 'English Garden', address_line = 'Munich, Germany' WHERE post_id = 830;
+UPDATE post_map_cards SET venue_name = 'Nymphenburg Palace', address_line = '80638 Munich, Germany' WHERE post_id = 831;
+UPDATE post_map_cards SET venue_name = 'BMW Welt', address_line = 'Am Olympiapark 1, 80809 München, Germany' WHERE post_id = 832;
+UPDATE post_map_cards SET venue_name = 'Frauenkirche', address_line = 'Frauenplatz 1, 80331 München, Germany' WHERE post_id = 833;
+UPDATE post_map_cards SET venue_name = 'Olympiapark München', address_line = 'Spiridon-Louis-Ring 21, 80809 München, Germany' WHERE post_id = 834;
+UPDATE post_map_cards SET venue_name = 'Alte Pinakothek', address_line = 'Barer Str. 27, 80333 München, Germany' WHERE post_id = 835;
+UPDATE post_map_cards SET venue_name = 'Hellabrunn Zoo', address_line = 'Tierparkstraße 30, 81543 München, Germany' WHERE post_id = 836;
+UPDATE post_map_cards SET venue_name = 'Dachau Concentration Camp Memorial Site', address_line = 'Pater-Roth-Straße 2A, 85221 Dachau, Germany' WHERE post_id = 838;
+UPDATE post_map_cards SET venue_name = 'LEGOLAND Germany', address_line = 'Legoland-Allee 1, 89312 Günzburg, Germany' WHERE post_id = 839;
+UPDATE post_map_cards SET venue_name = 'Dotonbori', address_line = 'Dotonbori, Chuo Ward, Osaka, 542-0071, Japan' WHERE post_id = 841;
+UPDATE post_map_cards SET venue_name = 'Shinsaibashisuji', address_line = 'Shinsaibashisuji, Chuo Ward, Osaka, 542-0085, Japan' WHERE post_id = 842;
+UPDATE post_map_cards SET venue_name = 'Osaka Aquarium Kaiyukan', address_line = '1 Chome-1-10 Kaigandori, Minato Ward, Osaka, 552-0022, Japan' WHERE post_id = 843;
+UPDATE post_map_cards SET venue_name = 'Shinsekai', address_line = '2 Chome Ebisuhigashi, Naniwa Ward, Osaka, 556-0002, Japan' WHERE post_id = 844;
+UPDATE post_map_cards SET venue_name = 'Umeda Sky Building', address_line = '1 Chome-1-88 Oyodonaka, Kita Ward, Osaka, 531-6023, Japan' WHERE post_id = 845;
+UPDATE post_map_cards SET venue_name = 'Abeno Harukas', address_line = '1 Chome-1-43 Abenosuji, Abeno Ward, Osaka, 545-6016, Japan' WHERE post_id = 847;
+UPDATE post_map_cards SET venue_name = 'Osaka Museum of History', address_line = '4 Chome-1-32 Otemae, Chuo Ward, Osaka, 540-0008, Japan' WHERE post_id = 848;
+UPDATE post_map_cards SET venue_name = 'The National Museum of Art, Osaka', address_line = 'Japan, 〒530-0005 Osaka, Kita Ward, Nakanoshima, 4 Chome−2−55 国立国際美術館' WHERE post_id = 849;
+UPDATE post_map_cards SET venue_name = 'Festival Hall', address_line = 'Japan, 〒530-0005 Osaka, Kita Ward, Nakanoshima, 2 Chome−3−18 FESTIVAL TOWER, B1F' WHERE post_id = 850;
+UPDATE post_map_cards SET venue_name = 'Panasonic Stadium Suita', address_line = 'Japan, 〒565-0826 Osaka, Suita, Senribanpakukoen, 3−3 市立吹田サッカースタジアム' WHERE post_id = 851;
+UPDATE post_map_cards SET venue_name = 'Batu Caves', address_line = 'Gombak, 68100 Batu Caves, Selangor, Malaysia' WHERE post_id = 852;
+UPDATE post_map_cards SET venue_name = 'Merdeka Square', address_line = 'Kuala Lumpur City Centre, 50050 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia' WHERE post_id = 853;
+UPDATE post_map_cards SET venue_name = 'Bukit Bintang', address_line = 'Bukit Bintang, Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia' WHERE post_id = 855;
+UPDATE post_map_cards SET venue_name = 'Sultan Abdul Samad Building', address_line = 'Jln Raja, Kuala Lumpur City Centre, 50050 Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia' WHERE post_id = 856;
+UPDATE post_map_cards SET venue_name = 'Resorts World Genting', address_line = 'Genting Highlands, 69000 Genting Highlands, Pahang, Malaysia' WHERE post_id = 858;
+UPDATE post_map_cards SET venue_name = 'Zoo Negara Malaysia', address_line = 'Jalan Taman Zooview, Taman Zooview, 68000 Ampang, Selangor, Malaysia' WHERE post_id = 859;
+UPDATE post_map_cards SET venue_name = 'Thean Hou Temple', address_line = '65, Persiaran Endah, Taman Persiaran Desa, 50460 Kuala Lumpur, Wilayah Persekutuan Kuala Lumpur, Malaysia' WHERE post_id = 860;
+UPDATE post_map_cards SET venue_name = 'Sacred Monkey Forest Sanctuary', address_line = 'Jl. Monkey Forest, Ubud, Kecamatan Ubud, Kabupaten Gianyar, Bali 80571, Indonesia' WHERE post_id = 862;
+UPDATE post_map_cards SET venue_name = 'Uluwatu Temple', address_line = 'Pecatu, South Kuta, Badung Regency, Bali, Indonesia' WHERE post_id = 863;
+UPDATE post_map_cards SET venue_name = 'Pura Tirta Empul', address_line = 'Tampaksiring, Gianyar Regency, Bali 80552, Indonesia' WHERE post_id = 864;
+UPDATE post_map_cards SET venue_name = 'Mt Batur', address_line = 'Mt Batur, South Batur, Kintamani, Bangli Regency, Bali, Indonesia' WHERE post_id = 865;
+UPDATE post_map_cards SET venue_name = 'Besakih Great Temple', address_line = 'Besakih, Rendang, Karangasem Regency, Bali 80863, Indonesia' WHERE post_id = 866;
+UPDATE post_map_cards SET venue_name = 'The Amazing Taman Safari Bali', address_line = 'Jl. Prof. Dr. Ida Bagus Mantra No.19, Serongga, Kec. Blahbatuh, Kabupaten Gianyar, Bali 80515, Indonesia' WHERE post_id = 867;
+UPDATE post_map_cards SET venue_name = 'Museum Puri Lukisan', address_line = 'Jl. Raya Ubud, Ubud, Kecamatan Ubud, Kabupaten Gianyar, Bali 80571, Indonesia' WHERE post_id = 870;
+UPDATE post_map_cards SET venue_name = 'Intramuros', address_line = 'Intramuros, Manila, 1002 Metro Manila, Philippines' WHERE post_id = 871;
+UPDATE post_map_cards SET venue_name = 'Minor Basilica and Metropolitan Cathedral of the Immaculate Conception - The Manila Cathedral', address_line = 'Cabildo, 132 Beaterio St, Intramuros, Manila, Philippines' WHERE post_id = 872;
+UPDATE post_map_cards SET venue_name = 'SM Mall of Asia', address_line = 'Seaside Blvd, Pasay City, 1300 Metro Manila, Philippines' WHERE post_id = 873;
+UPDATE post_map_cards SET venue_name = 'Binondo', address_line = 'Binondo, Manila, 1006 Metro Manila, Philippines' WHERE post_id = 875;
+UPDATE post_map_cards SET venue_name = 'Baywalk', address_line = 'Baywalk, Malate, Manila, 1004 Metro Manila, Philippines' WHERE post_id = 876;
+UPDATE post_map_cards SET venue_name = 'Enchanted Kingdom', address_line = 'San Lorenzo South, RSBS Boulevard, City of Santa Rosa, 4026 Laguna, Philippines' WHERE post_id = 878;
+UPDATE post_map_cards SET venue_name = 'Philippine Arena', address_line = 'Philippine Arena, Bocaue Road, Bocaue, Bulacan, Philippines' WHERE post_id = 879;
+UPDATE post_map_cards SET venue_name = 'SM Mall of Asia Arena', address_line = 'Mall of Asia Complex, J.W. Diokno Boulevard, cor Coral Way, Pasay City, 1300 Metro Manila, Philippines' WHERE post_id = 880;
+UPDATE post_map_cards SET venue_name = 'Ayala Museum', address_line = 'Makati Avenue, corner Dela Rosa Street, Ayala Center, Makati City, 1229 Metro Manila, Philippines' WHERE post_id = 881;
+UPDATE post_map_cards SET venue_name = 'Notre Dame Cathedral of Saigon', address_line = '01 Công trường Công xã Paris, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh 70000, Vietnam' WHERE post_id = 883;
+UPDATE post_map_cards SET venue_name = 'Ben Thanh Market', address_line = 'Ben Thanh, District 1, Ho Chi Minh City, Vietnam' WHERE post_id = 884;
+UPDATE post_map_cards SET venue_name = 'Jade Emperor Pagoda', address_line = '73 Mai Thị Lựu, Đa Kao, Quận 1, Thành phố Hồ Chí Minh 700000, Vietnam' WHERE post_id = 886;
+UPDATE post_map_cards SET venue_name = 'Bitexco Financial Tower', address_line = '2 Đ. Hải Triều, Bến Nghé, Quận 1, Thành phố Hồ Chí Minh 700000, Vietnam' WHERE post_id = 887;
+UPDATE post_map_cards SET venue_name = 'Tân Định Catholic Church', address_line = '289 Hai Bà Trưng, Phường Võ Thị Sáu, Quận 3, Thành phố Hồ Chí Minh 70000, Vietnam' WHERE post_id = 888;
+UPDATE post_map_cards SET venue_name = 'Ho Chi Minh\'s Mausoleum', address_line = '1 Hùng Vương, Điện Biên, Ba Đình, Hà Nội, Vietnam' WHERE post_id = 889;
+UPDATE post_map_cards SET venue_name = 'Old Quarter', address_line = 'Old Quarter, Hoàn Kiếm, Hanoi, Vietnam' WHERE post_id = 890;
+UPDATE post_map_cards SET venue_name = 'One Pillar Pagoda', address_line = '2RPM+79G, P. Chùa Một Cột, Đội Cấn, Ba Đình, Hà Nội 100000, Vietnam' WHERE post_id = 891;
+UPDATE post_map_cards SET venue_name = 'Vietnam Museum of Ethnology', address_line = 'Đ. Nguyễn Văn Huyên, Quan Hoa, Cầu Giấy, Hà Nội 100000, Vietnam' WHERE post_id = 892;
+UPDATE post_map_cards SET venue_name = 'St. Joseph Cathedral', address_line = '1 P. Nhà Thờ, Hàng Trống, Hoàn Kiếm, Hà Nội 100000, Vietnam' WHERE post_id = 893;
+UPDATE post_map_cards SET venue_name = 'West Lake', address_line = 'West Lake, Tây Hồ, Hanoi, Vietnam' WHERE post_id = 894;
+UPDATE post_map_cards SET venue_name = 'Đồng Xuân Market', address_line = 'Đồng Xuân Market, Đồng Xuân, Hoàn Kiếm, Hà Nội 100000, Vietnam' WHERE post_id = 895;
+UPDATE post_map_cards SET venue_name = 'Sân vận động Quốc gia Mỹ Đình', address_line = '1 Đ. Lê Đức Thọ, Mỹ Đình, Nam Từ Liêm, Hà Nội, Vietnam' WHERE post_id = 898;
+UPDATE post_map_cards SET venue_name = 'Red Fort', address_line = 'Netaji Subhash Marg, Lal Qila, Chandni Chowk, New Delhi, Delhi, 110006, India' WHERE post_id = 900;
+UPDATE post_map_cards SET venue_name = 'Qutb Minar', address_line = 'Seth Sarai, Mehrauli, New Delhi, Delhi 110030, India' WHERE post_id = 901;
+UPDATE post_map_cards SET venue_name = 'Lotus Temple', address_line = 'Lotus Temple Rd Bahapur, Kalkaji, New Delhi, Delhi 110019, India' WHERE post_id = 902;
+UPDATE post_map_cards SET venue_name = 'Jama Masjid', address_line = 'Jama Masjid, Old Delhi, Delhi, 110006, India' WHERE post_id = 903;
+UPDATE post_map_cards SET venue_name = 'Chandni Chowk', address_line = 'Chandni Chowk, Delhi, India' WHERE post_id = 904;
+UPDATE post_map_cards SET venue_name = 'National Museum, New Delhi', address_line = 'Janpath Rd, Rajpath Area, Central Secretariat, New Delhi, Delhi 110011, India' WHERE post_id = 905;
+UPDATE post_map_cards SET venue_name = 'Lodhi Gardens', address_line = 'Lodhi Gardens, Lodhi Estate, New Delhi, Delhi 110003, India' WHERE post_id = 906;
+UPDATE post_map_cards SET venue_name = 'Jantar Mantar', address_line = 'Sansad Marg, Janpath, Connaught Place, New Delhi, Delhi 110001, India' WHERE post_id = 908;
+UPDATE post_map_cards SET venue_name = 'Siri Fort Auditorium', address_line = 'H637+854, August Kranti Marg, Siri Institutional Area, Siri Fort Institutional Area, Siri Fort, New Delhi, Delhi 110049, India' WHERE post_id = 909;
+UPDATE post_map_cards SET venue_name = 'Amber Palace', address_line = 'Devisinghpura, Amer, Jaipur, Rajasthan 302001, India' WHERE post_id = 910;
+UPDATE post_map_cards SET venue_name = 'Jantar Mantar', address_line = 'Malve Nagar, J.D.A. Market, Pink City, Jaipur, Rajasthan 302002, India' WHERE post_id = 911;
+UPDATE post_map_cards SET venue_name = 'Nahargarh Fort', address_line = 'Krishna Nagar, Brahampuri, Jaipur, Rajasthan 302001, India' WHERE post_id = 912;
+UPDATE post_map_cards SET venue_name = 'Jaigarh Fort', address_line = 'Devisinghpura, Amer, Jaipur, Rajasthan 302028, India' WHERE post_id = 913;
+UPDATE post_map_cards SET venue_name = 'Albert Hall Museum', address_line = 'Ram Niwas Garden, Ashok Nagar, Jaipur, Rajasthan 302004, India' WHERE post_id = 914;
+UPDATE post_map_cards SET venue_name = 'Galta Ji', address_line = 'Galta Ji, Jaipur, Rajasthan, India' WHERE post_id = 915;
+UPDATE post_map_cards SET venue_name = 'Jaipur Zoo', address_line = 'Museum Rd, Ram Niwas Garden, Kailash Puri, Bagh, Jaipur, Rajasthan 302004, India' WHERE post_id = 916;
+UPDATE post_map_cards SET venue_name = 'National Mall', address_line = 'Washington, DC, United States' WHERE post_id = 918;
+UPDATE post_map_cards SET venue_name = 'Lincoln Memorial', address_line = '2 Lincoln Memorial Cir NW, Washington, DC 20002, United States' WHERE post_id = 919;
+UPDATE post_map_cards SET venue_name = 'Washington Monument', address_line = '2 15th St NW, Washington, DC 20024, United States' WHERE post_id = 920;
+UPDATE post_map_cards SET venue_name = 'United States Capitol', address_line = 'Washington, DC 20004, United States' WHERE post_id = 921;
+UPDATE post_map_cards SET venue_name = 'The White House', address_line = '1600 Pennsylvania Ave NW, Washington, DC 20500, United States' WHERE post_id = 922;
+UPDATE post_map_cards SET venue_name = 'Smithsonian Institution', address_line = '600 Maryland Ave SW, Washington, DC 20024, United States' WHERE post_id = 923;
+UPDATE post_map_cards SET venue_name = 'Smithsonian\'s National Air and Space Museum', address_line = '650 Jefferson Dr SW, Washington, DC 20004, United States' WHERE post_id = 924;
+UPDATE post_map_cards SET venue_name = 'National Gallery of Art', address_line = 'Constitution Ave. NW, Washington, DC 20565, United States' WHERE post_id = 925;
+UPDATE post_map_cards SET venue_name = 'World War II Memorial', address_line = 'VXR5+4H, 1750 Independence Ave SW, Washington, DC 20024, United States' WHERE post_id = 926;
+UPDATE post_map_cards SET venue_name = 'Arlington National Cemetery', address_line = 'Arlington, VA, United States' WHERE post_id = 927;
+UPDATE post_map_cards SET venue_name = 'Library of Congress', address_line = '101 Independence Ave SE, Washington, DC 20540, United States' WHERE post_id = 928;
+UPDATE post_map_cards SET venue_name = 'Nationals Park', address_line = '1500 South Capitol St SE, Washington, DC 20003, United States' WHERE post_id = 929;
+UPDATE post_map_cards SET venue_name = 'Northwest Stadium', address_line = '1600 Ring Rd, Landover, MD 20785, United States' WHERE post_id = 930;
+UPDATE post_map_cards SET venue_name = 'Vizcaya Museum & Gardens', address_line = '3251 S Miami Ave, Miami, FL 33129, United States' WHERE post_id = 931;
+UPDATE post_map_cards SET venue_name = 'Miami Beach', address_line = 'Miami Beach, FL, USA' WHERE post_id = 932;
+UPDATE post_map_cards SET venue_name = 'Little Havana', address_line = 'Little Havana, Miami, FL, USA' WHERE post_id = 933;
+UPDATE post_map_cards SET venue_name = 'Bayside Marketplace', address_line = '401 Biscayne Blvd, Miami, FL 33132, United States' WHERE post_id = 934;
+UPDATE post_map_cards SET venue_name = 'Everglades National Park', address_line = 'Florida, United States' WHERE post_id = 935;
+UPDATE post_map_cards SET venue_name = 'Zoo Miami', address_line = '12400 SW 152nd St, Miami, FL 33177, United States' WHERE post_id = 936;
+UPDATE post_map_cards SET venue_name = 'Jungle Island', address_line = '1111 Parrot Jungle Trail, Miami, FL 33132, United States' WHERE post_id = 937;
+UPDATE post_map_cards SET venue_name = 'Hard Rock Stadium', address_line = '347 Don Shula Dr Suite 102, Miami Gardens, FL 33056, United States' WHERE post_id = 938;
+UPDATE post_map_cards SET venue_name = 'Kaseya Center', address_line = '601 Biscayne Blvd, Miami, FL 33132, United States' WHERE post_id = 939;
+UPDATE post_map_cards SET venue_name = 'Key Biscayne', address_line = 'Key Biscayne, FL 33149, USA' WHERE post_id = 940;
+UPDATE post_map_cards SET venue_name = 'Stanley Park', address_line = 'Vancouver, BC V6G 1Z4, Canada' WHERE post_id = 941;
+UPDATE post_map_cards SET venue_name = 'Granville Island', address_line = 'Granville Island, Vancouver, BC, Canada' WHERE post_id = 942;
+UPDATE post_map_cards SET venue_name = 'Capilano Suspension Bridge Park', address_line = '3735 Capilano Rd, North Vancouver, BC V7R 4J1, Canada' WHERE post_id = 943;
+UPDATE post_map_cards SET venue_name = 'Vancouver Aquarium', address_line = '845 Avison Way, Vancouver, BC V6G 3E2, Canada' WHERE post_id = 944;
+UPDATE post_map_cards SET venue_name = 'Grouse Mountain', address_line = '6400 Nancy Greene Way, North Vancouver, BC V7R 4K9, Canada' WHERE post_id = 945;
+UPDATE post_map_cards SET venue_name = 'Vancouver Art Gallery', address_line = '750 Hornby St, Vancouver, BC V6Z 2H7, Canada' WHERE post_id = 946;
+UPDATE post_map_cards SET venue_name = 'Chinatown', address_line = 'Chinatown, Vancouver, BC, Canada' WHERE post_id = 947;
+UPDATE post_map_cards SET venue_name = 'Lynn Canyon Suspension Bridge', address_line = '3663 Park Rd, North Vancouver, BC V7J 3K2, Canada' WHERE post_id = 948;
+UPDATE post_map_cards SET venue_name = 'Robson St', address_line = 'Robson St, Vancouver, BC, Canada' WHERE post_id = 949;
+UPDATE post_map_cards SET venue_name = 'BC Place', address_line = '777 Pacific Blvd, Vancouver, BC V6B 4Y8, Canada' WHERE post_id = 951;
+UPDATE post_map_cards SET venue_name = 'Rogers Arena', address_line = '800 Griffiths Wy, Vancouver, BC V6B 6G1, Canada' WHERE post_id = 952;
+UPDATE post_map_cards SET venue_name = 'Queen Elizabeth Theatre', address_line = '630 Hamilton St, Vancouver, BC V6B 5N6, Canada' WHERE post_id = 953;
+UPDATE post_map_cards SET venue_name = 'Old Montreal', address_line = 'Old Montreal, Montreal, QC, Canada' WHERE post_id = 954;
+UPDATE post_map_cards SET venue_name = 'Mount Royal', address_line = 'Mount Royal, Montreal, QC H2W 1S8, Canada' WHERE post_id = 955;
+UPDATE post_map_cards SET venue_name = 'Olympic Stadium', address_line = '4545 Pierre-de Coubertin Ave, Montreal, Quebec H1V 0B2, Canada' WHERE post_id = 956;
+UPDATE post_map_cards SET venue_name = 'Montreal Museum of Fine Arts', address_line = '1380 Sherbrooke St W, Montreal, Quebec H3G 1J5, Canada' WHERE post_id = 957;
+UPDATE post_map_cards SET venue_name = 'Saint Joseph\'s Oratory of Mount Royal', address_line = '3800 Queen Mary Rd, Montreal, Quebec H3V 1H6, Canada' WHERE post_id = 958;
+UPDATE post_map_cards SET venue_name = 'Le Plateau-Mont-Royal', address_line = 'Le Plateau-Mont-Royal, Montreal, QC, Canada' WHERE post_id = 960;
+UPDATE post_map_cards SET venue_name = 'Jean Talon Market', address_line = '7070 Henri Julien Ave, Montreal, Quebec H2S 3A3, Canada' WHERE post_id = 961;
+UPDATE post_map_cards SET venue_name = 'Montreal Museum of Archaeology and History', address_line = '350 Place Royale, Montreal, Quebec H2Y 3Y5, Canada' WHERE post_id = 962;
+UPDATE post_map_cards SET venue_name = 'Montreal Science Centre', address_line = '2 De la Commune St W, Montreal, Quebec H2Y 4B2, Canada' WHERE post_id = 963;
+UPDATE post_map_cards SET venue_name = 'Centre Bell', address_line = '1909 Av. des Canadiens-de-Montréal, Montréal, QC H3B 2S2, Canada' WHERE post_id = 964;
+UPDATE post_map_cards SET venue_name = 'Place des Arts', address_line = '175 Rue Sainte-Catherine O, Montréal, QC H2X 3X5, Canada' WHERE post_id = 965;
+UPDATE post_map_cards SET venue_name = 'Zoo de Granby', address_line = '1050 Boulevard David-Bouchard N, Granby, QC J2G 5P3, Canada' WHERE post_id = 966;
+UPDATE post_map_cards SET venue_name = 'SeaWorld San Diego', address_line = '500 Sea World Dr., San Diego, CA 92109, United States' WHERE post_id = 967;
+UPDATE post_map_cards SET venue_name = 'San Diego Zoo Safari Park', address_line = '15500 San Pasqual Valley Rd, Escondido, CA 92027, United States' WHERE post_id = 969;
+UPDATE post_map_cards SET venue_name = 'La Jolla Cove', address_line = 'La Jolla Cove, San Diego, CA 92037, United States' WHERE post_id = 970;
+UPDATE post_map_cards SET venue_name = 'San Diego Natural History Museum', address_line = '1788 El Prado, San Diego, CA 92101, United States' WHERE post_id = 971;
+UPDATE post_map_cards SET venue_name = 'The San Diego Museum of Art', address_line = '1450 El Prado, San Diego, CA 92102, United States' WHERE post_id = 972;
+UPDATE post_map_cards SET venue_name = 'Birch Aquarium', address_line = '2300 Expedition Way, La Jolla, CA 92037, United States' WHERE post_id = 973;
+UPDATE post_map_cards SET venue_name = 'Mission Beach', address_line = 'Mission Beach, San Diego, CA 92109, USA' WHERE post_id = 974;
+UPDATE post_map_cards SET venue_name = 'Cabrillo National Monument', address_line = '1800 Cabrillo Memorial Dr, San Diego, CA 92106, United States' WHERE post_id = 975;
+UPDATE post_map_cards SET venue_name = 'Belmont Park', address_line = '3146 Mission Blvd, San Diego, CA 92109, United States' WHERE post_id = 976;
+UPDATE post_map_cards SET venue_name = 'Point Loma', address_line = 'Point Loma, San Diego, CA, USA' WHERE post_id = 977;
+UPDATE post_map_cards SET venue_name = 'Fenway Park', address_line = '4 Jersey St, Boston, MA 02215, United States' WHERE post_id = 978;
+UPDATE post_map_cards SET venue_name = 'Boston Common', address_line = '139 Tremont St, Boston, MA 02111, United States' WHERE post_id = 979;
+UPDATE post_map_cards SET venue_name = 'Museum of Fine Arts, Boston', address_line = '465 Huntington Ave, Boston, MA 02115, United States' WHERE post_id = 980;
+UPDATE post_map_cards SET venue_name = 'Faneuil Hall Marketplace', address_line = 'Boston, MA 02109, United States' WHERE post_id = 981;
+UPDATE post_map_cards SET venue_name = 'The Paul Revere House', address_line = '19 N Square, Boston, MA 02113, United States' WHERE post_id = 982;
+UPDATE post_map_cards SET venue_name = 'Old North Church', address_line = '193 Salem St, Boston, MA 02113, United States' WHERE post_id = 983;
+UPDATE post_map_cards SET venue_name = 'Isabella Stewart Gardner Museum', address_line = '25 Evans Way, Boston, MA 02115, United States' WHERE post_id = 984;
+UPDATE post_map_cards SET venue_name = 'Massachusetts Institute of Technology', address_line = '77 Massachusetts Ave, Cambridge, MA 02139, United States' WHERE post_id = 985;
+UPDATE post_map_cards SET venue_name = 'USS Constitution', address_line = 'Charlestown, MA 02129, United States' WHERE post_id = 986;
+UPDATE post_map_cards SET venue_name = 'Symphony Hall', address_line = '301 Massachusetts Ave, Boston, MA 02115, United States' WHERE post_id = 987;
+UPDATE post_map_cards SET venue_name = 'Franklin Park Zoo', address_line = '1 Franklin Park Rd, Boston, MA 02121, United States' WHERE post_id = 988;
+UPDATE post_map_cards SET venue_name = 'Newbury St', address_line = 'Newbury St, Boston, MA, USA' WHERE post_id = 989;
+UPDATE post_map_cards SET venue_name = 'Space Needle', address_line = '400 Broad St, Seattle, WA 98109, United States' WHERE post_id = 990;
+UPDATE post_map_cards SET venue_name = 'Museum of Pop Culture', address_line = '325 5th Ave N, Seattle, WA 98109, United States' WHERE post_id = 991;
+UPDATE post_map_cards SET venue_name = 'Chihuly Garden and Glass', address_line = '305 Harrison St, Seattle, WA 98109, United States' WHERE post_id = 992;
+UPDATE post_map_cards SET venue_name = 'Woodland Park Zoo', address_line = 'Seattle, WA 98103, United States' WHERE post_id = 994;
+UPDATE post_map_cards SET venue_name = 'Gas Works Park', address_line = '2101 N Northlake Way, Seattle, WA 98103, United States' WHERE post_id = 995;
+UPDATE post_map_cards SET venue_name = 'Lumen Field', address_line = '800 Occidental Ave S, Seattle, WA 98134, United States' WHERE post_id = 996;
+UPDATE post_map_cards SET venue_name = 'Olympic Sculpture Park', address_line = '2901 Western Ave, Seattle, WA 98121, United States' WHERE post_id = 997;
+UPDATE post_map_cards SET venue_name = 'The Museum of Flight', address_line = 'Seattle, WA 98108, United States' WHERE post_id = 998;
+UPDATE post_map_cards SET venue_name = 'Wild Waves Theme and Water Park', address_line = '36201 Enchanted Pkwy S, Federal Way, WA 98003, United States' WHERE post_id = 1000;
+UPDATE post_map_cards SET venue_name = 'Pa Tong', address_line = 'Pa Tong, Kathu District, Phuket, Thailand' WHERE post_id = 1001;
+UPDATE post_map_cards SET venue_name = 'Phang Nga Bay', address_line = 'Phang Nga Bay, Thailand' WHERE post_id = 1002;
+UPDATE post_map_cards SET venue_name = 'Old Phuket Town', address_line = 'Old Phuket Town, Mueang Phuket District, Phuket 83000, Thailand' WHERE post_id = 1003;
+UPDATE post_map_cards SET venue_name = 'Karon Beach', address_line = 'Karon Beach, Karon, Phuket 83100, Thailand' WHERE post_id = 1005;
+UPDATE post_map_cards SET venue_name = 'Phi Phi Islands', address_line = 'Phi Phi Islands, Mueang Krabi District, Krabi, Thailand' WHERE post_id = 1006;
+UPDATE post_map_cards SET venue_name = 'National Palace Museum', address_line = 'No. 221, Sec 2, Zhi Shan Rd, Shilin District, Taipei City, Taiwan 111' WHERE post_id = 1008;
+UPDATE post_map_cards SET venue_name = 'Chiang Kai-shek Memorial Hall', address_line = '100, Taiwan, Taipei City, Zhongzheng District' WHERE post_id = 1010;
+UPDATE post_map_cards SET venue_name = 'Yangmingshan National Park', address_line = 'Taiwan' WHERE post_id = 1012;
+UPDATE post_map_cards SET venue_name = 'Taipei Zoo', address_line = 'No. 30號, Section 2, Xinguang Rd, Wenshan District, Taipei City, Taiwan 116' WHERE post_id = 1015;
+UPDATE post_map_cards SET venue_name = 'Taipei Fine Arts Museum', address_line = 'No. 181號, Section 3, Zhongshan N Rd, Zhongshan District, Taipei City, Taiwan 10461' WHERE post_id = 1017;
+UPDATE post_map_cards SET venue_name = 'National Dr. Sun Yat-Sen Memorial Hall', address_line = 'No. 505號, Section 4, Ren\'ai Rd, Xinyi District, Taipei City, Taiwan 110' WHERE post_id = 1018;
+UPDATE post_map_cards SET venue_name = 'National Theater', address_line = 'No. 21-1號, Zhongshan S Rd, Zhongzheng District, Taipei City, Taiwan 100011' WHERE post_id = 1019;
+UPDATE post_map_cards SET venue_name = 'Leofoo Village Theme Park', address_line = '仁安里拱子溝 60 號, Guanxi Township, Hsinchu County, Taiwan 306' WHERE post_id = 1021;
+UPDATE post_map_cards SET venue_name = 'State Hermitage Museum', address_line = 'Palace Square, 2, St Petersburg, Russia, 190000' WHERE post_id = 1022;
+UPDATE post_map_cards SET venue_name = 'Winter Palace', address_line = 'Palace Embankment, 32, St Petersburg, Russia, 190000' WHERE post_id = 1023;
+UPDATE post_map_cards SET venue_name = 'Savior on the Spilled Blood', address_line = 'Griboyedov channel embankment, 2б, лит. А, St Petersburg, Russia, 191186' WHERE post_id = 1024;
+UPDATE post_map_cards SET venue_name = 'Peter and Paul Fortress', address_line = 'St Petersburg, Russia, 197046' WHERE post_id = 1025;
+UPDATE post_map_cards SET venue_name = 'Peterhof Palace', address_line = 'Razvodnaya Ulitsa, 2, St Petersburg, Russia' WHERE post_id = 1026;
+UPDATE post_map_cards SET venue_name = 'Catherine Palace', address_line = 'Garden St, 7, Sankt-Peterburg, Russia, 196601' WHERE post_id = 1027;
+UPDATE post_map_cards SET venue_name = 'Mariinsky Theatre', address_line = 'Theatre Square, 1, St Petersburg, Russia, 190000' WHERE post_id = 1028;
+UPDATE post_map_cards SET venue_name = 'Summer Garden', address_line = 'Naberezhnaya Lebyazh\'yey Kanavki, St Petersburg, Russia, 191186' WHERE post_id = 1029;
+UPDATE post_map_cards SET venue_name = 'Gazprom Arena', address_line = 'Futbol\'naya Alleya, 1, St Petersburg, Russia, 197110' WHERE post_id = 1031;
+UPDATE post_map_cards SET venue_name = 'Kunstkamera', address_line = 'University Embankment, 3, St Petersburg, Russia, 199034' WHERE post_id = 1032;
+UPDATE post_map_cards SET venue_name = 'Vasilyevsky Island', address_line = 'Vasilyevsky Island, St Petersburg, Russia' WHERE post_id = 1033;
+UPDATE post_map_cards SET venue_name = 'Bayon Temple', address_line = 'Krong Siem Reap, Cambodia' WHERE post_id = 1034;
+UPDATE post_map_cards SET venue_name = 'Preah Khan Temple', address_line = 'Krong Siem Reap, Cambodia' WHERE post_id = 1035;
+UPDATE post_map_cards SET venue_name = 'Phnom Bakheng Temple', address_line = 'CVF4+GCW Angkor Archaeological Park, Krong Siem Reap 17000, Cambodia' WHERE post_id = 1036;
+UPDATE post_map_cards SET venue_name = 'Angkor National Museum', address_line = '968 Vithei Preah Sihanouk Ave, Krong Siem Reap, Cambodia' WHERE post_id = 1037;
+UPDATE post_map_cards SET venue_name = 'Angkor Green Gardens Park by Dara', address_line = 'National Road #6, Krong Siem Reap 17252, Cambodia' WHERE post_id = 1038;
+UPDATE post_map_cards SET venue_name = 'Boudhha', address_line = 'Boudhha, Kathmandu 44600, Nepal' WHERE post_id = 1039;
+UPDATE post_map_cards SET venue_name = 'Patan Darbar Square', address_line = 'Lalitpur 44600, Nepal' WHERE post_id = 1040;
+UPDATE post_map_cards SET venue_name = 'Thamel', address_line = 'Thamel, Kathmandu 44600, Nepal' WHERE post_id = 1041;
+UPDATE post_map_cards SET venue_name = 'Garden of Dreams', address_line = 'Tridevi Sadak, Kathmandu 44600, Nepal' WHERE post_id = 1042;
+UPDATE post_map_cards SET venue_name = 'Kathmandu', address_line = 'Kathmandu 44600, Nepal' WHERE post_id = 1043;
+UPDATE post_map_cards SET venue_name = 'Shivapuri Nagarjun National Park', address_line = '44600, Nepal' WHERE post_id = 1044;
+UPDATE post_map_cards SET venue_name = 'Agra Fort', address_line = 'Agra Fort, Rakabganj, Agra, Uttar Pradesh, India' WHERE post_id = 1045;
+UPDATE post_map_cards SET venue_name = 'Mehtab Bagh', address_line = 'MEHTAB BAGH, 1, Agra, Uttar Pradesh 282001, India' WHERE post_id = 1046;
+UPDATE post_map_cards SET venue_name = 'Tomb of Mariam-UZ-Zamani', address_line = '6W8V+43Q, Mathura Rd, near Pathwari Mandir, Kailash Mode, Sikandra, Agra, Bainpur Mustkil, Uttar Pradesh 282007, India' WHERE post_id = 1048;
+UPDATE post_map_cards SET venue_name = 'Bharatpur Bird Sanctuary', address_line = '5G7F+599, Bharatpur, Shreenagar Rural, Rajasthan 321001, India' WHERE post_id = 1050;
+UPDATE post_map_cards SET venue_name = 'Gold Reef City Theme Park', address_line = 'Northern Pkwy & Data Cres, Johannesburg, 2159, South Africa' WHERE post_id = 1051;
+UPDATE post_map_cards SET venue_name = 'Johannesburg Zoo', address_line = 'and, Shop U 30 Keyes, Jellicoe Ave, Rosebank, Johannesburg, 2196, South Africa' WHERE post_id = 1052;
+UPDATE post_map_cards SET venue_name = 'Montecasino', address_line = 'Montecasino Blvd, Fourways, Johannesburg, 2055, South Africa' WHERE post_id = 1057;
+UPDATE post_map_cards SET venue_name = 'Carlton Centre', address_line = 'Carlton Centre, 150 Commissioner St, Marshalltown, Johannesburg, 2000, South Africa' WHERE post_id = 1058;
+UPDATE post_map_cards SET venue_name = 'Kenyatta International Convention Centre', address_line = 'City Square, along, Harambee Ave, Nairobi, Kenya' WHERE post_id = 1059;
+UPDATE post_map_cards SET venue_name = 'Ngong Hills', address_line = 'Ngong Hills, Kenya' WHERE post_id = 1061;
+UPDATE post_map_cards SET venue_name = 'Warsaw Old Town', address_line = 'Warsaw Old Town, Warsaw, Poland' WHERE post_id = 1062;
+UPDATE post_map_cards SET venue_name = 'The Royal Castle in Warsaw', address_line = 'plac Zamkowy 4, 00-277 Warszawa, Poland' WHERE post_id = 1063;
+UPDATE post_map_cards SET venue_name = 'Royal Baths Park', address_line = 'Agrykola 1, 00-460 Warszawa, Poland' WHERE post_id = 1064;
+UPDATE post_map_cards SET venue_name = 'Warsaw Uprising Museum', address_line = 'Grzybowska 79, 00-844 Warszawa, Poland' WHERE post_id = 1065;
+UPDATE post_map_cards SET venue_name = 'Copernicus Science Centre', address_line = 'Wybrzeże Kościuszkowskie 20, 00-390 Warszawa, Poland' WHERE post_id = 1066;
+UPDATE post_map_cards SET venue_name = 'plac Zamkowy', address_line = 'plac Zamkowy, 01-195 Warszawa, Poland' WHERE post_id = 1067;
+UPDATE post_map_cards SET venue_name = 'City Zoological Garden in Warsaw', address_line = 'Ratuszowa 1/3, 03-461 Warszawa, Poland' WHERE post_id = 1068;
+UPDATE post_map_cards SET venue_name = 'Teatr Wielki - Polish National Opera', address_line = 'plac Teatralny 1, 00-950 Warszawa, Poland' WHERE post_id = 1069;
+UPDATE post_map_cards SET venue_name = 'Krakowskie Przedmieście', address_line = 'Krakowskie Przedmieście, Warszawa, Poland' WHERE post_id = 1071;
+UPDATE post_map_cards SET venue_name = 'Archcathedral Basilica of St. John the Baptist', address_line = 'Świętojańska 8, 00-278 Warszawa, Poland' WHERE post_id = 1072;
+UPDATE post_map_cards SET venue_name = 'Wawel Royal Castle-State Art Collection', address_line = 'Wawel 5, 31-001 Kraków, Poland' WHERE post_id = 1074;
+UPDATE post_map_cards SET venue_name = 'Rynek Główny', address_line = 'Rynek Główny, 31-422 Kraków, Poland' WHERE post_id = 1075;
+UPDATE post_map_cards SET venue_name = 'Memorial and Museum Auschwitz-Birkenau', address_line = 'Więźniów Oświęcimia 55, 32-600 Oświęcim, Poland' WHERE post_id = 1076;
+UPDATE post_map_cards SET venue_name = 'Wieliczka Salt Mine', address_line = 'Daniłowicza 10, 32-020 Wieliczka, Poland' WHERE post_id = 1077;
+UPDATE post_map_cards SET venue_name = 'Kazimierz', address_line = 'Kazimierz, Kraków, Poland' WHERE post_id = 1078;
+UPDATE post_map_cards SET venue_name = 'Energylandia', address_line = 'aleja 3 Maja 2, 32-640 Zator, Poland' WHERE post_id = 1080;
+UPDATE post_map_cards SET venue_name = 'TAURON Arena Krakow', address_line = 'Stanisława Lema 7, 31-571 Kraków, Poland' WHERE post_id = 1081;
+UPDATE post_map_cards SET venue_name = 'Buda Castle', address_line = 'Budapest, Szent György tér, 1014 Hungary' WHERE post_id = 1084;
+UPDATE post_map_cards SET venue_name = 'Hungarian Parliament Building', address_line = 'Budapest, Kossuth Lajos tér 1-3, 1055 Hungary' WHERE post_id = 1085;
+UPDATE post_map_cards SET venue_name = 'Széchenyi Thermal Bath', address_line = 'Budapest, Állatkerti krt. 9-11, 1146 Hungary' WHERE post_id = 1086;
+UPDATE post_map_cards SET venue_name = 'Heroes\' Square', address_line = 'Budapest, Hősök tere, 1146 Hungary' WHERE post_id = 1087;
+UPDATE post_map_cards SET venue_name = 'The Church of Our Lady of Buda Castle', address_line = 'Budapest, Szentháromság tér 2, 1014 Hungary' WHERE post_id = 1088;
+UPDATE post_map_cards SET venue_name = 'Central Market Hall', address_line = 'Budapest, 1093 Hungary' WHERE post_id = 1089;
+UPDATE post_map_cards SET venue_name = 'Hungarian National Museum', address_line = 'Budapest, Múzeum krt. 14-16, 1088 Hungary' WHERE post_id = 1090;
+UPDATE post_map_cards SET venue_name = 'House of Terror Museum', address_line = 'Budapest, Andrássy út 60, 1062 Hungary' WHERE post_id = 1091;
+UPDATE post_map_cards SET venue_name = 'Gellért Hill', address_line = 'Budapest, Gellért Hill, 1016 Hungary' WHERE post_id = 1092;
+UPDATE post_map_cards SET venue_name = 'Citadel', address_line = 'Budapest, 1, 1118 Hungary' WHERE post_id = 1093;
+UPDATE post_map_cards SET venue_name = 'Hungarian State Opera', address_line = 'Budapest, Andrássy út 22, 1061 Hungary' WHERE post_id = 1094;
+UPDATE post_map_cards SET venue_name = 'Puskás Aréna', address_line = 'Budapest, Istvánmezei út 3-5, 1146 Hungary' WHERE post_id = 1095;
+UPDATE post_map_cards SET venue_name = 'Váci u', address_line = 'Budapest, Váci u, Hungary' WHERE post_id = 1096;
+UPDATE post_map_cards SET venue_name = 'Dohány Street Synagogue', address_line = 'Budapest, Dohány u. 2, 1074 Hungary' WHERE post_id = 1097;
+UPDATE post_map_cards SET venue_name = 'Fira', address_line = 'Fira 847 00, Greece' WHERE post_id = 1098;
+UPDATE post_map_cards SET venue_name = 'Ancient Thera', address_line = 'Santorini 847 00, Greece' WHERE post_id = 1100;
+UPDATE post_map_cards SET venue_name = 'Pyrgos Kallistis', address_line = 'Pyrgos Kallistis 847 00, Greece' WHERE post_id = 1101;
+UPDATE post_map_cards SET venue_name = 'Museum of Prehistoric Thera', address_line = 'Fira 847 00, Greece' WHERE post_id = 1102;
+UPDATE post_map_cards SET venue_name = 'Nea Kameni', address_line = 'Nea Kameni, Santorini 847 00, Greece' WHERE post_id = 1104;
+UPDATE post_map_cards SET venue_name = 'Walls of Dubrovnik', address_line = 'Poljana Paska Miličevića bb, 20000, Dubrovnik, Croatia' WHERE post_id = 1105;
+UPDATE post_map_cards SET venue_name = 'Lokrum', address_line = 'Lokrum, Croatia' WHERE post_id = 1106;
+UPDATE post_map_cards SET venue_name = 'Rector\'s Palace', address_line = 'Ul. Pred Dvorom 3, 20000, Dubrovnik, Croatia' WHERE post_id = 1107;
+UPDATE post_map_cards SET venue_name = 'Sponza Palace', address_line = 'Stradun 2, 20000, Dubrovnik, Croatia' WHERE post_id = 1108;
+UPDATE post_map_cards SET venue_name = 'Peristil', address_line = 'Peristil, 21000, Grad, Split, Croatia' WHERE post_id = 1110;
+UPDATE post_map_cards SET venue_name = 'Museum of Fine Art', address_line = 'Ul. kralja Tomislava 15, 21000, Split, Croatia' WHERE post_id = 1111;
+UPDATE post_map_cards SET venue_name = 'Krka National Park', address_line = 'Croatia' WHERE post_id = 1112;
+UPDATE post_map_cards SET venue_name = 'Plitvice Lakes National Park', address_line = 'Croatia' WHERE post_id = 1113;
+UPDATE post_map_cards SET venue_name = 'Prom. des Anglais', address_line = 'Prom. des Anglais, Nice, France' WHERE post_id = 1115;
+UPDATE post_map_cards SET venue_name = 'Pl. Massena', address_line = 'Pl. Massena, Nice, France' WHERE post_id = 1116;
+UPDATE post_map_cards SET venue_name = 'Monaco', address_line = 'Monaco' WHERE post_id = 1117;
+UPDATE post_map_cards SET venue_name = 'Allianz Riviera', address_line = 'Bd des Jardiniers, 06200 Nice, France' WHERE post_id = 1118;
+UPDATE post_map_cards SET venue_name = 'St Paul de Vence', address_line = 'St Paul de Vence, France' WHERE post_id = 1119;
+UPDATE post_map_cards SET venue_name = 'Lima Main Square', address_line = 'Jr. Junín cdra. 1, Lima 15001, Peru' WHERE post_id = 1120;
+UPDATE post_map_cards SET venue_name = 'Larco Museum', address_line = 'frente al, Parque Larco, Av. Simón Bolivar 1515 Ingreso por, Navarra 169, Pueblo Libre 15084, Peru' WHERE post_id = 1121;
+UPDATE post_map_cards SET venue_name = 'Lima Cathedral', address_line = 'Plaza de Armas de Lima, Jirón Carabaya s/n, Lima 15001, Peru' WHERE post_id = 1122;
+UPDATE post_map_cards SET venue_name = 'Parque Kennedy', address_line = 'Parque Kennedy, Miraflores 15074, Peru' WHERE post_id = 1123;
+UPDATE post_map_cards SET venue_name = 'Basílica and Convent of San Francisco, Lima', address_line = 'XX3F+P6Q, Jr. Lampa, Lima 15001, Peru' WHERE post_id = 1124;
+UPDATE post_map_cards SET venue_name = 'Museo de Arte de Lima', address_line = 'Av. 9 de Diciembre 125 15046, Lima 15046, Peru' WHERE post_id = 1125;
+UPDATE post_map_cards SET venue_name = 'Plaza de Bolívar', address_line = 'Cra. 7 #11-10, La Candelaria, Bogotá, Colombia' WHERE post_id = 1126;
+UPDATE post_map_cards SET venue_name = 'Botero Museum', address_line = 'Cl. 11 #4-41, Bogotá, Colombia' WHERE post_id = 1127;
+UPDATE post_map_cards SET venue_name = 'Catedral de Sal de Zipaquirá Salt', address_line = 'Parque De La Sal, Zipaquirá, Cundinamarca, Colombia' WHERE post_id = 1128;
+UPDATE post_map_cards SET venue_name = 'El Campin', address_line = 'El Campin, Teusaquillo, Bogotá, Bogota, Colombia' WHERE post_id = 1129;
+UPDATE post_map_cards SET venue_name = 'Jardín Botánico de Bogotá José Celestino Mutis', address_line = 'Cl 63 #68-95, Bogotá, Colombia' WHERE post_id = 1130;
+UPDATE post_map_cards SET venue_name = 'Parque Jaime Duque', address_line = 'Zipaquira - Briceno #55C, Zipaquirá, Tocancipá, Cundinamarca, Colombia' WHERE post_id = 1131;
+UPDATE post_map_cards SET venue_name = 'San Cristóbal Hill', address_line = 'San Cristóbal Hill, Recoleta, Santiago Metropolitan Region, Chile' WHERE post_id = 1132;
+UPDATE post_map_cards SET venue_name = 'La Moneda Palace', address_line = 'Moneda, Santiago, Región Metropolitana, Chile' WHERE post_id = 1133;
+UPDATE post_map_cards SET venue_name = 'Santa Lucía Hill', address_line = 'Santa Lucía Hill, Santiago, Santiago Metropolitan Region, Chile' WHERE post_id = 1134;
+UPDATE post_map_cards SET venue_name = 'Estadio Nacional Julio Martínez Pradanos', address_line = 'Av. Grecia 2001, 7780464 Ñuñoa, Región Metropolitana, Chile' WHERE post_id = 1135;
+UPDATE post_map_cards SET venue_name = 'Lastarria', address_line = 'Lastarria, Santiago, Santiago Metropolitan Region, Chile' WHERE post_id = 1137;
+UPDATE post_map_cards SET venue_name = 'Museum of Cartagena de Indias', address_line = '46, Plaza de Bolivar Carrera 3 33, Bolívar, Colombia' WHERE post_id = 1138;
+UPDATE post_map_cards SET venue_name = 'Bocagrande', address_line = 'Bocagrande, Cartagena, Bolivar, Colombia' WHERE post_id = 1139;
+UPDATE post_map_cards SET venue_name = 'La Boquilla', address_line = 'La Boquilla, Cartagena, Bolivar, Colombia' WHERE post_id = 1140;
+UPDATE post_map_cards SET venue_name = 'Historic Sanctuary of Machu Picchu', address_line = '08680, Peru' WHERE post_id = 1143;
+UPDATE post_map_cards SET venue_name = 'Saqsaywaman', address_line = 'Cusco 08002, Peru' WHERE post_id = 1144;
+UPDATE post_map_cards SET venue_name = 'Cusco Cathedral', address_line = 'F2MC+85M, Cusco 08002, Peru' WHERE post_id = 1145;
+UPDATE post_map_cards SET venue_name = 'Sacred Valley', address_line = 'Sacred Valley, 08670, Peru' WHERE post_id = 1146;
+UPDATE post_map_cards SET venue_name = 'Tambomachay', address_line = 'G2CM+928, Cusco 08000, Peru' WHERE post_id = 1148;
+UPDATE post_map_cards SET venue_name = 'Tipon', address_line = 'Tipon, Cusco 08003, Peru' WHERE post_id = 1150;
+UPDATE post_map_cards SET venue_name = 'Centro Qosqo de Arte Nativo', address_line = 'Av. El Sol 872, Cusco 08002, Peru' WHERE post_id = 1151;
+UPDATE post_map_cards SET venue_name = 'Chichén Itzá', address_line = '97751 Yucatan, Mexico' WHERE post_id = 1152;
+UPDATE post_map_cards SET venue_name = 'Isla Mujeres', address_line = 'Isla Mujeres, Quintana Roo, Mexico' WHERE post_id = 1153;
+UPDATE post_map_cards SET venue_name = 'Xcaret Park', address_line = 'Carretera Chetumal, Puerto Juarez km 282-Int B, Colonia Rancho Xcaret, Juárez, 77580 Playa del Carmen, Q.R., Mexico' WHERE post_id = 1154;
+UPDATE post_map_cards SET venue_name = 'Tulum', address_line = 'Zona Hotelera Tulum, 77765 Tulum, Quintana Roo, Mexico' WHERE post_id = 1155;
+UPDATE post_map_cards SET venue_name = 'Glass House Mountains', address_line = 'Glass House Mountains QLD, Australia' WHERE post_id = 1158;
+UPDATE post_map_cards SET venue_name = 'Mapleton Falls National Park', address_line = '78 Mapleton Falls Rd, Mapleton QLD 4560, Australia' WHERE post_id = 1160;
+UPDATE post_map_cards SET venue_name = 'Maroochydore', address_line = 'Maroochydore QLD, Australia' WHERE post_id = 1161;
+UPDATE post_map_cards SET venue_name = 'The Big Pineapple', address_line = '76 Nambour Connection Rd, Woombye QLD 4559, Australia' WHERE post_id = 1162;
+UPDATE post_map_cards SET venue_name = 'Kakadu National Park', address_line = 'Kakadu Hwy, Jabiru NT 0886, Australia' WHERE post_id = 1163;
+UPDATE post_map_cards SET venue_name = 'Crocosaurus Cove', address_line = '58 Mitchell St, Darwin City NT 0800, Australia' WHERE post_id = 1164;
+UPDATE post_map_cards SET venue_name = 'Stokes Hill Wharf', address_line = '45 Stokes Hill Rd, Darwin City NT 0800, Australia' WHERE post_id = 1166;
+UPDATE post_map_cards SET venue_name = 'Larnach Castle', address_line = '145 Camp Road, Pukehiki, Dunedin 9077, New Zealand' WHERE post_id = 1168;
+UPDATE post_map_cards SET venue_name = 'Dunedin Railway Station', address_line = '3074332, Dunedin 9016, New Zealand' WHERE post_id = 1169;
+UPDATE post_map_cards SET venue_name = 'Otago Peninsula', address_line = 'Otago Peninsula, Otago Region, New Zealand' WHERE post_id = 1170;
+UPDATE post_map_cards SET venue_name = 'Tuhura Otago Museum', address_line = '419 Great King Street, Dunedin North, Dunedin 9016, New Zealand' WHERE post_id = 1171;
+UPDATE post_map_cards SET venue_name = 'Speight\'s Brewery', address_line = '200 Rattray Street, Central Dunedin, Dunedin 9016, New Zealand' WHERE post_id = 1172;
+UPDATE post_map_cards SET venue_name = 'First Church Of Otago', address_line = '415 Moray Place, Central Dunedin, Dunedin 9016, New Zealand' WHERE post_id = 1174;
+UPDATE post_map_cards SET venue_name = 'Saint Clair Beach', address_line = 'Saint Clair Beach, St Clair, Dunedin 9012, New Zealand' WHERE post_id = 1176;
+UPDATE post_map_cards SET venue_name = 'National Aquarium of New Zealand', address_line = '546 Marine Parade, Napier South, Napier 4110, New Zealand' WHERE post_id = 1179;
+UPDATE post_map_cards SET venue_name = 'Cape Kidnappers', address_line = 'Cape Kidnappers, Hawke\'s Bay Region, New Zealand' WHERE post_id = 1180;
+UPDATE post_map_cards SET venue_name = 'Te Mata Peak', address_line = 'Te Mata Peak, Tuki Tuki 4294, New Zealand' WHERE post_id = 1181;
+UPDATE post_map_cards SET venue_name = 'The Sanctuary of Truth Museum', address_line = '206, 2 Soi Na Kluea 12, Muang Pattaya, Bang Lamung District, Chon Buri 20150, Thailand' WHERE post_id = 1183;
+UPDATE post_map_cards SET venue_name = 'Walking St', address_line = 'Walking St, Muang Pattaya, Amphoe Bang Lamung, Chang Wat Chon Buri 20150, Thailand' WHERE post_id = 1184;
+UPDATE post_map_cards SET venue_name = 'Khao Chi Chan', address_line = 'Khao Chi Chan, Na Chom Thian, Sattahip District, Chon Buri 20250, Thailand' WHERE post_id = 1186;
+UPDATE post_map_cards SET venue_name = 'Mini Siam', address_line = '387 Sukhumvit Rd, Muang Pattaya, Bang Lamung District, Chon Buri 20150, Thailand' WHERE post_id = 1187;
+UPDATE post_map_cards SET venue_name = 'Wat Phra That Doi Suthep', address_line = 'Suthep, Mueang Chiang Mai District, Chiang Mai 50200, Thailand' WHERE post_id = 1188;
+UPDATE post_map_cards SET venue_name = 'Doi Inthanon', address_line = 'Doi Inthanon, Ban Luang, Mae Chaem District, Chiang Mai 50270, Thailand' WHERE post_id = 1190;
+UPDATE post_map_cards SET venue_name = 'Royal Park Rajapruek', address_line = '334, Mae Hia, Mueang Chiang Mai District, Chiang Mai 50100, Thailand' WHERE post_id = 1192;
+UPDATE post_map_cards SET venue_name = 'Chiang Mai Night Safari', address_line = '33, Nong Kwai, Hang Dong District, Chiang Mai 50230, Thailand' WHERE post_id = 1193;
+UPDATE post_map_cards SET venue_name = 'Nara Park', address_line = 'Nara, Japan' WHERE post_id = 1194;
+UPDATE post_map_cards SET venue_name = 'Heijō Palace Site Historical Park', address_line = '3 Chome-5-1 Nijoojiminami, Nara, 630-8012, Japan' WHERE post_id = 1197;
+UPDATE post_map_cards SET venue_name = 'Gango-ji (Gokurakubo)', address_line = 'Japan, 〒630-8392 Nara, Chuincho, １１' WHERE post_id = 1198;
+UPDATE post_map_cards SET venue_name = 'Toshodai-ji', address_line = '13-46 Gojocho, Nara, 630-8032, Japan' WHERE post_id = 1199;
+UPDATE post_map_cards SET venue_name = 'Todai-ji Nigatsu-do', address_line = '406-1 Zoshicho, Nara, 630-8211, Japan' WHERE post_id = 1200;
+UPDATE post_map_cards SET venue_name = 'Yakushi-ji', address_line = '457 Nishinokyocho, Nara, 630-8563, Japan' WHERE post_id = 1201;
+UPDATE post_map_cards SET venue_name = 'Royal Alcázar of Seville', address_line = 'Casco Antiguo, 41004 Seville, Spain' WHERE post_id = 1202;
+UPDATE post_map_cards SET venue_name = 'Plaza de España', address_line = 'Av. Isabel la Católica, 41004 Sevilla, Spain' WHERE post_id = 1203;
+UPDATE post_map_cards SET venue_name = 'La Giralda', address_line = 'Av. de la Constitución, s/n, Casco Antiguo, 41004 Sevilla, Spain' WHERE post_id = 1204;
+UPDATE post_map_cards SET venue_name = 'Setas de Sevilla', address_line = 'Pl. de la Encarnación, s/n, Casco Antiguo, 41003 Sevilla, Spain' WHERE post_id = 1205;
+UPDATE post_map_cards SET venue_name = 'Triana', address_line = 'Triana, Seville, Spain' WHERE post_id = 1207;
+UPDATE post_map_cards SET venue_name = 'Isla Mágica', address_line = 'Pabellón de España, s/n, 41092 Sevilla, Spain' WHERE post_id = 1208;
+UPDATE post_map_cards SET venue_name = 'Teatro de la Maestranza', address_line = 'P.º de Cristóbal Colón, 22, Casco Antiguo, 41001 Sevilla, Spain' WHERE post_id = 1209;
+UPDATE post_map_cards SET venue_name = 'Alameda de Hércules', address_line = 'Alameda de Hércules, Casco Antiguo, 41002 Sevilla, Spain' WHERE post_id = 1210;
+UPDATE post_map_cards SET venue_name = 'Ciudad de las Artes y las Ciencias', address_line = 'Quatre Carreres, 46013 València, Valencia, Spain' WHERE post_id = 1211;
+UPDATE post_map_cards SET venue_name = 'Torres de Serranos', address_line = 'C. de la Blanqueria, 1, Ciutat Vella, 46003 València, Valencia, Spain' WHERE post_id = 1213;
+UPDATE post_map_cards SET venue_name = 'Hemisfèric', address_line = 'Av. del Professor López Piñero, 3, Quatre Carreres, 46013 València, Valencia, Spain' WHERE post_id = 1214;
+UPDATE post_map_cards SET venue_name = 'Art Modern Institute Museum of Valencia', address_line = 'C/ de Guillem de Castro, 118, Ciutat Vella, 46003 València, Valencia, Spain' WHERE post_id = 1215;
+UPDATE post_map_cards SET venue_name = 'Speicherstadt', address_line = 'Speicherstadt, 20457 Hamburg, Germany' WHERE post_id = 1216;
+UPDATE post_map_cards SET venue_name = 'Elbphilharmonie Hamburg', address_line = 'Platz d. Deutschen Einheit 4, 20457 Hamburg, Germany' WHERE post_id = 1217;
+UPDATE post_map_cards SET venue_name = 'Reeperbahn', address_line = 'Reeperbahn, Hamburg, Germany' WHERE post_id = 1218;
+UPDATE post_map_cards SET venue_name = 'Port of Hamburg', address_line = 'Port of Hamburg, Hamburg, Germany' WHERE post_id = 1219;
+UPDATE post_map_cards SET venue_name = 'Hagenbeck Zoo', address_line = 'Lokstedter Grenzstraße 2, 22527 Hamburg, Germany' WHERE post_id = 1221;
+UPDATE post_map_cards SET venue_name = 'Alster', address_line = 'Alster, Hamburg, Germany' WHERE post_id = 1222;
+UPDATE post_map_cards SET venue_name = 'Heide Park Resort', address_line = 'Heide Park 1, 29614 Soltau, Germany' WHERE post_id = 1223;
+UPDATE post_map_cards SET venue_name = 'St Pauli', address_line = 'St Pauli, Hamburg, Germany' WHERE post_id = 1224;
+UPDATE post_map_cards SET venue_name = 'Städel Museum', address_line = 'Schaumainkai 63, 60596 Frankfurt am Main, Germany' WHERE post_id = 1226;
+UPDATE post_map_cards SET venue_name = 'MAIN TOWER', address_line = 'Neue Mainzer Str. 52–58, 60311 Frankfurt am Main, Germany' WHERE post_id = 1227;
+UPDATE post_map_cards SET venue_name = 'Frankfurt Cathedral', address_line = 'Domplatz 1, 60311 Frankfurt am Main, Germany' WHERE post_id = 1229;
+UPDATE post_map_cards SET venue_name = 'Goethe House', address_line = 'Großer Hirschgraben 23-25, 60311 Frankfurt am Main, Germany' WHERE post_id = 1230;
+UPDATE post_map_cards SET venue_name = 'Zoo Frankfurt', address_line = 'Bernhard-Grzimek-Allee 1, 60316 Frankfurt am Main, Germany' WHERE post_id = 1231;
+UPDATE post_map_cards SET venue_name = 'Deutsche Bank Park', address_line = 'Mörfelder Landstraße 362, 60528 Frankfurt am Main, Germany' WHERE post_id = 1232;
+UPDATE post_map_cards SET venue_name = 'Eschenheimer Tor', address_line = 'Eschenheimer Tor, Frankfurt am Main, Germany' WHERE post_id = 1233;
+UPDATE post_map_cards SET venue_name = 'Villa Cimbrone', address_line = 'Via Santa Chiara, 26, 84010 Ravello SA, Italy' WHERE post_id = 1236;
+UPDATE post_map_cards SET venue_name = 'Praiano', address_line = '84010 Praiano, SA, Italy' WHERE post_id = 1237;
+UPDATE post_map_cards SET venue_name = 'Capri', address_line = 'Capri, Metropolitan City of Naples, Italy' WHERE post_id = 1240;
+UPDATE post_map_cards SET venue_name = 'Amalfi Coast', address_line = '84011 Amalfi, Province of Salerno, Italy' WHERE post_id = 1241;
+UPDATE post_map_cards SET venue_name = 'Amalfi Coast', address_line = '84011 Amalfi, Province of Salerno, Italy' WHERE post_id = 1242;
+UPDATE post_map_cards SET venue_name = 'Bowness-on-Windermere', address_line = 'Bowness-on-Windermere, Windermere, UK' WHERE post_id = 1243;
+UPDATE post_map_cards SET venue_name = 'Derwentwater', address_line = 'Derwentwater, Keswick, UK' WHERE post_id = 1244;
+UPDATE post_map_cards SET venue_name = 'Coniston Water', address_line = 'Coniston Water, United Kingdom' WHERE post_id = 1245;
+UPDATE post_map_cards SET venue_name = 'Scafell Pike', address_line = 'Scafell Pike, Seascale CA20 1EX, United Kingdom' WHERE post_id = 1246;
+UPDATE post_map_cards SET venue_name = 'Helvellyn', address_line = 'Helvellyn, Keswick CA11 0PU, United Kingdom' WHERE post_id = 1247;
+UPDATE post_map_cards SET venue_name = 'Wordsworth Grasmere', address_line = 'Town End, Grasmere, Ambleside LA22 9PP, United Kingdom' WHERE post_id = 1248;
+UPDATE post_map_cards SET venue_name = 'Rydal Water', address_line = 'Rydal Water, Ambleside LA22 9HQ, UK' WHERE post_id = 1249;
+UPDATE post_map_cards SET venue_name = 'Lakes Aquarium', address_line = 'Lakeside, Newby Bridge, Ulverston LA12 8AS, United Kingdom' WHERE post_id = 1250;
+UPDATE post_map_cards SET venue_name = 'Castlerigg Stone Circle', address_line = 'Castle Ln, Keswick CA12 4RN, United Kingdom' WHERE post_id = 1251;
+UPDATE post_map_cards SET venue_name = 'National Trust - Wray', address_line = 'C22P+83, Ambleside LA22 0JA, United Kingdom' WHERE post_id = 1252;
+UPDATE post_map_cards SET venue_name = 'Pulteney Bridge', address_line = 'Bridge St, Bath BA2 4AT, United Kingdom' WHERE post_id = 1253;
+UPDATE post_map_cards SET venue_name = 'The Jane Austen Centre', address_line = '40 Gay St, Bath BA1 2NT, United Kingdom' WHERE post_id = 1254;
+UPDATE post_map_cards SET venue_name = 'Victoria Art Gallery', address_line = 'Bridge St, Bath BA2 4AT, United Kingdom' WHERE post_id = 1255;
+UPDATE post_map_cards SET venue_name = 'The Recreation Ground', address_line = 'Pulteney Mews, Bathwick, Bath BA2 4DS, United Kingdom' WHERE post_id = 1256;
+UPDATE post_map_cards SET venue_name = 'Theatre Royal, Bath', address_line = 'Saw Cl, Bath BA1 1ET, United Kingdom' WHERE post_id = 1257;
+UPDATE post_map_cards SET venue_name = 'Bath City Parade Gardens', address_line = 'Grand Parade, Bath BA2 4DF, United Kingdom' WHERE post_id = 1259;
+UPDATE post_map_cards SET venue_name = 'Sydney Gardens', address_line = 'Sydney Pl, Bathwick, Bath BA2 6NH, United Kingdom' WHERE post_id = 1260;
+UPDATE post_map_cards SET venue_name = 'Mozart\'s Birthplace', address_line = 'Getreidegasse 9, 5020 Salzburg, Austria' WHERE post_id = 1262;
+UPDATE post_map_cards SET venue_name = 'Schloss Hellbrunn', address_line = 'Fürstenweg 37, 5020 Salzburg, Austria' WHERE post_id = 1263;
+UPDATE post_map_cards SET venue_name = 'Residenzpl.', address_line = 'Residenzpl., 5020 Salzburg, Austria' WHERE post_id = 1265;
+UPDATE post_map_cards SET venue_name = 'Salzburg Residence', address_line = 'Residenzpl. 1, 5020 Salzburg, Austria' WHERE post_id = 1266;
+UPDATE post_map_cards SET venue_name = 'Untersberg', address_line = 'Untersberg, 83471 Bischofswiesener Forst, Germany' WHERE post_id = 1269;
+UPDATE post_map_cards SET venue_name = 'Mönchsberg', address_line = 'Mönchsberg, 5020 Salzburg, Austria' WHERE post_id = 1270;
+UPDATE post_map_cards SET venue_name = 'Basilica of the Holy Blood', address_line = 'Burg 13, 8000 Brugge, Belgium' WHERE post_id = 1272;
+UPDATE post_map_cards SET venue_name = 'Bruges City Hall', address_line = 'Burg 12, 8000 Brugge, Belgium' WHERE post_id = 1273;
+UPDATE post_map_cards SET venue_name = 'Saint John’s Hospital', address_line = 'Mariastraat 38, 8000 Brugge, Belgium' WHERE post_id = 1274;
+UPDATE post_map_cards SET venue_name = 'Porto São Bento', address_line = 'Praça de Almeida Garrett, 4000-069 Porto, Portugal' WHERE post_id = 1276;
+UPDATE post_map_cards SET venue_name = 'Parque de Serralves', address_line = 'R. Dom João de Castro 210, 4150-417 Porto, Portugal' WHERE post_id = 1278;
+UPDATE post_map_cards SET venue_name = 'Estádio do Dragão', address_line = 'Via Porto Football Club, West Entrance, Door 1, Floor 3, 4350-415 Porto, Portugal' WHERE post_id = 1279;
+UPDATE post_map_cards SET venue_name = 'Casa da Música', address_line = 'Av. da Boavista 604-610 Piso 0, 4149-071 Porto, Portugal' WHERE post_id = 1280;
+UPDATE post_map_cards SET venue_name = 'Matosinhos', address_line = 'Matosinhos, Portugal' WHERE post_id = 1282;
+UPDATE post_map_cards SET venue_name = 'Laugavegur', address_line = 'Laugavegur, Reykjavík, Iceland' WHERE post_id = 1283;
+UPDATE post_map_cards SET venue_name = 'Thingvellir National Park', address_line = '806 Selfoss, Iceland' WHERE post_id = 1285;
+UPDATE post_map_cards SET venue_name = 'Laugardalslaug', address_line = 'Sundlaugavegur 105, 105 Reykjavík, Iceland' WHERE post_id = 1286;
+UPDATE post_map_cards SET venue_name = 'Scottish Gas Murrayfield Stadium', address_line = 'Roseburn St, Edinburgh EH12 5PJ, United Kingdom' WHERE post_id = 1294;
+UPDATE post_map_cards SET venue_name = 'Glasgow Cathedral', address_line = 'Castle St, Glasgow G4 0QZ, United Kingdom' WHERE post_id = 1296;
+UPDATE post_map_cards SET venue_name = 'Riverside Museum', address_line = '100 Pointhouse Rd, Glasgow G3 8RS, United Kingdom' WHERE post_id = 1297;
+UPDATE post_map_cards SET venue_name = 'Glasgow Botanic Gardens', address_line = '730 Great Western Rd, Glasgow G12 0UE, United Kingdom' WHERE post_id = 1298;
+UPDATE post_map_cards SET venue_name = 'University of Glasgow', address_line = 'Glasgow G12 8QQ, United Kingdom' WHERE post_id = 1299;
+UPDATE post_map_cards SET venue_name = 'Ibrox Stadium', address_line = '150 Edmiston Dr, Glasgow G51 2XD, United Kingdom' WHERE post_id = 1301;
+UPDATE post_map_cards SET venue_name = '(Barclays) Hampden', address_line = 'Letherby Dr, Glasgow G42 9BA, United Kingdom' WHERE post_id = 1302;
+UPDATE post_map_cards SET venue_name = 'Marischal College', address_line = 'Broad St, Aberdeen AB10 1AB, United Kingdom' WHERE post_id = 1303;
+UPDATE post_map_cards SET venue_name = 'Footdee', address_line = 'Footdee, Aberdeen AB11 5DP, UK' WHERE post_id = 1304;
+UPDATE post_map_cards SET venue_name = 'Brig o\' Balgownie', address_line = 'Brig o\' Balgownie, Bridge of Don, Aberdeen AB24 1XP, UK' WHERE post_id = 1306;
+UPDATE post_map_cards SET venue_name = 'Place Bellecour', address_line = 'Pl. Bellecour, 69002 Lyon, France' WHERE post_id = 1307;
+UPDATE post_map_cards SET venue_name = 'Parc de la Tête d\'Or', address_line = 'Boulevard des Belges, 69006 Lyon, France' WHERE post_id = 1308;
+UPDATE post_map_cards SET venue_name = 'Cathédrale Saint-Jean-Baptiste', address_line = 'Pl. Saint-Jean, 69005 Lyon, France' WHERE post_id = 1309;
+UPDATE post_map_cards SET venue_name = 'Lyon Presqu\'ile Hn', address_line = '69002 Lyon, France' WHERE post_id = 1310;
+UPDATE post_map_cards SET venue_name = 'Musée des Confluences', address_line = '86 Quai Perrache, 69002 Lyon, France' WHERE post_id = 1311;
+UPDATE post_map_cards SET venue_name = 'La Croix-Rousse', address_line = 'La Croix-Rousse, 69004 Lyon, France' WHERE post_id = 1312;
+UPDATE post_map_cards SET venue_name = 'Cité du Vin', address_line = '134 Quai de Bacalan, 33300 Bordeaux, France' WHERE post_id = 1313;
+UPDATE post_map_cards SET venue_name = 'Opéra National de Bordeaux - Grand-Théâtre', address_line = 'Pl. de la Comédie, 33000 Bordeaux, France' WHERE post_id = 1314;
+UPDATE post_map_cards SET venue_name = 'Basilique Saint-Michel', address_line = '16 Pl. Meynard, 33000 Bordeaux, France' WHERE post_id = 1317;
+UPDATE post_map_cards SET venue_name = 'Dune of Pilat', address_line = 'Av. de Biscarrosse, 33115 La Teste-de-Buch, France' WHERE post_id = 1318;
+UPDATE post_map_cards SET venue_name = 'Arena di Verona', address_line = 'P.za Bra, 1, 37121 Verona VR, Italy' WHERE post_id = 1319;
+UPDATE post_map_cards SET venue_name = 'Verona Cathedral', address_line = 'Piazza Vescovado, 37121 Verona VR, Italy' WHERE post_id = 1320;
+UPDATE post_map_cards SET venue_name = 'P.za Bra', address_line = 'P.za Bra, Verona VR, Italy' WHERE post_id = 1321;
+UPDATE post_map_cards SET venue_name = 'Giusti Garden', address_line = 'Via Giardino Giusti, 2, 37129 Verona VR, Italy' WHERE post_id = 1322;
+UPDATE post_map_cards SET venue_name = 'Basilica di Sant\' Anastasia', address_line = 'Piazza S.Anastasia, 37121 Verona VR, Italy' WHERE post_id = 1323;
+UPDATE post_map_cards SET venue_name = 'Castelvecchio Museum', address_line = 'Corso Castelvecchio, 2, 37121 Verona VR, Italy' WHERE post_id = 1325;
+UPDATE post_map_cards SET venue_name = 'Lake Garda', address_line = 'Lake Garda, Italy' WHERE post_id = 1326;
+UPDATE post_map_cards SET venue_name = 'Museum of Islamic Art', address_line = 'Doha, Qatar' WHERE post_id = 1327;
+UPDATE post_map_cards SET venue_name = 'The Pearl Island', address_line = 'The Pearl Island, Doha, Qatar' WHERE post_id = 1328;
+UPDATE post_map_cards SET venue_name = 'National Museum of Qatar', address_line = 'Museum Pk St, Doha, Qatar' WHERE post_id = 1330;
+UPDATE post_map_cards SET venue_name = 'Aspire Park', address_line = 'Aspire Zone, Aspire Park Running Trail, Doha, Qatar' WHERE post_id = 1331;
+UPDATE post_map_cards SET venue_name = 'Khalifa International Stadium‎', address_line = '7C7X+C6X, Al Waab St, Doha, Qatar' WHERE post_id = 1333;
+UPDATE post_map_cards SET venue_name = 'Lusail Stadium', address_line = 'CFCR+75, Lusail, Qatar' WHERE post_id = 1334;
+UPDATE post_map_cards SET venue_name = 'Qatar National Convention Centre (QNCC)', address_line = 'Al Luqta St, Al-Rayyan, Qatar' WHERE post_id = 1335;
+UPDATE post_map_cards SET venue_name = 'Louvre Abu Dhabi', address_line = 'Saadiyat - Abu Dhabi - United Arab Emirates' WHERE post_id = 1336;
+UPDATE post_map_cards SET venue_name = 'Ferrari World Yas Island, Abu Dhabi', address_line = 'Yas Island - YS1 - Abu Dhabi - United Arab Emirates' WHERE post_id = 1337;
+UPDATE post_map_cards SET venue_name = 'Yas Island', address_line = 'Yas Island - Abu Dhabi - United Arab Emirates' WHERE post_id = 1338;
+UPDATE post_map_cards SET venue_name = 'Al Ain Zoo', address_line = 'Nahyan The First St - Shiab Al Ashkhar - Zoo - Abu Dhabi - United Arab Emirates' WHERE post_id = 1339;
+UPDATE post_map_cards SET venue_name = 'Jebel Hafeet', address_line = 'Jebel Hafeet' WHERE post_id = 1340;
+UPDATE post_map_cards SET venue_name = 'The White City of Tel Aviv', address_line = 'Tel Aviv-Yafo, Israel' WHERE post_id = 1342;
+UPDATE post_map_cards SET venue_name = 'Rabin Square', address_line = 'Tel Aviv-Yafo, Israel' WHERE post_id = 1345;
+UPDATE post_map_cards SET venue_name = 'ANU Museum of the Jewish People', address_line = 'Klausner St 15, Tel Aviv-Yafo, 6139202, Israel' WHERE post_id = 1346;
+UPDATE post_map_cards SET venue_name = 'Sarona Market', address_line = 'Aluf Kalman Magen St 3, Tel Aviv-Yafo, Israel' WHERE post_id = 1347;
+UPDATE post_map_cards SET venue_name = 'Temple Mount', address_line = 'Jerusalem' WHERE post_id = 1348;
+UPDATE post_map_cards SET venue_name = 'Church of the Holy Sepulchre', address_line = 'Jerusalem' WHERE post_id = 1349;
+UPDATE post_map_cards SET venue_name = 'Mount of Olives', address_line = 'Mount of Olives, Jerusalem' WHERE post_id = 1350;
+UPDATE post_map_cards SET venue_name = 'Yad Vashem', address_line = 'Internal Yad Vashem Road, Jerusalem, 9103401, Israel' WHERE post_id = 1351;
+UPDATE post_map_cards SET venue_name = 'Tower of David', address_line = 'Jerusalem, 1001363' WHERE post_id = 1352;
+UPDATE post_map_cards SET venue_name = 'Gethsemane', address_line = 'Jerusalem' WHERE post_id = 1353;
+UPDATE post_map_cards SET venue_name = 'Mahaneh Yehudah Market', address_line = 'Agripas St 90, Jerusalem, Israel' WHERE post_id = 1354;
+UPDATE post_map_cards SET venue_name = 'Dead Sea', address_line = 'Dead Sea' WHERE post_id = 1355;
+UPDATE post_map_cards SET venue_name = 'Masada National Park', address_line = 'Israel' WHERE post_id = 1356;
+UPDATE post_map_cards SET venue_name = 'Ein Gedi Eco Park', address_line = 'Ein Gedi 31, Jerusalem, Israel' WHERE post_id = 1357;
+UPDATE post_map_cards SET venue_name = 'The Tisch Family Zoological Gardens in Jerusalem', address_line = 'Derech 1, Jerusalem, Israel' WHERE post_id = 1358;
+UPDATE post_map_cards SET venue_name = 'Teddy Stadium', address_line = 'איצטדיון טדי, Jerusalem, Israel' WHERE post_id = 1359;
+UPDATE post_map_cards SET venue_name = 'Jerusalem Theatre', address_line = 'David Marcus St 20, Jerusalem, Israel' WHERE post_id = 1360;
+UPDATE post_map_cards SET venue_name = 'The Garden Tomb Jerusalem', address_line = 'Conrad Schick St, Jerusalem' WHERE post_id = 1361;
+UPDATE post_map_cards SET venue_name = 'Petra', address_line = 'Jordan' WHERE post_id = 1362;
+UPDATE post_map_cards SET venue_name = 'Jordan Museum', address_line = 'Ali bin Abi Taleb Street, Amman, Jordan' WHERE post_id = 1364;
+UPDATE post_map_cards SET venue_name = 'Amman', address_line = 'Amman, Jordan' WHERE post_id = 1365;
+UPDATE post_map_cards SET venue_name = 'Wadi Rum Protected Area', address_line = 'Jordan' WHERE post_id = 1366;
+UPDATE post_map_cards SET venue_name = 'Amman International Stadium', address_line = 'XWP3+25R, Amman, Jordan' WHERE post_id = 1367;
+UPDATE post_map_cards SET venue_name = 'Aqaba', address_line = 'Aqaba, Jordan' WHERE post_id = 1368;
+UPDATE post_map_cards SET venue_name = 'Shobak Castle', address_line = 'GHJ6+H84, Shobak, Jordan' WHERE post_id = 1369;
+UPDATE post_map_cards SET venue_name = 'Bait Al Zubair Museum', address_line = 'JH7Q+QRG, Muscat, Oman' WHERE post_id = 1371;
+UPDATE post_map_cards SET venue_name = 'Al Jalali Fort', address_line = 'JH8X+P4V, Al Bahri Rd, Muscat, Oman' WHERE post_id = 1372;
+UPDATE post_map_cards SET venue_name = 'Hassan II Mosque', address_line = 'Bd Sidi Mohamed Ben Abdellah, Casablanca, Morocco' WHERE post_id = 1374;
+UPDATE post_map_cards SET venue_name = 'Fes El Bali', address_line = 'Fes El Bali, Fes, Morocco' WHERE post_id = 1375;
+UPDATE post_map_cards SET venue_name = 'Marinid Tombs', address_line = '329C+W6W, Fes, Morocco' WHERE post_id = 1376;
+UPDATE post_map_cards SET venue_name = 'Dar Batha Museum of Islamic Arts', address_line = 'Oued Fejjaline، 5 Ave du Batha, Fes, Morocco' WHERE post_id = 1377;
+UPDATE post_map_cards SET venue_name = 'Al Attarine Madrasa', address_line = '328G+3H2, Rue Talaa Kebira, Fes, Morocco' WHERE post_id = 1378;
+UPDATE post_map_cards SET venue_name = 'Fes El Jdid', address_line = 'Fes El Jdid, Fes, Morocco' WHERE post_id = 1379;
+UPDATE post_map_cards SET venue_name = 'Tangier American Legation Museum', address_line = '8 Rue d\'Amerique, Tanger, Morocco' WHERE post_id = 1382;
+UPDATE post_map_cards SET venue_name = 'Rmilat Park', address_line = 'Q4VQ+52P, Tangier, Morocco' WHERE post_id = 1385;
+UPDATE post_map_cards SET venue_name = 'Labadi Beach', address_line = 'Labadi Beach, Accra, Ghana' WHERE post_id = 1386;
+UPDATE post_map_cards SET venue_name = 'Black Star Square', address_line = 'Accra, Ghana' WHERE post_id = 1388;
+UPDATE post_map_cards SET venue_name = 'Nike Art Gallery', address_line = '2 Nike Art Gallery Rd, Lekki Phase I, Lekki 106104, Lagos, Nigeria' WHERE post_id = 1390;
+UPDATE post_map_cards SET venue_name = 'Freedom Park Lagos', address_line = 'C9XW+MJM, Old Prison Ground,1, Hospital Road, adjacent St\' Nicholas Hospital, Lagos Island, Lagos, Nigeria' WHERE post_id = 1391;
+UPDATE post_map_cards SET venue_name = 'Tarkwa Bay Beach', address_line = 'Tarkwa Bay Beach, Lagos, Nigeria' WHERE post_id = 1392;
+UPDATE post_map_cards SET venue_name = 'Elegushi Royal Beach Lekki Phase I Lagos', address_line = 'By Road 3 Lekki Phase 1, Lekki 106104, Nigeria' WHERE post_id = 1393;
+UPDATE post_map_cards SET venue_name = 'Third Mainland Brg', address_line = 'Third Mainland Brg, Lagos, Nigeria' WHERE post_id = 1394;
+UPDATE post_map_cards SET venue_name = 'Victoria Island, Lagos', address_line = 'Victoria Island, Lagos, Victoria Island, Lagos 106104, Lagos, Nigeria' WHERE post_id = 1395;
+UPDATE post_map_cards SET venue_name = 'Ikoyi', address_line = 'Ikoyi, Lagos 106104, Lagos, Nigeria' WHERE post_id = 1397;
+UPDATE post_map_cards SET venue_name = 'The Forodhani of Zanzibar', address_line = 'R5QQ+VJ6 Forodhani park, Zanzibar, Tanzania' WHERE post_id = 1398;
+UPDATE post_map_cards SET venue_name = 'House of Wonders', address_line = 'R5QQ+JR, Sokoku St, Zanzibar, Tanzania' WHERE post_id = 1399;
+UPDATE post_map_cards SET venue_name = 'The Palace Museum', address_line = 'R5MX+WHF, UnnamedRoa, Zanzibar, Ta, Zanzibar, Tanzania' WHERE post_id = 1400;
+UPDATE post_map_cards SET venue_name = 'Darajani Bazaar', address_line = 'Darajani St, Zanzibar, Tanzania' WHERE post_id = 1401;
+UPDATE post_map_cards SET venue_name = 'Victoria Falls', address_line = '' WHERE post_id = 1402;
+UPDATE post_map_cards SET venue_name = 'Devil\'s Pool', address_line = 'Zambia, Livingstone Island' WHERE post_id = 1403;
+UPDATE post_map_cards SET venue_name = 'Mosi-oa-Tunya National Park', address_line = 'Livingstone, Zambia' WHERE post_id = 1404;
+UPDATE post_map_cards SET venue_name = 'Walk With Lions Victoria Falls', address_line = 'Victoria Falls, Zimbabwe' WHERE post_id = 1405;
+UPDATE post_map_cards SET venue_name = 'Grand Baie', address_line = 'Grand Baie, Mauritius' WHERE post_id = 1406;
+UPDATE post_map_cards SET venue_name = 'Sir Seewoosagur Ramgoolam Botanical Garden', address_line = 'VHWJ+448, Pamplemousses, Mauritius' WHERE post_id = 1407;
+UPDATE post_map_cards SET venue_name = 'Blue Penny Museum', address_line = 'RFQX+J2C, Dans Caudan Water Front, Port Louis, Mauritius' WHERE post_id = 1408;
+UPDATE post_map_cards SET venue_name = 'Luang Prabang', address_line = 'Luang Prabang, Laos' WHERE post_id = 1411;
+UPDATE post_map_cards SET venue_name = 'Wat Xiengthong', address_line = 'V4WV+WC8, Khem Khong, Luang Prabang, Laos' WHERE post_id = 1412;
+UPDATE post_map_cards SET venue_name = 'Tat Sae Waterfalls', address_line = 'R6VC+G2C, En, Laos' WHERE post_id = 1413;
+UPDATE post_map_cards SET venue_name = 'Pha That Luang Vientiane', address_line = 'That Luang, Xaysettha 10009, Laos' WHERE post_id = 1415;
+UPDATE post_map_cards SET venue_name = 'Patuxai', address_line = 'XJC9+6F9 P.D.R, Vientiane 00100, Laos' WHERE post_id = 1416;
+UPDATE post_map_cards SET venue_name = 'Buddha Park (Wat Xieng Khouane Luang)', address_line = 'Deua, Thanon Tha, Vientiane, Laos' WHERE post_id = 1417;
+UPDATE post_map_cards SET venue_name = 'Ho Phrakeo Museum', address_line = 'XJ66+QG5, Vientiane, Laos' WHERE post_id = 1418;
+UPDATE post_map_cards SET venue_name = 'Lao National Museum', address_line = '328 13, Vientiane, Laos' WHERE post_id = 1419;
+UPDATE post_map_cards SET venue_name = 'Vang Vieng', address_line = 'Vang Vieng, Laos' WHERE post_id = 1420;
+UPDATE post_map_cards SET venue_name = 'Shwedagon Pagoda', address_line = 'Yangon, Myanmar (Burma)' WHERE post_id = 1421;
+UPDATE post_map_cards SET venue_name = 'Bogyoke Aung San Market', address_line = '11143 Bo Gyoke Aung San Rd, Yangon, Myanmar (Burma)' WHERE post_id = 1422;
+UPDATE post_map_cards SET venue_name = 'Chaukhtatgyi Buddha Temple', address_line = 'R567+MFQ, Yangon, Myanmar (Burma)' WHERE post_id = 1423;
+UPDATE post_map_cards SET venue_name = 'Yangon City Hall', address_line = 'Y.C.H, Maha Bandula Road, Yangon, Myanmar (Burma)' WHERE post_id = 1424;
+UPDATE post_map_cards SET venue_name = 'Martyrs\' Mausoleum', address_line = 'Martyrs\' Mausoleum, Ar Zar Ni St, Yangon, Myanmar (Burma)' WHERE post_id = 1425;
+UPDATE post_map_cards SET venue_name = 'The Strand Hotel Yangon', address_line = 'No.92 Strand Rd, Yangon, Myanmar (Burma)' WHERE post_id = 1426;
+UPDATE post_map_cards SET venue_name = 'Yangon Zoo', address_line = 'Kan Yeik Tha Rd, Yangon 11221, Myanmar (Burma)' WHERE post_id = 1427;
+UPDATE post_map_cards SET venue_name = 'Ananda Temple', address_line = 'မြင်းကပါ, Myanmar (Burma)' WHERE post_id = 1428;
+UPDATE post_map_cards SET venue_name = 'That Bin Nyu Temple', address_line = '5V97+G38, Old Bagan, Myanmar (Burma)' WHERE post_id = 1429;
+UPDATE post_map_cards SET venue_name = 'Dhammayangyi Temple', address_line = '5V6F+R3J, Old Bagan, Myanmar (Burma)' WHERE post_id = 1430;
+UPDATE post_map_cards SET venue_name = 'Manuha Temple', address_line = '5V35+8MR, Myin Ka Bar, Myanmar (Burma)' WHERE post_id = 1431;
+UPDATE post_map_cards SET venue_name = 'Gawdawpalin Temple', address_line = 'Old Bagan, Myanmar (Burma)' WHERE post_id = 1433;
+UPDATE post_map_cards SET venue_name = 'Royal Palace of Cambodia', address_line = 'Samdach Sothearos Blvd (3), Phnom Penh, Cambodia' WHERE post_id = 1434;
+UPDATE post_map_cards SET venue_name = 'Tuol Sleng Genocide Museum', address_line = 'Street 113, 3, Phnom Penh, Cambodia' WHERE post_id = 1435;
+UPDATE post_map_cards SET venue_name = 'Independence Square', address_line = '7 Independence Ave, Colombo 00700, Sri Lanka' WHERE post_id = 1438;
+UPDATE post_map_cards SET venue_name = 'Seema Malaka', address_line = 'WV83+QR3, Sir James Pieris Mawatha, Colombo, Sri Lanka' WHERE post_id = 1439;
+UPDATE post_map_cards SET venue_name = 'Fort', address_line = 'Fort, Colombo, Sri Lanka' WHERE post_id = 1441;
+UPDATE post_map_cards SET venue_name = 'Dehiwala Zoological Gardens', address_line = '120 Galvihara Rd, Dehiwala-Mount Lavinia, Sri Lanka' WHERE post_id = 1442;
+UPDATE post_map_cards SET venue_name = 'R. Premadasa International Cricket Stadium, Colombo, Sri Lanka', address_line = 'Khettarama Temple Rd, Colombo 01000, Sri Lanka' WHERE post_id = 1443;
+UPDATE post_map_cards SET venue_name = 'Malé', address_line = 'Malé, Maldives' WHERE post_id = 1445;
+UPDATE post_map_cards SET venue_name = 'Hulhumale', address_line = 'Hulhumale, Maldives' WHERE post_id = 1446;
+UPDATE post_map_cards SET venue_name = 'Monuriki', address_line = 'Monuriki, Fiji' WHERE post_id = 1450;
+UPDATE post_map_cards SET venue_name = 'Hamilton Gardens', address_line = 'Hungerford Crescent, Hamilton 3216, New Zealand' WHERE post_id = 1451;
+UPDATE post_map_cards SET venue_name = 'Hobbiton™ Movie Set Tours', address_line = '501 Buckland Road, Matamata 3472, New Zealand' WHERE post_id = 1452;
+UPDATE post_map_cards SET venue_name = 'FMG Stadium Waikato', address_line = '128 Seddon Road, Frankton, Hamilton 3204, New Zealand' WHERE post_id = 1453;
+UPDATE post_map_cards SET venue_name = 'Cambridge', address_line = 'Cambridge, New Zealand' WHERE post_id = 1454;
+UPDATE post_map_cards SET venue_name = 'Australian War Memorial', address_line = 'Treloar Cres, Campbell ACT 2612, Australia' WHERE post_id = 1455;
+UPDATE post_map_cards SET venue_name = 'Parliament House', address_line = 'Parliament Dr, Canberra ACT 2600, Australia' WHERE post_id = 1456;
+UPDATE post_map_cards SET venue_name = 'National Gallery of Australia', address_line = 'Parkes Pl E, Parkes ACT 2600, Australia' WHERE post_id = 1457;
+UPDATE post_map_cards SET venue_name = 'National Museum of Australia', address_line = 'Lawson Cres, Acton ACT 2601, Australia' WHERE post_id = 1458;
+UPDATE post_map_cards SET venue_name = 'National Zoo & Aquarium', address_line = '999 Lady Denman Dr, Yarralumla ACT 2611, Australia' WHERE post_id = 1459;
+UPDATE post_map_cards SET venue_name = 'Australian National Botanic Gardens', address_line = 'Clunies Ross St, Acton ACT 2601, Australia' WHERE post_id = 1460;
+UPDATE post_map_cards SET venue_name = 'GIO Stadium Canberra', address_line = 'Battye St, Bruce ACT 2617, Australia' WHERE post_id = 1462;
+UPDATE post_map_cards SET venue_name = 'Black mountain trail summit', address_line = '100 Black Mountain Dr, Australian Capital Territory 2600, Australia' WHERE post_id = 1463;
+UPDATE post_map_cards SET venue_name = 'Nobbys Beach', address_line = 'Nobbys Beach, New South Wales, Australia' WHERE post_id = 1464;
+UPDATE post_map_cards SET venue_name = 'Fort Scratchley', address_line = '1/3 Nobbys Rd, Newcastle East NSW 2300, Australia' WHERE post_id = 1465;
+UPDATE post_map_cards SET venue_name = 'Bogey Hole', address_line = 'Shortland Esplanade, Newcastle NSW 2300, Australia' WHERE post_id = 1466;
+UPDATE post_map_cards SET venue_name = 'Lake Macquarie', address_line = 'Lake Macquarie, New South Wales, Australia' WHERE post_id = 1467;
+UPDATE post_map_cards SET venue_name = 'Newcastle Entertainment Centre', address_line = 'Showground, Brown Rd, Broadmeadow NSW 2292, Australia' WHERE post_id = 1468;
+UPDATE post_map_cards SET venue_name = 'Fo Guang Shan Nan Tien Temple', address_line = 'GVM2+67, 180 Berkeley Rd, Berkeley NSW 2506, Australia' WHERE post_id = 1469;
+UPDATE post_map_cards SET venue_name = 'Flagstaff Point Lighthouse', address_line = 'lot 2500/LOT 2 Endeavour Dr, Wollongong NSW 2500, Australia' WHERE post_id = 1470;
+UPDATE post_map_cards SET venue_name = 'Wollongong Botanic Garden', address_line = '40 Murphys Ave, Keiraville NSW 2500, Australia' WHERE post_id = 1471;
+UPDATE post_map_cards SET venue_name = 'Mount Keira', address_line = 'Mount Keira, NSW 2500, Australia' WHERE post_id = 1472;
+UPDATE post_map_cards SET venue_name = 'Symbio Wildlife Park', address_line = '7/11 Lawrence Hargrave Dr, Helensburgh NSW 2508, Australia' WHERE post_id = 1473;
+UPDATE post_map_cards SET venue_name = 'WIN Stadium', address_line = 'Unit 3/49 Harbour St, Wollongong NSW 2500, Australia' WHERE post_id = 1474;
+UPDATE post_map_cards SET venue_name = 'Royal National Park', address_line = 'New South Wales, Australia' WHERE post_id = 1475;
+UPDATE post_map_cards SET venue_name = 'Cathedral Rocks', address_line = '36 Cliff Dr, Kiama Downs NSW 2533, Australia' WHERE post_id = 1476;
+UPDATE post_map_cards SET venue_name = 'Castle Hill Lookout', address_line = 'Castle Hill Rd, Castle Hill QLD 4810, Australia' WHERE post_id = 1477;
+UPDATE post_map_cards SET venue_name = 'Magnetic Island - Townsville', address_line = 'Magnetic Island - Townsville, Australia' WHERE post_id = 1479;
+UPDATE post_map_cards SET venue_name = 'Riverway', address_line = '731-739 Riverway Dr, Thuringowa Central QLD 4817, Australia' WHERE post_id = 1481;
+UPDATE post_map_cards SET venue_name = 'SS Yongala', address_line = 'Queensland, Australia' WHERE post_id = 1482;
+UPDATE post_map_cards SET venue_name = 'Perc Tucker Regional Gallery', address_line = '253 Flinders St, Townsville City QLD 4810, Australia' WHERE post_id = 1483;
+UPDATE post_map_cards SET venue_name = 'Point Lonsdale Lighthouse', address_line = '9-13 Point Lonsdale Rd, Point Lonsdale VIC 3225, Australia' WHERE post_id = 1486;
+UPDATE post_map_cards SET venue_name = 'Geelong Arts Centre', address_line = '50 Little Malop St, Geelong VIC 3220, Australia' WHERE post_id = 1487;
+UPDATE post_map_cards SET venue_name = 'Torquay', address_line = 'Torquay VIC 3228, Australia' WHERE post_id = 1488;
+UPDATE post_map_cards SET venue_name = 'Bells Beach', address_line = 'Bells Beach VIC 3228, Australia' WHERE post_id = 1489;
+UPDATE post_map_cards SET venue_name = 'Fiordland National Park', address_line = 'Southland Region, New Zealand' WHERE post_id = 1490;
+UPDATE post_map_cards SET venue_name = 'Curio Bay Cliffs', address_line = 'Waikawa-Curio Bay Road, Southland Region 9884, New Zealand' WHERE post_id = 1491;
+UPDATE post_map_cards SET venue_name = 'E. Hayes & Sons', address_line = '168 Dee Street, Invercargill 9810, New Zealand' WHERE post_id = 1492;
+UPDATE post_map_cards SET venue_name = 'Mount Maunganui', address_line = 'Mount Maunganui, 3116, New Zealand' WHERE post_id = 1493;
+UPDATE post_map_cards SET venue_name = 'Matakana Island', address_line = 'Matakana Island, Bay of Plenty Region 3172, New Zealand' WHERE post_id = 1494;
+UPDATE post_map_cards SET venue_name = 'Etihad Stadium', address_line = 'Etihad Stadium, Etihad Campus, Manchester M11 3FF, United Kingdom' WHERE post_id = 1495;
+UPDATE post_map_cards SET venue_name = 'Manchester Cathedral', address_line = 'Victoria St, Manchester M3 1SX, United Kingdom' WHERE post_id = 1496;
+UPDATE post_map_cards SET venue_name = 'John Rylands Library', address_line = '150 Deansgate, Manchester M3 3EH, United Kingdom' WHERE post_id = 1497;
+UPDATE post_map_cards SET venue_name = 'National Football Museum', address_line = 'Todd St, Manchester M4 3BG, United Kingdom' WHERE post_id = 1498;
+UPDATE post_map_cards SET venue_name = 'Heaton Park', address_line = 'Bury Old Rd, Manchester M25 0EQ, United Kingdom' WHERE post_id = 1499;
+UPDATE post_map_cards SET venue_name = 'Northern Quarter', address_line = 'Northern Quarter, Manchester, UK' WHERE post_id = 1500;
+UPDATE post_map_cards SET venue_name = 'MediaCityUK', address_line = 'MediaCity UK, Arrive M50 2NT, United Kingdom' WHERE post_id = 1501;
+UPDATE post_map_cards SET venue_name = 'Opera House Manchester', address_line = '3 Quay St, Manchester M3 3HP, United Kingdom' WHERE post_id = 1502;
+UPDATE post_map_cards SET venue_name = 'Palace Theatre Manchester', address_line = '97 Oxford St, Manchester M1 6FT, United Kingdom' WHERE post_id = 1503;
+UPDATE post_map_cards SET venue_name = 'Co-op Live', address_line = 'Co-op Live, Etihad Campus, 1 Sportcity Way, Manchester M11 3DL, United Kingdom' WHERE post_id = 1504;
+UPDATE post_map_cards SET venue_name = 'The Trafford Centre', address_line = 'The Trafford Centre, Trafford Park, Stretford, Manchester, UK' WHERE post_id = 1505;
+UPDATE post_map_cards SET venue_name = 'The Beatles Story Museum, Liverpool', address_line = 'Britannia Vaults, Royal Albert Dock, Liverpool L3 4AD, United Kingdom' WHERE post_id = 1506;
+UPDATE post_map_cards SET venue_name = 'Anfield', address_line = 'Anfield Rd, Anfield, Liverpool L4 0TH, United Kingdom' WHERE post_id = 1507;
+UPDATE post_map_cards SET venue_name = 'Liverpool Metropolitan Cathedral', address_line = 'Cathedral House, Mt Pleasant, Liverpool L3 5TQ, United Kingdom' WHERE post_id = 1508;
+UPDATE post_map_cards SET venue_name = 'World Museum', address_line = 'William Brown St, Liverpool L3 8EN, United Kingdom' WHERE post_id = 1509;
+UPDATE post_map_cards SET venue_name = 'Museum of Liverpool', address_line = 'Pier Head, Mann Island, Liverpool L3 1DG, United Kingdom' WHERE post_id = 1510;
+UPDATE post_map_cards SET venue_name = 'Liver Bldg', address_line = 'Liver Bldg, Pier Head, Liverpool L3 1HU, UK' WHERE post_id = 1511;
+UPDATE post_map_cards SET venue_name = 'The Cavern Club', address_line = '8, 10 Mathew St, Liverpool L2 6RE, United Kingdom' WHERE post_id = 1512;
+UPDATE post_map_cards SET venue_name = 'Tate Liverpool', address_line = 'Mann Island, Liverpool L3 1BP, United Kingdom' WHERE post_id = 1513;
+UPDATE post_map_cards SET venue_name = 'Goodison Park', address_line = 'Goodison Rd, Liverpool L4 4EL, United Kingdom' WHERE post_id = 1514;
+UPDATE post_map_cards SET venue_name = 'Victoria Square, Birmingham', address_line = 'Victoria Square, Birmingham, Birmingham B1 1BD, UK' WHERE post_id = 1517;
+UPDATE post_map_cards SET venue_name = 'Villa Park', address_line = 'Trinity Rd, Birmingham B6 6HE, United Kingdom' WHERE post_id = 1518;
+UPDATE post_map_cards SET venue_name = 'Birmingham Hippodrome', address_line = 'South Side, Hippodrome Theatre, Hurst St, Birmingham B5 4TB, United Kingdom' WHERE post_id = 1519;
+UPDATE post_map_cards SET venue_name = 'Symphony Hall', address_line = 'Broad St, Birmingham B1 2EA, United Kingdom' WHERE post_id = 1520;
+UPDATE post_map_cards SET venue_name = 'Black Country Living Museum', address_line = 'Discovery Wy, Dudley DY1 4AL, United Kingdom' WHERE post_id = 1521;
+UPDATE post_map_cards SET venue_name = 'Resorts World Birmingham', address_line = 'Pendigo Way, Marston Green, Birmingham B40 1PU, United Kingdom' WHERE post_id = 1522;
+UPDATE post_map_cards SET venue_name = 'Bodleian Library', address_line = 'Broad St, Oxford OX1 3BG, United Kingdom' WHERE post_id = 1523;
+UPDATE post_map_cards SET venue_name = 'Christ Church', address_line = 'St Aldate\'s, Oxford OX1 1DP, United Kingdom' WHERE post_id = 1524;
+UPDATE post_map_cards SET venue_name = 'Oxford University Museum of Natural History', address_line = 'Parks Rd, Oxford OX1 3PW, United Kingdom' WHERE post_id = 1525;
+UPDATE post_map_cards SET venue_name = 'Pitt Rivers Museum', address_line = 'S Parks Rd, Oxford OX1 3PP, United Kingdom' WHERE post_id = 1526;
+UPDATE post_map_cards SET venue_name = 'Magdalen College', address_line = 'Oxford OX1 4AU, United Kingdom' WHERE post_id = 1527;
+UPDATE post_map_cards SET venue_name = 'Carfax Tower', address_line = 'Queen St, Oxford OX1 1ET, United Kingdom' WHERE post_id = 1528;
+UPDATE post_map_cards SET venue_name = 'Oxford Castle', address_line = 'Oxford Castle, Oxford, UK' WHERE post_id = 1529;
+UPDATE post_map_cards SET venue_name = 'Blenheim Palace', address_line = 'Woodstock OX20 1PS, United Kingdom' WHERE post_id = 1531;
+UPDATE post_map_cards SET venue_name = 'Kassam Stadium', address_line = 'Grenoble Rd, Littlemore, Oxford OX4 4XP, United Kingdom' WHERE post_id = 1532;
+UPDATE post_map_cards SET venue_name = 'King\'s College, Cambridge', address_line = 'King\'s Parade, Cambridge CB2 1ST, United Kingdom' WHERE post_id = 1533;
+UPDATE post_map_cards SET venue_name = 'Mathematical Bridge', address_line = 'Queens\' College, Silver St, Cambridge CB3 9ET, United Kingdom' WHERE post_id = 1534;
+UPDATE post_map_cards SET venue_name = 'Bridge of Sighs', address_line = 'St John\'s College, St John\'s St, Cambridge CB2 1TP, United Kingdom' WHERE post_id = 1535;
+UPDATE post_map_cards SET venue_name = 'Trinity College', address_line = 'Cambridge CB2 1TQ, United Kingdom' WHERE post_id = 1536;
+UPDATE post_map_cards SET venue_name = 'Great St Mary\'s', address_line = 'The University Church, Senate House Hill, Cambridge CB2 3PQ, United Kingdom' WHERE post_id = 1537;
+UPDATE post_map_cards SET venue_name = 'Jesus Green', address_line = 'Jesus Green, Cambridge CB5 8BL, United Kingdom' WHERE post_id = 1539;
+UPDATE post_map_cards SET venue_name = 'York City Walls', address_line = 'York YO1 7LJ, United Kingdom' WHERE post_id = 1540;
+UPDATE post_map_cards SET venue_name = 'Clifford\'s Tower, York', address_line = 'Tower St, York YO1 9SA, United Kingdom' WHERE post_id = 1541;
+UPDATE post_map_cards SET venue_name = 'York Castle Museum', address_line = 'Tower St, York YO1 9RY, United Kingdom' WHERE post_id = 1542;
+UPDATE post_map_cards SET venue_name = 'Barley Hall', address_line = '2 Coffee Yard, York YO1 8AR, United Kingdom' WHERE post_id = 1544;
+UPDATE post_map_cards SET venue_name = 'York Theatre Royal', address_line = 'St Leonard\'s Pl, York YO1 7HD, United Kingdom' WHERE post_id = 1545;
+UPDATE post_map_cards SET venue_name = 'Castle Howard', address_line = 'Castle Howard, York YO60 7DA, United Kingdom' WHERE post_id = 1546;
+UPDATE post_map_cards SET venue_name = 'San Antonio Zoo', address_line = '3903 N St Mary\'s St, San Antonio, TX 78212, United States' WHERE post_id = 1547;
+UPDATE post_map_cards SET venue_name = 'Tower of the Americas', address_line = '739 E César E. Chávez Blvd, San Antonio, TX 78205, United States' WHERE post_id = 1548;
+UPDATE post_map_cards SET venue_name = 'Natural Bridge Caverns', address_line = '26495 Natural Bridge Caverns Rd, San Antonio, TX 78266, United States' WHERE post_id = 1549;
+UPDATE post_map_cards SET venue_name = 'San Antonio Museum of Art', address_line = '200 W Jones Ave, San Antonio, TX 78215, United States' WHERE post_id = 1550;
+UPDATE post_map_cards SET venue_name = 'Witte Museum', address_line = '3801 Broadway, San Antonio, TX 78209, United States' WHERE post_id = 1551;
+UPDATE post_map_cards SET venue_name = 'Frost Bank Center', address_line = '1 Frost Bank Center Dr, San Antonio, TX 78219, United States' WHERE post_id = 1552;
+UPDATE post_map_cards SET venue_name = 'Majestic Theatre', address_line = '224 E Houston St, San Antonio, TX 78205, United States' WHERE post_id = 1553;
+UPDATE post_map_cards SET venue_name = 'Pearl', address_line = '303 Pearl Pkwy, San Antonio, TX 78215, United States' WHERE post_id = 1554;
+UPDATE post_map_cards SET venue_name = 'Denver Art Museum', address_line = '100 W 14th Ave Pkwy, Denver, CO 80204, United States' WHERE post_id = 1555;
+UPDATE post_map_cards SET venue_name = 'Denver Museum of Nature & Science', address_line = '2001 Colorado Blvd, Denver, CO 80205, United States' WHERE post_id = 1556;
+UPDATE post_map_cards SET venue_name = '16th St Mall', address_line = '16th St Mall, Denver, CO 80202, USA' WHERE post_id = 1558;
+UPDATE post_map_cards SET venue_name = 'Empower Field at Mile High', address_line = '1701 Bryant St, Denver, CO 80204, United States' WHERE post_id = 1559;
+UPDATE post_map_cards SET venue_name = 'Coors Field', address_line = '2001 Blake St, Denver, CO 80205, United States' WHERE post_id = 1560;
+UPDATE post_map_cards SET venue_name = 'Molly Brown House Museum', address_line = '1340 Pennsylvania St, Denver, CO 80203, United States' WHERE post_id = 1561;
+UPDATE post_map_cards SET venue_name = 'Desert Botanical Garden', address_line = '1201 N Galvin Pkwy, Phoenix, AZ 85008, United States' WHERE post_id = 1562;
+UPDATE post_map_cards SET venue_name = 'Heard Museum', address_line = '2301 N Central Ave, Phoenix, AZ 85004, United States' WHERE post_id = 1563;
+UPDATE post_map_cards SET venue_name = 'Camelback Mountain', address_line = 'Camelback Mountain, Phoenix, AZ 85018, United States' WHERE post_id = 1564;
+UPDATE post_map_cards SET venue_name = 'Taliesin West', address_line = '12621 N Frank Lloyd Wright Blvd, Scottsdale, AZ 85259, United States' WHERE post_id = 1565;
+UPDATE post_map_cards SET venue_name = 'State Farm Stadium', address_line = '1 Cardinals Dr, Glendale, AZ 85305, United States' WHERE post_id = 1566;
+UPDATE post_map_cards SET venue_name = 'Footprint Center', address_line = '201 E Jefferson St, Phoenix, AZ 85004, United States' WHERE post_id = 1567;
+UPDATE post_map_cards SET venue_name = 'Liberty Bell', address_line = '526 Market St, Philadelphia, PA 19106, United States' WHERE post_id = 1569;
+UPDATE post_map_cards SET venue_name = 'Philadelphia Museum of Art', address_line = '2600 Benjamin Franklin Pkwy, Philadelphia, PA 19130, United States' WHERE post_id = 1570;
+UPDATE post_map_cards SET venue_name = 'Philadelphia Zoo', address_line = '3400 W Girard Ave, Philadelphia, PA 19104, United States' WHERE post_id = 1571;
+UPDATE post_map_cards SET venue_name = 'Reading Terminal Market', address_line = '1136 Arch St, Philadelphia, PA 19107, United States' WHERE post_id = 1572;
+UPDATE post_map_cards SET venue_name = 'Eastern State Penitentiary', address_line = '2027 Fairmount Ave, Philadelphia, PA 19130, United States' WHERE post_id = 1573;
+UPDATE post_map_cards SET venue_name = 'Lincoln Financial Field', address_line = 'One Lincoln Financial Field Way, Philadelphia, PA 19148, United States' WHERE post_id = 1574;
+UPDATE post_map_cards SET venue_name = 'Citizens Bank Park', address_line = '1 Citizens Bank Way, Philadelphia, PA 19148, United States' WHERE post_id = 1575;
+UPDATE post_map_cards SET venue_name = 'French Quarter', address_line = 'French Quarter, New Orleans, LA, USA' WHERE post_id = 1576;
+UPDATE post_map_cards SET venue_name = 'Garden District', address_line = 'Garden District, New Orleans, LA, USA' WHERE post_id = 1577;
+UPDATE post_map_cards SET venue_name = 'The National WWII Museum', address_line = '945 Magazine St, New Orleans, LA 70130, United States' WHERE post_id = 1578;
+UPDATE post_map_cards SET venue_name = 'Audubon Zoo', address_line = '6500 Magazine St, New Orleans, LA 70118, United States' WHERE post_id = 1579;
+UPDATE post_map_cards SET venue_name = 'Cafe Du Monde', address_line = '800 Decatur St, New Orleans, LA 70116, United States' WHERE post_id = 1580;
+UPDATE post_map_cards SET venue_name = 'Frenchmen St', address_line = 'Frenchmen St, New Orleans, LA, USA' WHERE post_id = 1581;
+UPDATE post_map_cards SET venue_name = 'Caesars Superdome', address_line = '1500 Sugar Bowl Dr, New Orleans, LA 70112, United States' WHERE post_id = 1582;
+UPDATE post_map_cards SET venue_name = 'Smoothie King Center', address_line = '1501 Dave Dixon Dr Space 101-102, New Orleans, LA 70113, United States' WHERE post_id = 1583;
+UPDATE post_map_cards SET venue_name = 'Magazine St', address_line = 'Magazine St, New Orleans, LA, USA' WHERE post_id = 1584;
+UPDATE post_map_cards SET venue_name = 'Grand Ole Opry', address_line = '600 Opry Mills Dr, Nashville, TN 37214, United States' WHERE post_id = 1585;
+UPDATE post_map_cards SET venue_name = 'Johnny Cash Museum', address_line = 'Lower Level, 119 3rd Ave S, Nashville, TN 37201, United States' WHERE post_id = 1586;
+UPDATE post_map_cards SET venue_name = 'Warner Parks', address_line = '50 Vaughn Rd, Nashville, TN 37221, United States' WHERE post_id = 1592;
+UPDATE post_map_cards SET venue_name = 'Georgia Aquarium', address_line = '225 Baker St NW, Atlanta, GA 30313, United States' WHERE post_id = 1593;
+UPDATE post_map_cards SET venue_name = 'Centennial Olympic Park', address_line = 'Atlanta, GA 30313, United States' WHERE post_id = 1594;
+UPDATE post_map_cards SET venue_name = 'High Museum of Art', address_line = '1280 Peachtree Rd NE, Atlanta, GA 30309, United States' WHERE post_id = 1595;
+UPDATE post_map_cards SET venue_name = 'Mercedes-Benz Stadium', address_line = '1 AMB Dr NW, Atlanta, GA 30313, United States' WHERE post_id = 1596;
+UPDATE post_map_cards SET venue_name = 'Truist Park', address_line = '755 Battery Ave SE, Atlanta, GA 30339, United States' WHERE post_id = 1597;
+UPDATE post_map_cards SET venue_name = 'State Farm Arena', address_line = '1 State Farm Dr, Atlanta, GA 30303, United States' WHERE post_id = 1598;
+UPDATE post_map_cards SET venue_name = 'CNN Studio Tours', address_line = '190 Marietta St NW, Atlanta, GA 30303, United States' WHERE post_id = 1599;
+UPDATE post_map_cards SET venue_name = 'Ponce City Market', address_line = '675 Ponce De Leon Ave NE, Atlanta, GA 30308, United States' WHERE post_id = 1600;
+UPDATE post_map_cards SET venue_name = 'Six Flags Over Georgia', address_line = '275 Riverside Pkwy, Austell, GA 30168, United States' WHERE post_id = 1601;
+UPDATE post_map_cards SET venue_name = 'The BeltLine', address_line = 'The BeltLine, Atlanta, GA 30309, USA' WHERE post_id = 1602;
+UPDATE post_map_cards SET venue_name = 'Space Center Houston', address_line = '1601 E NASA Pkwy, Houston, TX 77058, United States' WHERE post_id = 1603;
+UPDATE post_map_cards SET venue_name = 'Houston Zoo', address_line = '6200 Hermann Park Dr, Houston, TX 77030, United States' WHERE post_id = 1604;
+UPDATE post_map_cards SET venue_name = 'Hermann Park', address_line = '6001 Fannin St, Houston, TX 77030, United States' WHERE post_id = 1605;
+UPDATE post_map_cards SET venue_name = 'Buffalo Bayou Park', address_line = '105 Sabine St, Houston, TX 77007, United States' WHERE post_id = 1606;
+UPDATE post_map_cards SET venue_name = 'Toyota Center', address_line = '1510 Polk St, Houston, TX 77002, United States' WHERE post_id = 1607;
+UPDATE post_map_cards SET venue_name = 'Houston Museum District', address_line = 'Houston Museum District, Houston, TX, USA' WHERE post_id = 1608;
+UPDATE post_map_cards SET venue_name = 'Children\'s Museum Houston', address_line = '1500 Binz St, Houston, TX 77004, United States' WHERE post_id = 1609;
+UPDATE post_map_cards SET venue_name = 'The Sixth Floor Museum at Dealey Plaza', address_line = '411 Elm St, Dallas, TX 75202, United States' WHERE post_id = 1610;
+UPDATE post_map_cards SET venue_name = 'American Airlines Center', address_line = '2500 Victory Ave, Dallas, TX 75219, United States' WHERE post_id = 1612;
+UPDATE post_map_cards SET venue_name = 'Globe Life Field', address_line = '734 Stadium Dr, Arlington, TX 76011, United States' WHERE post_id = 1613;
+UPDATE post_map_cards SET venue_name = 'Dealey Plaza', address_line = '400 Main St, Dallas, TX 75202, United States' WHERE post_id = 1615;
+UPDATE post_map_cards SET venue_name = 'Six Flags Over Texas', address_line = 'Arlington, TX 76011, United States' WHERE post_id = 1616;
+UPDATE post_map_cards SET venue_name = 'Deep Ellum', address_line = 'Deep Ellum, Dallas, TX 75226, USA' WHERE post_id = 1617;
+UPDATE post_map_cards SET venue_name = 'White Rock Lake', address_line = 'White Rock Lake, Dallas, TX, USA' WHERE post_id = 1618;
+UPDATE post_map_cards SET venue_name = 'Universal Studios Japan', address_line = '2 Chome-1-33 Sakurajima, Konohana Ward, Osaka, 554-0031, Japan' WHERE post_id = 1620;
+UPDATE post_map_cards SET venue_name = 'Sumiyoshi Taisha', address_line = '2 Chome-9-89 Sumiyoshi, Sumiyoshi Ward, Osaka, 558-0045, Japan' WHERE post_id = 1627;
+UPDATE post_map_cards SET venue_name = 'Shitennō-ji', address_line = '1 Chome-11-18 Shitennoji, Tennoji Ward, Osaka, 543-0051, Japan' WHERE post_id = 1629;
+UPDATE post_map_cards SET venue_name = 'Vantelin Dome Nagoya', address_line = '1 Chome-1-1 Daikominami, Higashi Ward, Nagoya, Aichi 461-0047, Japan' WHERE post_id = 1637;
+UPDATE post_map_cards SET venue_name = 'Museum Meiji-Mura', address_line = '1 Uchiyama, Inuyama, Aichi 484-0000, Japan' WHERE post_id = 1638;
+UPDATE post_map_cards SET venue_name = 'Hiroshima Peace Memorial Museum', address_line = '1-2 Nakajimacho, Naka Ward, Hiroshima, 730-0811, Japan' WHERE post_id = 1639;
+UPDATE post_map_cards SET venue_name = 'Okonomimura', address_line = '5-13 Shintenchi, Naka Ward, Hiroshima, 730-0034, Japan' WHERE post_id = 1641;
+UPDATE post_map_cards SET venue_name = 'Sapporo Clock Tower', address_line = '2 Chome Kita 1 Jonishi, Chuo Ward, Sapporo, Hokkaido 060-0001, Japan' WHERE post_id = 1642;
+UPDATE post_map_cards SET venue_name = 'Hokkaidō Prefectural Government Office', address_line = '6 Chome Kita 3 Jonishi, Chuo Ward, Sapporo, Hokkaido 060-0003, Japan' WHERE post_id = 1643;
+UPDATE post_map_cards SET venue_name = 'Susukino St', address_line = 'Susukino St, Minami 6 Jōnishi, Chuo Ward, Sapporo, Hokkaido 064-0806, Japan' WHERE post_id = 1645;
+UPDATE post_map_cards SET venue_name = 'Hokkaido Museum', address_line = 'Konopporo-53-2 Atsubetsucho, Atsubetsu Ward, Sapporo, Hokkaido 004-0006, Japan' WHERE post_id = 1646;
+UPDATE post_map_cards SET venue_name = 'Fukuoka Castle Ruins', address_line = '1-1 Jonai, Chuo Ward, Fukuoka, 810-0043, Japan' WHERE post_id = 1648;
+UPDATE post_map_cards SET venue_name = 'Fukuoka Zoo and Botanical Garden', address_line = '1-1 Minamikoen, Chuo Ward, Fukuoka, 810-0037, Japan' WHERE post_id = 1650;
+UPDATE post_map_cards SET venue_name = 'Mizuho PayPay Dome FUKUOKA', address_line = '2 Chome-2-2 Jigyohama, Chuo Ward, Fukuoka, 810-8660, Japan' WHERE post_id = 1651;
+UPDATE post_map_cards SET venue_name = '奈良ドリームランド', address_line = '2 Chome-1 Horensahoyama, Nara, 630-8108, Japan' WHERE post_id = 1655;
+UPDATE post_map_cards SET venue_name = 'Meriken Park', address_line = '2 Hatobacho, Chuo Ward, Kobe, Hyogo 650-0042, Japan' WHERE post_id = 1656;
+UPDATE post_map_cards SET venue_name = 'Ikuta-jinja Shrine', address_line = '1 Chome-2-1 Shimoyamatedori, Chuo Ward, Kobe, Hyogo 650-0011, Japan' WHERE post_id = 1657;
+UPDATE post_map_cards SET venue_name = 'The Great Hanshin-Awaji Earthquake Memorial Disaster Reduction and Human Renovation Institution', address_line = '1 Chome-5-2 Wakinohamakaigandori, Chuo Ward, Kobe, Hyogo 651-0073, Japan' WHERE post_id = 1658;
+UPDATE post_map_cards SET venue_name = 'Kobe Suma Seaworld', address_line = '1 Chome-3-5 Wakamiyacho, Suma Ward, Kobe, Hyogo 654-0049, Japan' WHERE post_id = 1660;
+UPDATE post_map_cards SET venue_name = 'Arima Onsen', address_line = 'Arima Onsen, Arimacho, Kita Ward, Kobe, Hyogo 651-1401, Japan' WHERE post_id = 1661;
+UPDATE post_map_cards SET venue_name = 'Akashi-Kaikyo Bridge', address_line = '4 Higashimaikocho, Tarumi-ku, Kobe, Hyogo 655-0047, Japan' WHERE post_id = 1662;
+UPDATE post_map_cards SET venue_name = 'Shamiandao Island', address_line = 'Shamiandao Island, 沙面 Liwan District, Guangzhou, China, 510130' WHERE post_id = 1663;
+UPDATE post_map_cards SET venue_name = 'Temple of the Six Banyan Trees', address_line = '87 Liurong Rd, Yuexiu District, Guangzhou, Guangdong Province, China, 510000' WHERE post_id = 1664;
+UPDATE post_map_cards SET venue_name = 'Yuexiu Park', address_line = '988 Jiefang N Rd, Yuexiu District, Guangzhou, Guangdong Province, China, 510040' WHERE post_id = 1665;
+UPDATE post_map_cards SET venue_name = 'Chimelong Paradise', address_line = 'X8WH+MG9, Han Xi Da Dao, Panyu District, Guangzhou, Guangdong Province, China, 511495' WHERE post_id = 1666;
+UPDATE post_map_cards SET venue_name = '珠江', address_line = '珠江, Nansha District, Guangzhou, China, 511457' WHERE post_id = 1667;
+UPDATE post_map_cards SET venue_name = '珠江新城', address_line = 'Tianhe District, Guangzhou, China, 510623' WHERE post_id = 1669;
+UPDATE post_map_cards SET venue_name = 'Huacheng Square', address_line = '48FF+MV5, Tianhe District, Guangzhou, Guangdong Province, China, 510620' WHERE post_id = 1670;
+UPDATE post_map_cards SET venue_name = 'Splendid China Folk Village', address_line = 'GXJQ+FFX, Unnamed Road, 华侨城 Nanshan, Shenzhen, Guangdong Province, China' WHERE post_id = 1671;
+UPDATE post_map_cards SET venue_name = 'Shenzhen Museum', address_line = 'Shenzhen Museum, 中信广场 Fu Tian Qu, Shen Zhen Shi, Guang Dong Sheng, China, 518027' WHERE post_id = 1672;
+UPDATE post_map_cards SET venue_name = '仙湖植物园', address_line = 'China, Guangdong Province, Shenzhen, Luohu District, 仙湖路160号 邮政编码: 518004' WHERE post_id = 1673;
+UPDATE post_map_cards SET venue_name = 'Shenzhen Bay Park', address_line = 'GX43+J99, Nanshan, Shenzhen, Guangdong Province, China, 518065' WHERE post_id = 1674;
+UPDATE post_map_cards SET venue_name = 'OCT East', address_line = 'China, Guangdong Province, Shenzhen, 盐田区中心城 邮政编码: 518000' WHERE post_id = 1676;
+UPDATE post_map_cards SET venue_name = 'He Xiangning Art Museum', address_line = '9013 Shennan Blvd, Nanshan, Shenzhen, Guangdong Province, China, 518053' WHERE post_id = 1677;
+UPDATE post_map_cards SET venue_name = 'Giant Wild Goose Pagoda', address_line = '1 Cien Rd, Yanta District, Xi\'An, Shaanxi, China, 710064' WHERE post_id = 1678;
+UPDATE post_map_cards SET venue_name = 'Shaanxi History Museum', address_line = '91 Xiaozhai E Rd, Yanta District, Xi\'An, Shaanxi, China, 710064' WHERE post_id = 1679;
+UPDATE post_map_cards SET venue_name = 'Drum Tower', address_line = '6WQR+2QV, Jianfusi Rd, Beilin, Xi\'An, Shaanxi, China, 710064' WHERE post_id = 1680;
+UPDATE post_map_cards SET venue_name = 'Daming Palace', address_line = '7XM5+4P8, Beibei Qu, Chongqing Shi, China, 710015' WHERE post_id = 1681;
+UPDATE post_map_cards SET venue_name = 'Xi\'an Olympic Sports Ctr. Swimming', address_line = '92HH+3F2, Baqiao District, Xi\'An, Shaanxi, China, 710026' WHERE post_id = 1682;
+UPDATE post_map_cards SET venue_name = 'Jagalchi Market', address_line = '52 Jagalchihaean-ro, Jung-gu, Busan, South Korea' WHERE post_id = 1683;
+UPDATE post_map_cards SET venue_name = 'Haedong Yonggungsa Temple', address_line = '86 Yonggung-gil, Gijang-gun, Busan, South Korea' WHERE post_id = 1684;
+UPDATE post_map_cards SET venue_name = 'Gwangalli Beach', address_line = 'Gwangalli Beach, Busan, South Korea' WHERE post_id = 1685;
+UPDATE post_map_cards SET venue_name = 'Busan Tower', address_line = '37-55 Yongdusan-gil, Jung-gu, Busan, South Korea' WHERE post_id = 1686;
+UPDATE post_map_cards SET venue_name = 'Yongdusan Park', address_line = '37-55 Yongdusan-gil, Jung-gu, Busan, South Korea' WHERE post_id = 1687;
+UPDATE post_map_cards SET venue_name = 'Busan Asiad Main Stadium', address_line = '344 World cup-daero, Yeonje-gu, Busan, South Korea' WHERE post_id = 1688;
+UPDATE post_map_cards SET venue_name = 'Busan Cinema Center', address_line = '120 Suyeonggangbyeon-daero, Haeundae-gu, Busan, South Korea' WHERE post_id = 1689;
+UPDATE post_map_cards SET venue_name = 'Hallasan', address_line = 'Hallasan, Seogwipo-si, South Korea' WHERE post_id = 1691;
+UPDATE post_map_cards SET venue_name = 'Seongsan Ilchulbong', address_line = 'Seongsan Ilchulbong, Seogwipo-si, South Korea' WHERE post_id = 1692;
+UPDATE post_map_cards SET venue_name = 'Udo', address_line = 'Udo, Cheju' WHERE post_id = 1693;
+UPDATE post_map_cards SET venue_name = 'Songdo Central Park', address_line = '160 Convensia-daero, Yeonsu-gu, Incheon, South Korea' WHERE post_id = 1695;
+UPDATE post_map_cards SET venue_name = 'Incheon Asiad Main Stadium', address_line = '379-2 Yeonhui-dong, Seo-gu, Incheon, South Korea' WHERE post_id = 1698;
+UPDATE post_map_cards SET venue_name = 'Gyeyangsan', address_line = 'Gyeyangsan, Incheon, South Korea' WHERE post_id = 1699;
+UPDATE post_map_cards SET venue_name = 'Avenida Malecón', address_line = 'Avenida Malecón, La Habana, Cuba' WHERE post_id = 1700;
+UPDATE post_map_cards SET venue_name = 'Grand Theater of Havana Alicia Alonso', address_line = '458 P.º de Martí, La Habana 10600, Cuba' WHERE post_id = 1701;
+UPDATE post_map_cards SET venue_name = 'La Bodeguita Del Medio', address_line = '4JRX+847, Empedrado, La Habana, Cuba' WHERE post_id = 1702;
+UPDATE post_map_cards SET venue_name = 'Latin American Stadium', address_line = '4J9F+FJ6, La Habana, Cuba' WHERE post_id = 1703;
+UPDATE post_map_cards SET venue_name = 'P.º de Martí', address_line = 'P.º de Martí, La Habana, Cuba' WHERE post_id = 1704;
+UPDATE post_map_cards SET venue_name = 'Ocho Rios', address_line = 'Ocho Rios, Jamaica' WHERE post_id = 1705;
+UPDATE post_map_cards SET venue_name = 'Green Grotto Caves', address_line = 'Main Street, Discovery Bay, Jamaica' WHERE post_id = 1706;
+UPDATE post_map_cards SET venue_name = 'Cable Beach', address_line = 'Cable Beach, Nassau, Bahamas' WHERE post_id = 1707;
+UPDATE post_map_cards SET venue_name = 'Ardastra Gardens & Wildlife Conservation Centre', address_line = 'Chippingham Rd, Nassau, Bahamas' WHERE post_id = 1708;
+UPDATE post_map_cards SET venue_name = 'Saona Island', address_line = 'Saona Island, 23000, Dominican Republic' WHERE post_id = 1710;
+UPDATE post_map_cards SET venue_name = 'Altos de Chavón', address_line = 'Casa de Campo Resort and Villas, La Romana 22000, Dominican Republic' WHERE post_id = 1711;
+UPDATE post_map_cards SET venue_name = 'La Fortaleza', address_line = '63 C. de la Fortaleza, San Juan, 00901, Puerto Rico' WHERE post_id = 1712;
+UPDATE post_map_cards SET venue_name = 'Paseo de la Princesa', address_line = 'Paseo de la Princesa, San Juan, 00901, Puerto Rico' WHERE post_id = 1713;
+UPDATE post_map_cards SET venue_name = 'Coliseo de Puerto Rico José Miguel Agrelot', address_line = '500 Av. Arterial B, San Juan, 00918, Puerto Rico' WHERE post_id = 1714;
+UPDATE post_map_cards SET venue_name = 'La Placita de Santurce', address_line = '300 C. dos Hermanos, San Juan, 00909, Puerto Rico' WHERE post_id = 1715;
+UPDATE post_map_cards SET venue_name = 'Palm Beach', address_line = 'Palm Beach, Noord, Aruba' WHERE post_id = 1716;
+UPDATE post_map_cards SET venue_name = 'California Lighthouse', address_line = 'Noord, Aruba' WHERE post_id = 1717;
+UPDATE post_map_cards SET venue_name = 'Kapel di Alto Vista', address_line = 'HXGQ+9JC, Noord, Aruba' WHERE post_id = 1718;
+UPDATE post_map_cards SET venue_name = 'Bridgetown', address_line = 'Bridgetown, Saint Michael Barbados' WHERE post_id = 1719;
+UPDATE post_map_cards SET venue_name = 'Animal Flower Cave & Restaurant', address_line = 'North Point Gardens, Saint Lucy Barbados' WHERE post_id = 1720;
+UPDATE post_map_cards SET venue_name = 'Barbados Museum & Historical Society', address_line = 'Dalkeith Road, Bridgetown, Saint Michael Barbados' WHERE post_id = 1721;
+UPDATE post_map_cards SET venue_name = 'Kensington Oval', address_line = 'President Kennedy Dr, Bridgetown, Saint Michael BB120004Barbados' WHERE post_id = 1723;
+UPDATE post_map_cards SET venue_name = 'St Lucia Sulphur Springs', address_line = 'sulphur springs access road Soufriere, Malgretoute, St Lucia' WHERE post_id = 1726;
+UPDATE post_map_cards SET venue_name = 'Bay Gardens Beach Resort & Spa', address_line = 'Rodney Bay, St Lucia' WHERE post_id = 1728;
+UPDATE post_map_cards SET venue_name = 'Victoria', address_line = 'Victoria, Seychelles' WHERE post_id = 1729;
+UPDATE post_map_cards SET venue_name = 'Praslin', address_line = 'Praslin, Seychelles' WHERE post_id = 1730;
+UPDATE post_map_cards SET venue_name = 'La Digue', address_line = 'La Digue, Seychelles' WHERE post_id = 1731;
+UPDATE post_map_cards SET venue_name = 'Vallée de Mai, Praslin, Seychelles', address_line = 'Baie Ste Anne, Seychelles' WHERE post_id = 1732;
+UPDATE post_map_cards SET venue_name = 'Aldabra', address_line = 'Aldabra, Seychelles' WHERE post_id = 1734;
+UPDATE post_map_cards SET venue_name = 'Bird Island, Seychelles', address_line = 'Bird Island, Seychelles' WHERE post_id = 1735;
+UPDATE post_map_cards SET venue_name = 'Bora Bora', address_line = 'Bora Bora, French Polynesia' WHERE post_id = 1736;
+UPDATE post_map_cards SET venue_name = 'Vaitape', address_line = 'Vaitape, French Polynesia' WHERE post_id = 1737;
+UPDATE post_map_cards SET venue_name = 'Mt. Pa’ia Summit', address_line = 'F7X6+FCJ, Bora-Bora, French Polynesia' WHERE post_id = 1738;
+UPDATE post_map_cards SET venue_name = 'Papeete', address_line = 'Papeete 98714, French Polynesia' WHERE post_id = 1739;
+UPDATE post_map_cards SET venue_name = 'Notre Dame Cathedral', address_line = 'FC5M+W4P, Av. du Général de Gaulle, Papeete 98714, French Polynesia' WHERE post_id = 1741;
+UPDATE post_map_cards SET venue_name = 'Pearl Harbor', address_line = 'Pearl Harbor, Hawaii, USA' WHERE post_id = 1742;
+UPDATE post_map_cards SET venue_name = 'Iolani Palace', address_line = '364 S King St, Honolulu, HI 96813, United States' WHERE post_id = 1743;
+UPDATE post_map_cards SET venue_name = 'Honolulu Zoo', address_line = '151 Kapahulu Ave, Honolulu, HI 96815, United States' WHERE post_id = 1744;
+UPDATE post_map_cards SET venue_name = 'Bishop Museum', address_line = '1525 Bernice St, Honolulu, HI 96817, United States' WHERE post_id = 1745;
+UPDATE post_map_cards SET venue_name = 'Ala Moana Regional Park', address_line = '1201 Ala Moana Blvd, Honolulu, HI 96814, United States' WHERE post_id = 1746;
+UPDATE post_map_cards SET venue_name = 'Polynesian Cultural Center', address_line = '55-370 Kamehameha Hwy, Laie, HI 96762, United States' WHERE post_id = 1747;
+UPDATE post_map_cards SET venue_name = 'Honolulu Museum of Art (HoMA)', address_line = '900 S Beretania St., Honolulu, HI 96814, United States' WHERE post_id = 1748;
+UPDATE post_map_cards SET venue_name = 'Aloha Stadium', address_line = '99-500 Salt Lake Blvd, Aiea, HI 96701, United States' WHERE post_id = 1749;
+UPDATE post_map_cards SET venue_name = 'Manoa Falls', address_line = 'Manoa Falls, Honolulu, HI 96822, United States' WHERE post_id = 1750;
+UPDATE post_map_cards SET venue_name = 'Koko Head', address_line = 'Koko Head, Honolulu, HI 96825, United States' WHERE post_id = 1751;
+UPDATE post_map_cards SET venue_name = 'Haleakalā National Park', address_line = 'Hawaii, United States' WHERE post_id = 1752;
+UPDATE post_map_cards SET venue_name = 'Hana Hwy', address_line = 'Hana Hwy, Hawaii, USA' WHERE post_id = 1753;
+UPDATE post_map_cards SET venue_name = 'Molokini Crater', address_line = 'Maui, HI 96708, United States' WHERE post_id = 1754;
+UPDATE post_map_cards SET venue_name = 'ʻOheʻo Gulch', address_line = 'Pipiwai Trail, Hana, HI 96713, United States' WHERE post_id = 1756;
+UPDATE post_map_cards SET venue_name = 'Lahaina Banyan Court', address_line = '671 Front St, Lahaina, HI 96761, United States' WHERE post_id = 1758;
+UPDATE post_map_cards SET venue_name = 'Portland Japanese Garden', address_line = '611 SW Kingston Ave, Portland, OR 97205, United States' WHERE post_id = 1759;
+UPDATE post_map_cards SET venue_name = 'Powell\'s City of Books', address_line = '1005 W Burnside St, Portland, OR 97209, United States' WHERE post_id = 1760;
+UPDATE post_map_cards SET venue_name = 'Portland Art Museum', address_line = '1219 SW Park Ave, Portland, OR 97205, United States' WHERE post_id = 1761;
+UPDATE post_map_cards SET venue_name = 'Pittock Mansion', address_line = '3229 NW Pittock Dr, Portland, OR 97210, United States' WHERE post_id = 1762;
+UPDATE post_map_cards SET venue_name = 'Multnomah Falls', address_line = 'Multnomah Falls, Oregon 97014, United States' WHERE post_id = 1763;
+UPDATE post_map_cards SET venue_name = 'OMSI', address_line = '1945 SE Water Ave, Portland, OR 97214, United States' WHERE post_id = 1764;
+UPDATE post_map_cards SET venue_name = 'Columbia River Gorge National Scenic Area', address_line = 'Oregon, United States' WHERE post_id = 1765;
+UPDATE post_map_cards SET venue_name = 'St. Johns Bridge', address_line = '8600 NW Bridge Ave, Portland, OR 97203, United States' WHERE post_id = 1767;
+UPDATE post_map_cards SET venue_name = 'W 6th St', address_line = 'W 6th St, Austin, TX, USA' WHERE post_id = 1768;
+UPDATE post_map_cards SET venue_name = 'Barton Springs Pool', address_line = '2131 William Barton Dr, Austin, TX 78746, United States' WHERE post_id = 1769;
+UPDATE post_map_cards SET venue_name = 'Zilker Metropolitan Park', address_line = 'Austin, TX 78746, United States' WHERE post_id = 1770;
+UPDATE post_map_cards SET venue_name = 'Congress Avenue Bridge', address_line = 'Congress Avenue Bridge, S Congress Ave, Austin, TX 78701, USA' WHERE post_id = 1771;
+UPDATE post_map_cards SET venue_name = 'Austin Zoo', address_line = '10808 Rawhide Trail, Austin, TX 78736, United States' WHERE post_id = 1772;
+UPDATE post_map_cards SET venue_name = 'Blanton Museum of Art', address_line = '200 E Martin Luther King Jr Blvd, Austin, TX 78712, United States' WHERE post_id = 1773;
+UPDATE post_map_cards SET venue_name = 'Mt Bonnell', address_line = 'Mt Bonnell, Austin, TX 78731, United States' WHERE post_id = 1774;
+UPDATE post_map_cards SET venue_name = 'Darrell K Royal Texas Memorial Stadium', address_line = '2139 San Jacinto Blvd, Austin, TX 78712, United States' WHERE post_id = 1775;
+UPDATE post_map_cards SET venue_name = 'Lake Wakatipu', address_line = 'Lake Wakatipu, Otago Region, New Zealand' WHERE post_id = 1777;
+UPDATE post_map_cards SET venue_name = 'The Remarkables Ski Area', address_line = 'Queenstown 9300, New Zealand' WHERE post_id = 1778;
+UPDATE post_map_cards SET venue_name = 'Coronet Peak', address_line = 'Queenstown 9371, New Zealand' WHERE post_id = 1780;
+UPDATE post_map_cards SET venue_name = 'Alice Springs Desert Park', address_line = 'Larapinta Dr, Alice Springs NT 0871, Australia' WHERE post_id = 1784;
+UPDATE post_map_cards SET venue_name = 'Royal Flying Doctor Service Alice Springs Tourist Facility', address_line = '8/10 Stuart Terrace, Alice Springs NT 0870, Australia' WHERE post_id = 1785;
+UPDATE post_map_cards SET venue_name = 'Simpsons Gap', address_line = 'Simpsons Gap, Burt Plain NT 0872, Australia' WHERE post_id = 1786;
+UPDATE post_map_cards SET venue_name = 'Fremantle Markets', address_line = 'South Terrace &, Henderson St, Fremantle WA 6160, Australia' WHERE post_id = 1788;
+UPDATE post_map_cards SET venue_name = 'Bathers Beach', address_line = 'Bathers Beach, Western Australia 6160, Australia' WHERE post_id = 1789;
+UPDATE post_map_cards SET venue_name = 'City of Fremantle Town Hall', address_line = '8 William St, Fremantle WA 6160, Australia' WHERE post_id = 1790;
+UPDATE post_map_cards SET venue_name = 'Fremantle Oval', address_line = 'Parry St, Fremantle WA 6160, Australia' WHERE post_id = 1791;
+UPDATE post_map_cards SET venue_name = 'Gantheaume Point', address_line = 'Gantheaume Point Rd, Broome WA 6725, Australia' WHERE post_id = 1793;
+UPDATE post_map_cards SET venue_name = 'Roebuck Bay', address_line = 'Broome WA 6725, Australia' WHERE post_id = 1794;
+UPDATE post_map_cards SET venue_name = 'Arakwal National Park', address_line = 'Tallow Beach Rd, Byron Bay NSW 2481, Australia' WHERE post_id = 1795;
+UPDATE post_map_cards SET venue_name = 'Crystal Castle & Shambhala Gardens', address_line = '81 Monet Dr, Montecollum NSW 2482, Australia' WHERE post_id = 1796;
+UPDATE post_map_cards SET venue_name = 'Minyon Falls Lookout', address_line = 'Minyon Platform Track, Whian Whian NSW 2480, Australia' WHERE post_id = 1797;
+UPDATE post_map_cards SET venue_name = 'Walgun Cape Byron State Conservation Area', address_line = 'Lighthouse Rd, Byron Bay NSW 2481, Australia' WHERE post_id = 1798;
+UPDATE post_map_cards SET venue_name = 'Lizard Island', address_line = 'Lizard Island, Lizard QLD 4892, Australia' WHERE post_id = 1799;
+UPDATE post_map_cards SET venue_name = 'Osprey Reef', address_line = 'Osprey Reef' WHERE post_id = 1800;
+UPDATE post_map_cards SET venue_name = 'Daydream Island', address_line = 'Daydream Island, Queensland, Australia' WHERE post_id = 1801;
+
+-- =============================================
+-- COMPLETE
+-- =============================================
+-- Charset conversions: 36 tables
+-- Duplicate posts deleted: 25
+-- Descriptions updated: 1501
+-- Venue names/addresses updated: 1501
+-- =============================================
+
+SET FOREIGN_KEY_CHECKS = 1;
