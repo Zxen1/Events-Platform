@@ -92,26 +92,24 @@ This creates `curated-venues-run1.json` with varied venue counts from the master
 
 **Checkpoint:** Save progress every 100 venues
 
-### PHASE 2: Google Places Verification (~$68)
+### PHASE 2: Description Check + Google Places
 **Only for venues that PASSED Phase 1:**
-1. Query Google Places API: "{venue name}, {city}, {country}"
-2. Get: venue_name, address_line (formatted_address), latitude, longitude
-3. If Google returns no results OR wrong country → venue FAILS
+1. **FIRST:** Check description in ZIM (FREE)
+   - Extract lead section from Wikipedia HTML
+   - Clean text: remove HTML, citations, pronunciation guides
+   - Verify minimum 300 characters
+   - If description too short → venue FAILS (no Google call)
+2. **THEN:** Query Google Places API (PAID - only if description valid)
+   - Get: venue_name, address_line, latitude, longitude
+   - If Google returns no results → venue FAILS
+3. Add photo credits to description
 
-**API:** Google Places "Find Place from Text"  
-**Key:** (stored in script, same as website uses)
-
-**Checkpoint:** Save progress every 100 venues
-
-### PHASE 3: Description Verification (Free)
-**Only for venues that PASSED Phase 2:**
-1. Extract lead section from Wikipedia HTML (up to first h2)
-2. Clean text: remove HTML, citations, pronunciation guides, wiki markup
-3. Verify minimum 300 characters
-4. Add photo credits at end
-5. If description too short → venue FAILS
+**Cost:** Only pay for venues with valid descriptions
 
 **Checkpoint:** Save progress every 100 venues
+
+### PHASE 3: Skipped
+Phase 2 now includes description verification. Phase 3 just copies results.
 
 ### PHASE 4: SQL Generation
 **Only for venues that PASSED all phases:**
